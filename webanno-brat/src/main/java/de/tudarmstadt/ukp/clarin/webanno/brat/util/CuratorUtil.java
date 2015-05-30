@@ -86,7 +86,7 @@ public class CuratorUtil
     public final static String CURATION_USER = "CURATION_USER";
 
     /**
-     * Get JCAS objects of annotator where {@link CasDiff} will run on it
+     * Get JCAS objects of annotator where diff will run on it
      *
      * @param aJCases
      *            the JCases.
@@ -470,12 +470,14 @@ public class CuratorUtil
         List<AnnotationOption> annotationOptions = null;
         try {
             // curating multiple sentences
-            annotationOptions = CasDiff.doDiff(entryTypes, jCases, aCurationSegment.getCurationBegin(),
-                    aCurationSegment.getCurationEnd());
+            annotationOptions = CasDiff.doDiff(entryTypes, jCases,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
         }
         catch (Exception e) {
             throw new CasDiffException(e.getMessage());
         }
+//        DiffResult diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(),
+//                entryTypes, jCases, aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
 
         // fill lookup variable for annotation selections
         CuratorUtil.fillLookupVariables(annotationOptions,

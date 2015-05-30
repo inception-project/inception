@@ -47,12 +47,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.CasDiffException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -135,8 +137,6 @@ public class SuggestionBuilder
         JCas mergeJCas = getMergeCas(aBModel, sourceDocument, jCases,
                 randomAnnotationDocument);
 
-        int numUsers = jCases.size();
-
         List<Type> entryTypes = null;
 
         segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
@@ -153,33 +153,13 @@ public class SuggestionBuilder
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
-            List<AnnotationOption> annotationOptions = null;
-            try {
-                annotationOptions = CasDiff.doDiff(entryTypes, jCases, begin, end);
-            }
-            catch (Exception e) {
-                throw new CasDiffException(e.getMessage(), e);
-            }
-
-            Boolean hasDiff = false;
-            for (AnnotationOption annotationOption : annotationOptions) {
-                List<AnnotationSelection> annotationSelections = annotationOption
-                        .getAnnotationSelections();
-                if (annotationSelections.size() > 1) {
-                    hasDiff = true;
-                }
-                else if (annotationSelections.size() == 1) {
-                    AnnotationSelection annotationSelection = annotationSelections.get(0);
-                    if (annotationSelection.getAddressByUsername().size() < numUsers) {
-                        hasDiff = true;
-                    }
-                }
-            }
+            DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
+                    entryTypes, jCases, begin, end);
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
-            if (hasDiff) {
+            if (diff.hasDifferences()) {
                 curationSegment.setSentenceState(SentenceState.DISAGREE);
             }
             else {
@@ -297,7 +277,8 @@ public class SuggestionBuilder
                         randomAnnotationDocument);
             }
             else {
-                mergeJCas = createCurationCas(mergeJCas, randomAnnotationDocument, jCases, -1, -1,
+                mergeJCas = createCurationCas(aBratAnnotatorModel.getProject(), mergeJCas,
+                        randomAnnotationDocument, jCases, -1, -1,
                         aBratAnnotatorModel.getAnnotationLayers());
             }
         }
@@ -306,7 +287,7 @@ public class SuggestionBuilder
 
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
-     * the {@link CasDiff}
+     * the diff.
      *
      * @throws IOException
      * @throws ClassNotFoundException
@@ -381,8 +362,9 @@ public class SuggestionBuilder
      * @throws BratAnnotationException
      *             hum?
      */
-    public JCas createCurationCas(JCas mergeJCas, AnnotationDocument randomAnnotationDocument,
-            Map<String, JCas> jCases, int aBegin, int aEnd, List<AnnotationLayer> aAnnotationLayers)
+    public JCas createCurationCas(Project aProject, JCas mergeJCas,
+            AnnotationDocument randomAnnotationDocument, Map<String, JCas> jCases, int aBegin,
+            int aEnd, List<AnnotationLayer> aAnnotationLayers)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
@@ -396,7 +378,6 @@ public class SuggestionBuilder
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<AnnotationOption> annotationOptions = null;
-
         annotationOptions = CasDiff.doDiff(entryTypes, jCases, aBegin, aEnd);
         for (AnnotationOption annotationOption : annotationOptions) {
             // remove the featureStructure if more than 1 annotationSelection exists per
@@ -423,6 +404,17 @@ public class SuggestionBuilder
                 }
             }
         }
+        
+//        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases,
+//                begin, end);        
+//        
+//        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations().entrySet()) {
+//            // Remove FSes with differences from the merge CAS
+//            for (Configuration cfg : diffEntry.getValue().getConfigurations(CurationPanel.CURATION_USER)) {
+//                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+//                mergeJCas.removeFsFromIndexes(fs);
+//            }
+//        }
 
         repository
                 .writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);

@@ -17,12 +17,15 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -52,6 +55,13 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.TOP;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -150,18 +160,55 @@ public class CasDiff2
     }
     
     /**
-     * Calculate the differences between CASes. This method scopes the calculation of differences
-     * to a span instead of calculating them on the whole text.
+     * Calculate the differences between CASes. This method scopes the calculation of differences to
+     * a span instead of calculating them on the whole text.
+     * 
+     * @param aService
+     *            the annotation service.
+     * @param aProject
+     *            a project.
+     * @param aEntryTypes
+     *            the types for which differences are to be calculated.
+     * @param aCasMap
+     *            a set of CASes, each associated with an ID
+     * @param aBegin
+     *            begin of the span for which differences should be calculated.
+     * @param aEnd
+     *            end of the span for which differences should be calculated.
+     * @return a diff result.
+     */
+    public static DiffResult doDiffSingle(AnnotationService aService, Project aProject,
+            List<Type> aEntryTypes, Map<String, JCas> aCasMap, int aBegin, int aEnd)
+    {
+        List<DiffAdapter> adapters = CasDiff2.getAdapters(aService, aProject);
+        
+        List<String> entryTypes = new ArrayList<>();
+        for (Type t : aEntryTypes) {
+            entryTypes.add(t.getName());
+        }
+        
+        Map<String, List<JCas>> casMap = new LinkedHashMap<>();
+        for (Entry<String, JCas> e : aCasMap.entrySet()) {
+            casMap.put(e.getKey(), asList(e.getValue()));
+        }
+        return doDiff(entryTypes, adapters, casMap, aBegin, aEnd);
+    }
+
+    /**
+     * Calculate the differences between CASes. This method scopes the calculation of differences to
+     * a span instead of calculating them on the whole text.
      * 
      * @param aEntryTypes
      *            the types for which differences are to be calculated.
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
-          * @param aCasMap
+     * @param aCasMap
      *            a set of CASes, each associated with an ID
-     * @param aBegin begin of the span for which differences should be calculated.
-     * @param aEnd end of the span for which differences should be calculated.
+     * @param aBegin
+     *            begin of the span for which differences should be calculated.
+     * @param aEnd
+     *            end of the span for which differences should be calculated.
      * @return a diff result.
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
@@ -324,6 +371,7 @@ public class CasDiff2
             casId = aCasId;
         }
         
+        @Override
         public String getType()
         {
             return type;
@@ -775,7 +823,7 @@ public class CasDiff2
         {
             return fsAddresses;
         }
-        
+
         public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
                 Class<T> aClass, Map<String, List<JCas>> aCasMap)
         {
@@ -787,6 +835,15 @@ public class CasDiff2
                 Map<String, List<JCas>> aCasMap)
         {
             return getFs(aCasGroupId, aCasId, FeatureStructure.class, aCasMap);
+        }
+
+        public FeatureStructure getFs(String aCasGroupId, Map<String, JCas> aCasMap)
+        {
+            Map<String, List<JCas>> casMap = new LinkedHashMap<>();
+            for (Entry<String, JCas> e : aCasMap.entrySet()) {
+                casMap.put(e.getKey(), asList(e.getValue()));
+            }
+            return getFs(aCasGroupId, 0, FeatureStructure.class, casMap);
         }
 
         @Override
@@ -816,11 +873,18 @@ public class CasDiff2
         private final Map<Position, ConfigurationSet> data;
         private final Set<String> casGroupIds;
         private final Map<ConfigurationSet, Boolean> completenessCache = new HashMap<>();
+        private final boolean cachedHasDifferences;
         
         private DiffResult(CasDiff2 aDiff)
         {
             data = Collections.unmodifiableMap(aDiff.configSets);
             casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
+            cachedHasDifferences = !getDifferingConfigurations().isEmpty();
+        }
+        
+        public boolean hasDifferences()
+        {
+            return cachedHasDifferences;
         }
         
         public Collection<Position> getPositions() {
@@ -974,11 +1038,13 @@ public class CasDiff2
             labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
         }
         
+        @Override
         public String getType()
         {
             return type;
         }
         
+        @Override
         public Set<String> getLabelFeatures()
         {
             return labelFeatures;
@@ -1005,6 +1071,7 @@ public class CasDiff2
             super(aType, aLabelFeatures);
         }
         
+        @Override
         public Position getPosition(int aCasId, FeatureStructure aFS)
         {
             AnnotationFS annoFS = (AnnotationFS) aFS;
@@ -1041,6 +1108,7 @@ public class CasDiff2
             targetFeature = aTargetFeature;
         }
         
+        @Override
         public Position getPosition(int aCasId, FeatureStructure aFS)
         {
             Type type = aFS.getType();
