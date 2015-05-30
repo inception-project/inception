@@ -111,7 +111,7 @@ public class CurationPage
     private CurationContainer curationContainer;
     private BratAnnotatorModel bModel;
 
-    public Label numberOfPages;
+    private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
 
     private int sentenceNumber = 1;
@@ -120,13 +120,15 @@ public class CurationPage
     private long currentprojectId;
 
     // Open the dialog window on first load
-    boolean firstLoad = true;
+    private boolean firstLoad = true;
 
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
 
-    WebMarkupContainer finish;
+    private WebMarkupContainer finish;
 
+    private AjaxLink<Void> showreCreateMergeCasModal;
+    
     @SuppressWarnings("deprecation")
     public CurationPage()
     {
@@ -625,10 +627,18 @@ public class CurationPage
         reCreateMergeCas
                 .setTitle("are you sure? all curation annotations for this document will be lost");
 
-        add(new AjaxLink<Void>("showreCreateMergeCasModal")
+        add(showreCreateMergeCasModal = new AjaxLink<Void>("showreCreateMergeCasModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
 
+            @Override
+            protected void onConfigure()
+            {
+                setEnabled(bModel.getDocument() != null
+                        && !bModel.getDocument().getState()
+                                .equals(SourceDocumentState.CURATION_FINISHED));
+            }
+            
             @Override
             public void onClick(AjaxRequestTarget target)
             {
@@ -659,14 +669,6 @@ public class CurationPage
                     }
                 });
                 reCreateMergeCas.show(target);
-            }
-
-            @Override
-            public boolean isEnabled()
-            {
-                return bModel.getDocument() != null
-                        && !bModel.getDocument().getState()
-                                .equals(SourceDocumentState.CURATION_FINISHED);
             }
         });
         // Show the next page of this document
@@ -991,5 +993,6 @@ public class CurationPage
         aTarget.add(finish);
         aTarget.add(numberOfPages);
         aTarget.add(documentNamePanel);
+        aTarget.add(showreCreateMergeCasModal);
     }
 }
