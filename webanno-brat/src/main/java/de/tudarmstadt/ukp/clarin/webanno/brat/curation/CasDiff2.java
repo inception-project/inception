@@ -1056,6 +1056,47 @@ public class CasDiff2
         }
     }
 
+    public static List<DiffAdapter> getAdapters(AnnotationService annotationService, Project project)
+    {
+        List<DiffAdapter> adapters = new ArrayList<>();
+        for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
+            Set<String> labelFeatures = new LinkedHashSet<>();
+            for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                if (!f.isEnabled()) {
+                    continue;
+                }
+                
+                // FIXME Ignoring link features
+                if (!LinkMode.NONE.equals(f.getLinkMode())) {
+                    continue;
+                }
+                
+                labelFeatures.add(f.getName());
+            }
+            
+            switch (layer.getType()) {
+            case SPAN_TYPE: {
+                SpanDiffAdapter adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
+                adapters.add(adpt);
+                break;
+            }
+            case RELATION_TYPE: {
+                ArcAdapter typeAdpt = (ArcAdapter) TypeUtil.getAdapter(annotationService, layer);
+                ArcDiffAdapter adpt = new ArcDiffAdapter(layer.getName(),
+                        typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
+                        labelFeatures);
+                adapters.add(adpt);
+                break;
+            }
+            case CHAIN_TYPE:
+                // FIXME Currently, these are ignored.
+                break;
+            }
+        }
+        return adapters;
+    }
+
+    
 //  private Set<String> entryTypes = new LinkedHashSet<>();
 
 //  /**

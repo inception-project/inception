@@ -17,9 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
@@ -37,11 +34,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -94,16 +89,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -777,40 +769,7 @@ public class MonitoringPage
                 }
             }
             
-            List<DiffAdapter> adapters = new ArrayList<>();
-            for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
-                Set<String> labelFeatures = new LinkedHashSet<>();
-                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-                    if (!f.isEnabled()) {
-                        continue;
-                    }
-                    
-                    // FIXME Ignoring link features
-                    if (!LinkMode.NONE.equals(f.getLinkMode())) {
-                        continue;
-                    }
-                }
-                
-                switch (layer.getType()) {
-                case SPAN_TYPE: {
-                    SpanDiffAdapter adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
-                    adapters.add(adpt);
-                    break;
-                }
-                case RELATION_TYPE: {
-                    ArcAdapter typeAdpt = (ArcAdapter) TypeUtil.getAdapter(annotationService, layer);
-                    ArcDiffAdapter adpt = new ArcDiffAdapter(layer.getName(),
-                            typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
-                            labelFeatures);
-                    adapters.add(adpt);
-                    break;
-                }
-                case CHAIN_TYPE:
-                    // FIXME Currently, these are ignored.
-                    break;
-                }
-            }
-            
+            List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, project);
             DiffResult diff = CasDiff2.doDiff(
                     asList(features.getModelObject().getLayer().getName()), adapters, casMap);
             AgreementResult[][] agreements = AgreementUtils.getPairwiseCohenKappaAgreement(diff,
