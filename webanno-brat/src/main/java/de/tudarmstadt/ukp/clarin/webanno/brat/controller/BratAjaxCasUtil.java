@@ -285,7 +285,7 @@ public class BratAjaxCasUtil
         int count = 0;
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
         Sentence s = si.get();
-        while (count < aWindowSize) {
+        while (count < aWindowSize - 1) {
             si.moveToNext();
             if (si.isValid()) {
                 s = si.get();
