@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
@@ -44,11 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationOption;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -277,9 +278,8 @@ public class SuggestionBuilder
                         randomAnnotationDocument);
             }
             else {
-                mergeJCas = createCurationCas(aBratAnnotatorModel.getProject(), mergeJCas,
-                        randomAnnotationDocument, jCases, -1, -1,
-                        aBratAnnotatorModel.getAnnotationLayers());
+                mergeJCas = createCurationCas(aBratAnnotatorModel.getProject(),
+                        randomAnnotationDocument, jCases, aBratAnnotatorModel.getAnnotationLayers());
             }
         }
         return mergeJCas;
@@ -339,82 +339,43 @@ public class SuggestionBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     *
-     * @param mergeJCas
-     *            the merge CAS.
+     * 
+     * @param aProject
+     *            the project
      * @param randomAnnotationDocument
      *            an annotation document.
      * @param jCases
      *            the JCases
-     * @param aBegin
-     *            the begin offset.
-     * @param aEnd
-     *            the end offset.
      * @param aAnnotationLayers
      *            the layers.
      * @return the JCas.
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             hum?
-     * @throws UIMAException
-     *             hum?
-     * @throws BratAnnotationException
-     *             hum?
      */
-    public JCas createCurationCas(Project aProject, JCas mergeJCas,
-            AnnotationDocument randomAnnotationDocument, Map<String, JCas> jCases, int aBegin,
-            int aEnd, List<AnnotationLayer> aAnnotationLayers)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    public JCas createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
+            Map<String, JCas> jCases, List<AnnotationLayer> aAnnotationLayers)
+        throws IOException
     {
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
-        List<Type> entryTypes = null;
-        int numUsers = jCases.size();
-        mergeJCas = repository.readAnnotationCas(randomAnnotationDocument);
-
-        entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
+        JCas mergeJCas = repository.readAnnotationCas(randomAnnotationDocument);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
-        List<AnnotationOption> annotationOptions = null;
-        annotationOptions = CasDiff.doDiff(entryTypes, jCases, aBegin, aEnd);
-        for (AnnotationOption annotationOption : annotationOptions) {
-            // remove the featureStructure if more than 1 annotationSelection exists per
-            // annotationOption
-            boolean removeFS = annotationOption.getAnnotationSelections().size() > 1;
-            if (annotationOption.getAnnotationSelections().size() == 1) {
-                removeFS = annotationOption.getAnnotationSelections().get(0).getAddressByUsername()
-                        .size() <= numUsers;
-            }
-            for (AnnotationSelection annotationSelection : annotationOption
-                    .getAnnotationSelections()) {
-                for (String username : annotationSelection.getAddressByUsername().keySet()) {
-                    if (username.equals(CurationPanel.CURATION_USER)) {
-                        Integer address = annotationSelection.getAddressByUsername().get(username);
+        List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
 
-                        // removing disagreeing feature structures in mergeJCas
-                        if (removeFS && address != null) {
-                            FeatureStructure fs = selectByAddr(mergeJCas, address);
-                            if (!(fs instanceof Token)) {
-                                mergeJCas.getCas().removeFsFromIndexes(fs);
-                            }
-                        }
-                    }
-                }
+        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases,
+                0, mergeJCas.getDocumentText().length());        
+        
+        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations().entrySet()) {
+            // Remove FSes with differences from the merge CAS
+            List<Configuration> cfgsForCurationUser = diffEntry.getValue().getConfigurations(
+                    CurationPanel.CURATION_USER);
+            for (Configuration cfg : cfgsForCurationUser) {
+                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                mergeJCas.removeFsFromIndexes(fs);
             }
         }
-        
-//        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases,
-//                begin, end);        
-//        
-//        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations().entrySet()) {
-//            // Remove FSes with differences from the merge CAS
-//            for (Configuration cfg : diffEntry.getValue().getConfigurations(CurationPanel.CURATION_USER)) {
-//                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
-//                mergeJCas.removeFsFromIndexes(fs);
-//            }
-//        }
 
         repository
                 .writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);
