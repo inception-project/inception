@@ -189,9 +189,6 @@ public class CuratorUtil
                                     .equals(Mode.AUTOMATION) || bratAnnotatorModel.getMode()
                                     .equals(Mode.CORRECTION)))) {
                         Integer address = annotationSelection.getAddressByUsername().get(username);
-                        // aAnnotationSelectionByUsernameAndAddress.put(username,
-                        // new
-                        // HashMap<Integer, AnnotationSelection>());
                         aAnnotationSelectionByUsernameAndAddress.get(username).put(address,
                                 annotationSelection);
                     }
@@ -486,9 +483,7 @@ public class CuratorUtil
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
-        BratAnnotatorModel bModel2 = bModel;
-
-        CuratorUtil.populateCurationSentences(jCases, sentences, bModel2,
+        CuratorUtil.populateCurationSentences(jCases, sentences, bModel,
                 annotationOptions, aAnnotationSelectionByUsernameAndAddress, aAnnotationService,
                 aCurationContainer);
 
