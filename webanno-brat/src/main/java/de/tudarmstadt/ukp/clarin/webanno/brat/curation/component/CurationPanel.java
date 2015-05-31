@@ -100,8 +100,8 @@ public class CurationPanel
 
     private int fSn = 0;
     private int lSn = 0;
-    boolean firstLoad = true;
-
+    private boolean firstLoad = true;
+    private boolean annotate = false;
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
      * username from which the span has been selected
@@ -228,26 +228,9 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-
-                try {
-                    mergeVisualizer.bratRender(aTarget, getCas(aBModel));
-                }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
-                    return;
-                }
-
-                mergeVisualizer
-                        .bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                annotate = true;
 
                 mergeVisualizer.onChange(aTarget, aBModel);
-                mergeVisualizer.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),
-                        aBModel.getSelection().getEnd());
-                if (!aBModel.getSelection().isAnnotate()) {
-                    mergeVisualizer.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(),
-                            aBModel.getSelection().getEnd());
-                }
             }
         };
 
@@ -265,7 +248,6 @@ public class CurationPanel
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     updatePanel(aTarget, cCModel.getObject());
                 }
                 catch (UIMAException e) {
@@ -346,7 +328,7 @@ public class CurationPanel
                 String cC = curationViewItem.getSentenceState().getValue();
                 // mark current sentence in yellow
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
-                    if(cC!=null) {
+                    if (cC != null) {
                         item.add(AttributeModifier.append("class", "current-disagree"));
                     }
                 }
@@ -460,7 +442,15 @@ public class CurationPanel
         textOuterView.addOrReplace(textListView);
         aTarget.add(textOuterView);
         aTarget.add(suggestionViewPanel);
-        mergeVisualizer.bratRenderLater(aTarget);
+        if (annotate) {
+            mergeVisualizer.bratRender(aTarget, annotationDetailEditorPanel.getCas(bModel));
+            mergeVisualizer.bratRenderHighlight(aTarget, bModel.getSelection().getAnnotation());
+
+        }
+        else {
+            mergeVisualizer.bratRenderLater(aTarget);
+        }
+        annotate = false;
         CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, mergeVisualizer, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
