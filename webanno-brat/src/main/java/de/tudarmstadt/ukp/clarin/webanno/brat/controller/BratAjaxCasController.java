@@ -25,8 +25,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Resource;
@@ -209,7 +212,7 @@ public class BratAjaxCasController
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
 
         // Render visible (custom) layers
-        int i = 0;
+        Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
@@ -220,8 +223,8 @@ public class BratAjaxCasController
                 continue;
             }
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
-                    aBModel.getPreferences(), i);
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
+                    aAnnotationService, layer, aBModel.getPreferences(), colorQueues);
 
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
             List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
@@ -233,7 +236,6 @@ public class BratAjaxCasController
             features.removeAll(invisibleFeatures);
             TypeAdapter adapter = getAdapter(aAnnotationService, layer);
             adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
-            i++;
         }
     }
 
