@@ -466,9 +466,16 @@ public class CuratorUtil
                 bModel.getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
         try {
-            // curating multiple sentences
-            annotationOptions = CasDiff.doDiff(entryTypes, jCases,
-                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+            if(bModel.getMode().equals(Mode.CURATION)) {
+                // curating multiple sentences
+                annotationOptions = CasDiff.doDiff(entryTypes, jCases,
+                        aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+            }
+            else{
+                annotationOptions = CasDiff.doDiff(entryTypes, jCases,
+                        aCurationSegment.getBegin(), aCurationSegment.getEnd());
+
+            }
         }
         catch (Exception e) {
             throw new CasDiffException(e.getMessage());
