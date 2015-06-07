@@ -22,18 +22,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.dao.DataRetrievalFailureException;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
@@ -124,19 +125,11 @@ public class BratAnnotationDocumentVisualizer
         try {
             jCas = repository.getAnnotationDocumentContent(getModelObject());
         }
-        catch (UIMAException e) {
-            error(ExceptionUtils.getRootCauseMessage(e));
-            return docData;
-        }
-        catch (DataRetrievalFailureException e) {
-            error(e.getCause().getMessage());
-        }
         catch (IOException e) {
-            error("Unable to find annotation document " + ExceptionUtils.getRootCauseMessage(e));
+            error("Unable to read annotation document " + ExceptionUtils.getRootCauseMessage(e));
         }
-        catch (ClassNotFoundException e) {
-            error("Unable to get the class name for conversion +"
-                    + ExceptionUtils.getRootCauseMessage(e));
+        catch (Exception e) {
+            error(e.getCause().getMessage());
         }
         // Generate BRAT object model from CAS
         GetDocumentResponse response = new GetDocumentResponse();
@@ -145,7 +138,7 @@ public class BratAnnotationDocumentVisualizer
         BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
         SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
 
-        int i = 0;
+        Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())) {
                 continue;
@@ -159,12 +152,11 @@ public class BratAnnotationDocumentVisualizer
             }
             features.removeAll(invisibleFeatures);
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer,
-                    bratAnnotatorModel, i);
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(annotationService,
+                    layer, bratAnnotatorModel, colorQueues);
 
             getAdapter(layer)
                     .render(jCas, features, response, bratAnnotatorModel, coloringStrategy);
-            i++;
         }
 
         // Serialize BRAT object model to JSON

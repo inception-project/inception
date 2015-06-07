@@ -21,7 +21,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -252,7 +255,7 @@ public class BratAjaxCasController
         SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
 
         // Render visible (custom) layers
-        int i = 0;
+        Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
@@ -263,7 +266,8 @@ public class BratAjaxCasController
                 continue;
             }
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(layer, aBModel, i);
+            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(annotationService,
+                    layer, aBModel, colorQueues);
 
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
             List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
@@ -275,7 +279,6 @@ public class BratAjaxCasController
             features.removeAll(invisibleFeatures);
             TypeAdapter adapter = getAdapter(layer);
             adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
-            i++;
         }
     }
 }
