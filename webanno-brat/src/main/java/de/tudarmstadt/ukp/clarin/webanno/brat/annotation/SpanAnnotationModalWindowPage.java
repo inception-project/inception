@@ -134,10 +134,6 @@ public class SpanAnnotationModalWindowPage
                 if (!layer.isEnabled() || layer.getName().equals(Token.class.getName())) {
                     continue;
                 }
-                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-                if (features.size() == 0) {
-                    continue;
-                }
                 if (!layer.getType().equals(RELATION_TYPE)) {
                     spanLayers.add(layer);
                 }
