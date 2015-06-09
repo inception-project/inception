@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
 
@@ -90,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -425,11 +427,19 @@ public class BratAnnotator
                     .readValue(offsets, OffsetsList.class);
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-            // if ellipsis annotation, add ellipsis at the beginning of the sentences
-            int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
-            int annotationEnd = sentence.getBegin()
-                    + offsetLists.get(offsetLists.size() - 1).getEnd();
-            return new Offsets(annotationBegin, annotationEnd);
+
+            SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, getModelObject()
+                    .getSelectedAnnotationLayer());
+
+            int bo = sentence.getBegin() + offsetLists.get(0).getBegin();
+            int eo = sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd();
+
+            if (adapter.isLockToTokenOffsets()) {
+                List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
+                bo = tokens.get(0).getBegin();
+                eo = tokens.get(0).getEnd();
+            }
+            return new Offsets(bo, eo);
         }
         else {
             // Edit existing span annotation
@@ -540,9 +550,8 @@ public class BratAnnotator
             AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                     selection.getEnd());
             // The first sentence address in the display window!
-            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas,
-                    getModelObject().getSentenceBeginOffset(),
-                    getModelObject().getSentenceEndOffset());
+            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
+                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
             int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
 
             int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
