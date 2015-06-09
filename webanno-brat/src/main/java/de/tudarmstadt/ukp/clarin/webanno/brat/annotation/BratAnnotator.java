@@ -549,17 +549,19 @@ public class BratAnnotator
 
             AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                     selection.getEnd());
-            // The first sentence address in the display window!
-            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
-                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-            int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
+            if (nextToken != null) {
+                // The first sentence address in the display window!
+                Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
+                        .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
+                int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
 
-            int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
+                int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
 
-            response = addGhost(bratBegin, bratEnd);
+                response = addGhost(bratBegin, bratEnd);
 
-            selection.clear();
-            selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                selection.clear();
+                selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+            }
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
