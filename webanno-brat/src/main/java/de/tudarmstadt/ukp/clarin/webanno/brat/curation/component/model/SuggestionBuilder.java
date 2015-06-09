@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.util.Map.Entry;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -44,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
@@ -81,6 +84,8 @@ public class SuggestionBuilder
 
     int sentenceNumber;
     int begin, end;
+    //
+    Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
 
     public SuggestionBuilder(RepositoryService repository, AnnotationService aAnnotationService,
             UserDao aUserDao)
@@ -113,11 +118,13 @@ public class SuggestionBuilder
         Map<String, JCas> jCases = new HashMap<String, JCas>();
 
         AnnotationDocument randomAnnotationDocument = null;
+        JCas mergeJCas;
 
         // get the correction/automation JCas for the logged in user
         if (aBModel.getMode().equals(Mode.AUTOMATION) || aBModel.getMode().equals(Mode.CORRECTION)) {
             jCases = listJcasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
+            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
             String username = jCases.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
                     jCases.get(username), username, aBModel.getPreferences().getWindowSize());
@@ -127,14 +134,11 @@ public class SuggestionBuilder
 
             jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
-            for (String username : jCases.keySet()) {
-                JCas jCas = jCases.get(username);
-                updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, jCas,
-                        username, aBModel.getPreferences().getCurationWindowSize());
-            }
-        }
+            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
+            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
+                    CurationPanel.CURATION_USER, aBModel.getPreferences().getCurationWindowSize());
 
-        JCas mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
+        }
 
         List<Type> entryTypes = null;
 
@@ -148,12 +152,27 @@ public class SuggestionBuilder
             entryTypes = getEntryTypes(mergeJCas, aBModel.getAnnotationLayers(), annotationService);
         }
 
+        // for cross-sentences annotation, update the end of the segment
+        for (Integer begin : segmentBeginEnd.keySet()) {
+            for (Type t : entryTypes) {
+                for (JCas c : jCases.values()) {
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, end)) {
+                        if (fs.getBegin() <= segmentBeginEnd.get(begin)
+                                && fs.getEnd() > segmentBeginEnd.get(begin)) {
+                            Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
+                            segmentBeginEnd.put(begin, s.getEnd());
+                        }
+                    }
+                }
+            }
+        }
+
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
             DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
                     entryTypes, jCases, begin, end);
-
+            diff.print(System.out);
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
@@ -313,6 +332,13 @@ public class SuggestionBuilder
             segmentNumber.put(sentence.getBegin(), sentenceNumber);
             segmentAdress.get(username).put(sentence.getBegin(), getAddr(sentence));
         }
+
+        /*
+         * if (segmentBeginEnd.isEmpty()) { for (Sentence sentence : selectCovered(mergeJCas,
+         * Sentence.class, begin, end)) {
+         *
+         * } }
+         */
     }
 
     public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers,

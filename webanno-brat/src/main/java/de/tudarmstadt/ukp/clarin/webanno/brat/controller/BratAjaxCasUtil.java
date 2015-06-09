@@ -303,12 +303,34 @@ public class BratAjaxCasUtil
     {
         Sentence currentSentence = null;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-            if (sentence.getBegin() <= aBegin && sentence.getEnd() >= aEnd) {
+            if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin
+                    && sentence.getEnd() <= aEnd) {
                 currentSentence = sentence;
                 break;
             }
         }
         return currentSentence;
+    }
+
+    /**
+     * get a sentence at the end of an annotation
+     * @param aJCas
+     * @param aEnd
+     * @return
+     */
+    public static Sentence getSentenceByAnnoEnd(JCas aJCas, int aEnd)
+    {
+
+        int prevEnd = 0;
+        Sentence sent = null;
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+            if (prevEnd >= aEnd) {
+                return sent;
+            }
+            sent = sentence;
+            prevEnd = sent.getEnd();
+        }
+        return sent;
     }
 
     public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
@@ -341,7 +363,7 @@ public class BratAjaxCasUtil
         int count = 0;
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
         Sentence s = si.get();
-        while (count < aWindowSize-1) {
+        while (count < aWindowSize - 1) {
             si.moveToNext();
             if (si.isValid()) {
                 s = si.get();
@@ -672,8 +694,8 @@ public class BratAjaxCasUtil
         case CAS.TYPE_NAME_INTEGER:
             return (T) (Integer) aFS.getIntValue(feature);
         default:
-            throw new IllegalArgumentException("Cannot get value of feature ["
-                    + feature.getName() + "] with type [" + feature.getRange().getName() + "]");
+            throw new IllegalArgumentException("Cannot get value of feature [" + feature.getName()
+                    + "] with type [" + feature.getRange().getName() + "]");
         }
     }
 
@@ -690,19 +712,19 @@ public class BratAjaxCasUtil
                         + aFeature.getType() + "].");
             }
 
-//            switch (aFeature.getType()) {
-//            case CAS.TYPE_NAME_STRING:
-//                return (T) aFS.getStringValue(feature);
-//            case CAS.TYPE_NAME_BOOLEAN:
-//                return (T) (Boolean) aFS.getBooleanValue(feature);
-//            case CAS.TYPE_NAME_FLOAT:
-//                return (T) (Float) aFS.getFloatValue(feature);
-//            case CAS.TYPE_NAME_INTEGER:
-//                return (T) (Integer) aFS.getIntValue(feature);
-//            default:
-//                throw new IllegalArgumentException("Cannot get value of feature ["
-//                        + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
-//            }
+            // switch (aFeature.getType()) {
+            // case CAS.TYPE_NAME_STRING:
+            // return (T) aFS.getStringValue(feature);
+            // case CAS.TYPE_NAME_BOOLEAN:
+            // return (T) (Boolean) aFS.getBooleanValue(feature);
+            // case CAS.TYPE_NAME_FLOAT:
+            // return (T) (Float) aFS.getFloatValue(feature);
+            // case CAS.TYPE_NAME_INTEGER:
+            // return (T) (Integer) aFS.getIntValue(feature);
+            // default:
+            // throw new IllegalArgumentException("Cannot get value of feature ["
+            // + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
+            // }
             return getFeature(aFS, aFeature.getName());
         }
         case ARRAY: {
