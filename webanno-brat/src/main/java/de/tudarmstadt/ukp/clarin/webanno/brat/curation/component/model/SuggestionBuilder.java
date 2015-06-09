@@ -103,8 +103,8 @@ public class SuggestionBuilder
 
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
-        for (AnnotationDocument annotationDocument : repository
-                .listAnnotationDocuments(aBModel.getDocument())) {
+        for (AnnotationDocument annotationDocument : repository.listAnnotationDocuments(aBModel
+                .getDocument())) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
             }
@@ -115,8 +115,7 @@ public class SuggestionBuilder
         AnnotationDocument randomAnnotationDocument = null;
 
         // get the correction/automation JCas for the logged in user
-        if (aBModel.getMode().equals(Mode.AUTOMATION)
-                || aBModel.getMode().equals(Mode.CORRECTION)) {
+        if (aBModel.getMode().equals(Mode.AUTOMATION) || aBModel.getMode().equals(Mode.CORRECTION)) {
             jCases = listJcasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
             String username = jCases.keySet().iterator().next();
@@ -130,13 +129,12 @@ public class SuggestionBuilder
                     aBModel.getMode());
             for (String username : jCases.keySet()) {
                 JCas jCas = jCases.get(username);
-                updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
-                        jCas, username, aBModel.getPreferences().getCurationWindowSize());
+                updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, jCas,
+                        username, aBModel.getPreferences().getCurationWindowSize());
             }
         }
 
-        JCas mergeJCas = getMergeCas(aBModel, sourceDocument, jCases,
-                randomAnnotationDocument);
+        JCas mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
 
         List<Type> entryTypes = null;
 
@@ -147,8 +145,7 @@ public class SuggestionBuilder
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas, aBModel.getAnnotationLayers(),
-                    annotationService);
+            entryTypes = getEntryTypes(mergeJCas, aBModel.getAnnotationLayers(), annotationService);
         }
 
         for (Integer begin : segmentBeginEnd.keySet()) {
@@ -160,7 +157,7 @@ public class SuggestionBuilder
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
-            if (diff.hasDifferences()) {
+            if (diff.hasDifferences() || !diff.getIncompleteConfigurations().isEmpty()) {
                 curationSegment.setSentenceState(SentenceState.DISAGREE);
             }
             else {
@@ -339,7 +336,7 @@ public class SuggestionBuilder
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
-     * 
+     *
      * @param aProject
      *            the project
      * @param randomAnnotationDocument
@@ -364,10 +361,11 @@ public class SuggestionBuilder
 
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
 
-        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases,
-                0, mergeJCas.getDocumentText().length());        
-        
-        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations().entrySet()) {
+        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases, 0,
+                mergeJCas.getDocumentText().length());
+
+        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations()
+                .entrySet()) {
             // Remove FSes with differences from the merge CAS
             List<Configuration> cfgsForCurationUser = diffEntry.getValue().getConfigurations(
                     CurationPanel.CURATION_USER);
