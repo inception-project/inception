@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import static java.lang.String.format;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
@@ -31,6 +32,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 /**
  *  An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -70,6 +72,16 @@ public class SpringAuthenticatedWebSession
     @Override
     public boolean authenticate(String username, String password)
     {
+        SecurityContext ctx = SecurityContextHolder.getContext();
+
+        // If user is already authenticated, then we do not need to check the password using Spring
+        // Security. This allows us to sign in to the Wicket session if a user was already logged in
+        // to Spring via pre-authentication.
+        if (ctx.getAuthentication().isAuthenticated()
+                && StringUtils.equals(ctx.getAuthentication().getName(), username)) {
+            return true;
+        }
+        
         boolean authenticated = false;
         try {
             Authentication authentication = authenticationManager
