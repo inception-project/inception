@@ -445,9 +445,13 @@ public class BratAjaxCasUtil
         }
 
         // Center sentence
-        if(aWindowSize == 2 && getAddr(s)>aSentenceAddress) {
+        Sentence c = (Sentence) selectByAddr(aJcas.getCas(), aSentenceAddress);
+        Sentence n = (Sentence) selectByAddr(aJcas.getCas(), getAddr(s));
+
+        if(aWindowSize == 2 && n.getBegin()>c.getBegin()) {
             return getAddr(s);
         }
+
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
             si.moveToPrevious();
