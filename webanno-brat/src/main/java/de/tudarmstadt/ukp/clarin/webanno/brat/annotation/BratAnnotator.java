@@ -428,17 +428,12 @@ public class BratAnnotator
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
 
-            SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, getModelObject()
-                    .getSelectedAnnotationLayer());
-
             int bo = sentence.getBegin() + offsetLists.get(0).getBegin();
             int eo = sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd();
+            List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
+            bo = tokens.get(0).getBegin();
+            eo = tokens.get(0).getEnd();
 
-            if (adapter.isLockToTokenOffsets()) {
-                List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
-                bo = tokens.get(0).getBegin();
-                eo = tokens.get(0).getEnd();
-            }
             return new Offsets(bo, eo);
         }
         else {
@@ -556,11 +551,15 @@ public class BratAnnotator
                 int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
 
                 int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
+                int la = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, firstSentence
+                        .getAddress(), getModelObject().getPreferences().getWindowSize());
+                Sentence ls = (Sentence) BratAjaxCasUtil.selectByAddr(aJCas.getCas(), la);
+                if (ls.getEnd() > nextToken.getBegin()) {
+                    response = addGhost(bratBegin, bratEnd);
 
-                response = addGhost(bratBegin, bratEnd);
-
-                selection.clear();
-                selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                    selection.clear();
+                    selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                }
             }
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);

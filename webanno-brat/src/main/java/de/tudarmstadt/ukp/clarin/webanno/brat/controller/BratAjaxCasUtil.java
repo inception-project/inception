@@ -314,6 +314,7 @@ public class BratAjaxCasUtil
 
     /**
      * get a sentence at the end of an annotation
+     *
      * @param aJCas
      * @param aEnd
      * @return
@@ -420,8 +421,13 @@ public class BratAjaxCasUtil
     {
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
 
-        // Seek the sentence that contains the current focus
+        // no auto-forward for single sentence window
         Sentence s = si.get();
+        if (aWindowSize == 1) {
+            return getAddr(s);
+        }
+
+        // Seek the sentence that contains the current focus
         while (si.isValid()) {
             if (s.getEnd() < aFocosOffset) {
                 // Focus after current sentence
@@ -439,12 +445,17 @@ public class BratAjaxCasUtil
         }
 
         // Center sentence
+        if(aWindowSize == 2 && getAddr(s)>aSentenceAddress) {
+            return getAddr(s);
+        }
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
             si.moveToPrevious();
             if (si.isValid()) {
                 s = si.get();
+
             }
+
             count++;
         }
 
