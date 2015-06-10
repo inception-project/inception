@@ -624,8 +624,8 @@ public class ProjectLayersPanel
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     // Makes no sense for relation layers or layers that attach to tokens
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && !CHAIN_TYPE.equals(layer.getType())
                             && layer.getAttachFeature() == null);
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()));
                 }
             });
             add(lockToTokenOffset = new CheckBox("lockToTokenOffset")
@@ -643,8 +643,8 @@ public class ProjectLayersPanel
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     // Makes no sense for relation layers or layers that attach to tokens
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && !CHAIN_TYPE.equals(layer.getType())
                             && layer.getAttachFeature() == null);
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()));
                 }
             });
 
@@ -661,9 +661,10 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
-                            && !CHAIN_TYPE.equals(layer.getType()));
+                    setVisible(!isBlank(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that have an attach feature (basically Dependency)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
             add(allowStacking = new CheckBox("allowStacking")
@@ -679,9 +680,11 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
-                            && !CHAIN_TYPE.equals(layer.getType()));
+                    setVisible(!isBlank(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that attach to tokens (currently that is the
+                    // only layer on which we use the attach feature)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
 
@@ -699,9 +702,11 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
-                            && !CHAIN_TYPE.equals(layer.getType()));
+                    setVisible(!isBlank(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that attach to tokens (currently that is the
+                    // only layer on which we use the attach feature)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
             add(crossSentence = new CheckBox("crossSentence")
@@ -717,9 +722,11 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && layer.getAttachFeature() == null
-                            && !CHAIN_TYPE.equals(layer.getType()));
+                    setVisible(!isBlank(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that attach to tokens (currently that is the
+                    // only layer on which we use the attach feature)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
 
@@ -736,10 +743,12 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relation layers or layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && !CHAIN_TYPE.equals(layer.getType())
-                            && layer.getAttachFeature() == null);
+                    // Makes no sense for relations
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that attach to tokens (currently that is the
+                    // only layer on which we use the attach feature)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
             add(multipleTokens = new CheckBox("multipleTokens")
@@ -755,10 +764,12 @@ public class ProjectLayersPanel
                 {
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relation layers or layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && !CHAIN_TYPE.equals(layer.getType())
-                            && layer.getAttachFeature() == null);
+                    // Makes no sense for relations
+                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
+                    // Not configurable for chains
+                    // Not configurable for layers that attach to tokens (currently that is the
+                    // only layer on which we use the attach feature)
+                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
                 }
             });
 
@@ -985,6 +996,7 @@ public class ProjectLayersPanel
                     });
                 }
 
+                @Override
                 protected void onConfigure()
                 {
                     setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
