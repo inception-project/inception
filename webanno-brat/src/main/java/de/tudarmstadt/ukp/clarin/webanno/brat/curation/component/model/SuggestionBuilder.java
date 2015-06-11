@@ -199,12 +199,29 @@ public class SuggestionBuilder
                     if (thisSent == -1) {
                         thisSent = BratAjaxCasUtil.getSentenceNumber(c, begin);
                     }
+                    // update cross-sentence annotation lists
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, this.begin, end)) {
+                        // CASE 1. annotation begins here
+                        if (fs.getBegin() >= begin && fs.getBegin() <= segmentBeginEnd.get(begin)) {
+                            if (fs.getEnd() > segmentBeginEnd.get(begin) || fs.getEnd() < begin) {
+                                Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
+                                int thatSent = BratAjaxCasUtil.getSentenceNumber(c, s.getBegin());
+                                crossSents.add(thatSent);
+                            }
+                        }
+                        // CASE 2. Annotation ends here
+                        else if (fs.getEnd() >= begin && fs.getEnd() <= segmentBeginEnd.get(begin)) {
+                            if (fs.getBegin() > segmentBeginEnd.get(begin) || fs.getBegin() < begin) {
+                                int thatSent = BratAjaxCasUtil.getSentenceNumber(c, fs.getBegin());
+                                crossSents.add(thatSent);
+                            }
+                        }
+                    }
+
                     for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, end)) {
                         if (fs.getBegin() <= segmentBeginEnd.get(begin)
                                 && fs.getEnd() > segmentBeginEnd.get(begin)) {
                             Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
-                            int thatSent = BratAjaxCasUtil.getSentenceNumber(c, s.getBegin());
-                            crossSents.add(thatSent);
                             segmentBeginEnd.put(begin, s.getEnd());
                         }
                     }
