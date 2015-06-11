@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceLis
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -140,38 +139,50 @@ public class CuratorUtil
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
+/*    public static BratAnnotatorModel setBratAnnotatorModel(SourceDocument aSourceDocument,
             RepositoryService aRepository, SourceListView aCurationSegment,
             AnnotationService aAnnotationService, UserDao aUserDao)
         throws BeansException, IOException
     {
         User userLoggedIn = aUserDao.get(SecurityContextHolder.getContext().getAuthentication()
                 .getName());
-        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();// .getModelObject();
-        bratAnnotatorModel.setDocument(aSourceDocument);
-        bratAnnotatorModel.setProject(aSourceDocument.getProject());
-        bratAnnotatorModel.setUser(userLoggedIn);
-        bratAnnotatorModel.setSentenceAddress(aCurationSegment.getSentenceAddress().get(
+        BratAnnotatorModel bModel = new BratAnnotatorModel();// .getModelObject();
+        bModel.setDocument(aSourceDocument);
+        bModel.setProject(aSourceDocument.getProject());
+        bModel.setUser(userLoggedIn);
+        bModel.setSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
-        bratAnnotatorModel.setFirstSentenceAddress(aCurationSegment.getSentenceAddress().get(
+        bModel.setFirstSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
-        bratAnnotatorModel.setLastSentenceAddress(aCurationSegment.getSentenceAddress().get(
+        bModel.setLastSentenceAddress(aCurationSegment.getSentenceAddress().get(
                 CURATION_USER));
 
-        bratAnnotatorModel.setSentenceBeginOffset(aCurationSegment.getBegin());
-        bratAnnotatorModel.setSentenceEndOffset(aCurationSegment.getEnd());
+        bModel.setSentenceBeginOffset(aCurationSegment.getBegin());
+        bModel.setSentenceEndOffset(aCurationSegment.getEnd());
 
-        bratAnnotatorModel.setMode(Mode.CURATION);
+        bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+
+        Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
+                lastAddressInPage);
+        bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+
+        bModel.setMode(Mode.CURATION);
         PreferencesUtil.setAnnotationPreference(userLoggedIn.getUsername(), aRepository,
-                aAnnotationService, bratAnnotatorModel, Mode.CURATION);
+                aAnnotationService, bModel, Mode.CURATION);
 
         LOG.debug("Configured BratAnnotatorModel for user [" + userLoggedIn + "] f:["
-                + bratAnnotatorModel.getFirstSentenceAddress() + "] l:["
-                + bratAnnotatorModel.getLastSentenceAddress() + "] s:["
-                + bratAnnotatorModel.getSentenceAddress() + "]");
+                + bModel.getFirstSentenceAddress() + "] l:["
+                + bModel.getLastSentenceAddress() + "] s:["
+                + bModel.getSentenceAddress() + "]");
 
-        return bratAnnotatorModel;
-    }
+        return bModel;
+    }*/
 
     public static void fillLookupVariables(
             List<AnnotationOption> aAnnotationOptions,

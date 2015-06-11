@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
@@ -714,6 +715,17 @@ public class AnnotationDetailEditorPanel
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
         aBModel.setSentenceEndOffset(sentence.getEnd());
+
+
+        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
+                aBModel.getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas,
+                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
+                lastAddressInPage);
+        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
     @SuppressWarnings("unchecked")

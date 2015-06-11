@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceAddress;
@@ -33,6 +34,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -104,31 +106,26 @@ public class CurationPage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private CurationPanel curationPanel;
-
     private ReMergeCasModel reMerge;
-
     private CurationContainer curationContainer;
     private BratAnnotatorModel bModel;
 
-    private Label numberOfPages;
-    private DocumentNamePanel documentNamePanel;
-
+    private int gotoPageAddress;
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
-
     private long currentprojectId;
+    List<String> crossAnnoSentList;
 
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private int gotoPageAddress;
-
+    private Label numberOfPages;
+    private DocumentNamePanel documentNamePanel;
+    private CurationPanel curationPanel;
     private WebMarkupContainer finish;
-
     private AjaxLink<Void> showreCreateMergeCasModal;
-    
+
     @SuppressWarnings("deprecation")
     public CurationPage()
     {
@@ -138,6 +135,7 @@ public class CurationPage
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bModel);
+
         curationPanel = new CurationPanel("curationPanel", new Model<CurationContainer>(
                 curationContainer))
         {
@@ -439,11 +437,9 @@ public class CurationPage
                     aTarget.add(getFeedbackPanel());
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
-                        bModel.setSentenceAddress(gotoPageAddress);
 
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-                        bModel.setSentenceBeginOffset(sentence.getBegin());
-                        bModel.setSentenceEndOffset(sentence.getEnd());
+                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
+
                         aTarget.add(numberOfPages);
                         updatePanel(curationContainer, aTarget);
                     }
@@ -514,11 +510,8 @@ public class CurationPage
                     aTarget.add(getFeedbackPanel());
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
-                        bModel.setSentenceAddress(gotoPageAddress);
 
-                        Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-                        bModel.setSentenceBeginOffset(sentence.getBegin());
-                        bModel.setSentenceEndOffset(sentence.getEnd());
+                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
 
                         aTarget.add(numberOfPages);
                         curationPanel.updatePanel(aTarget, curationContainer);
@@ -638,7 +631,7 @@ public class CurationPage
                         && !bModel.getDocument().getState()
                                 .equals(SourceDocumentState.CURATION_FINISHED));
             }
-            
+
             @Override
             public void onClick(AjaxRequestTarget target)
             {
@@ -692,14 +685,9 @@ public class CurationPage
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != nextSentenceAddress) {
                             aTarget.add(getFeedbackPanel());
-                            bModel.setSentenceAddress(nextSentenceAddress);
 
-                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                    nextSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
-                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
-                                    sentence.getBegin()));
+                            ubdateSentenceNumber(mergeJCas, nextSentenceAddress);
+
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -747,14 +735,9 @@ public class CurationPage
                                         .getSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
-                            bModel.setSentenceAddress(previousSentenceAddress);
 
-                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                    previousSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
-                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
-                                    sentence.getBegin()));
+                            ubdateSentenceNumber(mergeJCas, previousSentenceAddress);
+
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -800,14 +783,9 @@ public class CurationPage
                         int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
-                            bModel.setSentenceAddress(firstAddress);
 
-                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
-                                    firstAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
-                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
-                                    sentence.getBegin()));
+                            ubdateSentenceNumber(mergeJCas, firstAddress);
+
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -851,14 +829,10 @@ public class CurationPage
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
-                            bModel.setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
 
-                            Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
+                            ubdateSentenceNumber(mergeJCas,
                                     lastDisplayWindowBeginingSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
-                            bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(mergeJCas,
-                                    sentence.getBegin()));
+
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
                             updatePanel(curationContainer, aTarget);
@@ -929,6 +903,25 @@ public class CurationPage
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
 
+    private void ubdateSentenceNumber(JCas aJCas, int aAddress)
+    {
+        bModel.setSentenceAddress(aAddress);
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
+        bModel.setSentenceBeginOffset(sentence.getBegin());
+        bModel.setSentenceEndOffset(sentence.getEnd());
+        bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+
+        Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
+                lastAddressInPage);
+        bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+    }
+
     private void loadDocumentAction(AjaxRequestTarget aTarget)
     {
         try {
@@ -984,6 +977,7 @@ public class CurationPage
             curationContainer.setBratAnnotatorModel(bModel);
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
+
         }
         catch (Exception e) {
             aTarget.add(getFeedbackPanel());

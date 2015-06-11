@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
@@ -32,6 +33,7 @@ import java.util.List;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
@@ -313,6 +315,17 @@ public class SuggestionViewPanel
                     aBModel.getSentenceAddress());
             aBModel.setSentenceBeginOffset(sentence.getBegin());
             aBModel.setSentenceEndOffset(sentence.getEnd());
+
+
+            Sentence firstSentence = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
+                    aBModel.getSentenceEndOffset());
+            int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
+                    getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
+            // the last sentence address in the display window
+            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas, FeatureStructure.class,
+                    lastAddressInPage);
+            aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
@@ -420,6 +433,16 @@ public class SuggestionViewPanel
             Sentence sentence = selectByAddr(aJcas, Sentence.class, bModel.getSentenceAddress());
             bModel.setSentenceBeginOffset(sentence.getBegin());
             bModel.setSentenceEndOffset(sentence.getEnd());
+
+            Sentence firstSentence = selectSentenceAt(clickedJCas, bModel.getSentenceBeginOffset(),
+                    bModel.getSentenceEndOffset());
+            int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
+                    getAddr(firstSentence), bModel.getPreferences().getWindowSize());
+            // the last sentence address in the display window
+            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas, FeatureStructure.class,
+                    lastAddressInPage);
+            bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 

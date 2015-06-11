@@ -17,7 +17,10 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
@@ -70,7 +74,7 @@ public class BratAnnotatorModel
     private User user;
 
     private ScriptDirection scriptDirection;
-    
+
     /**
      * The sentence address where the display window starts with, in its UIMA annotation
      */
@@ -97,28 +101,37 @@ public class BratAnnotatorModel
     private int sentenceEndOffset;
 
     /**
-     *  the sentence number where an action occured (selection, modification, clicking)
+     * the sentence number where an action occured (selection, modification, clicking)
      */
     private int sentenceNumber;
+    /**
+     * The first sentence number in the display window
+     */
+    private int fSN;
+    /**
+     * The last sentence number in the display window
+     */
+    private int lSN;
+
     // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
      */
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
-//    /**
-//     * The number of sentences to be displayed at a time
-//     */
-//    private int windowSize = 5;
-//
-//    /**
-//     * Used to enable/disable auto-scrolling while annotation
-//     */
-//    private boolean scrollPage = true;
-//
-//    // determine if static color for annotations will be used or we shall
-//    // dynamically generate one
-//    private boolean staticColor = true;
+    // /**
+    // * The number of sentences to be displayed at a time
+    // */
+    // private int windowSize = 5;
+    //
+    // /**
+    // * Used to enable/disable auto-scrolling while annotation
+    // */
+    // private boolean scrollPage = true;
+    //
+    // // determine if static color for annotations will be used or we shall
+    // // dynamically generate one
+    // private boolean staticColor = true;
 
     private AnnotationPreference preferences = new AnnotationPreference();
 
@@ -359,6 +372,26 @@ public class BratAnnotatorModel
         this.sentenceNumber = sentenceNumber;
     }
 
+    public int getFSN()
+    {
+        return fSN;
+    }
+
+    public void setFSN(int fSN)
+    {
+        this.fSN = fSN;
+    }
+
+    public int getLSN()
+    {
+        return lSN;
+    }
+
+    public void setLSN(int lSN)
+    {
+        this.lSN = lSN;
+    }
+
     public AnnotationLayer getSelectedAnnotationLayer()
     {
         return selectedAnnotationLayer;
@@ -398,6 +431,16 @@ public class BratAnnotatorModel
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
         setSentenceBeginOffset(sentence.getBegin());
         setSentenceEndOffset(sentence.getEnd());
+
+        Sentence firstSentence = selectSentenceAt(aJCas, getSentenceBeginOffset(),
+                getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+                getAddr(firstSentence), getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
+                lastAddressInPage);
+        setFSN(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
 
         // LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
         // + getFirstSentenceAddress() + "] l:["

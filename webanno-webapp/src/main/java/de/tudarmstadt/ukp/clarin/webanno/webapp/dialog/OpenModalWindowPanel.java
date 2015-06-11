@@ -173,18 +173,6 @@ public class OpenModalWindowPanel
                     aTarget.add(documentSelection.setOutputMarkupId(true));
                 }
             });
-
-            /*
-             * add(new StaticImage("icon", new
-             * Model("static/img/Fugue-shadowless-folder-horizontal-open.png"))); RepeatingView
-             * projectIconRepeator = new RepeatingView("projectIconRepeator");
-             * add(projectIconRepeator);
-             *
-             * for (final Project project : getAllowedProjects(allowedProject)) { AbstractItem item
-             * = new AbstractItem(projectIconRepeator.newChildId()); projectIconRepeator.add(item);
-             * item. add(new StaticImage("icon", new
-             * Model("static/img/Fugue-shadowless-folder-horizontal-open.png"))); }
-             */
         }
     }
 

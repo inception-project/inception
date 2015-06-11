@@ -20,40 +20,41 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <head>
 <wicket:head>
-    <style type="text/css">
-.curation-sentence-item{
-    margin:2px 2px;
-    padding:2px 2px;
+	<style type="text/css">
+.curation-sentence-item {
+	margin: 2px 2px;
+	padding: 2px 2px;
 }
 
 .curation-sentence-number {
-    margin:1px 1px;
-    padding:1px 1px;
-    display: inline-block;
-    min-width: 4em;
-    max-width: 7.9em;
-    text-align: center;
+	margin: 1px 1px;
+	padding: 1px 1px;
+	display: inline-block;
+	min-width: 4em;
+	max-width: 7.9em;
+	text-align: center;
 }
 
-.curation-sentence-list{
-    width: 90%;
-    height: 550px;
-    overflow: scroll;
+.curation-sentence-list {
+	width: 90%;
+	height: 550px;
+	overflow: scroll;
 }
 
 .range {
-    border: 1px solid black;
+	border: 1px solid black;
 }
-    
+
 .agree {
-    background-color: green;
+	background-color: green;
 }
+
 .current-disagree {
-    background-color: orange;
+	background-color: orange;
 }
 
 .disagree {
-    background-color: red;
+	background-color: red;
 }
 </style>
 </wicket:head>
@@ -65,11 +66,11 @@
 				<td width="12%">
 					<fieldset class="curation-sentence-list">
 						<legend>Sentences</legend>
-						<span wicket:id="textOuterView"
-							style="border-collapse: collapse;">
-							<span  wicket:id="textListView" class="curation-sentence-number">
+						<span wicket:id="sentencesListView"
+							style="border-collapse: collapse;"> <span
+							wicket:id="sentencesList" class="curation-sentence-number">
 								<span wicket:id="sentenceNumber" />
-							</span>
+						</span>
 						</span>
 					</fieldset>
 				</td>
@@ -78,6 +79,14 @@
 						<tr style="vertical-align: top;">
 							<td width="80%">
 								<div class="merge-view" wicket:id="mergeView" />
+								<fieldset>
+									<legend>Hidden annotations in other pages</legend>
+									<span wicket:id="corssSentAnnoView"> <span
+										wicket:id="crossSentAnnoList"> <span
+											wicket:id="crossAnnoSent" />
+									</span>
+									</span>
+								</fieldset>
 								<div wicket:id="suggestionViewPanel">
 									<div class="sentence-list-view" wicket:id="sentenceListView">
 										<div wicket:id="sentence" />

@@ -29,10 +29,12 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
@@ -84,6 +86,8 @@ public class SuggestionBuilder
 
     int sentenceNumber;
     int begin, end;
+    boolean firstload = true;
+    public static Map<Integer, Set<Integer>> crossSentenceLists;
     //
     Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
 
@@ -153,18 +157,9 @@ public class SuggestionBuilder
         }
 
         // for cross-sentences annotation, update the end of the segment
-        for (Integer begin : segmentBeginEnd.keySet()) {
-            for (Type t : entryTypes) {
-                for (JCas c : jCases.values()) {
-                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, end)) {
-                        if (fs.getBegin() <= segmentBeginEnd.get(begin)
-                                && fs.getEnd() > segmentBeginEnd.get(begin)) {
-                            Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
-                            segmentBeginEnd.put(begin, s.getEnd());
-                        }
-                    }
-                }
-            }
+        if (firstload) {
+            updateCrossSentAnnoList(segmentBeginEnd, jCases, entryTypes);
+            firstload = false;
         }
 
         for (Integer begin : segmentBeginEnd.keySet()) {
@@ -172,7 +167,6 @@ public class SuggestionBuilder
 
             DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
                     entryTypes, jCases, begin, end);
-            diff.print(System.out);
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
@@ -191,6 +185,33 @@ public class SuggestionBuilder
             curationContainer.getCurationViewByBegin().put(begin, curationSegment);
         }
         return curationContainer;
+    }
+
+    private void updateCrossSentAnnoList(Map<Integer, Integer> segmentBeginEnd,
+            Map<String, JCas> jCases, List<Type> entryTypes)
+    {
+        crossSentenceLists = new HashMap<>();
+        for (Integer begin : segmentBeginEnd.keySet()) {
+            int thisSent = -1;
+            Set<Integer> crossSents = new HashSet<>();
+            for (Type t : entryTypes) {
+                for (JCas c : jCases.values()) {
+                    if (thisSent == -1) {
+                        thisSent = BratAjaxCasUtil.getSentenceNumber(c, begin);
+                    }
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, end)) {
+                        if (fs.getBegin() <= segmentBeginEnd.get(begin)
+                                && fs.getEnd() > segmentBeginEnd.get(begin)) {
+                            Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
+                            int thatSent = BratAjaxCasUtil.getSentenceNumber(c, s.getBegin());
+                            crossSents.add(thatSent);
+                            segmentBeginEnd.put(begin, s.getEnd());
+                        }
+                    }
+                }
+            }
+            crossSentenceLists.put(thisSent, crossSents);
+        }
     }
 
     public Map<String, JCas> listJcasesforCorrection(AnnotationDocument randomAnnotationDocument,
