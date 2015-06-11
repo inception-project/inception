@@ -97,6 +97,7 @@ public class CurationPanel
     public SuggestionViewPanel suggestionViewPanel;
     private BratAnnotator mergeVisualizer;
     private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer corssSentAnnoView;
 
@@ -114,7 +115,8 @@ public class CurationPanel
 
     public SourceListView curationView;
 
-    ListView<SourceListView> textListView;
+    ListView<SourceListView> sentenceList;
+    ListView<String> crossSentAnnoList;
     List<SourceListView> sourceListModel;
 
     // CurationContainer curationContainer;
@@ -310,7 +312,7 @@ public class CurationPanel
             }
         };
 
-        ListView<String> crossSentAnnoList = new ListView<String>("crossSentAnnoList",
+       crossSentAnnoList = new ListView<String>("crossSentAnnoList",
                 sentenceDiffModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
@@ -354,7 +356,7 @@ public class CurationPanel
             }
         };
 
-        textListView = new ListView<SourceListView>("sentencesList", sentencesListModel)
+        sentenceList = new ListView<SourceListView>("sentencesList", sentencesListModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
@@ -432,8 +434,8 @@ public class CurationPanel
             }
         };
         // add subcomponents to the component
-        textListView.setOutputMarkupId(true);
-        sentencesListView.add(textListView);
+        sentenceList.setOutputMarkupId(true);
+        sentencesListView.add(sentenceList);
     }
 
     private void getBColor(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
@@ -523,8 +525,12 @@ public class CurationPanel
         fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
-        sentencesListView.addOrReplace(textListView);
+        sentencesListView.addOrReplace(sentenceList);
         aTarget.add(sentencesListView);
+
+/*        corssSentAnnoView.addOrReplace(crossSentAnnoList);
+        aTarget.add(corssSentAnnoView);
+*/
         aTarget.add(suggestionViewPanel);
         if (annotate) {
             mergeVisualizer.bratRender(aTarget, annotationDetailEditorPanel.getCas(bModel));

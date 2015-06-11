@@ -281,6 +281,7 @@ public class CurationPage
                                     username);
 
                             loadDocumentAction(target);
+
                         }
                         catch (IOException e) {
                             target.add(getFeedbackPanel());
@@ -302,7 +303,27 @@ public class CurationPage
             {
                 aTarget.add(getFeedbackPanel());
                 aTarget.add(numberOfPages);
-                updatePanel(curationContainer, aTarget);
+                JCas mergeJCas = null;
+                try {
+                    aTarget.add(getFeedbackPanel());
+                    mergeJCas = repository.readCurationCas(bModel.getDocument());
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                    ubdateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
+
             }
         });
 
@@ -977,6 +998,7 @@ public class CurationPage
             curationContainer.setBratAnnotatorModel(bModel);
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
+            ubdateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
 
         }
         catch (Exception e) {
