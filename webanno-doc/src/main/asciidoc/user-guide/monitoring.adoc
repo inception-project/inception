@@ -95,4 +95,6 @@ The lower part of the agreement matrix displays how many configuration sets were
 agreement and how many were found in total. The upper part of the agreement matrix displays the
 pairwise Cohen's kappa scores.
   
+CAUTION: Multiple interpretations in the form of stacked annotations not supported in the agreement 
+      calculation!
 
