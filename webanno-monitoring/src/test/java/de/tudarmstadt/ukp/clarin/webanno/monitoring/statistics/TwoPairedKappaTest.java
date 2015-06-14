@@ -128,8 +128,8 @@ public class TwoPairedKappaTest
         
         assertEquals(1.0d, agreement.getAgreement(), 0.000001);
         assertEquals(9, diff.size());
-        assertEquals(0, diff.getDifferingConfigurations().size());
-        assertEquals(0, diff.getIncompleteConfigurations().size());
+        assertEquals(0, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
     private Map<String, List<JCas>> convert(Map<User, JCas> aMap) {
@@ -167,8 +167,8 @@ public class TwoPairedKappaTest
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurations().size());
-        assertEquals(0, diff.getIncompleteConfigurations().size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
     @Test
@@ -198,8 +198,8 @@ public class TwoPairedKappaTest
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurations().size());
-        assertEquals(0, diff.getIncompleteConfigurations().size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
     @Test
@@ -230,8 +230,8 @@ public class TwoPairedKappaTest
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
         assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurations().size());
-        assertEquals(0, diff.getIncompleteConfigurations().size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
     @Test

@@ -42,9 +42,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -319,23 +321,32 @@ public class CasDiff2
         }
         
         for (AnnotationFS fs : annotations) {
+            List<Position> positions = new ArrayList<>();
+            
             // Get/create configuration set at the current position
-            Position pos = getAdapter(aType).getPosition(aCasId, fs);
-            ConfigurationSet configSet = configSets.get(pos);
-            if (configSet == null) {
-                configSet = new ConfigurationSet(pos);
-                configSets.put(pos, configSet);
-            }
+            positions.add(getAdapter(aType).getPosition(aCasId, fs));
             
-            if (pos.getClass() != configSet.position.getClass()) {
-                pos.compareTo(configSet.position);
-            }
-            
-            assert pos.getClass() == configSet.position.getClass() : "Position type mismatch ["
-                    + pos.getClass() + "] vs [" + configSet.position.getClass() + "]";
+            // Generate secondary positions for multi-link features
+            positions.addAll(getAdapter(aType).generateSubPositions(aCasId, fs));
 
-            // Merge FS into current set
-            configSet.addConfiguration(aCasGroupId, fs);
+            for (Position pos : positions) {
+                ConfigurationSet configSet = configSets.get(pos);
+                if (configSet == null) {
+                    configSet = new ConfigurationSet(pos);
+                    configSets.put(pos, configSet);
+                }
+                
+    //          REC: appears to be left-over debug code that can be removed...  
+    //            if (pos.getClass() != configSet.position.getClass()) {
+    //                pos.compareTo(configSet.position);
+    //            }
+                
+                assert pos.getClass() == configSet.position.getClass() : "Position type mismatch ["
+                        + pos.getClass() + "] vs [" + configSet.position.getClass() + "]";
+    
+                // Merge FS into current set
+                configSet.addConfiguration(aCasGroupId, fs);
+            }
         }
 //        
 //        // Remember that we have processed the type
@@ -358,19 +369,41 @@ public class CasDiff2
          * @return the type.
          */
         String getType();
+        
+        /**
+         * @return the feature if this is a sub-position for a link feature.
+         */
+        String getFeature();
+        
+        String getRole();
+        
+        // REC Just keeping these for the moment in case we do want to switch to target-based
+        // slot disambiguation. Right now, we use role-based disambiguation.
+//        int getLinkTargetBegin();
+//        
+//        int getLinkTargetEnd();
     }
     
     public static abstract class Position_ImplBase implements Position
     {
         private final String type;
         private final int casId;
-        
-        public Position_ImplBase(int aCasId, String aType)
-        {
+        private final String feature;
+        private final String role;
+//        private final int linkTargetBegin;
+//        private final int linkTargetEnd;
+
+        public Position_ImplBase(int aCasId, String aType, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd)
+     {
             type = aType;
             casId = aCasId;
+            feature = aFeature;
+            role = aRole;
+//            linkTargetBegin = aLinkTargetBegin;
+//            linkTargetEnd = aLinkTargetEnd;
         }
-        
+
         @Override
         public String getType()
         {
@@ -384,13 +417,55 @@ public class CasDiff2
         }
         
         @Override
+        public String getFeature()
+        {
+            return feature;
+        }
+        
+        @Override
+        public String getRole()
+        {
+            return role;
+        }
+        
+//        @Override
+//        public int getLinkTargetBegin()
+//        {
+//            return linkTargetBegin;
+//        }
+//        
+//        @Override
+//        public int getLinkTargetEnd()
+//        {
+//            return linkTargetEnd;
+//        }
+        
+        @Override
         public int compareTo(Position aOther) {
             if (casId != aOther.getCasId()) {
                 return casId - aOther.getCasId();
             }
-            else {
-                return type.compareTo(aOther.getType());
+            
+            int typeCmp = type.compareTo(aOther.getType());
+            if (typeCmp != 0) {
+                return typeCmp;
             }
+            
+            int featureCmp = ObjectUtils.compare(feature, aOther.getFeature());
+            if (featureCmp != 0) {
+                return featureCmp;
+            }
+
+            // Include target into position
+//            if (linkTargetBegin != aOther.getLinkTargetBegin()) {
+//                return linkTargetBegin - aOther.getLinkTargetBegin();
+//            }
+//            
+//            return linkTargetEnd - aOther.getLinkTargetEnd();
+            
+            // Include role into position
+            return ObjectUtils.compare(role, aOther.getRole());
+
         }
     }
     
@@ -402,9 +477,10 @@ public class CasDiff2
         private final int begin;
         private final int end;
 
-        public SpanPosition(int aCasId, String aType, int aBegin, int aEnd)
+        public SpanPosition(int aCasId, String aType, int aBegin, int aEnd, String aFeature,
+                String aRole, int aLinkTargetBegin, int aLinkTargetEnd)
         {
-            super(aCasId, aType);
+            super(aCasId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
             begin = aBegin;
             end = aEnd;
         }
@@ -449,12 +525,29 @@ public class CasDiff2
         @Override
         public String toString()
         {
-            return "Span [cas=" + getCasId() + ", type="
-                    + StringUtils.substringAfterLast(getType(), ".") + ", span=(" + begin + "-"
-                    + end + ")]";
+            StringBuilder builder = new StringBuilder();
+            builder.append("Span [cas=");
+            builder.append(getCasId());
+            builder.append(", type=");
+            builder.append(StringUtils.substringAfterLast(getType(), "."));
+            builder.append(", begin=");
+            builder.append(begin);
+            builder.append(", end=");
+            builder.append(end);
+            if (getFeature() != null) {
+                builder.append(", linkFeature=");
+                builder.append(getFeature());
+                builder.append(", role=");
+                builder.append(getRole());
+//                builder.append(", linkTarget=(");
+//                builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
+                builder.append(")");
+            }
+            builder.append("]");
+            return builder.toString();
         }
     }
-
+    
     /**
      * Represents a span position in the text.
      */
@@ -466,9 +559,10 @@ public class CasDiff2
         private final int targetEnd;
 
         public ArcPosition(int aCasId, String aType, int aSourceBegin, int aSourceEnd,
-                int aTargetBegin, int aTargetEnd)
+                int aTargetBegin, int aTargetEnd, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd)
         {
-            super(aCasId, aType);
+            super(aCasId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
             sourceBegin = aSourceBegin;
             sourceEnd = aSourceEnd;
             targetBegin = aTargetBegin;
@@ -537,9 +631,27 @@ public class CasDiff2
         @Override
         public String toString()
         {
-            return "Arc [cas=" + getCasId() + ", type="
-                    + StringUtils.substringAfterLast(getType(), ".") + ", source=(" + sourceBegin
-                    + "-" + sourceEnd + "), target=(" + targetBegin + "-" + targetEnd + ")]";
+            StringBuilder builder = new StringBuilder();
+            builder.append("Arc [cas=");
+            builder.append(getCasId());
+            builder.append(", type=");
+            builder.append(StringUtils.substringAfterLast(getType(), "."));
+            builder.append(", source=(");
+            builder.append(sourceBegin).append('-').append(sourceEnd);
+            builder.append("), target=(");
+            builder.append(targetBegin).append('-').append(targetEnd);
+            builder.append(')');
+            if (getFeature() != null) {
+                builder.append(", linkFeature=");
+                builder.append(getFeature());
+                builder.append(", role=");
+                builder.append(getRole());
+//                builder.append(", linkTarget=(");
+//                builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
+                builder.append(")");
+            }
+            builder.append("]");
+            return builder.toString();
         }
     }
 
@@ -563,21 +675,70 @@ public class CasDiff2
                 return;
             }
             
-            // Check if this configuration is already present
-            Configuration configuration = null;
-            for (Configuration cfg : configurations) {
-                if (equalsFS(cfg.getRepresentative(), aFS)) {
-                    configuration = cfg;
+            if (position.getFeature() == null) {
+                // Check if this configuration is already present
+                Configuration configuration = null;
+                for (Configuration cfg : configurations) {
+                    // Handle main positions
+                    if (equalsFS(cfg.getRepresentative(), aFS)) {
+                        configuration = cfg;
+                        break;
+                    }
+                }
+    
+                // Not found, add new one
+                if (configuration == null) {
+                    configuration = new Configuration(position);
+                    configurations.add(configuration);
+                }
+                
+                configuration.add(aCasGroupId, aFS);
+            }
+            else {
+                // For each slot at the given position in the FS-to-be-added, we need find a
+                // corresponding configuration
+                ArrayFS links = (ArrayFS) aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(
+                        position.getFeature()));
+                for (int i = 0; i < links.size(); i++) {
+                    FeatureStructure link = links.get(i);
+                    DiffAdapter adapter = getAdapter(aFS.getType().getName());
+                    LinkFeatureDecl decl = adapter.getLinkFeature(position.getFeature());
+                    
+                    String role = link.getStringValue(link.getType().getFeatureByBaseName(decl.roleFeature));
+                    if (!role.equals(position.getRole())) {
+                        continue;
+                    }
+                    
+                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                            .getFeatureByBaseName(decl.targetFeature));
+                    
+                    // Check if this configuration is already present
+                    Configuration configuration = null;
+                    for (Configuration cfg : configurations) {
+                        FeatureStructure repFS = cfg.getRepresentative();
+                        AID repAID = cfg.getRepresentativeAID();
+                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
+                                .getFeatureByBaseName(decl.name))).get(repAID.index);
+                        AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
+                                .getType().getFeatureByBaseName(decl.targetFeature));                        
+                        
+                        // Compare targets
+                        if (equalsAnnotationFS(repTarget, target)) {
+                            configuration = cfg;
+                            break;
+                        }
+                    }
+                    
+                    // Not found, add new one
+                    if (configuration == null) {
+                        configuration = new Configuration(position);
+                        configurations.add(configuration);
+                    }
+                    
+                    configuration.add(aCasGroupId, aFS, position.getFeature(), i);
                 }
             }
 
-            // Not found, add new one
-            if (configuration == null) {
-                configuration = new Configuration(aCasGroupId, position, aFS);
-                configurations.add(configuration);
-            }
-            
-            configuration.add(aCasGroupId, aFS);
             casGroupIds.add(aCasGroupId);
         }
         
@@ -767,17 +928,7 @@ public class CasDiff2
                 //    single annotation, but we want to consider each link as an annotation
                 TypeSystem ts1 = aFS1.getCAS().getTypeSystem();
                 if (ts1.subsumes(ts1.getType(CAS.TYPE_NAME_ANNOTATION), type1)) {
-                    // Null check
-                    if (aFS1 == null || aFS2 == null) {
-                        return false;
-                    }
-
-                    // Position check
-                    DiffAdapter adapter = getAdapter(aFS1.getType().getName());
-                    Position pos1 = adapter.getPosition(0, aFS1);
-                    Position pos2 = adapter.getPosition(0, aFS2);
-                    
-                    if (pos1.compareTo(pos2) != 0) {
+                    if (!equalsAnnotationFS((AnnotationFS) aFS1, (AnnotationFS) aFS2)) {
                         return false;
                     }
                 }
@@ -794,6 +945,21 @@ public class CasDiff2
         return true;
     }
     
+    private boolean equalsAnnotationFS(AnnotationFS aFS1, AnnotationFS aFS2)
+    {
+        // Null check
+        if (aFS1 == null || aFS2 == null) {
+            return false;
+        }
+
+        // Position check
+        DiffAdapter adapter = getAdapter(aFS1.getType().getName());
+        Position pos1 = adapter.getPosition(0, aFS1);
+        Position pos2 = adapter.getPosition(0, aFS2);
+        
+        return pos1.compareTo(pos2) == 0;
+    }
+    
     /**
      * A single configuration seen at a particular position. The configuration may have been
      * observed in multiple CASes. 
@@ -801,25 +967,34 @@ public class CasDiff2
     public class Configuration
     {
         private final Position position;
-        private final Map<String, Integer> fsAddresses = new TreeMap<>();
-        
-        public Configuration(String aCasGroupId, Position aPosition, FeatureStructure aFS)
+        private final Map<String, AID> fsAddresses = new TreeMap<>();
+
+        public Configuration(Position aPosition)
         {
             position = aPosition;
-            add(aCasGroupId, aFS);
         }
-        
+
         private void add(String aCasGroupId, FeatureStructure aFS) {
-            fsAddresses.put(aCasGroupId, getAddr(aFS));            
+            fsAddresses.put(aCasGroupId, new AID(getAddr(aFS)));            
         }
-        
+
+        private void add(String aCasGroupId, FeatureStructure aFS, String aFeature, int aSlot) {
+            fsAddresses.put(aCasGroupId, new AID(getAddr(aFS), aFeature, aSlot));            
+        }
+
         private FeatureStructure getRepresentative()
         {
-            Entry<String, Integer> e = fsAddresses.entrySet().iterator().next();
-            return selectByAddr(cases.get(e.getKey()).get(position.getCasId()), e.getValue());
+            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
+            return selectByAddr(cases.get(e.getKey()).get(position.getCasId()), e.getValue().addr);
         }
-        
-        public Map<String, Integer> getAddressByCasId()
+
+        private AID getRepresentativeAID()
+        {
+            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
+            return e.getValue();
+        }
+
+        public Map<String, AID> getAddressByCasId()
         {
             return fsAddresses;
         }
@@ -828,7 +1003,7 @@ public class CasDiff2
                 Class<T> aClass, Map<String, List<JCas>> aCasMap)
         {
             return selectByAddr(aCasMap.get(aCasGroupId).get(aCasId), aClass,
-                    fsAddresses.get(aCasGroupId));
+                    fsAddresses.get(aCasGroupId).addr);
         }
 
         public FeatureStructure getFs(String aCasGroupId, int aCasId,
@@ -851,7 +1026,7 @@ public class CasDiff2
         {
             StringBuilder sb = new StringBuilder();
             sb.append('[');
-            for (Entry<String, Integer> e : fsAddresses.entrySet()) {
+            for (Entry<String, AID> e : fsAddresses.entrySet()) {
                 if (sb.length() > 1) {
                     sb.append(", ");
                 }
@@ -879,7 +1054,7 @@ public class CasDiff2
         {
             data = Collections.unmodifiableMap(aDiff.configSets);
             casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
-            cachedHasDifferences = !getDifferingConfigurations().isEmpty();
+            cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
         }
         
         public boolean hasDifferences()
@@ -924,8 +1099,24 @@ public class CasDiff2
             if (data.get(aConfigurationSet.position) != aConfigurationSet) {
                 throw new IllegalArgumentException("Configuration set position mismatch");
             }
+            
+            // If there is only a single configuration in the set, we call it an agreement
+            if (aConfigurationSet.configurations.size() == 1) {
+                return true;
+            }
 
-            return aConfigurationSet.configurations.size() == 1;
+//          Issue 21 GitHub - REC - not really sure if we should call this an agreement            
+//            // If there are multiple configurations in the set, we only call it an agreement if
+//            // at least one of these configurations has been made by all annotators
+//            for (Configuration cfg : aConfigurationSet.configurations) {
+//                HashSet<String> unseenGroupCasIDs = new HashSet<>(casGroupIds);
+//                unseenGroupCasIDs.removeAll(cfg.fsAddresses.keySet());
+//                if (unseenGroupCasIDs.isEmpty()) {
+//                    return true;
+//                }
+//            }
+            
+            return false;
         }
         
         /**
@@ -958,7 +1149,7 @@ public class CasDiff2
             return complete;
         }
         
-        public Map<Position, ConfigurationSet> getDifferingConfigurations()
+        public Map<Position, ConfigurationSet> getDifferingConfigurationSets()
         {
             Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
             for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
@@ -970,7 +1161,7 @@ public class CasDiff2
             return diffs;
         }
 
-        public Map<Position, ConfigurationSet> getIncompleteConfigurations()
+        public Map<Position, ConfigurationSet> getIncompleteConfigurationSets()
         {
             Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
             for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
@@ -1017,13 +1208,85 @@ public class CasDiff2
         }
     }
     
+    public static class AID {
+        public final int addr;
+        public final String feature;
+        public final int index;
+
+        public AID(int aAddr)
+        {
+            this(aAddr, null, -1);
+        }
+        
+        public AID(int aAddr, String aFeature, int aIndex)
+        {
+            addr = aAddr;
+            feature = aFeature;
+            index = aIndex;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("AID [addr=");
+            builder.append(addr);
+            if (feature != null) {
+                builder.append(", feature=");
+                builder.append(feature);
+                builder.append(", index=");
+                builder.append(index);
+            }
+            builder.append("]");
+            return builder.toString();
+        }
+    }
+    
+    public static class LinkFeatureDecl {
+        public final String name;
+        public final String roleFeature;
+        public final String targetFeature;
+        
+        public LinkFeatureDecl(String aName, String aRoleFeature, String aTargetFeature)
+        {
+            name = aName;
+            roleFeature = aRoleFeature;
+            targetFeature = aTargetFeature;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("LinkFeatureDecl [name=");
+            builder.append(name);
+            if (roleFeature != null) {
+                builder.append(", roleFeature=");
+                builder.append(roleFeature);
+            }
+            if (targetFeature != null) {
+                builder.append(", targetFeature=");
+                builder.append(targetFeature);
+            }
+            builder.append("]");
+            return builder.toString();
+        }
+    }
+    
     public static interface DiffAdapter
     {
         String getType();
         
+        Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs);
+
+        LinkFeatureDecl getLinkFeature(String aFeature);
+        
         Set<String> getLabelFeatures();
         
         Position getPosition(int aCasId, FeatureStructure aFS);
+
+        Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd);
     }
     
     public static abstract class DiffAdapter_ImplBase implements DiffAdapter
@@ -1032,10 +1295,17 @@ public class CasDiff2
         
         private final Set<String> labelFeatures;
         
+        private final List<LinkFeatureDecl> linkFeatures = new ArrayList<>();
+        
         public DiffAdapter_ImplBase(String aType, Set<String> aLabelFeatures)
         {
             type = aType;
             labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
+        }
+        
+        public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature)
+        {
+            linkFeatures.add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature));
         }
         
         @Override
@@ -1048,6 +1318,45 @@ public class CasDiff2
         public Set<String> getLabelFeatures()
         {
             return labelFeatures;
+        }
+        
+        @Override
+        public LinkFeatureDecl getLinkFeature(String aFeature)
+        {
+            for (LinkFeatureDecl decl : linkFeatures) {
+                if (decl.name.equals(aFeature)) {
+                    return decl;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public Position getPosition(int aCasId, FeatureStructure aFS)
+        {
+            return getPosition(aCasId, aFS, null, null, -1, -1);
+        }
+        
+        @Override
+        public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs)
+        {
+            List<Position> subPositions = new ArrayList<>();
+            
+            for (LinkFeatureDecl decl : linkFeatures) {
+                Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.name);
+                ArrayFS array = (ArrayFS) aFs.getFeatureValue(linkFeature);
+                for (FeatureStructure linkFS : array.toArray()) {
+                    String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName(
+                            decl.roleFeature));
+                    AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(linkFS.getType()
+                            .getFeatureByBaseName(decl.targetFeature));
+                    Position pos = getPosition(aCasId, aFs, decl.name, role, target.getBegin(),
+                            target.getEnd());
+                    subPositions.add(pos);
+                }
+            }
+            
+            return subPositions;
         }
     }
 
@@ -1072,10 +1381,12 @@ public class CasDiff2
         }
         
         @Override
-        public Position getPosition(int aCasId, FeatureStructure aFS)
+        public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd)
         {
             AnnotationFS annoFS = (AnnotationFS) aFS;
-            return new SpanPosition(aCasId, getType(), annoFS.getBegin(), annoFS.getEnd());
+            return new SpanPosition(aCasId, getType(), annoFS.getBegin(), annoFS.getEnd(),
+                    aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
         }
     }
 
@@ -1109,7 +1420,8 @@ public class CasDiff2
         }
         
         @Override
-        public Position getPosition(int aCasId, FeatureStructure aFS)
+        public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd)
         {
             Type type = aFS.getType();
             AnnotationFS sourceFS = (AnnotationFS) aFS.getFeatureValue(type
@@ -1120,7 +1432,8 @@ public class CasDiff2
                     sourceFS != null ? sourceFS.getBegin() : -1,
                     sourceFS != null ? sourceFS.getEnd() : -1,
                     targetFS != null ? targetFS.getBegin() : -1,
-                    targetFS != null ? targetFS.getEnd() : -1);
+                    targetFS != null ? targetFS.getEnd() : -1,
+                    aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
         }
     }
 
@@ -1134,7 +1447,7 @@ public class CasDiff2
                     continue;
                 }
                 
-                // FIXME Ignoring link features
+                // Link features are treated separately from primitive label features
                 if (!LinkMode.NONE.equals(f.getLinkMode())) {
                     continue;
                 }
@@ -1142,23 +1455,49 @@ public class CasDiff2
                 labelFeatures.add(f.getName());
             }
             
+            DiffAdapter_ImplBase adpt;
             switch (layer.getType()) {
             case SPAN_TYPE: {
-                SpanDiffAdapter adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
-                adapters.add(adpt);
+                adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
                 break;
             }
             case RELATION_TYPE: {
                 ArcAdapter typeAdpt = (ArcAdapter) TypeUtil.getAdapter(annotationService, layer);
-                ArcDiffAdapter adpt = new ArcDiffAdapter(layer.getName(),
+                adpt = new ArcDiffAdapter(layer.getName(),
                         typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
                         labelFeatures);
-                adapters.add(adpt);
                 break;
             }
             case CHAIN_TYPE:
                 // FIXME Currently, these are ignored.
-                break;
+                continue;
+            default:
+                throw new IllegalStateException("Unknown layer type [" + layer.getType() + "]");
+            }
+
+            adapters.add(adpt);
+
+            for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                if (!f.isEnabled()) {
+                    continue;
+                }
+                
+                switch (f.getLinkMode()) {
+                case NONE:
+                    // Nothing to do here
+                    break;
+                case SIMPLE:
+                    adpt.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(), null);
+                    break;
+                case WITH_ROLE:
+                    adpt.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
+                            f.getLinkTypeTargetFeatureName());
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown link mode [" + f.getLinkMode() + "]");
+                }
+                
+                labelFeatures.add(f.getName());
             }
         }
         return adapters;

@@ -170,7 +170,7 @@ public class SuggestionBuilder
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
-            if (diff.hasDifferences() || !diff.getIncompleteConfigurations().isEmpty()) {
+            if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
                 curationSegment.setSentenceState(SentenceState.DISAGREE);
             }
             else {
@@ -428,7 +428,7 @@ public class SuggestionBuilder
         DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases, 0,
                 mergeJCas.getDocumentText().length());
 
-        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurations()
+        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
                 .entrySet()) {
             // Remove FSes with differences from the merge CAS
             List<Configuration> cfgsForCurationUser = diffEntry.getValue().getConfigurations(
