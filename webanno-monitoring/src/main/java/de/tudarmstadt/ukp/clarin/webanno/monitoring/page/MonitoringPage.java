@@ -103,7 +103,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -488,8 +487,7 @@ public class MonitoringPage
                             for (AnnotationFeature feature : features) {
                                 if (feature.getLayer().getName().equals(Token.class.getName())
                                         || feature.getLayer().getName()
-                                                .equals(WebAnnoConst.COREFERENCE_LAYER)
-                                        || !LinkMode.NONE.equals(feature.getLinkMode())) {
+                                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
                                     unusedFeatures.add(feature);
                                 }
                             }

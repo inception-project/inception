@@ -30,7 +30,9 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
@@ -140,17 +142,41 @@ public class AgreementUtils
                                     + user + "] has [" + cfgs.size()
                                     + "] differnet configurations.");
                 }
+
+                Configuration cfg = cfgs.get(0);
                 
                 // Only calculate agreement for the given feature
-                FeatureStructure fs = cfgs.get(0).getFs(user, p.getCasId(), aCasMap);
-                values[i] = getFeature(fs, aFeature);
+                FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);
                 
+                if (fs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()) {
+                    // Primitive features
+                    values[i] = getFeature(fs, aFeature);
+                }
+                // We may hit here on a primary position, but we only want to enter on sub-positions
+                // for link features.
+                else if (cfg.getPosition().getFeature() != null) {
+                    // Link features
+                    ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType().getFeatureByBaseName(
+                            aFeature));
+                    FeatureStructure link = links.get(cfg.getAID(user).index);
+                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                            .getFeatureByBaseName("target"));
+                    
+                    values[i] = target.getBegin() + "-" + target.getEnd();
+                }
+                else {
+                    // If we get here, then this position has nothing relevant to our feature to
+                    // be evaluated for agreement. We can skip it directly without recording it
+                    // as incomplete
+                    continue nextPosition;
+                }
+
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
                 if (values[i] == null) {
                     incompleteSetsByLabel.add(cfgSet);
                     continue nextPosition;
                 }
-                
+
                 i++;
             }
 

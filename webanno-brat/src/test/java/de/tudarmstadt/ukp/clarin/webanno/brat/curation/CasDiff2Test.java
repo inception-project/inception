@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -432,9 +431,11 @@ public class CasDiff2Test
     {
         JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));        
+        makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));        
 
         JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
+        makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA));
@@ -446,13 +447,23 @@ public class CasDiff2Test
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        DiffResult diff = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        result.print(System.out);
+        diff.print(System.out);
         
-        assertEquals(2, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertEquals(4, diff.size());
+        assertEquals(0, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        
+        // Check against new impl
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
+                casByUser);
+
+        // Asserts
+        System.out.printf("Agreement: %s%n", agreement.toString());
+        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+        
+        assertEquals(1.0d, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -475,13 +486,23 @@ public class CasDiff2Test
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        DiffResult diff = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        result.print(System.out);
+        diff.print(System.out);
         
-        assertEquals(3, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(2, result.getIncompleteConfigurationSets().size());
+        assertEquals(3, diff.size());
+        assertEquals(0, diff.getDifferingConfigurationSets().size());
+        assertEquals(2, diff.getIncompleteConfigurationSets().size());
+        
+        // Check against new impl
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
+                casByUser);
+
+        // Asserts
+        System.out.printf("Agreement: %s%n", agreement.toString());
+        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+        
+        assertEquals(Double.NaN, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -504,13 +525,23 @@ public class CasDiff2Test
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        DiffResult diff = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        result.print(System.out);
+        diff.print(System.out);
         
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertEquals(2, diff.size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+
+        // Check against new impl
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
+                casByUser);
+
+        // Asserts
+        System.out.printf("Agreement: %s%n", agreement.toString());
+        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+        
+        assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -536,13 +567,23 @@ public class CasDiff2Test
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        DiffResult diff = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        result.print(System.out);
+        diff.print(System.out);
         
-        assertEquals(2, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertEquals(2, diff.size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        
+//        // Check against new impl
+//        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
+//                casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//        
+//        assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -568,13 +609,23 @@ public class CasDiff2Test
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        DiffResult diff = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
         
-        result.print(System.out);
+        diff.print(System.out);
         
-        assertEquals(3, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(2, result.getIncompleteConfigurationSets().size());
+        assertEquals(3, diff.size());
+        assertEquals(1, diff.getDifferingConfigurationSets().size());
+        assertEquals(2, diff.getIncompleteConfigurationSets().size());
+
+//        // Check against new impl
+//        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
+//                casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//        
+//        assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
 
     private static Map<String, List<JCas>> load(String... aPaths)

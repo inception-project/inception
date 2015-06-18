@@ -973,6 +973,11 @@ public class CasDiff2
         {
             position = aPosition;
         }
+        
+        public Position getPosition()
+        {
+            return position;
+        }
 
         private void add(String aCasGroupId, FeatureStructure aFS) {
             fsAddresses.put(aCasGroupId, new AID(getAddr(aFS)));            
@@ -994,9 +999,14 @@ public class CasDiff2
             return e.getValue();
         }
 
-        public Map<String, AID> getAddressByCasId()
+        private Map<String, AID> getAddressByCasId()
         {
             return fsAddresses;
+        }
+
+        public AID getAID(String aCasGroupId)
+        {
+            return fsAddresses.get(aCasGroupId);
         }
 
         public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
@@ -1006,6 +1016,7 @@ public class CasDiff2
                     fsAddresses.get(aCasGroupId).addr);
         }
 
+        // FIXME aCasId parameter should not be required as we can get it from the position
         public FeatureStructure getFs(String aCasGroupId, int aCasId,
                 Map<String, List<JCas>> aCasMap)
         {
