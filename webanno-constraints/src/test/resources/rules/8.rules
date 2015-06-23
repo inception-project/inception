@@ -1,0 +1,3 @@
+Lemma{
+@Lemma="sheep" & System.value="infinity" -> semanticArgument = "Jumping" | parser.value="ok";
+}

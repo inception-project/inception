@@ -1,0 +1,93 @@
+/* this is 
+me comment*/
+
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.Predicate as Frame;
+import pos.value as value;
+
+SemanticPredicate{
+  @Lemma.value="jump" -> frame = "Jumping";
+  frame="Jumping" -> arguments.role = "Arg1" (!) | arguments.role = "Arg2" (!);
+}
+
+Verb{
+@access = "open" & location = "parent" -> showPath.withoutQuotes = "false" | useCaching = "false" (!);
+}
+
+/*
+-------
+
+def options = generateOptions(rules);
+def fs = new FS { frame = "Jumping" };
+def fs2 = new FS { frame = "Dancing" };
+
+options.getOptions(fs, "arguments.role") -> { "Arg1", "Arg2" } 
+options.getOptions(fs, "arguments") -> { } 
+options.getOptions(fs2, "arguments.role") -> { } 
+
+---
+
+1) No annotations yet
+
+CAS {
+  Token(0,4,"jumps")
+}
+
+2) User wants to add a lemma annnotation
+
+CAS {
+  Token(0,4,"jumps")
+  Lemma(0,4,"jump") // newly created annotation
+}
+
+3a) User wants to add a semantic predicate annotation
+
+CAS {
+  Token(0,4,text="jumps")
+  Lemma(0,4,value="jump")
+  context = SemanticPredicate(0,4,frame="!!!") <- here constraint kicks in
+    options.getOptions(context, "frame") -> { "Jumping" } // Rule @Lemma.value="jump" -> frame = "Jumping";    
+}
+
+3b) User selects frame "Jumping"
+
+CAS {
+  Token(0,4,text="jumps")
+  Lemma(0,4,value="jump")
+  context = SemanticPredicate(0,4,frame="Jumping")
+}
+
+4a) User wants to add argument
+
+CAS {
+  Token(0,4,text="jumps")
+  Lemma(0,4,value="jump")
+  context = SemanticPredicate(0,4,frame="Jumping", arguments[role="!!!"])  <- here constraint kicks in
+    options.getOptions(fs, "arguments.role") -> { "Arg1", "Arg2" } 
+}
+
+4a) User wants sets argument
+
+CAS {
+  Token(0,4,text="jumps")
+  Lemma(0,4,value="jump")
+  context = SemanticPredicate(0,4,frame="Jumping", arguments[role="Arg1"] = someOtherFS)
+}
+
+
+
+---
+
+this.@Lemma.@POS.value="unknown" -> @value.format="unicode"; 
+
+// @<type> means - look for annotations of <type> at current position
+// ^<type> means - look for annotations of <type> beginning before the current position and ending after the current position
+
+this.^NamedEntity.@Concept.category
+
+this        = POS(5,10)
+NamedEntity = NE(0,15)
+Concept     = C(0,15)
+
+If POS tag of the next token is "NN", then the current token should have POS "DET"
+*/

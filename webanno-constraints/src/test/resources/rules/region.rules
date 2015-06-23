@@ -1,0 +1,6 @@
+import de.Country as Country;
+
+Country{
+continent.name="Asia" & name="Russian Federation"-> regionType="cold" (!); 
+
+}

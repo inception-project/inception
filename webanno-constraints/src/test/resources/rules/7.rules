@@ -1,0 +1,3 @@
+Lemma{
+@Lemma="sheep" -> semanticArgument = "Jumping";
+}
