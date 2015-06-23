@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
@@ -29,6 +28,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -92,6 +93,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -181,9 +190,7 @@ public class AnnotationDetailEditorPanel
                     setEnabled(model.getSelectedAnnotationLayer() != null
                             && model.getSelectedAnnotationLayer().getId() > 0
                             && model.getSelectedAnnotationLayer().getType()
-                                    .equals(WebAnnoConst.SPAN_TYPE)
-                            && model.getSelectedAnnotationLayer().isLockToTokenOffset());
-                    updateForwardAnnotation(model);
+                                    .equals(WebAnnoConst.SPAN_TYPE));
 
                 }
             });
@@ -194,8 +201,14 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    updateForwardAnnotation(getModelObject());
-                    aTarget.add(forwardAnnotation);
+                    if (getModelObject().getSelection().getAnnotation().isSet()) {
+                        getModelObject().setForwardAnnotation(false);// this is editing
+                        aTarget.add(forwardAnnotation);
+                    }
+                    else {
+                        getModelObject().setForwardAnnotation(
+                                getModelObject().isForwardAnnotation());
+                    }
                 }
             });
 
@@ -715,17 +728,6 @@ public class AnnotationDetailEditorPanel
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
         aBModel.setSentenceEndOffset(sentence.getEnd());
-
-
-        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                aBModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas,
-                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
-                lastAddressInPage);
-        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
     @SuppressWarnings("unchecked")
@@ -844,6 +846,10 @@ public class AnnotationDetailEditorPanel
                 featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
                         .getFeature(annoFs, feature)));
             }
+
+            /*
+             * //TODO: aakash: add logic to use constraints here.
+             */
         }
         else {
             setInitSpanLayers(aBModel);
@@ -1147,13 +1153,69 @@ public class AnnotationDetailEditorPanel
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
             String featureLabel = aModel.feature.getUiName();
+
             if (aModel.feature.getTagset() != null) {
                 featureLabel += " (" + aModel.feature.getTagset().getName() + ")";
             }
             add(new Label("feature", featureLabel));
 
             if (aModel.feature.getTagset() != null) {
-                List<Tag> tagset = annotationService.listTags(aModel.feature.getTagset());
+
+                List<Tag> tagset = new ArrayList<Tag>();
+                
+                
+                //Add values from rules
+                String target = aModel.feature.getName()+"."+"role";
+
+                try {
+                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                    JCas jCas = getCas(model);
+
+                    FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
+                            .getAnnotation().getId());
+
+                    ConstraintsGrammar parser;
+                    Parse p;
+                    ParsedConstraints constraints = null;
+                    Evaluator evaluator = new ValuesGenerator();
+                    parser = new ConstraintsGrammar(
+                            new FileInputStream(
+                                    "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules"));
+
+                    p = parser.Parse();
+
+                    constraints = p.accept(new ParserVisitor());
+
+                    List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
+                            featureStructure, target, constraints);
+                    for (PossibleValue pb : possibleValues) {
+                        Tag temp = new Tag();
+                        temp.setName(pb.getValue());
+                        tagset.add(temp);
+                    }
+
+                    
+                }
+                catch (ParseException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (UIMAException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (ClassNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
+                // adding all other possible values
+                    tagset.addAll(annotationService.listTags(aModel.feature.getTagset()));
+               
                 field = new ComboBox<Tag>("value", tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 isDrop = true;
@@ -1248,6 +1310,7 @@ public class AnnotationDetailEditorPanel
                             aTarget.add(wmc);
                         }
                     });
+
                     label.add(new AttributeAppender("style", new Model<String>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -1269,7 +1332,63 @@ public class AnnotationDetailEditorPanel
             });
 
             if (aModel.feature.getTagset() != null) {
-                List<Tag> tagset = annotationService.listTags(aModel.feature.getTagset());
+                List<Tag> tagset = new ArrayList<Tag>();
+                // aModel.feature.getName() + "." +
+                // this aModel.feature.getLinkTypeRoleFeatureName() will return "role"
+                // String target = aModel.feature.getName() + "."
+                // + aModel.feature.getLinkTypeTargetFeatureName();
+                // Attempting to find FeatureStructure
+
+                String restrictionFeaturePath = aModel.feature.getName()+"."+aModel.feature.getLinkTypeRoleFeatureName();
+
+                try {
+                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                    JCas jCas = getCas(model);
+
+                    FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
+                            .getAnnotation().getId());
+
+                    ConstraintsGrammar parser;
+                    Parse p;
+                    ParsedConstraints constraints = null;
+                    Evaluator evaluator = new ValuesGenerator();
+                    parser = new ConstraintsGrammar(
+                            new FileInputStream(
+                                    "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules"));
+
+                    p = parser.Parse();
+
+                    constraints = p.accept(new ParserVisitor());
+
+                    List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
+                            featureStructure, restrictionFeaturePath, constraints);
+                    for (PossibleValue pb : possibleValues) {
+                        Tag temp = new Tag();
+                        temp.setName(pb.getValue());
+                        tagset.add(temp);
+                    }
+                    
+
+                }
+                catch (ParseException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (UIMAException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (ClassNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
+              //Adding the remaining tags
+                tagset.addAll(annotationService.listTags(aModel.feature.getTagset()));
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
@@ -1440,7 +1559,6 @@ public class AnnotationDetailEditorPanel
 
                     aTarget.add(wmc);
                     aTarget.add(annotateButton);
-                    aTarget.add(forwardAnnotation);
                 }
             });
         }
@@ -1481,21 +1599,6 @@ public class AnnotationDetailEditorPanel
         public String role;
         public String label = CLICK_HINT;
         public int targetAddr = -1;
-    }
-
-    private void updateForwardAnnotation(BratAnnotatorModel aBModel)
-    {
-        if (aBModel.getSelection().getAnnotation().isSet()) {
-            aBModel.setForwardAnnotation(false);// this is editing
-
-        }
-        else if (aBModel.getSelectedAnnotationLayer() != null
-                && !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
-            aBModel.setForwardAnnotation(false);// no forwarding for sub-/multitoken annotation
-        }
-        else {
-            aBModel.setForwardAnnotation(aBModel.isForwardAnnotation());
-        }
     }
 
     public static class FeatureModel
