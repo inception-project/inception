@@ -197,6 +197,10 @@
             <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+        	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        	<artifactId>webanno-constraints</artifactId>
+        </dependency>
 	</dependencies>
 	<build>
 		<resources>
