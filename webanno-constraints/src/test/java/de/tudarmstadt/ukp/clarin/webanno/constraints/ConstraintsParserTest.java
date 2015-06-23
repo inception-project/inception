@@ -81,23 +81,7 @@ public class ConstraintsParserTest
         Parse p = parser.Parse();
     }
 
-    @Test
-    public void test9()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/constraints_origFrame-Roleset.rules"));
-        Parse p = parser.Parse();
-    }
 
-    @Test
-    public void test10()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/constraints_v_15_Lemma-Frame.rules"));
-        Parse p = parser.Parse();
-    }
 
     /*
      * @Test public void testWithData() throws Exception { // BACKGROUND DATA JCas jcas =
