@@ -73,9 +73,9 @@ public class PossibleValue implements Comparable<PossibleValue>
     public int compareTo(PossibleValue o)
     {
         if(!this.isImportant() && o.isImportant()){
-            return -1; 
+            return 1; 
         }else if(this.isImportant() && !o.isImportant()){
-            return 1;
+            return -1;
         }else
             return 0;
        
