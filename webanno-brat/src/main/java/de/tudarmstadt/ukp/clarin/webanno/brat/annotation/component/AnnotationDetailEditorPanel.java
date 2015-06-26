@@ -1406,7 +1406,8 @@ public class AnnotationDetailEditorPanel
                     // only adds tags which are suggested by rules and exist in tagset.
                     tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
                     // TODO Create entries for important tags.
-
+//                    addImportantTags(tagset,possibleValues);
+                    
                     // add remaining tags.
                     addRemainingTags(tagset, valuesFromTagset);
 
@@ -1512,6 +1513,35 @@ public class AnnotationDetailEditorPanel
                 }
             });
         }
+/*
+        private void addImportantTags(List<Tag> tagset, List<PossibleValue> possibleValues)
+        {
+            
+            //Loop over values to see which of the tags are important.
+            for(Tag tag:tagset){
+                for(PossibleValue value: possibleValues){
+                    if(!value.isImportant()){
+                        break;
+                    }
+                    if(tag.getName().equalsIgnoreCase(value.getValue())){
+                        //Add empty slot in UI with that name.
+
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                .getModelObject().value;
+                        LinkWithRoleModel m = new LinkWithRoleModel();
+                        m.role = (String) text.getModelObject();
+                        links.add(m);
+                        annotationFeatureForm.getModelObject().setArmedSlot(
+                                LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+//                       aTarget.add(wmc);
+
+                    }
+                }
+            }
+            
+                        
+        }
+        */
 
         public void setModelObject(FeatureModel aModel)
         {
