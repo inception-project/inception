@@ -1405,17 +1405,34 @@ public class AnnotationDetailEditorPanel
                             .getTagset());
                     // only adds tags which are suggested by rules and exist in tagset.
                     tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-                    // TODO Create entries for important tags.
-//                    addImportantTags(tagset,possibleValues);
+                    //  Create entries for important tags.
+                    
+                    //Loop over values to see which of the tags are important.
+                    for(Tag tag:tagset){
+                        for(PossibleValue value: possibleValues){
+                            if(!value.isImportant()){
+                                break;
+                            }
+                            if(tag.getName().equalsIgnoreCase(value.getValue())){
+                                //Add empty slot in UI with that name.
+
+                                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                        .getModelObject().value;
+                                LinkWithRoleModel m = new LinkWithRoleModel();
+                                m.role = tag.getName();
+                                links.add(m);
+                                annotationFeatureForm.getModelObject().setArmedSlot(
+                                        LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+//                               aTarget.add(wmc);
+
+                            }
+                        }
+                    }
+                    
                     
                     // add remaining tags.
                     addRemainingTags(tagset, valuesFromTagset);
 
-                    // for (PossibleValue pb : possibleValues) {
-                    // Tag temp = new Tag();
-                    // temp.setName(pb.getValue());
-                    // tagset.add(temp);
-                    // }
                 }
                 catch (ParseException e) {
                     e.printStackTrace();
@@ -1433,8 +1450,7 @@ public class AnnotationDetailEditorPanel
                     e.printStackTrace();
                 }
 
-                // Adding the remaining tags
-                // tagset.addAll(annotationService.listTags(aModel.feature.getTagset()));
+                
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
@@ -1511,37 +1527,17 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 }
+                
+                
+                
             });
-        }
-/*
-        private void addImportantTags(List<Tag> tagset, List<PossibleValue> possibleValues)
-        {
             
-            //Loop over values to see which of the tags are important.
-            for(Tag tag:tagset){
-                for(PossibleValue value: possibleValues){
-                    if(!value.isImportant()){
-                        break;
-                    }
-                    if(tag.getName().equalsIgnoreCase(value.getValue())){
-                        //Add empty slot in UI with that name.
-
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                .getModelObject().value;
-                        LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = (String) text.getModelObject();
-                        links.add(m);
-                        annotationFeatureForm.getModelObject().setArmedSlot(
-                                LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
-//                       aTarget.add(wmc);
-
-                    }
-                }
-            }
             
-                        
         }
-        */
+
+
+     
+
 
         public void setModelObject(FeatureModel aModel)
         {
