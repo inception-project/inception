@@ -1221,17 +1221,10 @@ public class AnnotationDetailEditorPanel
                             .getTagset());
                     // only adds tags which are suggested by rules and exist in tagset.
                     tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-                    // TODO Create entries for important tags.
+                    // TODO Create entries for important tags?
 
                     // add remaining tags
                     addRemainingTags(tagset, valuesFromTagset);
-
-                    // for (PossibleValue pb : possibleValues) {
-                    // Tag temp = new Tag();
-                    // temp.setName(pb.getValue());
-                    // tagset.add(temp);
-                    // }
-
                 }
                 catch (ParseException e) {
                     e.printStackTrace();
@@ -1369,13 +1362,8 @@ public class AnnotationDetailEditorPanel
 
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
-                // aModel.feature.getName() + "." +
-                // this aModel.feature.getLinkTypeRoleFeatureName() will return
-                // "role"
-                // String target = aModel.feature.getName() + "."
-                // + aModel.feature.getLinkTypeTargetFeatureName();
-                // Attempting to find FeatureStructure
 
+                // Get the name for evaluation.
                 String restrictionFeaturePath = aModel.feature.getName() + "."
                         + aModel.feature.getLinkTypeRoleFeatureName();
 
@@ -1405,16 +1393,16 @@ public class AnnotationDetailEditorPanel
                             .getTagset());
                     // only adds tags which are suggested by rules and exist in tagset.
                     tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-                    //  Create entries for important tags.
-                    
-                    //Loop over values to see which of the tags are important.
-                    for(Tag tag:tagset){
-                        for(PossibleValue value: possibleValues){
-                            if(!value.isImportant()){
+                    // Create entries for important tags.
+
+                    // Loop over values to see which of the tags are important and add them.
+                    for (Tag tag : tagset) {
+                        for (PossibleValue value : possibleValues) {
+                            if (!value.isImportant()) {
                                 break;
                             }
-                            if(tag.getName().equalsIgnoreCase(value.getValue())){
-                                //Add empty slot in UI with that name.
+                            if (tag.getName().equalsIgnoreCase(value.getValue())) {
+                                // Add empty slot in UI with that name.
 
                                 List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                                         .getModelObject().value;
@@ -1422,14 +1410,14 @@ public class AnnotationDetailEditorPanel
                                 m.role = tag.getName();
                                 links.add(m);
                                 annotationFeatureForm.getModelObject().setArmedSlot(
-                                        LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
-//                               aTarget.add(wmc);
+                                        LinkFeatureEditor.this.getModelObject().feature,
+                                        links.size() - 1);
+                                // aTarget.add(wmc);
 
                             }
                         }
                     }
-                    
-                    
+
                     // add remaining tags.
                     addRemainingTags(tagset, valuesFromTagset);
 
@@ -1450,7 +1438,6 @@ public class AnnotationDetailEditorPanel
                     e.printStackTrace();
                 }
 
-                
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
@@ -1527,17 +1514,10 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 }
-                
-                
-                
+
             });
-            
-            
+
         }
-
-
-     
-
 
         public void setModelObject(FeatureModel aModel)
         {
