@@ -694,6 +694,8 @@ public class MonitoringPage
 
     private void updateAgreementForm()
     {
+        // Clear the cached CASes. When we switch to another project, we'll have to reload them.
+        cachedCASes = null;
         agreementForm.remove();
         agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
                 new Model<Project>());
@@ -901,7 +903,7 @@ public class MonitoringPage
                     result = getModelObject().layerResult.getResult();
                     aTarget.add(TrainingResultForm.this);
                 }
-            }).setOutputMarkupId(true).setOutputMarkupId(true);
+            }).setOutputMarkupId(true);
         }
 
     }
@@ -1299,7 +1301,7 @@ public class MonitoringPage
 
             aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
             updateAgreementTable(aTarget);
-            aTarget.add(agreementForm.setOutputMarkupId(true));
+            aTarget.add(agreementForm);
         }
         
         /**
