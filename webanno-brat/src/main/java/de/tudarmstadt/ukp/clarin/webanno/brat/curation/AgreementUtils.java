@@ -48,32 +48,27 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStu
 
 public class AgreementUtils
 {
-    public static AgreementResult[][] getPairwiseCohenKappaAgreement(DiffResult aDiff, String aType,
-            String aFeature, Map<String, List<JCas>> aCasMap)
+    public static PairwiseAnnotationResult getPairwiseCohenKappaAgreement(DiffResult aDiff,
+            String aType, String aFeature, Map<String, List<JCas>> aCasMap)
     {
-        AgreementResult[][] result = new AgreementResult[aCasMap.size()][aCasMap.size()];
+        PairwiseAnnotationResult result = new PairwiseAnnotationResult();
         List<Entry<String, List<JCas>>> entryList = new ArrayList<>(aCasMap.entrySet());
         for (int m = 0; m < entryList.size(); m++) {
             for (int n = 0; n < entryList.size(); n++) {
-                // Diagonal
-                if (m == n) {
-                    result[m][n] = new AgreementResult(aType, aFeature);
-                    result[m][n].setAgreement(1.0d);
-                }
-                
                 // Triangle matrix mirrored
                 if (n < m) {
                     Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    result[m][n] = getCohenKappaAgreement(aDiff, aType, aFeature, pairwiseCasMap);
-                    result[n][m] = result[m][n];
+                    AgreementResult res = getCohenKappaAgreement(aDiff, aType, aFeature,
+                            pairwiseCasMap);
+                    result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
                 }
             }
         }
         return result;
     }
-    
+
     public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<JCas>> aCasMap)
     {

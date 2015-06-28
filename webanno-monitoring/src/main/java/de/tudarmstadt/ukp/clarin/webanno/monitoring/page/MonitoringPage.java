@@ -89,13 +89,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -112,7 +110,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.DynamicColumnMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
@@ -170,7 +167,6 @@ public class MonitoringPage
 
     private Label overview;
     private DefaultDataTable<?,?> annotationDocumentStatusTable;
-    private DefaultDataTable<?,?> agreementTable;
     private final Label projectName;
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
@@ -187,6 +183,10 @@ public class MonitoringPage
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
 
+        annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
+        annotationTypeSelectionForm.setVisible(false);
+        add(annotationTypeSelectionForm);
+
         agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
                 new Model<Project>());
         agreementForm.setVisible(false);
@@ -195,10 +195,6 @@ public class MonitoringPage
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
         add(trainingResultForm);
-
-        annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
-        annotationTypeSelectionForm.setVisible(false);
-        add(annotationTypeSelectionForm);
 
         annotatorsProgressImage = new NonCachingImage("annotator");
         annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
@@ -661,27 +657,54 @@ public class MonitoringPage
     {
         private static final long serialVersionUID = 344165080600348157L;
 
-        @SuppressWarnings({ "unchecked" })
+        private AgreementTable agreementTable2;
+        
         public AgreementForm(String id, Model<AnnotationLayer> aType, Model<Project> aProject)
-
         {
             super(id);
-            // Intialize the agreementTable with NOTHING.
-            List<String> usersListAsColumnHeader = new ArrayList<String>();
-            usersListAsColumnHeader.add("");
-            List<String> agreementResult = new ArrayList<String>();
-            agreementResult.add("");
-            List<List<String>> agreementResults = new ArrayList<List<String>>();
-            agreementResults.add(agreementResult);
+            
+            setOutputMarkupId(true);
+            setOutputMarkupPlaceholderTag(true);
+                        
+            add(agreementTable2 = new AgreementTable("agreementTable", 
+                    new LoadableDetachableModel<PairwiseAnnotationResult>()
+            {
+                private static final long serialVersionUID = 1L;
 
-            TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
-                    agreementResults);
-            List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
-
-            for (int m = 0; m < provider.getColumnCount(); m++) {
-                columns.add(new DynamicColumnMetaData(provider, m));
-            }
-            add(agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10));
+                @Override
+                protected PairwiseAnnotationResult load()
+                {
+                    if (features.getModelObject() == null) {
+                        return null;
+                    }
+                    
+                    Project project = projectSelectionForm.getModelObject().project;
+                    List<User> users = repository
+                            .listProjectUsersWithPermissions(project, PermissionLevel.USER);
+                    
+                    // Convert to structure required by CasDiff - FIXME should be removed
+                    Map<String, List<JCas>> casMap = new LinkedHashMap<>();
+                    for (Entry<SourceDocument, Map<User, JCas>> e1: documentJCases.entrySet()) {
+                        for (User user : users) {
+                            List<JCas> casList = casMap.get(user.getUsername());
+                            if (casList == null) {
+                                casList = new ArrayList<>();
+                                casMap.put(user.getUsername(), casList);
+                            }
+                            // The next line can enter null values into the list if a user didn't work
+                            // on a CAS yet.
+                            casList.add(e1.getValue().get(user));
+                        }
+                    }
+                    
+                    List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, project);
+                    DiffResult diff = CasDiff2.doDiff(
+                            asList(features.getModelObject().getLayer().getName()), adapters, casMap);
+                    return AgreementUtils.getPairwiseCohenKappaAgreement(
+                            diff, features.getModelObject().getLayer().getName(), features.getModelObject()
+                                    .getName(), casMap);
+                }
+            }));
         }
     }
 
@@ -703,7 +726,6 @@ public class MonitoringPage
          
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void updateAgreementTable(AjaxRequestTarget aTarget)
     {
 
@@ -711,17 +733,6 @@ public class MonitoringPage
         List<User> users = repository
                 .listProjectUsersWithPermissions(project, PermissionLevel.USER);
         if (features.getModelObject() != null) {
-
-            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, features.getModelObject().getLayer());
-
-            // assume all users finished only one document
-            double[][] multipleDocumentsFinished = new double[users.size()][users.size()];
-            for (int m = 0; m < users.size(); m++) {
-                for (int j = 0; j < users.size(); j++) {
-                    multipleDocumentsFinished[m][j] = 1.0;
-                }
-            }
-
             List<SourceDocument> sourceDocuments = repository.listSourceDocuments(project);
             List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
             for (SourceDocument sdc : sourceDocuments) {
@@ -730,21 +741,6 @@ public class MonitoringPage
                 }
             }
             sourceDocuments.removeAll(trainingDoc);
-
-            // a map that contains list of finished annotation documents for a given user
-            Map<User, List<SourceDocument>> finishedDocumentLists = new HashMap<User, List<SourceDocument>>();
-            for (User user : users) {
-                List<SourceDocument> finishedDocuments = new ArrayList<SourceDocument>();
-
-                for (SourceDocument document : sourceDocuments) {
-                    AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                            document, user);
-                    if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                        finishedDocuments.add(document);
-                    }
-                }
-                finishedDocumentLists.put(user, finishedDocuments);
-            }
 
             if (documentJCases == null) {
                 documentJCases = getJCases(users, sourceDocuments);
@@ -767,55 +763,9 @@ public class MonitoringPage
                 }
             }
             
-            List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, project);
-            DiffResult diff = CasDiff2.doDiff(
-                    asList(features.getModelObject().getLayer().getName()), adapters, casMap);
-            AgreementResult[][] agreements = AgreementUtils.getPairwiseCohenKappaAgreement(diff,
-                    features.getModelObject().getLayer().getName(), features.getModelObject()
-                            .getName(), casMap);
-            
-            List<String> usersListAsColumnHeader = new ArrayList<>();
-            usersListAsColumnHeader.add("users");
-            usersListAsColumnHeader.addAll(casMap.keySet());
-            
-            List<List<String>> agreementResults = new ArrayList<>();
-            int i = 0;
-            for (String username : casMap.keySet()) {
-                List<String> agreementResult = new ArrayList<>();
-                agreementResult.add(username);
+            // Force reload
+            agreementForm.agreementTable2.getDefaultModel().detach();
 
-                for (int j = 0; j < casMap.size(); j++) {
-                    if (j == i) {
-                        agreementResult.add("-");
-                    }
-                    else if (j < i) {
-                        agreementResult.add(String.format("%d/%d", agreements[i][j]
-                                .getCompleteSetCount(), agreements[i][j].getTotalSetCount()));
-                    }
-                    else {
-                        if (agreements[i][j].getStudy().getItemCount() == 0) {
-                            agreementResult.add("no data");
-                        }
-                        else {
-                            agreementResult.add(String.format("%.2f", agreements[i][j].getAgreement()));
-                        }
-                    }
-                }
-                i++;
-                agreementResults.add(agreementResult);
-            }
-
-            TableDataProvider provider = new TableDataProvider(usersListAsColumnHeader,
-                    agreementResults);
-
-            List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
-
-            for (int m = 0; m < provider.getColumnCount(); m++) {
-                columns.add(new DynamicColumnMetaData(provider, m));
-            }
-            agreementTable.remove();
-            agreementTable = new DefaultDataTable("agreementTable", columns, provider, 10);
-            agreementForm.add(agreementTable);
             aTarget.add(agreementForm);
         }
     }
