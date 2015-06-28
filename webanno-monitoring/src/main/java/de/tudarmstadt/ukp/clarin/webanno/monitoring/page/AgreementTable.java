@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -147,8 +148,19 @@ public class AgreementTable
                             
                             String label = String.format("%d/%d", result.getCompleteSetCount(),
                                     result.getTotalSetCount());                            
+
+                            String toolTip = String.format(
+                                    "Details about annotations excluded from agreement calculation:%n" +
+                                    "- Incomplete (missing): %d%n" +
+                                    "- Incomplete (not labeled): %d%n" +                                  
+                                    "- Plurality: %d",                                  
+                                    result.getIncompleteSetsByPosition().size(),
+                                    result.getIncompleteSetsByLabel().size(),
+                                    result.getPluralitySets().size());
                             
-                            cell.add(new Label("label", Model.of(label)));
+                            Label l = new Label("label", Model.of(label)); 
+                            l.add(new AttributeModifier("title", toolTip));
+                            cell.add(l);
                         }
                         // Rest
                         else {
