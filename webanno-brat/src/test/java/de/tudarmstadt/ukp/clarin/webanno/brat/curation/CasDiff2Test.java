@@ -134,6 +134,53 @@ public class CasDiff2Test
     }
 
     @Test
+    public void multipleEmptyCasWithMissingOnesTest()
+        throws Exception
+    {
+        String text = "";
+        
+        JCas user1Cas1 = null;
+
+        JCas user1Cas2 = null;
+
+        JCas user1Cas3 = JCasFactory.createJCas();
+        user1Cas3.setDocumentText(text);
+
+        JCas user1Cas4 = JCasFactory.createJCas();
+        user1Cas4.setDocumentText(text);
+
+        JCas user2Cas1 = JCasFactory.createJCas();
+        user2Cas1.setDocumentText(text);
+
+        JCas user2Cas2 = null;
+
+        JCas user2Cas3 = null;
+
+        JCas user2Cas4 = JCasFactory.createJCas();
+        user2Cas4.setDocumentText(text);
+        
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
+        casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
+
+        List<String> entryTypes = asList(Token.class.getName());
+
+        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
+
+        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters, casByUser);
+        
+        result.print(System.out);
+        
+        assertEquals(0, result.size());
+        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
+
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+                "PosValue", casByUser);
+        assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+    }
+    @Test
     public void noDifferencesPosTest()
         throws Exception
     {

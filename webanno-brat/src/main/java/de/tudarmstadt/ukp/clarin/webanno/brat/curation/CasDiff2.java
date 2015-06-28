@@ -299,8 +299,11 @@ public class CasDiff2
             cases.put(aCasGroupId, casList);
         }
         
-        // Avoid adding same CAS twice in cases where we add multiple types from a CAS.
-        if (!casList.contains(aCas)) {
+        // Avoid adding same CAS twice in cases where we add multiple types from a CAS. If the
+        // current CAS ID is greater than the size of the current CAS list, then we did not add
+        // it yet. Before, we checked whether the casList already contained the current CAS, but
+        // that failed when we had multiple "null" CASes.
+        if ((casList.size() - 1) < aCasId) {
             casList.add(aCas);
         }
         assert (casList.size() - 1) == aCasId : "Expected CAS ID [" + (casList.size() - 1)
