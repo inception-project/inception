@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -171,7 +170,6 @@ public class MonitoringPage
     private AgreementForm agreementForm;
     private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
     private ListChoice<AnnotationFeature> features;
-    private transient Map<SourceDocument, Map<User, JCas>> documentJCases;
 
     private String result;
 
@@ -322,8 +320,6 @@ public class MonitoringPage
                         }
                     }
                     sourceDocuments.removeAll(trainingDoc);
-
-                    documentJCases = null;
 
                     if (aNewSelection == null) {
                         return;
@@ -674,35 +670,23 @@ public class MonitoringPage
                 @Override
                 protected PairwiseAnnotationResult load()
                 {
-                    if (features.getModelObject() == null) {
+                    AnnotationFeature feature = features.getModelObject();
+                    
+                    // Do not do any agreement if no feature has been selected yet.
+                    if (feature == null) {
                         return null;
                     }
                     
+                    Map<String, List<JCas>> casMap = getJCases();
+                    
                     Project project = projectSelectionForm.getModelObject().project;
-                    List<User> users = repository
-                            .listProjectUsersWithPermissions(project, PermissionLevel.USER);
-                    
-                    // Convert to structure required by CasDiff - FIXME should be removed
-                    Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-                    for (Entry<SourceDocument, Map<User, JCas>> e1: documentJCases.entrySet()) {
-                        for (User user : users) {
-                            List<JCas> casList = casMap.get(user.getUsername());
-                            if (casList == null) {
-                                casList = new ArrayList<>();
-                                casMap.put(user.getUsername(), casList);
-                            }
-                            // The next line can enter null values into the list if a user didn't work
-                            // on a CAS yet.
-                            casList.add(e1.getValue().get(user));
-                        }
-                    }
-                    
-                    List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, project);
-                    DiffResult diff = CasDiff2.doDiff(
-                            asList(features.getModelObject().getLayer().getName()), adapters, casMap);
-                    return AgreementUtils.getPairwiseCohenKappaAgreement(
-                            diff, features.getModelObject().getLayer().getName(), features.getModelObject()
-                                    .getName(), casMap);
+                    List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
+                            project);
+
+                    DiffResult diff = CasDiff2.doDiff(asList(feature.getLayer().getName()),
+                            adapters, casMap);
+                    return AgreementUtils.getPairwiseCohenKappaAgreement(diff, feature
+                            .getLayer().getName(), feature.getName(), casMap);
                 }
             }));
         }
@@ -728,46 +712,9 @@ public class MonitoringPage
 
     private void updateAgreementTable(AjaxRequestTarget aTarget)
     {
-
-        Project project = projectSelectionForm.getModelObject().project;
-        List<User> users = repository
-                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
-        if (features.getModelObject() != null) {
-            List<SourceDocument> sourceDocuments = repository.listSourceDocuments(project);
-            List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
-            for (SourceDocument sdc : sourceDocuments) {
-                if (sdc.isTrainingDocument()) {
-                    trainingDoc.add(sdc);
-                }
-            }
-            sourceDocuments.removeAll(trainingDoc);
-
-            if (documentJCases == null) {
-                documentJCases = getJCases(users, sourceDocuments);
-            }
-            
-            // Users with some annotations of this type
-
-            // Convert to structure required by CasDiff - FIXME should be removed
-            Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-            for (Entry<SourceDocument, Map<User, JCas>> e1: documentJCases.entrySet()) {
-                for (User user : users) {
-                    List<JCas> casList = casMap.get(user.getUsername());
-                    if (casList == null) {
-                        casList = new ArrayList<>();
-                        casMap.put(user.getUsername(), casList);
-                    }
-                    // The next line can enter null values into the list if a user didn't work
-                    // on a CAS yet.
-                    casList.add(e1.getValue().get(user));
-                }
-            }
-            
-            // Force reload
-            agreementForm.agreementTable2.getDefaultModel().detach();
-
-            aTarget.add(agreementForm);
-        }
+        // Force reload
+        agreementForm.agreementTable2.getDefaultModel().detach();
+        aTarget.add(agreementForm);
     }
 
     private class TrainingResultForm
@@ -973,26 +920,58 @@ public class MonitoringPage
 
     }
 
+    // The CASes cannot be serialized, so we make them transient here. However, it does not matter
+    // as we do not access the field directly but via getJCases() which will re-load them if
+    // necessary, e.g. if the transient field is empty after a session is restored from a 
+    // persisted state.
+    private transient Map<String, List<JCas>> cachedCASes;
+
     /**
      * Get the finished CASes used to compute agreement.
      */
-    private Map<SourceDocument, Map<User, JCas>> getJCases(List<User> users,
-            List<SourceDocument> sourceDocuments)
+    private Map<String, List<JCas>> getJCases()
     {
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<SourceDocument, Map<User, JCas>>();
-        for (SourceDocument document : sourceDocuments) {
-            Map<User, JCas> jCases = new HashMap<User, JCas>();
-            for (User user : users) {
+        // Avoid reloading the CASes when switching features. 
+        if (cachedCASes != null) {
+            return cachedCASes;
+        }
+        
+        Project project = projectSelectionForm.getModelObject().project;
+        
+        List<User> users = repository
+                .listProjectUsersWithPermissions(project, PermissionLevel.USER);
+        
+        List<SourceDocument> sourceDocuments = repository.listSourceDocuments(project);
+        
+        // Filter training documents out from the source documents. Training documents are not
+        // being annotated
+        // FIXME actually, listSourceDocuments() shouldn return training documents in the first 
+        // place. Cf. https://github.com/webanno/webanno/issues/23
+        List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
+        for (SourceDocument sdc : sourceDocuments) {
+            if (sdc.isTrainingDocument()) {
+                trainingDoc.add(sdc);
+            }
+        }
+        sourceDocuments.removeAll(trainingDoc);
+        
+        cachedCASes = new LinkedHashMap<>();
+        for (User user : users) {
+            List<JCas> cases = new ArrayList<>();
+            
+            for (SourceDocument document : sourceDocuments) {
+                JCas jCas = null;
+                
+                // Load the CAS if there is a finished one.
                 if (repository.existsAnnotationDocument(document, user)) {
                     AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                             document, user);
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
-                            JCas jCas = repository.readAnnotationCas(annotationDocument);
+                            jCas = repository.readAnnotationCas(annotationDocument);
                             repository.upgradeCas(jCas.getCas(), annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
-                            jCases.put(user, jCas);
                         }
                         catch (DataRetrievalFailureException e) {
                             error(e.getCause().getMessage());
@@ -1005,10 +984,16 @@ public class MonitoringPage
                         }
                     }
                 }
+                
+                // The next line can enter null values into the list if a user didn't work on this
+                // source document yet.
+                cases.add(jCas);
             }
-            documentJCases.put(document, jCases);
+
+            cachedCASes.put(user.getUsername(), cases);
         }
-        return documentJCases;
+        
+        return cachedCASes;
     }
 
     private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
