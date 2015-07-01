@@ -17,10 +17,15 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Rule
+public class Rule implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5230339537568449002L;
     private final List<Condition> conditions;
     private final List<Restriction> restrictions;
 

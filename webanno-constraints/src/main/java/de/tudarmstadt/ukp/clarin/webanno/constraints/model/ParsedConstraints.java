@@ -17,20 +17,25 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 /***
- * Class containing objects after parsing and creating objects based on rules file
+ * Serialized Class containing objects after parsing and creating objects based on rules file
  * 
  * @author aakash
  *
  */
-public class ParsedConstraints
+public class ParsedConstraints implements Serializable
 {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2401965871743170805L;
     private final Map<String, String> imports;
     private final List<Scope> scopes;
     private Map<String, Scope> scopeMap = null;

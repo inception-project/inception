@@ -1202,20 +1202,9 @@ public class AnnotationDetailEditorPanel
                     FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
                             .getAnnotation().getId());
 
-                    ConstraintsGrammar parser;
-                    Parse p;
-                    ParsedConstraints constraints = null;
                     Evaluator evaluator = new ValuesGenerator();
-
-                    parser = new ConstraintsGrammar(
-                            new FileInputStream(
-                                    "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules"));
-
-                    p = parser.Parse();
-                    constraints = p.accept(new ParserVisitor());
-
                     List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                            featureStructure, restrictionFeaturePath, constraints);
+                            featureStructure, restrictionFeaturePath, model.getConstraints());
 
                     List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
                             .getTagset());
@@ -1241,9 +1230,7 @@ public class AnnotationDetailEditorPanel
                     // add remaining tags
                     addRemainingTags(tagset, valuesFromTagset);
                 }
-                catch (ParseException e) {
-                    e.printStackTrace();
-                }
+                
                 catch (UIMAException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -1389,20 +1376,10 @@ public class AnnotationDetailEditorPanel
                     FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
                             .getAnnotation().getId());
 
-                    ConstraintsGrammar parser;
-                    Parse p;
-                    ParsedConstraints constraints = null;
                     Evaluator evaluator = new ValuesGenerator();
 
-                    parser = new ConstraintsGrammar(
-                            new FileInputStream(
-                                    "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules"));
-
-                    p = parser.Parse();
-                    constraints = p.accept(new ParserVisitor());
-
                     List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                            featureStructure, restrictionFeaturePath, constraints);
+                            featureStructure, restrictionFeaturePath, model.getConstraints());
 
                     List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
                             .getTagset());
@@ -1437,9 +1414,7 @@ public class AnnotationDetailEditorPanel
                     addRemainingTags(tagset, valuesFromTagset);
 
                 }
-                catch (ParseException e) {
-                    e.printStackTrace();
-                }
+                
                 catch (UIMAException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -1448,10 +1423,10 @@ public class AnnotationDetailEditorPanel
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                catch (IOException e) {
-                    // TODO Auto-generated catch block
+                catch(IOException e){
                     e.printStackTrace();
                 }
+                
 
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));

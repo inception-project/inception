@@ -35,6 +35,7 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -112,6 +113,21 @@ public class BratAnnotatorModel
      * The last sentence number in the display window
      */
     private int lSN;
+    
+    /**
+     * Constraints object from rule file 
+     */
+    private ParsedConstraints constraints;
+
+    public ParsedConstraints getConstraints()
+    {
+        return constraints;
+    }
+
+    public void setConstraints(ParsedConstraints constraints)
+    {
+        this.constraints = constraints;
+    }
 
     // Annotation preferences, to be saved in a file system
     /**

@@ -17,11 +17,16 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-public class Condition
+public class Condition implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5229065580264733470L;
     private final String path;
     private final String value;
 
