@@ -1908,6 +1908,9 @@ public class RepositoryServiceDbData
         Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
                 oldTypeSystem, null);
 
+        // Make sure JCas is properly initialized too
+        aCas.getJCas();
+        
         createLog(aSourceDocument.getProject()).info(
                 "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
                         + "] " + " in project ID [" + aSourceDocument.getProject().getId() + "]");

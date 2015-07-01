@@ -48,32 +48,27 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStu
 
 public class AgreementUtils
 {
-    public static AgreementResult[][] getPairwiseCohenKappaAgreement(DiffResult aDiff, String aType,
-            String aFeature, Map<String, List<JCas>> aCasMap)
+    public static PairwiseAnnotationResult getPairwiseCohenKappaAgreement(DiffResult aDiff,
+            String aType, String aFeature, Map<String, List<JCas>> aCasMap)
     {
-        AgreementResult[][] result = new AgreementResult[aCasMap.size()][aCasMap.size()];
+        PairwiseAnnotationResult result = new PairwiseAnnotationResult();
         List<Entry<String, List<JCas>>> entryList = new ArrayList<>(aCasMap.entrySet());
         for (int m = 0; m < entryList.size(); m++) {
             for (int n = 0; n < entryList.size(); n++) {
-                // Diagonal
-                if (m == n) {
-                    result[m][n] = new AgreementResult(aType, aFeature);
-                    result[m][n].setAgreement(1.0d);
-                }
-                
                 // Triangle matrix mirrored
                 if (n < m) {
                     Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    result[m][n] = getCohenKappaAgreement(aDiff, aType, aFeature, pairwiseCasMap);
-                    result[n][m] = result[m][n];
+                    AgreementResult res = getCohenKappaAgreement(aDiff, aType, aFeature,
+                            pairwiseCasMap);
+                    result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
                 }
             }
         }
         return result;
     }
-    
+
     public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<JCas>> aCasMap)
     {
@@ -113,6 +108,7 @@ public class AgreementUtils
         List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
+        List<ConfigurationSet> pluralitySets = new ArrayList<>();
         CodingAnnotationStudy study = new CodingAnnotationStudy(aUsers.size());
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
@@ -137,10 +133,8 @@ public class AgreementUtils
                 // annotations.
                 List<Configuration> cfgs = cfgSet.getConfigurations(user);
                 if (cfgs.size() > 1) {
-                    throw new IllegalStateException(
-                            "Agreement for interpretation plurality not yet supported! User ["
-                                    + user + "] has [" + cfgs.size()
-                                    + "] differnet configurations.");
+                    pluralitySets.add(cfgSet);
+                    continue nextPosition;
                 }
 
                 Configuration cfg = cfgs.get(0);
@@ -189,7 +183,8 @@ public class AgreementUtils
         }
         
         return new AgreementResult(aType, aFeature, aDiff, study, completeSets,
-                setsWithDifferences, incompleteSetsByPosition, incompleteSetsByLabel);
+                setsWithDifferences, incompleteSetsByPosition, incompleteSetsByLabel,
+                pluralitySets);
     }
     
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
@@ -207,11 +202,26 @@ public class AgreementUtils
             aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
         }
         
-        List<ConfigurationSet> completeSets = aAgreement.getCompleteSets();
+        aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
+        dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
+        
+        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
+        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
+
+        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
+        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
+
+        aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
+        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
+    }
+    
+    private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
+            AgreementResult aAgreement, List<ConfigurationSet> aSets)
+    {
         int i = 0;
         for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
             StringBuilder sb = new StringBuilder();
-            sb.append(completeSets.get(i).getPosition());
+            sb.append(aSets.get(i).getPosition());
             for (IAnnotationUnit unit : item.getUnits()) {
                 if (sb.length() > 0) {
                     sb.append(" \t");
@@ -220,6 +230,22 @@ public class AgreementUtils
             }
             aOut.println(sb);
             i++;
+        }
+    }
+
+    private static void dumpAgreementConfigurationSets(PrintStream aOut,
+            AgreementResult aAgreement, List<ConfigurationSet> aSets)
+    {
+        for (ConfigurationSet cfgSet : aSets) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(cfgSet.getPosition());
+            for (Configuration cfg : cfgSet.getConfigurations()) {
+                if (sb.length() > 0) {
+                    sb.append(" \t");
+                }
+                sb.append(cfg.toString());
+            }
+            aOut.println(sb);
         }
     }
 
@@ -260,6 +286,7 @@ public class AgreementUtils
         private final List<ConfigurationSet> completeSets;
         private final List<ConfigurationSet> incompleteSetsByPosition;
         private final List<ConfigurationSet> incompleteSetsByLabel;
+        private final List<ConfigurationSet> pluralitySets;
         private double agreement;
 
         public AgreementResult(String aType, String aFeature)
@@ -272,13 +299,15 @@ public class AgreementUtils
             completeSets = null;
             incompleteSetsByPosition = null;
             incompleteSetsByLabel = null;
+            pluralitySets = null;
         }
 
         public AgreementResult(String aType, String aFeature, DiffResult aDiff,
                 ICodingAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
                 List<ConfigurationSet> aSetsWithDifferences,
                 List<ConfigurationSet> aIncompleteByPosition,
-                List<ConfigurationSet> aIncompleteByLabel)
+                List<ConfigurationSet> aIncompleteByLabel,
+                List<ConfigurationSet> aPluralitySets)
         {
             type = aType;
             feature = aFeature;
@@ -290,6 +319,8 @@ public class AgreementUtils
                     aIncompleteByPosition));
             incompleteSetsByLabel = Collections
                     .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
+            pluralitySets = Collections
+                    .unmodifiableList(new ArrayList<>(aPluralitySets));
         }
         
         private void setAgreement(double aAgreement)
@@ -306,13 +337,18 @@ public class AgreementUtils
         }
 
         /**
-         * Positions that were  seen in all CAS groups, but labels are unset (null).
+         * Positions that were seen in all CAS groups, but labels are unset (null).
          */
         public List<ConfigurationSet> getIncompleteSetsByLabel()
         {
             return incompleteSetsByLabel;
         }
 
+        public List<ConfigurationSet> getPluralitySets()
+        {
+            return pluralitySets;
+        }
+        
         /**
          * @return sets differing with respect to the type and feature used to calculate agreement.
          */
@@ -331,9 +367,10 @@ public class AgreementUtils
             return setsWithDifferences.size();
         }
         
-        public int getIncompleteSetCount()
+        public int getUnusableSetCount()
         {
-            return incompleteSetsByPosition.size() + incompleteSetsByLabel.size();
+            return incompleteSetsByPosition.size() + incompleteSetsByLabel.size()
+                    + pluralitySets.size();
         }
         
         public Object getCompleteSetCount()
@@ -375,7 +412,7 @@ public class AgreementUtils
         public String toString()
         {
             return "AgreementResult [type=" + type + ", feature=" + feature + ", diffs="
-                    + getDiffSetCount() + ", incompleteSets=" + getIncompleteSetCount()
+                    + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount()
                     + ", agreement=" + agreement + "]";
         }
     }
