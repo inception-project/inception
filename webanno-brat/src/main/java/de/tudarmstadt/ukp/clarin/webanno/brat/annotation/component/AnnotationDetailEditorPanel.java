@@ -1210,22 +1210,6 @@ public class AnnotationDetailEditorPanel
                             .getTagset());
                     // only adds tags which are suggested by rules and exist in tagset.
                     tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-                    // Create entries for important tags.
-
-                    // Loop over values to see which of the tags are important and add them.
-                    for (Tag tag : tagset) {
-                        for (PossibleValue value : possibleValues) {
-                            if (!value.isImportant()) {
-                                break;
-                            }
-                            if (tag.getName().equalsIgnoreCase(value.getValue())) {
-                                // Add empty slot in UI with that name.
-
-                                // TODO Add roles here.
-
-                            }
-                        }
-                    }
 
                     // add remaining tags
                     addRemainingTags(tagset, valuesFromTagset);
