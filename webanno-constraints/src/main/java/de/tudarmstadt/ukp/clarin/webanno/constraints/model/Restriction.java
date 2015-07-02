@@ -19,11 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
 
-public class Restriction implements Serializable
+/**
+ * Class containing object representation of Restriction of a rule.
+ * 
+ * @author aakash
+ *
+ */
+public class Restriction
+    implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -6950610587083804950L;
     private final String path;
     private final String value;

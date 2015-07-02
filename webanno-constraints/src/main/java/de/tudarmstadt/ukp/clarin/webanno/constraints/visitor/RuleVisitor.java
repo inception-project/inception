@@ -25,7 +25,11 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepth
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
-
+/**
+ * Visitor for Rules
+ * @author aakash
+ *
+ */
 public class RuleVisitor
     extends GJVoidDepthFirst<List<Rule>>
 {

@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 import java.io.Serializable;
 import java.util.List;
 
-public class Scope implements Serializable
+/**
+ * Class representating "Scope" (name) and list of "Rules" for a particular "Scope".
+ * 
+ * @author aakash
+ *
+ */
+public class Scope
+    implements Serializable
 {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 226908916809455385L;
     private final String scopeName;
     private final List<Rule> rules;

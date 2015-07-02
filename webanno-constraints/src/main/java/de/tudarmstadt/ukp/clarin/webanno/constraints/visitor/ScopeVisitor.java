@@ -25,7 +25,11 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepth
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
-
+/**
+ * Visitor for scopeName
+ * @author aakash
+ *
+ */
 public class ScopeVisitor
     extends GJVoidDepthFirst<List<Scope>>
 {

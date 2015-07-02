@@ -29,7 +29,8 @@ import java.util.Map.Entry;
  * @author aakash
  *
  */
-public class ParsedConstraints implements Serializable
+public class ParsedConstraints
+    implements Serializable
 {
 
     /**

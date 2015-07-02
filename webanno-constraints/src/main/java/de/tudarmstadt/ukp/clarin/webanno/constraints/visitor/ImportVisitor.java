@@ -21,7 +21,11 @@ import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.ImportDeclaration;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
-
+/**
+ * Visitor for Import
+ * @author aakash
+ *
+ */
 public class ImportVisitor
     extends GJVoidDepthFirst<Map<String, String>>
 {

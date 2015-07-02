@@ -24,7 +24,11 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Path;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.DepthFirstVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
-
+/**
+ * Visitor for Condition
+ * @author aakash
+ *
+ */
 public class ConditionVisitor
     extends GJVoidDepthFirst<List<Condition>>
 {

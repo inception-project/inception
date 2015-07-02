@@ -90,7 +90,7 @@ public class PossibleValue
     @Override
     public int compareTo(PossibleValue o)
     {
-        //Reverse sorting, so that important things are at top.
+        // Reverse sorting, so that important things are at top.
         if (!this.isImportant() && o.isImportant()) {
             return 1;
         }
@@ -98,8 +98,8 @@ public class PossibleValue
             return -1;
         }
         else
-          //Sort based on string value if important tags are same, A-Z
-            return this.getValue().compareTo(o.getValue()); 
+            // Sort based on string value if important tags are same, A-Z
+            return this.getValue().compareTo(o.getValue());
 
     }
 }

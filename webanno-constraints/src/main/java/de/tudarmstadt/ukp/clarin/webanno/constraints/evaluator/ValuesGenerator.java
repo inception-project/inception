@@ -39,6 +39,12 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 
+/**
+ * Class for getting list of PossibleValues after evaluating context and applicable rules.
+ * 
+ * @author aakash
+ *
+ */
 public class ValuesGenerator
     implements Evaluator
 {
