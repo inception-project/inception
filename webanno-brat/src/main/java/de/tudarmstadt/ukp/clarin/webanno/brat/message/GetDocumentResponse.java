@@ -2,13 +2,13 @@
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
@@ -88,8 +89,8 @@ public class GetDocumentResponse
     private List<Entity> entities = new ArrayList<Entity>();
     private List<String> attributes = new ArrayList<String>();
     private List<String> equivs = new ArrayList<String>();
-    private List<String[]> comments = new ArrayList<String[]>();
 
+    private List<Comment> comments = new ArrayList<>();
     public GetDocumentResponse()
     {
         super(COMMAND);
@@ -125,14 +126,20 @@ public class GetDocumentResponse
         text = aText;
     }
 
-    public List<String[]> getComments()
+
+    public List<Comment> getComments()
     {
         return comments;
     }
 
-    public void setComments(List<String[]> aComments)
+    public void setComments(List<Comment> aComments)
     {
-        comments = aComments;
+        this.comments = aComments;
+    }
+
+    public void addComments(Comment aComments)
+    {
+        comments.add(aComments);
     }
 
     /**
