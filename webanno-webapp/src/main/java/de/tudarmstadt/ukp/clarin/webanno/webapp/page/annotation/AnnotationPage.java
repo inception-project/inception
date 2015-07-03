@@ -60,8 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -128,8 +126,7 @@ public class AnnotationPage
 
     private boolean closeButtonClicked;
     public BratAnnotatorModel bModel = new BratAnnotatorModel();
-    
-    //Constraints file location
+    // Constraints file location
     private final String constraintsFile = "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules";
 
     public AnnotationPage()
@@ -156,11 +153,11 @@ public class AnnotationPage
                 annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                        .getSelection().getEnd());
+                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                        aBModel.getSelection().getEnd());
                 if (!aBModel.getSelection().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                            .getSelection().getEnd());
+                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(),
+                            aBModel.getSelection().getEnd());
                 }
             }
         };
@@ -168,14 +165,15 @@ public class AnnotationPage
         annotationDetailEditorPanel.setOutputMarkupId(true);
         add(annotationDetailEditorPanel);
 
-        annotator = new BratAnnotator("embedder1", new Model<BratAnnotatorModel>(bModel),
-                annotationDetailEditorPanel)
+        annotator = new BratAnnotator("embedder1",
+                new Model<BratAnnotatorModel>(bModel), annotationDetailEditorPanel)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget,
+                    BratAnnotatorModel aBratAnnotatorModel)
             {
                 bModel = aBratAnnotatorModel;
                 aTarget.add(numberOfPages);
@@ -264,7 +262,8 @@ public class AnnotationPage
                         // A hack, the dialog opens for the first time, and if no document is
                         // selected window will be "blind down". Something in the brat js causes
                         // this!
-                        if (bModel.getProject() == null || bModel.getDocument() == null) {
+                        if (bModel.getProject() == null
+                                || bModel.getDocument() == null) {
                             setResponsePage(WelcomePage.class);
                         }
 
@@ -290,13 +289,15 @@ public class AnnotationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 // annotator.reloadContent(aTarget);
-                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;"
-                        + "window.location.reload()");
+                aTarget.appendJavaScript(
+                        "Wicket.Window.unloadConfirmation = false;" +
+                        "window.location.reload()");
 
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)));
+        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(
+                bModel)));
         // Show the previous document, if exist
         add(new AjaxLink<Void>("showPreviousDocument")
         {
@@ -310,8 +311,8 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(bModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = userRepository.get(username);
@@ -328,16 +329,18 @@ public class AnnotationPage
                 listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
 
                 // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel
+                        .getDocument());
 
                 // If the first the document
                 if (currentDocumentIndex == 0) {
                     aTarget.appendJavaScript("alert('This is the first document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
-                        .getName());
-                bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
+                bModel.setDocumentName(listOfSourceDocuements.get(
+                        currentDocumentIndex - 1).getName());
+                bModel
+                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
 
                 loadDocumentAction(aTarget);
             }
@@ -356,8 +359,8 @@ public class AnnotationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
+                List<SourceDocument> listOfSourceDocuements = repository
+                        .listSourceDocuments(bModel.getProject());
 
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = userRepository.get(username);
@@ -374,16 +377,18 @@ public class AnnotationPage
                 listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
 
                 // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel
+                        .getDocument());
 
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
                     aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
-                        .getName());
-                bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
+                bModel.setDocumentName(listOfSourceDocuements.get(
+                        currentDocumentIndex + 1).getName());
+                bModel
+                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 loadDocumentAction(aTarget);
             }
@@ -404,17 +409,18 @@ public class AnnotationPage
                 try {
                     if (bModel.getDocument() != null) {
                         JCas jCas = getJCas();
-                        int nextSentenceAddress = BratAjaxCasUtil.getNextPageFirstSentenceAddress(
-                                jCas, bModel.getSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
+                        int nextSentenceAddress = BratAjaxCasUtil
+                                .getNextPageFirstSentenceAddress(jCas,
+                                        bModel.getSentenceAddress(),
+                                        bModel.getPreferences().getWindowSize());
                         if (bModel.getSentenceAddress() != nextSentenceAddress) {
 
                             ubdateSentenceNumber(jCas, nextSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                    bModel.getSentenceAddress())+1);
                             updateSentenceAddress(jCas, aTarget);
                         }
 
@@ -447,17 +453,17 @@ public class AnnotationPage
                         JCas jCas = getJCas();
 
                         int previousSentenceAddress = BratAjaxCasUtil
-                                .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
-                                        .getSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
+                                .getPreviousDisplayWindowSentenceBeginAddress(jCas,
+                                        bModel.getSentenceAddress(),
+                                        bModel.getPreferences().getWindowSize());
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
 
                             ubdateSentenceNumber(jCas, previousSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                    bModel.getSentenceAddress())+1);
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -472,8 +478,8 @@ public class AnnotationPage
                     error(e.getMessage());
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                 }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
+             }
+         }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
         add(new AjaxLink<Void>("showFirst")
         {
@@ -487,14 +493,15 @@ public class AnnotationPage
 
                         JCas jCas = getJCas();
 
-                        if (bModel.getFirstSentenceAddress() != bModel.getSentenceAddress()) {
+                        if (bModel.getFirstSentenceAddress() != bModel
+                                .getSentenceAddress()) {
 
                             ubdateSentenceNumber(jCas, bModel.getFirstSentenceAddress());
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                    bModel.getSentenceAddress())+1);
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -527,14 +534,15 @@ public class AnnotationPage
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(jCas, bModel
                                         .getPreferences().getWindowSize());
-                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
+                        if (lastDisplayWindowBeginingSentenceAddress != bModel
+                                .getSentenceAddress()) {
 
-                            ubdateSentenceNumber(jCas, lastDisplayWindowBeginingSentenceAddress);
+                            ubdateSentenceNumber(jCas,lastDisplayWindowBeginingSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                    bModel.getSentenceAddress())+1);
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -568,33 +576,31 @@ public class AnnotationPage
                 annotator.bratRenderLater(aTarget);
             }
         });
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(
+                bModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "onsubmit")
-        {
+        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "onsubmit") {
             private static final long serialVersionUID = -4549805321484461545L;
-
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
+            protected void onSubmit(AjaxRequestTarget aTarget) {
                 try {
-                    if (gotoPageAddress == 0) {
-                        aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                        return;
-                    }
+                     if (gotoPageAddress == 0) {
+                            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+                            return;
+                        }
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
                         JCas jCas = getJCas();
 
-                        ubdateSentenceNumber(jCas, gotoPageAddress);
+                        ubdateSentenceNumber(jCas,gotoPageAddress);
 
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
-                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(
-                                jCas, bModel.getSentenceAddress()) + 1);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bModel.getSentenceAddress())+1);
                         aTarget.add(gotoPageTextField);
                     }
                 }
@@ -649,13 +655,13 @@ public class AnnotationPage
                     }
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
                         JCas jCas = getJCas();
-                        ubdateSentenceNumber(jCas, gotoPageAddress);
+                        ubdateSentenceNumber(jCas,gotoPageAddress);
 
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         annotator.bratRenderLater(aTarget);
                         aTarget.add(numberOfPages);
-                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(
-                                jCas, bModel.getSentenceAddress()) + 1);
+                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+                                bModel.getSentenceAddress())+1);
                         aTarget.add(gotoPageTextField);
                     }
                 }
@@ -669,7 +675,8 @@ public class AnnotationPage
         finish = new FinishImage("finishImage", new Model<BratAnnotatorModel>(bModel));
         finish.setOutputMarkupId(true);
 
-        add(new FinishLink("showYesNoModalPanel", new Model<BratAnnotatorModel>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel",
+                new Model<BratAnnotatorModel>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
         });
@@ -685,28 +692,30 @@ public class AnnotationPage
         if (bModel.getDocument() != null) {
             // FIXME Why do we have to re-load the CAS here?
             // bratAnnotatorModel.getUser() is always set to the logged-in user
-            JCas jCas1 = repository.readAnnotationCas(bModel.getDocument(), bModel.getUser());
+            JCas jCas1 = repository.readAnnotationCas(bModel.getDocument(),
+                    bModel.getUser());
             JCas jCas = jCas1;
             totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
-                bModel.setSentenceAddress(bModel.getFirstSentenceAddress());
+                bModel.setSentenceAddress(bModel
+                        .getFirstSentenceAddress());
             }
             int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(jCas,
                     bModel.getSentenceAddress());
             int firstSentenceNumber = sentenceNumber + 1;
             int lastSentenceNumber;
             if (firstSentenceNumber + bModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
-                lastSentenceNumber = firstSentenceNumber + bModel.getPreferences().getWindowSize()
-                        - 1;
+                lastSentenceNumber = firstSentenceNumber
+                        + bModel.getPreferences().getWindowSize() - 1;
             }
             else {
                 lastSentenceNumber = totalNumberOfSentence;
             }
 
-            labelText = "showing " + firstSentenceNumber + "-" + lastSentenceNumber + " of "
-                    + totalNumberOfSentence + " sentences";
+            labelText = "showing " + firstSentenceNumber + "-" + lastSentenceNumber
+                    + " of " + totalNumberOfSentence + " sentences";
 
         }
         else {
@@ -808,19 +817,18 @@ public class AnnotationPage
 
             currentprojectId = bModel.getProject().getId();
 
-            LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser() + "] f:["
-                    + bModel.getFirstSentenceAddress() + "] l:[" + bModel.getLastSentenceAddress()
-                    + "] s:[" + bModel.getSentenceAddress() + "]");
+            LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser()
+                    + "] f:[" + bModel.getFirstSentenceAddress() + "] l:["
+                    + bModel.getLastSentenceAddress() + "] s:["
+                    + bModel.getSentenceAddress() + "]");
 
             gotoPageTextField.setModelObject(1);
-            
+
             // Parsing Constraint rules for project.
             ConstraintsGrammar parser;
             Parse p;
             ParsedConstraints constraints = null;
-            parser = new ConstraintsGrammar(
-                    new FileInputStream(
-                            constraintsFile));
+            parser = new ConstraintsGrammar(new FileInputStream(constraintsFile));
             p = parser.Parse();
             constraints = p.accept(new ParserVisitor());
             bModel.setConstraints(constraints);
@@ -834,9 +842,6 @@ public class AnnotationPage
             // brat-level initialization and rendering of document
             annotator.bratInit(aTarget);
             annotator.bratRender(aTarget, jcas);
-
-
-
         }
         catch (DataRetrievalFailureException e) {
             LOG.error("Error", e);

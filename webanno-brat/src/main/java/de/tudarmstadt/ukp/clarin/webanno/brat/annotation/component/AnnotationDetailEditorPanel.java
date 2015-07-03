@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
@@ -28,8 +29,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -96,11 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -190,7 +184,9 @@ public class AnnotationDetailEditorPanel
                     setEnabled(model.getSelectedAnnotationLayer() != null
                             && model.getSelectedAnnotationLayer().getId() > 0
                             && model.getSelectedAnnotationLayer().getType()
-                                    .equals(WebAnnoConst.SPAN_TYPE));
+                                    .equals(WebAnnoConst.SPAN_TYPE)
+                            && model.getSelectedAnnotationLayer().isLockToTokenOffset());
+                    updateForwardAnnotation(model);
 
                 }
             });
@@ -201,15 +197,8 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    if (getModelObject().getSelection().getAnnotation().isSet()) {
-                        getModelObject().setForwardAnnotation(false);// this is
-                                                                     // editing
-                        aTarget.add(forwardAnnotation);
-                    }
-                    else {
-                        getModelObject().setForwardAnnotation(
-                                getModelObject().isForwardAnnotation());
-                    }
+                    updateForwardAnnotation(getModelObject());
+                    aTarget.add(forwardAnnotation);
                 }
             });
 
@@ -231,8 +220,7 @@ public class AnnotationDetailEditorPanel
                     setVisible(!featureModels.isEmpty());
                 }
             };
-            // Add placeholder since wmc might start out invisible. Without the
-            // placeholder we
+            // Add placeholder since wmc might start out invisible. Without the placeholder we
             // cannot make it visible in an AJAX call
             wmc.setOutputMarkupPlaceholderTag(true);
             wmc.setOutputMarkupId(true);
@@ -362,8 +350,7 @@ public class AnnotationDetailEditorPanel
     public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        // If there is no annotation yet, create one. During creation, the
-        // adapter
+        // If there is no annotation yet, create one. During creation, the adapter
         // may notice that it would create a duplicate and return the address of
         // an existing annotation instead of a new one.
         JCas jCas = getCas(aBModel);
@@ -485,10 +472,8 @@ public class AnnotationDetailEditorPanel
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId());
 
-        // TODO We assume here that the selected annotation layer corresponds to
-        // the type of the
-        // FS to be deleted. It would be more robust if we could get the layer
-        // from the FS itself.
+        // TODO We assume here that the selected annotation layer corresponds to the type of the
+        // FS to be deleted. It would be more robust if we could get the layer from the FS itself.
         AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
         TypeAdapter adapter = getAdapter(annotationService, layer);
 
@@ -496,8 +481,7 @@ public class AnnotationDetailEditorPanel
         // If the deleted FS is a span, we must delete all relations that
         // point to it directly or indirectly via the attachFeature.
         //
-        // NOTE: It is important that this happens before UNATTACH SPANS since
-        // the attach feature
+        // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
             for (AnnotationLayer relationLayer : annotationService
@@ -510,10 +494,8 @@ public class AnnotationDetailEditorPanel
                 Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
                         .getTargetFeatureName());
 
-                // This code is already prepared for the day that relations can
-                // go between
-                // different layers and may have different attach features for
-                // the source and
+                // This code is already prepared for the day that relations can go between
+                // different layers and may have different attach features for the source and
                 // target layers.
                 Feature relationSourceAttachFeature = null;
                 Feature relationTargetAttachFeature = null;
@@ -526,8 +508,7 @@ public class AnnotationDetailEditorPanel
 
                 List<AnnotationFS> toBeDeleted = new ArrayList<AnnotationFS>();
                 for (AnnotationFS relationFS : CasUtil.select(jCas.getCas(), relationType)) {
-                    // Here we get the annotations that the relation is pointing
-                    // to in the UI
+                    // Here we get the annotations that the relation is pointing to in the UI
                     FeatureStructure sourceFS;
                     if (relationSourceAttachFeature != null) {
                         sourceFS = relationFS.getFeatureValue(sourceFeature).getFeatureValue(
@@ -560,20 +541,15 @@ public class AnnotationDetailEditorPanel
         }
 
         // == DELETE ATTACHED SPANS ==
-        // This case is currently not implemented because WebAnno currently does
-        // not allow to
-        // create spans that attach to other spans. The only span type for which
-        // this is relevant
+        // This case is currently not implemented because WebAnno currently does not allow to
+        // create spans that attach to other spans. The only span type for which this is relevant
         // is the Token type which cannot be deleted.
 
         // == UNATTACH SPANS ==
         // If the deleted FS is a span that is attached to another span, the
-        // attachFeature in the other span must be set to null. Typical example:
-        // POS is deleted, so
-        // the pos feature of Token must be set to null. This is a quick case,
-        // because we only need
-        // to look at span annotations that have the same offsets as the FS to
-        // be deleted.
+        // attachFeature in the other span must be set to null. Typical example: POS is deleted, so
+        // the pos feature of Token must be set to null. This is a quick case, because we only need
+        // to look at span annotations that have the same offsets as the FS to be deleted.
         if (adapter instanceof SpanAdapter && layer.getAttachType() != null) {
             Type spanType = CasUtil.getType(jCas.getCas(), layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
@@ -590,14 +566,10 @@ public class AnnotationDetailEditorPanel
         }
 
         // == CLEAN UP LINK FEATURES ==
-        // If the deleted FS is a span that is the target of a link feature, we
-        // must unset that
-        // link and delete the slot if it is a multi-valued link. Here, we have
-        // to scan all
-        // annotations from layers that have link features that could point to
-        // the FS
-        // to be deleted: the link feature must be the type of the FS or it must
-        // be generic.
+        // If the deleted FS is a span that is the target of a link feature, we must unset that
+        // link and delete the slot if it is a multi-valued link. Here, we have to scan all
+        // annotations from layers that have link features that could point to the FS
+        // to be deleted: the link feature must be the type of the FS or it must be generic.
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService.listAttachedLinkFeatures(layer)) {
                 Type linkType = CasUtil.getType(jCas.getCas(), linkFeature.getLayer().getName());
@@ -623,8 +595,7 @@ public class AnnotationDetailEditorPanel
             }
         }
 
-        // If the deleted FS is a relation, we don't have to do anything.
-        // Nothing can point to a
+        // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
         // relation.
         if (adapter instanceof ArcAdapter) {
             // Do nothing ;)
@@ -747,6 +718,17 @@ public class AnnotationDetailEditorPanel
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
         aBModel.setSentenceEndOffset(sentence.getEnd());
+
+
+        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
+                aBModel.getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas,
+                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
+                lastAddressInPage);
+        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
     @SuppressWarnings("unchecked")
@@ -790,24 +772,20 @@ public class AnnotationDetailEditorPanel
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
 
-            // If we drag an arc between POS annotations, then the relation must
-            // be a dependency
+            // If we drag an arc between POS annotations, then the relation must be a dependency
             // relation.
-            // FIXME - Actually this case should be covered by the last case -
-            // the database lookup!
+            // FIXME - Actually this case should be covered by the last case - the database lookup!
             if (spanLayer.isBuiltIn() && spanLayer.getName().equals(POS.class.getName())) {
                 aBModel.setSelectedAnnotationLayer(annotationService.getLayer(
                         Dependency.class.getName(), aBModel.getProject()));
             }
-            // If we drag an arc in a chain layer, then the arc is of the same
-            // layer as the span
+            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
             // Chain layers consist of arcs and spans
             else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 // one layer both for the span and arc annotation
                 aBModel.setSelectedAnnotationLayer(spanLayer);
             }
-            // Otherwise, look up the possible relation layer(s) in the
-            // database.
+            // Otherwise, look up the possible relation layer(s) in the database.
             else {
                 for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel
                         .getProject())) {
@@ -869,10 +847,6 @@ public class AnnotationDetailEditorPanel
                 featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
                         .getFeature(annoFs, feature)));
             }
-
-            /*
-             * //TODO: aakash: add logic to use constraints here.
-             */
         }
         else {
             setInitSpanLayers(aBModel);
@@ -950,8 +924,7 @@ public class AnnotationDetailEditorPanel
         @Override
         protected void populateItem(final Item<FeatureModel> item)
         {
-            // Feature editors that allow multiple values may want to update
-            // themselves,
+            // Feature editors that allow multiple values may want to update themselves,
             // e.g. to add another slot.
             item.setOutputMarkupId(true);
 
@@ -986,8 +959,7 @@ public class AnnotationDetailEditorPanel
             case ARRAY: {
                 switch (fm.feature.getLinkMode()) {
                 case WITH_ROLE: {
-                    // If it is none of the primitive types, it must be a link
-                    // feature
+                    // If it is none of the primitive types, it must be a link feature
                     frag = new LinkFeatureEditor("editor", "linkFeatureEditor", item, fm);
                     break;
 
@@ -1005,12 +977,9 @@ public class AnnotationDetailEditorPanel
                         + "]");
             }
             item.add(frag);
-            // whenever it is updating an annotation, it updates automatically
-            // when a component for
-            // the feature lost focus - but updating is for every component
-            // edited
-            // LinkFeatureEditors must be excluded because the auto-update will
-            // break the ability
+            // whenever it is updating an annotation, it updates automatically when a component for
+            // the feature lost focus - but updating is for every component edited
+            // LinkFeatureEditors must be excluded because the auto-update will break the ability
             // to add slots. Adding a slot is NOT an annotation action.
             if (annotationFeatureForm.getModelObject().getSelection().getAnnotation().isSet()
                     && !(frag instanceof LinkFeatureEditor)) {
@@ -1181,7 +1150,6 @@ public class AnnotationDetailEditorPanel
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
             String featureLabel = aModel.feature.getUiName();
-
             if (aModel.feature.getTagset() != null) {
                 featureLabel += " (" + aModel.feature.getTagset().getName() + ")";
             }
@@ -1325,7 +1293,6 @@ public class AnnotationDetailEditorPanel
                             aTarget.add(wmc);
                         }
                     });
-
                     label.add(new AttributeAppender("style", new Model<String>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -1488,9 +1455,7 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 }
-
             });
-
         }
 
         public void setModelObject(FeatureModel aModel)
@@ -1620,6 +1585,7 @@ public class AnnotationDetailEditorPanel
 
                     aTarget.add(wmc);
                     aTarget.add(annotateButton);
+                    aTarget.add(forwardAnnotation);
                 }
             });
         }
@@ -1662,6 +1628,21 @@ public class AnnotationDetailEditorPanel
         public int targetAddr = -1;
     }
 
+    private void updateForwardAnnotation(BratAnnotatorModel aBModel)
+    {
+        if (aBModel.getSelection().getAnnotation().isSet()) {
+            aBModel.setForwardAnnotation(false);// this is editing
+
+        }
+        else if (aBModel.getSelectedAnnotationLayer() != null
+                && !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
+            aBModel.setForwardAnnotation(false);// no forwarding for sub-/multitoken annotation
+        }
+        else {
+            aBModel.setForwardAnnotation(aBModel.isForwardAnnotation());
+        }
+    }
+
     public static class FeatureModel
         implements Serializable
     {
@@ -1674,8 +1655,7 @@ public class AnnotationDetailEditorPanel
             feature = aFeature;
             value = aValue;
 
-            // Avoid having null here because otherwise we have to handle null
-            // in zillion places!
+            // Avoid having null here because otherwise we have to handle null in zillion places!
             if (value == null && MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())) {
                 value = new ArrayList<>();
             }
