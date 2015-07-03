@@ -110,6 +110,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Annotation Detail Editor Panel.
  *
  * @author Seid Muhie Yimam
+ * @author aakash
  */
 public class AnnotationDetailEditorPanel
     extends Panel
@@ -1158,47 +1159,16 @@ public class AnnotationDetailEditorPanel
             if (aModel.feature.getTagset() != null) {
 
                 List<Tag> tagset = null;
-
-                // Add values from rules
-                String restrictionFeaturePath = aModel.feature.getName() + "."
-                        + aModel.feature.getLinkTypeRoleFeatureName();
-
-                try {
-                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
-                    JCas jCas = getCas(model);
-
-                    FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
-                            .getAnnotation().getId());
-
-                    Evaluator evaluator = new ValuesGenerator();
-                    List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                            featureStructure, restrictionFeaturePath, model.getConstraints());
-
-                    List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
-                            .getTagset());
-                    // only adds tags which are suggested by rules and exist in tagset.
-                    tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-
-                    // add remaining tags
-                    addRemainingTags(tagset, valuesFromTagset);
+                BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                //verification to check whether constraints exist for this project or NOT
+                if (model.getConstraints() != null) {
+                    tagset = populateTagsBasedOnRules(model, aModel, tagset);
                 }
-                
-                catch (UIMAException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                else {
+                    // Earlier behavior,
+                    tagset = annotationService.listTags(aModel.feature.getTagset());
+                    ;
                 }
-                catch (ClassNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-                // adding all other possible values
-                // tagset.addAll(annotationService.listTags(aModel.feature.getTagset()));
-
                 field = new ComboBox<Tag>("value", tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 isDrop = true;
@@ -1207,6 +1177,55 @@ public class AnnotationDetailEditorPanel
                 field = new TextField<String>("value");
             }
             add(field);
+        }
+
+        /**
+         * Adds and sorts tags based on Constraints rules
+         * @param model
+         * @param aModel
+         * @param tagset
+         * @return
+         */
+        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel,
+                List<Tag> tagset)
+        {
+            // Add values from rules
+            String restrictionFeaturePath = aModel.feature.getName() + "."
+                    + aModel.feature.getLinkTypeRoleFeatureName();
+
+            try {
+ 
+                JCas jCas = getCas(model);
+
+                FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
+                        .getAnnotation().getId());
+
+                Evaluator evaluator = new ValuesGenerator();
+                List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
+                        featureStructure, restrictionFeaturePath, model.getConstraints());
+
+                List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
+                        .getTagset());
+                // only adds tags which are suggested by rules and exist in tagset.
+                tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+
+                // add remaining tags
+                addRemainingTags(tagset, valuesFromTagset);
+            }
+            
+            catch (UIMAException e) {
+                error("UIMA Exception while applying Constraint rules");
+                LOG.error("UIMA Exception while applying Constraint rules");    
+            }
+            catch (ClassNotFoundException e) {
+                error(ExceptionUtils.getRootCause(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
+            }
+            catch(IOException e){
+                error(ExceptionUtils.getRootCause(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
+            }
+            return tagset;
         }
 
         @Override
@@ -1315,70 +1334,16 @@ public class AnnotationDetailEditorPanel
 
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
-
-                // Get the name for evaluation.
-                String restrictionFeaturePath = aModel.feature.getName() + "."
-                        + aModel.feature.getLinkTypeRoleFeatureName();
-
-                try {
-                    BratAnnotatorModel model = annotationFeatureForm.getModelObject();
-                    JCas jCas = getCas(model);
-
-                    FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
-                            .getAnnotation().getId());
-
-                    Evaluator evaluator = new ValuesGenerator();
-
-                    List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                            featureStructure, restrictionFeaturePath, model.getConstraints());
-
-                    List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
-                            .getTagset());
-                    // only adds tags which are suggested by rules and exist in tagset.
-                    tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
-                    // Create entries for important tags.
-
-                    // Loop over values to see which of the tags are important and add them.
-                    for (Tag tag : tagset) {
-                        for (PossibleValue value : possibleValues) {
-                            if (!value.isImportant()) {
-                                break;
-                            }
-                            if (tag.getName().equalsIgnoreCase(value.getValue())) {
-                                // Add empty slot in UI with that name.
-
-                                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                        .getModelObject().value;
-                                LinkWithRoleModel m = new LinkWithRoleModel();
-                                m.role = tag.getName();
-                                links.add(m);
-                                annotationFeatureForm.getModelObject().setArmedSlot(
-                                        LinkFeatureEditor.this.getModelObject().feature,
-                                        links.size() - 1);
-                                // aTarget.add(wmc);
-
-                            }
-                        }
-                    }
-
-                    // add remaining tags.
-                    addRemainingTags(tagset, valuesFromTagset);
-
+                BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                //verification to check whether constraints exist for this project or NOT
+                if (model.getConstraints() != null) {
+                    tagset = populateTagsBasedOnRules(model, aModel, tagset);
+                }
+                else {
+                    // add tagsets only, earlier behavior
+                    tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
                 
-                catch (UIMAException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                catch (ClassNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                catch(IOException e){
-                    e.printStackTrace();
-                }
-                
-
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
@@ -1456,6 +1421,76 @@ public class AnnotationDetailEditorPanel
                     }
                 }
             });
+        }
+
+        /**
+         * Adds tagset based on Constraints rules, auto-adds tags which are marked important.
+         * @param model 
+         * @param aModel
+         * @param tagset
+         * @return
+         */
+        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel, List<Tag> tagset)
+        {
+            String restrictionFeaturePath = aModel.feature.getName() + "."
+                    + aModel.feature.getLinkTypeRoleFeatureName();
+
+            try {
+                JCas jCas = getCas(model);
+
+                FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
+                        .getAnnotation().getId());
+
+                Evaluator evaluator = new ValuesGenerator();
+
+                List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
+                        featureStructure, restrictionFeaturePath, model.getConstraints());
+
+                List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
+                        .getTagset());
+                // only adds tags which are suggested by rules and exist in tagset.
+                tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                // Create entries for important tags.
+
+                // Loop over values to see which of the tags are important and add them.
+                for (Tag tag : tagset) {
+                    for (PossibleValue value : possibleValues) {
+                        if (!value.isImportant()) {
+                            break;
+                        }
+                        if (tag.getName().equalsIgnoreCase(value.getValue())) {
+                            // Add empty slot in UI with that name.
+
+                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                    .getModelObject().value;
+                            LinkWithRoleModel m = new LinkWithRoleModel();
+                            m.role = tag.getName();
+                            links.add(m);
+                            annotationFeatureForm.getModelObject().setArmedSlot(
+                                    LinkFeatureEditor.this.getModelObject().feature,
+                                    links.size() - 1);
+                        }
+                    }
+                }
+
+                // add remaining tags.
+                addRemainingTags(tagset, valuesFromTagset);
+
+            }
+            
+            catch (UIMAException e) {
+                error("UIMA Exception while applying Constraint rules");
+                LOG.error("UIMA Exception while applying Constraint rules");    
+            }
+            catch (ClassNotFoundException e) {
+                error(ExceptionUtils.getRootCause(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
+            }
+            catch(IOException e){
+                error(ExceptionUtils.getRootCause(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
+            }
+            return tagset;
         }
 
         public void setModelObject(FeatureModel aModel)
