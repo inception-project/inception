@@ -1335,6 +1335,15 @@ public class AnnotationDetailEditorPanel
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
+                //Remove unused (but auto-added) tags.
+//                Iterator<LinkWithRoleModel> existingLinks = ((List<LinkWithRoleModel>) LinkFeatureEditor.this
+//                        .getModelObject().value).iterator(); 
+//                while(existingLinks.hasNext()){
+//                    if(existingLinks.next().wasAutoCreated && existingLinks.next().targetAddr==-1){
+//                        //remove it
+//                        existingLinks.remove();
+//                    }
+//                }
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null) {
                     tagset = populateTagsBasedOnRules(model, aModel, tagset);
@@ -1428,7 +1437,7 @@ public class AnnotationDetailEditorPanel
          * @param model 
          * @param aModel
          * @param tagset
-         * @return
+         * @return List containing tags which exist in tagset and also suggested by rules, followed by the remaining tags in tagset.
          */
         private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel, List<Tag> tagset)
         {
@@ -1448,32 +1457,12 @@ public class AnnotationDetailEditorPanel
 
                 List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
                         .getTagset());
-                // only adds tags which are suggested by rules and exist in tagset.
+                // Only adds tags which are suggested by rules and exist in tagset.
                 tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
                 // Create entries for important tags.
+                autoAddImportantTags(tagset, possibleValues);
 
-                // Loop over values to see which of the tags are important and add them.
-                for (Tag tag : tagset) {
-                    for (PossibleValue value : possibleValues) {
-                        if (!value.isImportant()) {
-                            break;
-                        }
-                        if (tag.getName().equalsIgnoreCase(value.getValue())) {
-                            // Add empty slot in UI with that name.
-
-                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                    .getModelObject().value;
-                            LinkWithRoleModel m = new LinkWithRoleModel();
-                            m.role = tag.getName();
-                            links.add(m);
-                            annotationFeatureForm.getModelObject().setArmedSlot(
-                                    LinkFeatureEditor.this.getModelObject().feature,
-                                    links.size() - 1);
-                        }
-                    }
-                }
-
-                // add remaining tags.
+                // Add remaining tags.
                 addRemainingTags(tagset, valuesFromTagset);
 
             }
@@ -1491,6 +1480,35 @@ public class AnnotationDetailEditorPanel
                 LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
             }
             return tagset;
+        }
+
+        /**
+         * @param tagset
+         * @param possibleValues
+         */
+        private void autoAddImportantTags(List<Tag> tagset, List<PossibleValue> possibleValues)
+        {
+            // Loop over values to see which of the tags are important and add them.
+            for (Tag tag : tagset) {
+                for (PossibleValue value : possibleValues) {
+                    if (!value.isImportant()) {
+                        break;
+                    }
+                    if (tag.getName().equalsIgnoreCase(value.getValue())) {
+                        // Add empty slot in UI with that name.
+
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                .getModelObject().value;
+                        LinkWithRoleModel m = new LinkWithRoleModel();
+                        m.role = tag.getName();
+                        m.wasAutoCreated = true; //Marking so that can be ignored later. 
+                        links.add(m);
+                        annotationFeatureForm.getModelObject().setArmedSlot(
+                                LinkFeatureEditor.this.getModelObject().feature,
+                                links.size() - 1);
+                    }
+                }
+            }
         }
 
         public void setModelObject(FeatureModel aModel)
@@ -1661,6 +1679,7 @@ public class AnnotationDetailEditorPanel
         public String role;
         public String label = CLICK_HINT;
         public int targetAddr = -1;
+        public boolean wasAutoCreated;
     }
 
     private void updateForwardAnnotation(BratAnnotatorModel aBModel)
