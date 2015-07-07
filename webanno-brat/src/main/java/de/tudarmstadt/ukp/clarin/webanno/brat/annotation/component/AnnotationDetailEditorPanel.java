@@ -1338,7 +1338,7 @@ public class AnnotationDetailEditorPanel
                 
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null) {
-                    tagset = populateTagsBasedOnRules(model, aModel, tagset);
+                    tagset = addTagsBasedOnRules(model, aModel, tagset);
                 }
                 else {
                     // add tagsets only, earlier behavior
@@ -1431,7 +1431,7 @@ public class AnnotationDetailEditorPanel
          * @param tagset
          * @return List containing tags which exist in tagset and also suggested by rules, followed by the remaining tags in tagset.
          */
-        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel, List<Tag> tagset)
+        private List<Tag> addTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel, List<Tag> tagset)
         {
             String restrictionFeaturePath = aModel.feature.getName() + "."
                     + aModel.feature.getLinkTypeRoleFeatureName();
@@ -1479,17 +1479,22 @@ public class AnnotationDetailEditorPanel
         /**
          * 
          */
+        @SuppressWarnings("unchecked")
         private void removeAutomaticallyAddedUnusedEntries()
         {
             //              Remove unused (but auto-added) tags.
-                          Iterator<LinkWithRoleModel> existingLinks = ((List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                  .getModelObject().value).iterator(); 
+                          List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                      .getModelObject().value;
+                          LinkWithRoleModel temp;
+                        Iterator<LinkWithRoleModel> existingLinks = list.iterator(); 
                           while(existingLinks.hasNext()){
-                              if(existingLinks.next().wasAutoCreated && existingLinks.next().targetAddr==-1){
+                              temp = existingLinks.next();
+                              if(temp.wasAutoCreated && temp.targetAddr==-1){
                                   //remove it
                                   existingLinks.remove();
                               }
                           }
+//                          LinkFeatureEditor.this.setModelObject((FeatureModel) list);
         }
 
         /**
