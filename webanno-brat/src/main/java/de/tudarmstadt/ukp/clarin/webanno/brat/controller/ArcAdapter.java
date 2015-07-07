@@ -31,8 +31,10 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +52,7 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -165,8 +168,8 @@ public class ArcAdapter
                 getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
 
         // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas,
-                FeatureStructure.class, lastAddressInPage);
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
+                lastAddressInPage);
 
         Type type = getType(aJcas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
@@ -177,6 +180,9 @@ public class ArcAdapter
 
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
+
+        Map<Integer, List<Integer>> relationLinks = getRelationLinks(aJcas, firstSentence,
+                lastSentenceInPage, type, dependentFeature, governorFeature, arcSpanFeature);
 
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
@@ -201,9 +207,93 @@ public class ArcAdapter
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
 
-            aResponse.addRelation(new Relation(getAddr(fs),
-                    bratTypeName, argumentList, bratLabelText, color));
+            aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
+                    bratLabelText, color));
+            if (relationLinks.keySet().contains(getAddr(fs))) {
+                StringBuffer cm = new StringBuffer();
+                boolean f = true;
+                for (int id : relationLinks.get(getAddr(fs))) {
+                    if (f) {
+                        cm.append(selectByAddr(aJcas, id).getCoveredText());
+                        f = false;
+                    }
+                    else {
+                        cm.append("→" + selectByAddr(aJcas, id).getCoveredText());
+                    }
+                }
+
+                aResponse.addComments(new Comment(getAddr(fs), "Yield of relation:", cm.toString()));
+            }
         }
+    }
+
+    /**
+     * Get relation links to display
+     * @param aJcas
+     * @param firstSentence
+     * @param lastSentenceInPage
+     * @param type
+     * @param dependentFeature
+     * @param governorFeature
+     * @param arcSpanFeature
+     * @return
+     */
+    private Map<Integer, List<Integer>> getRelationLinks(JCas aJcas, Sentence firstSentence,
+            Sentence lastSentenceInPage, Type type, Feature dependentFeature,
+            Feature governorFeature, Feature arcSpanFeature)
+    {
+        FeatureStructure dependentFs;
+        FeatureStructure governorFs;
+        Map<Integer, List<Integer>> relations = new HashMap<>();
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+            if (attachFeatureName != null) {
+                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
+                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
+            }
+            else {
+                dependentFs = fs.getFeatureValue(dependentFeature);
+                governorFs = fs.getFeatureValue(governorFeature);
+            }
+            if (dependentFs == null || governorFs == null) {
+                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                        + "] has loose ends - cannot render.");
+                continue;
+            }
+            LinkedList<Integer> links = new LinkedList<>();
+
+            links.add(getAddr(dependentFs));
+
+            // check for the existences of links
+            for (AnnotationFS oFS : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
+                    lastSentenceInPage.getEnd())) {
+                FeatureStructure oDependentFs;
+                FeatureStructure oGovernorFs;
+                if (attachFeatureName != null) {
+                    oDependentFs = oFS.getFeatureValue(dependentFeature).getFeatureValue(
+                            arcSpanFeature);
+                    oGovernorFs = oFS.getFeatureValue(governorFeature).getFeatureValue(
+                            arcSpanFeature);
+                }
+                else {
+                    oDependentFs = oFS.getFeatureValue(dependentFeature);
+                    oGovernorFs = oFS.getFeatureValue(governorFeature);
+                }
+
+                if (((AnnotationFS) governorFs).getBegin() == ((AnnotationFS) oGovernorFs)
+                        .getBegin()
+                        && ((AnnotationFS) dependentFs).getBegin() == ((AnnotationFS) oDependentFs)
+                                .getBegin()) {
+                    continue;
+                }
+                else if (links.contains(getAddr(oGovernorFs))) {
+                    links.add(getAddr(oDependentFs));
+                }
+            }
+            links.addFirst(getAddr(governorFs));
+            relations.put(getAddr(fs), links);
+        }
+        return relations;
     }
 
     /**
@@ -225,20 +315,19 @@ public class ArcAdapter
      * @throws BratAnnotationException
      *             if the annotation could not be created/updated.
      */
-    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs,
-            JCas aJCas, BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
+    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
+            BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
         throws BratAnnotationException
     {
-        Sentence sentence = selectSentenceAt(aJCas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
+        Sentence sentence = selectSentenceAt(aJCas, aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
 
         int beginOffset = sentence.getBegin();
         int endOffset = selectByAddr(
                 aJCas,
                 Sentence.class,
-                getLastSentenceAddressInDisplayWindow(aJCas, getAddr(sentence),
-                        aBratAnnotatorModel.getPreferences().getWindowSize())).getEnd();
+                getLastSentenceAddressInDisplayWindow(aJCas, getAddr(sentence), aBratAnnotatorModel
+                        .getPreferences().getWindowSize())).getEnd();
         if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             return updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
@@ -265,35 +354,35 @@ public class ArcAdapter
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
 
-            for (AnnotationFS fs : selectCovered(aJCas.getCas(), type,  aBegin, aEnd)) {
+        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
-                if (attachFeatureName != null) {
-                    Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
-                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
-                            .getFeatureValue(arcSpanFeature);
-                    governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
-                            .getFeatureValue(arcSpanFeature);
-                }
-                else {
-                    dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-                    governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
-                }
+            if (attachFeatureName != null) {
+                Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
+                        arcSpanFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature).getFeatureValue(
+                        arcSpanFeature);
+            }
+            else {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+            }
 
-                if (dependentFs == null || governorFs == null) {
-                    log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
-                            + "] has loose ends - ignoring during while checking for duplicates.");
-                    continue;
-                }
+            if (dependentFs == null || governorFs == null) {
+                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                        + "] has loose ends - ignoring during while checking for duplicates.");
+                continue;
+            }
 
-                if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
-                        aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
+            if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
+                    aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
-                    if (!allowStacking) {
-                        setFeature(fs, aFeature, aValue);
-                        return fs;
-                    }
+                if (!allowStacking) {
+                    setFeature(fs, aFeature, aValue);
+                    return fs;
                 }
             }
+        }
 
         // It is new ARC annotation, create it
         dependentFs = aTargetFs;
