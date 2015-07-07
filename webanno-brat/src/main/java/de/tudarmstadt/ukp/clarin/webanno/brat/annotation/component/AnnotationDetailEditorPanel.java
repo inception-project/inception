@@ -1335,15 +1335,7 @@ public class AnnotationDetailEditorPanel
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
-                //Remove unused (but auto-added) tags.
-//                Iterator<LinkWithRoleModel> existingLinks = ((List<LinkWithRoleModel>) LinkFeatureEditor.this
-//                        .getModelObject().value).iterator(); 
-//                while(existingLinks.hasNext()){
-//                    if(existingLinks.next().wasAutoCreated && existingLinks.next().targetAddr==-1){
-//                        //remove it
-//                        existingLinks.remove();
-//                    }
-//                }
+                
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null) {
                     tagset = populateTagsBasedOnRules(model, aModel, tagset);
@@ -1459,6 +1451,8 @@ public class AnnotationDetailEditorPanel
                         .getTagset());
                 // Only adds tags which are suggested by rules and exist in tagset.
                 tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                removeAutomaticallyAddedUnusedEntries();
+                
                 // Create entries for important tags.
                 autoAddImportantTags(tagset, possibleValues);
 
@@ -1480,6 +1474,22 @@ public class AnnotationDetailEditorPanel
                 LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
             }
             return tagset;
+        }
+
+        /**
+         * 
+         */
+        private void removeAutomaticallyAddedUnusedEntries()
+        {
+            //              Remove unused (but auto-added) tags.
+                          Iterator<LinkWithRoleModel> existingLinks = ((List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                  .getModelObject().value).iterator(); 
+                          while(existingLinks.hasNext()){
+                              if(existingLinks.next().wasAutoCreated && existingLinks.next().targetAddr==-1){
+                                  //remove it
+                                  existingLinks.remove();
+                              }
+                          }
         }
 
         /**
