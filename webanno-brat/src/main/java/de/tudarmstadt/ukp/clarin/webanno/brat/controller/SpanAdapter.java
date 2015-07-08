@@ -341,6 +341,10 @@ public class SpanAdapter
     public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
         throws BratAnnotationException
     {
+        // if zero-offset annotation is requestd
+        if (aBegin == aEnd) {
+            return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+        }
         if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
                 List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);

@@ -430,10 +430,12 @@ public class BratAnnotator
 
             int bo = sentence.getBegin() + offsetLists.get(0).getBegin();
             int eo = sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd();
+            if (bo == eo) {
+                return new Offsets(bo, eo);
+            }
             List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
             bo = tokens.get(0).getBegin();
             eo = tokens.get(0).getEnd();
-
             return new Offsets(bo, eo);
         }
         else {
