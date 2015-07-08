@@ -81,7 +81,6 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
@@ -359,7 +358,14 @@ public class AnnotationDetailEditorPanel
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         if (aBModel.getSelectedAnnotationLayer() == null) {
-            error("No layer is selected. First select a layer");
+            error("No layer is selected. First select a layer.");
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            return;
+        }
+        
+        if (aBModel.getSelectedAnnotationLayer().isLocked()) {
+            error("Layer is not editable.");
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
             return;
         }
 
@@ -456,7 +462,7 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelection().getAnnotation().isSet()) {
             String bratLabelText = TypeUtil.getBratLabelText(adapter,
                     selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId()), features);
-            info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText,
+            info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText,
                     false));
         }
 
@@ -623,7 +629,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
         aBModel.getSelection().setAnnotate(false);
 
-        info(BratAnnotator.generateMessage(aBModel.getSelectedAnnotationLayer(), null, true));
+        info(generateMessage(aBModel.getSelectedAnnotationLayer(), null, true));
 
         // A hack to remember the visual DropDown display value
         aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
@@ -800,6 +806,11 @@ public class AnnotationDetailEditorPanel
 
                 populateFeatures(aBModel, annoFs);
             }
+            // Avoid creation of arcs on locked layers
+            else if (aBModel.getSelectedAnnotationLayer() != null
+                    && aBModel.getSelectedAnnotationLayer().isLocked()) {
+                aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
+            }
         }
         // Rapid annotation - get saved anno layers and features
         else if (aBModel.getSelection().getAnnotation().isNotSet()
@@ -899,7 +910,7 @@ public class AnnotationDetailEditorPanel
 
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getType().equals(WebAnnoConst.RELATION_TYPE) || !layer.isEnabled()
-                    || layer.getName().equals(Token.class.getName())) {
+                    || layer.isLocked() || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
             annotationLayers.add(layer);
@@ -974,23 +985,29 @@ public class AnnotationDetailEditorPanel
                         + "]");
             }
             item.add(frag);
-            // whenever it is updating an annotation, it updates automatically when a component for
-            // the feature lost focus - but updating is for every component edited
-            // LinkFeatureEditors must be excluded because the auto-update will break the ability
-            // to add slots. Adding a slot is NOT an annotation action.
-            if (annotationFeatureForm.getModelObject().getSelection().getAnnotation().isSet()
-                    && !(frag instanceof LinkFeatureEditor)) {
-                if (frag.isDropOrchoice()) {
-                    updateFeature(fm, frag, "onchange");
+            
+            if (!fm.feature.getLayer().isLocked()) {
+                // whenever it is updating an annotation, it updates automatically when a component 
+                // for the feature lost focus - but updating is for every component edited
+                // LinkFeatureEditors must be excluded because the auto-update will break the 
+                // ability to add slots. Adding a slot is NOT an annotation action.
+                if (annotationFeatureForm.getModelObject().getSelection().getAnnotation().isSet()
+                        && !(frag instanceof LinkFeatureEditor)) {
+                    if (frag.isDropOrchoice()) {
+                        updateFeature(fm, frag, "onchange");
+                    }
+                    else {
+                        updateFeature(fm, frag, "onblur");
+                    }
                 }
-                else {
-                    updateFeature(fm, frag, "onblur");
+    
+                if (item.getIndex() == 0) {
+                    // Put focus on first feature
+                    frag.getFocusComponent().add(new DefaultFocusBehavior());
                 }
             }
-
-            if (item.getIndex() == 0) {
-                // Put focus on first feature
-                frag.getFocusComponent().add(new DefaultFocusBehavior());
+            else {
+                frag.getFocusComponent().setEnabled(false);
             }
         }
 
@@ -1515,5 +1532,16 @@ public class AnnotationDetailEditorPanel
                 value = new ArrayList<>();
             }
         }
+    }
+    
+    private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
+    {
+        String action = aDeleted ? "deleted" : "created/updated";
+
+        String msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
+        if (StringUtils.isNotBlank(aLabel)) {
+            msg += " Label: [" + aLabel + "]";
+        }
+        return msg;
     }
 }
