@@ -128,7 +128,7 @@ public class AnnotationPage
     private boolean closeButtonClicked;
     public BratAnnotatorModel bModel = new BratAnnotatorModel();
     // Constraints file location
-    private final String constraintsFile = "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules";
+//    private final String constraintsFile = "/home/aakash/ukp/workspaceLuna/constraints/src/test/resources/rules/constraints_origFrame-Roleset.rules";
 
     public AnnotationPage()
     {
@@ -831,13 +831,14 @@ public class AnnotationPage
             File rulesFile = repository.getConstraintRulesFile(bModel.getProject());
             if (rulesFile.exists()) {
                 parser = new ConstraintsGrammar(new FileInputStream(rulesFile));
+                p = parser.Parse();
+                constraints = p.accept(new ParserVisitor());
+                bModel.setConstraints(constraints);
             }
             else {
-                parser = new ConstraintsGrammar(new FileInputStream(constraintsFile));
+                info("No constraint rules found for current project. Go to project settings to upload constraint rules file.");
             }
-            p = parser.Parse();
-            constraints = p.accept(new ParserVisitor());
-            bModel.setConstraints(constraints);
+           
 
             updateSentenceAddress(jcas, aTarget);
 
