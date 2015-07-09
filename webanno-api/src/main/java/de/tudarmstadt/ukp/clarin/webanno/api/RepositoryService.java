@@ -1087,4 +1087,6 @@ public interface RepositoryService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException;
+
+    File getConstraints(Project aProject);
 }

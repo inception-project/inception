@@ -704,6 +704,13 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public File getConstraints(Project aProject)
+    {
+        // FIXME We had decided to store the constraints in the DB
+        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + "/constraints.txt");
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException

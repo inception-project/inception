@@ -124,9 +124,9 @@ public class BratAnnotatorModel
         return constraints;
     }
 
-    public void setConstraints(ParsedConstraints constraints)
+    public void setConstraints(ParsedConstraints aConstraints)
     {
-        this.constraints = constraints;
+        constraints = aConstraints;
     }
 
     // Annotation preferences, to be saved in a file system

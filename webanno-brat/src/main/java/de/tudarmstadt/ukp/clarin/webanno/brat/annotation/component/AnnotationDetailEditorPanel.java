@@ -1178,7 +1178,7 @@ public class AnnotationDetailEditorPanel
                 List<Tag> tagset = null;
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
                 //verification to check whether constraints exist for this project or NOT
-                if (model.getConstraints() != null) {
+                if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
                     tagset = populateTagsBasedOnRules(model, aModel, tagset);
                 }
                 else {
@@ -1207,8 +1207,20 @@ public class AnnotationDetailEditorPanel
                 List<Tag> tagset)
         {
             // Add values from rules
-            String restrictionFeaturePath = aModel.feature.getName() + "."
-                    + aModel.feature.getLinkTypeRoleFeatureName();
+            String restrictionFeaturePath;
+            switch (aModel.feature.getLinkMode()) {
+            case WITH_ROLE:
+                restrictionFeaturePath = aModel.feature.getName() + "."
+                        + aModel.feature.getLinkTypeRoleFeatureName();
+                break;
+            case NONE:
+                restrictionFeaturePath = aModel.feature.getName();
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported link mode ["
+                        + aModel.feature.getLinkMode() + "] on feature ["
+                        + aModel.feature.getName() + "]");
+            }
 
             try {
  
@@ -1354,7 +1366,7 @@ public class AnnotationDetailEditorPanel
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
                 
                 //verification to check whether constraints exist for this project or NOT
-                if (model.getConstraints() != null) {
+                if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
                     tagset = addTagsBasedOnRules(model, aModel, tagset);
                 }
                 else {
@@ -1631,8 +1643,8 @@ public class AnnotationDetailEditorPanel
     {
 
         List<Tag> returnList = new ArrayList<Tag>();
-        // Sorting based on important flag
-        possibleValues.sort(null);
+//        // Sorting based on important flag
+//        possibleValues.sort(null);
         // Comparing to check which values suggested by rules exists in existing
         // tagset and adding them first in list.
         for (PossibleValue value : possibleValues) {
