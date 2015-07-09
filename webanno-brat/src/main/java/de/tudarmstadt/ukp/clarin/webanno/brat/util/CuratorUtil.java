@@ -319,8 +319,8 @@ public class CuratorUtil
             }
         }
 
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, d, false, false);
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, i, true, false);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, d, false, false);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, i, true, false);
 
         List<ConfigurationSet> all = new ArrayList<>();
 
@@ -334,7 +334,7 @@ public class CuratorUtil
             all.remove(cfgSet);
         }
 
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, all, false, true);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, all, false, true);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
@@ -358,7 +358,7 @@ public class CuratorUtil
      * @param aSuggestionColors
      * @param aCfgSet
      */
-    private static void addSuggestionColor(AnnotationService aAnnotationService, Project aProj,
+    private static void addSuggestionColor(AnnotationService aAnnotationService, Mode aMode,
             Map<String, JCas> aCasMap, Map<FeatureStructure, AnnotationState> aSuggestionColors,
             Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
@@ -373,7 +373,7 @@ public class CuratorUtil
                         continue;
                     }
                     // automation and correction projects
-                    if (!aProj.getMode().equals(Mode.CURATION) && !aAgree) {
+                    if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
                             aSuggestionColors.put(fs, AnnotationState.DO_NOT_USE);
                         }
