@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationUserSegmentForAnnotationDocument;
@@ -191,8 +190,7 @@ public class SuggestionViewPanel
                                     && action.toString().equals("selectArcForMerge")) {
                                 // add span for merge
                                 // get information of the span clicked
-                                mergeArc(request, curationUserSegment, annotationJCas, repository,
-                                        annotationService);
+                                mergeArc(request, curationUserSegment, annotationJCas);
                             }
                             onChange(aTarget);
                         }
@@ -245,12 +243,6 @@ public class SuggestionViewPanel
         String spanType = removePrefix(aRequest.getParameterValue("type").toString());
 
         String username = aCurationUserSegment.getUsername();
-        AnnotationSelection annotationSelection = aCurationUserSegment
-                .getAnnotationSelectionByUsernameAndAddress().get(username).get(address);
-
-        if (annotationSelection == null) {
-            return;
-        }
 
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
@@ -316,22 +308,21 @@ public class SuggestionViewPanel
             aBModel.setSentenceBeginOffset(sentence.getBegin());
             aBModel.setSentenceEndOffset(sentence.getEnd());
 
-
-            Sentence firstSentence = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
-                    aBModel.getSentenceEndOffset());
+            Sentence firstSentence = selectSentenceAt(clickedJCas,
+                    aBModel.getSentenceBeginOffset(), aBModel.getSentenceEndOffset());
             int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
                     getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
             // the last sentence address in the display window
-            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas, FeatureStructure.class,
-                    lastAddressInPage);
+            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
+                    FeatureStructure.class, lastAddressInPage);
             aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+                    lastSentenceInPage.getBegin()));
         }
     }
 
     private void mergeArc(IRequestParameters aRequest,
-            CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
-            RepositoryService repository, AnnotationService annotationService)
+            CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas)
         throws NoOriginOrTargetAnnotationSelectedException, ArcCrossedMultipleSentenceException,
         BratAnnotationException, IOException
     {
@@ -345,20 +336,6 @@ public class SuggestionViewPanel
         String username = aCurationUserSegment.getUsername();
         BratAnnotatorModel bModel = aCurationUserSegment.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
-
-        AnnotationSelection annotationSelectionOrigin = aCurationUserSegment
-                .getAnnotationSelectionByUsernameAndAddress().get(username)
-                .get(addressOriginClicked);
-        AnnotationSelection annotationSelectionTarget = aCurationUserSegment
-                .getAnnotationSelectionByUsernameAndAddress().get(username)
-                .get(addressTargetClicked);
-
-        Integer addressOrigin = annotationSelectionOrigin.getAddressByUsername().get(username);
-        Integer addressTarget = annotationSelectionTarget.getAddressByUsername().get(username);
-
-        if (annotationSelectionOrigin == null || annotationSelectionTarget == null) {
-            return;
-        }
 
         AnnotationDocument clickedAnnotationDocument = null;
         List<AnnotationDocument> annotationDocuments = repository
@@ -377,8 +354,8 @@ public class SuggestionViewPanel
         catch (IOException e1) {
             throw new IOException();
         }
-        AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOrigin);
-        AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTarget);
+        AnnotationFS originFsClicked = selectByAddr(clickedJCas, addressOriginClicked);
+        AnnotationFS targetFsClicked = selectByAddr(clickedJCas, addressTargetClicked);
 
         AnnotationFS originFs = selectSingleFsAt(aJcas, originFsClicked.getType(),
                 originFsClicked.getBegin(), originFsClicked.getEnd());
@@ -439,10 +416,11 @@ public class SuggestionViewPanel
             int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
                     getAddr(firstSentence), bModel.getPreferences().getWindowSize());
             // the last sentence address in the display window
-            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas, FeatureStructure.class,
-                    lastAddressInPage);
+            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
+                    FeatureStructure.class, lastAddressInPage);
             bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas,
+                    lastSentenceInPage.getBegin()));
         }
     }
 

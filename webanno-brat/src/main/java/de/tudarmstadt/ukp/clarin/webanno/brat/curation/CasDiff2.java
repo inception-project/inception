@@ -972,6 +972,11 @@ public class CasDiff2
         private final Position position;
         private final Map<String, AID> fsAddresses = new TreeMap<>();
 
+        public Set<String> getCasGroupIds()
+        {
+            return fsAddresses.keySet();
+        } 
+        
         public Configuration(Position aPosition)
         {
             position = aPosition;
@@ -1557,3 +1562,4 @@ public class CasDiff2
 //      cases = new HashMap<>(aCases);
 //  }
 }
+
