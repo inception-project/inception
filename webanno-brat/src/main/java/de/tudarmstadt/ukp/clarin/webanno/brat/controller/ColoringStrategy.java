@@ -73,7 +73,10 @@ public abstract class ColoringStrategy
     {
         // Decide on coloring strategy for the current layer
         ColoringStrategy coloringStrategy;
-        if (aPreferences.isStaticColor()) {
+        if (aLayer.isLocked()) {
+            coloringStrategy = staticColor(DISABLED);
+        }
+        else if (aPreferences.isStaticColor()) {
             int threshold;
             
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aService, aLayer)) {
@@ -175,6 +178,8 @@ public abstract class ColoringStrategy
     }
 
     private final static int LIGHTNESS_FILTER_THRESHOLD = 180;
+    
+    public final static String DISABLED = "#bebebe";
     
     public final static String[] PALETTE_PASTEL = { "#8dd3c7", "#ffffb3", "#bebada",
             "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5",

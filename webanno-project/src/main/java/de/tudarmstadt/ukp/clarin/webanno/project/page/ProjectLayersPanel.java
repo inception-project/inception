@@ -597,6 +597,8 @@ public class ProjectLayersPanel
             add(attachTypes);
 
             // Behaviors of layers
+            add(new CheckBox("locked"));
+            
             add(new AjaxLink<Void>("showlayerBehaviorModal")
             {
                 private static final long serialVersionUID = 7496156015186497496L;

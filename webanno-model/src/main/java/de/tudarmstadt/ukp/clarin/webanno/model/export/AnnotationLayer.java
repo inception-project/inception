@@ -53,6 +53,9 @@ public class AnnotationLayer
     @JsonProperty("built_in")
     private boolean builtIn = false;
 
+    @JsonProperty("locked")
+    private boolean locked = false;
+
     @JsonProperty("attach_type")
     private AnnotationLayer attachType;
 
@@ -223,6 +226,16 @@ public class AnnotationLayer
     public void setLinkedListBehavior(boolean aLinkedListBehavior)
     {
         linkedListBehavior = aLinkedListBehavior;
+    }
+
+    public boolean isLocked()
+    {
+        return locked;
+    }
+
+    public void setLocked(boolean aLocked)
+    {
+        locked = aLocked;
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,7 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceRefer
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -430,10 +428,12 @@ public class BratAnnotator
 
             int bo = sentence.getBegin() + offsetLists.get(0).getBegin();
             int eo = sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd();
+            if (bo == eo) {
+                return new Offsets(bo, eo);
+            }
             List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
             bo = tokens.get(0).getBegin();
             eo = tokens.get(0).getEnd();
-
             return new Offsets(bo, eo);
         }
         else {
@@ -753,16 +753,5 @@ public class BratAnnotator
         else {
             return repository.readCurationCas(aBratAnnotatorModel.getDocument());
         }
-    }
-
-    public static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
-    {
-        String action = aDeleted ? "deleted" : "created/updated";
-
-        String msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
-        if (StringUtils.isNotBlank(aLabel)) {
-            msg += " Label: [" + aLabel + "]";
-        }
-        return msg;
     }
 }
