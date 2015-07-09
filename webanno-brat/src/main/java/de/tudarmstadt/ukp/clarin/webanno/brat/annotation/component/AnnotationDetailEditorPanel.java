@@ -1162,7 +1162,7 @@ public class AnnotationDetailEditorPanel
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null) {
-                    tagset = populateTagsBasedOnRules(model, aModel, tagset);
+                    tagset = addTagsBasedOnRules(model, aModel, tagset);
                 }
                 else {
                     // Earlier behavior,
@@ -1186,15 +1186,31 @@ public class AnnotationDetailEditorPanel
          * @param tagset
          * @return
          */
-        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel,
+        private List<Tag> addTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel,
                 List<Tag> tagset)
         {
             // Add values from rules
-            String restrictionFeaturePath = aModel.feature.getName() + "."
-                    + aModel.feature.getLinkTypeRoleFeatureName();
-
+            String restrictionFeaturePath;
+            
+            switch (aModel.feature.getLinkMode()) {
+            case WITH_ROLE: {
+                restrictionFeaturePath = aModel.feature.getName() + "."
+                        + aModel.feature.getLinkTypeRoleFeatureName();
+                break;
+            }
+            case NONE: {
+                restrictionFeaturePath = aModel.feature.getName();
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported link mode ["
+                        + aModel.feature.getLinkMode() + "] on feature [" + aModel.feature.getName()
+                        + "]");
+            }
+            
             try {
  
+                
                 JCas jCas = getCas(model);
 
                 FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()

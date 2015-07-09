@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -213,7 +214,6 @@ public class AnnotationPage
         final ModalWindow openDocumentsModal;
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
-
         openDocumentsModal.setInitialWidth(500);
         openDocumentsModal.setInitialHeight(300);
         openDocumentsModal.setResizable(true);
@@ -827,8 +827,14 @@ public class AnnotationPage
             // Parsing Constraint rules for project.
             ConstraintsGrammar parser;
             Parse p;
-            ParsedConstraints constraints = null;
-            parser = new ConstraintsGrammar(new FileInputStream(constraintsFile));
+            ParsedConstraints constraints = null; 
+            File rulesFile = repository.getConstraintRulesFile(bModel.getProject());
+            if (rulesFile.exists()) {
+                parser = new ConstraintsGrammar(new FileInputStream(rulesFile));
+            }
+            else {
+                parser = new ConstraintsGrammar(new FileInputStream(constraintsFile));
+            }
             p = parser.Parse();
             constraints = p.accept(new ParserVisitor());
             bModel.setConstraints(constraints);

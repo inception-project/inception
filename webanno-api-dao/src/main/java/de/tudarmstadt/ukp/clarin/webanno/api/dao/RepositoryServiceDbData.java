@@ -203,6 +203,8 @@ public class RepositoryServiceDbData
 
     private static final String HELP_FILE = "/help.properties";
 
+    private static final String CONSTRAINTS = "/constraints/";
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -2264,5 +2266,41 @@ public class RepositoryServiceDbData
         catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    public void createConstraintRules(Project aProject, File aContent, String aFileName,
+            String username)
+        throws IOException
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aProject.getId() + CONSTRAINTS;
+        FileUtils.forceMkdir(new File(constraintRulesPath));
+        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(constraintRulesPath
+                + "project.rules")));
+
+        createLog(aProject).info(
+                " Created Constraints Rule file[ " + aFileName + "] for Project [" + aProject.getName()
+                        + "] with ID [" + aProject.getId() + "]");
+        createLog(aProject).removeAllAppenders();
+        
+    }
+
+    @Override
+    public File getConstraintRulesFile(Project aProject)
+    {
+        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + CONSTRAINTS+"/project.rules");
+    }
+
+    @Override
+    public void removeConstraintRules(Project aProject, String aUsername)
+        throws IOException
+    {
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
+                + CONSTRAINTS+"/project.rules"));
+        createLog(aProject).info(
+                " Removed Constraint Rules file from [" + aProject.getName() + "] with ID ["
+                        + aProject.getId() + "]");
+        createLog(aProject).removeAllAppenders();
+        
     }
 }

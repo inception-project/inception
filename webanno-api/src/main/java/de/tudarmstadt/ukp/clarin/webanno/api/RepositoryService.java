@@ -1087,4 +1087,46 @@ public interface RepositoryService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException;
+ // --------------------------------------------------------------------------------------------
+    // Methods related to Constraints
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Write this {@code content} of the guideline file in the project;
+     *
+     * @param project
+     *            the project.
+     * @param content
+     *            the guidelines.
+     * @param fileName
+     *            the filename.
+     * @param username
+     *            the username.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void createConstraintRules(Project project, File content, String fileName, String username)
+        throws IOException;
+
+    /**
+     * Export the associated project Constraint Rules for this {@link Project} while copying a project
+     * 
+     * @param project
+     *            the project.
+     * @return the file.
+     */
+    File getConstraintRulesFile(Project project);
+
+    /**
+     * Remove an annotation guideline document from the file system
+     *
+     * @param project
+     *            the project.
+     * @param username
+     *            the username.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void removeConstraintRules(Project project, String username)
+        throws IOException;
 }
