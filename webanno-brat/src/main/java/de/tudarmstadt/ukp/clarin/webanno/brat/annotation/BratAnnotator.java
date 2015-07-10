@@ -433,7 +433,7 @@ public class BratAnnotator
             }
             List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
             bo = tokens.get(0).getBegin();
-            eo = tokens.get(0).getEnd();
+            eo = tokens.get(tokens.size()-1).getEnd();
             return new Offsets(bo, eo);
         }
         else {
