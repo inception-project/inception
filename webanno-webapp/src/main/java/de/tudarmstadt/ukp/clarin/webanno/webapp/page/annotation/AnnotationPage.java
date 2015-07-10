@@ -126,7 +126,7 @@ public class AnnotationPage
 
     private boolean closeButtonClicked;
     public BratAnnotatorModel bModel = new BratAnnotatorModel();
-    
+
     public AnnotationPage()
     {
         annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
@@ -825,11 +825,14 @@ public class AnnotationPage
             // Parsing Constraint rules for project.
             ParsedConstraints constraints = null;
             // BEGIN HACK - Eventually, we obtain the constraints from the project settings
-            if (repository.getConstraints(bModel.getProject()).canRead()) {
+            if (repository.getConstraintRulesFile(bModel.getProject()).canRead()) {
                 ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                        repository.getConstraints(bModel.getProject())));
+                        repository.getConstraintRulesFile(bModel.getProject())));
                 Parse p = parser.Parse();
                 constraints = p.accept(new ParserVisitor());
+            }
+            else {
+                info("No constraint rules found for current project. Go to project settings to upload constraint rules file.");
             }
             // END HACK - Eventually, we obtain the constraints from the project settings
             bModel.setConstraints(constraints);

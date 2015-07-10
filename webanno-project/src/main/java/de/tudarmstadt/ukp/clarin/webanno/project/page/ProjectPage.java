@@ -286,6 +286,7 @@ public class ProjectPage
         AbstractTab layers;
         AbstractTab tagSets;
         AbstractTab documents;
+        AbstractTab constraints; //For constraint rules
         @SuppressWarnings("rawtypes")
         AjaxTabbedPanel allTabs;
 
@@ -387,6 +388,23 @@ public class ProjectPage
                 public Panel getPanel(String panelId)
                 {
                     return new AnnotationGuideLinePanel(panelId, projectModel);
+                }
+
+                @Override
+                public boolean isVisible()
+                {
+                    return projectModel.getObject().getId() != 0 && visible;
+                }
+            });
+
+            tabs.add(new AbstractTab(new Model<String>("Constraints"))
+            {
+                private static final long serialVersionUID = 8910455936756021733L;
+
+                @Override
+                public Panel getPanel(String panelId)
+                {
+                    return new ConstraintsPanel(panelId, projectModel);
                 }
 
                 @Override
