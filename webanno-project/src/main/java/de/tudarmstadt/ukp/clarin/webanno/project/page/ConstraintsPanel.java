@@ -22,6 +22,7 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +32,14 @@ import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.googlecode.wicket.jquery.ui.widget.progressbar.ProgressBar;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -70,14 +74,16 @@ public class ConstraintsPanel
     private FileUploadField fileUpload;
 
     private Model<Project> selectedProjectModel;
-
+    private boolean isThereAConstraintRulesFile;
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ConstraintsPanel(String id, Model<Project> aProjectModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
         add(fileUpload = new FileUploadField("content", new Model()));
-
+        Project tempProject = selectedProjectModel.getObject();
+        isThereAConstraintRulesFile = projectRepository.getConstraintRulesFile(tempProject).exists();
         add(new Button("importConstraintRules", new ResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
@@ -118,16 +124,17 @@ public class ConstraintsPanel
                         if (constraintRuleFileIsOK) {
                             projectRepository.createConstraintRules(project, tempFile, fileName,
                                     username);
+                            isThereAConstraintRulesFile = true;
                         }
-                    }
-                    catch (ParseException e) {
-                        error("Exception while parsing the constraint rules file. Please check it"
-                                + ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (IOException e) {
                         error("Unable to write constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
+                    catch (ParseException e) {
+                        error("Exception while parsing the constraint rules file. Please check it"
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }                    
                 }
 
             }
@@ -136,6 +143,23 @@ public class ConstraintsPanel
         add(new Button("removeConstraintRules", new ResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
+            
+            
+            @Override
+            protected IModel<String> initModel()
+            {
+                this.setEnabled(isThereAConstraintRulesFile);
+                return super.initModel();
+            }
+
+
+            @Override
+            public void updateModel()
+            {
+                this.setEnabled(isThereAConstraintRulesFile);
+                super.updateModel();
+            }
+
 
             @Override
             public void onSubmit()
@@ -146,6 +170,8 @@ public class ConstraintsPanel
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     projectRepository.removeConstraintRules(project, username);
+                    isThereAConstraintRulesFile = false;
+                    this.updateModel();
                 }
                 catch (IOException e) {
                     error("Error while removing Constraint Rules "
