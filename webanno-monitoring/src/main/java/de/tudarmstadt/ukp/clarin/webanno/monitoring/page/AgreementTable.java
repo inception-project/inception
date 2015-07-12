@@ -140,6 +140,7 @@ public class AgreementTable
                             Label l = new Label("label", Model.of(label)); 
                             cell.add(l);
                             l.add(makeDownloadBehavior(aRowItem.getModelObject(), aCellItem.getModelObject()));
+                            l.add(new AttributeAppender("style", "cursor: pointer", ";"));
                         }
                         // Lower diagonal
                         else if (aCellItem.getIndex() < aRowItem.getIndex()) {
@@ -147,7 +148,7 @@ public class AgreementTable
                                     aRowItem.getModelObject(), aCellItem.getModelObject());
                             
                             String label = String.format("%d/%d", result.getCompleteSetCount(),
-                                    result.getTotalSetCount());                            
+                                    result.getRelevantSetCount());                            
 
                             String toolTip = String.format(
                                     "Details about annotations excluded from agreement calculation:%n" +
@@ -160,6 +161,7 @@ public class AgreementTable
                             
                             Label l = new Label("label", Model.of(label)); 
                             l.add(new AttributeModifier("title", toolTip));
+                            l.add(new AttributeAppender("style", "cursor: help", ";"));
                             cell.add(l);
                         }
                         // Rest

@@ -43,13 +43,56 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.FleissKappaAgreement;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 public class AgreementUtils
 {
+    public static enum ConcreteAgreementMeasure {
+        COHEN_KAPPA_AGREEMENT(false),
+        FLEISS_KAPPA_AGREEMENT(false),
+        KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT(true);
+        
+        private final boolean nullValueSupported;
+        
+        private ConcreteAgreementMeasure(boolean aNullValueSupported)
+        {
+            nullValueSupported = aNullValueSupported;
+        }
+        
+        public IAgreementMeasure make(ICodingAnnotationStudy aStudy)
+        {
+            switch (this) {
+            case COHEN_KAPPA_AGREEMENT:
+                return new CohenKappaAgreement(aStudy);
+            case FLEISS_KAPPA_AGREEMENT:
+                return new FleissKappaAgreement(aStudy);
+            case KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT:
+                return new KrippendorffAlphaAgreement(aStudy, new NominalDistanceFunction());
+            default:   
+                throw new IllegalArgumentException();
+            }
+        }
+        
+        public boolean isNullValueSupported()
+        {
+            return nullValueSupported;
+        }
+    }
+    
     public static PairwiseAnnotationResult getPairwiseCohenKappaAgreement(DiffResult aDiff,
             String aType, String aFeature, Map<String, List<JCas>> aCasMap)
+    {
+        return getPairwiseAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff,
+                aType, aFeature, aCasMap);
+    }
+
+    public static PairwiseAnnotationResult getPairwiseAgreement(
+            ConcreteAgreementMeasure aMeasure, boolean aExcludeIncomplete,
+            DiffResult aDiff, String aType, String aFeature, Map<String, List<JCas>> aCasMap)
     {
         PairwiseAnnotationResult result = new PairwiseAnnotationResult();
         List<Entry<String, List<JCas>>> entryList = new ArrayList<>(aCasMap.entrySet());
@@ -60,8 +103,8 @@ public class AgreementUtils
                     Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    AgreementResult res = getCohenKappaAgreement(aDiff, aType, aFeature,
-                            pairwiseCasMap);
+                    AgreementResult res = getAgreement(aMeasure, aExcludeIncomplete, aDiff, aType,
+                            aFeature, pairwiseCasMap);
                     result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
                 }
             }
@@ -72,13 +115,23 @@ public class AgreementUtils
     public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<JCas>> aCasMap)
     {
+        return getAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff, aType,
+                aFeature, aCasMap);
+    }
+
+    public static AgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
+            boolean aExcludeIncomplete, DiffResult aDiff, String aType, String aFeature,
+            Map<String, List<JCas>> aCasMap)
+    {
         if (aCasMap.size() != 2) {
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
         
-        AgreementResult agreementResult = AgreementUtils.makeStudy(aDiff, aType, aFeature, aCasMap);
+        AgreementResult agreementResult = AgreementUtils.makeStudy(aDiff, aType, aFeature,
+                aExcludeIncomplete, aCasMap);
         try {
-            IAgreementMeasure agreement = new CohenKappaAgreement(agreementResult.study);
+            IAgreementMeasure agreement = aMeasure.make(agreementResult.study);
+            
             if (agreementResult.study.getItemCount() > 0) {
                 agreementResult.setAgreement(agreement.calculateAgreement());
            }
@@ -96,19 +149,21 @@ public class AgreementUtils
     }
     
     private static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
-            Map<String, List<JCas>> aCasMap)
+            boolean aExcludeIncomplete, Map<String, List<JCas>> aCasMap)
     {
-        return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aCasMap);
+        return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, aCasMap);
     }
     
     private static AgreementResult makeStudy(DiffResult aDiff, Collection<String> aUsers,
-            String aType, String aFeature, Map<String, List<JCas>> aCasMap)
+            String aType, String aFeature, boolean aExcludeIncomplete,
+            Map<String, List<JCas>> aCasMap)
     {
         List<ConfigurationSet> completeSets = new ArrayList<>();
         List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
         List<ConfigurationSet> pluralitySets = new ArrayList<>();
+        List<ConfigurationSet> irrelevantSets = new ArrayList<>();
         CodingAnnotationStudy study = new CodingAnnotationStudy(aUsers.size());
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
@@ -124,8 +179,15 @@ public class AgreementUtils
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
-                    incompleteSetsByPosition.add(cfgSet);
-                    continue nextPosition;
+                    if (aExcludeIncomplete) {
+                        incompleteSetsByPosition.add(cfgSet);
+                        continue nextPosition;
+                    }
+                    else {
+                        values[i] = null;
+                        i++;
+                        continue;
+                    }
                 }
                 
                 // Make sure a single user didn't do multiple alternative annotations at a single
@@ -141,32 +203,51 @@ public class AgreementUtils
                 
                 // Only calculate agreement for the given feature
                 FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);
+
+                boolean isSubPosition = cfg.getPosition().getFeature() != null;
+                boolean isPrimitive = fs.getType().getFeatureByBaseName(aFeature).getRange()
+                        .isPrimitive();
                 
-                if (fs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()) {
-                    // Primitive features
+                if (isPrimitive && !isSubPosition) {
+                    // Primitive feature / primary position
                     values[i] = getFeature(fs, aFeature);
                 }
-                // We may hit here on a primary position, but we only want to enter on sub-positions
-                // for link features.
-                else if (cfg.getPosition().getFeature() != null) {
-                    // Link features
+                else if (!isPrimitive && isSubPosition && cfg.getPosition().getFeature().equals(aFeature)) {
+                    // Link feature / sub-position
                     ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType().getFeatureByBaseName(
                             aFeature));
                     FeatureStructure link = links.get(cfg.getAID(user).index);
-                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
-                            .getFeatureByBaseName("target"));
                     
-                    values[i] = target.getBegin() + "-" + target.getEnd();
+                    switch (cfg.getPosition().getLinkCompareBehavior()) {
+                    case LINK_TARGET_AS_LABEL:
+                        // FIXME The target feature name should be obtained from the feature definition!
+                        AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                                .getFeatureByBaseName("target"));
+                        
+                        values[i] = target.getBegin() + "-" + target.getEnd();
+                        break;
+                    case LINK_ROLE_AS_LABEL:
+                        // FIXME The role feature name should be obtained from the feature definition!
+                        String role = link.getStringValue(link.getType().getFeatureByBaseName(
+                                "role"));
+                        
+                        values[i] = role;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown link target comparison mode ["
+                                + cfg.getPosition().getLinkCompareBehavior() + "]");
+                    }
                 }
                 else {
                     // If we get here, then this position has nothing relevant to our feature to
                     // be evaluated for agreement. We can skip it directly without recording it
                     // as incomplete
+                    irrelevantSets.add(cfgSet);
                     continue nextPosition;
                 }
 
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
-                if (values[i] == null) {
+                if (aExcludeIncomplete && values[i] == null) {
                     incompleteSetsByLabel.add(cfgSet);
                     continue nextPosition;
                 }
@@ -182,7 +263,7 @@ public class AgreementUtils
             study.addItemAsArray(values);
         }
         
-        return new AgreementResult(aType, aFeature, aDiff, study, completeSets,
+        return new AgreementResult(aType, aFeature, aDiff, study, completeSets, irrelevantSets,
                 setsWithDifferences, incompleteSetsByPosition, incompleteSetsByLabel,
                 pluralitySets);
     }
@@ -201,7 +282,9 @@ public class AgreementUtils
         catch (Throwable e) {
             aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
         }
-        
+
+        aOut.printf("Relevant position count: %d%n", aAgreement.getRelevantSetCount());
+
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
         
@@ -284,6 +367,7 @@ public class AgreementUtils
         private final ICodingAnnotationStudy study;
         private final List<ConfigurationSet> setsWithDifferences;
         private final List<ConfigurationSet> completeSets;
+        private final List<ConfigurationSet> irrelevantSets;
         private final List<ConfigurationSet> incompleteSetsByPosition;
         private final List<ConfigurationSet> incompleteSetsByLabel;
         private final List<ConfigurationSet> pluralitySets;
@@ -297,6 +381,7 @@ public class AgreementUtils
             study = null;
             setsWithDifferences = null;
             completeSets = null;
+            irrelevantSets = null;
             incompleteSetsByPosition = null;
             incompleteSetsByLabel = null;
             pluralitySets = null;
@@ -304,6 +389,7 @@ public class AgreementUtils
 
         public AgreementResult(String aType, String aFeature, DiffResult aDiff,
                 ICodingAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
+                List<ConfigurationSet> aIrrelevantSets,
                 List<ConfigurationSet> aSetsWithDifferences,
                 List<ConfigurationSet> aIncompleteByPosition,
                 List<ConfigurationSet> aIncompleteByLabel,
@@ -315,6 +401,7 @@ public class AgreementUtils
             study = aStudy;
             setsWithDifferences = aSetsWithDifferences;
             completeSets = Collections.unmodifiableList(new ArrayList<>(aComplete));
+            irrelevantSets = aIrrelevantSets;
             incompleteSetsByPosition = Collections.unmodifiableList(new ArrayList<>(
                     aIncompleteByPosition));
             incompleteSetsByLabel = Collections
@@ -362,6 +449,11 @@ public class AgreementUtils
             return completeSets;
         }
         
+        public List<ConfigurationSet> getIrrelevantSets()
+        {
+            return irrelevantSets;
+        }
+        
         public int getDiffSetCount()
         {
             return setsWithDifferences.size();
@@ -381,6 +473,11 @@ public class AgreementUtils
         public int getTotalSetCount()
         {
             return diff.getPositions().size();
+        }
+        
+        public int getRelevantSetCount()
+        {
+            return diff.getPositions().size() - irrelevantSets.size();
         }
         
         public double getAgreement()

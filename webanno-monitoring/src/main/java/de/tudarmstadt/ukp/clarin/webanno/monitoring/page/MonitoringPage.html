@@ -61,25 +61,38 @@
 						</table>
 						<fieldset class="ui-widget-content ui-corner-all">
 							<legend>Document status</legend>
-							<p>
-							<b>Click on a cell in the table to lock/unlock a document for a user.</b>
-							</p>
+							<p><b><wicket:message key="document_status.hint">[Status hint]</wicket:message></b></p>
 							<table wicket:id="rsTable" class="hfill"></table>
 						</fieldset>
 					</form>
 
-					<table class="hfill">
-						<tr style="vertical-align: top;">
-							<td width="20%">
-								<form wicket:id="annotationTypeSelectionForm" class="hfill">
+                    <form wicket:id="agreementForm" class="hfill">
+						<table class="hfill">
+							<tr style="vertical-align: top;">
+								<td width="20%">
 									<fieldset class="ui-widget-content ui-corner-all">
 										<legend>Layer</legend>
-										<select class="hfill" wicket:id="features"></select>
+										<select class="hfill" wicket:id="feature"></select>
+										<table>
+	                                        <tr class="labels-left">
+    	                                        <td><label wicket:for="measure">
+    	                                          <wicket:label key="measure.label"/>:</label></td>
+	                                            <td><select wicket:id="measure"></select></td>
+	                                        </tr>
+                                            <tr class="labels-left">
+                                               <td><label wicket:for="excludeIncomplete">
+                                                 <wicket:label key="excludeIncomplete.label"/>:</label></td>
+                                               <td><input type="checkbox" wicket:id="excludeIncomplete"></input></td>
+                                            </tr>
+	                                        <tr class="labels-left">
+	                                           <td><label wicket:for="linkCompareBehavior">
+	                                             <wicket:label key="linkCompareBehavior.label"/>:</label></td>
+	                                           <td><select wicket:id="linkCompareBehavior"></select></td>
+	                                        </tr>
+										</table>
 									</fieldset>
-								</form>
-							</td>
-							<td width="80%">
-								<form wicket:id="agreementForm" class="hfill">
+								</td>
+								<td width="80%">
 									<fieldset class="ui-widget-content ui-corner-all">
 										<legend>Agreement</legend>
                                         <table wicket:id="agreementTable" class="hfill"></table>
@@ -87,14 +100,14 @@
 			                            <b>Legend:</b>
 			                            </p>
 			                            <ul>
-			                            <li>Lower triangle: positions annotated by all users / total positions</li>
-                                        <li>Upper triangle: Cohen's kappa calculated over those positions annotated by all users</li>
+			                            <li>Lower triangle: Positions included in agreement / total number of positions</li>
+	                                       <li>Upper triangle: Agreement score</li>
 			                            </ul>
 									</fieldset>
-								</form>
-							</td>
-						</tr>
-					</table>
+								</td>
+							</tr>
+						</table>
+                    </form>
 				</td>
 			</tr>
 			<tr>

@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
@@ -304,11 +305,13 @@ public class CuratorUtil
 
         if (bModel.getMode().equals(Mode.CURATION)) {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    jCases, aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
         }
         else {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    jCases, aCurationSegment.getBegin(), aCurationSegment.getEnd());
+                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd());
         }
 
         diff.print(System.out);

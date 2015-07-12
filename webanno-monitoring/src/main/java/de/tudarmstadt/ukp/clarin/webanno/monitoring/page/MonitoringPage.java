@@ -44,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -53,7 +54,10 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColu
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.image.Image;
@@ -89,16 +93,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -113,6 +118,7 @@ import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -167,9 +173,7 @@ public class MonitoringPage
     private Label overview;
     private DefaultDataTable<?,?> annotationDocumentStatusTable;
     private final Label projectName;
-    private AgreementForm agreementForm;
-    private final AnnotationTypeSelectionForm annotationTypeSelectionForm;
-    private ListChoice<AnnotationFeature> features;
+    private final AgreementForm agreementForm;
 
     private String result;
 
@@ -181,14 +185,7 @@ public class MonitoringPage
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
 
-        annotationTypeSelectionForm = new AnnotationTypeSelectionForm("annotationTypeSelectionForm");
-        annotationTypeSelectionForm.setVisible(false);
-        add(annotationTypeSelectionForm);
-
-        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
-                new Model<Project>());
-        agreementForm.setVisible(false);
-        add(agreementForm);
+        add(agreementForm = new AgreementForm("agreementForm"));
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
@@ -327,21 +324,21 @@ public class MonitoringPage
 
                     monitoringDetailForm.setModelObject(aNewSelection);
                     monitoringDetailForm.setVisible(true);
-                    annotationTypeSelectionForm.setVisible(true);
-                    monitoringDetailForm.setVisible(true);
 
                     updateTrainingResultForm(aNewSelection);
                     result = "";
 
-                    annotationTypeSelectionForm.setModelObject(new SelectionModel());
+                    agreementForm.setModelObject(new AgreementFormModel());
                     ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
                     projectSelectionModel.project = aNewSelection;
                     projectSelectionModel.annotatorsProgress = new TreeMap<String, Integer>();
                     projectSelectionModel.annotatorsProgressInPercent = new TreeMap<String, Integer>();
                     projectSelectionModel.totalDocuments = sourceDocuments.size();
-                    updateAgreementForm();
-
                     ProjectSelectionForm.this.setVisible(true);
+
+                    // Clear the cached CASes. When we switch to another project, we'll have to
+                    // reload them.
+                    updateAgreementTable(null, true);
 
                     // Annotator's Progress
                     if (projectSelectionModel.project != null) {
@@ -453,79 +450,6 @@ public class MonitoringPage
         }
     }
 
-    private class AnnotationTypeSelectionForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -1L;
-
-        public AnnotationTypeSelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            add(features = new ListChoice<AnnotationFeature>("features")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            List<AnnotationFeature> features = annotationService
-                                    .listAnnotationFeature((projectSelectionForm.getModelObject().project));
-                            List<AnnotationFeature> unusedFeatures = new ArrayList<AnnotationFeature>();
-                            for (AnnotationFeature feature : features) {
-                                if (feature.getLayer().getName().equals(Token.class.getName())
-                                        || feature.getLayer().getName()
-                                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
-                                    unusedFeatures.add(feature);
-                                }
-                            }
-                            features.removeAll(unusedFeatures);
-                            return features;
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
-                        private static final long serialVersionUID = -3370671999669664776L;
-
-                        @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
-                            return aObject.getLayer().getUiName()+" : " + aObject.getUiName();
-                        }
-                    });
-                    setNullValid(false);
-
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
-            features.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 7492425689121761943L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    try {
-                        updateAgreementTable(aTarget);
-                    }
-                    catch (Throwable e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    }
-                }
-            }).setOutputMarkupId(true);
-        }
-    }
-
     Model<Project> projectModel = new Model<Project>()
     {
         private static final long serialVersionUID = -6394439155356911110L;
@@ -626,15 +550,6 @@ public class MonitoringPage
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
     }
 
-    static public class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -1L;
-
-        public Project project;
-        public AnnotationFeature features;
-    }
-
     private class MonitoringDetailForm
         extends Form<Project>
     {
@@ -647,21 +562,99 @@ public class MonitoringPage
         }
     }
 
-    @SuppressWarnings("rawtypes")
     private class AgreementForm
-        extends Form<DefaultDataTable>
+        extends Form<AgreementFormModel>
     {
-        private static final long serialVersionUID = 344165080600348157L;
+        private static final long serialVersionUID = -1L;
 
-        private AgreementTable agreementTable2;
+        private ListChoice<AnnotationFeature> featureList;
         
-        public AgreementForm(String id, Model<AnnotationLayer> aType, Model<Project> aProject)
+        private AgreementTable agreementTable2;
+
+        private DropDownChoice<ConcreteAgreementMeasure> measureDropDown;
+        
+        private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
+
+        private CheckBox excludeIncomplete;
+        
+        public AgreementForm(String id)
         {
-            super(id);
+            super(id, new CompoundPropertyModel<AgreementFormModel>(new AgreementFormModel()));
             
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
-                        
+            
+            add(measureDropDown = new DropDownChoice<ConcreteAgreementMeasure>(
+                    "measure", asList(ConcreteAgreementMeasure.values()),
+                    new EnumChoiceRenderer<ConcreteAgreementMeasure>(MonitoringPage.this)));
+            addUpdateAgreementTableBehavior(measureDropDown);
+
+            add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
+                    "linkCompareBehavior", asList(LinkCompareBehavior.values()),
+                    new EnumChoiceRenderer<LinkCompareBehavior>(MonitoringPage.this)));
+            addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
+            
+            add(excludeIncomplete = new CheckBox("excludeIncomplete") {
+                private static final long serialVersionUID = 1L;
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setEnabled(AgreementForm.this.getModelObject().measure.isNullValueSupported());
+                }
+            });
+            addUpdateAgreementTableBehavior(excludeIncomplete);
+            
+            add(featureList = new ListChoice<AnnotationFeature>("feature")
+            {
+                private static final long serialVersionUID = 1L;
+
+                {
+                    setOutputMarkupId(true);
+                    
+                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected List<AnnotationFeature> load()
+                        {
+                            List<AnnotationFeature> features = annotationService
+                                    .listAnnotationFeature((projectSelectionForm.getModelObject().project));
+                            List<AnnotationFeature> unusedFeatures = new ArrayList<AnnotationFeature>();
+                            for (AnnotationFeature feature : features) {
+                                if (feature.getLayer().getName().equals(Token.class.getName())
+                                        || feature.getLayer().getName()
+                                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
+                                    unusedFeatures.add(feature);
+                                }
+                            }
+                            features.removeAll(unusedFeatures);
+                            return features;
+                        }
+                    });
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
+                    {
+                        private static final long serialVersionUID = -3370671999669664776L;
+
+                        @Override
+                        public Object getDisplayValue(AnnotationFeature aObject)
+                        {
+                            return aObject.getLayer().getUiName() + " : " + aObject.getUiName();
+                        }
+                    });
+                    setNullValid(false);
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+            });
+            addUpdateAgreementTableBehavior(featureList);
+            
             add(agreementTable2 = new AgreementTable("agreementTable", 
                     new LoadableDetachableModel<PairwiseAnnotationResult>()
             {
@@ -670,7 +663,7 @@ public class MonitoringPage
                 @Override
                 protected PairwiseAnnotationResult load()
                 {
-                    AnnotationFeature feature = features.getModelObject();
+                    AnnotationFeature feature = featureList.getModelObject();
                     
                     // Do not do any agreement if no feature has been selected yet.
                     if (feature == null) {
@@ -683,24 +676,88 @@ public class MonitoringPage
                     List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
                             project);
 
+                    AgreementFormModel pref = AgreementForm.this.getModelObject();
+                    
                     DiffResult diff = CasDiff2.doDiff(asList(feature.getLayer().getName()),
-                            adapters, casMap);
-                    return AgreementUtils.getPairwiseCohenKappaAgreement(diff, feature
-                            .getLayer().getName(), feature.getName(), casMap);
+                            adapters, pref.linkCompareBehavior, casMap);
+                    return AgreementUtils.getPairwiseAgreement(
+                            AgreementForm.this.getModelObject().measure,
+                            pref.excludeIncomplete, diff, feature.getLayer().getName(),
+                            feature.getName(), casMap);
                 }
             }));
         }
-    }
+        
+        @Override
+        protected void onConfigure()
+        {
+            ProjectSelectionModel model = projectSelectionForm.getModelObject();
+            
+            setVisible(model != null && model.project != null);
+        }
 
-    private void updateAgreementForm()
+        private void addUpdateAgreementTableBehavior(Component aComponent)
+        {
+            aComponent.add(new OnChangeAjaxBehavior()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    updateAgreementTable(aTarget, false);
+                    // Adding this as well because when choosing a different measure, it may affect
+                    // the ability to exclude incomplete conifgurations.
+                    aTarget.add(excludeIncomplete);
+                }
+            });
+        }
+    }
+    
+    static public class AgreementFormModel
+        implements Serializable
     {
-        // Clear the cached CASes. When we switch to another project, we'll have to reload them.
-        cachedCASes = null;
-        agreementForm.remove();
-        agreementForm = new AgreementForm("agreementForm", new Model<AnnotationLayer>(),
-                new Model<Project>());
-        add(agreementForm);
-        agreementForm.setVisible(true);
+        private static final long serialVersionUID = -1L;
+
+        public AnnotationFeature feature;
+
+        public LinkCompareBehavior linkCompareBehavior = LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+        
+        public boolean excludeIncomplete = false;
+        
+        public ConcreteAgreementMeasure measure = 
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
+
+        private boolean savedExcludeIncomplete = excludeIncomplete;
+        private boolean savedNullSupported = measure.isNullValueSupported();
+
+        public void setMeasure(ConcreteAgreementMeasure aMeasure)
+        {
+            measure = aMeasure;
+            
+            // Did the null-support status change?
+            if (savedNullSupported != measure.isNullValueSupported()) {
+                savedNullSupported = measure.isNullValueSupported();
+                
+                // If it changed, is null support locked or not?
+                if (!measure.isNullValueSupported()) {
+                    // Is locked, so save what we had before and lock it
+                    savedExcludeIncomplete = excludeIncomplete;
+                    excludeIncomplete = true;
+                }
+                else {
+                    // Is not locked, so restore what we had before
+                    excludeIncomplete = savedExcludeIncomplete;
+                }
+            }
+        }
+        
+        // This method must be here so Wicket sets the "measure" value through the setter instead
+        // of using field injection
+        public ConcreteAgreementMeasure getMeasure()
+        {
+            return measure;
+        }
     }
     
     private void updateTrainingResultForm(Project aProject)
@@ -709,14 +766,6 @@ public class MonitoringPage
     	 trainingResultForm = new TrainingResultForm("trainingResultForm");
     	 add(trainingResultForm);
          trainingResultForm.setVisible(aProject.getMode().equals(Mode.AUTOMATION));
-         
-    }
-
-    private void updateAgreementTable(AjaxRequestTarget aTarget)
-    {
-        // Force reload
-        agreementForm.agreementTable2.getDefaultModel().detach();
-        aTarget.add(agreementForm);
     }
 
     private class TrainingResultForm
@@ -974,6 +1023,12 @@ public class MonitoringPage
                             repository.upgradeCas(jCas.getCas(), annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
+                            
+                            // Set the CAS name in the DocumentMetaData so that we can pick it
+                            // up in the Diff position for the purpose of debugging / transparency.
+                            DocumentMetaData documentMetadata = DocumentMetaData.get(jCas);
+                            documentMetadata.setDocumentId(annotationDocument.getDocument().getName());
+                            documentMetadata.setCollectionId(annotationDocument.getProject().getName());
                         }
                         catch (DataRetrievalFailureException e) {
                             error(e.getCause().getMessage());
@@ -998,6 +1053,25 @@ public class MonitoringPage
         return cachedCASes;
     }
 
+    private void updateAgreementTable(AjaxRequestTarget aTarget, boolean aClearCache)
+    {
+        try {
+            if (aClearCache) {
+                cachedCASes = null;
+            }
+            agreementForm.agreementTable2.getDefaultModel().detach();
+            if (aTarget != null) {
+                aTarget.add(agreementForm.agreementTable2);
+            }
+        }
+        catch (Throwable e) {
+            error(ExceptionUtils.getRootCauseMessage(e));
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+            }
+        }
+    }
+    
     private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
             boolean aIsPercentage)
     {
@@ -1167,7 +1241,8 @@ public class MonitoringPage
                             aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
                         }
 
-                        //aTarget.add(annotationDocumentStatusTable);
+                        updateAgreementTable(aTarget, true);
+                        
                         aTarget.add(aCellItem);
                         updateStats(aTarget, projectSelectionForm.getModelObject());
                     }
@@ -1277,7 +1352,9 @@ public class MonitoringPage
                             }
 
                         }
-                        //aTarget.add(annotationDocumentStatusTable);
+                        
+                        updateAgreementTable(aTarget, true);
+                        
                         aTarget.add(aCellItem);
                         updateStats(aTarget, projectSelectionForm.getModelObject());
                     }
@@ -1300,7 +1377,6 @@ public class MonitoringPage
             aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
 
             aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
-            updateAgreementTable(aTarget);
             aTarget.add(agreementForm);
         }
         
