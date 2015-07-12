@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.monitoring.support;
 
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.request.resource.AbstractResource;
+import org.apache.wicket.request.resource.IResource;
 import org.apache.wicket.request.resource.ResourceReference;
 
 /**
@@ -36,12 +36,28 @@ public class EmbeddableImage
     public EmbeddableImage(String aComponentId, ResourceReference aResource)
     {
         super(aComponentId);
-        add(new Image("image", aResource));
+        add(new Image("image", aResource) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean shouldAddAntiCacheParameter()
+            {
+                return false;
+            }
+        });
     }
 
-    public EmbeddableImage(String aComponentId, AbstractResource aResource)
+    public EmbeddableImage(String aComponentId, IResource aResource)
     {
         super(aComponentId);
-        add(new Image("image", aResource));
+        add(new Image("image", aResource) {
+            private static final long serialVersionUID = 1L;
+            
+            @Override
+            protected boolean shouldAddAntiCacheParameter()
+            {
+                return false;
+            }
+        });
     }
 }

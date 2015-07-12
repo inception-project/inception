@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -63,7 +64,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.resource.ContextRelativeResource;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -166,6 +168,33 @@ public class MonitoringPage
 
     private String result;
 
+    private static final ResourceReference ICON_FINISHED = new PackageResourceReference(
+            MonitoringPage.class, "accept.png");
+    private static final ResourceReference ICON_IGNORE = new PackageResourceReference(
+            MonitoringPage.class, "lock.png");
+    private static final ResourceReference ICON_INPROGRESS = new PackageResourceReference(
+            MonitoringPage.class, "resultset_next.png");
+    private static final ResourceReference ICON_NEW = new PackageResourceReference(
+            MonitoringPage.class, "new.png");
+    
+    private static final Map<Object, ResourceReference> ICONS;
+    
+    static {
+        Map<Object, ResourceReference> icons = new HashMap<>();
+        icons.put(SourceDocumentState.ANNOTATION_FINISHED, ICON_FINISHED);
+        icons.put(SourceDocumentState.ANNOTATION_IN_PROGRESS, ICON_INPROGRESS);
+        icons.put(SourceDocumentState.CURATION_FINISHED, ICON_FINISHED);
+        icons.put(SourceDocumentState.CURATION_IN_PROGRESS, ICON_INPROGRESS);
+        icons.put(SourceDocumentState.NEW, ICON_NEW);
+        
+        icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
+        icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
+        icons.put(AnnotationDocumentState.IN_PROGRESS, ICON_INPROGRESS);
+        icons.put(AnnotationDocumentState.NEW, ICON_NEW);
+        ICONS = Collections.unmodifiableMap(icons);
+    }
+    
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public MonitoringPage()
         throws UIMAException, IOException, ClassNotFoundException
@@ -1211,21 +1240,6 @@ public class MonitoringPage
                 SourceDocument document = projectRepositoryService.getSourceDocument(project,
                         value.substring(value.indexOf(":") + 1));
                 SourceDocumentState state = document.getState();
-                String iconNameForState = SourceDocumentState.NEW.toString();
-                // If state is annotation finished or annotation in progress, curation is not yet
-                // started
-                if (state.equals(SourceDocumentState.ANNOTATION_FINISHED)) {
-                    iconNameForState = SourceDocumentState.NEW.toString();
-                }
-                else if (state.equals(SourceDocumentState.ANNOTATION_IN_PROGRESS)) {
-                    iconNameForState = SourceDocumentState.NEW.toString();
-                }
-                else if (state.equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
-                    iconNameForState = AnnotationDocumentState.IN_PROGRESS.toString();
-                }
-                else if (state.equals(SourceDocumentState.CURATION_FINISHED)) {
-                    iconNameForState = AnnotationDocumentState.FINISHED.toString();
-                }
                 // #770 - Disable per-document progress on account of slowing down monitoring page
 //                if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
 //                        && document.getSentenceAccessed() != 0) {
@@ -1246,8 +1260,7 @@ public class MonitoringPage
 //                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
 //                }
 //                else {
-                    aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
-                            "/images_small/" + iconNameForState + ".png")));
+                    aCellItem.add(new EmbeddableImage(componentId, ICONS.get(state)));
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")
@@ -1339,8 +1352,7 @@ public class MonitoringPage
 //                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
 //                }
 //                else {
-                    aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
-                            "/images_small/" + state.toString() + ".png")));
+                    aCellItem.add(new EmbeddableImage(componentId, ICONS.get(state)));
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")
