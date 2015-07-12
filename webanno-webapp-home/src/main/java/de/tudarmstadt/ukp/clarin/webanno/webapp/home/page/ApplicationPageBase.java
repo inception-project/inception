@@ -76,7 +76,7 @@ public abstract class ApplicationPageBase
     @SuppressWarnings({ "serial" })
     private void commonInit()
     {
-        getSession().setLocale(Locale.ENGLISH);
+//        getSession().setLocale(Locale.ENGLISH);
 
         logoutPanel = new LogoutPanel("logoutPanel");
         feedbackPanel = new FeedbackPanel("feedbackPanel");
