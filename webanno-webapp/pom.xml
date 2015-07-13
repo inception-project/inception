@@ -366,7 +366,7 @@
 				<artifactId>winstone-maven-plugin</artifactId>
 				<version>1.2</version>
 				<configuration>
-					<filename>webanno-${project.version}-standalone.jar</filename>
+					<filename>webanno-standalone-${project.version}.jar</filename>
 					<cmdLineOptions>
 						<property>
 							<name>ajp13Port</name>
