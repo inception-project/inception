@@ -35,6 +35,9 @@ image::monitoring2.jpg[align="center"]
 
 The percentual progress out of the workload for individual annotators may be viewed as well as the number of finished documents.
 
+[[sect_monitoring_status]]
+=== Document Status ===
+
 The following table will explain the different symbols, which explain the status of a document for a user and the described task.
 
 [cols="2*", options="header"]
@@ -67,3 +70,18 @@ As there is only one curator for one document, curation is not divided into indi
 Scrolling down, two further frames become visible. The left one, named *Layer*, allows you to chose a layer in which pairwise kappa agreement between annotators will be calculated.
 
 image::monitoring_agreement.jpg[align="center"]
+
+[[sect_monitoring_agreement]]
+=== Agreement ===
+
+Agreement can be inspected on a per-feature basis and it is calculates pair-wise between all 
+annotators across all document. Agreement is calculated using Cohen's kappa as implemented in
+DKPro Statistics.
+
+The first time a feature is selected for agreement inspection, it takes a moment to calculate the
+differences between the annotated documents. Switching between different features subsequently
+is much faster.
+  
+CAUTION: Multiple interpretations in the form of stacked annotations not supported in the agreement 
+      calculation!
+

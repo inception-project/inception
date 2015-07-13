@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.home.page;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -35,7 +36,10 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.ExternalLink;
+import org.apache.wicket.markup.html.link.PopupSettings;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
@@ -60,6 +64,7 @@ public abstract class ApplicationPageBase
     private Label versionLabel;
     private Label embeddedDbWarning;
     private Label browserWarning;
+    private ExternalLink helpLink;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -151,6 +156,21 @@ public abstract class ApplicationPageBase
         if ("false".equals(settings.getProperty("warnings.unsupportedBrowser"))) {
             browserWarning.setVisible(false);
         }
+        
+        boolean helpAvailable;
+        try {
+            Application.get().getResourceSettings().getLocalizer().getString("page.help.link", this);
+            Application.get().getResourceSettings().getLocalizer().getString("page.help", this);
+            helpAvailable = true;
+        }
+        catch (MissingResourceException e) {
+            helpAvailable = false;
+        }
+        
+        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""),
+                new ResourceModel("page.help", "")));
+        helpLink.setPopupSettings(new PopupSettings("_blank"));
+        helpLink.setVisible(helpAvailable);
         
         add(logoutPanel);
         add(feedbackPanel);
