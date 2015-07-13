@@ -24,7 +24,7 @@
 				<td width="20%">
 					<form wicket:id="projectSelectionForm">
 						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Projects</legend>
+							<legend><wicket:message key="projects.label" /></legend>
 							<select class="hfill" wicket:id="project" size="29"></select>
 						</fieldset>
 					</form>
@@ -37,7 +37,7 @@
 					</fieldset>
 					<form wicket:id="monitoringDetailForm" class="hfill">
 						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Project</legend>
+							<legend><wicket:message key="project.label" /></legend>
 							<div>
 								<span wicket:id="projectName"></span>
 							</div>
@@ -60,54 +60,65 @@
 							</tr>
 						</table>
 						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Document status</legend>
+							<legend><wicket:message key="document_status.label" /> (<a target="_blank" wicket:message="href:document_status.help.link"><wicket:message key="help.label"/></a>)</legend>
 							<p><b><wicket:message key="document_status.hint">[Status hint]</wicket:message></b></p>
 							<table wicket:id="rsTable" class="hfill"></table>
 						</fieldset>
 					</form>
 
                     <form wicket:id="agreementForm" class="hfill">
-						<table class="hfill">
-							<tr style="vertical-align: top;">
-								<td width="20%">
-									<fieldset class="ui-widget-content ui-corner-all">
-										<legend>Layer</legend>
-										<select class="hfill" wicket:id="feature"></select>
+						<fieldset class="ui-widget-content ui-corner-all">
+							<legend>
+								<wicket:message key="agreement.label" />: (<a target="_blank"
+									wicket:message="href:agreement.help.link"><wicket:message
+										key="help.label" /></a>)
+							</legend>
+							<table class="hfill">
+								<tr style="vertical-align: top;">
+									<td width="20%"> 
 										<table>
-	                                        <tr class="labels-left">
-    	                                        <td><label wicket:for="measure">
-    	                                          <wicket:label key="measure.label"/>:</label></td>
-	                                            <td><select wicket:id="measure"></select></td>
-	                                        </tr>
-                                            <tr class="labels-left">
-                                               <td><label wicket:for="excludeIncomplete">
-                                                 <wicket:label key="excludeIncomplete.label"/>:</label></td>
-                                               <td><input type="checkbox" wicket:id="excludeIncomplete"></input></td>
-                                            </tr>
-	                                        <tr class="labels-left">
-	                                           <td><label wicket:for="linkCompareBehavior">
-	                                             <wicket:label key="linkCompareBehavior.label"/>:</label></td>
-	                                           <td><select wicket:id="linkCompareBehavior"></select></td>
-	                                        </tr>
+											<tr class="labels-top">
+											  <td colspan="2">
+											    <label wicket:for="feature"><wicket:label key="feature.label" />:</label>
+											    <select class="hfill" wicket:id="feature"></select>
+											  </td>
+											</tr>
+											<tr class="labels-left">
+												<td><label wicket:for="measure"> <wicket:label
+															key="measure.label" />:
+												</label></td>
+												<td><select wicket:id="measure"></select></td>
+											</tr>
+											<tr class="labels-left">
+												<td><label wicket:for="excludeIncomplete"> <wicket:label
+															key="excludeIncomplete.label" />:
+												</label></td>
+												<td><input type="checkbox"
+													wicket:id="excludeIncomplete"></input></td>
+											</tr>
+											<tr class="labels-left">
+												<td><label wicket:for="linkCompareBehavior"> <wicket:label
+															key="linkCompareBehavior.label" />:
+												</label></td>
+												<td><select wicket:id="linkCompareBehavior"></select></td>
+											</tr>
 										</table>
-									</fieldset>
-								</td>
-								<td width="80%">
-									<fieldset class="ui-widget-content ui-corner-all">
-										<legend>Agreement</legend>
-                                        <table wicket:id="agreementTable" class="hfill"></table>
-			                            <p>
-			                            <b>Legend:</b>
-			                            </p>
-			                            <ul>
-			                            <li>Lower triangle: Positions included in agreement / total number of positions</li>
-	                                       <li>Upper triangle: Agreement score</li>
-			                            </ul>
-									</fieldset>
-								</td>
-							</tr>
-						</table>
-                    </form>
+								    </td>
+									<td width="80%">
+										<table wicket:id="agreementTable" class="hfill"></table>
+										<p>
+											<b>Legend:</b>
+										</p>
+										<ul>
+											<li>Lower triangle: Positions included in agreement /
+												total number of positions</li>
+											<li>Upper triangle: Agreement score</li>
+										</ul>
+									</td>
+								</tr>
+							</table>
+                        </fieldset>						
+    				</form>
 				</td>
 			</tr>
 			<tr>
