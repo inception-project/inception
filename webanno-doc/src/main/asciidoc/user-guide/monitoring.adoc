@@ -35,6 +35,9 @@ image::monitoring2.jpg[align="center"]
 
 The percentual progress out of the workload for individual annotators may be viewed as well as the number of finished documents.
 
+[[sect_monitoring_status]]
+=== Document Status ===
+
 The following table will explain the different symbols, which explain the status of a document for a user and the described task.
 
 [cols="2*", options="header"]
@@ -68,6 +71,7 @@ Scrolling down, two further frames become visible. The left one, named *Layer*, 
 
 image::monitoring_agreement.jpg[align="center"]
 
+[[sect_monitoring_agreement]]
 === Agreement ===
 
 Agreement can be inspected on a per-feature basis and it is calculates pair-wise between all 

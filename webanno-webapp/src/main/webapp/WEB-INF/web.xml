@@ -28,6 +28,7 @@
 			/WEB-INF/applicationContext.xml
 			/WEB-INF/rest-servlet.xml
 			/WEB-INF/databaseContext.xml
+            /WEB-INF/docs.xml
 		</param-value>
 	</context-param>
 
