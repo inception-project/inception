@@ -193,11 +193,13 @@ public class MonitoringPage
     static {
         Map<Object, ResourceReference> icons = new HashMap<>();
         icons.put(SourceDocumentState.ANNOTATION_FINISHED, ICON_FINISHED);
-        icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
         icons.put(SourceDocumentState.CURATION_FINISHED, ICON_FINISHED);
-        icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
         icons.put(SourceDocumentState.CURATION_IN_PROGRESS, ICON_INPROGRESS);
         icons.put(SourceDocumentState.ANNOTATION_IN_PROGRESS, ICON_INPROGRESS);
+        icons.put(SourceDocumentState.NEW, ICON_NEW);
+        
+        icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
+        icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
         icons.put(AnnotationDocumentState.IN_PROGRESS, ICON_INPROGRESS);
         icons.put(AnnotationDocumentState.NEW, ICON_NEW);
         ICONS = Collections.unmodifiableMap(icons);
