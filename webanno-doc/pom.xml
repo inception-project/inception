@@ -111,9 +111,8 @@
             </goals>
             <configuration>
               <tasks>
-                <delete includeemptydirs="true">
-                  <fileset dir="src/main/resources/de/tudarmstadt/ukp/clarin/webanno/doc"
-                    includes="**/*" />
+                <delete includeemptydirs="true" failonerror="false">
+                  <fileset dir="src/main/resources" includes="**/*" />
                 </delete>
               </tasks>
             </configuration>
