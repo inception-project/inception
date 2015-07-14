@@ -208,7 +208,14 @@ The format of the exported annotations is selected using the *Format* drop-down 
 is selected, the file format corresponds to the format of the source document. If WebAnno has not
 write support for the source format, the file is exported in the WebAnno TSV format instead.
 
-*Bug note: do not leave the export page after initiating an export before the progress bar is complete or your WebAnno instance can become locked until it is restarted!*
+IMPORTANT: Do not leave the export page after initiating an export before the progress bar is 
+           complete or your WebAnno instance can become locked until it is restarted!
+
+NOTE: Some browsers automatically extract ZIP files into a folder after the download. Zipping this
+      folder and trying to re-import it into WebAnno will generally not work because the process
+      introduces an additional folder within the archive and WebAnno is unable to handle that. The
+      best option is to disable the automatic extraction in your browser. E.g. in Safari, go to
+      *Preferences* -> *General* and disable the setting *Open "safe" files after downloading*.
 
 When exporting a whole project, the structure of the exported ZIP file is a follows:
 
