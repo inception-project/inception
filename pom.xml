@@ -175,6 +175,11 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>org.dkpro.statistics</groupId>
+                <artifactId>dkpro-statistics-agreement</artifactId>
+                <version>2.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.wicket</groupId>
                 <artifactId>wicket-parent</artifactId>
                 <version>${wicket.version}</version>
