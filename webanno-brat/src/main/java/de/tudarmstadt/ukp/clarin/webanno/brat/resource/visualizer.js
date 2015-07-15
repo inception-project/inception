@@ -3773,7 +3773,9 @@ Util.profileStart('before render');
         var webFontConfig = {
           custom: {
             families: [
-              'Astloch',
+// WEBANNO EXTENSION BEGIN - No need for this font - it was used for the brat logo
+              //'Astloch',
+// WEBANNO EXTENSION END - No need for this font - it was used for the brat logo
               'PT Sans Caption',
               //        'Ubuntu',
               'Liberation Sans'
@@ -3781,7 +3783,9 @@ Util.profileStart('before render');
             /* For some cases, in particular for embedding, we need to
               allow for fonts being hosted elsewhere */
             urls: webFontURLs !== undefined ? webFontURLs : [
-              'static/fonts/Astloch-Bold.ttf',
+// WEBANNO EXTENSION BEGIN - No need for this font - it was used for the brat logo
+              //'static/fonts/Astloch-Bold.ttf',
+// WEBANNO EXTENSION END - No need for this font - it was used for the brat logo
               'static/fonts/PT_Sans-Caption-Web-Regular.ttf',
               //
               'static/fonts/Liberation_Sans-Regular.ttf'

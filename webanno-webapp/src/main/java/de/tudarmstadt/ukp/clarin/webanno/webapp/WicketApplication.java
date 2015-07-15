@@ -27,6 +27,7 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
@@ -82,12 +83,17 @@ public class WicketApplication
             mountPage("/correction.html", CorrectionPage.class);
             mountPage("/automation.html", AutomationPage.class);
 
-            mountResource("/static/jquery-theme/jquery-ui-redmond.css",
-                    new CssResourceReference(WebAnnoResources.class, "client/css/jquery-ui-redmond.css"));
+            // FIXME Handling brat font/css resources should be moved to brat module
             mountResource("/style-vis.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-vis.css"));
             mountResource("/style-ui.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
+            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
+                    new PackageResourceReference(WebAnnoResources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
+            // For an unknown reason, this file doesn't load from the package... so still keeping
+            // it in static under the webapp
+//            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
+//                    new PackageResourceReference(WebAnnoResources.class, "fonts/Liberation_Sans-Regular.ttf"));
 
             Properties settings = SettingsUtil.getSettings();
             String logoValue = settings.getProperty("style.logo");
@@ -100,14 +106,6 @@ public class WicketApplication
                         "images/logo.png", false));
             }
             
-/*            // mount fonts
-            mountResource("/static/fonts/Astloch-Bold.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/Astloch-Bold.ttf"));
-            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/Liberation_Sans-Regular.ttf"));
-            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
-*/
             isInitialized = true;
         }
     }
