@@ -30,14 +30,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
@@ -47,8 +44,6 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.markup.ComponentTag;
@@ -69,13 +64,10 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -113,8 +105,6 @@ public class ProjectLayersPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private ModalWindow openHelpDialog;
-
     private final String DEPENDENT = "Dependent";
     private final String GOVERNOR = "Governor";
     private final String FIRST = "first";
@@ -128,7 +118,6 @@ public class ProjectLayersPanel
     private Select<AnnotationLayer> layerSelection;
 
     private final Model<Project> selectedProjectModel;
-    private IModel<String> helpDataModel = new Model<String>();
 
     private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
@@ -156,34 +145,13 @@ public class ProjectLayersPanel
         featureDetailForm.setVisible(false);
         featureDetailForm.setOutputMarkupPlaceholderTag(true);
 
-        openHelpDialog = new ModalWindow("openHelpDialog");
-        openHelpDialog.setOutputMarkupId(true);
-        openHelpDialog.setInitialWidth(550);
-        openHelpDialog.setInitialHeight(250);
-        openHelpDialog.setResizable(true);
-        openHelpDialog.setWidthUnit("px");
-        openHelpDialog.setHeightUnit("px");
-
-        add(layerSelectionForm.add(openHelpDialog));
+        add(layerSelectionForm);
         add(featureSelectionForm);
         add(layerDetailForm);
         add(featureDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
         add(importLayerForm);
-    }
-
-    /**
-     * opens the {@link HelpModalWindowPanel} in a {@link ModalWindow}
-     */
-    private void openHelpDialog(final ModalWindow openAnnotationDialog, AjaxRequestTarget aTarget,
-            String helpName)
-    {
-        helpDataModel.setObject(getHelpContent(helpName));
-        openAnnotationDialog.setTitle("....");
-        openAnnotationDialog.setContent(new HelpModalWindowPanel(openAnnotationDialog
-                .getContentId(), openAnnotationDialog, getHelpContent(), helpName, helpDataModel));
-        openAnnotationDialog.show(aTarget);
     }
 
     private class LayerSelectionForm
@@ -474,16 +442,6 @@ public class ProjectLayersPanel
                     layerName = modelValue;
                 }
             });
-            add(new AjaxLink<Void>("showLayerPropertyModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "layerProperty");
-                }
-            });
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
@@ -522,16 +480,6 @@ public class ProjectLayersPanel
                     target.add(linkedListBehavior);
 
                     target.add(attachTypes);
-                }
-            });
-            add(new AjaxLink<Void>("showLayerTechnicalPropertyModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "layerTechnicalProperty");
                 }
             });
 
@@ -599,17 +547,6 @@ public class ProjectLayersPanel
             // Behaviors of layers
             add(new CheckBox("locked"));
             
-            add(new AjaxLink<Void>("showlayerBehaviorModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "layerBehavior");
-                }
-            });
-
             add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel",
                     "Lock to token offsets:")
             {
@@ -949,16 +886,6 @@ public class ProjectLayersPanel
                     new EntityModel<AnnotationFeature>(new AnnotationFeature())));
 
             add(new TextField<String>("uiName").setRequired(true));
-            add(new AjaxLink<Void>("showfeatureDetailModal")
-            {
-                private static final long serialVersionUID = 7496156015186497496L;
-
-                @Override
-                public void onClick(AjaxRequestTarget target)
-                {
-                    openHelpDialog(openHelpDialog, target, "featureDetail");
-                }
-            });
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
@@ -1216,66 +1143,5 @@ public class ProjectLayersPanel
         {
             feature.setChoices(regenerateModel());
         }
-    }
-
-    private HelpDataModel getHelpContent()
-    {
-        HelpDataModel helpContent = new HelpDataModel();
-        BeanWrapper wrapper = new BeanWrapperImpl(helpContent);
-        // get annotation preference from file system
-        try {
-            for (Entry<Object, Object> entry : repository.loadHelpContents().entrySet()) {
-                String property = entry.getKey().toString();
-                if (wrapper.isWritableProperty(property)) {
-
-                    if (HelpDataModel.class.getDeclaredField(property).getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
-                            wrapper.setPropertyValue(property, value);
-                        }
-                    }
-                    else {
-                        wrapper.setPropertyValue(property, entry.getValue());
-                    }
-                }
-            }
-        }
-        // no preference found
-        catch (Exception e) {
-        }
-        return helpContent;
-    }
-
-    private String getHelpContent(String aField)
-    {
-        String helpFieldContent = "";
-        HelpDataModel helpContent = new HelpDataModel();
-        BeanWrapper wrapper = new BeanWrapperImpl(helpContent);
-        // get annotation preference from file system
-        try {
-            for (Entry<Object, Object> entry : repository.loadHelpContents().entrySet()) {
-                String property = entry.getKey().toString();
-                if (wrapper.isWritableProperty(property)) {
-                    if (HelpDataModel.class.getDeclaredField(property).getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
-                            wrapper.setPropertyValue(property, value);
-                        }
-                    }
-                    else {
-                        if (property.equals(aField)) {
-                            helpFieldContent = entry.getValue().toString();
-                        }
-                        wrapper.setPropertyValue(property, entry.getValue());
-                    }
-                }
-            }
-        }
-        // no preference found
-        catch (Exception e) {
-        }
-        return helpFieldContent;
     }
 }

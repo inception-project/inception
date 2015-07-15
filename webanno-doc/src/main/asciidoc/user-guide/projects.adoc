@@ -75,58 +75,7 @@ To delete a document from the project, you have to click on it and then click on
 [[sect_projects_layers]]
 === Layers 
  
-To administer the layers, click on *Layer*. A frame showing all existing layers in this project will appear. The colouring of the layers signal the following: 
-
-[cols="2*"]
-|===
-| green
-| built-in annotation layer, enabled
-
-| blue
-| custom annotation layer, enabled
-
-| red
-| disabled annotation layer
-|===
-
-By default, only the default layer will be displayed as enabled. 
-To disable a layer, which means that it will not be shown to the users of the project, first select the layer by clicking on it. The following frames will open. 
-
-image::layer1.jpg[align="center"]
-
-In the first frame, there is field *Enabled*, which can be ticked or unticked. By unticking the field it can be made invisible to the users. Layers cannot simply be deleted.
-
-To create a new layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed.
-
-image::layer2.jpg[align="center"]
-
-The only obligatory field in this frame is the *Layer name*. Above, the user can give a description to the new layer. The tick after enabled signals whether the layer is shown to the users of the project, as it was already explained above.
-
-In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation or chain.
-Span annotations cover an optional range of characters - tokens, words or sentences.
-
-Relation and chain annotations are used for annotating links between two spans.
-
-For relation and chain annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here only non-default layers are displayed. To create a relation or chain annotation, first the span annotation needs to be created.
-
-In the last frame, *Behaviours*, other properties of the annotation may be selected. The first field, *Lock to token offsets*, gives the possibility to bind the annotation to a token.
-The next field, *Allow stacking*, gives the possibility to make several annotations over one range.
-The third field, *Allow crossing sentence boundary* gives the possibility to annotate a range covering more than one sentence. 
-After clicking on *Save layer* only changes in the first frame (*Properties*) may be made. After the layer has been saved, it will be displayed in the Layer frame.
-
-To be able to make annotations with this layer, features need to be added. This can be done by choosing the layer and clicking on *New feature* in the *Feature overview* frame. Then the following frame will be displayed:
-
-image::layer3.jpg[align="center"]
-
-In this frame details of the features may be chosen. 
-In the first field, the user may choose between different object types the tags of the feature are going to have (string, integer, float or boolean).
-A name and a description may also be given to the feature.
-The field *Enabled* shows whether the feature can be chosen by users.
-The field *Show* shows whether the feature is shown to the user.
-A tagset may be chosen in the last field. Only non-default tagsets may be chosen. Tagsets may be created in the *Tagsets* frame above. The next chapter explains how to create new tagsets in detail.
-
-
-*Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.*
+To administer the layers, click on *Layer*. A frame showing all existing layers in this project will appear. There are a couple of built-in layers.
 
 .Built-in layers
 |====
@@ -150,6 +99,68 @@ A tagset may be chosen in the last field. Only non-default tagsets may be chosen
 | Part of Speech (POS)
 | Span
 |====
+
+The colouring of the layers signal the following: 
+
+[cols="2*"]
+|===
+| green
+| built-in annotation layer, enabled
+
+| blue
+| custom annotation layer, enabled
+
+| red
+| disabled annotation layer
+|===
+
+By default, only the default layer will be displayed as enabled. 
+To disable a layer, which means that it will not be shown to the users of the project, first select the layer by clicking on it. The following frames will open. 
+
+image::layer1.jpg[align="center"]
+
+In the first frame, there is field *Enabled*, which can be ticked or unticked. By unticking the field it can be made invisible to the users. Layers cannot simply be deleted.
+
+[[sect_projects_layers_properties]]
+==== Properties 
+
+To create a new layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed.
+
+image::layer2.jpg[align="center"]
+
+The only obligatory field in this frame is the *Layer name*. Above, the user can give a description to the new layer. The tick after enabled signals whether the layer is shown to the users of the project, as it was already explained above.
+
+In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation or chain.
+Span annotations cover an optional range of characters - tokens, words or sentences.
+
+Relation and chain annotations are used for annotating links between two spans.
+
+For relation and chain annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here only non-default layers are displayed. To create a relation or chain annotation, first the span annotation needs to be created.
+
+[[sect_projects_layers_behaviours]]
+==== Behaviours
+
+In the last frame, *Behaviours*, other properties of the annotation may be selected. The first field, *Lock to token offsets*, gives the possibility to bind the annotation to a token.
+The next field, *Allow stacking*, gives the possibility to make several annotations over one range.
+The third field, *Allow crossing sentence boundary* gives the possibility to annotate a range covering more than one sentence. 
+After clicking on *Save layer* only changes in the first frame (*Properties*) may be made. After the layer has been saved, it will be displayed in the Layer frame.
+
+[[sect_projects_layers_features]]
+==== Features
+
+To be able to make annotations with this layer, features need to be added. This can be done by choosing the layer and clicking on *New feature* in the *Feature overview* frame. Then the following frame will be displayed:
+
+image::layer3.jpg[align="center"]
+
+In this frame details of the features may be chosen. 
+In the first field, the user may choose between different object types the tags of the feature are going to have (string, integer, float or boolean).
+A name and a description may also be given to the feature.
+The field *Enabled* shows whether the feature can be chosen by users.
+The field *Show* shows whether the feature is shown to the user.
+A tagset may be chosen in the last field. Only non-default tagsets may be chosen. Tagsets may be created in the *Tagsets* frame above. The next chapter explains how to create new tagsets in detail.
+
+
+*Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.*
 
 
 === Tagsets
