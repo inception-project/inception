@@ -138,13 +138,13 @@ These are *optional* instructions if you want to run WebAnno behind an Apache we
    * mod_proxy_ajp
 
    * Edit `/opt/webanno/conf/server.xml`
-      * Enable AJP Connector on localhost (comment in and add address)
+      * Enable AJP Connector on localhost (comment in, add address, and change port)
 ----
-<Connector port="38009" protocol="AJP/1.3" redirectPort="8443" address="127.0.0.1"/>
+<Connector port="18009" protocol="AJP/1.3" redirectPort="8443" address="127.0.0.1"/>
 ----
       * Disable HTTP Connector (just comment it out)
 ----
-<!--Connector port="38080" protocol="HTTP/1.1".
+<!--Connector port="8080" protocol="HTTP/1.1".
            connectionTimeout="20000".
            URIEncoding="UTF-8"
            redirectPort="8443" /-->
