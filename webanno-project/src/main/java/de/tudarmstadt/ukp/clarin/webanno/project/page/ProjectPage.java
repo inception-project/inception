@@ -60,12 +60,13 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -96,6 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
  * @author Richard Eckart de Castilho
  *
  */
+@MountPath("/projectsetting.html")
 public class ProjectPage
     extends ApplicationPageBase
 {

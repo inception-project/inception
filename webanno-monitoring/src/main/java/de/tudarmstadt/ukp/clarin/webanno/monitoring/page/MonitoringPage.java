@@ -87,6 +87,7 @@ import org.jfree.ui.RectangleInsets;
 import org.jfree.util.UnitType;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -129,6 +130,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * @author Seid Muhie Yimam
  *
  */
+@MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
 {

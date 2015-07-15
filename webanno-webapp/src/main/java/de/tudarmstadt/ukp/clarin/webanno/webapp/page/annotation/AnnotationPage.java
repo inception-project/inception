@@ -47,6 +47,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.wicketstuff.annotation.mount.MountPath;
 
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -83,6 +84,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * @author Seid Muhie Yimam
  *
  */
+@MountPath("/annotation.html")
 public class AnnotationPage
     extends ApplicationPageBase
 {

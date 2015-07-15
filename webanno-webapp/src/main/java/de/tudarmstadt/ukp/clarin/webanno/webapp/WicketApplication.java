@@ -31,21 +31,14 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
+import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
-import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 
 /**
  * The wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -72,16 +65,9 @@ public class WicketApplication
 
             mountPage("/login.html", getSignInPageClass());
             mountPage("/welcome.html", getHomePage());
-            mountPage("/annotation.html", AnnotationPage.class);
 
-            mountPage("/curation.html", CurationPage.class);
-            mountPage("/projectsetting.html", ProjectPage.class);
-            mountPage("/monitoring.html", MonitoringPage.class);
-            mountPage("/users.html", ManageUsersPage.class);
-            mountPage("/crowdsource.html", CrowdSourcePage.class);
-
-            mountPage("/correction.html", CorrectionPage.class);
-            mountPage("/automation.html", AutomationPage.class);
+            // Mount the other pages via @MountPath annotation on the page classes
+            new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp.clarin.webanno").mount(this);
 
             // FIXME Handling brat font/css resources should be moved to brat module
             mountResource("/style-vis.css",
