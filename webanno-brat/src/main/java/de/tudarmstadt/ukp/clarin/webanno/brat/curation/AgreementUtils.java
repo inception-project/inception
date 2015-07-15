@@ -34,20 +34,20 @@ import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.dkpro.statistics.agreement.IAgreementMeasure;
-import org.dkpro.statistics.agreement.IAnnotationUnit;
-import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
-import org.dkpro.statistics.agreement.coding.CohenKappaAgreement;
-import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
-import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.FleissKappaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 public class AgreementUtils
 {
