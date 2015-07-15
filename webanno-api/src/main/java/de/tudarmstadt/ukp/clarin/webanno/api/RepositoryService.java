@@ -1057,23 +1057,6 @@ public interface RepositoryService
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
-    // Methods related to Help file contents
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Load contents that will be displayed as a popup window for help from a property file
-     * 
-     * @return the properties.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    Properties loadHelpContents()
-        throws IOException;
-
-    <T> void saveHelpContents(T configurationObject)
-        throws IOException;
-
-    // --------------------------------------------------------------------------------------------
     // Methods related to anything else
     // --------------------------------------------------------------------------------------------
 
