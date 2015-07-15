@@ -99,9 +99,6 @@ public class ProjectLayersPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
-
     private final String DEPENDENT = "Dependent";
     private final String GOVERNOR = "Governor";
     private final String FIRST = "first";
