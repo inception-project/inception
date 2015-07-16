@@ -27,24 +27,18 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
+import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
-import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 
 /**
  * The wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -71,23 +65,21 @@ public class WicketApplication
 
             mountPage("/login.html", getSignInPageClass());
             mountPage("/welcome.html", getHomePage());
-            mountPage("/annotation.html", AnnotationPage.class);
 
-            mountPage("/curation.html", CurationPage.class);
-            mountPage("/projectsetting.html", ProjectPage.class);
-            mountPage("/monitoring.html", MonitoringPage.class);
-            mountPage("/users.html", ManageUsersPage.class);
-            mountPage("/crowdsource.html", CrowdSourcePage.class);
+            // Mount the other pages via @MountPath annotation on the page classes
+            new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp.clarin.webanno").mount(this);
 
-            mountPage("/correction.html", CorrectionPage.class);
-            mountPage("/automation.html", AutomationPage.class);
-
-            mountResource("/static/jquery-theme/jquery-ui-redmond.css",
-                    new CssResourceReference(WebAnnoResources.class, "client/css/jquery-ui-redmond.css"));
+            // FIXME Handling brat font/css resources should be moved to brat module
             mountResource("/style-vis.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-vis.css"));
             mountResource("/style-ui.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
+            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
+                    new PackageResourceReference(WebAnnoResources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
+            // For an unknown reason, this file doesn't load from the package... so still keeping
+            // it in static under the webapp
+//            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
+//                    new PackageResourceReference(WebAnnoResources.class, "fonts/Liberation_Sans-Regular.ttf"));
 
             Properties settings = SettingsUtil.getSettings();
             String logoValue = settings.getProperty("style.logo");
@@ -100,14 +92,6 @@ public class WicketApplication
                         "images/logo.png", false));
             }
             
-/*            // mount fonts
-            mountResource("/static/fonts/Astloch-Bold.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/Astloch-Bold.ttf"));
-            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/Liberation_Sans-Regular.ttf"));
-            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
-                    new CssResourceReference(Myresources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
-*/
             isInitialized = true;
         }
     }

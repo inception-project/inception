@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -166,7 +167,7 @@ public class SuggestionBuilder
             Integer end = segmentBeginEnd.get(begin);
 
             DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
-                    entryTypes, jCases, begin, end);
+                    entryTypes, LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, begin, end);
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);
@@ -425,8 +426,9 @@ public class SuggestionBuilder
 
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
 
-        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes, jCases, 0,
-                mergeJCas.getDocumentText().length());
+        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes,
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, 0, mergeJCas.getDocumentText()
+                        .length());
 
         for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
                 .entrySet()) {

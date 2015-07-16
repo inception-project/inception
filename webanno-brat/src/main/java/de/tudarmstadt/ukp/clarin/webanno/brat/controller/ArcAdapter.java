@@ -280,6 +280,13 @@ public class ArcAdapter
                     oGovernorFs = oFS.getFeatureValue(governorFeature);
                 }
 
+                if (oGovernorFs == null || oDependentFs == null) {
+                    log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                            + "] has no spans to attach to - cannot render.");
+                    continue;
+                }
+                
+                
                 if (((AnnotationFS) governorFs).getBegin() == ((AnnotationFS) oGovernorFs)
                         .getBegin()
                         && ((AnnotationFS) dependentFs).getBegin() == ((AnnotationFS) oDependentFs)

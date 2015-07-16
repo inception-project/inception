@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
@@ -27,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -70,7 +73,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.NoOriginOrTargetAnnotationSel
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -257,12 +262,12 @@ public class SuggestionViewPanel
         }
 
         createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
-                clickedAnnotationDocument, address, aRepository, aAnnotationService);
+                clickedAnnotationDocument, address, null, null);
     }
 
     private void createSpan(String spanType, BratAnnotatorModel aBModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress, RepositoryService aRepository,
-            AnnotationService aAnnotationService)
+            AnnotationDocument aAnnotationDocument, int aAddress, AnnotationFeature aSlotfeat,
+            List<LinkWithRoleModel> linkRole)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas clickedJCas = getJCas(aBModel, aAnnotationDocument);
@@ -277,15 +282,29 @@ public class SuggestionViewPanel
         int selectedSpanId = adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
                 null, null);
 
+        // if slot link is copied from the suggestion
+        if (aSlotfeat != null && linkRole != null) {
+            BratAjaxCasUtil.setFeature(BratAjaxCasUtil.selectByAddr(aMergeJCas, selectedSpanId),
+                    aSlotfeat, linkRole);
+        }
         // Set the feature values
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                continue;
-            }
-            if (feature.isEnabled()) {
-                Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(feature.getName());
-                adapter.updateFeature(aMergeJCas, feature, selectedSpanId,
-                        fsClicked.getFeatureValueAsString(uimaFeature));
+        else {
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                    continue;
+                }
+                // slot span is copied from the suggestion to the curation
+                if (feature.isEnabled() && feature.getLinkMode() != null) {
+                    BratAjaxCasUtil
+                            .setFeature(BratAjaxCasUtil.selectByAddr(aMergeJCas, selectedSpanId),
+                                    feature, null);
+                }
+                else if (feature.isEnabled()) {
+                    Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
+                            feature.getName());
+                    adapter.updateFeature(aMergeJCas, feature, selectedSpanId,
+                            fsClicked.getFeatureValueAsString(uimaFeature));
+                }
             }
         }
         repository
@@ -329,7 +348,7 @@ public class SuggestionViewPanel
         Integer addressOriginClicked = aRequest.getParameterValue("originSpanId").toInteger();
         Integer addressTargetClicked = aRequest.getParameterValue("targetSpanId").toInteger();
         String arcType = removePrefix(aRequest.getParameterValue("type").toString());
-        Integer fsArcaddress = aRequest.getParameterValue("arcId").toInteger();
+        String fsArcaddress = aRequest.getParameterValue("arcId").toString();
 
         // add span for merge
         // get information of the span clicked
@@ -371,25 +390,58 @@ public class SuggestionViewPanel
             long layerId = TypeUtil.getLayerId(arcType);
 
             AnnotationLayer layer = annotationService.getLayer(layerId);
-            AnnotationFS fsClicked = selectByAddr(clickedJCas, fsArcaddress);
-            ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
+            int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
+            AnnotationFS fsClicked = selectByAddr(clickedJCas, address);
 
-            // Add annotation - we set no feature values yet.
-            int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas, bModel, null, null));
+            // this is a slot
+            if (fsArcaddress.contains(".")) {
 
-            // Set the feature values
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-                if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                    continue;
+                Integer fiIndex = Integer.parseInt(fsArcaddress.split("\\.")[1]);
+                Integer liIndex = Integer.parseInt(fsArcaddress.split("\\.")[2]);
+
+                AnnotationFeature slotFeature = null;
+                List<LinkWithRoleModel> linkRole = new ArrayList<>();
+                int fi = 0;
+               f: for (AnnotationFeature feat : annotationService.listAnnotationFeature(layer)) {
+                    if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
+                            && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
+                        List<LinkWithRoleModel> links = getFeature(fsClicked, feat);
+                        for (int li = 0; li < links.size(); li++) {
+                            LinkWithRoleModel link = links.get(li);
+                            if (fi == fiIndex && li == liIndex) {
+                                slotFeature = feat;
+                                link.targetAddr = getAddr(targetFs);
+                                linkRole.add(link);
+                                break f;
+                            }
+                        }
+                    }
+                    fi++;
                 }
-                if (feature.isEnabled()) {
-                    Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
-                            feature.getName());
-                    adapter.updateFeature(aJcas, feature, selectedSpanId,
-                            fsClicked.getFeatureValueAsString(uimaFeature));
+
+                createSpan(arcType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
+                        clickedAnnotationDocument, address, slotFeature, linkRole);
+            }
+            else {
+                ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
+
+                // Add annotation - we set no feature values yet.
+                int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas, bModel, null,
+                        null));
+
+                // Set the feature values
+                for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                    if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                        continue;
+                    }
+                    if (feature.isEnabled()) {
+                        Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
+                                feature.getName());
+                        adapter.updateFeature(aJcas, feature, selectedSpanId,
+                                fsClicked.getFeatureValueAsString(uimaFeature));
+                    }
                 }
             }
-
             repository.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
 
             // update timestamp
@@ -399,6 +451,14 @@ public class SuggestionViewPanel
         }
         catch (IOException e) {
             throw new IOException();
+        }
+        catch (UIMAException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
 
         if (bModel.getPreferences().isScrollPage()) {

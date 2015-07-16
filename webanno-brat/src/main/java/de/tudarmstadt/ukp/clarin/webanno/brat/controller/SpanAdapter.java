@@ -260,6 +260,9 @@ public class SpanAdapter
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
 
+                        // get the color of the link for suggestion annotations
+                        color = aColoringStrategy.getColor(fs + "-" + targetFS,
+                                bratLabelText);
                         aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
                                 bratTypeName, getArgument(fs, targetFS), link.role, color));
                     }

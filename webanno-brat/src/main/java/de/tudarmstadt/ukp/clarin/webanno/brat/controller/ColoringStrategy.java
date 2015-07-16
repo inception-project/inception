@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-import org.apache.uima.cas.FeatureStructure;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
@@ -41,7 +39,7 @@ public abstract class ColoringStrategy
         return new ColoringStrategy()
         {
             @Override
-            public String getColor(FeatureStructure aFS, String aLabel)
+            public String getColor(Object aObj, String aLabel)
             {
                 // If each tag should get a separate color, we currently have no chance other than
                 // to derive the color from the actual label text because at this point, we cannot
@@ -57,17 +55,17 @@ public abstract class ColoringStrategy
             }
         };
     }
-    
+
     public static ColoringStrategy staticColor(final String aColor) {
         return new ColoringStrategy() {
             @Override
-            public String getColor(FeatureStructure aFS, String aLabel)
+            public String getColor(Object aObj, String aLabel)
             {
                 return aColor;
             }
         };
     }
-    
+
     public static ColoringStrategy getBestStrategy(AnnotationService aService, AnnotationLayer aLayer,
             AnnotationPreference aPreferences, Map<String[], Queue<String>> aColorQueues)
     {
@@ -78,7 +76,7 @@ public abstract class ColoringStrategy
         }
         else if (aPreferences.isStaticColor()) {
             int threshold;
-            
+
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aService, aLayer)) {
                 threshold = Integer.MAX_VALUE; // No filtering
             }
@@ -88,12 +86,12 @@ public abstract class ColoringStrategy
                 // the full palette.
                 threshold = LIGHTNESS_FILTER_THRESHOLD;
             }
-            
+
             coloringStrategy = staticColor(nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold));
         }
         else {
             String[] palette;
-            
+
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aService, aLayer)) {
                 palette = PALETTE_NORMAL;
             }
@@ -103,12 +101,12 @@ public abstract class ColoringStrategy
                 // the full palette.
                 palette = PALETTE_NORMAL_FILTERED;
             }
-            
+
             coloringStrategy = labelHashBasedColor(palette);
         }
         return coloringStrategy;
     }
-    
+
     private static boolean hasLinkFeature(AnnotationService aService, AnnotationLayer aLayer)
     {
         for (AnnotationFeature feature : aService.listAnnotationFeature(aLayer)) {
@@ -118,7 +116,7 @@ public abstract class ColoringStrategy
         }
         return false;
     }
-    
+
     private static String nextPaletteEntry(String[] aPalette,
             Map<String[], Queue<String>> aPaletteCursors, int aThreshold)
     {
@@ -128,7 +126,7 @@ public abstract class ColoringStrategy
             colorQueue = new LinkedList<>(asList(aPalette));
             aPaletteCursors.put(aPalette, colorQueue);
         }
-        
+
         // Look for a suitable color
         String color = colorQueue.poll();
         String firstColor = color;
@@ -141,14 +139,14 @@ public abstract class ColoringStrategy
             }
         }
         colorQueue.add(color);
-        
+
         return color;
     }
-    
+
     /**
      * Filter out too light colors from the palette - those that do not show propely on a ligth
      * background. The threshold controls what to filter.
-     * 
+     *
      * @param aPalette
      *            the palette.
      * @param aThreshold
@@ -165,7 +163,7 @@ public abstract class ColoringStrategy
         }
         return (String[]) filtered.toArray(new String[filtered.size()]);
     }
-    
+
     public static boolean isTooLight(String aColor, int aThreshold)
     {
         // http://24ways.org/2010/calculating-color-contrast/
@@ -178,9 +176,9 @@ public abstract class ColoringStrategy
     }
 
     private final static int LIGHTNESS_FILTER_THRESHOLD = 180;
-    
+
     public final static String DISABLED = "#bebebe";
-    
+
     public final static String[] PALETTE_PASTEL = { "#8dd3c7", "#ffffb3", "#bebada",
             "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5",
             "#ffed6f" };
@@ -195,5 +193,5 @@ public abstract class ColoringStrategy
     public final static String[] PALETTE_NORMAL_FILTERED = filterLightColors(PALETTE_NORMAL,
             LIGHTNESS_FILTER_THRESHOLD);
 
-    public abstract String getColor(FeatureStructure aFS, String aLabel);
+    public abstract String getColor(Object aObj, String aLabel);
 }

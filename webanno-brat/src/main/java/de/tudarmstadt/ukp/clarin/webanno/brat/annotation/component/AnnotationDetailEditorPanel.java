@@ -52,7 +52,6 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
-import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -131,8 +130,8 @@ public class AnnotationDetailEditorPanel
     private RefreshingView<FeatureModel> featureValues;
     private WebMarkupContainer wmc;
     private AjaxButton annotateButton;
-    private AjaxSubmitLink deleteButton;
-    private AjaxSubmitLink reverseButton;
+    private AjaxButton deleteButton;
+    private AjaxButton reverseButton;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
@@ -276,7 +275,7 @@ public class AnnotationDetailEditorPanel
             add(annotateButton);
             setDefaultButton(annotateButton);
 
-            add(deleteButton = new AjaxSubmitLink("delete")
+            add(deleteButton = new AjaxButton("delete")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -286,6 +285,10 @@ public class AnnotationDetailEditorPanel
                     super.onConfigure();
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
                     setVisible(model.getSelection().getAnnotation().isSet());
+                    
+                    // Avoid deleting in read-only layers
+                    setEnabled(model.getSelectedAnnotationLayer() != null
+                            && !model.getSelectedAnnotationLayer().isLocked());
                 }
 
                 @Override
@@ -308,7 +311,7 @@ public class AnnotationDetailEditorPanel
                 }
             });
 
-            add(reverseButton = new AjaxSubmitLink("reverse")
+            add(reverseButton = new AjaxButton("reverse")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -319,6 +322,10 @@ public class AnnotationDetailEditorPanel
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
                     setVisible(model.getSelection().isRelationAnno()
                             && model.getSelection().getAnnotation().isSet());
+
+                    // Avoid reversing in read-only layers
+                    setEnabled(model.getSelectedAnnotationLayer() != null
+                            && !model.getSelectedAnnotationLayer().isLocked());
                 }
 
                 @Override

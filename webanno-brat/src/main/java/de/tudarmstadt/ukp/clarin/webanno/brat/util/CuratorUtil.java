@@ -32,8 +32,10 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.codehaus.jackson.JsonGenerator;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationContainer;
@@ -69,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -131,7 +133,7 @@ public class CuratorUtil
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationService aAnnotationService, CurationContainer aCurationContainer,
-            final Map<FeatureStructure, AnnotationState> aStates)
+            final Map<Object, AnnotationState> aStates)
         throws IOException
     {
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
@@ -168,9 +170,9 @@ public class CuratorUtil
                 ColoringStrategy curationColoringStrategy = new ColoringStrategy()
                 {
                     @Override
-                    public String getColor(FeatureStructure aFS, String aLabel)
+                    public String getColor(Object aObj, String aLabel)
                     {
-                        return aStates.get(aFS).getColorCode();
+                        return aStates.get(aObj).getColorCode();
                     }
                 };
 
@@ -282,7 +284,6 @@ public class CuratorUtil
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         BratAnnotatorModel bModel = aCurationContainer.getBratAnnotatorModel();
-        Project project = bModel.getProject();
         SourceDocument sourceDocument = bModel.getDocument();
         Map<String, JCas> jCases = new HashMap<String, JCas>();
 
@@ -298,18 +299,23 @@ public class CuratorUtil
                 bModel.getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
 
-        Map<FeatureStructure, AnnotationState> annoStates = new HashMap<>();
+        Map<Object, AnnotationState> annoStates = new HashMap<>();
 
         DiffResult diff;
 
         if (bModel.getMode().equals(Mode.CURATION)) {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    jCases, aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
         }
         else {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    jCases, aCurationSegment.getBegin(), aCurationSegment.getEnd());
+                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd());
         }
+
+        diff.print(System.out);
+
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
 
         Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
@@ -319,8 +325,9 @@ public class CuratorUtil
             }
         }
 
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, d, false, false);
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, i, true, false);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, d, false,
+                false);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, i, true, false);
 
         List<ConfigurationSet> all = new ArrayList<>();
 
@@ -334,7 +341,8 @@ public class CuratorUtil
             all.remove(cfgSet);
         }
 
-        addSuggestionColor(aAnnotationService, project, jCases, annoStates, all, false, true);
+        addSuggestionColor(aAnnotationService, bModel.getMode(), jCases, annoStates, all, false,
+                true);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
@@ -358,27 +366,37 @@ public class CuratorUtil
      * @param aSuggestionColors
      * @param aCfgSet
      */
-    private static void addSuggestionColor(AnnotationService aAnnotationService, Project aProj,
-            Map<String, JCas> aCasMap, Map<FeatureStructure, AnnotationState> aSuggestionColors,
+    private static void addSuggestionColor(AnnotationService aAnnotationService, Mode aMode,
+            Map<String, JCas> aCasMap, Map<Object, AnnotationState> aSuggestionColors,
             Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
             boolean use = false;
             for (String u : cs.getCasGroupIds()) {
                 for (Configuration c : cs.getConfigurations(u)) {
-                    FeatureStructure fs = c.getFs(u, aCasMap);
 
+                    FeatureStructure fs = c.getFs(u, aCasMap);
+                    Object key =fs;
+                    // link FS
+                    if (c.getPosition().getFeature() != null) {
+                        ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType()
+                                .getFeatureByBaseName(c.getPosition().getFeature()));
+                        FeatureStructure link = links.get(c.getAID(u).index);
+                        fs = (AnnotationFS) link.getFeatureValue(link.getType()
+                                .getFeatureByBaseName("target"));
+                        key = key + "-" + fs;
+                    }
                     if (aAgree) {
-                        aSuggestionColors.put(fs, AnnotationState.AGREE);
+                        aSuggestionColors.put(key, AnnotationState.AGREE);
                         continue;
                     }
                     // automation and correction projects
-                    if (!aProj.getMode().equals(Mode.CURATION) && !aAgree) {
+                    if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            aSuggestionColors.put(fs, AnnotationState.DO_NOT_USE);
+                            aSuggestionColors.put(key, AnnotationState.DO_NOT_USE);
                         }
                         else {
-                            aSuggestionColors.put(fs, AnnotationState.DISAGREE);
+                            aSuggestionColors.put(key, AnnotationState.DISAGREE);
                         }
                         continue;
                     }
@@ -396,19 +414,19 @@ public class CuratorUtil
                     }
 
                     if (aAgree) {
-                        aSuggestionColors.put(fs, AnnotationState.AGREE);
+                        aSuggestionColors.put(key, AnnotationState.AGREE);
                     }
                     else if (use) {
-                        aSuggestionColors.put(fs, AnnotationState.USE);
+                        aSuggestionColors.put(key, AnnotationState.USE);
                     }
                     else if (aI) {
-                        aSuggestionColors.put(fs, AnnotationState.DISAGREE);
+                        aSuggestionColors.put(key, AnnotationState.DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        aSuggestionColors.put(fs, AnnotationState.DISAGREE);
+                        aSuggestionColors.put(key, AnnotationState.DISAGREE);
                     }
                     else {
-                        aSuggestionColors.put(fs, AnnotationState.DO_NOT_USE);
+                        aSuggestionColors.put(key, AnnotationState.DO_NOT_USE);
                     }
                 }
             }

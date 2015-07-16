@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
@@ -45,7 +46,8 @@ public class SettingsUtil
     {
         if (versionInfo == null) {
             try {
-                versionInfo = PropertiesLoaderUtils.loadAllProperties("/META-INF/version.properties");
+                versionInfo = PropertiesLoaderUtils.loadProperties(new ClassPathResource(
+                        "META-INF/version.properties"));
             }
             catch (IOException e) {
                 versionInfo = new Properties();

@@ -59,7 +59,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-model</artifactId>
 		</dependency>
-
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-doc</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-project</artifactId>
@@ -115,6 +118,10 @@
 			<groupId>org.wicketstuff</groupId>
 			<artifactId>wicketstuff-input-events</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.wicketstuff</groupId>
+            <artifactId>wicketstuff-annotation</artifactId>
+        </dependency>
 
 		<!-- Spring dependencies -->
 		
@@ -363,7 +370,7 @@
 				<artifactId>winstone-maven-plugin</artifactId>
 				<version>1.2</version>
 				<configuration>
-					<filename>webanno-${project.version}-standalone.jar</filename>
+					<filename>webanno-standalone-${project.version}.jar</filename>
 					<cmdLineOptions>
 						<property>
 							<name>ajp13Port</name>

@@ -1,4 +1,5 @@
 The following icon sets are licensed under a Creative Commons Attribution 3.0 License.(licenses/CC_BY_3.0.txt)
+Source: http://www.fatcow.com/free-icons
   
 categories.png
 cog.png
@@ -16,11 +17,8 @@ statistics.png
 user_go.png
 text_width.png
 
-The following files are under the the MIT license (licences/MIT.txt)
-These files are originally from the BRAT project
+The following fonts are under SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007 (SIL.txt)
 
-src/main/webapp/static/style.css
-Astloch-Bold.ttf
 Liberation_Sans-Regular.ttf
 PT_Sans-Caption-Web-Regular.ttf
 

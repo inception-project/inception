@@ -188,9 +188,6 @@ public class RepositoryServiceDbData
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
-    @Resource(name = "helpFile")
-    private Properties helpProperiesFile;
-
     private static final String PROJECT = "/project/";
     private static final String DOCUMENT = "/document/";
     private static final String SOURCE = "/source";
@@ -1146,21 +1143,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public Properties loadHelpContents()
-        throws FileNotFoundException, IOException
-    {
-        if (new File(dir.getAbsolutePath() + HELP_FILE).exists()) {
-            Properties property = new Properties();
-            property.load(new FileInputStream(new File(dir.getAbsolutePath() + HELP_FILE)));
-            return property;
-        }
-        else {
-            return helpProperiesFile;
-        }
-
-    }
-
-    @Override
     @Transactional
     public void removeProject(Project aProject, User aUser)
         throws IOException
@@ -1357,30 +1339,6 @@ public class RepositoryServiceDbData
                         + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
                         + "] to location: [" + propertiesPath + "]");
         createLog(aProject).removeAllAppenders();
-
-    }
-
-    @Override
-    public <T> void saveHelpContents(T aConfigurationObject)
-        throws IOException
-    {
-        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
-        Properties property = new Properties();
-        for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
-            if (wrapper.getPropertyValue(value.getName()) == null) {
-                continue;
-            }
-            property.setProperty(value.getName(), wrapper.getPropertyValue(value.getName())
-                    .toString());
-        }
-        File helpFile = new File(dir.getAbsolutePath() + HELP_FILE);
-        if (helpFile.exists()) {
-            FileUtils.forceDeleteOnExit(helpFile);
-        }
-        else {
-            helpFile.createNewFile();
-        }
-        property.store(new FileOutputStream(helpFile), null);
 
     }
 

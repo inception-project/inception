@@ -24,6 +24,14 @@
 
 	<!-- <security:global-method-security secured-annotations="enabled"/> -->
 
+    <security:http pattern="/api/doc/**">
+        <security:remember-me />
+        <security:logout />
+        <security:intercept-url pattern="/**"
+            access="ROLE_ADMIN, ROLE_USER" />
+        <security:form-login login-page='/login.html' />
+    </security:http>
+
 	<security:http pattern="/api/**" create-session="stateless">
 		<security:http-basic />
 		<security:intercept-url pattern="/**"

@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class CasDiff2
@@ -83,10 +84,14 @@ public class CasDiff2
     
     private final Map<String, DiffAdapter> typeAdapters = new HashMap<>();
     
-    private CasDiff2(int aBegin, int aEnd, Collection<? extends DiffAdapter> aAdapters)
+    private final LinkCompareBehavior linkCompareBehavior;
+    
+    private CasDiff2(int aBegin, int aEnd, Collection<? extends DiffAdapter> aAdapters,
+            LinkCompareBehavior aLinkCompareBehavior)
     {
         begin = aBegin;
         end = aEnd;
+        linkCompareBehavior = aLinkCompareBehavior;
         if (aAdapters != null) {
             for (DiffAdapter adapter : aAdapters) {
                 typeAdapters.put(adapter.getType(), adapter);
@@ -107,13 +112,14 @@ public class CasDiff2
      * @return a diff result.
      */
     public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, JCas> aCasMap)
+            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
+            Map<String, JCas> aCasMap)
     {
         Map<String, List<JCas>> map2 = new LinkedHashMap<>();
         for (Entry<String, JCas> e : aCasMap.entrySet()) {
             map2.put(e.getKey(), asList(e.getValue()));
         }
-        return doDiff(asList(aEntryType.getName()), aAdapters, map2);
+        return doDiff(asList(aEntryType.getName()), aAdapters, aLinkCompareBehavior, map2);
     }
 
     /**
@@ -130,9 +136,9 @@ public class CasDiff2
      * @return a diff result.
      */
     public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType, DiffAdapter aAdapter,
-            Map<String, List<JCas>> aCasMap)
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<JCas>> aCasMap)
     {
-        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aCasMap);
+        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior, aCasMap);
     }
 
     /**
@@ -147,18 +153,19 @@ public class CasDiff2
      * @return a diff result.
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap)
+            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
+            Map<String, List<JCas>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
-            return new DiffResult(new CasDiff2(0,0, aAdapters));
+            return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
         
         List<JCas> casList = aCasMap.values().iterator().next();
         if (casList.isEmpty()) {
-            return new DiffResult(new CasDiff2(0,0, aAdapters));
+            return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
         
-        return doDiff(aEntryTypes, aAdapters, aCasMap, -1, -1);
+        return doDiff(aEntryTypes, aAdapters, aCasMap, -1, -1, aLinkCompareBehavior);
     }
     
     /**
@@ -180,7 +187,8 @@ public class CasDiff2
      * @return a diff result.
      */
     public static DiffResult doDiffSingle(AnnotationService aService, Project aProject,
-            List<Type> aEntryTypes, Map<String, JCas> aCasMap, int aBegin, int aEnd)
+            List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
+            Map<String, JCas> aCasMap, int aBegin, int aEnd)
     {
         List<DiffAdapter> adapters = CasDiff2.getAdapters(aService, aProject);
         
@@ -193,7 +201,7 @@ public class CasDiff2
         for (Entry<String, JCas> e : aCasMap.entrySet()) {
             casMap.put(e.getKey(), asList(e.getValue()));
         }
-        return doDiff(entryTypes, adapters, casMap, aBegin, aEnd);
+        return doDiff(entryTypes, adapters, casMap, aBegin, aEnd, aLinkCompareBehavior);
     }
 
     /**
@@ -215,11 +223,11 @@ public class CasDiff2
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap, int aBegin,
-            int aEnd)
+            int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         sanityCheck(aCasMap);
         
-        CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters);
+        CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
         
         for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
             int casId = 0;
@@ -312,7 +320,28 @@ public class CasDiff2
         // null elements in the list can occur if a user has never worked on a CAS
         // We add these to the internal list above, but then we bail out here.
         if (aCas == null) {
+            log.debug("CAS group [" + aCasGroupId + "] does not contain a CAS at index [" + aCasId
+                    + "].");
             return;
+        }
+        
+        if (log.isDebugEnabled()) {
+            log.debug("Processing CAS group [" + aCasGroupId + "] CAS [" + aCasId
+                    + "].");
+            
+            String collectionId = null;
+            String documentId = null;
+            try {
+                DocumentMetaData dmd = DocumentMetaData.get(aCas);
+                collectionId = dmd.getCollectionId();
+                documentId = dmd.getDocumentId();
+                
+                log.debug("User [" + collectionId + "] - Document [" + documentId + "]");
+            }
+            catch (IllegalArgumentException e) {
+                // We use this information only for debugging - so we can ignore if the information
+                // is missing.
+            }
         }
         
         Collection<AnnotationFS> annotations;
@@ -323,6 +352,19 @@ public class CasDiff2
             annotations = selectCovered(aCas, getType(aCas, aType), begin, end);
         }
         
+        if (annotations.isEmpty()) {
+            log.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
+                    + "] contains no annotations of type [" + aType + "]");
+            return;
+        }
+        else {
+            log.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
+                    + annotations.size() + "] annotations of type [" + aType + "]");
+        }
+
+        int posBefore = configSets.keySet().size();
+        log.debug("Positions before: [" + posBefore + "]");
+
         for (AnnotationFS fs : annotations) {
             List<Position> positions = new ArrayList<>();
             
@@ -330,7 +372,7 @@ public class CasDiff2
             positions.add(getAdapter(aType).getPosition(aCasId, fs));
             
             // Generate secondary positions for multi-link features
-            positions.addAll(getAdapter(aType).generateSubPositions(aCasId, fs));
+            positions.addAll(getAdapter(aType).generateSubPositions(aCasId, fs, linkCompareBehavior));
 
             for (Position pos : positions) {
                 ConfigurationSet configSet = configSets.get(pos);
@@ -351,9 +393,34 @@ public class CasDiff2
                 configSet.addConfiguration(aCasGroupId, fs);
             }
         }
+
+        log.debug("Positions after: [" + configSets.keySet().size() + "] (delta: "
+                + (configSets.keySet().size() - posBefore) + ")");
+
 //        
 //        // Remember that we have processed the type
 //        entryTypes.add(aType);
+    }
+    
+    public static enum LinkCompareBehavior
+    {
+        /**
+         * The link target is considered to be the label. As a consequence, the
+         * {@link Position#compareTo} method includes the role label into comparison but not the
+         * link target.
+         */
+        LINK_TARGET_AS_LABEL,
+
+        /**
+         * The link role is considered to be the label and the {@link Position#compareTo} method
+         * takes the link target into account
+         */
+        LINK_ROLE_AS_LABEL;
+        
+        public String getName()
+        {
+            return toString();
+        }
     }
     
     /**
@@ -380,11 +447,16 @@ public class CasDiff2
         
         String getRole();
         
-        // REC Just keeping these for the moment in case we do want to switch to target-based
-        // slot disambiguation. Right now, we use role-based disambiguation.
-//        int getLinkTargetBegin();
-//        
-//        int getLinkTargetEnd();
+        int getLinkTargetBegin();
+        
+        int getLinkTargetEnd();
+        
+        /**
+         * Get the way in which links are compared and labels for links are generated.
+         * 
+         * @param aLinkTargetAsLabel use link target instead of role as label.
+         */
+        LinkCompareBehavior getLinkCompareBehavior();
     }
     
     public static abstract class Position_ImplBase implements Position
@@ -392,19 +464,36 @@ public class CasDiff2
         private final String type;
         private final int casId;
         private final String feature;
-        private final String role;
-//        private final int linkTargetBegin;
-//        private final int linkTargetEnd;
 
-        public Position_ImplBase(int aCasId, String aType, String aFeature, String aRole,
-                int aLinkTargetBegin, int aLinkTargetEnd)
-     {
+        private final String role;
+        
+        private final int linkTargetBegin;
+        private final int linkTargetEnd;
+        private final String linkTargetText;
+
+        private final LinkCompareBehavior linkCompareBehavior;
+        
+        // These are for debugging purposes only
+        private final String collectionId;
+        private final String documentId;
+
+        public Position_ImplBase(String aCollectionId, String aDocumentId, int aCasId,
+                String aType, String aFeature, String aRole, int aLinkTargetBegin,
+                int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aBehavior)
+        {
             type = aType;
             casId = aCasId;
             feature = aFeature;
+
+            linkCompareBehavior = aBehavior;
+
             role = aRole;
-//            linkTargetBegin = aLinkTargetBegin;
-//            linkTargetEnd = aLinkTargetEnd;
+            linkTargetBegin = aLinkTargetBegin;
+            linkTargetEnd = aLinkTargetEnd;
+            linkTargetText = aLinkTargetText;
+
+            collectionId = aCollectionId;
+            documentId = aDocumentId;
         }
 
         @Override
@@ -431,18 +520,34 @@ public class CasDiff2
             return role;
         }
         
-//        @Override
-//        public int getLinkTargetBegin()
-//        {
-//            return linkTargetBegin;
-//        }
-//        
-//        @Override
-//        public int getLinkTargetEnd()
-//        {
-//            return linkTargetEnd;
-//        }
+        @Override
+        public int getLinkTargetBegin()
+        {
+            return linkTargetBegin;
+        }
         
+        @Override
+        public int getLinkTargetEnd()
+        {
+            return linkTargetEnd;
+        }
+        
+        public String getCollectionId()
+        {
+            return collectionId;
+        }
+        
+        public String getDocumentId()
+        {
+            return documentId;
+        }
+        
+        @Override
+        public LinkCompareBehavior getLinkCompareBehavior()
+        {
+            return linkCompareBehavior;
+        }
+
         @Override
         public int compareTo(Position aOther) {
             if (casId != aOther.getCasId()) {
@@ -453,22 +558,82 @@ public class CasDiff2
             if (typeCmp != 0) {
                 return typeCmp;
             }
-            
+
             int featureCmp = ObjectUtils.compare(feature, aOther.getFeature());
             if (featureCmp != 0) {
                 return featureCmp;
             }
 
-            // Include target into position
-//            if (linkTargetBegin != aOther.getLinkTargetBegin()) {
-//                return linkTargetBegin - aOther.getLinkTargetBegin();
-//            }
-//            
-//            return linkTargetEnd - aOther.getLinkTargetEnd();
-            
-            // Include role into position
-            return ObjectUtils.compare(role, aOther.getRole());
-
+            int linkCmpCmp = ObjectUtils.compare(linkCompareBehavior, aOther.getLinkCompareBehavior());
+            if (linkCmpCmp != 0) {
+                // If the linkCompareBehavior is not the same, then we are dealing with different
+                // positions
+                return linkCmpCmp;
+            }
+            // If linkCompareBehavior is equal, then we still only have to continue if it is non-
+            // null.
+            else if (linkCompareBehavior != null) {
+                // If we are dealing with sub-positions generated for link features, then we need to
+                // check this, otherwise linkTargetBegin, linkTargetEnd, linkCompareBehavior,
+                // feature and role are all unset.
+                switch (linkCompareBehavior) {
+                case LINK_TARGET_AS_LABEL:
+                    // Include role into position
+                    return ObjectUtils.compare(role, aOther.getRole());
+                case LINK_ROLE_AS_LABEL:
+                    // Include target into position
+                    if (linkTargetBegin != aOther.getLinkTargetBegin()) {
+                        return linkTargetBegin - aOther.getLinkTargetBegin();
+                    }
+                    
+                    return linkTargetEnd - aOther.getLinkTargetEnd();
+                default:
+                    throw new IllegalStateException("Unknown link target comparison mode ["
+                            + linkCompareBehavior + "]");
+                }
+            }
+            else {
+                return linkCmpCmp;
+            }
+        }
+        
+        protected void toStringFragment(StringBuilder builder)
+        {
+            builder.append("cas=");
+            builder.append(getCasId());
+            if (getCollectionId() != null) {
+                builder.append(", coll=");
+                builder.append(getCollectionId());
+            }
+            if (getDocumentId() != null) {
+                builder.append(", doc=");
+                builder.append(getDocumentId());
+            }
+            builder.append(", type=");
+            if (getType().contains(".")) {
+                builder.append(StringUtils.substringAfterLast(getType(), "."));
+            }
+            else {
+                builder.append(getType());
+            }
+            if (getFeature() != null) {
+                builder.append(", linkFeature=");
+                builder.append(getFeature());
+                switch (getLinkCompareBehavior()) {
+                case LINK_TARGET_AS_LABEL:
+                    builder.append(", role=");
+                    builder.append(getRole());
+                    break;
+                case LINK_ROLE_AS_LABEL:
+                    builder.append(", linkTarget=(");
+                    builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
+                    builder.append(')');
+                    builder.append('[').append(linkTargetText).append(']');
+                    break;
+                default:
+                    builder.append(", BAD LINK BEHAVIOR");
+                }
+            }
         }
     }
     
@@ -479,13 +644,17 @@ public class CasDiff2
     {
         private final int begin;
         private final int end;
+        private final String text;
 
-        public SpanPosition(int aCasId, String aType, int aBegin, int aEnd, String aFeature,
-                String aRole, int aLinkTargetBegin, int aLinkTargetEnd)
+        public SpanPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
+                int aBegin, int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
+                int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
         {
-            super(aCasId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
+            super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
+                    aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
             begin = aBegin;
             end = aEnd;
+            text = aText;
         }
         
         /**
@@ -529,24 +698,11 @@ public class CasDiff2
         public String toString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.append("Span [cas=");
-            builder.append(getCasId());
-            builder.append(", type=");
-            builder.append(StringUtils.substringAfterLast(getType(), "."));
-            builder.append(", begin=");
-            builder.append(begin);
-            builder.append(", end=");
-            builder.append(end);
-            if (getFeature() != null) {
-                builder.append(", linkFeature=");
-                builder.append(getFeature());
-                builder.append(", role=");
-                builder.append(getRole());
-//                builder.append(", linkTarget=(");
-//                builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
-                builder.append(")");
-            }
-            builder.append("]");
+            builder.append("Span [");
+            toStringFragment(builder);
+            builder.append(", span=(").append(begin).append('-').append(end).append(')');
+            builder.append('[').append(text).append(']');
+            builder.append(']');
             return builder.toString();
         }
     }
@@ -558,18 +714,25 @@ public class CasDiff2
     {
         private final int sourceBegin;
         private final int sourceEnd;
+        private final String sourceText;
         private final int targetBegin;
         private final int targetEnd;
+        private final String targetText;
 
-        public ArcPosition(int aCasId, String aType, int aSourceBegin, int aSourceEnd,
-                int aTargetBegin, int aTargetEnd, String aFeature, String aRole,
-                int aLinkTargetBegin, int aLinkTargetEnd)
+        public ArcPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
+                int aSourceBegin, int aSourceEnd, String aSourceText, int aTargetBegin,
+                int aTargetEnd, String aTargetText, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
+                LinkCompareBehavior aLinkCompareBehavior)
         {
-            super(aCasId, aType, aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
+            super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
+                    aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
             sourceBegin = aSourceBegin;
             sourceEnd = aSourceEnd;
+            sourceText = aSourceText;
             targetBegin = aTargetBegin;
             targetEnd = aTargetEnd;
+            targetText = aTargetText;
         }
         
         /**
@@ -635,24 +798,12 @@ public class CasDiff2
         public String toString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.append("Arc [cas=");
-            builder.append(getCasId());
-            builder.append(", type=");
-            builder.append(StringUtils.substringAfterLast(getType(), "."));
-            builder.append(", source=(");
-            builder.append(sourceBegin).append('-').append(sourceEnd);
-            builder.append("), target=(");
-            builder.append(targetBegin).append('-').append(targetEnd);
-            builder.append(')');
-            if (getFeature() != null) {
-                builder.append(", linkFeature=");
-                builder.append(getFeature());
-                builder.append(", role=");
-                builder.append(getRole());
-//                builder.append(", linkTarget=(");
-//                builder.append(getLinkTargetBegin()).append('-').append(getLinkTargetEnd());
-                builder.append(")");
-            }
+            builder.append("Arc [");
+            toStringFragment(builder);
+            builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd).append(')');
+            builder.append('[').append(sourceText).append(']');
+            builder.append(", target=(").append(targetBegin).append('-').append(targetEnd).append(')');
+            builder.append('[').append(targetText).append(']');
             builder.append("]");
             return builder.toString();
         }
@@ -707,29 +858,64 @@ public class CasDiff2
                     DiffAdapter adapter = getAdapter(aFS.getType().getName());
                     LinkFeatureDecl decl = adapter.getLinkFeature(position.getFeature());
                     
-                    String role = link.getStringValue(link.getType().getFeatureByBaseName(decl.roleFeature));
-                    if (!role.equals(position.getRole())) {
-                        continue;
-                    }
-                    
-                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
-                            .getFeatureByBaseName(decl.targetFeature));
-                    
                     // Check if this configuration is already present
                     Configuration configuration = null;
-                    for (Configuration cfg : configurations) {
-                        FeatureStructure repFS = cfg.getRepresentative();
-                        AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
-                                .getFeatureByBaseName(decl.name))).get(repAID.index);
-                        AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
-                                .getType().getFeatureByBaseName(decl.targetFeature));                        
-                        
-                        // Compare targets
-                        if (equalsAnnotationFS(repTarget, target)) {
-                            configuration = cfg;
-                            break;
+                    switch (position.getLinkCompareBehavior()) {
+                    case LINK_TARGET_AS_LABEL: {
+                        String role = link.getStringValue(link.getType().getFeatureByBaseName(decl.roleFeature));
+                        if (!role.equals(position.getRole())) {
+                            continue;
                         }
+                        
+                        AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                                .getFeatureByBaseName(decl.targetFeature));
+                        
+                        cfgLoop: for (Configuration cfg : configurations) {
+                            FeatureStructure repFS = cfg.getRepresentative();
+                            AID repAID = cfg.getRepresentativeAID();
+                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
+                                    .getFeatureByBaseName(decl.name))).get(repAID.index);
+                            AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
+                                    .getType().getFeatureByBaseName(decl.targetFeature));                        
+                            
+                            // Compare targets
+                            if (equalsAnnotationFS(repTarget, target)) {
+                                configuration = cfg;
+                                break cfgLoop;
+                            }
+                        }
+                        break;
+                    }
+                    case LINK_ROLE_AS_LABEL: {
+                        AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                                .getFeatureByBaseName(decl.targetFeature));
+                        if (!(target.getBegin() == position.getLinkTargetBegin() && 
+                                target.getEnd() == position.getLinkTargetEnd())) {
+                            continue;
+                        }
+                        
+                        String role = link.getStringValue(link.getType().getFeatureByBaseName(
+                                decl.roleFeature));
+                        
+                        cfgLoop: for (Configuration cfg : configurations) {
+                            FeatureStructure repFS = cfg.getRepresentative();
+                            AID repAID = cfg.getRepresentativeAID();
+                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
+                                    .getFeatureByBaseName(decl.name))).get(repAID.index);
+                            String linkRole = repLink.getStringValue(repLink.getType()
+                                    .getFeatureByBaseName(decl.roleFeature));
+                            
+                            // Compare roles
+                            if (role.equals(linkRole)) {
+                                configuration = cfg;
+                                break cfgLoop;
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        throw new IllegalStateException("Unknown link target comparison mode ["
+                                + linkCompareBehavior + "]");
                     }
                     
                     // Not found, add new one
@@ -1020,8 +1206,22 @@ public class CasDiff2
         public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
                 Class<T> aClass, Map<String, List<JCas>> aCasMap)
         {
-            return selectByAddr(aCasMap.get(aCasGroupId).get(aCasId), aClass,
-                    fsAddresses.get(aCasGroupId).addr);
+            AID aid = fsAddresses.get(aCasGroupId);
+            if (aid == null) {
+                return null;
+            }
+            
+            List<JCas> cases = aCasMap.get(aCasGroupId);
+            if (cases == null) {
+                return null;
+            }
+            
+            JCas cas = cases.get(aCasId);
+            if (cas == null) {
+                return null;
+            }
+            
+            return selectByAddr(cas, aClass, aid.addr);
         }
 
         // FIXME aCasId parameter should not be required as we can get it from the position
@@ -1217,7 +1417,6 @@ public class CasDiff2
                         isAgreement(configurationSet) ? "AGREE" : "DISAGREE",
                         isComplete(configurationSet) ? "COMPLETE" : "INCOMPLETE");
                 if (!isAgreement(configurationSet) || !isComplete(configurationSet)) {
-                    aOut.println();
                     for (Configuration cfg : configurationSet.getConfigurations()) {
                         aOut.println();
                         aOut.println(cfg);
@@ -1296,7 +1495,8 @@ public class CasDiff2
     {
         String getType();
         
-        Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs);
+        Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
+                LinkCompareBehavior aLinkCompareBehavior);
 
         LinkFeatureDecl getLinkFeature(String aFeature);
         
@@ -1305,7 +1505,7 @@ public class CasDiff2
         Position getPosition(int aCasId, FeatureStructure aFS);
 
         Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
-                int aLinkTargetBegin, int aLinkTargetEnd);
+                int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
     }
     
     public static abstract class DiffAdapter_ImplBase implements DiffAdapter
@@ -1353,11 +1553,12 @@ public class CasDiff2
         @Override
         public Position getPosition(int aCasId, FeatureStructure aFS)
         {
-            return getPosition(aCasId, aFS, null, null, -1, -1);
+            return getPosition(aCasId, aFS, null, null, -1, -1, null);
         }
         
         @Override
-        public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs)
+        public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
+                LinkCompareBehavior aLinkCompareBehavior)
         {
             List<Position> subPositions = new ArrayList<>();
             
@@ -1370,7 +1571,7 @@ public class CasDiff2
                     AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(linkFS.getType()
                             .getFeatureByBaseName(decl.targetFeature));
                     Position pos = getPosition(aCasId, aFs, decl.name, role, target.getBegin(),
-                            target.getEnd());
+                            target.getEnd(), aLinkCompareBehavior);
                     subPositions.add(pos);
                 }
             }
@@ -1401,11 +1602,31 @@ public class CasDiff2
         
         @Override
         public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
-                int aLinkTargetBegin, int aLinkTargetEnd)
+                int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
         {
             AnnotationFS annoFS = (AnnotationFS) aFS;
-            return new SpanPosition(aCasId, getType(), annoFS.getBegin(), annoFS.getEnd(),
-                    aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
+            
+            String collectionId = null;
+            String documentId = null;
+            try {
+                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
+                collectionId = dmd.getCollectionId();
+                documentId = dmd.getDocumentId();
+            }
+            catch (IllegalArgumentException e) {
+                // We use this information only for debugging - so we can ignore if the information
+                // is missing.
+            }
+            
+            String linkTargetText = null;
+            if (aLinkTargetBegin != -1 && aFS.getCAS().getDocumentText() != null) {
+                linkTargetText = aFS.getCAS().getDocumentText()
+                        .substring(aLinkTargetBegin, aLinkTargetEnd);
+            }
+            
+            return new SpanPosition(collectionId, documentId, aCasId, getType(), annoFS.getBegin(),
+                    annoFS.getEnd(), annoFS.getCoveredText(), aFeature, aRole, aLinkTargetBegin,
+                    aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
         }
     }
 
@@ -1440,19 +1661,41 @@ public class CasDiff2
         
         @Override
         public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
-                int aLinkTargetBegin, int aLinkTargetEnd)
+                int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
         {
             Type type = aFS.getType();
             AnnotationFS sourceFS = (AnnotationFS) aFS.getFeatureValue(type
                     .getFeatureByBaseName(sourceFeature));
             AnnotationFS targetFS = (AnnotationFS) aFS.getFeatureValue(type
                     .getFeatureByBaseName(targetFeature));
-            return new ArcPosition(aCasId, getType(), 
+            
+            String collectionId = null;
+            String documentId = null;
+            try {
+                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
+                collectionId = dmd.getCollectionId();
+                documentId = dmd.getDocumentId();
+            }
+            catch (IllegalArgumentException e) {
+                // We use this information only for debugging - so we can ignore if the information
+                // is missing.
+            }
+            
+            String linkTargetText = null;
+            if (aLinkTargetBegin != -1 && aFS.getCAS().getDocumentText() != null) {
+                linkTargetText = aFS.getCAS().getDocumentText()
+                        .substring(aLinkTargetBegin, aLinkTargetEnd);
+            }
+            
+            return new ArcPosition(collectionId, documentId, aCasId, getType(), 
                     sourceFS != null ? sourceFS.getBegin() : -1,
                     sourceFS != null ? sourceFS.getEnd() : -1,
+                    sourceFS != null ? sourceFS.getCoveredText() : null,
                     targetFS != null ? targetFS.getBegin() : -1,
                     targetFS != null ? targetFS.getEnd() : -1,
-                    aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd);
+                    targetFS != null ? targetFS.getCoveredText() : null,
+                    aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd, linkTargetText,
+                    aLinkCompareBehavior);
         }
     }
 
@@ -1522,7 +1765,6 @@ public class CasDiff2
         return adapters;
     }
 
-    
 //  private Set<String> entryTypes = new LinkedHashSet<>();
 
 //  /**
