@@ -17,7 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
 
@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -297,8 +296,7 @@ public class BratAnnotator
                             selection.setRelationAnno(false);
 
                             Offsets offsets = getSpanOffsets(request, jCas, paramId);
-                            // we lost on the way the actual brat offsets for ghosting!
-                            Offsets bratOffsets = getBratSpanOffsets(request, jCas, paramId);
+
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
 
@@ -314,8 +312,8 @@ public class BratAnnotator
                             bratRenderHighlight(aTarget, selection.getAnnotation());
 
                             if (selection.getAnnotation().isNotSet()) {
-                                bratRenderGhostSpan(aTarget, jCas, bratOffsets.getBegin(),
-                                        bratOffsets.getEnd());
+                                bratRenderGhostSpan(aTarget, jCas, offsets.getBegin(),
+                                        offsets.getEnd());
                             }
                             else {
                                 bratRender(aTarget, jCas);
@@ -426,33 +424,10 @@ public class BratAnnotator
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
 
-            int bo = sentence.getBegin() + offsetLists.get(0).getBegin();
-            int eo = sentence.getBegin() + offsetLists.get(offsetLists.size() - 1).getEnd();
-            if (bo == eo) {
-                return new Offsets(bo, eo);
-            }
-            List<Token> tokens = selectOverlapping(jCas, Token.class, bo, eo);
-            bo = tokens.get(0).getBegin();
-            eo = tokens.get(tokens.size()-1).getEnd();
-            return new Offsets(bo, eo);
-        }
-        else {
-            // Edit existing span annotation
-            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, aVid.getId());
-            return new Offsets(fs.getBegin(), fs.getEnd());
-        }
-    }
-
-    private Offsets getBratSpanOffsets(IRequestParameters request, JCas jCas, VID aVid)
-        throws JsonParseException, JsonMappingException, IOException
-    {
-        if (aVid.isNotSet()) {
-            // Create new span annotation
-            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(offsets, OffsetsList.class);
-            return new Offsets(offsetLists.get(0).getBegin(), offsetLists.get(
-                    offsetLists.size() - 1).getEnd());
+            int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
+            int annotationEnd = sentence.getBegin()
+                    + offsetLists.get(offsetLists.size() - 1).getEnd();
+            return new Offsets(annotationBegin, annotationEnd);
         }
         else {
             // Edit existing span annotation
@@ -538,30 +513,6 @@ public class BratAnnotator
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-
-        if (getModelObject().isForwardAnnotation()) {
-            Selection selection = getModelObject().getSelection();
-
-            AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
-                    selection.getEnd());
-            if (nextToken != null) {
-                // The first sentence address in the display window!
-                Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
-                        .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-                int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
-
-                int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
-                int la = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas, firstSentence
-                        .getAddress(), getModelObject().getPreferences().getWindowSize());
-                Sentence ls = (Sentence) BratAjaxCasUtil.selectByAddr(aJCas.getCas(), la);
-                if (ls.getEnd() > nextToken.getBegin()) {
-                    response = addGhost(bratBegin, bratEnd);
-
-                    selection.clear();
-                    selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
-                }
-            }
-        }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
         LOG.info("END bratRenderCommand");
@@ -573,7 +524,12 @@ public class BratAnnotator
             int aEndOffset)
     {
         LOG.info("BEGIN ghostAnnoRender");
-        GetDocumentResponse response = addGhost(aBeginOffset, aEndOffset);
+        // the first sentence in this page
+        Sentence firstSent = selectSentenceAt(aJCas, getModelObject().getSentenceBeginOffset(),
+                getModelObject().getSentenceEndOffset());
+        int bo = firstSent.getBegin();
+
+        GetDocumentResponse response = addGhost(aBeginOffset - bo, aEndOffset - bo);
 
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
 
@@ -668,6 +624,42 @@ public class BratAnnotator
     public void bratRender(AjaxRequestTarget aTarget, JCas aJCas)
     {
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
+    }
+/**
+ * Display the ghost annotation on the next token if auto forwarding is enabled
+ * @param aTarget
+ * @param aJCas
+ */
+    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas)
+    {
+        LOG.info("BEGIN auto-forward annotation");
+        GetDocumentResponse response = new GetDocumentResponse();
+        Selection selection = getModelObject().getSelection();
+
+        AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
+                selection.getEnd());
+        if (nextToken != null) {
+            // The first sentence address in the display window!
+            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
+                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
+            int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
+
+            int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
+            int la = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
+                    firstSentence.getAddress(), getModelObject().getPreferences().getWindowSize());
+            Sentence ls = (Sentence) BratAjaxCasUtil.selectByAddr(aJCas.getCas(), la);
+            if (ls.getEnd() > nextToken.getBegin()) {
+                response = addGhost(bratBegin, bratEnd);
+
+                selection.clear();
+                selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+            }
+        }
+        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+        String json = toJson(response);
+        LOG.info("auto-forward annotation");
+        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + json + "]);");
     }
 
     /**
