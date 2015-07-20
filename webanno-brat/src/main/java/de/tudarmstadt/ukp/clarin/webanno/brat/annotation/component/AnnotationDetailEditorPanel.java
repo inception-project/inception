@@ -32,8 +32,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -128,7 +130,7 @@ public class AnnotationDetailEditorPanel
     @SuppressWarnings("unused")
     private DropDownChoice<AnnotationLayer> layers;
     private RefreshingView<FeatureModel> featureValues;
-    private WebMarkupContainer wmc;
+    private WebMarkupContainer featureEditorsContainer;
     private AjaxButton annotateButton;
     private AjaxButton deleteButton;
     private AjaxButton reverseButton;
@@ -205,9 +207,9 @@ public class AnnotationDetailEditorPanel
 
             add(layers = new LayerSelector("selectedAnnotationLayer", annotationLayers));
 
-            featureValues = new FeatureEditorPanel("featureValues");
+            featureValues = new FeatureEditorPanelContent("featureValues");
 
-            wmc = new WebMarkupContainer("wmc")
+            featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
 
@@ -221,10 +223,10 @@ public class AnnotationDetailEditorPanel
             };
             // Add placeholder since wmc might start out invisible. Without the placeholder we
             // cannot make it visible in an AJAX call
-            wmc.setOutputMarkupPlaceholderTag(true);
-            wmc.setOutputMarkupId(true);
-            wmc.add(featureValues);
-            add(wmc);
+            featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
+            featureEditorsContainer.setOutputMarkupId(true);
+            featureEditorsContainer.add(featureValues);
+            add(featureEditorsContainer);
 
             annotateButton = new AjaxButton("annotate")
             {
@@ -650,7 +652,7 @@ public class AnnotationDetailEditorPanel
 
         setLayerAndFeatureModels(jCas, aBModel);
 
-        aTarget.add(wmc);
+        aTarget.add(featureEditorsContainer);
         aTarget.add(deleteButton);
         aTarget.add(reverseButton);
         onChange(aTarget, aBModel);
@@ -928,12 +930,12 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public class FeatureEditorPanel
+    public class FeatureEditorPanelContent
         extends RefreshingView<FeatureModel>
     {
         private static final long serialVersionUID = -8359786805333207043L;
 
-        public FeatureEditorPanel(String aId)
+        public FeatureEditorPanelContent(String aId)
         {
             super(aId);
             setOutputMarkupId(true);
@@ -1005,10 +1007,10 @@ public class AnnotationDetailEditorPanel
                 if (annotationFeatureForm.getModelObject().getSelection().getAnnotation().isSet()
                         && !(frag instanceof LinkFeatureEditor)) {
                     if (frag.isDropOrchoice()) {
-                        updateFeature(fm, frag, "onchange");
+                        addAnnotateActionBehavior(fm, frag, "onchange");
                     }
                     else {
-                        updateFeature(fm, frag, "onblur");
+                        addAnnotateActionBehavior(fm, frag, "onblur");
                     }
                 }
     
@@ -1022,7 +1024,8 @@ public class AnnotationDetailEditorPanel
             }
         }
 
-        private void updateFeature(final FeatureModel aFm, final FeatureEditor aFrag, String aEvent)
+        private void addAnnotateActionBehavior(final FeatureModel aFm, final FeatureEditor aFrag,
+                String aEvent)
         {
             aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior(aEvent)
             {
@@ -1032,6 +1035,11 @@ public class AnnotationDetailEditorPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     try {
+                        if (annotationFeatureForm.getModelObject().getConstraints() != null) {
+                            // Make sure we update the feature editor panel because due to 
+                            // constraints the contents may have to be re-rendered
+                            aTarget.add(featureEditorsContainer);
+                        }
                         actionAnnotate(aTarget, annotationFeatureForm.getModelObject());
                     }
                     catch (BratAnnotationException e) {
@@ -1186,12 +1194,11 @@ public class AnnotationDetailEditorPanel
                 BratAnnotatorModel model = annotationFeatureForm.getModelObject();
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
-                    tagset = populateTagsBasedOnRules(model, aModel, tagset);
+                    tagset = populateTagsBasedOnRules(model, aModel);
                 }
                 else {
                     // Earlier behavior,
                     tagset = annotationService.listTags(aModel.feature.getTagset());
-                    ;
                 }
                 field = new ComboBox<Tag>("value", tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
@@ -1205,13 +1212,8 @@ public class AnnotationDetailEditorPanel
 
         /**
          * Adds and sorts tags based on Constraints rules
-         * @param model
-         * @param aModel
-         * @param tagset
-         * @return
          */
-        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel,
-                List<Tag> tagset)
+        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel)
         {
             // Add values from rules
             String restrictionFeaturePath;
@@ -1229,8 +1231,10 @@ public class AnnotationDetailEditorPanel
                         + aModel.feature.getName() + "]");
             }
 
+            List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
+                    .getTagset());
+
             try {
- 
                 JCas jCas = getCas(model);
 
                 FeatureStructure featureStructure = selectByAddr(jCas, model.getSelection()
@@ -1240,28 +1244,21 @@ public class AnnotationDetailEditorPanel
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
-                List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
-                        .getTagset());
+                LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
+                        + restrictionFeaturePath + "]: " + possibleValues);
+                
                 // only adds tags which are suggested by rules and exist in tagset.
-                tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
 
                 // add remaining tags
                 addRemainingTags(tagset, valuesFromTagset);
+                return tagset;
             }
-            
-            catch (UIMAException e) {
-                error("UIMA Exception while applying Constraint rules");
-                LOG.error("UIMA Exception while applying Constraint rules");    
-            }
-            catch (ClassNotFoundException e) {
+            catch (IOException | ClassNotFoundException | UIMAException e) {
                 error(ExceptionUtils.getRootCause(e));
                 LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
             }
-            catch(IOException e){
-                error(ExceptionUtils.getRootCause(e));
-                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
-            }
-            return tagset;
+            return valuesFromTagset;
         }
 
         @Override
@@ -1345,7 +1342,7 @@ public class AnnotationDetailEditorPanel
                                 annotationFeatureForm.getModelObject().setArmedSlot(aModel.feature,
                                         aItem.getIndex());
                             }
-                            aTarget.add(wmc);
+                            aTarget.add(featureEditorsContainer);
                         }
                     });
                     label.add(new AttributeAppender("style", new Model<String>()
@@ -1374,7 +1371,7 @@ public class AnnotationDetailEditorPanel
                 
                 //verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
-                    tagset = addTagsBasedOnRules(model, aModel, tagset);
+                    tagset = addTagsBasedOnRules(model, aModel);
                 }
                 else {
                     // add tagsets only, earlier behavior
@@ -1411,7 +1408,7 @@ public class AnnotationDetailEditorPanel
                         annotationFeatureForm.getModelObject().setArmedSlot(
                                 LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
 
-                        aTarget.add(wmc);
+                        aTarget.add(featureEditorsContainer);
                     }
                 }
             });
@@ -1439,7 +1436,7 @@ public class AnnotationDetailEditorPanel
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
 
-                    aTarget.add(wmc);
+                    aTarget.add(featureEditorsContainer);
 
                     // Auto-commit if working on existing annotation
                     if (annotationFeatureForm.getModelObject().getSelection().getAnnotation()
@@ -1462,15 +1459,17 @@ public class AnnotationDetailEditorPanel
 
         /**
          * Adds tagset based on Constraints rules, auto-adds tags which are marked important.
-         * @param model 
-         * @param aModel
-         * @param tagset
-         * @return List containing tags which exist in tagset and also suggested by rules, followed by the remaining tags in tagset.
+         * 
+         * @return List containing tags which exist in tagset and also suggested by rules, followed
+         *         by the remaining tags in tagset.
          */
-        private List<Tag> addTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel, List<Tag> tagset)
+        private List<Tag> addTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel)
         {
             String restrictionFeaturePath = aModel.feature.getName() + "."
                     + aModel.feature.getLinkTypeRoleFeatureName();
+
+            List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
+                    .getTagset());
 
             try {
                 JCas jCas = getCas(model);
@@ -1483,10 +1482,11 @@ public class AnnotationDetailEditorPanel
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
-                List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature
-                        .getTagset());
+                LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
+                        + restrictionFeaturePath + "]: " + possibleValues);
+
                 // Only adds tags which are suggested by rules and exist in tagset.
-                tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
                 removeAutomaticallyAddedUnusedEntries();
                 
                 // Create entries for important tags.
@@ -1494,71 +1494,70 @@ public class AnnotationDetailEditorPanel
 
                 // Add remaining tags.
                 addRemainingTags(tagset, valuesFromTagset);
-
+                return tagset;
+            }
+            catch (ClassNotFoundException | UIMAException | IOException e) {
+                error(ExceptionUtils.getRootCause(e));
+                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
             }
             
-            catch (UIMAException e) {
-                error("UIMA Exception while applying Constraint rules");
-                LOG.error("UIMA Exception while applying Constraint rules");    
-            }
-            catch (ClassNotFoundException e) {
-                error(ExceptionUtils.getRootCause(e));
-                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
-            }
-            catch(IOException e){
-                error(ExceptionUtils.getRootCause(e));
-                LOG.error(ExceptionUtils.getRootCauseMessage(e),e);
-            }
-            return tagset;
+            return valuesFromTagset;
         }
 
-        /**
-         * 
-         */
-        @SuppressWarnings("unchecked")
         private void removeAutomaticallyAddedUnusedEntries()
         {
-            //              Remove unused (but auto-added) tags.
-                          List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                      .getModelObject().value;
-                          LinkWithRoleModel temp;
-                        Iterator<LinkWithRoleModel> existingLinks = list.iterator(); 
-                          while(existingLinks.hasNext()){
-                              temp = existingLinks.next();
-                              if(temp.wasAutoCreated && temp.targetAddr==-1){
-                                  //remove it
-                                  existingLinks.remove();
-                              }
-                          }
-//                          LinkFeatureEditor.this.setModelObject((FeatureModel) list);
+            // Remove unused (but auto-added) tags.
+            @SuppressWarnings("unchecked")
+            List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                    .getModelObject().value;
+            
+            Iterator<LinkWithRoleModel> existingLinks = list.iterator();
+            while (existingLinks.hasNext()) {
+                LinkWithRoleModel link = existingLinks.next();
+                if (link.autoCreated && link.targetAddr == -1) {
+                    // remove it
+                    existingLinks.remove();
+                }
+            }
         }
 
-        /**
-         * @param tagset
-         * @param possibleValues
-         */
-        private void autoAddImportantTags(List<Tag> tagset, List<PossibleValue> possibleValues)
+        private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> possibleValues)
         {
+            // Construct a quick index for tags
+            Set<String> tagset = new HashSet<String>();
+            for (Tag t : aTagset) {
+                tagset.add(t.getName());
+            }
+            
+            // Get links list and build role index
+            @SuppressWarnings("unchecked")
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                    .getModelObject().value;
+            Set<String> roles = new HashSet<String>();
+            for (LinkWithRoleModel l : links) {
+                roles.add(l.role);
+            }
+            
             // Loop over values to see which of the tags are important and add them.
-            for (Tag tag : tagset) {
-                for (PossibleValue value : possibleValues) {
-                    if (!value.isImportant()) {
-                        break;
-                    }
-                    if (tag.getName().equalsIgnoreCase(value.getValue())) {
-                        // Add empty slot in UI with that name.
-
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                .getModelObject().value;
-                        LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = tag.getName();
-                        m.wasAutoCreated = true; //Marking so that can be ignored later. 
-                        links.add(m);
-                        annotationFeatureForm.getModelObject().setArmedSlot(
-                                LinkFeatureEditor.this.getModelObject().feature,
-                                links.size() - 1);
-                    }
+            for (PossibleValue value : possibleValues) {
+                if (!value.isImportant() || !tagset.contains(value.getValue())) {
+                    continue;
                 }
+
+                // Check if there is already a slot with the given name
+                if (roles.contains(value.getValue())) {
+                    continue;
+                }
+                
+                // Add empty slot in UI with that name.
+                LinkWithRoleModel m = new LinkWithRoleModel();
+                m.role = value.getValue();
+                // Marking so that can be ignored later. 
+                m.autoCreated = true; 
+                links.add(m);
+                // NOT arming the slot here!
+                
+                System.out.println("Auto-added link ["+m.role+"]");
             }
         }
 
@@ -1645,10 +1644,9 @@ public class AnnotationDetailEditorPanel
      * exist in tagset and is suggested by rules. The remaining values from tagset are added
      * afterwards.
      */
-    public List<Tag> compareSortAndAdd(List<PossibleValue> possibleValues,
+    private static List<Tag> compareSortAndAdd(List<PossibleValue> possibleValues,
             List<Tag> valuesFromTagset)
     {
-
         List<Tag> returnList = new ArrayList<Tag>();
 //        // Sorting based on important flag
 //        possibleValues.sort(null);
@@ -1687,7 +1685,7 @@ public class AnnotationDetailEditorPanel
 
                     populateFeatures(model, null);
 
-                    aTarget.add(wmc);
+                    aTarget.add(featureEditorsContainer);
                     aTarget.add(annotateButton);
                     aTarget.add(forwardAnnotation);
                 }
@@ -1730,7 +1728,7 @@ public class AnnotationDetailEditorPanel
         public String role;
         public String label = CLICK_HINT;
         public int targetAddr = -1;
-        public boolean wasAutoCreated;
+        public boolean autoCreated;
     }
 
     private void updateForwardAnnotation(BratAnnotatorModel aBModel)

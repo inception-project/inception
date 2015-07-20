@@ -22,8 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,10 +65,13 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -806,6 +809,9 @@ public class AnnotationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             bModel.initForDocument(jcas);
 
+            // Load constraints
+            bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
+            
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bModel, Mode.ANNOTATION);
@@ -823,21 +829,6 @@ public class AnnotationPage
                     + bModel.getSentenceAddress() + "]");
 
             gotoPageTextField.setModelObject(1);
-
-            // Parsing Constraint rules for project.
-            ParsedConstraints constraints = null;
-            // BEGIN HACK - Eventually, we obtain the constraints from the project settings
-            if (repository.getConstraintRulesFile(bModel.getProject()).canRead()) {
-                ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                        repository.getConstraintRulesFile(bModel.getProject())));
-                Parse p = parser.Parse();
-                constraints = p.accept(new ParserVisitor());
-            }
-            else {
-                info("No constraint rules found for current project. Go to project settings to upload constraint rules file.");
-            }
-            // END HACK - Eventually, we obtain the constraints from the project settings
-            bModel.setConstraints(constraints);
 
             updateSentenceAddress(jcas, aTarget);
 
@@ -869,13 +860,51 @@ public class AnnotationPage
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
         }
-        catch (ParseException e) {
-            LOG.error("Error", e);
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            error(e.getMessage());
-
-        }
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
+    }
+    
+    private ParsedConstraints loadConstraints(AjaxRequestTarget aTarget, Project aProject)
+        throws IOException
+    {
+        ParsedConstraints merged = null;
+
+        for (ConstraintSet set : repository.listConstraintSets(aProject)) {
+            try {
+                String script = repository.readConstrainSet(set);
+                ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
+                Parse p = parser.Parse();
+                ParsedConstraints constraints = p.accept(new ParserVisitor());
+                
+                if (merged == null) {
+                    merged = constraints;
+                }
+                else {
+                    // Merge imports
+                    // FIXME check if there are import conflicts
+                    merged.getImports().putAll(constraints.getImports());
+
+                    // Merge scopes
+                    for (Scope scope : constraints.getScopes()) {
+                        Scope target = merged.getScopeByName(scope.getScopeName());
+                        if (target == null) {
+                            // Scope does not exist yet
+                            merged.getScopes().add(scope);
+                        }
+                        else {
+                            // Scope already exists
+                            target.getRules().addAll(scope.getRules());
+                        }
+                    }
+                }
+            }
+            catch (ParseException e) {
+                LOG.error("Error", e);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                error(e.getMessage());
+            }
+        }
+
+        return merged;
     }
 }

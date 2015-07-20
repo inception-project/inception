@@ -123,6 +123,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -710,13 +711,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getConstraints(Project aProject)
-    {
-        // FIXME We had decided to store the constraints in the DB
-        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + "/constraints.txt");
-    }
-
-    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException
@@ -916,7 +910,7 @@ public class RepositoryServiceDbData
                 + aFileName)));
 
         createLog(aProject).info(
-                " Created Guideline file[ " + aFileName + "] for Project [" + aProject.getName()
+                " Created Guideline file [" + aFileName + "] for Project [" + aProject.getName()
                         + "] with ID [" + aProject.getId() + "]");
         createLog(aProject).removeAllAppenders();
     }
@@ -2241,38 +2235,65 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public void createConstraintRules(Project aProject, File aContent, String aFileName,
-            String username)
+    @Transactional
+    public List<ConstraintSet> listConstraintSets(Project aProject)
+    {
+        return entityManager
+                .createQuery("FROM ConstraintSet WHERE project = :project ORDER BY name ASC ",
+                        ConstraintSet.class).setParameter("project", aProject).getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public void createConstraintSet(ConstraintSet aSet)
+    {
+        entityManager.persist(aSet);
+        createLog(aSet.getProject()).info(
+                "Read constraints set [" + aSet.getName() + "] for project ["
+                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
+                        + "]");
+        createLog(aSet.getProject()).removeAllAppenders();
+    }
+    
+    @Override
+    @Transactional
+    public void removeConstraintSet(ConstraintSet aSet)
+    {
+        entityManager.remove(entityManager.merge(aSet));
+    }
+    
+    @Override
+    public String readConstrainSet(ConstraintSet aSet)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aProject.getId() + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
+        String data =  FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
+        
+        createLog(aSet.getProject()).info(
+                "Read constraints set file [" + filename + "] for project ["
+                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
+                        + "]");
+        createLog(aSet.getProject()).removeAllAppenders();
+        
+        return data;
+    }
+    
+    @Override
+    public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
+        throws IOException
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
-        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(constraintRulesPath
-                + "project.rules")));
-
-        createLog(aProject).info(
-                " Created Constraints Rule file[ " + aFileName + "] for Project [" + aProject.getName()
-                        + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
+        FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
         
-    }
-
-    @Override
-    public File getConstraintRulesFile(Project aProject)
-    {
-        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + CONSTRAINTS+"/project.rules");
-    }
-
-    @Override
-    public void removeConstraintRules(Project aProject, String aUsername)
-        throws IOException
-    {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
-                + CONSTRAINTS+"/project.rules"));
-        createLog(aProject).info(
-                " Removed Constraint Rules file from [" + aProject.getName() + "] with ID ["
-                        + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
-        
+        createLog(aSet.getProject()).info(
+                "Created constraints set file [" + filename + "] for project ["
+                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
+                        + "]");
+        createLog(aSet.getProject()).removeAllAppenders();
     }
 }

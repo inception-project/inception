@@ -19,35 +19,32 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.ListMultipleChoice;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.googlecode.wicket.jquery.ui.widget.progressbar.ProgressBar;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}
@@ -58,128 +55,242 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class ConstraintsPanel
     extends Panel
 {
-
     private static final long serialVersionUID = 8910455936756021733L;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
 
-    // private ArrayList<String> documents = new ArrayList<String>();
-    // private ArrayList<String> selectedDocuments = new ArrayList<String>();
-
-    private List<FileUpload> uploadedFiles;
-    private FileUploadField fileUpload;
-
-    private Model<Project> selectedProjectModel;
-    private boolean isThereAConstraintRulesFile;
+    private SelectionForm selectionForm;
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private DetailForm detailForm;
+    
+    private ImportForm importForm;
+
     public ConstraintsPanel(String id, Model<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
-        add(fileUpload = new FileUploadField("content", new Model()));
-        Project tempProject = selectedProjectModel.getObject();
-        isThereAConstraintRulesFile = projectRepository.getConstraintRulesFile(tempProject).exists();
-        add(new Button("importConstraintRules", new ResourceModel("label"))
+        super(id, aProjectModel);
+        
+        add(selectionForm = new SelectionForm("selectionForm"));
+        add(detailForm = new DetailForm("detailForm"));
+        add(importForm = new ImportForm("importForm"));
+    }
+
+    public Project getModelObject()
+    {
+        return (Project) getDefaultModelObject();
+    }
+
+    public class SelectionForm
+        extends Form<ConstraintSet>
+    {
+        private static final long serialVersionUID = -4835473062143674510L;
+
+        public SelectionForm(String aId)
         {
-            private static final long serialVersionUID = 1L;
+            super(aId, Model.of((ConstraintSet) null));
 
-            @Override
-            public void onSubmit()
+            LoadableDetachableModel<List<ConstraintSet>> rulesets = new LoadableDetachableModel<List<ConstraintSet>>()
+                    {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected List<ConstraintSet> load()
+                {
+                    return projectRepository.listConstraintSets(ConstraintsPanel.this
+                            .getModelObject());
+                }
+            };
+            
+            add(new ListChoice<ConstraintSet>("ruleset", SelectionForm.this.getModel(), rulesets) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    setChoiceRenderer(new ChoiceRenderer<ConstraintSet>("name"));
+                    setNullValid(false);
+                }
+                
+                @Override
+                protected void onSelectionChanged(ConstraintSet aNewSelection)
+                {
+                    ConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
+                }
+
+                @Override
+                protected boolean wantOnSelectionChangedNotifications()
+                {
+                    return true;
+                }
+
+                @Override
+                protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+            });
+        }
+    }
+
+    public class DetailForm
+        extends Form<ConstraintSet>
+    {
+        private static final long serialVersionUID = 8696334789027911595L;
+
+        private TextArea<String> script;
+        
+        public DetailForm(String aId)
+        {
+            super(aId, new CompoundPropertyModel<ConstraintSet>(new EntityModel<ConstraintSet>(null)));
+            
+            add(new TextField<String>("name"));
+            
+            add(script = new TextArea<String>("script", new LoadableDetachableModel<String>()
             {
-                uploadedFiles = fileUpload.getFileUploads();
-                if (uploadedFiles.size() > 1) {
-                    error("Please select only 1 document for Constraint Rules");
-                    return;
-                }
-                Project project = selectedProjectModel.getObject();
+                private static final long serialVersionUID = 1L;
 
-                if (project.getId() == 0) {
-                    error("Project not yet created, please save project Details!");
-                    return;
-                }
-                if (isEmpty(uploadedFiles)) {
-                    error("No document is selected to upload, please select a document first");
-                    return;
-                }
-
-                for (FileUpload constraintRulesFile : uploadedFiles) {
-
+                @Override
+                protected String load()
+                {
                     try {
-                        File tempFile = constraintRulesFile.writeToTempFile();
-                        String fileName = constraintRulesFile.getClientFileName();
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        boolean constraintRuleFileIsOK = false;
-                        // Checking if file is OK as per Constraints Grammar specification
-                        ConstraintsGrammar parser;
-                        Parse p;
-                        parser = new ConstraintsGrammar(new FileInputStream(tempFile));
-                        p = parser.Parse();
-                        constraintRuleFileIsOK=true;
-                        if (constraintRuleFileIsOK) {
-                            projectRepository.createConstraintRules(project, tempFile, fileName,
-                                    username);
-                            isThereAConstraintRulesFile = true;
-                        }
+                        return projectRepository.readConstrainSet(DetailForm.this.getModelObject());
                     }
                     catch (IOException e) {
+                        error("ERROR: " + ExceptionUtils.getRootCauseMessage(e));
+                        return "ERROR";
+                    }
+                }
+            }));
+            // Script not editable - if we remove this flag, then the script area will not update
+            // when switching set selection
+            script.setEnabled(false); 
+            
+            add(new Button("delete", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    projectRepository.removeConstraintSet(DetailForm.this.getModelObject());
+                    DetailForm.this.setModelObject(null);
+                    selectionForm.setModelObject(null);
+                }
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(DetailForm.this.getModelObject().getId() >= 0);
+                }
+            });
+            add(new Button("save", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                @Override
+                public void onSubmit()
+                {
+                    // Actually nothing to do here. Wicket will transfer the values from the
+                    // form into the model object and Hibernate will persist it
+                }
+            });
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+                    DetailForm.this.setModelObject(null);
+                }
+            });
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            
+            setVisible(getModelObject() != null);
+        }
+    }
+    
+    public class ImportForm
+        extends Form<Void>
+    {
+        private static final long serialVersionUID = 8121850699963791359L;
+        
+        private List<FileUpload> uploads;
+        
+        public ImportForm(String aId)
+        {
+            super(aId);
+
+            add(new FileUploadField("uploads", PropertyModel.<List<FileUpload>> of(this, "uploads")));
+            add(new Button("import", new ResourceModel("label"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public void onSubmit()
+                {
+                    importAction();
+                }
+            });
+        }
+        
+        private void importAction()
+        {
+            Project project = ConstraintsPanel.this.getModelObject();
+
+            if (project.getId() == 0) {
+                error("Project not yet created, please save project Details!");
+                return;
+            }
+
+            if (isEmpty(uploads)) {
+                error("No document is selected to upload, please select a document first");
+                return;
+            }
+
+            for (FileUpload constraintRulesFile : uploads) {
+                // Checking if file is OK as per Constraints Grammar specification
+                boolean constraintRuleFileIsOK = false;
+                try {
+                    ConstraintsGrammar parser = new ConstraintsGrammar(
+                            constraintRulesFile.getInputStream());
+                    parser.Parse();
+                    constraintRuleFileIsOK = true;
+                }
+                catch (IOException e) {
+                    error("Unable to read constraints file "
+                            + ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (ParseException e) {
+                    error("Exception while parsing the constraint rules file. Please check it"
+                            + ExceptionUtils.getRootCauseMessage(e));
+                }
+
+                // Persist rules
+                if (constraintRuleFileIsOK) {
+                    try {
+                        ConstraintSet constraintSet = new ConstraintSet();
+                        constraintSet.setProject(ConstraintsPanel.this.getModelObject());
+                        constraintSet.setName(constraintRulesFile.getClientFileName());
+                        projectRepository.createConstraintSet(constraintSet);
+                        projectRepository.writeConstraintSet(constraintSet,
+                                constraintRulesFile.getInputStream());
+                        detailForm.setModelObject(constraintSet);
+                        selectionForm.setModelObject(constraintSet);
+                    }
+                    catch (IOException e) {
+                        detailForm.setModelObject(null);
                         error("Unable to write constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
-                    catch (ParseException e) {
-                        error("Exception while parsing the constraint rules file. Please check it"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }                    
                 }
-
             }
-        });
-
-        add(new Button("removeConstraintRules", new ResourceModel("label"))
-        {
-            private static final long serialVersionUID = 1L;
-            
-            
-            @Override
-            protected IModel<String> initModel()
-            {
-                this.setEnabled(isThereAConstraintRulesFile);
-                return super.initModel();
-            }
-
-
-            @Override
-            public void updateModel()
-            {
-                this.setEnabled(isThereAConstraintRulesFile);
-                super.updateModel();
-            }
-
-
-            @Override
-            public void onSubmit()
-            {
-                Project project = selectedProjectModel.getObject();
-
-                try {
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    projectRepository.removeConstraintRules(project, username);
-                    isThereAConstraintRulesFile = false;
-                    this.updateModel();
-                }
-                catch (IOException e) {
-                    error("Error while removing Constraint Rules "
-                            + ExceptionUtils.getRootCauseMessage(e));
-                }
-                // documents.remove(document);
-
-            }
-        });
+        }
     }
 }

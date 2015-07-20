@@ -33,6 +33,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -1075,42 +1076,15 @@ public interface RepositoryService
     // Methods related to Constraints
     // --------------------------------------------------------------------------------------------
 
-    /**
-     * Write this {@code content} of the guideline file in the project;
-     *
-     * @param project
-     *            the project.
-     * @param content
-     *            the guidelines.
-     * @param fileName
-     *            the filename.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void createConstraintRules(Project project, File content, String fileName, String username)
+    void createConstraintSet(ConstraintSet aSet);
+
+    List<ConstraintSet> listConstraintSets(Project aProject);
+
+    void removeConstraintSet(ConstraintSet aSet);
+
+    String readConstrainSet(ConstraintSet aSet)
         throws IOException;
 
-    /**
-     * Export the associated project Constraint Rules for this {@link Project} while copying a project
-     * 
-     * @param project
-     *            the project.
-     * @return the file.
-     */
-    File getConstraintRulesFile(Project project);
-
-    /**
-     * Remove an annotation guideline document from the file system
-     *
-     * @param project
-     *            the project.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeConstraintRules(Project project, String username)
+    void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException;
 }

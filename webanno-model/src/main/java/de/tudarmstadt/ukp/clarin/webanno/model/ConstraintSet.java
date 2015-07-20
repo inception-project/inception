@@ -23,7 +23,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -41,7 +40,7 @@ public class ConstraintSet
 
     @Id
     @GeneratedValue
-    private long id;
+    private long id = -1;
 
     @Column(nullable = false)
     private String name;
@@ -49,12 +48,6 @@ public class ConstraintSet
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
-
-    @Lob
-    private String description;
-
-    @Lob
-    private String rules;
 
     public long getId()
     {
@@ -84,26 +77,6 @@ public class ConstraintSet
     public void setProject(Project aProject)
     {
         project = aProject;
-    }
-
-    public String getDescription()
-    {
-        return description;
-    }
-
-    public void setDescription(String aDescription)
-    {
-        description = aDescription;
-    }
-
-    public String getRules()
-    {
-        return rules;
-    }
-
-    public void setRules(String aRules)
-    {
-        rules = aRules;
     }
 
     @Override
