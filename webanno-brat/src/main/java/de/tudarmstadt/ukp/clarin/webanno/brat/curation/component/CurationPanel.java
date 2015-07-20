@@ -95,7 +95,7 @@ public class CurationPanel
     public final static String CURATION_USER = "CURATION_USER";
 
     public SuggestionViewPanel suggestionViewPanel;
-    private BratAnnotator mergeVisualizer;
+    private BratAnnotator annotator;
     private AnnotationDetailEditorPanel annotationDetailEditorPanel;
 
     private final WebMarkupContainer sentencesListView;
@@ -243,14 +243,27 @@ public class CurationPanel
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
 
-                mergeVisualizer.onChange(aTarget, aBModel);
+                annotator.onChange(aTarget, aBModel);
+            }
+
+            @Override
+            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            {
+                try {
+                    annotator.autoForward(aTarget, getCas(aBModel));
+                }
+                catch (UIMAException | ClassNotFoundException | IOException e) {
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                    return;
+                }
             }
         };
 
         annotationDetailEditorPanel.setOutputMarkupId(true);
         add(annotationDetailEditorPanel);
 
-        mergeVisualizer = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
                 annotationDetailEditorPanel)
         {
 
@@ -279,8 +292,8 @@ public class CurationPanel
         };
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
-        mergeVisualizer.setOutputMarkupId(true);
-        add(mergeVisualizer);
+        annotator.setOutputMarkupId(true);
+        add(annotator);
 
         LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
         {
@@ -296,13 +309,13 @@ public class CurationPanel
                     for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
                         if (sn >= fSN && sn <= lSN) {
                             List<Integer> cr = new ArrayList<>();
-                            for(int c:SuggestionBuilder.crossSentenceLists.get(sn)){
-                                if (c<fSN || c>lSN){
+                            for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
+                                if (c < fSN || c > lSN) {
                                     cr.add(c);
                                 }
                             }
-                            if(!cr.isEmpty()) {
-                                crossSentAnnos.add(sn + "-->"+cr);
+                            if (!cr.isEmpty()) {
+                                crossSentAnnos.add(sn + "-->" + cr);
                             }
                         }
                     }
@@ -312,8 +325,7 @@ public class CurationPanel
             }
         };
 
-       crossSentAnnoList = new ListView<String>("crossSentAnnoList",
-                sentenceDiffModel)
+        crossSentAnnoList = new ListView<String>("crossSentAnnoList", sentenceDiffModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
 
@@ -490,8 +502,8 @@ public class CurationPanel
         }
         else if (bModel.getProject() != null) {
             // mergeVisualizer.setModelObject(bratAnnotatorModel);
-            mergeVisualizer.setCollection("#" + bModel.getProject().getName() + "/");
-            mergeVisualizer.bratInitRenderLater(response);
+            annotator.setCollection("#" + bModel.getProject().getName() + "/");
+            annotator.bratInitRenderLater(response);
         }
     }
 
@@ -528,20 +540,20 @@ public class CurationPanel
         sentencesListView.addOrReplace(sentenceList);
         aTarget.add(sentencesListView);
 
-/*        corssSentAnnoView.addOrReplace(crossSentAnnoList);
-        aTarget.add(corssSentAnnoView);
-*/
+        /*
+         * corssSentAnnoView.addOrReplace(crossSentAnnoList); aTarget.add(corssSentAnnoView);
+         */
         aTarget.add(suggestionViewPanel);
         if (annotate) {
-            mergeVisualizer.bratRender(aTarget, annotationDetailEditorPanel.getCas(bModel));
-            mergeVisualizer.bratRenderHighlight(aTarget, bModel.getSelection().getAnnotation());
+            annotator.bratRender(aTarget, annotationDetailEditorPanel.getCas(bModel));
+            annotator.bratRenderHighlight(aTarget, bModel.getSelection().getAnnotation());
 
         }
         else {
-            mergeVisualizer.bratRenderLater(aTarget);
+            annotator.bratRenderLater(aTarget);
         }
         annotate = false;
-        CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, mergeVisualizer, repository,
+        CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotator, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
     }

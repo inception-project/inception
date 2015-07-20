@@ -287,7 +287,7 @@ public class AnnotationDetailEditorPanel
                     super.onConfigure();
                     BratAnnotatorModel model = AnnotationFeatureForm.this.getModelObject();
                     setVisible(model.getSelection().getAnnotation().isSet());
-                    
+
                     // Avoid deleting in read-only layers
                     setEnabled(model.getSelectedAnnotationLayer() != null
                             && !model.getSelectedAnnotationLayer().isLocked());
@@ -375,7 +375,7 @@ public class AnnotationDetailEditorPanel
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             return;
         }
-        
+
         if (aBModel.getSelectedAnnotationLayer().isLocked()) {
             error("Layer is not editable.");
             aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -475,11 +475,13 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelection().getAnnotation().isSet()) {
             String bratLabelText = TypeUtil.getBratLabelText(adapter,
                     selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId()), features);
-            info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText,
-                    false));
+            info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
         }
 
         onChange(aTarget, aBModel);
+        if (aBModel.isForwardAnnotation()) {
+            onAutoForward(aTarget, aBModel);
+        }
     }
 
     private void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -735,11 +737,10 @@ public class AnnotationDetailEditorPanel
         aBModel.setSentenceBeginOffset(sentence.getBegin());
         aBModel.setSentenceEndOffset(sentence.getEnd());
 
-
         Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
                 aBModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas,
-                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence),
+                aBModel.getPreferences().getWindowSize());
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
@@ -896,6 +897,11 @@ public class AnnotationDetailEditorPanel
         // Overriden in BratAnnotator
     }
 
+    protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    {
+        // Overriden in BratAnnotator
+    }
+
     public void setAnnotationLayers(BratAnnotatorModel aBModel)
     {
         setInitSpanLayers(aBModel);
@@ -998,11 +1004,11 @@ public class AnnotationDetailEditorPanel
                         + "]");
             }
             item.add(frag);
-            
+
             if (!fm.feature.getLayer().isLocked()) {
-                // whenever it is updating an annotation, it updates automatically when a component 
+                // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
-                // LinkFeatureEditors must be excluded because the auto-update will break the 
+                // LinkFeatureEditors must be excluded because the auto-update will break the
                 // ability to add slots. Adding a slot is NOT an annotation action.
                 if (annotationFeatureForm.getModelObject().getSelection().getAnnotation().isSet()
                         && !(frag instanceof LinkFeatureEditor)) {
@@ -1013,7 +1019,7 @@ public class AnnotationDetailEditorPanel
                         addAnnotateActionBehavior(fm, frag, "onblur");
                     }
                 }
-    
+
                 if (item.getIndex() == 0) {
                     // Put focus on first feature
                     frag.getFocusComponent().add(new DefaultFocusBehavior());
@@ -1764,7 +1770,7 @@ public class AnnotationDetailEditorPanel
             }
         }
     }
-    
+
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {
         String action = aDeleted ? "deleted" : "created/updated";

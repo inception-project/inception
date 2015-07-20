@@ -159,8 +159,22 @@ public class AnnotationPage
                 annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(),
                         aBModel.getSelection().getEnd());
                 if (!aBModel.getSelection().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(),
-                            aBModel.getSelection().getEnd());
+                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
+                            .getSelection().getEnd());
+                }
+
+            }
+
+            @Override
+            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            {
+                try {
+                    annotator.autoForward(aTarget, getCas(aBModel));
+                }
+                catch (UIMAException | ClassNotFoundException | IOException e) {
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                    return;
                 }
             }
         };
