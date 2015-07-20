@@ -58,6 +58,10 @@ public class EntityModel<T>
     @Override
     protected T load()
     {
+        if (entityClass == null) {
+            return null;
+        }
+        
         if (id == null || id.longValue() == 0) {
             return BeanUtils.instantiate(entityClass);
         }
