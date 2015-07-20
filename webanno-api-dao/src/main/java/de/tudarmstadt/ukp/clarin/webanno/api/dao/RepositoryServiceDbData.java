@@ -73,6 +73,8 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -150,15 +152,20 @@ public class RepositoryServiceDbData
     private final Log log = LogFactory.getLog(getClass());
 
     public Logger createLog(Project aProject)
-        throws IOException
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication != null ? authentication.getName() : "SYSTEM";
 
         Logger logger = Logger.getLogger(getClass());
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"),
-                targetLog, true);
+        Appender apndr;
+        try {
+            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
+                    true);
+        }
+        catch (IOException e) {
+            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
+        }
         logger.addAppender(apndr);
         logger.setLevel(Level.ALL);
         return logger;
