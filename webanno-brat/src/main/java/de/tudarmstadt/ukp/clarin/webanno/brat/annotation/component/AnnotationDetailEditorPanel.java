@@ -290,7 +290,7 @@ public class AnnotationDetailEditorPanel
 
                     // Avoid deleting in read-only layers
                     setEnabled(model.getSelectedAnnotationLayer() != null
-                            && !model.getSelectedAnnotationLayer().isLocked());
+                            && !model.getSelectedAnnotationLayer().isReadonly());
                 }
 
                 @Override
@@ -327,7 +327,7 @@ public class AnnotationDetailEditorPanel
 
                     // Avoid reversing in read-only layers
                     setEnabled(model.getSelectedAnnotationLayer() != null
-                            && !model.getSelectedAnnotationLayer().isLocked());
+                            && !model.getSelectedAnnotationLayer().isReadonly());
                 }
 
                 @Override
@@ -376,7 +376,7 @@ public class AnnotationDetailEditorPanel
             return;
         }
 
-        if (aBModel.getSelectedAnnotationLayer().isLocked()) {
+        if (aBModel.getSelectedAnnotationLayer().isReadonly()) {
             error("Layer is not editable.");
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             return;
@@ -822,7 +822,7 @@ public class AnnotationDetailEditorPanel
             }
             // Avoid creation of arcs on locked layers
             else if (aBModel.getSelectedAnnotationLayer() != null
-                    && aBModel.getSelectedAnnotationLayer().isLocked()) {
+                    && aBModel.getSelectedAnnotationLayer().isReadonly()) {
                 aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
             }
         }
@@ -929,7 +929,7 @@ public class AnnotationDetailEditorPanel
 
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getType().equals(WebAnnoConst.RELATION_TYPE) || !layer.isEnabled()
-                    || layer.isLocked() || layer.getName().equals(Token.class.getName())) {
+                    || layer.isReadonly() || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
             annotationLayers.add(layer);
@@ -1005,7 +1005,7 @@ public class AnnotationDetailEditorPanel
             }
             item.add(frag);
 
-            if (!fm.feature.getLayer().isLocked()) {
+            if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
                 // LinkFeatureEditors must be excluded because the auto-update will break the

@@ -545,7 +545,7 @@ public class ProjectLayersPanel
             add(attachTypes);
 
             // Behaviors of layers
-            add(new CheckBox("locked"));
+            add(new CheckBox("readonly"));
             
             add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel",
                     "Lock to token offsets:")

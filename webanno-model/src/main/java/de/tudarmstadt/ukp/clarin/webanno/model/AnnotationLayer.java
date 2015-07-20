@@ -71,7 +71,7 @@ public class AnnotationLayer
 
     private boolean builtIn = false;
     
-    private boolean locked = true;
+    private boolean readonly = false;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -430,13 +430,13 @@ public class AnnotationLayer
         linkedListBehavior = aLinkedListBehavior;
     }
 
-    public boolean isLocked()
+    public boolean isReadonly()
     {
-        return locked;
+        return readonly;
     }
 
-    public void setLocked(boolean aLocked)
+    public void setReadonly(boolean aReadonly)
     {
-        locked = aLocked;
+        readonly = aReadonly;
     }
 }

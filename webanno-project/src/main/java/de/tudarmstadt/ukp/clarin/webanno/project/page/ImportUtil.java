@@ -349,7 +349,7 @@ public class ImportUtil
     {
         aLayer.setAllowStacking(aExLayer.isAllowStacking());
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
-        aLayer.setLocked(aExLayer.isLocked());
+        aLayer.setReadonly(aExLayer.isReadonly());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
         aLayer.setDescription(aExLayer.getDescription());
         aLayer.setEnabled(aExLayer.isEnabled());
@@ -820,7 +820,7 @@ public class ImportUtil
         de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setBuiltIn(aLayer.isBuiltIn());
-        exLayer.setLocked(aLayer.isLocked());
+        exLayer.setReadonly(aLayer.isReadonly());
         exLayer.setCrossSentence(aLayer.isCrossSentence());
         exLayer.setDescription(aLayer.getDescription());
         exLayer.setEnabled(aLayer.isEnabled());

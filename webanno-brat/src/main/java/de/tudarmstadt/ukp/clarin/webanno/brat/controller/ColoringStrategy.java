@@ -71,7 +71,7 @@ public abstract class ColoringStrategy
     {
         // Decide on coloring strategy for the current layer
         ColoringStrategy coloringStrategy;
-        if (aLayer.isLocked()) {
+        if (aLayer.isReadonly()) {
             coloringStrategy = staticColor(DISABLED);
         }
         else if (aPreferences.isStaticColor()) {

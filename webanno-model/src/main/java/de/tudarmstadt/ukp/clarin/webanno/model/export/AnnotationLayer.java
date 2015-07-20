@@ -53,8 +53,8 @@ public class AnnotationLayer
     @JsonProperty("built_in")
     private boolean builtIn = false;
 
-    @JsonProperty("locked")
-    private boolean locked = false;
+    @JsonProperty("readonly")
+    private boolean readonly = false;
 
     @JsonProperty("attach_type")
     private AnnotationLayer attachType;
@@ -228,14 +228,14 @@ public class AnnotationLayer
         linkedListBehavior = aLinkedListBehavior;
     }
 
-    public boolean isLocked()
+    public boolean isReadonly()
     {
-        return locked;
+        return readonly;
     }
 
-    public void setLocked(boolean aLocked)
+    public void setReadonly(boolean aReadonly)
     {
-        locked = aLocked;
+        readonly = aReadonly;
     }
 
     @Override
