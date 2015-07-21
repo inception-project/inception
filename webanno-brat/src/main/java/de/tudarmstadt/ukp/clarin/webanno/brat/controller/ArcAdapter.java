@@ -31,10 +31,11 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -181,8 +182,12 @@ public class ArcAdapter
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
 
-        Map<Integer, List<Integer>> relationLinks = getRelationLinks(aJcas, firstSentence,
-                lastSentenceInPage, type, dependentFeature, governorFeature, arcSpanFeature);
+        Map<FeatureStructure, Set<FeatureStructure>> relationLinks = getRelationLinks(aJcas,
+                firstSentence, lastSentenceInPage, type, dependentFeature, governorFeature,
+                arcSpanFeature);
+
+        // if this is a governor for more than one dependent, avoid duplicate yield
+        List<Integer> yieldDeps = new ArrayList<>();
 
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
@@ -209,26 +214,53 @@ public class ArcAdapter
 
             aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
                     bratLabelText, color));
-            if (relationLinks.keySet().contains(getAddr(fs))) {
-                StringBuffer cm = new StringBuffer();
-                boolean f = true;
-                for (int id : relationLinks.get(getAddr(fs))) {
-                    if (f) {
-                        cm.append(selectByAddr(aJcas, id).getCoveredText());
-                        f = false;
-                    }
-                    else {
-                        cm.append("→" + selectByAddr(aJcas, id).getCoveredText());
-                    }
-                }
 
-                aResponse.addComments(new Comment(getAddr(fs), "Yield of relation:", cm.toString()));
+            if (relationLinks.keySet().contains(governorFs)
+                    && !yieldDeps.contains(getAddr(governorFs))) {
+                yieldDeps.add(getAddr(governorFs));
+
+                List<FeatureStructure> sortedDepFs = new ArrayList<>(relationLinks.get(governorFs));
+                Collections.sort(sortedDepFs, new Comparator<FeatureStructure>()
+                {
+                    @Override
+                    public int compare(FeatureStructure arg0, FeatureStructure arg1)
+                    {
+                        return ((AnnotationFS) arg0).getBegin() - ((AnnotationFS) arg1).getBegin();
+                    }
+                });
+
+                StringBuffer cm = getYieldMessage(sortedDepFs);
+                aResponse.addComments(new Comment(getAddr(governorFs), "Yield of relation", cm
+                        .toString()));
             }
         }
     }
 
+    private StringBuffer getYieldMessage(List<FeatureStructure> sortedDepFs)
+    {
+        StringBuffer cm = new StringBuffer();
+        int end = -1;
+        for (FeatureStructure depFs : sortedDepFs) {
+            if (end == -1) {
+                cm.append(((AnnotationFS) depFs).getCoveredText());
+                end = ((AnnotationFS) depFs).getEnd();
+            }
+            else if (end + 1 != ((AnnotationFS) depFs).getBegin()) {
+                cm.append(" ... " + ((AnnotationFS) depFs).getCoveredText());
+                end = ((AnnotationFS) depFs).getEnd();
+            }
+            else {
+                cm.append(" " + ((AnnotationFS) depFs).getCoveredText());
+                end = ((AnnotationFS) depFs).getEnd();
+            }
+
+        }
+        return cm;
+    }
+
     /**
      * Get relation links to display
+     *
      * @param aJcas
      * @param firstSentence
      * @param lastSentenceInPage
@@ -238,13 +270,13 @@ public class ArcAdapter
      * @param arcSpanFeature
      * @return
      */
-    private Map<Integer, List<Integer>> getRelationLinks(JCas aJcas, Sentence firstSentence,
-            Sentence lastSentenceInPage, Type type, Feature dependentFeature,
-            Feature governorFeature, Feature arcSpanFeature)
+    private Map<FeatureStructure, Set<FeatureStructure>> getRelationLinks(JCas aJcas,
+            Sentence firstSentence, Sentence lastSentenceInPage, Type type,
+            Feature dependentFeature, Feature governorFeature, Feature arcSpanFeature)
     {
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
-        Map<Integer, List<Integer>> relations = new HashMap<>();
+        Map<FeatureStructure, Set<FeatureStructure>> relations = new HashMap<>();
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
             if (attachFeatureName != null) {
@@ -260,9 +292,12 @@ public class ArcAdapter
                         + "] has loose ends - cannot render.");
                 continue;
             }
-            LinkedList<Integer> links = new LinkedList<>();
+            Set<FeatureStructure> links = relations.get(governorFs);
+            if (links == null) {
+                links = new HashSet<>();
+            }
 
-            links.add(getAddr(dependentFs));
+            links.add(dependentFs);
 
             // check for the existences of links
             for (AnnotationFS oFS : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
@@ -285,20 +320,19 @@ public class ArcAdapter
                             + "] has no spans to attach to - cannot render.");
                     continue;
                 }
-                
-                
+
                 if (((AnnotationFS) governorFs).getBegin() == ((AnnotationFS) oGovernorFs)
                         .getBegin()
                         && ((AnnotationFS) dependentFs).getBegin() == ((AnnotationFS) oDependentFs)
                                 .getBegin()) {
                     continue;
                 }
-                else if (links.contains(getAddr(oGovernorFs))) {
-                    links.add(getAddr(oDependentFs));
+                else if (links.contains(oGovernorFs)) {
+                    links.add(oDependentFs);
                 }
             }
-            links.addFirst(getAddr(governorFs));
-            relations.put(getAddr(fs), links);
+            links.add(governorFs);
+            relations.put(governorFs, links);
         }
         return relations;
     }
