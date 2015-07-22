@@ -294,7 +294,7 @@ public class SuggestionViewPanel
                     continue;
                 }
                 // slot span is copied from the suggestion to the curation
-                if (feature.isEnabled() && feature.getLinkMode() != null) {
+                if (feature.isEnabled() && feature.getLinkMode() != LinkMode.NONE) {
                     BratAjaxCasUtil
                             .setFeature(BratAjaxCasUtil.selectByAddr(aMergeJCas, selectedSpanId),
                                     feature, null);
