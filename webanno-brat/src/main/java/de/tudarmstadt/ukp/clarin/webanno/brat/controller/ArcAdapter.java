@@ -250,6 +250,11 @@ public class ArcAdapter
                 cm.append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
+            // if no space between token and punct
+            else if (end==selectByAddr(aJCas, depFs).getBegin()){
+                cm.append(selectByAddr(aJCas, depFs).getCoveredText());
+                end = selectByAddr(aJCas, depFs).getEnd();
+            }
             else if (end + 1 != selectByAddr(aJCas, depFs).getBegin()) {
                 cm.append(" ... " + selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
