@@ -951,7 +951,11 @@ public class CurationPage
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                     .getAuthentication().getName());
+
             bModel.setUser(userLoggedIn);
+            // Load user preferences
+            PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
+                    bModel, Mode.CURATION);
 
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
@@ -981,12 +985,9 @@ public class CurationPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             bModel.initForDocument(mergeJCas);
-
-            // Load user preferences
-            PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
-                    bModel, Mode.CURATION);
             bModel.getPreferences().setCurationWindowSize(
                     BratAjaxCasUtil.getSentenceSize(mergeJCas));
+
             // if project is changed, reset some project specific settings
             if (currentprojectId != bModel.getProject().getId()) {
                 bModel.initForProject();
