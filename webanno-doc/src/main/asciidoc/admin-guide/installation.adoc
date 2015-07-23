@@ -115,6 +115,8 @@ backup.keep.time=1000000
 backup.interval=1000
 
 backup.keep.number=10
+
+number.of.sentences = 5
 ----
    * Fix permissions in WebAnno home folder
 ----
