@@ -25,10 +25,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSingleFsAt;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcCrossedMultipleSentenceException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
@@ -266,8 +265,8 @@ public class SuggestionViewPanel
     }
 
     private void createSpan(String spanType, BratAnnotatorModel aBModel, JCas aMergeJCas,
-            AnnotationDocument aAnnotationDocument, int aAddress, AnnotationFeature aSlotfeat,
-            List<LinkWithRoleModel> linkRole)
+            AnnotationDocument aAnnotationDocument, int aAddress, AnnotationFeature aLinkFeature,
+            LinkWithRoleModel aLink)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas clickedJCas = getJCas(aBModel, aAnnotationDocument);
@@ -283,9 +282,11 @@ public class SuggestionViewPanel
                 null, null);
 
         // if slot link is copied from the suggestion
-        if (aSlotfeat != null && linkRole != null) {
-            BratAjaxCasUtil.setFeature(BratAjaxCasUtil.selectByAddr(aMergeJCas, selectedSpanId),
-                    aSlotfeat, linkRole);
+        if (aLinkFeature != null && aLink != null) {
+            AnnotationFS fs = selectByAddr(aMergeJCas, selectedSpanId);
+            List<LinkWithRoleModel> links = getFeature(fs, aLinkFeature);
+            links.add(aLink);
+            setFeature(selectByAddr(aMergeJCas, selectedSpanId), aLinkFeature, links);
         }
         // Set the feature values
         else {
@@ -295,9 +296,7 @@ public class SuggestionViewPanel
                 }
                 // slot span is copied from the suggestion to the curation
                 if (feature.isEnabled() && feature.getLinkMode() != LinkMode.NONE) {
-                    BratAjaxCasUtil
-                            .setFeature(BratAjaxCasUtil.selectByAddr(aMergeJCas, selectedSpanId),
-                                    feature, null);
+                    setFeature(selectByAddr(aMergeJCas, selectedSpanId), feature, null);
                 }
                 else if (feature.isEnabled()) {
                     Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
@@ -318,9 +317,9 @@ public class SuggestionViewPanel
         if (aBModel.getPreferences().isScrollPage()) {
             int address = getAddr(selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
                     aBModel.getSentenceEndOffset()));
-            aBModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(clickedJCas,
-                    address, fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
-                    aBModel.getPreferences().getWindowSize()));
+            aBModel.setSentenceAddress(getSentenceBeginAddress(clickedJCas, address, fsClicked
+                    .getBegin(), aBModel.getProject(), aBModel.getDocument(), aBModel
+                    .getPreferences().getWindowSize()));
 
             Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
                     aBModel.getSentenceAddress());
@@ -334,9 +333,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas,
-                    lastSentenceInPage.getBegin()));
+            aBModel.setFSN(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            aBModel.setLSN(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
@@ -400,9 +398,9 @@ public class SuggestionViewPanel
                 Integer liIndex = Integer.parseInt(fsArcaddress.split("\\.")[2]);
 
                 AnnotationFeature slotFeature = null;
-                List<LinkWithRoleModel> linkRole = new ArrayList<>();
+                LinkWithRoleModel linkRole = null;
                 int fi = 0;
-               f: for (AnnotationFeature feat : annotationService.listAnnotationFeature(layer)) {
+                f: for (AnnotationFeature feat : annotationService.listAnnotationFeature(layer)) {
                     if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
                             && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
                         List<LinkWithRoleModel> links = getFeature(fsClicked, feat);
@@ -411,7 +409,7 @@ public class SuggestionViewPanel
                             if (fi == fiIndex && li == liIndex) {
                                 slotFeature = feat;
                                 link.targetAddr = getAddr(targetFs);
-                                linkRole.add(link);
+                                linkRole = link;
                                 break f;
                             }
                         }
@@ -478,9 +476,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(clickedJCas,
-                    lastSentenceInPage.getBegin()));
+            bModel.setFSN(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            bModel.setLSN(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 

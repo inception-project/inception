@@ -344,7 +344,7 @@ public class SpanAdapter
     public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
         throws BratAnnotationException
     {
-        // if zero-offset annotation is requestd
+        // if zero-offset annotation is requested
         if (aBegin == aEnd) {
             return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
         }
