@@ -30,11 +30,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
@@ -121,7 +124,7 @@ public class ProjectLayersPanel
 
     private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
-    
+
     private List<String> spanTypes = new ArrayList<String>();
     private String layerType = WebAnnoConst.SPAN_TYPE;
     private List<FileUpload> uploadedFiles;
@@ -404,7 +407,7 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         private TextField<String> uiName;
-        private String prefix = "webanno.custom.";
+        private static final String TYPE_PREFIX = "webanno.custom.";
         private String layerName;
         private DropDownChoice<String> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
@@ -546,7 +549,7 @@ public class ProjectLayersPanel
 
             // Behaviors of layers
             add(new CheckBox("readonly"));
-            
+
             add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel",
                     "Lock to token offsets:")
             {
@@ -773,7 +776,11 @@ public class ProjectLayersPanel
 
                     if (layer.getId() == 0) {
                         layerName = layerName.replaceAll("\\W", "");
-                        if (annotationService.existsLayer(prefix + layerName, layer.getType(),
+                        if(layerName.isEmpty() || !isAscii(layerName)){
+                            error("Non ASCII characters can not be used as layer name!");
+                            return;
+                        }
+                        if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
                                 project)) {
                             error("Only one Layer per project is allowed!");
                             return;
@@ -783,7 +790,7 @@ public class ProjectLayersPanel
                             return;
                         }
 
-                        if ((prefix + layerName).endsWith(".")) {
+                        if ((TYPE_PREFIX + layerName).endsWith(".")) {
                             error("please give a proper layer name!");
                             return;
                         }
@@ -794,7 +801,7 @@ public class ProjectLayersPanel
 
                         layer.setProject(project);
                         try {
-                            layer.setName(prefix + layerName);
+                            layer.setName(TYPE_PREFIX + layerName);
                             annotationService.createLayer(layer, user);
                             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
@@ -873,6 +880,12 @@ public class ProjectLayersPanel
         }
     }
 
+    public static boolean isAscii(String v)
+    {
+        CharsetEncoder asciiEncoder = StandardCharsets.US_ASCII.newEncoder();
+        return asciiEncoder.canEncode(v);
+    }
+
     private class FeatureDetailForm
         extends Form<AnnotationFeature>
     {
@@ -930,7 +943,7 @@ public class ProjectLayersPanel
                 {
                     setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
                 };
-           });
+            });
             featureType.add(new AjaxFormComponentUpdatingBehavior("onChange")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
@@ -960,7 +973,7 @@ public class ProjectLayersPanel
                         }
                     });
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -1028,11 +1041,11 @@ public class ProjectLayersPanel
 
         // If the feature is not a string feature or a link-with-role feature, force the tagset
         // to null.
-        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType())
-                            || !PRIMITIVE_TYPES.contains(aFeature.getType()))) {
+        if (!(CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || !PRIMITIVE_TYPES.contains(aFeature
+                .getType()))) {
             aFeature.setTagset(null);
         }
-        
+
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }
