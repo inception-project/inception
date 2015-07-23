@@ -89,8 +89,7 @@ public class AnnotationServiceImpl
         createLog(aTag.getTagSet().getProject(), aUser.getUsername()).info(
                 " Added tag [" + aTag.getName() + "] with ID [" + aTag.getId() + "] to TagSet ["
                         + aTag.getTagSet().getName() + "]");
-        createLog(aTag.getTagSet().getProject(), aUser.getUsername())
-                .removeAllAppenders();
+        createLog(aTag.getTagSet().getProject(), aUser.getUsername()).removeAllAppenders();
     }
 
     @Override
@@ -107,8 +106,7 @@ public class AnnotationServiceImpl
         }
         createLog(aTagSet.getProject(), aUser.getUsername()).info(
                 " Added tagset [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
-        createLog(aTagSet.getProject(), aUser.getUsername())
-                .removeAllAppenders();
+        createLog(aTagSet.getProject(), aUser.getUsername()).removeAllAppenders();
     }
 
     @Override
@@ -124,8 +122,7 @@ public class AnnotationServiceImpl
         }
         createLog(aLayer.getProject(), aUser.getUsername()).info(
                 " Added layer [" + aLayer.getName() + "] with ID [" + aLayer.getId() + "]");
-        createLog(aLayer.getProject(), aUser.getUsername())
-                .removeAllAppenders();
+        createLog(aLayer.getProject(), aUser.getUsername()).removeAllAppenders();
     }
 
     @Override
@@ -356,7 +353,7 @@ public class AnnotationServiceImpl
         createCorefLayer(aProject, aUser, aCorefTypeTags, aCorefRelTags);
 
         createLemmaLayer(aProject, aUser);
-        
+
         createChunkLayer(aProject, aUser);
     }
 
@@ -367,8 +364,9 @@ public class AnnotationServiceImpl
         AnnotationFeature tokenLemmaFeature = createFeature("lemma", "lemma", aProject, tokenLayer,
                 Lemma.class.getName());
         tokenLemmaFeature.setVisible(true);
-        
-        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE, aProject, true);
+
+        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
+                aProject, true);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
 
@@ -390,20 +388,20 @@ public class AnnotationServiceImpl
     {
         // Coref Layer
         AnnotationFeature corefTypeFeature = createFeature("referenceType", "referenceType",
-                "coreference type annotation",
-                CAS.TYPE_NAME_STRING, "BART", "de",
+                "coreference type annotation", CAS.TYPE_NAME_STRING, "BART", "de",
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject,
                 aUser);
 
-        AnnotationFeature corefRelFeature = createFeature("referenceRelation",
-                "referenceRelation", "coreference relation annotation",
-                CAS.TYPE_NAME_STRING, "TuebaDZ", "de",
+        AnnotationFeature corefRelFeature = createFeature("referenceRelation", "referenceRelation",
+                "coreference relation annotation", CAS.TYPE_NAME_STRING, "TuebaDZ", "de",
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
                 aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject,
                 aUser);
 
-        AnnotationLayer base = new AnnotationLayer("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference", CHAIN_TYPE, aProject, true);
+        AnnotationLayer base = new AnnotationLayer(
+                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
+                CHAIN_TYPE, aProject, true);
         base.setCrossSentence(true);
         base.setAllowStacking(true);
         base.setMultipleTokens(true);
@@ -436,7 +434,8 @@ public class AnnotationServiceImpl
                 CAS.TYPE_NAME_STRING, "NER_WebAnno", "de", neTags, neTagDescriptions, aProject,
                 aUser);
 
-        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE, aProject, true);
+        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
         neLayer.setLockToTokenOffset(false);
@@ -464,7 +463,7 @@ public class AnnotationServiceImpl
         chunkValueFeature.setLayer(chunkLayer);
         createFeature(chunkValueFeature);
     }
-    
+
     private void createDepLayer(Project aProject, User aUser, String[] aDepTags,
             String[] aDepTagDescriptions)
         throws IOException
@@ -485,7 +484,8 @@ public class AnnotationServiceImpl
                 "Dependency annotation", CAS.TYPE_NAME_STRING, "Tiger", "de", depTags,
                 depTagsDescription, aProject, aUser);
 
-        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE, aProject, true);
+        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RELATION_TYPE, aProject, true);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
         List<AnnotationFeature> tokenFeatures = listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;
@@ -581,7 +581,8 @@ public class AnnotationServiceImpl
                 CAS.TYPE_NAME_STRING, "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
 
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, aProject, true);
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
+                aProject, true);
         AnnotationFeature tokenPosFeature = createFeature("pos", "pos", aProject, tokenLayer,
                 POS.class.getName());
         tokenPosFeature.setVisible(true);
@@ -596,7 +597,8 @@ public class AnnotationServiceImpl
     private AnnotationLayer createTokenLayer(Project aProject, User aUser)
         throws IOException
     {
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, aProject, true);
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
+                aProject, true);
 
         createLayer(tokenLayer, aUser);
         return tokenLayer;
@@ -633,7 +635,7 @@ public class AnnotationServiceImpl
                 .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
                         AnnotationLayer.class).setParameter("project", aProject).getResultList();
     }
-    
+
     @Override
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
@@ -659,15 +661,14 @@ public class AnnotationServiceImpl
                 .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()) 
-                .getResultList();
-   }
+                .setParameter("project", aLayer.getProject()).getResultList();
+    }
 
     @Override
     @Transactional
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
-        if (aLayer.getId() == 0) {
+        if (aLayer == null || aLayer.getId() == 0) {
             return new ArrayList<AnnotationFeature>();
         }
 
