@@ -40,7 +40,7 @@ public enum AnnotationState
 	 * Annotators have annotated differently. Annotation for current document and curation
 	 * document are equal.
 	 */
-	USE("#7fffa2"),
+	USE("#004413"),
 	/**
 	 * Annotators have annotated differently. Annotation for current document and curation
 	 * document are not equal.
