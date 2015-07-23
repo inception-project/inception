@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -70,8 +72,10 @@ public interface RepositoryService
     /**
      * creates a project permission, adding permission level for the user in the given project
      *
-     * @param permission the permission
-     * @throws IOException if an I/O error occurs.
+     * @param permission
+     *            the permission
+     * @throws IOException
+     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission permission)
@@ -79,7 +83,7 @@ public interface RepositoryService
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
-     * 
+     *
      * @param user
      *            the user.
      * @param project
@@ -92,7 +96,7 @@ public interface RepositoryService
     /**
      * Check if there is already a {@link PermissionLevel} on a given {@link Project} for a given
      * {@link User}
-     * 
+     *
      * @param user
      *            the user.
      * @param project
@@ -117,7 +121,7 @@ public interface RepositoryService
 
     /**
      * Get list of permissions a user have in a given project
-     * 
+     *
      * @param user
      *            the user.
      * @param project
@@ -129,7 +133,7 @@ public interface RepositoryService
 
     /**
      * List Users those with some {@link PermissionLevel}s in the project
-     * 
+     *
      * @param project
      *            the project.
      * @return the users.
@@ -183,7 +187,7 @@ public interface RepositoryService
     /**
      * Check if a Source document with this same name exist in the project. The caller method then
      * can decide to override or throw an exception/message to the client
-     * 
+     *
      * @param project
      *            the project.
      * @param fileName
@@ -246,7 +250,7 @@ public interface RepositoryService
     /**
      * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
      * repository directory. This way we don't need to create the file to a temporary folder
-     * 
+     *
      * @param file
      *            the file.
      * @param document
@@ -265,7 +269,7 @@ public interface RepositoryService
 
     /**
      * Get the directory of this {@link SourceDocument} usually to read the content of the document
-     * 
+     *
      * @param aDocument
      *            the source document.
      * @return the source document folder.
@@ -296,7 +300,7 @@ public interface RepositoryService
      * Creates an annotation document. The {@link AnnotationDocument} is stored in the
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
-     * 
+     *
      * @param jCas
      *            the JCas.
      * @param document
@@ -313,7 +317,7 @@ public interface RepositoryService
     /**
      * A Method that checks if there is already an annotation document created for the source
      * document
-     * 
+     *
      * @param document
      *            the source document.
      * @param user
@@ -325,7 +329,7 @@ public interface RepositoryService
     /**
      * A method to check if there exist a correction document already. Base correction document
      * should be the same for all users
-     * 
+     *
      * @param document
      *            the source document.
      * @return if a correction document exists.
@@ -337,7 +341,7 @@ public interface RepositoryService
      * exists It is important as {@link AnnotationDocument} entry can be populated as
      * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the
      * document for annotation.
-     * 
+     *
      * @param sourceDocument
      *            the source document.
      * @param username
@@ -352,7 +356,7 @@ public interface RepositoryService
     /**
      * check if there is an already automated document. This is important as automated document
      * should appear the same among users
-     * 
+     *
      * @param sourceDocument
      *            the source document.
      * @return if an automation document exists.
@@ -393,7 +397,7 @@ public interface RepositoryService
 
     /**
      * Export a Serialized CAS annotation document from the file system
-     * 
+     *
      * @param document
      *            the source document.
      * @param user
@@ -404,7 +408,7 @@ public interface RepositoryService
 
     /**
      * Get the annotation document.
-     * 
+     *
      * @param document
      *            the source document.
      * @param user
@@ -432,7 +436,7 @@ public interface RepositoryService
      * Gets the CAS for the given annotation document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document
      * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
-     * 
+     *
      * @param document
      *            the source document.
      * @param user
@@ -461,7 +465,7 @@ public interface RepositoryService
 
     /**
      * Number of expected annotation documents in this project (numUser X document - Ignored)
-     * 
+     *
      * @param project
      *            the project.
      * @return the number of annotation documents.
@@ -471,7 +475,7 @@ public interface RepositoryService
     /**
      * List all annotation Documents in a project that are already closed. used to compute overall
      * project progress
-     * 
+     *
      * @param project
      *            the project.
      * @return the annotation documents.
@@ -483,7 +487,7 @@ public interface RepositoryService
      * annotation and those created by project admins or super admins for Test purpose. This method
      * is called when a source document (or Project) is deleted so that associated annotation
      * documents also get removed.
-     * 
+     *
      * @param document
      *            the source document.
      * @return the annotation documents.
@@ -492,7 +496,7 @@ public interface RepositoryService
 
     /**
      * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
-     * 
+     *
      * @param document
      *            the source document.
      * @param user
@@ -525,7 +529,7 @@ public interface RepositoryService
 
     /**
      * Create an annotation document under a special user named "CORRECTION_USER"
-     * 
+     *
      * @param jCas
      *            the JCas.
      * @param document
@@ -548,7 +552,7 @@ public interface RepositoryService
 
     /**
      * Create a curation annotation document under a special user named as "CURATION_USER"
-     * 
+     *
      * @param jCas
      *            the JCas.
      * @param document
@@ -564,7 +568,7 @@ public interface RepositoryService
 
     /**
      * Get a curation document for the given {@link SourceDocument}
-     * 
+     *
      * @param document
      *            the source document.
      * @return the curation JCas.
@@ -580,7 +584,7 @@ public interface RepositoryService
 
     /**
      * Remove a curation annotation document from the file system, for this {@link SourceDocument}
-     * 
+     *
      * @param sourceDocument
      *            the source document.
      * @param username
@@ -623,7 +627,7 @@ public interface RepositoryService
 
     /**
      * Check if there exists an project timestamp for this user and {@link Project}.
-     * 
+     *
      * @param project
      *            the project.
      * @param username
@@ -635,7 +639,7 @@ public interface RepositoryService
     /**
      * check if there exists a timestamp for at least one source document in aproject (add when a
      * curator start curating)
-     * 
+     *
      * @param project
      *            the project.
      * @return if a timestamp exists.
@@ -681,7 +685,7 @@ public interface RepositoryService
 
     /**
      * get the timestamp, of the curator, if exist
-     * 
+     *
      * @param project
      *            the project.
      * @return the timestamp.
@@ -700,7 +704,7 @@ public interface RepositoryService
 
     /**
      * Get a project by its id.
-     * 
+     *
      * @param id
      *            the ID.
      * @return the project.
@@ -774,7 +778,7 @@ public interface RepositoryService
 
     /**
      * Export the associated project guideline for this {@link Project} while copying a project
-     * 
+     *
      * @param project
      *            the project.
      * @return the file.
@@ -813,7 +817,7 @@ public interface RepositoryService
      * Create a crowd Project which contains some source document. A crowd project contains source
      * documents from {@link Project}(s), a {@link SourceDocument} belongs at most to one
      * {@link CrowdJob}.
-     * 
+     *
      * @param crowdProject
      *            the job.
      * @throws IOException
@@ -824,7 +828,7 @@ public interface RepositoryService
 
     /**
      * Check if a crowd job already exist or not with its name
-     * 
+     *
      * @param name
      *            the name.
      * @return if the job exists.
@@ -833,7 +837,7 @@ public interface RepositoryService
 
     /**
      * Get a {@link CrowdJob} by its name in a {@link Project}
-     * 
+     *
      * @param name
      *            the name.
      * @param project
@@ -844,7 +848,7 @@ public interface RepositoryService
 
     /**
      * Get a crowdFlower Template from the WebAnno root directory
-     * 
+     *
      * @param fileName
      *            the name.
      * @return the template.
@@ -856,7 +860,7 @@ public interface RepositoryService
 
     /**
      * List {@link CrowdJob}s/Crowd Tasks in the system
-     * 
+     *
      * @return the jobs.
      */
     List<CrowdJob> listCrowdJobs();
@@ -866,7 +870,8 @@ public interface RepositoryService
     /**
      * remove a crowd project
      *
-     * @param crowdProject the job.
+     * @param crowdProject
+     *            the job.
      */
     void removeCrowdJob(CrowdJob crowdProject);
 
@@ -889,7 +894,7 @@ public interface RepositoryService
 
     /**
      * Returns the Id of the format for the {@link SourceDocument} to be read from a properties File
-     * 
+     *
      * @param label
      *            the label.
      *
@@ -929,7 +934,7 @@ public interface RepositoryService
 
     /**
      * Returns the Id of the format for {@link AnnotationDocument} while exporting
-     * 
+     *
      * @param label
      *            the label.
      * @return the ID.
@@ -976,7 +981,8 @@ public interface RepositoryService
      * Save annotation references, such as {@code BratAnnotator#windowSize}..., in a properties file
      * so that they are not required to configure every time they open the document.
      *
-     * @param <T> object type to save
+     * @param <T>
+     *            object type to save
      * @param username
      *            the user name
      * @param subject
@@ -1017,8 +1023,8 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
-     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g.
-     *             using {@link #writeAnnotationCas(JCas, SourceDocument, User)}
+     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
+     *             {@link #writeAnnotationCas(JCas, SourceDocument, User)}
      */
     @Deprecated
     void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
@@ -1026,7 +1032,7 @@ public interface RepositoryService
 
     /**
      * Save the modified CAS in the file system as Serialized CAS
-     * 
+     *
      * @param mode
      *            the mode.
      * @param document
@@ -1043,7 +1049,7 @@ public interface RepositoryService
 
     /**
      * Get the name of the database driver in use.
-     * 
+     *
      * @return the driver name.
      */
     String getDatabaseDriverName();
@@ -1058,19 +1064,26 @@ public interface RepositoryService
 
     void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException;
-    
+
     /**
      * List project accessible by current user
-     * 
+     *
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects();
 
-    boolean existFinishedDocument(
-            SourceDocument aSourceDocument, User aUser, Project aProject);
+    boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser, Project aProject);
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException;
+
+    /**
+     * Get default number of sentences to display per page, set by administrator, which is read from
+     * settings.properties file
+     *
+     * @return
+     */
+    int getNumberOfSentences();
 
     // --------------------------------------------------------------------------------------------
     // Methods related to Constraints

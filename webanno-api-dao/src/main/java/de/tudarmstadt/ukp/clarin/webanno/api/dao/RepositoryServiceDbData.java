@@ -190,6 +190,9 @@ public class RepositoryServiceDbData
     @Value(value = "${backup.keep.number}")
     private int backupKeepNumber;
 
+    @Value(value = "${number.of.sentences}")
+    private int numberOfSentences;
+
     @Value(value = "${webanno.repository}")
     private File dir;
 
@@ -311,9 +314,8 @@ public class RepositoryServiceDbData
         entityManager.persist(aProject);
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         FileUtils.forceMkdir(new File(path));
-        createLog(aProject)
-                .info("Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId()
-                        + "]");
+        createLog(aProject).info(
+                "Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
         createLog(aProject).removeAllAppenders();
     }
 
@@ -630,8 +632,8 @@ public class RepositoryServiceDbData
         AnalysisEngineDescription writer;
         if (aWriter.getName()
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
-            List<AnnotationLayer> layers = annotationService
-                    .listAnnotationLayer(aDocument.getProject());
+            List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument
+                    .getProject());
             List<String> multipleSpans = new ArrayList<String>();
             for (AnnotationLayer layer : layers) {
                 if (layer.isMultipleTokens()) {
@@ -769,7 +771,8 @@ public class RepositoryServiceDbData
                 // Ok, so at this point, we either have the lazily converted CAS already loaded
                 // or we know that we can load the existing initial CAS.
                 if (jcas == null) {
-                    jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
+                    jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null)
+                            .getJCas();
                     readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                 }
             }
@@ -791,7 +794,7 @@ public class RepositoryServiceDbData
             // Read existing CAS
             // We intentionally do not upgrade the CAS here because in general the IDs
             // must remain stable. If an upgrade is required the caller should do it
-            jcas =  readCas(aDocument, user);
+            jcas = readCas(aDocument, user);
         }
 
         return jcas;
@@ -1576,9 +1579,8 @@ public class RepositoryServiceDbData
         throws IOException
     {
         log.debug("Updating annotation document [" + aDocument.getName() + "] " + "with ID ["
-                + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
-                + "]");
-        //DebugUtils.smallStack();
+                + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId() + "]");
+        // DebugUtils.smallStack();
 
         synchronized (lock) {
             File annotationFolder = getAnnotationFolder(aDocument);
@@ -1607,7 +1609,7 @@ public class RepositoryServiceDbData
                 md.setDocumentId(aUserName);
 
                 File targetPath = getAnnotationFolder(aDocument);
-                writeSerializedCas(aJcas, new File(targetPath, aUserName+".ser"));
+                writeSerializedCas(aJcas, new File(targetPath, aUserName + ".ser"));
 
                 createLog(aDocument.getProject()).info(
                         "Updated annotation document [" + aDocument.getName() + "] " + "with ID ["
@@ -1738,7 +1740,7 @@ public class RepositoryServiceDbData
                     + "] for user [" + aUsername + "]");
         }
 
-        //DebugUtils.smallStack();
+        // DebugUtils.smallStack();
 
         synchronized (lock) {
             File annotationFolder = getAnnotationFolder(aDocument);
@@ -1805,14 +1807,13 @@ public class RepositoryServiceDbData
             log.debug("Upgrading annotation document [" + aDocument.getName() + "] " + "with ID ["
                     + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
                     + "] for user [" + aUsername + "] in mode [" + aMode + "]");
-            //DebugUtils.smallStack();
+            // DebugUtils.smallStack();
 
             AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgradeCas(cas, annotationDocument);
-                writeAnnotationCas(cas.getJCas(),
-                        annotationDocument.getDocument(), user);
+                writeAnnotationCas(cas.getJCas(), annotationDocument.getDocument(), user);
 
                 if (aMode.equals(Mode.ANNOTATION)) {
                     // In this case we only need to upgrade to annotation document
@@ -1878,7 +1879,7 @@ public class RepositoryServiceDbData
 
         // Make sure JCas is properly initialized too
         aCas.getJCas();
-        
+
         createLog(aSourceDocument.getProject()).info(
                 "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
                         + "] " + " in project ID [" + aSourceDocument.getProject().getId() + "]");
@@ -1914,7 +1915,7 @@ public class RepositoryServiceDbData
         else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
             writeCurationCas(aJcas, aSourceDocument, aUser);
         }
-        
+
         updateTimeStamp(aSourceDocument, aUser, aMode);
     }
 
@@ -1947,8 +1948,9 @@ public class RepositoryServiceDbData
 
         // Convert the source document to CAS
         CollectionReader reader = CollectionReaderFactory.createReader(aReader,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile().getAbsolutePath(),
-                ResourceCollectionReaderBase.PARAM_PATTERNS, new String[] { "[+]" + aFile.getName() });
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile()
+                        .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
+                new String[] { "[+]" + aFile.getName() });
         if (!reader.hasNext()) {
             throw new FileNotFoundException("Annotation file [" + aFile.getName()
                     + "] not found in [" + aFile.getPath() + "]");
@@ -1962,9 +1964,8 @@ public class RepositoryServiceDbData
 
         if (!hasTokens || !hasSentences) {
             AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class,
-                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens,
-                    BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
+                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
+                    !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
             pipeline.process(cas.getJCas());
         }
 
@@ -2073,11 +2074,13 @@ public class RepositoryServiceDbData
             switch (aFeature.getLinkMode()) {
             case WITH_ROLE: {
                 // Link type
-                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
+                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
+                        CAS.TYPE_NAME_TOP);
                 linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
                 linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
                 // Link feature
-                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
+                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
+                        false);
                 break;
             }
             default:
@@ -2087,8 +2090,8 @@ public class RepositoryServiceDbData
             break;
         }
         default:
-            throw new IllegalArgumentException("Unsupported multi-value mode [" + aFeature.getMultiValueMode()
-                    + "] on feature [" + aFeature.getName() + "]");
+            throw new IllegalArgumentException("Unsupported multi-value mode ["
+                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
     }
 
@@ -2118,9 +2121,12 @@ public class RepositoryServiceDbData
     /**
      * A Helper method to add {@link TagsetDescription} to {@link CAS}
      *
-     * @param aCas the CAA.
-     * @param aLayer the layer.
-     * @param aTagSetName the tagset.
+     * @param aCas
+     *            the CAA.
+     * @param aLayer
+     *            the layer.
+     * @param aTagSetName
+     *            the tagset.
      */
     public static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
     {
@@ -2156,8 +2162,7 @@ public class RepositoryServiceDbData
     {
         List<Project> allowedProject = new ArrayList<Project>();
 
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
 
         List<Project> allProjects = listProjects();
@@ -2192,8 +2197,8 @@ public class RepositoryServiceDbData
      * @return if a finished document exists.
      */
     @Override
-    public boolean existFinishedDocument(
-            SourceDocument aSourceDocument, User aUser, Project aProject)
+    public boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser,
+            Project aProject)
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
@@ -2223,7 +2228,8 @@ public class RepositoryServiceDbData
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
             deserializeCASComplete(serializer, aJCas.getCasImpl());
-            // Initialize the JCas sub-system which is the most often used API in DKPro Core components
+            // Initialize the JCas sub-system which is the most often used API in DKPro Core
+            // components
             aJCas.getCas().getJCas();
         }
         catch (CASException e) {
@@ -2242,7 +2248,7 @@ public class RepositoryServiceDbData
                 .createQuery("FROM ConstraintSet WHERE project = :project ORDER BY name ASC ",
                         ConstraintSet.class).setParameter("project", aProject).getResultList();
     }
-    
+
     @Override
     @Transactional
     public void createConstraintSet(ConstraintSet aSet)
@@ -2254,14 +2260,14 @@ public class RepositoryServiceDbData
                         + "]");
         createLog(aSet.getProject()).removeAllAppenders();
     }
-    
+
     @Override
     @Transactional
     public void removeConstraintSet(ConstraintSet aSet)
     {
         entityManager.remove(entityManager.merge(aSet));
     }
-    
+
     @Override
     public String readConstrainSet(ConstraintSet aSet)
         throws IOException
@@ -2269,17 +2275,17 @@ public class RepositoryServiceDbData
         String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
                 + CONSTRAINTS;
         String filename = aSet.getId() + ".txt";
-        String data =  FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
-        
+        String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
+
         createLog(aSet.getProject()).info(
                 "Read constraints set file [" + filename + "] for project ["
                         + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
                         + "]");
         createLog(aSet.getProject()).removeAllAppenders();
-        
+
         return data;
     }
-    
+
     @Override
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException
@@ -2289,11 +2295,17 @@ public class RepositoryServiceDbData
         String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
-        
+
         createLog(aSet.getProject()).info(
                 "Created constraints set file [" + filename + "] for project ["
                         + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
                         + "]");
         createLog(aSet.getProject()).removeAllAppenders();
+    }
+
+    @Override
+    public int getNumberOfSentences()
+    {
+        return numberOfSentences;
     }
 }

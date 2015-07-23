@@ -984,7 +984,7 @@ public class CurationPage
                     randomAnnotationDocument);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            bModel.initForDocument(mergeJCas);
+            bModel.initForDocument(mergeJCas, repository);
             bModel.getPreferences().setCurationWindowSize(
                     BratAjaxCasUtil.getSentenceSize(mergeJCas));
 

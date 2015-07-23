@@ -35,7 +35,7 @@ public class AnnotationPreference
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private List<Long> annotationLayers;
 
-    private int windowSize = 5;
+    private int windowSize;
 
     private int curationWindowSize = 10;
 

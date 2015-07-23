@@ -821,11 +821,11 @@ public class AnnotationPage
                     annotationDocument.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            bModel.initForDocument(jcas);
+            bModel.initForDocument(jcas, repository);
 
             // Load constraints
             bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
-            
+
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bModel, Mode.ANNOTATION);
@@ -877,7 +877,7 @@ public class AnnotationPage
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
-    
+
     private ParsedConstraints loadConstraints(AjaxRequestTarget aTarget, Project aProject)
         throws IOException
     {
@@ -889,7 +889,7 @@ public class AnnotationPage
                 ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
                 Parse p = parser.Parse();
                 ParsedConstraints constraints = p.accept(new ParserVisitor());
-                
+
                 if (merged == null) {
                     merged = constraints;
                 }

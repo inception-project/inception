@@ -1135,7 +1135,7 @@ public class AutomationPage
         }
 
         // (Re)initialize brat model after potential creating / upgrading CAS
-        bModel.initForDocument(jCas);
+        bModel.initForDocument(jCas, repository);
 
         // Load user preferences
         PreferencesUtil.setAnnotationPreference(username, repository, annotationService, bModel,

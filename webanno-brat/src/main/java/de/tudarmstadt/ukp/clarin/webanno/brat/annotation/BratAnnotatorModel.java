@@ -32,6 +32,7 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
@@ -113,9 +114,9 @@ public class BratAnnotatorModel
      * The last sentence number in the display window
      */
     private int lSN;
-    
+
     /**
-     * Constraints object from rule file 
+     * Constraints object from rule file
      */
     private ParsedConstraints constraints;
 
@@ -436,13 +437,13 @@ public class BratAnnotatorModel
         setRememberedSpanLayer(null);
     }
 
-    public void initForDocument(JCas aJCas)
+    public void initForDocument(JCas aJCas, RepositoryService aRepository)
     {
         // (Re)initialize brat model after potential creating / upgrading CAS
         setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         setFirstSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(aJCas));
-        getPreferences().setWindowSize(5);
+        getPreferences().setWindowSize(aRepository.getNumberOfSentences());
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
         setSentenceBeginOffset(sentence.getBegin());
