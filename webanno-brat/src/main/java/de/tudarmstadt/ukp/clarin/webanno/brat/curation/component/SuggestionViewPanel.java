@@ -451,12 +451,10 @@ public class SuggestionViewPanel
             throw new IOException();
         }
         catch (UIMAException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            error(e.getMessage());
         }
         catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            error(e.getMessage());
         }
 
         if (bModel.getPreferences().isScrollPage()) {

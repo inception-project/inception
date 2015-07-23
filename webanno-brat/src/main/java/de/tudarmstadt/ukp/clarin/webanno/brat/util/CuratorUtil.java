@@ -314,8 +314,6 @@ public class CuratorUtil
                     aCurationSegment.getEnd());
         }
 
-        diff.print(System.out);
-
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
 
         Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();

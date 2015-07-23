@@ -1572,8 +1572,6 @@ public class AnnotationDetailEditorPanel
                 m.autoCreated = true;
                 links.add(m);
                 // NOT arming the slot here!
-
-                System.out.println("Auto-added link [" + m.role + "]");
             }
         }
 

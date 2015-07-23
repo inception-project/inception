@@ -112,7 +112,7 @@ public class ProjectMiraTemplatePanel
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
-        System.out.println(repository.getDir());
+
         for (MiraTemplate template : automationService.listMiraTemplates(selectedProjectModel.getObject())) {
             if (template.isCurrentLayer()) {
                 this.template = template;
@@ -703,7 +703,7 @@ public class ProjectMiraTemplatePanel
                             }
                         }
 
-                        automationStatus = automationService.existsAutomationStatus(template) ? 
+                        automationStatus = automationService.existsAutomationStatus(template) ?
                                 automationService.getAutomationStatus(template) : automationStatus;
                         automationStatus.setStartime(new Timestamp(new Date().getTime()));
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));

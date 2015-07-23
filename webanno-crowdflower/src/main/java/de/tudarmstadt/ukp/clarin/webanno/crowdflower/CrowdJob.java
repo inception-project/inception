@@ -149,7 +149,6 @@ public class CrowdJob
                 }
             }else if(!currentNode.isNull() && argumentFilterSet.contains(currentKey))
             {
-                System.out.println(jobKey + "[" + currentKey + "]=" + currentNode.toString());
                 argumentMap.add(jobKey + "[" + currentKey + "]",currentNode.asText());
             }
             if(currentKey == idKey) {

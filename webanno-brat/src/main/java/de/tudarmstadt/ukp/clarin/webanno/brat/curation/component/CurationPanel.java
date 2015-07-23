@@ -428,16 +428,13 @@ public class CurationPanel
                     getBColor(item, curationViewItem, fSn, lSn, cC);
                 }
                 catch (UIMAException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    error(e.getMessage());
                 }
                 catch (ClassNotFoundException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    error(e.getMessage());
                 }
                 catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    error(e.getMessage());
                 }
 
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
