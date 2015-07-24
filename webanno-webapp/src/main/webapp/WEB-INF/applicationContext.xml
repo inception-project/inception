@@ -50,7 +50,7 @@
 				<prop key="backup.keep.time">0</prop>
 				<prop key="backup.interval">0</prop>
 				<prop key="backup.keep.number">0</prop>
-				<prop key="number.of.sentences">5</prop>
+				<prop key="ui.brat.sentences.number">5</prop>
 				<prop key="crowdsource.enabled">0</prop>
                 <prop key="webanno.repository">#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/</prop>
 			</props>

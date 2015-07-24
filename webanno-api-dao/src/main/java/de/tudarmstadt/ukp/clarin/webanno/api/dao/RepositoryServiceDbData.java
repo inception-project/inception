@@ -190,7 +190,7 @@ public class RepositoryServiceDbData
     @Value(value = "${backup.keep.number}")
     private int backupKeepNumber;
 
-    @Value(value = "${number.of.sentences}")
+    @Value(value = "${ui.brat.sentences.number}")
     private int numberOfSentences;
 
     @Value(value = "${webanno.repository}")
