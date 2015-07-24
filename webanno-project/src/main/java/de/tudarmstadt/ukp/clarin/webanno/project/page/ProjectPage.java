@@ -110,7 +110,7 @@ public class ProjectPage
 
     @SpringBean(name = "automationService")
     private AutomationService automationService;
-    
+
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -263,12 +263,12 @@ public class ProjectPage
                     else {
                         actionImportProject(exportedProjects,
                                 ImportProjectForm.this.getModelObject().generateUsers);
-                    }                    
+                    }
                 }
             });
         }
     }
-    
+
     private class ImportProjectModel
         implements Serializable
     {
@@ -287,7 +287,7 @@ public class ProjectPage
         AbstractTab layers;
         AbstractTab tagSets;
         AbstractTab documents;
-        AbstractTab constraints; //For constraint rules
+        AbstractTab constraints; // For constraint rules
         @SuppressWarnings("rawtypes")
         AjaxTabbedPanel allTabs;
 
@@ -449,7 +449,8 @@ public class ProjectPage
                 public boolean isVisible()
                 {
                     return projectModel.getObject().getId() != 0
-                            && projectModel.getObject().getMode().equals(Mode.AUTOMATION) && visible;
+                            && projectModel.getObject().getMode().equals(Mode.AUTOMATION)
+                            && visible;
 
                 }
             });
@@ -530,7 +531,7 @@ public class ProjectPage
                                 .getName();
                         User user = userRepository.get(username);
                         repository.createProject(project, user);
-                        
+
                         // If the project was created by a user (not a global admin), then add this
                         // user as a project admin so that the user can see and edit the project.
                         if (SecurityUtil.isProjectCreator(repository, user)) {
@@ -540,10 +541,29 @@ public class ProjectPage
                             permission.setUser(username);
                             repository.createProjectPermission(permission);
                         }
-                        
+
                         annotationService.initializeTypesForProject(project, user, new String[] {},
                                 new String[] {}, new String[] {}, new String[] {}, new String[] {},
                                 new String[] {}, new String[] {}, new String[] {});
+                        // import the tagsets for the Penn Treebank POS and Stanford Dependencies
+                        // relations
+                        try {
+                            ClassLoader classLoader = getClass().getClassLoader();
+
+                            // The POS tags
+                            InputStream tagInputStream = classLoader
+                                    .getResourceAsStream("/tagsets/penntb.json");
+                            ProjectTagSetsPanel.importTagSetFromJson(project, user, tagInputStream,
+                                    annotationService);
+                            // The dependency relation tags
+                            tagInputStream = classLoader.getResourceAsStream("/tagsets/sd.json");
+                            ProjectTagSetsPanel.importTagSetFromJson(project, user, tagInputStream,
+                                    annotationService);
+
+                        }
+                        catch (IOException e) {
+                            error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
+                        }
                         projectDetailForm.setVisible(true);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.project = project;
@@ -578,7 +598,8 @@ public class ProjectPage
                             automationService.removeMiraTemplate(template);
                         }
 
-                        for (SourceDocument document : automationService.listTabSepDocuments(project)) {
+                        for (SourceDocument document : automationService
+                                .listTabSepDocuments(project)) {
                             repository.removeSourceDocument(document);
                         }
                         // END: Remove automation stuff
@@ -596,7 +617,7 @@ public class ProjectPage
             });
         }
     }
-    
+
     private void actionImportProject(List<FileUpload> exportedProjects, boolean aGenerateUsers)
     {
         Project importedProject = new Project();
@@ -637,11 +658,12 @@ public class ProjectPage
                         userRepository);
 
                 Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
-                        .createLayer(importedProject, importedProjectSetting, userRepository, 
+                        .createLayer(importedProject, importedProjectSetting, userRepository,
                                 annotationService);
                 ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
                         repository, userRepository, featuresMap);
-                ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
+                ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
+                        featuresMap);
                 ImportUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
 
                 ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,

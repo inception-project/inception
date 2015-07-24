@@ -56,7 +56,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -86,7 +87,7 @@ public class ProjectTagSetsPanel
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    
+
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
@@ -266,11 +267,8 @@ public class ProjectTagSetsPanel
                             InputStream tagInputStream;
                             try {
                                 tagInputStream = tagFile.getInputStream();
-                                String text = IOUtils.toString(tagInputStream, "UTF-8");
-
-                                TagSet importedTagSet = JSONUtil.getJsonConverter()
-                                        .getObjectMapper().readValue(text, TagSet.class);
-                                createTagSet(project, user, importedTagSet);
+                                importTagSetFromJson(project, user, tagInputStream,
+                                        annotationService);
 
                             }
                             catch (IOException e) {
@@ -345,31 +343,42 @@ public class ProjectTagSetsPanel
                     tagSelectionForm.setVisible(false);
                     tagDetailForm.setVisible(false);
                 }
-
-                private void createTagSet(Project project, User user, TagSet importedTagSet)
-                    throws IOException
-                {
-                    if (annotationService.existsTagSet(importedTagSet.getName(), project)) {
-                        annotationService.removeTagSet(annotationService.getTagSet(
-                                importedTagSet.getName(), project));
-                    }
-
-                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-                    newTagSet.setDescription(importedTagSet.getDescription());
-                    newTagSet.setName(importedTagSet.getName());
-                    newTagSet.setLanguage(importedTagSet.getLanguage());
-                    newTagSet.setProject(project);
-                    annotationService.createTagSet(newTagSet, user);
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet
-                            .getTags()) {
-                        Tag newTag = new Tag();
-                        newTag.setDescription(tag.getDescription());
-                        newTag.setName(tag.getName());
-                        newTag.setTagSet(newTagSet);
-                        annotationService.createTag(newTag, user);
-                    }
-                }
             });
+        }
+    }
+
+    public static void importTagSetFromJson(Project project, User user,
+            InputStream tagInputStream, AnnotationService aAnnotationService)
+        throws IOException, JsonParseException, JsonMappingException
+    {
+        String text = IOUtils.toString(tagInputStream, "UTF-8");
+
+        TagSet importedTagSet = JSONUtil.getJsonConverter().getObjectMapper()
+                .readValue(text, TagSet.class);
+        createTagSet(project, user, importedTagSet, aAnnotationService);
+    }
+
+    private static void createTagSet(Project project, User user, TagSet importedTagSet,
+            AnnotationService aAnnotationService)
+        throws IOException
+    {
+        if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
+            aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
+                    project));
+        }
+
+        de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+        newTagSet.setDescription(importedTagSet.getDescription());
+        newTagSet.setName(importedTagSet.getName());
+        newTagSet.setLanguage(importedTagSet.getLanguage());
+        newTagSet.setProject(project);
+        aAnnotationService.createTagSet(newTagSet, user);
+        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
+            Tag newTag = new Tag();
+            newTag.setDescription(tag.getDescription());
+            newTag.setName(tag.getName());
+            newTag.setTagSet(newTagSet);
+            aAnnotationService.createTag(newTag, user);
         }
     }
 
