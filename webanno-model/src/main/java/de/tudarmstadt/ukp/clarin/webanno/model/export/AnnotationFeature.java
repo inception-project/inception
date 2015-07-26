@@ -17,12 +17,8 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
-import javax.persistence.Column;
-
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.hibernate.annotations.Type;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
