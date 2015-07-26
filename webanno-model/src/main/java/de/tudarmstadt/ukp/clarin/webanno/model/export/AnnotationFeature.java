@@ -50,6 +50,9 @@ public class AnnotationFeature
     @JsonProperty("visible")
     private boolean visible = false;
 
+    @JsonProperty("remember")
+    private boolean remember = false;
+
     @JsonProperty("description")
     private String description;
 
@@ -133,7 +136,17 @@ public class AnnotationFeature
 		this.projectName = projectName;
 	}
 
-	@Override
+    public boolean isRemember()
+    {
+        return remember;
+    }
+
+    public void setRemember(boolean aRemember)
+    {
+        remember = aRemember;
+    }
+
+    @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

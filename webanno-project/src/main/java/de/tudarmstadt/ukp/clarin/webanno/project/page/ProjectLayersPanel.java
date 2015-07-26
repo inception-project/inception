@@ -879,6 +879,7 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
+            add(new CheckBox("remember"));
 
             add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
             {

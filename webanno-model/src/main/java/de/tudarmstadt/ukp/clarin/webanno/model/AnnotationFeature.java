@@ -84,6 +84,8 @@ public class AnnotationFeature
     private String name;
 
     private boolean visible = true;
+    
+    private boolean remember;
 
     public long getId()
     {
@@ -258,6 +260,16 @@ public class AnnotationFeature
     public void setTagset(TagSet tagset)
     {
         this.tagset = tagset;
+    }
+
+    public boolean isRemember()
+    {
+        return remember;
+    }
+
+    public void setRemember(boolean aRemember)
+    {
+        remember = aRemember;
     }
 
     @Override

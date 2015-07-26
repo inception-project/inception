@@ -375,6 +375,7 @@ public class ImportUtil
         aFeature.setLayer(aFeature.getLayer());
         aFeature.setType(aExFeature.getType());
         aFeature.setName(aExFeature.getName());
+        aFeature.setRemember(aExFeature.isRemember());
         aAnnotationService.createFeature(aFeature);
     }
 
@@ -843,6 +844,7 @@ public class ImportUtil
             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature();
             exFeature.setDescription(feature.getDescription());
             exFeature.setEnabled(feature.isEnabled());
+            exFeature.setRemember(feature.isRemember());
             exFeature.setName(feature.getName());
             exFeature.setProjectName(feature.getProject().getName());
             exFeature.setType(feature.getType());

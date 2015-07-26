@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.uima.jcas.JCas;
 
@@ -288,9 +289,18 @@ public class BratAnnotatorModel
         return rememberedSpanFeatures;
     }
 
-    public void setRememberedSpanFeatures(Map<AnnotationFeature, String> rememberedSpanFeature)
+    public void setRememberedSpanFeatures(Map<AnnotationFeature, String> aRememberedSpanFeature)
     {
-        this.rememberedSpanFeatures = rememberedSpanFeature;
+        rememberedSpanFeatures = new HashMap<>();
+        if (aRememberedSpanFeature != null) {
+            for (Entry<AnnotationFeature, String> fm : aRememberedSpanFeature.entrySet()) {
+                // Do not remember values unless this feature is enabled
+                if (!fm.getKey().isRemember()) {
+                    continue;
+                }
+                rememberedSpanFeatures.put(fm.getKey(), fm.getValue());
+            }
+        }
     }
 
     public Map<AnnotationFeature, String> getRememberedArcFeatures()
@@ -298,9 +308,18 @@ public class BratAnnotatorModel
         return rememberedArcFeatures;
     }
 
-    public void setRememberedArcFeatures(Map<AnnotationFeature, String> rememberedArcFeature)
+    public void setRememberedArcFeatures(Map<AnnotationFeature, String> aRememberedArcFeature)
     {
-        this.rememberedArcFeatures = rememberedArcFeature;
+        rememberedArcFeatures = new HashMap<>();
+        if (aRememberedArcFeature != null) {
+            for (Entry<AnnotationFeature, String> fm : aRememberedArcFeature.entrySet()) {
+                // Do not remember values unless this feature is enabled
+                if (!fm.getKey().isRemember()) {
+                    continue;
+                }
+                rememberedArcFeatures.put(fm.getKey(), fm.getValue());
+            }
+        }
     }
 
     public int getSentenceBeginOffset()
