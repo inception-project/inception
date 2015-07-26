@@ -902,6 +902,7 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
+            add(new CheckBox("remember"));
 
             spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
             for (AnnotationLayer spanLayer : annotationService

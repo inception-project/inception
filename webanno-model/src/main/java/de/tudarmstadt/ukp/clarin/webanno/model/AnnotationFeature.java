@@ -85,6 +85,8 @@ public class AnnotationFeature
     private String name;
 
     private boolean visible = true;
+    
+    private boolean remember;
 
     @Column(name = "multi_value_mode")
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
@@ -336,6 +338,16 @@ public class AnnotationFeature
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
+    }
+
+    public boolean isRemember()
+    {
+        return remember;
+    }
+
+    public void setRemember(boolean aRemember)
+    {
+        remember = aRemember;
     }
 
     @Override

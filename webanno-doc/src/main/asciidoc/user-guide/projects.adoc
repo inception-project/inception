@@ -157,6 +157,9 @@ In the first field, the user may choose between different object types the tags 
 A name and a description may also be given to the feature.
 The field *Enabled* shows whether the feature can be chosen by users.
 The field *Show* shows whether the feature is shown to the user.
+The field *Remember* defines whether the annotation detail editor should carry values of this feature
+over when creating a new annotation of the same type. This can be useful when creating many annotations
+of the same type in a row.
 A tagset may be chosen in the last field. Only non-default tagsets may be chosen. Tagsets may be created in the *Tagsets* frame above. The next chapter explains how to create new tagsets in detail.
 
 

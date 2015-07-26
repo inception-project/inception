@@ -331,6 +331,11 @@ public class BratAnnotatorModel
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
             for (FeatureModel fm : aModels) {
+                // Do not remember values unless this feature is enabled
+                if (!fm.feature.isRemember()) {
+                    continue;
+                }
+                
                 // Do not remember link features.
                 if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
                     continue;
@@ -350,6 +355,11 @@ public class BratAnnotatorModel
         rememberedArcFeatures = new HashMap<>();
         if (aModels != null) {
             for (FeatureModel fm : aModels) {
+                // Do not remember values unless this feature is enabled
+                if (!fm.feature.isRemember()) {
+                    continue;
+                }
+                
                 // Do not remember link features.
                 if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
                     continue;

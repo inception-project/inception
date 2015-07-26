@@ -56,6 +56,9 @@ public class AnnotationFeature
     @JsonProperty("visible")
     private boolean visible = false;
 
+    @JsonProperty("remember")
+    private boolean remember = false;
+
     @JsonProperty("description")
     private String description;
 
@@ -203,6 +206,16 @@ public class AnnotationFeature
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
+    }
+
+    public boolean isRemember()
+    {
+        return remember;
+    }
+
+    public void setRemember(boolean aRemember)
+    {
+        remember = aRemember;
     }
 
     @Override
