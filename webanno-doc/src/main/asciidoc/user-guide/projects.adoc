@@ -140,9 +140,11 @@ For relation and chain annotations the type of the spans which are to be connect
 [[sect_projects_layers_behaviours]]
 ==== Behaviours
 
-In the last frame, *Behaviours*, other properties of the annotation may be selected. The first field, *Lock to token offsets*, gives the possibility to bind the annotation to a token.
-The next field, *Allow stacking*, gives the possibility to make several annotations over one range.
-The third field, *Allow crossing sentence boundary* gives the possibility to annotate a range covering more than one sentence. 
+In the last frame, *Behaviours*, other properties of the annotation may be selected. 
+The field *Lock to token offsets*, gives the possibility to bind the annotation to a token.
+The field *Allow stacking* gives the possibility to make several annotations over one range.
+The field *Allow crossing sentence boundary* gives the possibility to annotate a range covering more than one sentence. 
+The field *Readonly* controls whether annotations in this layer can be created or edited.
 After clicking on *Save layer* only changes in the first frame (*Properties*) may be made. After the layer has been saved, it will be displayed in the Layer frame.
 
 [[sect_projects_layers_features]]

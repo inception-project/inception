@@ -68,6 +68,9 @@ a CAS data structure is used to represent the annotation document.
 need to retain the type definitions in order to load CASes which still contains the type, so this
 is a way to not allow editing/displaying of these types anymore.
 
+| readonly
+| If the annotations of this type can be created/edited.
+
 | attachType
 | *optional (span)*
 
