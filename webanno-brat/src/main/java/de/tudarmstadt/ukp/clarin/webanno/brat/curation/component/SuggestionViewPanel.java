@@ -278,15 +278,15 @@ public class SuggestionViewPanel
         SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, layer);
 
         // Add annotation - we set no feature values yet.
-        int selectedSpanId = adapter.add(aMergeJCas, fsClicked.getBegin(), fsClicked.getEnd(),
-                null, null);
+        AnnotationFS fs = adapter.updateCurationCas(aMergeJCas.getCas(), fsClicked.getBegin(),
+                fsClicked.getEnd(), null, null, fsClicked);
 
         // if slot link is copied from the suggestion
         if (aLinkFeature != null && aLink != null) {
-            AnnotationFS fs = selectByAddr(aMergeJCas, selectedSpanId);
+
             List<LinkWithRoleModel> links = getFeature(fs, aLinkFeature);
             links.add(aLink);
-            setFeature(selectByAddr(aMergeJCas, selectedSpanId), aLinkFeature, links);
+            setFeature(fs, aLinkFeature, links);
         }
         // Set the feature values
         else {
@@ -295,13 +295,14 @@ public class SuggestionViewPanel
                     continue;
                 }
                 // slot span is copied from the suggestion to the curation
-                if (feature.isEnabled() && feature.getLinkMode() != LinkMode.NONE) {
-                    setFeature(selectByAddr(aMergeJCas, selectedSpanId), feature, null);
+                if (feature.getLinkMode() != LinkMode.NONE) {
+                   // setFeature(fs, feature, null);
+                    continue;
                 }
                 else if (feature.isEnabled()) {
                     Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
                             feature.getName());
-                    adapter.updateFeature(aMergeJCas, feature, selectedSpanId,
+                    adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
                             fsClicked.getFeatureValueAsString(uimaFeature));
                 }
             }

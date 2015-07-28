@@ -261,8 +261,7 @@ public class SpanAdapter
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
 
                         // get the color of the link for suggestion annotations
-                        color = aColoringStrategy.getColor(fs + "-" + targetFS,
-                                bratLabelText);
+                        color = aColoringStrategy.getColor(fs + "-" + targetFS, bratLabelText);
                         aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
                                 bratTypeName, getArgument(fs, targetFS), link.role, color));
                     }
@@ -391,7 +390,14 @@ public class SpanAdapter
                 }
             }
         }
-        AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
+        AnnotationFS newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
+        return getAddr(newAnnotation);
+    }
+
+    private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd,
+            AnnotationFeature aFeature, Object aValue, Type aType)
+    {
+        AnnotationFS newAnnotation = aCas.createAnnotation(aType, aBegin, aEnd);
         setFeature(newAnnotation, aFeature, aValue);
 
         if (getAttachFeatureName() != null) {
@@ -408,7 +414,66 @@ public class SpanAdapter
                     .setFeatureValue(attachFeature, newAnnotation);
         }
         aCas.addFsToIndexes(newAnnotation);
-        return getAddr(newAnnotation);
+        return newAnnotation;
+    }
+
+    /**
+     * A Helper method to add annotation to a Curation CAS
+     */
+    public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
+            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs)
+    {
+        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
+        AnnotationFS newAnnotation = null;
+        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+            newAnnotation = fs;
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (!allowStacking) {
+                    setFeature(fs, aFeature, aValue);
+                    return fs;
+                }
+                // if stacking, get other existing feature values before updating with the new
+                // feature
+                StringBuilder clickedFtValues = new StringBuilder();
+                StringBuilder curationFtValues = new StringBuilder();
+                for (Feature feat : type.getFeatures()) {
+                    switch (feat.getRange().getName()) {
+                    case CAS.TYPE_NAME_STRING:
+                    case CAS.TYPE_NAME_BOOLEAN:
+                    case CAS.TYPE_NAME_FLOAT:
+                    case CAS.TYPE_NAME_INTEGER:
+                        clickedFtValues.append(aClickedFs.getFeatureValueAsString(feat));
+                        curationFtValues.append(fs.getFeatureValueAsString(feat));
+                    default:
+                        continue;
+                    }
+                }
+                if (clickedFtValues.toString().equals(curationFtValues.toString())) {
+                    return fs;
+                }
+            }
+        }
+        if (newAnnotation == null) {
+            newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
+        }
+        return newAnnotation;
+    }
+
+    public Integer getAddress(CAS aCas, int aBegin, int aEnd, Object aValue)
+    {
+        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
+        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                List<Feature> feats = type.getFeatures();
+                for (Feature feat : feats) {
+                    System.out.println(feat.getName());
+                    System.out.println(feat.getDomain().getNumberOfFeatures());
+                    System.out.println(feat.getRange().getName());
+                }
+                return getAddr(fs);
+            }
+        }
+        return -1;
     }
 
     @Override

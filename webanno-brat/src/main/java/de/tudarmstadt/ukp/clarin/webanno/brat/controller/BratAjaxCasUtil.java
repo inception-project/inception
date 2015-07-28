@@ -23,8 +23,10 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -448,7 +450,7 @@ public class BratAjaxCasUtil
         Sentence c = (Sentence) selectByAddr(aJcas.getCas(), aSentenceAddress);
         Sentence n = (Sentence) selectByAddr(aJcas.getCas(), getAddr(s));
 
-        if(aWindowSize == 2 && n.getBegin()>c.getBegin()) {
+        if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
             return getAddr(s);
         }
 
@@ -840,8 +842,11 @@ public class BratAjaxCasUtil
                 // Create all the links
                 // FIXME: actually we could re-use existing link link feature structures
                 List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
-                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) aValue;
-                if (links != null) {
+                List<LinkWithRoleModel> linksList = (List<LinkWithRoleModel>) aValue;
+
+                if (linksList != null) {
+                    // remove duplicate links
+                    Set<LinkWithRoleModel> links = new HashSet<LinkWithRoleModel>(linksList);
                     for (LinkWithRoleModel e : links) {
                         // Skip links that have been added in the UI but where the target has not
                         // yet been
