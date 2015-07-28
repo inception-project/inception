@@ -28,13 +28,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoFinishModalPanel;
 
 /**
  * A link to close/finish annotation/correction/curation project
+ *
  * @author Seid Muhie Yimam
  */
 public class FinishLink
@@ -50,7 +50,8 @@ public class FinishLink
 
     ModalWindow yesNoModal;
 
-    public FinishLink(String id, final IModel<BratAnnotatorModel> aModel, final FinishImage finishImag)
+    public FinishLink(String id, final IModel<BratAnnotatorModel> aModel,
+            final FinishImage finishImag)
     {
         super(id, aModel);
 
@@ -76,8 +77,7 @@ public class FinishLink
             {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = userRepository.get(username);
-                if (repository.getAnnotationDocument(aModel.getObject().getDocument(), user)
-                        .getState().equals(AnnotationDocumentState.FINISHED)) {
+                if (FinishImage.isFinished(aModel, user, repository)) {
                     target.appendJavaScript("alert('Document already closed!')");
                 }
                 else {

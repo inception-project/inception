@@ -557,7 +557,7 @@ public class CurationPage
 
         finish = new WebMarkupContainer("finishImage");
         finish.setOutputMarkupId(true);
-        finish.add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        finish.add(new AttributeModifier("src", new LoadableDetachableModel<String>()
         {
             private static final long serialVersionUID = 1562727305401900776L;
 

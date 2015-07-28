@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.CurationU
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -257,6 +258,16 @@ public class CurationPanel
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
+            }
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setEnabled(bModel.getDocument()!=null && !repository
+                        .getSourceDocument(bModel.getDocument().getProject(),
+                                bModel.getDocument().getName()).getState()
+                        .equals(SourceDocumentState.CURATION_FINISHED));
             }
         };
 

@@ -505,6 +505,10 @@ public class AutomationPage
                             loadDocumentAction();
                             setCurationSegmentBeginEnd();
                             update(target);
+                            User user = userRepository.get(username);
+                            annotationDetailEditorPanel.setEnabled(!FinishImage.isFinished(
+                                    new Model<BratAnnotatorModel>(bModel), user, repository));
+
 
                         }
                         catch (UIMAException e) {

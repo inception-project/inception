@@ -406,6 +406,12 @@ public class CorrectionPage
                             setCurationSegmentBeginEnd();
                             update(target);
 
+                            String username = SecurityContextHolder.getContext().getAuthentication()
+                                    .getName();
+                            User user = userRepository.get(username);
+                            annotationDetailEditorPanel.setEnabled(!FinishImage.isFinished(
+                                    new Model<BratAnnotatorModel>(bModel), user, repository));
+
                         }
                         catch (UIMAException e) {
                             target.appendJavaScript("alert('" + e.getMessage() + "')");

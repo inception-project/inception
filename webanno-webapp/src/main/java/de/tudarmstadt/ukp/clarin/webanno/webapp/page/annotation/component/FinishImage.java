@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * show closed/not closed images on annoataion/correction pages
+ *
  * @author Seid Muhie Yimam
  *
  */
@@ -70,13 +71,11 @@ public class FinishImage
         return (BratAnnotatorModel) getDefaultModelObject();
     }
 
-
-    @SuppressWarnings("deprecation")
     public FinishImage(String id, final IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
 
-        add(new AttributeModifier("src", true, new LoadableDetachableModel<String>()
+        add(new AttributeModifier("src", new LoadableDetachableModel<String>()
         {
             private static final long serialVersionUID = 1562727305401900776L;
 
@@ -88,10 +87,7 @@ public class FinishImage
 
                 if (aModel.getObject().getProject() != null
                         && aModel.getObject().getDocument() != null) {
-                    if (repository.existsAnnotationDocument(aModel.getObject().getDocument(), user)
-                            && repository
-                                    .getAnnotationDocument(aModel.getObject().getDocument(), user)
-                                    .getState().equals(AnnotationDocumentState.FINISHED)) {
+                    if (isFinished(aModel, user, repository)) {
                         return "images/accept.png";
                     }
                     else {
@@ -106,4 +102,12 @@ public class FinishImage
         }));
     }
 
+    public static boolean isFinished(final IModel<BratAnnotatorModel> aModel, User user,
+            RepositoryService aRepository)
+    {
+        return aRepository.existsAnnotationDocument(aModel.getObject().getDocument(), user)
+                && aRepository.getAnnotationDocument(aModel.getObject().getDocument(), user)
+                        .getState().equals(AnnotationDocumentState.FINISHED);
     }
+
+}
