@@ -351,7 +351,7 @@ public class CurationPage
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
                     if (!repository
-                            .existFinishedDocument(sourceDocument, user, bModel.getProject())) {
+                            .existFinishedDocument(sourceDocument, bModel.getProject())) {
                         sourceDocumentsinIgnorState.add(sourceDocument);
                     }
                 }
@@ -405,7 +405,7 @@ public class CurationPage
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
                     if (!repository
-                            .existFinishedDocument(sourceDocument, user, bModel.getProject())) {
+                            .existFinishedDocument(sourceDocument, bModel.getProject())) {
                         sourceDocumentsinIgnorState.add(sourceDocument);
                     }
                 }

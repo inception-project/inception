@@ -1072,7 +1072,11 @@ public interface RepositoryService
      */
     List<Project> listAccessibleProjects();
 
-    boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser, Project aProject);
+    /**
+     * If any of the users finised one annotation document
+     */
+
+    boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException;

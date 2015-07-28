@@ -2197,8 +2197,7 @@ public class RepositoryServiceDbData
      * @return if a finished document exists.
      */
     @Override
-    public boolean existFinishedDocument(SourceDocument aSourceDocument, User aUser,
-            Project aProject)
+    public boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject)
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;

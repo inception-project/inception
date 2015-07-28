@@ -73,7 +73,7 @@ public class OpenModalWindowPanel
     private static final long serialVersionUID = 1299869948010875439L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private RepositoryService repository;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -181,31 +181,36 @@ public class OpenModalWindowPanel
         List<Project> allowedProject = new ArrayList<Project>();
         switch (mode) {
         case ANNOTATION:
-            for (Project project : projectRepository.listProjects()) {
-                if (SecurityUtil.isMember(project, projectRepository, user)
+            for (Project project : repository.listProjects()) {
+                if (SecurityUtil.isMember(project, repository, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
             }
             break;
         case CURATION:
-            for (Project project : projectRepository.listProjects()) {
-                if (SecurityUtil.isCurator(project, projectRepository, user)) {
-                    allowedProject.add(project);
+            projects: for (Project project : repository.listProjects()) {
+                if (SecurityUtil.isCurator(project, repository, user)) {
+                    for (SourceDocument d : repository.listSourceDocuments(project)) {
+                        if (repository.existFinishedDocument(d, project)) {
+                            allowedProject.add(project);
+                            continue projects;
+                        }
+                    }
                 }
             }
             break;
         case CORRECTION:
-            for (Project project : projectRepository.listProjects()) {
-                if (SecurityUtil.isMember(project, projectRepository, user)
+            for (Project project : repository.listProjects()) {
+                if (SecurityUtil.isMember(project, repository, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
             }
             break;
         case AUTOMATION:
-            for (Project project : projectRepository.listProjects()) {
-                if (SecurityUtil.isMember(project, projectRepository, user)
+            for (Project project : repository.listProjects()) {
+                if (SecurityUtil.isMember(project, repository, user)
                         && project.getMode().equals(Mode.AUTOMATION)) {
                     allowedProject.add(project);
                 }
@@ -329,7 +334,7 @@ public class OpenModalWindowPanel
         if (selectedProject == null) {
             return new ArrayList<SourceDocument>();
         }
-        List<SourceDocument> allDocuments = projectRepository.listSourceDocuments(selectedProject);
+        List<SourceDocument> allDocuments = repository.listSourceDocuments(selectedProject);
 
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
@@ -345,9 +350,9 @@ public class OpenModalWindowPanel
                     excludeDocuments.add(sourceDocument);
                     continue;
                 }
-                if (projectRepository.existsAnnotationDocument(sourceDocument, user)) {
-                    AnnotationDocument anno = projectRepository.getAnnotationDocument(
-                            sourceDocument, user);
+                if (repository.existsAnnotationDocument(sourceDocument, user)) {
+                    AnnotationDocument anno = repository
+                            .getAnnotationDocument(sourceDocument, user);
                     if (anno.getState().equals(AnnotationDocumentState.IGNORE)) {
                         excludeDocuments.add(sourceDocument);
                     }
@@ -360,7 +365,7 @@ public class OpenModalWindowPanel
                 }
                 break;
             case CURATION:
-                if (!projectRepository.existFinishedDocument(sourceDocument, user, selectedProject)) {
+                if (!repository.existFinishedDocument(sourceDocument, selectedProject)) {
                     excludeDocuments.add(sourceDocument);
                 }
                 else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
