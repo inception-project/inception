@@ -296,7 +296,8 @@ public class SuggestionViewPanel
                 }
                 // slot span is copied from the suggestion to the curation
                 if (feature.getLinkMode() != LinkMode.NONE) {
-                   // setFeature(fs, feature, null);
+                    List<LinkWithRoleModel> links = getFeature(fs, feature);
+                    setFeature(fs, feature, links);
                     continue;
                 }
                 else if (feature.isEnabled()) {

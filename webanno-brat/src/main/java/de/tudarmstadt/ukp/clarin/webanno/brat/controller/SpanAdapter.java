@@ -459,23 +459,6 @@ public class SpanAdapter
         return newAnnotation;
     }
 
-    public Integer getAddress(CAS aCas, int aBegin, int aEnd, Object aValue)
-    {
-        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                List<Feature> feats = type.getFeatures();
-                for (Feature feat : feats) {
-                    System.out.println(feat.getName());
-                    System.out.println(feat.getDomain().getNumberOfFeatures());
-                    System.out.println(feat.getRange().getName());
-                }
-                return getAddr(fs);
-            }
-        }
-        return -1;
-    }
-
     @Override
     public void delete(JCas aJCas, int aAddress)
     {
