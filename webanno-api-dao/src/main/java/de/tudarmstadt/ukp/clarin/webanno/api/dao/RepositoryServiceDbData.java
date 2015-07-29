@@ -977,6 +977,24 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public boolean existsFinishedAnnotation(Project aProject)
+    {
+        for (SourceDocument document : listSourceDocuments(aProject)) {
+            List<AnnotationDocument> annotationDocuments = entityManager
+                    .createQuery("FROM AnnotationDocument WHERE document = :document",
+                            AnnotationDocument.class).setParameter("document", document)
+                    .getResultList();
+            for (AnnotationDocument annotationDocument : annotationDocuments) {
+                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
         try {

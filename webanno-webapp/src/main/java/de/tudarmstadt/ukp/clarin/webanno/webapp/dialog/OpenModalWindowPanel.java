@@ -189,14 +189,9 @@ public class OpenModalWindowPanel
             }
             break;
         case CURATION:
-            projects: for (Project project : repository.listProjects()) {
+            for (Project project : repository.listProjects()) {
                 if (SecurityUtil.isCurator(project, repository, user)) {
-                    for (SourceDocument d : repository.listSourceDocuments(project)) {
-                        if (repository.existFinishedDocument(d, project)) {
-                            allowedProject.add(project);
-                            continue projects;
-                        }
-                    }
+                    allowedProject.add(project);
                 }
             }
             break;
@@ -406,8 +401,14 @@ public class OpenModalWindowPanel
                                                                                       // at all
                     }
                     else if (selectedDocument == null) {
-                        aTarget.appendJavaScript("alert('Please select a document for project: "
-                                + selectedProject.getName() + "')");
+                        if (repository.existsFinishedAnnotation(selectedProject)) {
+                            aTarget.appendJavaScript("alert('Please select a document for project: "
+                                    + selectedProject.getName() + "')");
+                        }
+                        else {
+                            aTarget.appendJavaScript("alert('There is no document that is ready for curation yet for project: "
+                                    + selectedProject.getName() + "')");
+                        }
                     }
                     else {
                         bratAnnotatorModel.setProject(selectedProject);
