@@ -995,6 +995,18 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public List<Project> listProjectsWithFinishedAnnos()
+    {
+
+        return entityManager
+                .createQuery("SELECT DISTINCT project FROM AnnotationDocument WHERE state = :state",
+                        Project.class)
+                .setParameter("state", AnnotationDocumentState.FINISHED.getName()).getResultList();
+
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
         try {

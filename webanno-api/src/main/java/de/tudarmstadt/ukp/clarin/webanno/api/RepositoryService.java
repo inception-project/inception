@@ -516,11 +516,19 @@ public interface RepositoryService
     boolean existsFinishedAnnotation(SourceDocument document);
 
     /**
-     * Check if at least one annotation document is finished for this {@link Project}
-     * @param project
+     * If at least one {@link AnnotationDocument} is finished in this project
+     *
      * @return
      */
     boolean existsFinishedAnnotation(Project project);
+
+    /**
+     * list Projects which contain with those annotation documents state is finished
+     *
+     * @param project
+     * @return
+     */
+    List<Project> listProjectsWithFinishedAnnos();
 
     /**
      * Remove an annotation document, for example, when a user is removed from a project

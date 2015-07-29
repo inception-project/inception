@@ -34,15 +34,11 @@ import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
-import org.apache.wicket.markup.html.WebComponent;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -82,13 +78,12 @@ public class OpenModalWindowPanel
     private final ProjectSelectionForm projectSelectionForm;
     private final DocumentSelectionForm documentSelectionForm;
     private final ButtonsForm buttonsForm;
+    private Select<SourceDocument> documentSelection;
 
     // The first project - selected by default
     private Project selectedProject;
     // The first document in the project // auto selected in the first time.
     private SourceDocument selectedDocument;
-
-    private Select<SourceDocument> documentSelection;
 
     private final String username;
     private final User user;
@@ -98,7 +93,9 @@ public class OpenModalWindowPanel
     private final Mode mode;
     private final BratAnnotatorModel bratAnnotatorModel;
 
-    List<Project> allowedProject = new ArrayList<Project>();
+    private List<Project> allowedProject = new ArrayList<Project>();
+    private List<Project> projectesWithFinishedAnnos;
+    private Map<Project, String> projectColors = new HashMap<Project, String>();
 
     public OpenModalWindowPanel(String aId, BratAnnotatorModel aBratAnnotatorModel,
             ModalWindow aModalWindow, Mode aSubject)
@@ -107,6 +104,9 @@ public class OpenModalWindowPanel
         this.mode = aSubject;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = userRepository.get(username);
+        if (mode.equals(Mode.CURATION)) {
+            projectesWithFinishedAnnos = repository.listProjectsWithFinishedAnnos();
+        }
         if (getAllowedProjects().size() > 0) {
             selectedProject = getAllowedProjects().get(0);
         }
@@ -125,19 +125,15 @@ public class OpenModalWindowPanel
         extends Form<SelectionModel>
     {
         private static final long serialVersionUID = -1L;
-        private ListChoice<Project> projects;
+        private Select<Project> projectSelection;
 
         public ProjectSelectionForm(String id)
         {
-            // super(id);
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(projects = new ListChoice<Project>("project")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(new LoadableDetachableModel<List<Project>>()
+            projectSelection = new Select<Project>("projectSelection");
+            ListView<Project> lv = new ListView<Project>("projects",
+                    new LoadableDetachableModel<List<Project>>()
                     {
                         private static final long serialVersionUID = 1L;
 
@@ -146,28 +142,55 @@ public class OpenModalWindowPanel
                         {
                             return getAllowedProjects();
                         }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
-                    setNullValid(false);
-
-                }
+                    })
+            {
+                private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
+                protected void populateItem(final ListItem<Project> item)
                 {
-                    return "";
+                    String color = projectColors.get(item.getModelObject());
+                    if (color == null) {
+                        color = "#008000";// not in curation
+                    }
+                    item.add(new SelectOption<Project>("project", new Model<Project>(item
+                            .getModelObject()))
+                    {
+                        private static final long serialVersionUID = 3095089418860168215L;
+
+                        @Override
+                        public void onComponentTagBody(MarkupStream markupStream,
+                                ComponentTag openTag)
+                        {
+                            replaceComponentTagBody(markupStream, openTag, item.getModelObject()
+                                    .getName());
+                        }
+                    }.add(new AttributeModifier("style", "color:" + color + ";")));
                 }
-            });
-            projects.setOutputMarkupId(true);
-            projects.setMaxRows(10);
-            projects.add(new OnChangeAjaxBehavior()
+            };
+            add(projectSelection.add(lv));
+            projectSelection.setOutputMarkupId(true);
+            projectSelection.add(new OnChangeAjaxBehavior()
             {
-                private static final long serialVersionUID = 1381680080441080656L;
+                private static final long serialVersionUID = 1L;
 
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    selectedProject = getModelObject().project;
+                    selectedProject = getModelObject().projectSelection;
+                    // Remove selected document from other project
+                    selectedDocument = null;
+                    aTarget.add(documentSelection.setOutputMarkupId(true));
+                }
+            }).add(new AjaxEventBehavior("ondblclick")
+            {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onEvent(final AjaxRequestTarget aTarget)
+                {
+                    selectedProject = getModelObject().projectSelection;
                     // Remove selected document from other project
                     selectedDocument = null;
                     aTarget.add(documentSelection.setOutputMarkupId(true));
@@ -192,6 +215,12 @@ public class OpenModalWindowPanel
             for (Project project : repository.listProjects()) {
                 if (SecurityUtil.isCurator(project, repository, user)) {
                     allowedProject.add(project);
+                    if (projectesWithFinishedAnnos.contains(project)) {
+                        projectColors.put(project, "#008000");
+                    }
+                    else {
+                        projectColors.put(project, "#99cc99");
+                    }
                 }
             }
             break;
@@ -218,34 +247,12 @@ public class OpenModalWindowPanel
         return allowedProject;
     }
 
-    public class StaticImage
-        extends WebComponent
-    {
-        private static final long serialVersionUID = 3648088737917246374L;
-
-        public StaticImage(String id, IModel<?> model)
-        {
-            super(id, model);
-        }
-
-        @Override
-        protected void onComponentTag(ComponentTag tag)
-        {
-            super.onComponentTag(tag);
-            checkComponentTag(tag, "img");
-            tag.put("src", getDefaultModelObjectAsString());
-            // since Wicket 1.4 you need to use getDefaultModelObjectAsString() instead of
-            // getModelObjectAsString()
-        }
-
-    }
-
     private class SelectionModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
 
-        private Project project;
+        private Project projectSelection;
         private SourceDocument documentSelection;
     }
 
@@ -258,7 +265,7 @@ public class OpenModalWindowPanel
         {
 
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            final Map<SourceDocument, String> states = new HashMap<SourceDocument, String>();
+            final Map<SourceDocument, String> documnetColors = new HashMap<SourceDocument, String>();
 
             documentSelection = new Select<SourceDocument>("documentSelection");
             ListView<SourceDocument> lv = new ListView<SourceDocument>("documents",
@@ -269,7 +276,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            List<SourceDocument> allDocuments = listDOcuments(states);
+                            List<SourceDocument> allDocuments = listDOcuments(documnetColors);
                             return allDocuments;
                         }
                     })
@@ -292,7 +299,7 @@ public class OpenModalWindowPanel
                                     .getName());
                         }
                     }.add(new AttributeModifier("style", "color:"
-                            + states.get(item.getModelObject()) + ";")));
+                            + documnetColors.get(item.getModelObject()) + ";")));
                 }
             };
             add(documentSelection.add(lv));
