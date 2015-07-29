@@ -123,6 +123,15 @@
             <artifactId>wicketstuff-annotation</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.googlecode.wicket-jquery-ui</groupId>
+            <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.wicket-jquery-ui</groupId>
+            <artifactId>wicket-kendo-ui-theme-default</artifactId>
+        </dependency>
+        
 		<!-- Spring dependencies -->
 		
 		<dependency>
@@ -465,9 +474,6 @@
 										<!-- otherwise license files mentioned in NOTICE.txt -->
 										<exclude>src/main/webapp/js/css_browser_selector.js</exclude>
 										<exclude>src/main/webapp/static/style.css</exclude>
-
-										<exclude>src/main/webapp/css/kendo/kendo.common.min.css</exclude>
-										<exclude>src/main/webapp/css/kendo/kendo.default.min.css</exclude>
 									</excludes>
 								</configuration>
 							</execution>

@@ -193,9 +193,19 @@
             </dependency>
             <dependency>
                 <groupId>com.googlecode.wicket-jquery-ui</groupId>
+                <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+                <version>${wicket-jquery-ui.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.googlecode.wicket-jquery-ui</groupId>
                 <artifactId>wicket-kendo-ui</artifactId>
                 <version>${wicket-jquery-ui.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.googlecode.wicket-jquery-ui</groupId>
+                <artifactId>wicket-kendo-ui-theme-default</artifactId>
+                <version>${wicket-jquery-ui.version}</version>
+            </dependency>            
             <dependency>
                 <groupId>org.wicketstuff</groupId>
                 <artifactId>wicketstuff-input-events</artifactId>
