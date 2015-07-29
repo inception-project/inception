@@ -305,7 +305,7 @@ public class CuratorUtil
 
         if (bModel.getMode().equals(Mode.CURATION)) {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases,
+                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases,
                     aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
         }
         else {
@@ -374,7 +374,7 @@ public class CuratorUtil
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
-                    Object key =fs;
+                    Object key = fs;
                     // link FS
                     if (c.getPosition().getFeature() != null) {
                         ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType()
@@ -382,7 +382,7 @@ public class CuratorUtil
                         FeatureStructure link = links.get(c.getAID(u).index);
                         fs = (AnnotationFS) link.getFeatureValue(link.getType()
                                 .getFeatureByBaseName("target"));
-                        key = key + "-" + fs;
+                        key = key + "-" + fs + "-" + link;
                     }
                     if (aAgree) {
                         aSuggestionColors.put(key, AnnotationState.AGREE);

@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
@@ -256,12 +257,15 @@ public class SpanAdapter
                 if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
                         && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
                     List<LinkWithRoleModel> links = getFeature(fs, feat);
+                    ArrayFS linksFS = (ArrayFS) fs.getFeatureValue(fs.getType()
+                            .getFeatureByBaseName(feat.getName()));
                     for (int li = 0; li < links.size(); li++) {
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
-
+                        FeatureStructure linkFS = linksFS.get(li);
                         // get the color of the link for suggestion annotations
-                        color = aColoringStrategy.getColor(fs + "-" + targetFS, bratLabelText);
+                        color = aColoringStrategy.getColor(fs + "-" + targetFS + "-" + linkFS,
+                                bratLabelText);
                         aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
                                 bratTypeName, getArgument(fs, targetFS), link.role, color));
                     }
