@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -78,6 +79,10 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.plexus.util.StringUtils;
 
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.jquery.ui.widget.tooltip.CustomTooltipBehavior;
+import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
@@ -186,7 +191,7 @@ public class AnnotationDetailEditorPanel
         public AnnotationFeatureForm(String id, BratAnnotatorModel aBModel)
         {
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
-
+            
             featureModels = new ArrayList<>();
             if (aBModel.getSelection().getAnnotation().isNotSet()) {
 
@@ -1065,6 +1070,13 @@ public class AnnotationDetailEditorPanel
                     // Put focus on first feature
                     frag.getFocusComponent().add(new DefaultFocusBehavior());
                 }
+                
+                // Add tooltip on label
+                Component labelComponent = frag.getLabelComponent();
+                labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
+                labelComponent.add(new DescriptionTooltipBehavior(fm.feature.getUiName(),
+                        fm.feature.getDescription(), AnnotationDetailEditorPanel.this));
+                
             }
             else {
                 frag.getFocusComponent().setEnabled(false);
@@ -1128,6 +1140,10 @@ public class AnnotationDetailEditorPanel
             super(aId, aMarkupId, aMarkupProvider, aModel);
         }
 
+        public Component getLabelComponent() {
+            return get("feature");
+        }
+        
         abstract public Component getFocusComponent();
 
         abstract public boolean isDropOrchoice();
@@ -1145,11 +1161,7 @@ public class AnnotationDetailEditorPanel
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
-            String featureLabel = aModel.feature.getUiName();
-            if (aModel.feature.getTagset() != null) {
-                featureLabel += " (" + aModel.feature.getTagset().getName() + ")";
-            }
-            add(new Label("feature", featureLabel));
+            add(new Label("feature", aModel.feature.getUiName()));
 
             switch (aModel.feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
@@ -1193,11 +1205,7 @@ public class AnnotationDetailEditorPanel
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
-            String featureLabel = aModel.feature.getUiName();
-            if (aModel.feature.getTagset() != null) {
-                featureLabel += " (" + aModel.feature.getTagset().getName() + ")";
-            }
-            add(new Label("feature", featureLabel));
+            add(new Label("feature", aModel.feature.getUiName()));
 
             field = new CheckBox("value");
             add(field);
@@ -1229,11 +1237,11 @@ public class AnnotationDetailEditorPanel
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
-            String featureLabel = aModel.feature.getUiName();
+            String featureLabelText = aModel.feature.getUiName();
             if (aModel.feature.getTagset() != null) {
-                featureLabel += " (" + aModel.feature.getTagset().getName() + ")";
+                featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
             }
-            add(new Label("feature", featureLabel));
+            add(new Label("feature", featureLabelText));
 
             if (aModel.feature.getTagset() != null) {
 
@@ -1247,8 +1255,38 @@ public class AnnotationDetailEditorPanel
                     // Earlier behavior,
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
-                field = new ComboBox<Tag>("value", tagset,
-                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
+                field = new ComboBox<Tag>("value", tagset) {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        protected IJQueryTemplate newTemplate()
+                        {
+                            return new IJQueryTemplate()
+                            {
+                                private static final long serialVersionUID = 1L;
+
+                                @Override
+                                public String getText()
+                                {
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.append("<div title=\"${ data.description }\">${ data.name }</div>\n");
+                                    return sb.toString();
+                                }
+
+                                @Override
+                                public List<String> getTextProperties()
+                                {
+                                    return Arrays.asList("name", "description");
+                                }
+                            };
+                        }
+                };
+                field.setOutputMarkupId(true);
+                Options options = new Options(makeTooltipOptions());
+                options.set("content", "function() { return "
+                        + "'<h4>'+($(this).text() ? $(this).text() : 'no title')+'</h4>"
+                        + "<p>'+($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</p>' }");
+                field.add(new TooltipBehavior(options));
                 isDrop = true;
             }
             else {
@@ -1335,8 +1373,12 @@ public class AnnotationDetailEditorPanel
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
 
-            add(new Label("feature", aModel.feature.getUiName()));
-
+            String featureLabelText = aModel.feature.getUiName();
+            if (aModel.feature.getTagset() != null) {
+                featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
+            }
+            add(new Label("feature", featureLabelText));
+            
             add(new RefreshingView<LinkWithRoleModel>("slots",
                     Model.of((List<LinkWithRoleModel>) aModel.value))
             {
@@ -1863,4 +1905,47 @@ public class AnnotationDetailEditorPanel
         }
         return msg;
     }
-}
+    
+    private static Options makeTooltipOptions()
+    {
+        Options options = new Options();
+        options.set("position", "{ my: 'center bottom', at: 'center top', of: '.pagefooter' }");
+        return options;
+    }
+
+    
+    private static class DescriptionTooltipBehavior extends CustomTooltipBehavior
+    {
+        private static final long serialVersionUID = 1L;
+
+        private final String title;
+        private final String description;
+        private final MarkupContainer markupProvider;
+
+        public DescriptionTooltipBehavior(String aTitle, String aDescription,
+                MarkupContainer aMarkupProvider)
+        {
+            super(makeTooltipOptions());
+            title = aTitle;
+            if (StringUtils.isBlank(aDescription)) {
+                description = "no description";
+            }
+            else {
+                description = aDescription;
+            }
+            markupProvider = aMarkupProvider;
+        }
+      
+        @Override
+        protected WebMarkupContainer newContent(String markupId)
+        {
+            Fragment fragment = new Fragment(markupId, "description-tooltip-fragment",
+                    markupProvider);
+            fragment.add(new Label("title", Model.of(this.title)));
+            
+            Label descriptionLabel = new Label("description", Model.of(description));
+            fragment.add(descriptionLabel);
+            return fragment;
+        }
+    }
+ }
