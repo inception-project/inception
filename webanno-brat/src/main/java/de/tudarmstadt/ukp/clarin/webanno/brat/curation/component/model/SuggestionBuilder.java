@@ -441,6 +441,17 @@ public class SuggestionBuilder
             }
         }
 
+        for (Entry<Position, ConfigurationSet> diffEntry : diff.getIncompleteConfigurationSets()
+                .entrySet()) {
+            // Remove FSes with differences from the merge CAS
+            List<Configuration> cfgsForCurationUser = diffEntry.getValue().getConfigurations(
+                    CurationPanel.CURATION_USER);
+            for (Configuration cfg : cfgsForCurationUser) {
+                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                mergeJCas.removeFsFromIndexes(fs);
+            }
+        }
+
         repository
                 .writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(), userLoggedIn);
         return mergeJCas;
