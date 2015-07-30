@@ -427,7 +427,7 @@ public class SuggestionBuilder
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
 
         DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, 0, mergeJCas.getDocumentText()
+                LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0, mergeJCas.getDocumentText()
                         .length());
 
         for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
