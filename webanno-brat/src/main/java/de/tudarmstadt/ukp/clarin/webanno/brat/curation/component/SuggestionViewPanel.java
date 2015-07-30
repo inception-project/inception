@@ -261,12 +261,12 @@ public class SuggestionViewPanel
         }
 
         createSpan(spanType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
-                clickedAnnotationDocument, address, null, null);
+                clickedAnnotationDocument, address, null, null, false);
     }
 
     private void createSpan(String spanType, BratAnnotatorModel aBModel, JCas aMergeJCas,
             AnnotationDocument aAnnotationDocument, int aAddress, AnnotationFeature aLinkFeature,
-            LinkWithRoleModel aLink)
+            LinkWithRoleModel aLink, boolean aSlot)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas clickedJCas = getJCas(aBModel, aAnnotationDocument);
@@ -279,7 +279,7 @@ public class SuggestionViewPanel
 
         // Add annotation - we set no feature values yet.
         AnnotationFS fs = adapter.updateCurationCas(aMergeJCas.getCas(), fsClicked.getBegin(),
-                fsClicked.getEnd(), null, null, fsClicked);
+                fsClicked.getEnd(), null, null, fsClicked, aSlot);
 
         // if slot link is copied from the suggestion
         if (aLinkFeature != null && aLink != null) {
@@ -420,7 +420,7 @@ public class SuggestionViewPanel
                 }
 
                 createSpan(arcType, aCurationUserSegment.getBratAnnotatorModel(), aJcas,
-                        clickedAnnotationDocument, address, slotFeature, linkRole);
+                        clickedAnnotationDocument, address, slotFeature, linkRole, true);
             }
             else {
                 ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);

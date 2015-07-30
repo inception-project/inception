@@ -425,7 +425,7 @@ public class SpanAdapter
      * A Helper method to add annotation to a Curation CAS
      */
     public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs)
+            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = null;
@@ -457,7 +457,8 @@ public class SpanAdapter
                 }
             }
         }
-        if (newAnnotation == null) {
+
+        if (!aIsSlot) {
             newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
         }
         return newAnnotation;
