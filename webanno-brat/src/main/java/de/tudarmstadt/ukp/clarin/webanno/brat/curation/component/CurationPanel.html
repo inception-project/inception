@@ -40,7 +40,9 @@
 	height: 550px;
 	overflow: scroll;
 }
-
+.hidden-view {
+	border: 2px solid lightgreen;
+}
 .range {
 	border: 1px solid black;
 }
@@ -78,8 +80,8 @@
 					<table class="hfill">
 						<tr style="vertical-align: top;">
 							<td width="80%">
-								<div class="merge-view" wicket:id="mergeView" />
-								<fieldset>
+								<div wicket:id="mergeView" />
+								<fieldset  class="hidden-view">
 									<legend>Invisible annotations in other pages</legend>
 									<span wicket:id="corssSentAnnoView"> <span
 										wicket:id="crossSentAnnoList"> <span

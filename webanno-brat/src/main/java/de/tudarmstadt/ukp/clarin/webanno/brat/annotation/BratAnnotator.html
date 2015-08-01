@@ -24,12 +24,17 @@
       -->
 	<link rel="stylesheet" type="text/css" href="style-vis.css" />
 	<link rel="stylesheet" type="text/css" href="style-ui.css" />
+	<style type="text/css">
+		.anno-view {
+		border: 2px solid green;
+		}
+	</style>
 </wicket:head>
 </head>
 <body>
 	<wicket:panel>
-		<fieldset class="ui-widget-content ui-corner-all">
-			<legend>Annotation</legend>
+		<fieldset class="anno-view">
+			<legend> Annotation</legend>
 			<div wicket:id="vis"></div>
 		</fieldset>
 
