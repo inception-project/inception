@@ -1256,7 +1256,7 @@ public class AnnotationDetailEditorPanel
                 options.set("content", "function() { return "
                         + "'<div class=\"tooltip-title\">'+($(this).text() "
                         + "? $(this).text() : 'no title')+'</div>"
-                        + "<div class=\"tooltip-content\">'+($(this).attr('title') "
+                        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
                         + "? $(this).attr('title') : 'no description' )+'</div>' }");
                 field.add(new TooltipBehavior(options));
                 isDrop = true;
