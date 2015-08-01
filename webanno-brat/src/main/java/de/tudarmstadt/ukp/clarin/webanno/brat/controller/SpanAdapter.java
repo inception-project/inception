@@ -423,13 +423,16 @@ public class SpanAdapter
 
     /**
      * A Helper method to add annotation to a Curation CAS
+     * @throws BratAnnotationException 
      */
     public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)
+            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot) throws BratAnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = null;
+        int countAnno = 0;
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+            countAnno++;
             newAnnotation = fs;
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
@@ -460,6 +463,10 @@ public class SpanAdapter
 
         if (!aIsSlot) {
             newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
+        }
+        if (aIsSlot && countAnno > 1) {
+            throw new BratAnnotationException(
+                    "There are different stacking annotation on curation panel, cannot copy the slot feature");
         }
         return newAnnotation;
     }
