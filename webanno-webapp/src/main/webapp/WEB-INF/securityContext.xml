@@ -45,8 +45,10 @@
 			access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/images/**"
 			access="IS_AUTHENTICATED_ANONYMOUSLY" />
-		<security:intercept-url pattern="/css/**"
-			access="IS_AUTHENTICATED_ANONYMOUSLY" />
+        <security:intercept-url pattern="/wicket/resource/**/*.css"
+            access="IS_AUTHENTICATED_ANONYMOUSLY" />
+        <security:intercept-url pattern="/wicket/resource/**/*.js"
+            access="IS_AUTHENTICATED_ANONYMOUSLY" />
 		<security:intercept-url pattern="/admin/**"
 			access="ROLE_ADMIN" />
 		<security:intercept-url pattern="/**"
