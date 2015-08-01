@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -310,6 +312,41 @@ public class AgreementUtils
                 incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
     }
     
+    public static void toCSV(CSVPrinter aOut, AgreementResult aAgreement) throws IOException
+    {
+        try {
+            aOut.printComment(String.format("Category count: %d%n", aAgreement.getStudy()
+                    .getCategoryCount()));
+        }
+        catch (Throwable e) {
+            aOut.printComment(String.format("Category count: %s%n",
+                    ExceptionUtils.getRootCauseMessage(e)));
+        }
+        try {
+            aOut.printComment(String.format("Item count: %d%n", aAgreement.getStudy()
+                    .getItemCount()));
+        }
+        catch (Throwable e) {
+            aOut.printComment(String.format("Item count: %s%n",
+                    ExceptionUtils.getRootCauseMessage(e)));
+        }
+
+        aOut.printComment(String.format("Relevant position count: %d%n",
+                aAgreement.getRelevantSetCount()));
+
+//        aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
+        configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets());
+//        
+//        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
+//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
+//
+//        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
+//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
+//
+//        aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
+//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
+    }    
+    
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
     {
         try {
@@ -339,6 +376,31 @@ public class AgreementUtils
         aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
     }
+    
+    private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
+            AgreementResult aAgreement, List<ConfigurationSet> aSets)
+        throws IOException
+    {
+        aOut.printRecord("Type", "Collection", "Document", "Layer", "Feature", "Position",
+                aAgreement.getCasGroupIds().get(0), aAgreement.getCasGroupIds().get(1));
+        
+        int i = 0;
+        for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
+            Position pos = aSets.get(i).getPosition();
+            List<String> values = new ArrayList<>();
+            values.add(pos.getClass().getSimpleName());
+            values.add(pos.getCollectionId());
+            values.add(pos.getDocumentId());
+            values.add(pos.getType());
+            values.add(aAgreement.getFeature());
+            values.add(aSets.get(i).getPosition().toMinimalString());
+            for (IAnnotationUnit unit : item.getUnits()) {
+                values.add(String.valueOf(unit.getCategory()));
+            }
+            aOut.printRecord(values);
+            i++;
+        }
+    }    
     
     private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
             AgreementResult aAgreement, List<ConfigurationSet> aSets)

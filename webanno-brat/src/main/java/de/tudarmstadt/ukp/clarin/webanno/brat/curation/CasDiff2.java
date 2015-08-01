@@ -457,6 +457,11 @@ public class CasDiff2
          * @param aLinkTargetAsLabel use link target instead of role as label.
          */
         LinkCompareBehavior getLinkCompareBehavior();
+        
+        String getCollectionId();
+        String getDocumentId();
+        
+        String toMinimalString();
     }
     
     public static abstract class Position_ImplBase implements Position
@@ -473,7 +478,6 @@ public class CasDiff2
 
         private final LinkCompareBehavior linkCompareBehavior;
         
-        // These are for debugging purposes only
         private final String collectionId;
         private final String documentId;
 
@@ -532,11 +536,13 @@ public class CasDiff2
             return linkTargetEnd;
         }
         
+        @Override
         public String getCollectionId()
         {
             return collectionId;
         }
         
+        @Override
         public String getDocumentId()
         {
             return documentId;
@@ -547,7 +553,7 @@ public class CasDiff2
         {
             return linkCompareBehavior;
         }
-
+        
         @Override
         public int compareTo(Position aOther) {
             if (casId != aOther.getCasId()) {
@@ -705,6 +711,14 @@ public class CasDiff2
             builder.append(']');
             return builder.toString();
         }
+
+        @Override
+        public String toMinimalString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append(begin).append('-').append(end).append(" [").append(text).append(']');
+            return builder.toString();
+        }
     }
     
     /**
@@ -805,6 +819,17 @@ public class CasDiff2
             builder.append(", target=(").append(targetBegin).append('-').append(targetEnd).append(')');
             builder.append('[').append(targetText).append(']');
             builder.append("]");
+            return builder.toString();
+        }
+        
+        @Override
+        public String toMinimalString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("(").append(sourceBegin).append('-').append(sourceEnd).append(')');
+            builder.append('[').append(sourceText).append(']');
+            builder.append(" -> (").append(targetBegin).append('-').append(targetEnd).append(')');
+            builder.append(" [").append(targetText).append(']');
             return builder.toString();
         }
     }

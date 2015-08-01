@@ -21,11 +21,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.AttributeModifier;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -48,10 +51,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 
 public class AgreementTable
     extends Panel
 {
+    private final static Log LOG = LogFactory.getLog(AgreementTable.class);
+    
     private static final long serialVersionUID = 571396822546125376L;
     
     private RefreshingView<String> rows;
@@ -129,17 +135,52 @@ public class AgreementTable
                             AgreementResult result = AgreementTable.this.getModelObject().getStudy(
                                     aRowItem.getModelObject(), aCellItem.getModelObject());
 
+                            boolean noDataRater0 = result.isAllNull(result.getCasGroupIds().get(0));
+                            boolean noDataRater1 = result.isAllNull(result.getCasGroupIds().get(1));
+                            
                             String label;
                             if (result.getStudy().getItemCount() == 0) {
-                                label = "no data";
+                                label = "no positions";
+                            }
+                            else if (noDataRater0 && noDataRater1) {
+                                label = "no labels";
+                            }
+                            else if (noDataRater0) {
+                                label = "no labels from " + result.getCasGroupIds().get(0);
+                            }
+                            else if (noDataRater1) {
+                                label = "no labels from " + result.getCasGroupIds().get(1);
                             }
                             else {
                                 label = String.format("%.2f", result.getAgreement());
                             }
                             
+                            StringBuilder tooltipTitle = new StringBuilder();
+                            tooltipTitle.append(result.getCasGroupIds().get(0));
+                            tooltipTitle.append('/');
+                            tooltipTitle.append(result.getCasGroupIds().get(1));
+                            
+                            StringBuilder tooltipContent = new StringBuilder();
+                            tooltipContent.append("Positions annotated:\n");
+                            tooltipContent.append(String.format("- %s: %d/%d%n",
+                                    result.getCasGroupIds().get(0),
+                                    result.getNonNullCount(result.getCasGroupIds().get(0)),
+                                    result.getStudy().getItemCount()));
+                            tooltipContent.append(String.format("- %s: %d/%d%n",
+                                    result.getCasGroupIds().get(1),
+                                    result.getNonNullCount(result.getCasGroupIds().get(1)),
+                                    result.getStudy().getItemCount()));
+                            tooltipContent.append(String.format("Distinct labels used: %d%n",
+                                    result.getStudy().getCategoryCount()));
+                            
                             Label l = new Label("label", Model.of(label)); 
                             cell.add(l);
-                            l.add(makeDownloadBehavior(aRowItem.getModelObject(), aCellItem.getModelObject()));
+                            l.add(makeDownloadBehavior(aRowItem.getModelObject(),
+                                    aCellItem.getModelObject()));
+                            DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
+                                    tooltipTitle.toString(), tooltipContent.toString());
+                            tooltip.setOption("position", (Object) null);
+                            l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: pointer", ";"));
                         }
                         // Lower diagonal
@@ -150,17 +191,25 @@ public class AgreementTable
                             String label = String.format("%d/%d", result.getCompleteSetCount(),
                                     result.getRelevantSetCount());                            
 
-                            String toolTip = String.format(
-                                    "Details about annotations excluded from agreement calculation:%n" +
-                                    "- Incomplete (missing): %d%n" +
-                                    "- Incomplete (not labeled): %d%n" +                                  
-                                    "- Plurality: %d",                                  
-                                    result.getIncompleteSetsByPosition().size(),
-                                    result.getIncompleteSetsByLabel().size(),
-                                    result.getPluralitySets().size());
+                            String tooltipTitle = "Details about annotations excluded from "
+                                    + "agreement calculation";
+                            
+                            StringBuilder tooltipContent = new StringBuilder();
+                            if (result.isExcludeIncomplete()) {
+                                tooltipContent.append(String.format("- Incomplete (missing): %d%n",
+                                        result.getIncompleteSetsByPosition().size()));
+                                tooltipContent.append(String.format(
+                                        "- Incomplete (not labeled): %d%n", result
+                                                .getIncompleteSetsByLabel().size()));
+                            }
+                            tooltipContent.append(String.format("- Plurality: %d", result
+                                    .getPluralitySets().size()));
                             
                             Label l = new Label("label", Model.of(label)); 
-                            l.add(new AttributeModifier("title", toolTip));
+                            DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
+                                    tooltipTitle.toString(), tooltipContent.toString());
+                            tooltip.setOption("position", (Object) null);
+                            l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: help", ";"));
                             cell.add(l);
                         }
@@ -202,12 +251,24 @@ public class AgreementTable
                             public InputStream getInputStream()
                                 throws ResourceStreamNotFoundException
                             {
-                                AgreementResult result = AgreementTable.this.getModelObject()
-                                        .getStudy(aKey1, aKey2);
-                                
-                                ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                                AgreementUtils.dumpAgreementStudy(new PrintStream(buf), result);
-                                return new ByteArrayInputStream(buf.toByteArray());
+                                try {
+                                    AgreementResult result = AgreementTable.this.getModelObject()
+                                            .getStudy(aKey1, aKey2);
+                                    
+                                    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+//                                  AgreementUtils.dumpAgreementStudy(new PrintStream(buf), result);
+                                    try (CSVPrinter printer = new CSVPrinter(
+                                            new OutputStreamWriter(buf, "UTF-8"), CSVFormat.RFC4180)) {
+                                        AgreementUtils.toCSV(printer, result);
+                                    }
+                                    
+                                    return new ByteArrayInputStream(buf.toByteArray());
+                                }
+                                catch (Exception e) {
+                                    // FIXME Is there some better error handling here?
+                                    LOG.error("Unable to generate agreement report", e);
+                                    throw new ResourceStreamNotFoundException(e);
+                                }
                             }
 
                             @Override
@@ -220,7 +281,7 @@ public class AgreementTable
                     }
                 };
                 getComponent().add(download);
-                download.initiate(aTarget, "agreement.txt");
+                download.initiate(aTarget, "agreement.csv");
             }
         };      
     }
