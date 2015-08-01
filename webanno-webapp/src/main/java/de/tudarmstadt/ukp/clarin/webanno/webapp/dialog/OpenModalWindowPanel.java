@@ -180,7 +180,8 @@ public class OpenModalWindowPanel
                     selectedProject = getModelObject().projectSelection;
                     // Remove selected document from other project
                     selectedDocument = null;
-                    aTarget.add(documentSelection.setOutputMarkupId(true));
+                    documentSelection.setModelObject(selectedDocument);
+                    aTarget.add(documentSelection);
                 }
             }).add(new AjaxEventBehavior("ondblclick")
             {
