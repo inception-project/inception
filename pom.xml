@@ -222,6 +222,11 @@
                 <version>${wicketstuff.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.github.rjeschke</groupId>
+                <artifactId>txtmark</artifactId>
+                <version>0.13</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging-api</artifactId>
                 <version>1.1</version>

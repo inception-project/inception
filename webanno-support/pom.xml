@@ -29,6 +29,10 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-model</artifactId>
@@ -59,8 +63,16 @@
 			<groupId>org.apache.wicket</groupId>
 			<artifactId>wicket-util</artifactId>
 		</dependency>
-		
-		<!-- Hibernate dependencies -->
+        <dependency>
+            <groupId>com.googlecode.wicket-jquery-ui</groupId>
+            <artifactId>wicket-jquery-ui</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.github.rjeschke</groupId>
+          <artifactId>txtmark</artifactId>
+        </dependency>
+
+        <!-- Hibernate dependencies -->
 		
 		<dependency>
 			<groupId>org.hibernate</groupId>

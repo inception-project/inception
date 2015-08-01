@@ -78,12 +78,10 @@ import org.codehaus.plexus.util.StringUtils;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.CustomTooltipBehavior;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -106,6 +104,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -1046,7 +1045,7 @@ public class AnnotationDetailEditorPanel
                 Component labelComponent = frag.getLabelComponent();
                 labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                 labelComponent.add(new DescriptionTooltipBehavior(fm.feature.getUiName(),
-                        fm.feature.getDescription(), AnnotationDetailEditorPanel.this));
+                        fm.feature.getDescription()));
                 
             }
             else {
@@ -1253,10 +1252,12 @@ public class AnnotationDetailEditorPanel
                         }
                 };
                 field.setOutputMarkupId(true);
-                Options options = new Options(makeTooltipOptions());
+                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", "function() { return "
-                        + "'<h4>'+($(this).text() ? $(this).text() : 'no title')+'</h4>"
-                        + "<p>'+($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</p>' }");
+                        + "'<div class=\"tooltip-title\">'+($(this).text() "
+                        + "? $(this).text() : 'no title')+'</div>"
+                        + "<div class=\"tooltip-content\">'+($(this).attr('title') "
+                        + "? $(this).attr('title') : 'no description' )+'</div>' }");
                 field.add(new TooltipBehavior(options));
                 isDrop = true;
             }
@@ -1875,48 +1876,5 @@ public class AnnotationDetailEditorPanel
             msg += " Label: [" + aLabel + "]";
         }
         return msg;
-    }
-    
-    private static Options makeTooltipOptions()
-    {
-        Options options = new Options();
-        options.set("position", "{ my: 'center bottom', at: 'center top', of: '.pagefooter' }");
-        return options;
-    }
-
-    
-    private static class DescriptionTooltipBehavior extends CustomTooltipBehavior
-    {
-        private static final long serialVersionUID = 1L;
-
-        private final String title;
-        private final String description;
-        private final MarkupContainer markupProvider;
-
-        public DescriptionTooltipBehavior(String aTitle, String aDescription,
-                MarkupContainer aMarkupProvider)
-        {
-            super(makeTooltipOptions());
-            title = aTitle;
-            if (StringUtils.isBlank(aDescription)) {
-                description = "no description";
-            }
-            else {
-                description = aDescription;
-            }
-            markupProvider = aMarkupProvider;
-        }
-      
-        @Override
-        protected WebMarkupContainer newContent(String markupId)
-        {
-            Fragment fragment = new Fragment(markupId, "description-tooltip-fragment",
-                    markupProvider);
-            fragment.add(new Label("title", Model.of(this.title)));
-            
-            Label descriptionLabel = new Label("description", Model.of(description));
-            fragment.add(descriptionLabel);
-            return fragment;
-        }
     }
  }
