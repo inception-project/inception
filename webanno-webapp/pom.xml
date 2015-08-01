@@ -473,7 +473,6 @@
 										<exclude>src/main/java/**/type/**/*</exclude>
 										<!-- otherwise license files mentioned in NOTICE.txt -->
 										<exclude>src/main/webapp/js/css_browser_selector.js</exclude>
-										<exclude>src/main/webapp/static/style.css</exclude>
 									</excludes>
 								</configuration>
 							</execution>

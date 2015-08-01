@@ -31,6 +31,7 @@ import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
@@ -47,6 +48,9 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.security.LogoutPanel;
@@ -201,6 +205,32 @@ public abstract class ApplicationPageBase
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
+
+        // We also load the JQuery CSS always just to get a consistent look across the app
+        JQueryUILibrarySettings jqueryCfg = JQueryUILibrarySettings.get();
+
+        if (jqueryCfg.getStyleSheetReference() != null) {
+            aResponse.render(CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
+        }
+
+        // We use Kendo TextFields, but they do not automatically load the Kendo JS/CSS, so
+        // we do it manually here and for all the pages.
+        KendoUILibrarySettings kendoCfg = KendoUILibrarySettings.get();
+
+        if (kendoCfg.getCommonStyleSheetReference() != null) {
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getCommonStyleSheetReference()));
+        }
+
+        if (kendoCfg.getThemeStyleSheetReference() != null) {
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getThemeStyleSheetReference()));
+        }
+
+        if (kendoCfg.getJavaScriptReference() != null) {
+            aResponse.render(JavaScriptHeaderItem.forReference(kendoCfg.getJavaScriptReference()));
+        }
+
+        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
+        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
     }
 }

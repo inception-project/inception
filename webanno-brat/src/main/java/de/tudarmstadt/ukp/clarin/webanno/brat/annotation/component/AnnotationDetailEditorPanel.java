@@ -56,9 +56,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -86,7 +83,6 @@ import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
-import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -158,31 +154,6 @@ public class AnnotationDetailEditorPanel
         add(annotationFeatureForm);
     }
 
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-        
-        // We use Kendo TextFields here, but they do not automatically load the Kendo JS/CSS, so
-        // we do it manually here.
-        KendoUILibrarySettings settings = KendoUILibrarySettings.get();
-
-        if (settings.getCommonStyleSheetReference() != null)
-        {
-            aResponse.render(CssHeaderItem.forReference(settings.getCommonStyleSheetReference()));
-        }
-
-        if (settings.getThemeStyleSheetReference() != null)
-        {
-            aResponse.render(CssHeaderItem.forReference(settings.getThemeStyleSheetReference()));
-        }
-        
-        if (settings.getJavaScriptReference() != null)
-        {
-            aResponse.render(JavaScriptHeaderItem.forReference(settings.getJavaScriptReference()));
-        }
-    }
-    
     private class AnnotationFeatureForm
         extends Form<BratAnnotatorModel>
     {
