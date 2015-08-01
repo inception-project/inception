@@ -157,6 +157,21 @@ public class AgreementUtils
         return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, aCasMap);
     }
     
+    private static JCas findSomeCas(Map<String, List<JCas>> aCasMap)
+    {
+        for (List<JCas> l : aCasMap.values()) {
+            if (l != null) {
+                for (JCas jcas : l) {
+                    if (jcas != null) {
+                        return jcas;
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
     private static AgreementResult makeStudy(DiffResult aDiff, Collection<String> aUsers,
             String aType, String aFeature, boolean aExcludeIncomplete,
             Map<String, List<JCas>> aCasMap)
@@ -175,7 +190,29 @@ public class AgreementUtils
         // Check if the feature we are looking at is a primitive feature or a link feature
         // We do this by looking it up in the first available CAS. Mind that at this point all
         // CASes should have exactly the same typesystem.
-        TypeSystem ts = aCasMap.values().iterator().next().get(0).getTypeSystem();
+        JCas someCas = findSomeCas(aCasMap);
+        if (someCas == null) {
+            // Well... there is NOTHING here!
+            return new AgreementResult(aType, aFeature, aDiff, study, users, completeSets,
+                    irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
+                    incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
+        }
+        TypeSystem ts = someCas.getTypeSystem();
+        
+        // This happens in our testcases when we feed the process with uninitialized CASes.
+        // We should just do the right thing here which is: do nothing
+        if (ts.getType(aType) == null) {
+            return new AgreementResult(aType, aFeature, aDiff, study, users, completeSets,
+                    irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
+                    incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
+        }
+        
+        // Check that the feature really exists instead of just getting a NPE later
+        if (ts.getType(aType).getFeatureByBaseName(aFeature) == null) {
+            throw new IllegalArgumentException("Type [" + aType + "] has no feature called ["
+                    + aFeature + "]");
+        }
+
         boolean isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive();
         

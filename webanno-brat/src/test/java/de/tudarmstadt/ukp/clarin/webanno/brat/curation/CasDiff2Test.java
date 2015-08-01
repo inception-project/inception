@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
@@ -119,9 +120,9 @@ public class CasDiff2Test
         casByUser.put("user1", asList(user1Cas));
         casByUser.put("user2", asList(user2Cas));
 
-        List<String> entryTypes = asList(Token.class.getName());
+        List<String> entryTypes = asList(Lemma.class.getName());
 
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
+        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
@@ -133,7 +134,7 @@ public class CasDiff2Test
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "PosValue", casByUser);
+                "value", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -168,9 +169,9 @@ public class CasDiff2Test
         casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
         casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
 
-        List<String> entryTypes = asList(Token.class.getName());
+        List<String> entryTypes = asList(Lemma.class.getName());
 
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
+        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
@@ -182,7 +183,7 @@ public class CasDiff2Test
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "PosValue", casByUser);
+                "value", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
