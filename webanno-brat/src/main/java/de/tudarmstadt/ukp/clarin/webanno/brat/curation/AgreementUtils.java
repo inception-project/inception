@@ -32,6 +32,7 @@ import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
@@ -158,32 +159,65 @@ public class AgreementUtils
             String aType, String aFeature, boolean aExcludeIncomplete,
             Map<String, List<JCas>> aCasMap)
     {
+        List<String> users = new ArrayList<>(aUsers);
+        Collections.sort(users);
+        
         List<ConfigurationSet> completeSets = new ArrayList<>();
         List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByLabel = new ArrayList<>();
         List<ConfigurationSet> pluralitySets = new ArrayList<>();
         List<ConfigurationSet> irrelevantSets = new ArrayList<>();
-        CodingAnnotationStudy study = new CodingAnnotationStudy(aUsers.size());
+        CodingAnnotationStudy study = new CodingAnnotationStudy(users.size());
+        
+        // Check if the feature we are looking at is a primitive feature or a link feature
+        // We do this by looking it up in the first available CAS. Mind that at this point all
+        // CASes should have exactly the same typesystem.
+        TypeSystem ts = aCasMap.values().iterator().next().get(0).getTypeSystem();
+        boolean isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
+                .isPrimitive();
+        
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
 
-            // Only calculate agreement for the given type
+            // Only calculate agreement for the given layer
             if (!cfgSet.getPosition().getType().equals(aType)) {
+                // We don't even consider these as irrelevant, they are just filtered out
+                continue;
+            }
+
+            // If the feature on a position is set, then it is a subposition
+            boolean isSubPosition = p.getFeature() != null;
+
+            // Check if this position is irrelevant:
+            // - if we are looking for a primitive type and encounter a subposition
+            // - if we are looking for a non-primitive type and encounter a primary position
+            // this is an inverted XOR!
+            if (!(isPrimitiveFeature ^ isSubPosition)) {
+                irrelevantSets.add(cfgSet);
                 continue;
             }
             
-            Object[] values = new Object[aUsers.size()];
+            // Check if subposition is for the feature we are looking for or for a different 
+            // feature
+            if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
+                irrelevantSets.add(cfgSet);
+                continue nextPosition;
+            }
+            
+            Object[] values = new Object[users.size()];
             int i = 0;
-            for (String user : aUsers) {
+            for (String user : users) {
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
                     if (aExcludeIncomplete) {
+                        // Record as incomplete
                         incompleteSetsByPosition.add(cfgSet);
                         continue nextPosition;
                     }
                     else {
+                        // Record as missing value
                         values[i] = null;
                         i++;
                         continue;
@@ -204,15 +238,19 @@ public class AgreementUtils
                 // Only calculate agreement for the given feature
                 FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);
 
-                boolean isSubPosition = cfg.getPosition().getFeature() != null;
-                boolean isPrimitive = fs.getType().getFeatureByBaseName(aFeature).getRange()
-                        .isPrimitive();
+                // BEGIN PARANOIA
+                assert fs.getType().getFeatureByBaseName(aFeature).getRange()
+                        .isPrimitive() == isPrimitiveFeature;
+                // primitive implies not subposition - if this is primitive and subposition, we
+                // should never have gotten here in the first place.
+                assert !isPrimitiveFeature || !isSubPosition; 
+                // END PARANOIA
                 
-                if (isPrimitive && !isSubPosition) {
+                if (isPrimitiveFeature && !isSubPosition) {
                     // Primitive feature / primary position
                     values[i] = getFeature(fs, aFeature);
                 }
-                else if (!isPrimitive && isSubPosition && cfg.getPosition().getFeature().equals(aFeature)) {
+                else if (!isPrimitiveFeature && isSubPosition) {
                     // Link feature / sub-position
                     ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType().getFeatureByBaseName(
                             aFeature));
@@ -224,7 +262,8 @@ public class AgreementUtils
                         AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
                                 .getFeatureByBaseName("target"));
                         
-                        values[i] = target.getBegin() + "-" + target.getEnd();
+                        values[i] = target.getBegin() + "-" + target.getEnd() + " ["
+                                + target.getCoveredText() + "]";
                         break;
                     case LINK_ROLE_AS_LABEL:
                         // FIXME The role feature name should be obtained from the feature definition!
@@ -239,11 +278,9 @@ public class AgreementUtils
                     }
                 }
                 else {
-                    // If we get here, then this position has nothing relevant to our feature to
-                    // be evaluated for agreement. We can skip it directly without recording it
-                    // as incomplete
-                    irrelevantSets.add(cfgSet);
-                    continue nextPosition;
+                    throw new IllegalStateException("Should never get here: primitive: "
+                            + fs.getType().getFeatureByBaseName(aFeature).getRange()
+                                    .isPrimitive() + "; subpos: " + isSubPosition);
                 }
 
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
@@ -259,13 +296,18 @@ public class AgreementUtils
                 setsWithDifferences.add(cfgSet);
             }
             
+            // If the position feature is set (subposition), then it must match the feature we
+            // are calculating agreement over
+            assert !(cfgSet.getPosition().getFeature() != null)
+                    || cfgSet.getPosition().getFeature().equals(aFeature);
+            
             completeSets.add(cfgSet);
             study.addItemAsArray(values);
         }
         
-        return new AgreementResult(aType, aFeature, aDiff, study, completeSets, irrelevantSets,
-                setsWithDifferences, incompleteSetsByPosition, incompleteSetsByLabel,
-                pluralitySets);
+        return new AgreementResult(aType, aFeature, aDiff, study, users, completeSets,
+                irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
+                incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
     }
     
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
@@ -372,6 +414,8 @@ public class AgreementUtils
         private final List<ConfigurationSet> incompleteSetsByLabel;
         private final List<ConfigurationSet> pluralitySets;
         private double agreement;
+        private List<String> casGroupIds;
+        private final boolean excludeIncomplete;
 
         public AgreementResult(String aType, String aFeature)
         {
@@ -385,15 +429,18 @@ public class AgreementUtils
             incompleteSetsByPosition = null;
             incompleteSetsByLabel = null;
             pluralitySets = null;
+            excludeIncomplete = false;
         }
 
         public AgreementResult(String aType, String aFeature, DiffResult aDiff,
-                ICodingAnnotationStudy aStudy, List<ConfigurationSet> aComplete,
+                ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
+                List<ConfigurationSet> aComplete,
                 List<ConfigurationSet> aIrrelevantSets,
                 List<ConfigurationSet> aSetsWithDifferences,
                 List<ConfigurationSet> aIncompleteByPosition,
                 List<ConfigurationSet> aIncompleteByLabel,
-                List<ConfigurationSet> aPluralitySets)
+                List<ConfigurationSet> aPluralitySets,
+                boolean aExcludeIncomplete)
         {
             type = aType;
             feature = aFeature;
@@ -408,8 +455,36 @@ public class AgreementUtils
                     .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
             pluralitySets = Collections
                     .unmodifiableList(new ArrayList<>(aPluralitySets));
+            casGroupIds = Collections.unmodifiableList(new ArrayList<String>(aCasGroupIds));
+            excludeIncomplete = aExcludeIncomplete;
         }
         
+        public List<String> getCasGroupIds()
+        {
+            return casGroupIds;
+        }
+        
+        public boolean isAllNull(String aCasGroupId)
+        {
+            for (ICodingAnnotationItem item : study.getItems()) {
+                if (item.getUnit(casGroupIds.indexOf(aCasGroupId)).getCategory() != null) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        public int getNonNullCount(String aCasGroupId)
+        {
+            int i = 0;
+            for (ICodingAnnotationItem item : study.getItems()) {
+                if (item.getUnit(casGroupIds.indexOf(aCasGroupId)).getCategory() != null) {
+                    i++;
+                }
+            }
+            return i;
+        }
+
         private void setAgreement(double aAgreement)
         {
             agreement = aAgreement;
@@ -503,6 +578,11 @@ public class AgreementUtils
         public String getFeature()
         {
             return feature;
+        }
+        
+        public boolean isExcludeIncomplete()
+        {
+            return excludeIncomplete;
         }
 
         @Override
