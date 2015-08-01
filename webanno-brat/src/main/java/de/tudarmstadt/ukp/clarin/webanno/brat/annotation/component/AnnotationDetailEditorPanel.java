@@ -1238,6 +1238,9 @@ public class AnnotationDetailEditorPanel
                                 @Override
                                 public String getText()
                                 {
+                                    // Some docs on how the templates work in Kendo, in case we need
+                                    // more fancy dropdowns
+                                    // http://docs.telerik.com/kendo-ui/framework/templates/overview
                                     StringBuilder sb = new StringBuilder();
                                     sb.append("<div title=\"${ data.description }\">${ data.name }</div>\n");
                                     return sb.toString();
@@ -1252,6 +1255,8 @@ public class AnnotationDetailEditorPanel
                         }
                 };
                 field.setOutputMarkupId(true);
+                // Docs for the JQuery tooltip widget that we configure below:
+                // https://api.jqueryui.com/tooltip/
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", "function() { return "
                         + "'<div class=\"tooltip-title\">'+($(this).text() "
