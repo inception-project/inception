@@ -425,29 +425,30 @@ public class CurationPanel
                 item.add(click);
 
                 String cC = curationViewItem.getSentenceState().getValue();
-                // mark current sentence in yellow
+                // mark current sentence in orange if disagree
                 if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
                     if (cC != null) {
                         item.add(AttributeModifier.append("class", "current-disagree"));
                     }
                 }
                 else if (cC != null) {
-                    item.add(AttributeModifier.append("class", "disagree"));
+                    // disagree in range
+                    if (curationViewItem.getSentenceNumber() >= fSn
+                            && curationViewItem.getSentenceNumber() <= lSn) {
+                        item.add(AttributeModifier.append("class", "range-disagree"));
+                    }
+                    else{
+                        item.add(AttributeModifier.append("class", "disagree"));
+                    }
                 }
-
-                try {
-                    getBColor(item, curationViewItem, fSn, lSn, cC);
+                // agree and in range
+                else if (curationViewItem.getSentenceNumber() >= fSn
+                        && curationViewItem.getSentenceNumber() <= lSn) {
+                    item.add(AttributeModifier.append("class", "range-agree"));
                 }
-                catch (UIMAException e) {
-                    error(e.getMessage());
+                else{
+                    item.add(AttributeModifier.append("class", "agree"));
                 }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
@@ -456,16 +457,6 @@ public class CurationPanel
         // add subcomponents to the component
         sentenceList.setOutputMarkupId(true);
         sentencesListView.add(sentenceList);
-    }
-
-    private void getBColor(ListItem<SourceListView> aItem, SourceListView aCurationViewItem,
-            int aFSn, int aLSn, String aCC)
-        throws UIMAException, ClassNotFoundException, IOException
-    {
-        if (aCurationViewItem.getSentenceNumber() >= aFSn
-                && aCurationViewItem.getSentenceNumber() <= aLSn) {
-            aItem.add(AttributeModifier.append("class", "range"));
-        }
     }
 
     private void updateCurationView(final CurationContainer curationContainer,
