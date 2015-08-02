@@ -897,12 +897,8 @@ public class AnnotationDetailEditorPanel
         String featName = aFeature.getName();
 
         if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
-            if (aBModel.getSelection().isRelationAnno()) {
-                return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName);
-            }
-            else {
-                return WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
-            }
+            return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName)
+                    || WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
         }
 
         return false;
