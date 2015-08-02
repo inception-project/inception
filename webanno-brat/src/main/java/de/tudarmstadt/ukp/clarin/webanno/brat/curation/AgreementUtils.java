@@ -54,6 +54,23 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFun
 
 public class AgreementUtils
 {
+    public static enum AgreementReportExportFormat {
+        CSV(".csv"),
+        DEBUG(".txt");
+        
+        private final String extension;
+        
+        private AgreementReportExportFormat(String aExtension)
+        {
+            extension = aExtension;
+        }
+
+        public String getExtension()
+        {
+            return extension;
+        }
+    }
+    
     public static enum ConcreteAgreementMeasure {
         COHEN_KAPPA_AGREEMENT(false),
         FLEISS_KAPPA_AGREEMENT(false),
