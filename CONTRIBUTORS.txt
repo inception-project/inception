@@ -9,7 +9,7 @@
 
 # Please keep the list sorted.
     
-Aakash Sharma
+Aakash Sharma <aakash.y.sharma@gmail.com>
 Andreas Straninger
 Benjamin Milde
 Darina Benikova
