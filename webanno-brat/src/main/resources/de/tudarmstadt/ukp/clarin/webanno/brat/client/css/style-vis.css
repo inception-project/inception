@@ -335,16 +335,22 @@ WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
 #span_free_div, #arc_free_div {
   float: left;
 }
+
+/* BEGIN WEBANNO #67 Fieldset border color changes on annotation page when brat stuff is loaded */
+/*
 fieldset {
-  /* match relevant parts of jQuery UI .ui-widget-content */
+  / match relevant parts of jQuery UI .ui-widget-content /
   border: 1px solid #a6c9e2;
-  /* round corners, same as jQuery UI .ui-corner-all */
+  / round corners, same as jQuery UI .ui-corner-all /
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
-  /* to prevent border from running into legend */
+  / to prevent border from running into legend /
   margin-top: 5px;
 }
+*/
+/* END WEBANNO #67 Fieldset border color changes on annotation page when brat stuff is loaded */
+
 /*
 fieldset legend {
   font-weight: bold;
