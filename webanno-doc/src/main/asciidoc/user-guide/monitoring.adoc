@@ -40,24 +40,24 @@ The percentual progress out of the workload for individual annotators may be vie
 
 The following table will explain the different symbols, which explain the status of a document for a user and the described task.
 
-[cols="2*", options="header"]
+[cols="1^,2", options="header"]
 |===
 | Symbol
 | Meaning
 
-| image:icon_new.png[align="center"]
+| image:icon_new.png[]
 | Annotation has not started yet
 
-| image:icon_locked.png[align="center"]
+| image:icon_locked.png[]
 | Document not available to user
 
-| image:icon_annotation_in_progress.png[align="center"]
+| image:icon_annotation_in_progress.png[]
 | Annotation is in progress
 
-| image:icon_done.png[align="center"]
+| image:icon_done.png[]
 | Annotation is complete
 
-| image:icon_curation_in_progress.png[align="center"]
+| image:icon_curation_in_progress.png[]
 | Curation is in progress
 |===
 

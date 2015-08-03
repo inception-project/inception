@@ -102,18 +102,30 @@
 												</label></td>
 												<td><select wicket:id="linkCompareBehavior"></select></td>
 											</tr>
+                                            <tr class="labels-left">
+                                                <td><label wicket:for="exportFormat"> <wicket:label
+                                                            key="exportFormat.label" />:
+                                                </label></td>
+                                                <td><select wicket:id="exportFormat"></select></td>
+                                            </tr>
+											<tr>
+												<td colspan="2">
+													<p>
+														<b>Legend:</b>
+													</p>
+													<ul>
+														<li>Lower triangle: Positions included in agreement /
+															total number of positions</li>
+														<li>Upper triangle: Agreement score - click on cell
+															to export agreement report</li>
+													</ul>
+
+												</td>
+											</tr>
 										</table>
 								    </td>
 									<td width="80%">
 										<table wicket:id="agreementTable" class="hfill"></table>
-										<p>
-											<b>Legend:</b>
-										</p>
-										<ul>
-											<li>Lower triangle: Positions included in agreement /
-												total number of positions</li>
-											<li>Upper triangle: Agreement score</li>
-										</ul>
 									</td>
 								</tr>
 							</table>

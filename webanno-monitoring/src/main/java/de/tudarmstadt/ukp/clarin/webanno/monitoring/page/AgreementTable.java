@@ -22,6 +22,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,8 +49,9 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage.AgreementFormModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -62,15 +65,20 @@ public class AgreementTable
     
     private RefreshingView<String> rows;
 
+    private IModel<AgreementFormModel> settings;
+    
     public AgreementTable(String aId)
     {
         super(aId);
     }
 
-    public AgreementTable(String aId, IModel<PairwiseAnnotationResult> aModel)
+    public AgreementTable(String aId, IModel<AgreementFormModel> aSettings,
+            IModel<PairwiseAnnotationResult> aModel)
     {
         super(aId, aModel);
 
+        settings = aSettings;
+        
         setOutputMarkupId(true);
         
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
@@ -255,14 +263,15 @@ public class AgreementTable
                                     AgreementResult result = AgreementTable.this.getModelObject()
                                             .getStudy(aKey1, aKey2);
                                     
-                                    ByteArrayOutputStream buf = new ByteArrayOutputStream();
-//                                  AgreementUtils.dumpAgreementStudy(new PrintStream(buf), result);
-                                    try (CSVPrinter printer = new CSVPrinter(
-                                            new OutputStreamWriter(buf, "UTF-8"), CSVFormat.RFC4180)) {
-                                        AgreementUtils.toCSV(printer, result);
+                                    switch (settings.getObject().exportFormat) {
+                                    case CSV:
+                                        return generateCsvReport(result);
+                                    case DEBUG:
+                                        return generateDebugReport(result);
+                                    default:
+                                        throw new IllegalStateException("Unknown export format ["
+                                                + settings.getObject().exportFormat + "]");
                                     }
-                                    
-                                    return new ByteArrayInputStream(buf.toByteArray());
                                 }
                                 catch (Exception e) {
                                     // FIXME Is there some better error handling here?
@@ -281,9 +290,29 @@ public class AgreementTable
                     }
                 };
                 getComponent().add(download);
-                download.initiate(aTarget, "agreement.csv");
+                download.initiate(aTarget,
+                        "agreement" + settings.getObject().exportFormat.getExtension());
             }
         };      
+    }
+
+    private InputStream generateCsvReport(AgreementResult aResult)
+        throws UnsupportedEncodingException, IOException
+    {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
+                CSVFormat.RFC4180)) {
+            AgreementUtils.toCSV(printer, aResult);
+        }
+
+        return new ByteArrayInputStream(buf.toByteArray());
+    }
+    
+    private InputStream generateDebugReport(AgreementResult aResult)
+    {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        AgreementUtils.dumpAgreementStudy(new PrintStream(buf), aResult);
+        return new ByteArrayInputStream(buf.toByteArray());
     }
     
     @Override

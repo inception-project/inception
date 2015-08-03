@@ -49,6 +49,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -96,6 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
@@ -606,6 +608,8 @@ public class MonitoringPage
         
         private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
 
+        private DropDownChoice<AgreementReportExportFormat> exportFormat;
+
         private CheckBox excludeIncomplete;
         
         public AgreementForm(String id)
@@ -624,6 +628,20 @@ public class MonitoringPage
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
                     new EnumChoiceRenderer<LinkCompareBehavior>(MonitoringPage.this)));
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
+
+            add(exportFormat = new DropDownChoice<AgreementReportExportFormat>(
+                    "exportFormat", asList(AgreementReportExportFormat.values()),
+                    new EnumChoiceRenderer<AgreementReportExportFormat>(MonitoringPage.this)));
+            exportFormat.add(new OnChangeAjaxBehavior() {
+                private static final long serialVersionUID = -1L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    // Actually nothing to do, we just want the Ajax behavior to update the model
+                    // object.
+                }
+            });
             
             add(excludeIncomplete = new CheckBox("excludeIncomplete") {
                 private static final long serialVersionUID = 1L;
@@ -687,6 +705,7 @@ public class MonitoringPage
             addUpdateAgreementTableBehavior(featureList);
             
             add(agreementTable2 = new AgreementTable("agreementTable", 
+                    getModel(),
                     new LoadableDetachableModel<PairwiseAnnotationResult>()
             {
                 private static final long serialVersionUID = 1L;
@@ -762,6 +781,8 @@ public class MonitoringPage
         private boolean savedExcludeIncomplete = excludeIncomplete;
         private boolean savedNullSupported = measure.isNullValueSupported();
 
+        public AgreementReportExportFormat exportFormat = AgreementReportExportFormat.CSV;
+                    
         public void setMeasure(ConcreteAgreementMeasure aMeasure)
         {
             measure = aMeasure;
@@ -1219,7 +1240,10 @@ public class MonitoringPage
 //                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
 //                }
 //                else {
-                    aCellItem.add(new EmbeddableImage(componentId, ICONS.get(state)));
+                
+                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                    aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")
@@ -1312,7 +1336,9 @@ public class MonitoringPage
 //                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
 //                }
 //                else {
-                    aCellItem.add(new EmbeddableImage(componentId, ICONS.get(state)));
+                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                    aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("onclick")

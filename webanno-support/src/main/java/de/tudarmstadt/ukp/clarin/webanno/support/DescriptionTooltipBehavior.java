@@ -87,7 +87,7 @@ public class DescriptionTooltipBehavior
     @Override
     protected String escape(String content)
     {
-        return content.replace("\t", "").replace("\n", "\\n").replace("\"", "'");
+        return content.replace("\t", "").replace("\n", "\\n").replace("\r", "").replace("\"", "'");
     }
     
     private static class DescriptionTooltipPanel extends Panel
@@ -110,6 +110,7 @@ public class DescriptionTooltipBehavior
                 Label label = new Label("description");
                 label.add(new AttributeAppender("class", "tooltip-pre", " "));
                 add(label);
+                break;
             }
             }
         }
