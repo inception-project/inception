@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 /**
  * Source document information to be exported/imported
  *
- * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })

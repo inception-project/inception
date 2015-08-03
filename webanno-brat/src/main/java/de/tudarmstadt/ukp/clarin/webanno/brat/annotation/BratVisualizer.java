@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
  * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()}
  * and {@code #getDocumentData()} to provide the actual data.
  *
- * @author Richard Eckart de Castilho
  */
 public abstract class BratVisualizer
 	extends Panel

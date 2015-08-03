@@ -24,7 +24,6 @@ import java.io.Serializable;
  * A class consisting of property field to store help contents for different buttons in
  * {@link ProjectPage}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class HelpDataModel

@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepth
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 /**
  * Visitor for Condition
- * @author aakash
  *
  */
 public class ConditionVisitor

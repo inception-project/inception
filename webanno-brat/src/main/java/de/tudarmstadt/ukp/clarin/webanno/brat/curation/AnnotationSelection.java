@@ -25,7 +25,6 @@ import java.util.Map;
  * This class comprises usernames, which agree on a specific annotation (same annotation type, same
  * annotation value, same position).
  *
- * @author Andreas Straninger
  */
 public class AnnotationSelection
     implements Serializable

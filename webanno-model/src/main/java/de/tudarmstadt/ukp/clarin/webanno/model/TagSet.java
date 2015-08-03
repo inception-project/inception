@@ -32,7 +32,6 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.ForeignKey;
 /**
  * A persistence object for a TagSet
- * @author Seid Muhie Yimam
  *
  */
 @Entity

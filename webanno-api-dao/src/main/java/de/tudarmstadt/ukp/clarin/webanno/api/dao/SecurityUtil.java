@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * This class contains Utility methods that can be used in Project settings
  *
- * @author Seid Muhie Yimam
  *
  */
 public class SecurityUtil

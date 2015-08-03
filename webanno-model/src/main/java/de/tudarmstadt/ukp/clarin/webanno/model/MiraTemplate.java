@@ -34,7 +34,6 @@ import javax.persistence.UniqueConstraint;
 /**
  * A persistence object for MIRA template configurations
  *
- * @author Seid Muhie Yimam
  *
  */
 @Entity

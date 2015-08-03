@@ -17,6 +17,5 @@
  ******************************************************************************/
 /**
  * Utility classes for WebAnno Automation componet
- * @author Seid Muhie Yimam
   */
 package de.tudarmstadt.ukp.clarin.webanno.automation.util;

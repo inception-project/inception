@@ -25,7 +25,6 @@ import org.apache.wicket.request.resource.ResourceReference;
 /**
  * A {@link Panel} to display embeddable immages inside a table.
  *
- * @author yimam
  *
  */
 public class EmbeddableImage

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 /**
  * Constants for annotation types
- * @author Seid Muhie Yimam
  *
  */
 public class WebAnnoConst

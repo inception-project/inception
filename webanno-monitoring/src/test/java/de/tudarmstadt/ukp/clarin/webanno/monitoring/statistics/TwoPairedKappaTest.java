@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
  * Unit Test for Kappa Agreement. The example reads two TSV files with POS and DEP annotations for
  * two users and check the disagreement
  *
- * @author yimam
  */
 public class TwoPairedKappaTest
 {

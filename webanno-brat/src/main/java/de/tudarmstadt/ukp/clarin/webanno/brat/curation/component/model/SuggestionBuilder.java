@@ -76,8 +76,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
  * are displayed at a specific page.
  *
- * @author Andreas Straninger
- * @author Seid Muhie Yimam
  */
 public class SuggestionBuilder
 {

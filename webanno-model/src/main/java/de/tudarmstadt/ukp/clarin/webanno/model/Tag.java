@@ -29,7 +29,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 /**
  * A persistence object for a Tag
- * @author Seid Muhie Yimam
  *
  */
 @Entity

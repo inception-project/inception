@@ -67,8 +67,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A class that is used to create Brat Span to CAS and vice-versa
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  */
 public class SpanAdapter
     implements TypeAdapter, AutomationTypeAdapter

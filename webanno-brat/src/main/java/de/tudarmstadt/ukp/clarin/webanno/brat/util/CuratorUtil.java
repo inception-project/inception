@@ -81,7 +81,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A utility class for the curation AND Correction modules
  *
- * @author Seid Muhie Yimam
  */
 public class CuratorUtil
 {

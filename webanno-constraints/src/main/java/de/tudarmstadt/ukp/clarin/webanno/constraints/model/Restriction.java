@@ -22,7 +22,6 @@ import java.io.Serializable;
 /**
  * Class containing object representation of Restriction of a rule.
  * 
- * @author aakash
  *
  */
 public class Restriction

@@ -83,7 +83,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
  * the automated annotations
  *
- * @author Seid Muhie Yimam
  *
  */
 public class SuggestionViewPanel

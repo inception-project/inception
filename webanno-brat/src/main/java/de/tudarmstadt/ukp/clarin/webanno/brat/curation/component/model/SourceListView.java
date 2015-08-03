@@ -24,8 +24,6 @@ import java.util.Map;
 /**
  * A model comprises of Curation Segments comprising of the begin and end of the sentences, {@link SentenceState}
  *  Sentence number
- * @author  Andreas Straninger
- * @author  Seid Muhie Yimam
  *
  */
 public class SourceListView

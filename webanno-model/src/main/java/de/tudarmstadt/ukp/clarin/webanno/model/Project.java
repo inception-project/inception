@@ -32,7 +32,6 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for a Project.
  *
- * @author Seid Muhie Yimam
  *
  */
 @Entity

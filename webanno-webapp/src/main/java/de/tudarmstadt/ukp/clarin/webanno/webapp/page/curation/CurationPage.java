@@ -90,8 +90,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  *
- * @author Andreas Straninger
- * @author Seid Muhie Yimam
  */
 @MountPath("/curation.html")
 public class CurationPage

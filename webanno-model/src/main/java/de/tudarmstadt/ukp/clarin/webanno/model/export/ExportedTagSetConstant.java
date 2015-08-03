@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
 /**
  * Constants to Improt/export tagsets in the json and tabbed text format
- * @author Seid Muhie Yimam
  *
  */
 public class ExportedTagSetConstant

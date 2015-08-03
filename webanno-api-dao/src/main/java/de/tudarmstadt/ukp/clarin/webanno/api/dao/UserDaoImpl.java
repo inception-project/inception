@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * Implementation of methods defined in the {@link UserDao} interface
  *
- * @author Seid Muhie Yimam
  *
  */
 @Repository

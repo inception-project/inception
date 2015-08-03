@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * Displays a BRAT visualization and fills it with data from an BRAT object model.
  *
- * @author Richard Eckart de Castilho
  */
 public class BratModelVisualizer
 	extends BratVisualizer

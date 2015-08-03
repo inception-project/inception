@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 /**
  * Throw an exception if the arc annotation is not in the same sentence
- *  * @author Seid Muhie Yimam
  */
 public class ArcCrossedMultipleSentenceException
     extends BratAnnotationException

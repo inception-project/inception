@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * ["p_22406","KON",[[1125,1128]]] - id of POS 22406, of type KON and start offset=1125, end offset
  * = 1128
  *
- * @author Seid Muhie Yimam
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color" })

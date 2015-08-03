@@ -85,7 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter;
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  *
- * @author Seid Muhie Yimam
  */
 public class ProjectExportPanel extends Panel {
 	private static final long serialVersionUID = 2116717853865353733L;

@@ -67,8 +67,6 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
 /**
  * Writer for the WebLicht TCF format.
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  */
 @TypeCapability(inputs = { 
         "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",

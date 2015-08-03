@@ -23,7 +23,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * Represents one data row of the JSON data structure send to Crowdflower for NamedEntityTask1
- * @author Benjamin Milde
  *
  */
 public class NamedEntityTask1Data

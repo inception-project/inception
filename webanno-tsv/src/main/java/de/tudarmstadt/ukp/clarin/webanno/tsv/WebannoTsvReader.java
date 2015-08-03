@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Columns are separated by a TAB character and sentences are separated by a blank new line see the
  * {@link WebannoTsvReader#setAnnotations}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class WebannoTsvReader

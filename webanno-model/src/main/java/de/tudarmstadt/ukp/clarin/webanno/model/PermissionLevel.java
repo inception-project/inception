@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
  * {@link PermissionLevel#ADMIN} is a project administrator
  *
- * @author Seid Muhie Yimam
  *
  */
 public enum PermissionLevel

@@ -25,7 +25,6 @@ import org.apache.uima.cas.FeatureStructure;
 /**
  * Contains agreements and differences as the result of the Method CasDiff.compareFeatureFS().
  *
- * @author Andreas Straninger
  */
 public class CompareResult
 {

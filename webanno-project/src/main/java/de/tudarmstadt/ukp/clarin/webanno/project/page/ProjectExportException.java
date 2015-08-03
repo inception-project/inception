@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 /**
  * Exception thrown while exporting the whole project
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ProjectExportException    extends Exception

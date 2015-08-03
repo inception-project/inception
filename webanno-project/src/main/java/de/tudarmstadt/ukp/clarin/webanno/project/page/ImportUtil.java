@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate;
 /**
  * This class contains Utility methods that can be used in Project settings
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ImportUtil

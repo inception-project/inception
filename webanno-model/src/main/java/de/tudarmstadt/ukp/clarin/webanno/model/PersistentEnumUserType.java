@@ -29,7 +29,6 @@ import org.hibernate.usertype.UserType;
 
 /**
  * user-defined enum "types"
- * @author Seid Muhie Yimam
  *
  */
 public abstract class PersistentEnumUserType<T extends PersistentEnum> implements UserType {

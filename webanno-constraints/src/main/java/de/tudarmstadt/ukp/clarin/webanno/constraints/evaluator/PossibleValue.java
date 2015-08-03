@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 /**
  * Class for containing possible values based on a rule and evaluation Also includes flag values
  * 
- * @author aakash
  *
  */
 public class PossibleValue

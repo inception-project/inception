@@ -22,7 +22,6 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 /**
  * Gets only tag name and tag description to be exported.
  * No need to get the tag ID and other details from the persistent entity
- * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "tag_name", "tag_description" })

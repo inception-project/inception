@@ -26,7 +26,6 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 /**
  * Annotation document information to be exported/imported
- * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "name", "user", "state","timestamp" })

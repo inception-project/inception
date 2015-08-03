@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 /**
  * Throw an exception if the a span annotation is not in the same sentence
- *  * @author Seid Muhie Yimam
  */
 public class ZippingException
     extends Exception

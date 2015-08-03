@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContext
  * User entity corresponding to the Spring standard schema. Conformance to this schema is the reason
  * why a plural is used for the table name.
  *
- * @author Richard Eckart de Castilho
  * @see <a
  *      href="http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
  *      standard schema</a>

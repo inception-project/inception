@@ -38,8 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 /**
  * Getting User Details, such as Authorities, Login Success,... from the database
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public class AnyUserDetailsService

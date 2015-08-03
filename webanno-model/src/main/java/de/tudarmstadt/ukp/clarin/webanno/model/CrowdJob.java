@@ -36,7 +36,6 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 /**
  * A persistence object for crowd source task.
- * @author Seid Muhie Yimam
  *
  */
 @Entity

@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 /**
  * Class for getting list of PossibleValues after evaluating context and applicable rules.
  * 
- * @author aakash
  *
  */
 public class ValuesGenerator

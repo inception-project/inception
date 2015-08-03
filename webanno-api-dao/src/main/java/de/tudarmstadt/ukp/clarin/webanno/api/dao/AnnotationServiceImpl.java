@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
  *
- * @author Seid Muhie Yimam
  *
  */
 public class AnnotationServiceImpl

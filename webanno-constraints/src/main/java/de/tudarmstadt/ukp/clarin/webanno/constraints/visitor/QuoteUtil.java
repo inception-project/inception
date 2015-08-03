@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 /**
  * Utility for getting quotes corrected after parsing
- * @author aakash
  *
  */
 public class QuoteUtil

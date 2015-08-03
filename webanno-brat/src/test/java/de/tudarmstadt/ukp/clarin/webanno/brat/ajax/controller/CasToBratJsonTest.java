@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Test case for generating Brat Json data for getcollection and getcollection actions
  *
- * @author Seid M. Yimam
  *
  */
 

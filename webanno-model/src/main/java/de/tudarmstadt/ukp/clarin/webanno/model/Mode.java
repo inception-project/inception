@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 /**
  * Subjects of interest, either annotation or curation.
  *
- * @author Seid Muhie Yimam
  *
  */
 public enum Mode

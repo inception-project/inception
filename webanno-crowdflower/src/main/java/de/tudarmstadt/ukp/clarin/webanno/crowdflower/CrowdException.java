@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 
 /**
  * Exception which occurs then there is a problem in processing data uploaded to or returned by crowdflower.com
- * @author ich
  *
  */
 public class CrowdException

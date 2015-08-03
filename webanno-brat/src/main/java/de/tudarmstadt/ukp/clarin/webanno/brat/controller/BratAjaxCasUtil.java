@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
  *
- * @author Seid Muhie Yimam
  *
  */
 public class BratAjaxCasUtil

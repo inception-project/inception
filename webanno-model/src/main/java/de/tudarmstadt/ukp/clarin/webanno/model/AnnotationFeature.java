@@ -40,8 +40,6 @@ import org.hibernate.annotations.Type;
  * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
  * another span type which then serves as a label type for the first one
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 @Entity

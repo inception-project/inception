@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * features by | character. If the layer is a relation annotation, it includes the string
  * AttachToType=... where the attach type is expressed.There is no Chain TSV reader Writer yet.
  *
- * @author Seid Muhie Yimam
  *
  */
 public class WebannoCustomTsvReader

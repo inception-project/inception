@@ -36,8 +36,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 /**
  *  An {@link AuthenticatedWebSession} based on {@link Authentication}
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  *
  */
 public class SpringAuthenticatedWebSession

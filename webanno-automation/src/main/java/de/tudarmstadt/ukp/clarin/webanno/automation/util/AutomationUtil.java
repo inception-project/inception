@@ -82,7 +82,6 @@ import edu.lium.mira.Mira;
 /**
  * A utility class for the automation modules
  *
- * @author Seid Muhie Yimam
  *
  */
 public class AutomationUtil

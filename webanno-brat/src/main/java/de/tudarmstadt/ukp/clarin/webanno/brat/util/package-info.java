@@ -17,6 +17,5 @@
  ******************************************************************************/
 /**
  * Utility classes for brat annotation/curation/correction
- * @author Seid Muhie Yimam
   */
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;

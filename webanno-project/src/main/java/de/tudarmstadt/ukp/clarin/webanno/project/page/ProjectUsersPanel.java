@@ -47,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * A Panel used to add user permissions to a selected {@link Project}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ProjectUsersPanel

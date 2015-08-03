@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * A Panel user to manage Tagsets.
  *
- * @author Seid Muhie Yimam
  */
 public class ProjectTagSetsPanel
     extends Panel

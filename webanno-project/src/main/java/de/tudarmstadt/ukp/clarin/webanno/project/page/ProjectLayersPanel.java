@@ -91,7 +91,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
  *
- * @author Seid Muhie Yimam
  *
  */
 

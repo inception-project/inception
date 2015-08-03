@@ -22,7 +22,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 /**
  * An exception when {@code org.apache.uima.cas.Feature#getRange().getName()} is not either
  *  uima.cas.Integer or uima.cas.String
- * @author Seid Muhie Yimam
  *
  */
 public class RangeNameNotCheckedException extends BratAnnotationException{

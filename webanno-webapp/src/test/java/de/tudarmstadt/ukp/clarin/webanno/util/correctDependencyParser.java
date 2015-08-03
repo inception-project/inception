@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
  * It is a main method to reverse wrongly annotated dependency annotations (on a project with the
  * reverse button checked) Might be not necessary or be implemented as differently
  *
- * @author Seid Muhie Yimam
  *
  */
 public class correctDependencyParser

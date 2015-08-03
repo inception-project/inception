@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 /**
  * State of Automation, either, {NOT_STARTED, INPROGRESS, COMPLETED}
  *
- * @author Seid Muhie Yimam
  *
  */
 public enum Status

@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A helper class for {@link BratAnnotator} and CurationEditor
  *
- * @author Seid Muhie Yimam
  *
  */
 public class BratAnnotatorUtility

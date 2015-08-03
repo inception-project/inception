@@ -25,7 +25,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 /**
  * Use this "comments" to highlight "yield" of relation nodes
  *
- * @author Seid Muhie Yimam
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "vid", "commentType", "comment" })

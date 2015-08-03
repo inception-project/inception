@@ -23,7 +23,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.ImportDe
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
 /**
  * Visitor for Import
- * @author aakash
  *
  */
 public class ImportVisitor

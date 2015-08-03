@@ -90,7 +90,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  *
- * @author Seid Muhie Yimam
  *
  */
 @MountPath("/annotation.html")

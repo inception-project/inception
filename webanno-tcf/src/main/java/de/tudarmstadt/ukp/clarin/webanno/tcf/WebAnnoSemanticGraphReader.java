@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Reads textual entailment annotated document using separated with &gt; for entails and X for not
  * and convert it to CAS
  *
- * @author Seid Muhie Yimam
  *
  */
 public class WebAnnoSemanticGraphReader

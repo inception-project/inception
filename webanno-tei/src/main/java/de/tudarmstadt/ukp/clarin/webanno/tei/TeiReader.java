@@ -63,8 +63,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * Reader for the TEI XML.
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  */
 @TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
         "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
@@ -318,7 +316,6 @@ public class TeiReader
     }
 
     /**
-     * @author Richard Eckart de Castilho
      */
     protected abstract static class Handler
         extends DefaultHandler

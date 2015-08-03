@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * Class to manage data generation for German Named Entity tasks on Crowdflower.
  * Uses Crowdclient to upload and create jobs.
- * @author Benjamin Milde
  */
 public class NamedEntityTaskManager
     implements Serializable

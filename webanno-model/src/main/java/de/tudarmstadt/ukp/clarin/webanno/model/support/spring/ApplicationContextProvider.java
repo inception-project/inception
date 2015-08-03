@@ -27,7 +27,6 @@ import org.springframework.context.ApplicationContextAware;
  * the Spring context exist, these should be used. This class is mainly meant to be used by the
  * {@code EntityModel}.
  *
- * @author Richard Eckart de Castilho
  */
 public class ApplicationContextProvider
     implements ApplicationContextAware

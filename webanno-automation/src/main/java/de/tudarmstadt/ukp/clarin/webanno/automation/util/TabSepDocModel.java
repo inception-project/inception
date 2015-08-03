@@ -22,7 +22,6 @@ import java.io.Serializable;
 /**
  * A model representing the tab-sep training document which is to be used as target/train value
  *
- * @author Seid Muhie Yimam
  *
  */
 public class TabSepDocModel

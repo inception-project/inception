@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 /**
  * A yes/NO dialog window to confirm if the user is meant to finish the annotation or not.
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ReCreateMergeCASModalPanel

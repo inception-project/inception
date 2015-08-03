@@ -31,8 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 /**
  * A model for curation container comprises of {@link SourceListView}, {@link SourceDocument},
  * and {@link Project}
- * @author  Andreas Straninger
- * @author  Seid Muhie Yimam
  *
  */
 public class CurationContainer

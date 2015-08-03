@@ -38,7 +38,6 @@ import org.hibernate.annotations.Type;
  * A persistence object for meta-data of source documents. The content of the source document is
  * stored in the file system.
  *
- * @author Seid Muhie Yimam
  *
  */
 @Entity

@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoFinishModalPanel;
 /**
  * A link to close/finish annotation/correction/curation project
  *
- * @author Seid Muhie Yimam
  */
 public class FinishLink
     extends Panel

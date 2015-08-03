@@ -40,7 +40,6 @@ import org.apache.uima.jcas.JCas;
  * because they refer to the same annotated unit, are grouped together in an
  * {@link AnnotationOption}.
  *
- * @author Andreas Straninger
  */
 public class CasDiff
 {

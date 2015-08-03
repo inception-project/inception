@@ -25,7 +25,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * All required contents of a project to be exported.
  *
- * @author Seid Muhie Yimam
  *
  */
 

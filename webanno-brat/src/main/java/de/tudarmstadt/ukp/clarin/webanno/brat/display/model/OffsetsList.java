@@ -23,7 +23,6 @@ import java.util.ArrayList;
  * List of {@link Offsets}. Required so Jackson knows the generic type of the list when converting
  * an array of offsets from JSON to Java.
  *
- * @author Richard Eckart de Castilho
  */
 public class OffsetsList
     extends ArrayList<Offsets>

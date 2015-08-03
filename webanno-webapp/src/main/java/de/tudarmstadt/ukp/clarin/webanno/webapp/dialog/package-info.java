@@ -16,7 +16,6 @@
  * limitations under the License.
  ******************************************************************************/
 /** Contains a Panel for open dialog.
- * @author Seid Muhie Yimam
  *
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;

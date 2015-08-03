@@ -49,8 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
  * Based on the user's permission, it displays either {@link ProjectPage}, d {@link AnnotationPage}
  * , {@link CurationPage} or {@link MonitoringPage }(since v.2.0)
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  *
  */
 public class WelcomePage

@@ -107,7 +107,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
  *
- * @author Seid Muhie Yimam
  */
 @MountPath("/automation.html")
 public class AutomationPage

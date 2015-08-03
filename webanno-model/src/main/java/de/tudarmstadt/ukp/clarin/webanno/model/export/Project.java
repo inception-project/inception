@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 
 /**
  * All required contents of a project to be exported.
- * @author Seid Muhie Yimam
  *
  */
 

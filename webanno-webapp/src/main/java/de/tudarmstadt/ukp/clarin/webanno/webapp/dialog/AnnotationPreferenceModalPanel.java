@@ -52,8 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * Modal Window to configure layers, window size, etc.
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public class AnnotationPreferenceModalPanel

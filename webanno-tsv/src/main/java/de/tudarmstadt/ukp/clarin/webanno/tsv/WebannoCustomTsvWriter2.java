@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates
  * the source of the relation (the source of the arc drown)
  *
- * @author Seid Muhie Yimam
  *
  */
 
@@ -540,7 +539,6 @@ public class WebannoCustomTsvWriter2
      * own line. An annotation item can, therefore be a token, or a sub-token TODO - check if an
      * empty annotation item is still possible to be write in a new line
      *
-     * @author seid
      *
      */
     public static class AnnotationItem

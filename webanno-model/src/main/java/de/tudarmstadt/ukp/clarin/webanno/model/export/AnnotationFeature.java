@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
  * All required contents of {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature} to be
  * exported.
  *
- * @author Seid Muhie Yimam
  *
  */
 

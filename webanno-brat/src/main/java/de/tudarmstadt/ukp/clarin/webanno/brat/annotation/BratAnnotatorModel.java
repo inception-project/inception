@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Data model for the {@link BratAnnotator}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class BratAnnotatorModel

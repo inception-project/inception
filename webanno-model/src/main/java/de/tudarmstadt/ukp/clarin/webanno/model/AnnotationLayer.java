@@ -42,8 +42,6 @@ import org.hibernate.annotations.ForeignKey;
  *   'coreference' as 'chain'
  *  }
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 @Entity

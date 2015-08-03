@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContext
  * an entity manager. Requires Hibernate and requires that the {@link ApplicationContextProvider}
  * is present in the Spring context.
  *
- * @author Richard Eckart de Castilho
  */
 public class EntityModel<T>
     extends LoadableDetachableModel<T>

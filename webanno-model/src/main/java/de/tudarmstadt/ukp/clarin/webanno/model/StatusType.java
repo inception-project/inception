@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 
 /** Implementation of {@link PersistentEnumUserType}
- * @author Seid Muhie Yimam
  *
  */
 public class StatusType extends PersistentEnumUserType<Status> {

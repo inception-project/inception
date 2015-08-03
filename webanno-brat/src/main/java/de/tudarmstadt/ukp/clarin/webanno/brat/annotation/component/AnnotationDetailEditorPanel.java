@@ -113,8 +113,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * Annotation Detail Editor Panel.
  *
- * @author Seid Muhie Yimam
- * @author aakash
  */
 public class AnnotationDetailEditorPanel
     extends Panel

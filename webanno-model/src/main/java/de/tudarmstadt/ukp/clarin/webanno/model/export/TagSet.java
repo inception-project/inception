@@ -27,7 +27,6 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 /**
  * All required contents of a tagset to be exported. The tagsets to be exported are those
  * created for a project, hence project specific.
- * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "name", "typeUiName","description", "language", "type", "typeName",

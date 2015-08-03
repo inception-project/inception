@@ -31,8 +31,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 /**
  * The start and End offset positions of a span annotation as required by the Brat protocol
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  * @see Entity
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
@@ -78,7 +76,6 @@ public class Offsets
     /**
      * Deserialize {@link Offsets} from JSON to Java.
      *
-     * @author Richard Eckart de Castilho
      */
     public static class OffsetsDeserializer
         extends JsonDeserializer<Offsets>

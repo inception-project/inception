@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 /**
  * Visitor for scopeName
- * @author aakash
  *
  */
 public class ScopeVisitor

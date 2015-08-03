@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 /**
  * Modal window to display annotation guidelines
  *
- * @author Seid Muhie Yimam
  *
  */
 public class GuidelineModalWindowPage

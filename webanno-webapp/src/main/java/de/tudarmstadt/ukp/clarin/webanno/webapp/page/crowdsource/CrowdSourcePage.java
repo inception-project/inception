@@ -82,8 +82,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Crowdsource page used to setup and monitor crowd source projects.
  *
- * @author Seid Muhie Yimam
- * @author Benjamin Milde
  *
  */
 @MountPath("/crowdsource.html")
