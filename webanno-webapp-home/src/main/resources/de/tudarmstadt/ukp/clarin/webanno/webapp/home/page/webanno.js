@@ -59,7 +59,7 @@ $(document).ready(function() {
 			
 		}
 		else if(pos !== undefined && diff === undefined){
-			diff = pos.top - stickerTop;// wht the top of 
+			diff = pos.top - stickerTop;// length between the sticker and the editor 
 		}
 		else {
 			var editorTop = stickerTop + diff;
