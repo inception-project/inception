@@ -51,7 +51,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
 import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
@@ -62,11 +61,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -103,6 +102,8 @@ public class ProjectExportPanel extends Panel {
 	private static final String GUIDELINES_FOLDER = "/"+ImportUtil.GUIDELINE;
 	private static final String ANNOTATION_CAS_FOLDER = "/"+ImportUtil.ANNOTATION_AS_SERIALISED_CAS+"/";
 	private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
+   private static final String CONSTRAINTS = "/constraints/";
+
 
 	private static final String CURATION_USER = "CURATION_USER";
 	private static final String CORRECTION_USER = "CORRECTION_USER";
@@ -316,6 +317,7 @@ public class ProjectExportPanel extends Panel {
             }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
             final AJAXDownload exportProject = new AJAXDownload() {
+                @Override
                 protected String getFileName() {
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
@@ -493,13 +495,14 @@ public class ProjectExportPanel extends Panel {
             exportProjectLog(aModel.project, exportTempDir);
             exportGuideLine(aModel.project, exportTempDir);
             exportProjectMetaInf(aModel.project, exportTempDir);
+            exportProjectConstraints(aModel.project, exportTempDir);
             progress = 90;
             exportCuratedDocuments(aModel, exportTempDir);
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
             catch (Exception e) {
-                throw new ZippingException("Unable to Zipp the file");
+                throw new ZippingException("Unable to Zip the file");
             }
             finally {
                 FileUtils.forceDelete(projectSettings);
@@ -853,6 +856,26 @@ public class ProjectExportPanel extends Panel {
             if (metaInf.exists()) {
                 FileUtils.copyDirectory(metaInf, metaInfDir);
             }
+        }
+        
+        /**
+         * Copy Project Constraints from file system of this project to export folder
+         */
+        private void exportProjectConstraints(Project project, File exportTempDir)
+            throws IOException
+        {
+            File constraintsDir = new File(exportTempDir + CONSTRAINTS);
+            FileUtils.forceMkdir(constraintsDir);
+            String fileName;
+            for (ConstraintSet set : repository.listConstraintSets(project)) {
+                fileName = set.getName();
+             /*
+              * Copying with file's original name to save ConstraintSet's name
+              */
+                FileUtils.copyFile(repository.exportConstraintAsFile(set),
+                        new File(constraintsDir, fileName));
+            }
+
         }
     }
 }

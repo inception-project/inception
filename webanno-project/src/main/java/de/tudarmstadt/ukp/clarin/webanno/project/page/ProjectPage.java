@@ -687,8 +687,10 @@ public class ProjectPage
                 ImportUtil.createProjectLog(zip, importedProject, repository);
                 // create project guideline
                 ImportUtil.createProjectGuideline(zip, importedProject, repository);
-                // cretae project META-INF
+                // create project META-INF
                 ImportUtil.createProjectMetaInf(zip, importedProject, repository);
+                // create project constraint
+                ImportUtil.createProjectConstraint(zip, importedProject, repository);
             }
             catch (IOException e) {
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));

@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
@@ -72,6 +73,7 @@ public class ImportUtil
     public static final String GUIDELINE = "guideline";
     public static final String LOG_DIR = "log";
     public static final String EXPORTED_PROJECT = "exportedproject";
+    public static final String CONSTRAINTS = "constraints";
 
     private static final Log LOG = LogFactory.getLog(ImportUtil.class);
 
@@ -812,6 +814,38 @@ public class ImportUtil
             }
         }
     }
+
+    /**
+     * copy constraints from the exported project
+     * @param zip the ZIP file.
+     * @param aProject the project.
+     * @param aRepository the repository service.
+     * @throws IOException if an I/O error occurs.
+     */
+    @SuppressWarnings("rawtypes")
+    public static void createProjectConstraint(ZipFile zip, Project aProject,
+            RepositoryService aRepository)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(CONSTRAINTS)) {
+                String filename = FilenameUtils.getName(entry.getName());
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.setProject(aProject);
+                constraintSet.setName(filename);
+                aRepository.createConstraintSet(constraintSet);
+                aRepository.writeConstraintSet(constraintSet, zip.getInputStream(entry));
+                LOG.info("Imported constraint [" + filename + "] for project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
+        }
+    }
+
 
     public static de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> aLayerToExLayer,

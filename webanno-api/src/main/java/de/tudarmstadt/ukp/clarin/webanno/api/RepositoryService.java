@@ -1119,4 +1119,6 @@ public interface RepositoryService
 
     void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException;
+    
+    File exportConstraintAsFile(ConstraintSet aSet) throws IOException; 
 }

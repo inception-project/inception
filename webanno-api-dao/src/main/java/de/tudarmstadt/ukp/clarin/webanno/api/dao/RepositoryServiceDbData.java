@@ -2331,6 +2331,33 @@ public class RepositoryServiceDbData
                         + "]");
         createLog(aSet.getProject()).removeAllAppenders();
     }
+    /**
+     * Provides exporting constraints as a file.
+     */
+    @Override
+    public File exportConstraintAsFile(ConstraintSet aSet)
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
+        File constraintsFile = new File(constraintRulesPath, filename);
+        if (constraintsFile.exists()) {
+            createLog(aSet.getProject()).info(
+                    "Exported constraints set file [" + filename + "] for project ["
+                            + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
+                            + "]");
+            createLog(aSet.getProject()).removeAllAppenders();
+            return constraintsFile;
+        }
+        else {
+            createLog(aSet.getProject()).error("Unable to read constraint File [" + filename
+                    + "] for project [" + aSet.getProject().getName() + "] with ID ["
+                    + aSet.getProject().getId() + "]");
+            createLog(aSet.getProject()).removeAllAppenders();
+            return null;
+        }
+
+    }
 
     @Override
     public int getNumberOfSentences()
