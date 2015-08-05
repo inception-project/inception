@@ -35,8 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
  * Utility Class for {@link TypeAdapter} with static methods such as geting
  * {@link TypeAdapter} based on its {@link CAS} {@link Type}
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  */
 public final class TypeUtil
 {

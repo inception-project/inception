@@ -23,7 +23,6 @@ import java.util.List;
 /**
  * Class representing object representation of a Rule, contains Condition(s) and Restriction(s)
  * 
- * @author aakash
  *
  */
 public class Rule

@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * A Panel used to add Documents to the selected {@link Project}
  * 
- * @author Seid Muhie Yimam
  * 
  */
 public class ProjectDocumentsPanel

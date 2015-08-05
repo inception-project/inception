@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
  * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
  * of a link to open  annotation guideline
  *
- * @author Seid Muhie Yimam
  *
  */
 public class GuidelineModalPanel

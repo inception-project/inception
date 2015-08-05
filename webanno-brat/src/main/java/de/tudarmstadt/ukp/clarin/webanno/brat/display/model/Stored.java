@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 /**
  * Used to return name and suffix of annotation document exports. Currently support only TCF format
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public class Stored

@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 /**
  * Visitor for complete rules including scopes.
- * @author aakash
  *
  */
 public class ParserVisitor

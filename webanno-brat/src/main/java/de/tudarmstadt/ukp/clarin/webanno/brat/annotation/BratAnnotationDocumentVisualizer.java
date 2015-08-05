@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * to drive this component using a reference to the CAS (here an {@link AnnotationDocument}) and let
  * the component fetch the associated CAS itself when necessary.
  *
- * @author Richard Eckart de Castilho
  */
 public class BratAnnotationDocumentVisualizer
     extends BratVisualizer

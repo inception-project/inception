@@ -74,8 +74,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * Main Panel for the curation page. It displays a box with the complete text on the left side and a
  * box for a selected sentence on the right side.
  *
- * @author Andreas Straninger
- * @author Seid Muhie Yimam
  */
 public class CurationPanel
     extends Panel

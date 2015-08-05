@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebS
  * The wicket application class. Sets up pages, authentication, theme, and other application-wide
  * configuration.
  *
- * @author Richard Eckart de Castilho
  */
 public class WicketApplication
     extends AuthenticatedWebApplication

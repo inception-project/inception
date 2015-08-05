@@ -18,7 +18,6 @@
 /**
  * Provides Monitoring functionalities to WebAnno
  *
- * @author Seid Muhie Yimam
  *
  */
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;

@@ -28,8 +28,6 @@ import java.util.List;
  * "fgColor":"black","bgColor":"cyan","borderColor":"green","labels":["LOC"],"children":[],
  * "attributes":[],"arcs":[]},....
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public class EntityType

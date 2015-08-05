@@ -129,7 +129,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  *
- * @author Seid Muhie Yimam
  *
  */
 @MountPath("/monitoring.html")

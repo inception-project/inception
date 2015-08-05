@@ -26,8 +26,6 @@ import org.apache.wicket.model.Model;
 import org.springframework.security.core.context.SecurityContextHolder;
 /**
  * A wicket panel for logout.
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  *
  */
 public class LogoutPanel

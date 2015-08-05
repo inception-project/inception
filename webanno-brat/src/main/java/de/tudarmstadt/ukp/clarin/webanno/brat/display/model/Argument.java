@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
  * to denote a given arc annotation such as dependency parsing and coreference resolution
  *
- * @author Seid Muhie Yimam
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "label", "target" })

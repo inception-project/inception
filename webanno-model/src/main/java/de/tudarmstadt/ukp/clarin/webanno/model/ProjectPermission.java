@@ -31,7 +31,6 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for project permission. A user can have one or multiple permissions on a project.
  * Project permissions include {@code admin}, {@code user} for (annotator) and {@code curator}
- * @author Seid Muhie Yimam
  *
  */
 @Entity

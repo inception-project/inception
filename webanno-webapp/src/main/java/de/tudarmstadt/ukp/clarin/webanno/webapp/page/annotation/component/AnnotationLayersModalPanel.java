@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
  * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
  * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class AnnotationLayersModalPanel

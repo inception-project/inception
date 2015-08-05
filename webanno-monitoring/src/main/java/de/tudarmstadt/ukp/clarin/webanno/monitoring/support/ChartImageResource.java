@@ -28,7 +28,6 @@ import org.jfree.chart.JFreeChart;
  * A base class for the dynamically generated chart Images for percenatage and number of document
  * finished charts.
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ChartImageResource

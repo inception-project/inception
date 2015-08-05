@@ -144,7 +144,6 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
  *
- * @author Seid Muhie Yimam
  *
  */
 public class RepositoryServiceDbData

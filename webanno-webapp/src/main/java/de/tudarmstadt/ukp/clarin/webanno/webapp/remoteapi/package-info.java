@@ -18,6 +18,5 @@
 /**
  * Remote API.
  * 
- * @author Richard Eckart de Castilho
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;

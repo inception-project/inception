@@ -27,7 +27,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * All required contents of a {@link de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate}  to be exported.
  *
- * @author Seid Muhie Yimam
  *
  */
 

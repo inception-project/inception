@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.
  *
- * @author Seid Muhie Yimam
  *
  */
 public enum AnnotationDocumentState implements PersistentEnum

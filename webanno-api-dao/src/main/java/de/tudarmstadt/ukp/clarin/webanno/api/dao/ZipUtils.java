@@ -33,7 +33,6 @@ import org.apache.commons.io.IOUtils;
 /**
  * A utility class for {@link RepositoryServiceDbData} and {@link AnnotationServiceImpl} classes
  *
- * @author Seid Muhie Yimam
  */
 public class ZipUtils
 {

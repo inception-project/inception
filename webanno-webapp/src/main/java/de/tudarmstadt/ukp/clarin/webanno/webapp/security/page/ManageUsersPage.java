@@ -56,8 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 /**
  * Manage Application wide Users.
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 @MountPath("/users.html")

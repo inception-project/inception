@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  *
- * @author Seid Muhie Yimam
  *
  */
 public class AnnotationGuideLinePanel

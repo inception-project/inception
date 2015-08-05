@@ -14,6 +14,9 @@
  * limitations under the License.
  ******************************************************************************/
 
+/* -------------------------------------------------------------------------------------------------
+ * Generic classes
+ */
 body,
 table{
     font-family:arial, helvetica, "Verdana", sans-serif;
@@ -30,53 +33,6 @@ body{
 
 .top-sticker {
     width: 100%;
-}
-
-.labels-top label, label.top{
-    white-space:nowrap;
-    display: block;
-    text-align:left;
-    font-weight: bold;
-}
-
-.labels-left label, label.left {
-    white-space:nowrap;
-    display: block;
-    text-align: right;
-    font-weight: bold;
-}
-
-label.inline{
-    text-align:inherit;
-    display:inline;
-}
-
-ul label{
-    display:inline;
-    text-align:left;
-    font-weight:normal;
-}
-
-.inline-labels label{
-    display:inline;
-}
-
-fieldset{
-    -moz-border-radius:6px;
-    -webkit-border-radius:6px;
-    -khtml-border-radius:6px;
-    border-radius:6px;
-}
-
-.buttons{
-    text-align:right;
-}
-
-ul.vcheckboxgroup{
-    padding:0px;
-    margin:0px;
-    list-style:none;
-    white-space:nowrap;
 }
 
 .hfill{
@@ -129,26 +85,86 @@ select.hfill[multiple]{
     text-align:center;
 }
 
-.centering .wicketstuff-progressbar{
-    margin-left:auto;
-    margin-right:auto;
-}
-
 .centering table{
     margin-left:auto;
     margin-right:auto;
     text-align:left;
 }
 
+.centering .wicketstuff-progressbar{
+    margin-left:auto;
+    margin-right:auto;
+}
+
 /* -------------------------------------------------------------------------------------------------
- * Page header
+ * Forms
  */
+
+.labels-top label, label.top{
+    white-space:nowrap;
+    display: block;
+    text-align:left;
+    font-weight: bold;
+}
+
+.labels-left label, label.left {
+    white-space:nowrap;
+    display: block;
+    text-align: right;
+    font-weight: bold;
+}
+
+label.inline{
+    text-align:inherit;
+    display:inline;
+}
+
+ul label{
+    display:inline;
+    text-align:left;
+    font-weight:normal;
+}
+
+.inline-labels label{
+    display:inline;
+}
+
+fieldset{
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    -khtml-border-radius:6px;
+    border-radius:6px;
+}
+
+.buttons{
+    text-align:right;
+}
+
+ul.vcheckboxgroup{
+    padding:0px;
+    margin:0px;
+    list-style:none;
+    white-space:nowrap;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Page layout
+ */
+ 
 .logo{
     margin:2px;
 	margin-left:5px;
     float:right;
     vertical-align:middle;
     height:64px;
+}
+
+#spinner {
+  display: none;
+  position: fixed;
+  right:10px;
+  top: 55px;
+  z-index:9999;
 }
 
 .pageicon{
@@ -184,6 +200,17 @@ select.hfill[multiple]{
     color:grey;
     background:white;
     z-index:9999;
+}
+
+ul.feedbackPanel {
+    background-color:#fe8;
+    border:1px solid #900;
+    color:#900;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: left;
+    max-height: 100ox;
+    overflow: scroll;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -272,83 +299,30 @@ a.menulink > span {
     padding-right: 1em;
 }
 
-/* Caption of the icon 
-ul.horizontal li div {
-	text-align: center;
-}
-*/
-
 /* -------------------------------------------------------------------------------------------------
- * Info panel
+ * Tables
  */
-/*
-.info {
-	position: relative;
-	clear: both;
-	min-height: 158px; 
-	max-height: 250px;
-	position: relative;
-	margin: 0.7em;
-	
-    background-color:yellow;
-    border:solid black 1px;
 
-}
-*/
-.biginfo{
-    min-height:400px;
-    max-height:400px;
+th{
+    padding:3px;
 }
 
-.tagsetcontent{
-    border:0;
-    margin:0;
-    padding:0;
+tr.odd{
+    background:#EEEEEE;
 }
 
-.info .content{
-    top:0px;
-    bottom:0px;
-    left:0px;
-    right:0px;
-    position:absolute;
-    margin:7px;
-    overflow:auto;
+tr.even{
+    background:#DDDDDD;
 }
 
-.icon + .content{
-    left:158px; /* 128(img) + 2*15(img-padding) */
+tr.odd:hover{
+    background:#CCCCAA;
 }
 
-.info .content p{
-    margin-top:0px;
-    padding:0px;
+tr.even:hover{
+    background:#CCCCAA;
 }
 
-.info .icon{
-    padding:15px;
-    float:left;
-    height:128px;
-}
-
-.info .buttons{
-    position:absolute;
-    bottom:0px;
-    right:0px;
-    max-height:25px;
-}
-
-.infomargin{
-    margin:0.7em;
-}
-
-.infomargin .content{
-    margin:7px;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * KWIC table
- */
 .headers,
 .headers a:link,
 .headers a:visited{
@@ -379,122 +353,60 @@ div.navigator{
     text-align:right;
 }
 
-th{
-    padding:3px;
+/* -------------------------------------------------------------------------------------------------
+ * JQuery UI overrides - Probably should roll own theme instead...
+ */
+.ui-widget {
+    font-size: 1.0em;
+}
+	
+.ui-widget-content {
+	background: #fff;
+	color: #000;
 }
 
-/* td {
-	vertical-align: top;
-	padding: 3px;
-} */
-tr.odd{
-    background:#EEEEEE;
+.ui-tooltip {
+	padding: 0px;
+    -webkit-box-shadow: 0 0 5px #4D4D4D;
+    box-shadow: 0 0 5px #4D4D4D;
+    border: 1px solid #4D4D4D;
 }
 
-tr.even{
-    background:#DDDDDD;
+/* -------------------------------------------------------------------------------------------------
+ * DescriptionTooltipBehavior
+ */
+ 
+.ui-tooltip .tooltip-title {
+	text-align: center;
+    font-weight: bold;
+    color: #fff;
+    background-color: #B90F22;
+    padding: 4px;
+    margin-bottom: 4px;
 }
 
-tr.odd:hover{
-    background:#CCCCAA;
+.ui-tooltip .tooltip-content {
+    padding: 4px;
 }
 
-tr.even:hover{
-    background:#CCCCAA;
+.ui-tooltip .tooltip-pre {
+	word-break: keep-all; /* webkit */
+	word-wrap: break-word;
+	white-space: pre;
+	white-space: -moz-pre-wrap; /* fennec */
+	white-space: pre-wrap;
+    white-space: pre\9; /* IE7+ */	
 }
 
-td.editable{
-    background:khaki;
-    cursor:pointer;
-}
-
-td.correct{
-    font-weight:bold;
-    color:white;
-    background:limegreen;
-}
-
-td.wrong{
-    font-weight:bold;
-    color:white;
-    background:crimson;
-}
-
-td.check{
-    font-weight:bold;
-    color:black;
-    background:yellow;
-}
-
-td.pred_correct{
-    font-weight:bold;
-    color:black;
-    background:#66ff66; /* 60% limegreen */
-    font-style:italic;
-}
-
-td.pred_wrong{
-    font-weight:bold;
-    color:black;
-    background:#ea728a; /* 60% crimson */
-    font-style:italic;
-}
-
-td.leftContext{
-    text-align:right;
-}
-
-td.match{
-    padding-left:.5em;
-    padding-right:.5em;
-    border-left:1px black solid;
-    border-right:1px black solid;
-    text-align:center;
-}
-
-td.rightContext{
-    text-align:left;
-}
-
+/* -------------------------------------------------------------------------------------------------
+ * UNSORTED STYLES THAT SHOULD PROBABLY BE REMOVED
+ */
 .showCol{
     display:table-cell;
 }
 
 .hideCol{
     display:none;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * Context view
- */
-.contextView{
-    background-color:white;
-}
-
-.contextUnitLeft{
-    font-weight:bold;
-    background:#DDDDDD;
-}
-
-.contextMatch{
-    font-weight:bold;
-    background:#999999;
-}
-
-.contextUnitRight{
-    font-weight:bold;
-    background:#DDDDDD;
-}
-
-ul.feedbackPanel {
-    background-color:#fe8;
-    border:1px solid #900;
-    color:#900;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: left;
-    max-height: 100ox;
-    overflow: scroll;
 }
 
 /* left/right column arrangments for project/annotation settings */
@@ -589,66 +501,13 @@ div.tabpanel .tab-panel {
     margin: 1em;
 }
 
-
 .documenttable{
     width:55%;
     text-align:center;
-
 }
 
 tr.border_bottom td {
-	border-bottom: 2pt solid green;
+    border-bottom: 2pt solid green;
 }
 
-#spinner {
-  display: none;
-  position: fixed;
-  right:10px;
-  top: 55px;
-  z-index:9999;
-}
 
-/* -------------------------------------------------------------------------------------------------
- * JQuery UI overrides - Probably should roll own theme instead...
- */
-.ui-widget {
-    font-size: 1.0em;
-}
-	
-.ui-widget-content {
-	background: #fff;
-	color: #000;
-}
-
-.ui-tooltip {
-	padding: 0px;
-    -webkit-box-shadow: 0 0 5px #4D4D4D;
-    box-shadow: 0 0 5px #4D4D4D;
-    border: 1px solid #4D4D4D;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * DescriptionTooltipBehavior
- */
- 
-.ui-tooltip .tooltip-title {
-	text-align: center;
-    font-weight: bold;
-    color: #fff;
-    background-color: #B90F22;
-    padding: 4px;
-    margin-bottom: 4px;
-}
-
-.ui-tooltip .tooltip-content {
-    padding: 4px;
-}
-
-.ui-tooltip .tooltip-pre {
-	word-break: keep-all; /* webkit */
-	word-wrap: break-word;
-	white-space: pre;
-	white-space: -moz-pre-wrap; /* fennec */
-	white-space: pre-wrap;
-    white-space: pre\9; /* IE7+ */	
-}

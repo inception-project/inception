@@ -24,7 +24,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
  * Throw an exception if either a target or orgin span annotation is not merged before the arc
  * annotation merging is attempted
  *
- * @author Seid Muhie Yimam
  */
 public class NoOriginOrTargetAnnotationSelectedException
     extends BratAnnotationException

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 /**
  * Class containing object representation for Condition in a rule.
  * 
- * @author aakash
  */
 public class Condition
     implements Serializable

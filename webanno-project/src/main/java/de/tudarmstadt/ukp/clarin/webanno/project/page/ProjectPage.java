@@ -95,8 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 @MountPath("/projectsetting.html")

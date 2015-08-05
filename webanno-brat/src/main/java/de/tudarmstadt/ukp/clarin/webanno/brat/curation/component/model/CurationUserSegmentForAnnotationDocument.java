@@ -27,8 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 /**
  * A Model comprises of document and collection brat responses togehter with the username that will
  * populate the sentence with {@link AnnotationDocument}s
- * @author Andreas Straninger
- * @author Seid Muhie Yimam
  *
  */
 public class CurationUserSegmentForAnnotationDocument

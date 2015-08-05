@@ -57,8 +57,6 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
  * tokens and stored in a map (token_id, token(CAS object)) where later we get can get the offset
  * from the token
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  */
 public class TcfReader
     extends JCasResourceCollectionReader_ImplBase

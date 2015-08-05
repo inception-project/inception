@@ -50,7 +50,6 @@ import org.springframework.util.MultiValueMap;
 
 /**
 * Class that holds a template and job's data for a Crowdflower.com job
-* @author Benjamin Milde
 */
 public class CrowdJob
 {

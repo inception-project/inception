@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * show closed/not closed images on annoataion/correction pages
  *
- * @author Seid Muhie Yimam
  *
  */
 public class FinishImage

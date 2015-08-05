@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 /**
  * A panel that is used to display a {@link TextField} or {@link Label} to add/display help contents
  *
- * @author Seid Muhie Yimam
  *
  */
 public class HelpModalWindowPanel

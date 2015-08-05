@@ -26,8 +26,6 @@ import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 /**
  * A login form.
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  *
  */
 public class LoginForm

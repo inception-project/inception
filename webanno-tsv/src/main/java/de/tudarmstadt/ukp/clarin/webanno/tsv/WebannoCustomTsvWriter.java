@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates the
  * source of the relation (the source of the arc drown)
  *
- * @author Seid Muhie Yimam
  *
  */
 

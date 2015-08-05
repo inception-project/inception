@@ -29,7 +29,6 @@ import org.apache.wicket.model.Model;
 
 /**
  * Data provider for the user's annotation documents status {@link DataGridView}
- * @author Seid Muhie Yimam
  *
  */
 public class TableDataProvider

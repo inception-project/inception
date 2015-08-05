@@ -21,7 +21,6 @@ import java.io.Serializable;
 
 /**
  * A model to remerge CAS object for curation annotation document
- * @author Seid Muhie Yimam
  *
  */
 public class ReMergeCasModel implements Serializable

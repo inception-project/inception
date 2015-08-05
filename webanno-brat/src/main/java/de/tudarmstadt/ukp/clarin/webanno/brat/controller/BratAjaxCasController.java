@@ -67,8 +67,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * the JSON response to the brat FrontEnd, This controller also manipulates creation of annotation
  * Documents
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public class BratAjaxCasController

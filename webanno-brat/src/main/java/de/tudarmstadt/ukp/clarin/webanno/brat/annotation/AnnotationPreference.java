@@ -25,7 +25,6 @@ import java.util.List;
  * such as annotation layers, number of sentence to display at a time, visibility of lemma and
  * whether to allow auto page scrolling.
  *
- * @author Seid Muhie Yimam
  */
 public class AnnotationPreference
     implements Serializable

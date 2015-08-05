@@ -33,8 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 /**
  * Type Adapters for span, arc, and chain annotations
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  */
 public interface TypeAdapter
 {

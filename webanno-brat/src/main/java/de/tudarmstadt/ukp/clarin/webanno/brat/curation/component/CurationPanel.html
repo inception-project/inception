@@ -40,17 +40,23 @@
 	height: 550px;
 	overflow: scroll;
 }
-.hidden-view {
-	border: 2px solid lightgreen;
+
+.anno-view {
+	border: 1px solid #B90F22;
 }
+
+.hidden-view {
+	border: 1px solid #4D4D4D;
+}
+
 .range-disagree {
 	border: 1px solid black;
 	background-color: red;
 }
+
 .range-agree {
 	border: 1px solid black;
 }
-
 
 .agree {
 	border: 1px solid white;
@@ -87,8 +93,11 @@
 					<table class="hfill">
 						<tr style="vertical-align: top;">
 							<td width="80%">
-								<div wicket:id="mergeView" />
-								<fieldset  class="hidden-view">
+								<fieldset class="anno-view">
+									<legend> Annotation</legend>
+									<div wicket:id="mergeView" />
+								</fieldset>
+								<fieldset class="hidden-view">
 									<legend>Invisible annotations in other pages</legend>
 									<span wicket:id="corssSentAnnoView"> <span
 										wicket:id="crossSentAnnoList"> <span

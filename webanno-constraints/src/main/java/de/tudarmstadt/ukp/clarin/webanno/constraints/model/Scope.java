@@ -23,7 +23,6 @@ import java.util.List;
 /**
  * Class representating "Scope" (name) and list of "Rules" for a particular "Scope".
  * 
- * @author aakash
  *
  */
 public class Scope

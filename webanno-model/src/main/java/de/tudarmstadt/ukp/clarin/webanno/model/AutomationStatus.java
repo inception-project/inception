@@ -36,7 +36,6 @@ import org.hibernate.annotations.Type;
  * Different Automation statistics such as number of training documents, state of the automation
  * such as, generating Train Document, generating classifier....
  *
- * @author Seid Muhie Yimam
  *
  */
 @Entity

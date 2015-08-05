@@ -18,7 +18,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-
+<head>
+	<wicket:head>
+	<style type="text/css">
+		.anno-view {
+			border: 1px solid #B90F22;
+		}
+	</style>
+</wicket:head>
+</head>
 <body>
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
@@ -113,7 +121,10 @@
 		<table class="hfill">
 			<tr style="vertical-align: top;">
 				<td width="80%">
+				<fieldset class="anno-view">
+				    	<legend> Annotation</legend>
 					<div class="merge-view" wicket:id="mergeView" />
+					</fieldset>
 					<div wicket:id="automateView">
 						<div class="sentence-list-view" wicket:id="sentenceListView">
 							<div wicket:id="sentence" />

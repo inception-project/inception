@@ -30,7 +30,6 @@ import javax.persistence.UniqueConstraint;
 /**
  * The persistence object for authority the user have. Authorities can be either {@code ROLE_ADMIN}
  * or {@code ROLE_USER}
- * @author Seid Muhie Yimam
  *
  */
 @Entity

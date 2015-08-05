@@ -50,8 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * Users, and Projects for the annotation system. while meta data about documents and projects and
  * users are stored in the database, source and annotation documents are stored in a file system
  *
- * @author Seid Muhie Yimam
- * @author Richard Eckart de Castilho
  *
  */
 public interface RepositoryService

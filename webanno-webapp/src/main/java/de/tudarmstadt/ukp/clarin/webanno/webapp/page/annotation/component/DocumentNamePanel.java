@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
  * {@link Project#getName()} and {@link SourceDocument#getName()}
  *
- * @author Seid Muhie Yimam
  */
 public class DocumentNamePanel
     extends Panel

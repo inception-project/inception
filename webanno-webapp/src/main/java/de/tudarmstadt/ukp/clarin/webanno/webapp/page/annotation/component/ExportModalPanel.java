@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
  * A panel used for {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage}
  * consisting of a link to export annotated data
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ExportModalPanel

@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A class that is used to create Brat chain to CAS and vice-versa
  *
- * @author Seid Muhie Yimam
  */
 public class ChainAdapter
     implements TypeAdapter, AutomationTypeAdapter

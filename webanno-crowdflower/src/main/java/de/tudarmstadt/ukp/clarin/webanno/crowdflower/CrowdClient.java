@@ -45,7 +45,6 @@ import org.springframework.web.client.RestTemplate;
 
 /**
 * Abstracts away the details of communicating with crowdflower.com's API
-* @author Benjamin Milde
 */
 public class CrowdClient implements Serializable
 {

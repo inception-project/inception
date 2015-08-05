@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ArcAdapter

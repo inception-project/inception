@@ -18,7 +18,6 @@
 /**
  * Provides sub-components for Brat Curation page
  *
- * @author Seid Muhie Yimam
  *
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component;

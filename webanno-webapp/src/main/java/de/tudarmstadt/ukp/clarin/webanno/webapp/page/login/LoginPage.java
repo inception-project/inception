@@ -29,8 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LoginForm;
 /**
  * A wicket page for the {@link LoginForm}
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  *
  */
 

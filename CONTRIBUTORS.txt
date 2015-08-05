@@ -13,6 +13,7 @@ Aakash Sharma <aakash.y.sharma@gmail.com>
 Andreas Straninger
 Benjamin Milde
 Darina Benikova
+Erik-Lân Do Dinh
 Richard Eckart de Castilho <richard.eckart@gmail.com>
 Seid Muhie Yimam
 Sushil Jain

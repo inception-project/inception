@@ -100,7 +100,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * This is the main class for the correction page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the corrected annotation
  *
- * @author Seid Muhie Yimam
  */
 @MountPath("/correction.html")
 public class CorrectionPage

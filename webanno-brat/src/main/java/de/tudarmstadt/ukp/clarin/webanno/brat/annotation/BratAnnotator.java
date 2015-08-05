@@ -93,9 +93,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Brat annotator component.
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
- * @author Andreas Straninger
  */
 public class BratAnnotator
     extends Panel

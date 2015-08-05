@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 /***
  * Serialized Class containing objects after parsing and creating objects based on rules file
  * 
- * @author aakash
  *
  */
 public class ParsedConstraints

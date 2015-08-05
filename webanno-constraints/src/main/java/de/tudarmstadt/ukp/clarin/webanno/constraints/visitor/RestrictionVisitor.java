@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepth
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
 /**
  * Visitor for Restriction
- * @author aakash
  *
  */
 public class RestrictionVisitor

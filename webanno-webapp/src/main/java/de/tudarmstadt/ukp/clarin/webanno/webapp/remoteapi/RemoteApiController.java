@@ -56,8 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
  *
- * @author Richard Eckart de Castilho
- * @author Seid Muhie Yimam
  */
 @Controller
 public class RemoteApiController

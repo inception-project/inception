@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}
  *
- * @author aakash
  *
  */
 public class ConstraintsPanel

@@ -29,9 +29,9 @@ $(document).ready(
 
 							var pos = shadow.position();
 							if (pos.top <= initialPos.top) {
-								sticker.style.top = Math.max(0, pos.top
+								 stickerTop = Math.max(0, pos.top
 										- $(window).scrollTop())
-										+ "px";
+								sticker.style.top = stickerTop + "px";
 							}
 							sticker.style.left = Math.max(0, pos.left
 									- $(window).scrollLeft())
@@ -48,20 +48,36 @@ $(document).ready(
 $(document).ready(function() {
 	function fixAnnoPanel() {
 		var $annoPanel = $('#annotationDetailEditorPanel');
-		if ($(window).scrollTop() > 100)
-			$annoPanel.css({
-				'position' : 'fixed',
-				'top' : '100px'
-			});
-		else
+		var pos = $('#annotationDetailEditorPanel').position();
+		if(pos === undefined){
 			$annoPanel.css({
 				'position' : 'relative',
-				'top' : 'auto'
+				'top' : 'auto',
+				'overflow-y': 'auto',
+				'height' : '70%'
 			});
+			
+		}
+		else if(pos !== undefined && diff === undefined){
+			diff = pos.top - stickerTop;// length between the sticker and the editor 
+		}
+		else {
+			var editorTop = stickerTop + diff;
+			$annoPanel.css({
+				'position' : 'fixed',
+				'top' : editorTop  + 'px',
+				'overflow-y': 'auto',
+				'height' : '70%'
+			});
+		}
 	}
-	$(window).scroll(fixAnnoPanel);
+	var diff;
+	$(document).on("scroll", fixAnnoPanel);
+	$(document).on("resize", fixAnnoPanel);
+	$(document).on("load", fixAnnoPanel);
 	fixAnnoPanel();
 });
+
 
 $(document)
 		.ready(

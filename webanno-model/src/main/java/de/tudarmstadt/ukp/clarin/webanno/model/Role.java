@@ -26,7 +26,6 @@ import java.util.Set;
  * privilege such as project admin, annotator or curator ROLE_REMORE - Privilege for web-service
  * based user access
  *
- * @author Seid Muhie Yimam
  */
 public enum Role
 {

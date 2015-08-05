@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
  * An interface used to decouple enums from the data. Implementation based on ideas from
  * http://www.gabiaxel.com/2011/01/better-enum-mapping-with-hibernate.html
  *
- * @author Seid Muhie Yimam
  *
  */
 public interface PersistentEnum

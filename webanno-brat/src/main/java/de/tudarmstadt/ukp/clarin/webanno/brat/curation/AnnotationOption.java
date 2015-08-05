@@ -25,7 +25,6 @@ import java.util.List;
  * This class comprises instances of {@link AnnotationSelection}, each representing a possible
  * choice of disagreeing annotation sets.
  *
- * @author Andreas Straninger
  */
 public class AnnotationOption
     implements Serializable

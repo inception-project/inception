@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 /**
  * Variables for the different transitions states of a {@link SourceDocument} workflow.
  *
- * @author Seid Muhie Yimam
  *
  */
 public enum SourceDocumentStateTransition

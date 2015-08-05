@@ -17,7 +17,6 @@
  ******************************************************************************/
 /**
  * Model classes for curation/correction related components
- * @author Seid Muhie Yimam
  *
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;

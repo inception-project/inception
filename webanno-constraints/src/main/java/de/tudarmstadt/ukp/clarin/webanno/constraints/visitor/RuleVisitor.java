@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 /**
  * Visitor for Rules
- * @author aakash
  *
  */
 public class RuleVisitor

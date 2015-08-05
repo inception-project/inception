@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.WebAnnoCssReference;
 /**
  * Modal window to Export annotated document
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ExportModalWindowPage

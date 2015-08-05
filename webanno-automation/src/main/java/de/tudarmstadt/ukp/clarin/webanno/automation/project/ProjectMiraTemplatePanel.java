@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Panel used to define automation properties for the {@code MIRA} machine learning algorithm
  *
- * @author Seid Muhie Yimam
  *
  */
 public class ProjectMiraTemplatePanel

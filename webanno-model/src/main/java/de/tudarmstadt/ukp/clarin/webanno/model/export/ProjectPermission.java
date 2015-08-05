@@ -23,7 +23,6 @@ import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 /**
  * Project permissions information to be exported/imported
- * @author Seid Muhie Yimam
  *
  */
 @JsonPropertyOrder(value = { "level", "user"})

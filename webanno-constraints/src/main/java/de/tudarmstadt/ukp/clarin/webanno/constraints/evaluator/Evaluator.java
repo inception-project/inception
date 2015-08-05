@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 /***
  * Interface for getting values from rules
  * 
- * @author aakash
  *
  */
 public interface Evaluator

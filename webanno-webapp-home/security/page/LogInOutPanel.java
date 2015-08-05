@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 /**
  * Panel used to log in or log out.
  *
- * @author Richard Eckart de Castilho
  */
 public class LogInOutPanel
 	extends Panel

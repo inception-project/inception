@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
  * and associated documents
  *
- * @author Seid Muhie Yimam
  *
  */
 public class OpenModalWindowPanel

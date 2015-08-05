@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
  * clicks on a span or an arc, the Method onSelectAnnotationForMerge() is
  * called. Override that method to receive the result in another wicket panel.
  *
- * @author Andreas Straninger
  */
 public class BratSuggestionVisualizer
     extends BratVisualizer
