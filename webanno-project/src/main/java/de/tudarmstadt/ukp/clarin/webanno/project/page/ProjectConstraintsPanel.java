@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
  *
  *
  */
-public class ConstraintsPanel
+public class ProjectConstraintsPanel
     extends Panel
 {
     private static final long serialVersionUID = 8910455936756021733L;
@@ -68,7 +68,7 @@ public class ConstraintsPanel
     
     private ImportForm importForm;
 
-    public ConstraintsPanel(String id, Model<Project> aProjectModel)
+    public ProjectConstraintsPanel(String id, Model<Project> aProjectModel)
     {
         super(id, aProjectModel);
         
@@ -98,7 +98,7 @@ public class ConstraintsPanel
                 @Override
                 protected List<ConstraintSet> load()
                 {
-                    return projectRepository.listConstraintSets(ConstraintsPanel.this
+                    return projectRepository.listConstraintSets(ProjectConstraintsPanel.this
                             .getModelObject());
                 }
             };
@@ -114,7 +114,7 @@ public class ConstraintsPanel
                 @Override
                 protected void onSelectionChanged(ConstraintSet aNewSelection)
                 {
-                    ConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
+                    ProjectConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
                 }
 
                 @Override
@@ -268,7 +268,7 @@ public class ConstraintsPanel
         
         private void importAction()
         {
-            Project project = ConstraintsPanel.this.getModelObject();
+            Project project = ProjectConstraintsPanel.this.getModelObject();
 
             if (project.getId() == 0) {
                 error("Project not yet created, please save project Details!");
@@ -302,7 +302,7 @@ public class ConstraintsPanel
                 if (constraintRuleFileIsOK) {
                     try {
                         ConstraintSet constraintSet = new ConstraintSet();
-                        constraintSet.setProject(ConstraintsPanel.this.getModelObject());
+                        constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
                         constraintSet.setName(constraintRulesFile.getClientFileName());
                         projectRepository.createConstraintSet(constraintSet);
                         projectRepository.writeConstraintSet(constraintSet,

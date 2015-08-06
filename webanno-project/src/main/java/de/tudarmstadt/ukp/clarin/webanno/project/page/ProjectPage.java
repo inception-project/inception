@@ -405,7 +405,7 @@ public class ProjectPage
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ConstraintsPanel(panelId, projectModel);
+                    return new ProjectConstraintsPanel(panelId, projectModel);
                 }
 
                 @Override
