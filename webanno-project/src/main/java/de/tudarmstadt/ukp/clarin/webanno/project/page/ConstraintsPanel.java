@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -31,6 +33,7 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -161,7 +164,31 @@ public class ConstraintsPanel
             // Script not editable - if we remove this flag, then the script area will not update
             // when switching set selection
             script.setEnabled(false); 
-            
+
+            add(new DownloadLink("export", new LoadableDetachableModel<File>()
+            {
+                private static final long serialVersionUID = 840863954694163375L;
+
+                @Override
+                protected File load()
+                {
+                    File exportFile = null;
+                    try {
+                        String constraintFilename = DetailForm.this.getModelObject().getName();
+                        exportFile = new File("tmp", constraintFilename);
+                        FileUtils.copyFile(projectRepository.exportConstraintAsFile(DetailForm.this.getModelObject()), exportFile);
+                                                
+                    }
+                    catch (IOException e1) {
+                        error("Unable to export Constraint file");
+                    }
+                    
+                    info("Constraints successfully exported to :" + exportFile.getAbsolutePath());
+
+                    return exportFile;
+                }
+            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+
             add(new Button("delete", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
 
