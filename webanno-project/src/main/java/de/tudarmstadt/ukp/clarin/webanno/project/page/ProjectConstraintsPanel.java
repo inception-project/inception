@@ -23,8 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -173,22 +173,15 @@ public class ProjectConstraintsPanel
                 @Override
                 protected File load()
                 {
-                    File exportFile = null;
                     try {
-                        String constraintFilename = DetailForm.this.getModelObject().getName();
-                        exportFile = new File("tmp", constraintFilename);
-                        FileUtils.copyFile(projectRepository.exportConstraintAsFile(DetailForm.this.getModelObject()), exportFile);
-                                                
+                        return projectRepository.exportConstraintAsFile(DetailForm.this
+                                .getModelObject());
                     }
-                    catch (IOException e1) {
-                        error("Unable to export Constraint file");
+                    catch (IOException e) {
+                        throw new WicketRuntimeException(e);
                     }
-                    
-                    info("Constraints successfully exported to :" + exportFile.getAbsolutePath());
-
-                    return exportFile;
                 }
-            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+            }));
 
             add(new Button("delete", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
