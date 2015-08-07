@@ -37,6 +37,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
@@ -191,29 +193,26 @@ public class ProjectPage
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
                     setNullValid(false);
-                }
+                    
+                    add(new OnChangeAjaxBehavior()
+                    {
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                protected void onSelectionChanged(Project aNewSelection)
-                {
-                    if (aNewSelection != null) {
-                        projectDetailForm.setModelObject(aNewSelection);
-                        projectDetailForm.projectModel.setObject(aNewSelection);
-                        projectDetailForm.setVisible(true);
-
-                        projectDetailForm.allTabs.setSelectedTab(0);
-                        RequestCycle.get().setResponsePage(getPage());
-                        ProjectSelectionForm.this.setVisible(true);
-                    }
-                    if (projectType != null) {
-                        projectType.setEnabled(false);
-                    }
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget aTarget)
+                        {
+                            if (getModelObject() != null) {
+                                projectDetailForm.setModelObject(getModelObject());
+                                projectDetailForm.setVisible(true);
+                                
+                                projectDetailForm.allTabs.setSelectedTab(0);
+                                aTarget.add(projectDetailForm);
+                            }
+                            if (projectType != null) {
+                                projectType.setEnabled(false);
+                            }
+                        }
+                    });
                 }
 
                 @Override
@@ -222,7 +221,7 @@ public class ProjectPage
                     return "";
                 }
             });
-        }
+        }            
     }
 
     static public class SelectionModel
@@ -282,21 +281,19 @@ public class ProjectPage
     {
         private static final long serialVersionUID = -1L;
 
-        AbstractTab details;
-        AbstractTab users;
-        AbstractTab layers;
-        AbstractTab tagSets;
-        AbstractTab documents;
-        AbstractTab constraints; // For constraint rules
-        @SuppressWarnings("rawtypes")
-        AjaxTabbedPanel allTabs;
+        private AjaxTabbedPanel<ITab> allTabs;
 
         public ProjectDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
-
-            List<ITab> tabs = new ArrayList<ITab>();
-            tabs.add(details = new AbstractTab(new Model<String>("Details"))
+            add(allTabs = makeTabs());
+            ProjectDetailForm.this.setMultiPart(true);
+        }
+        
+        private AjaxTabbedPanel<ITab> makeTabs()
+        {
+            List<ITab> tabs = new ArrayList<>();
+            tabs.add(new AbstractTab(Model.of("Details"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -313,167 +310,150 @@ public class ProjectPage
                 }
             });
 
-            tabs.add(users = new AbstractTab(new Model<String>("Users"))
+            tabs.add(new AbstractTab(Model.of("Users"))
             {
                 private static final long serialVersionUID = 7160734867954315366L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectUsersPanel(panelId, projectModel);
+                    return new ProjectUsersPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(documents = new AbstractTab(new Model<String>("Documents"))
+            tabs.add(new AbstractTab(Model.of("Documents"))
             {
                 private static final long serialVersionUID = 1170760600317199418L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectDocumentsPanel(panelId, projectModel);
+                    return new ProjectDocumentsPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(layers = new AbstractTab(new Model<String>("Layers"))
+            tabs.add(new AbstractTab(Model.of("Layers"))
             {
                 private static final long serialVersionUID = 3274065112505097898L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectLayersPanel(panelId, projectModel);
+                    return new ProjectLayersPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(tagSets = new AbstractTab(new Model<String>("Tagsets"))
+            tabs.add(new AbstractTab(Model.of("Tagsets"))
             {
                 private static final long serialVersionUID = -3205723896786674220L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectTagSetsPanel(panelId, projectModel);
+                    return new ProjectTagSetsPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Guidelines"))
+            tabs.add(new AbstractTab(Model.of("Guidelines"))
             {
                 private static final long serialVersionUID = 7887973231065189200L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new AnnotationGuideLinePanel(panelId, projectModel);
+                    return new AnnotationGuideLinePanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Constraints"))
+            tabs.add(new AbstractTab(Model.of("Constraints"))
             {
                 private static final long serialVersionUID = 8910455936756021733L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectConstraintsPanel(panelId, projectModel);
+                    return new ProjectConstraintsPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0 && visible;
+                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("Export"))
+            tabs.add(new AbstractTab(Model.of("Export"))
             {
-
                 private static final long serialVersionUID = 788812791376373350L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectExportPanel(panelId, projectModel);
+                    return new ProjectExportPanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0;
-
+                    return ProjectDetailForm.this.getModelObject().getId() != 0;
                 }
             });
 
             tabs.add(new AbstractTab(new Model<String>("Automation"))
             {
-
                 private static final long serialVersionUID = 788812791376373350L;
 
                 @Override
                 public Panel getPanel(String panelId)
                 {
-                    return new ProjectMiraTemplatePanel(panelId, projectModel);
+                    return new ProjectMiraTemplatePanel(panelId, ProjectDetailForm.this.getModel());
                 }
 
                 @Override
                 public boolean isVisible()
                 {
-                    return projectModel.getObject().getId() != 0
-                            && projectModel.getObject().getMode().equals(Mode.AUTOMATION)
+                    Project project = ProjectDetailForm.this.getModelObject();
+                    return project.getId() != 0 && project.getMode().equals(Mode.AUTOMATION)
                             && visible;
-
                 }
             });
-            add(allTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>("tabs", tabs)
-                    .setOutputMarkupPlaceholderTag(true));
-            ProjectDetailForm.this.setMultiPart(true);
+            AjaxTabbedPanel<ITab> allTabs = new AjaxTabbedPanel<ITab>("tabs", tabs);
+            allTabs.setOutputMarkupPlaceholderTag(true);
+            allTabs.setOutputMarkupId(true);
+            return allTabs;
         }
-
-        // Update the project mode, that will be shared among TABS
-        // Better way of sharing data
-        // http://stackoverflow.com/questions/6532178/wicket-persistent-object-between-panels
-        Model<Project> projectModel = new Model<Project>()
-        {
-            private static final long serialVersionUID = -6394439155356911110L;
-
-            @Override
-            public Project getObject()
-            {
-                return projectDetailForm.getModelObject();
-            }
-        };
     }
-
+    
     private class ProjectDetailsPanel
         extends Panel
     {

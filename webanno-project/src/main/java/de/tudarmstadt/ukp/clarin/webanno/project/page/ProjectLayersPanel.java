@@ -67,6 +67,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
@@ -119,7 +120,7 @@ public class ProjectLayersPanel
     private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
 
-    private final Model<Project> selectedProjectModel;
+    private final IModel<Project> selectedProjectModel;
 
     private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
@@ -129,7 +130,7 @@ public class ProjectLayersPanel
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
-    public ProjectLayersPanel(String id, final Model<Project> aProjectModel)
+    public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;

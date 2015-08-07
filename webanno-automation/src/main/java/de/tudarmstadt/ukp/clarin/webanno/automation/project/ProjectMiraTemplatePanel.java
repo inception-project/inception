@@ -39,6 +39,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
@@ -94,7 +95,7 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
     private TargetLaerDetailForm targetLayerDetailForm;
 
-    private final Model<Project> selectedProjectModel;
+    private final IModel<Project> selectedProjectModel;
 
     private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
 
@@ -107,7 +108,7 @@ public class ProjectMiraTemplatePanel
     private DropDownChoice<AnnotationFeature> features;
     private DropDownChoice<AnnotationFeature> otherFeatures;
 
-    public ProjectMiraTemplatePanel(String id, final Model<Project> aProjectModel)
+    public ProjectMiraTemplatePanel(String id, final IModel<Project> aProjectModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;

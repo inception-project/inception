@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
@@ -68,7 +69,7 @@ public class ProjectConstraintsPanel
     
     private ImportForm importForm;
 
-    public ProjectConstraintsPanel(String id, Model<Project> aProjectModel)
+    public ProjectConstraintsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
         
