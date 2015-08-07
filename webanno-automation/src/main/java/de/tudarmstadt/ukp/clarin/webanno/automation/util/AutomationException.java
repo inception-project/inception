@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.tudarmstadt.ukp.clarin.webanno.brat.automation;
+package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
 public class AutomationException extends Exception {
 

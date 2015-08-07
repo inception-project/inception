@@ -76,6 +76,7 @@ import org.apache.log4j.PatternLayout;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
@@ -86,12 +87,14 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -132,6 +135,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.io.bincas.BinaryCasReader;
+import de.tudarmstadt.ukp.dkpro.core.io.bincas.SerializedCasWriter;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
@@ -2174,10 +2179,10 @@ public class RepositoryServiceDbData
     @Override
     public List<MiraTemplate> listMiraTemplates(Project aProject)
     {
-        List<MiraTemplate> allTemplates = entityManager.createQuery(
+        List<MiraTemplate> allTenplates = entityManager.createQuery(
                 "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
         List<MiraTemplate> templatesInThisProject = new ArrayList<MiraTemplate>();
-        for (MiraTemplate miraTemplate : allTemplates) {
+        for (MiraTemplate miraTemplate : allTenplates) {
             if (miraTemplate.getTrainFeature() != null
                     && miraTemplate.getTrainFeature().getProject().getId() == aProject.getId()) {
                 templatesInThisProject.add(miraTemplate);
@@ -2351,7 +2356,6 @@ public class RepositoryServiceDbData
         }
     }
     
-    @Override
     public List<Project> listAccessibleProjects()
     {
         List<Project> allowedProject = new ArrayList<Project>();
@@ -2391,7 +2395,6 @@ public class RepositoryServiceDbData
      *            the project.
      * @return if a finished document exists.
      */
-    @Override
     public boolean existFinishedDocument(
             SourceDocument aSourceDocument, User aUser, Project aProject)
     {

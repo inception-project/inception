@@ -38,9 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -68,7 +66,6 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.automation.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
@@ -77,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
@@ -123,7 +119,7 @@ public class SpanAnnotationModalWindowPage
     List<IModel<FeatureValue>> featureModels;
     List<IModel<String>> featureValueModels;
     RefreshingView<FeatureValue> featureValues;
-    private WebMarkupContainer wmc;
+    private WebMarkupContainer wmc ;
 
     private class AnnotationDialogForm
         extends Form<SelectionModel>
@@ -155,8 +151,7 @@ public class SpanAnnotationModalWindowPage
             }
 
             add(new Label("selectedText", selectedText));
-            DropDownChoice<AnnotationLayer> layer = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
-                    "layers", layersModel, spanLayers)
+			DropDownChoice<AnnotationLayer> layer = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>("layers", layersModel, spanLayers)
             {
                 private static final long serialVersionUID = -1L;
 
@@ -165,7 +160,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     return "";
                 }
-
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -185,15 +180,13 @@ public class SpanAnnotationModalWindowPage
                 }
             });
 
-            layer.add(new OnChangeAjaxBehavior()
-            {
+            layer.add(new OnChangeAjaxBehavior() {
 
-                private static final long serialVersionUID = 5179816588460867471L;
+				private static final long serialVersionUID = 5179816588460867471L;
 
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    featureModels = new ArrayList<IModel<FeatureValue>>();
+				@Override
+				protected void onUpdate(AjaxRequestTarget aTarget) {
+					featureModels = new ArrayList<IModel<FeatureValue>>();
                     featureValueModels = new ArrayList<IModel<String>>();
                     selectedLayer = layersModel.getObject();
                     for (AnnotationFeature feature : annotationService
@@ -220,9 +213,9 @@ public class SpanAnnotationModalWindowPage
                         featureValueModels.add(tagModel);
                     }
                     aTarget.add(wmc);
-                }
-            });
-
+				}
+			});
+            
             add(layer);
 
             featureModels = new ArrayList<IModel<FeatureValue>>();
@@ -269,9 +262,9 @@ public class SpanAnnotationModalWindowPage
 
                     String featureLabel = feature.getUiName();
                     if (feature.getTagset() != null) {
-                        featureLabel += " (" + feature.getTagset().getName() + ")";
+                        featureLabel += " (" + feature.getTagset().getName()+")";
                     }
-
+                    
                     item.add(new Label("feature", featureLabel));
 
                     if (feature.getTagset() != null) {
@@ -282,8 +275,7 @@ public class SpanAnnotationModalWindowPage
 
                         ComboBox<Tag> featureValueCombo = new ComboBox<Tag>("tag",
                                 featureValueModels.get(item.getIndex()), tagset,
-                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>(
-                                        "name"));
+                                new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                         if (item.getIndex() == 0) {
                             // Put focus on first feature
                             featureValueCombo.add(new DefaultFocusBehavior());
@@ -310,7 +302,7 @@ public class SpanAnnotationModalWindowPage
             }));
             featureValues.setOutputMarkupId(true);
             wmc.setOutputMarkupId(true);
-
+            
             AjaxButton annotateButton = new AjaxButton("annotate")
             {
                 private static final long serialVersionUID = 980971048279862290L;
@@ -320,7 +312,7 @@ public class SpanAnnotationModalWindowPage
                 {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     aModalWindow.close(aTarget);
-
+                    
                     try {
                         actionAnnotate();
                     }
@@ -352,13 +344,13 @@ public class SpanAnnotationModalWindowPage
                     super.onConfigure();
                     setVisible(isModify);
                 }
-
+                
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     aModalWindow.close(aTarget);
-
+                    
                     try {
                         actionDelete();
                     }
@@ -389,7 +381,7 @@ public class SpanAnnotationModalWindowPage
         bratAnnotatorModel.setSentenceBeginOffset(sentence.getBegin());
         bratAnnotatorModel.setSentenceEndOffset(sentence.getEnd());
     }
-
+    
     private void actionAnnotate()
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
@@ -426,9 +418,12 @@ public class SpanAnnotationModalWindowPage
             IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
             // Check if tag is necessary, set, and correct
-            if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
-                    && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
-                error("[" + model.getObject()
+            if (feature.getTagset() != null
+                    && !feature.getTagset().isCreateTag()
+                    && !annotationService.existsTag(model.getObject(),
+                            feature.getTagset())) {
+                error("["
+                        + model.getObject()
                         + "] is not in the tag list. Please choose form the existing tags");
                 return;
             }
@@ -442,14 +437,14 @@ public class SpanAnnotationModalWindowPage
 
         if (selectedSpanId == -1) {
             if (adapter instanceof SpanAdapter) {
-                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset, endOffset, null,
-                        null);
+                selectedSpanId = ((SpanAdapter) adapter).add(jCas, beginOffset,
+                        endOffset, null,null);
             }
             else {
-                selectedSpanId = ((ChainAdapter) adapter).addSpan(jCas, beginOffset, endOffset,
-                        null, null);
+                selectedSpanId = ((ChainAdapter) adapter).addSpan(jCas,
+                        beginOffset, endOffset, null,null);
             }
-            // continue;// next time, it will update features
+          //  continue;// next time, it will update features
         }
 
         // Set feature values
@@ -458,47 +453,45 @@ public class SpanAnnotationModalWindowPage
             IModel<String> model = featureValueModels.get(i);
             AnnotationFeature feature = featureModels.get(i).getObject().feature;
             features.add(feature);
-
+            
             Tag selectedTag;
             if (feature.getTagset() == null) {
                 selectedTag = new Tag();
                 selectedTag.setName(model.getObject());
             }
-            else if (feature.getTagset() != null && feature.getTagset().isCreateTag()
-                    && !annotationService.existsTag(model.getObject(), feature.getTagset())) {
+            else if (feature.getTagset() != null
+                    && feature.getTagset().isCreateTag()
+                    && !annotationService.existsTag(model.getObject(),
+                            feature.getTagset())) {
                 selectedTag = new Tag();
                 selectedTag.setName(model.getObject());
                 selectedTag.setTagSet(feature.getTagset());
                 if (model.getObject() != null) {
                     // Do not persist if we unset a feature value
-                    annotationService.createTag(selectedTag, bratAnnotatorModel.getUser());
+                    annotationService.createTag(selectedTag,
+                            bratAnnotatorModel.getUser());
                 }
             }
             else {
-                selectedTag = annotationService.getTag(model.getObject(), feature.getTagset());
+                selectedTag = annotationService.getTag(model.getObject(),
+                        feature.getTagset());
             }
 
-            adapter.updateFeature(jCas, feature, selectedSpanId, selectedTag.getName());
-            if (bratAnnotatorModel.getMode().equals(Mode.AUTOMATION)) {
-                MiraTemplate template = repository.getMiraTemplate(feature);
-                if (template != null && !template.isAnnotateAndPredict()) {
-                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
-                            annotationService, beginOffset, endOffset, feature,
-                            selectedTag.getName());
-                }
-            }
+            adapter.updateFeature(jCas, feature, selectedSpanId,
+                    selectedTag.getName());
             selectedFeatureValues.put(feature, model.getObject());
         }
 
         // update timestamp now
         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                bratAnnotatorModel.getMode());
+        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
         // persist changes
-        repository.updateJCas(bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
-                bratAnnotatorModel.getUser(), jCas);
+        repository.updateJCas(bratAnnotatorModel.getMode(),
+                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                jCas);
 
         if (bratAnnotatorModel.isScrollPage()) {
             updateSentenceAddressAndOffsets(jCas, beginOffset);
@@ -508,15 +501,15 @@ public class SpanAnnotationModalWindowPage
         bratAnnotatorModel.setRememberedSpanFeatures(selectedFeatureValues);
 
         bratAnnotatorModel.setAnnotate(true);
-        if (selectedSpanId != -1) {
+        if(selectedSpanId !=-1){
             String bratLabelText = TypeUtil.getBratLabelText(adapter,
                     BratAjaxCasUtil.selectByAddr(jCas, selectedSpanId), features);
             info(generateMessage(selectedLayer, bratLabelText, false));
         }
     }
-
+    
     private void actionDelete()
-        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+        throws IOException, UIMAException, ClassNotFoundException
     {
         JCas jCas = getCas(bratAnnotatorModel);
         AnnotationFS fs = selectByAddr(jCas, selectedSpanId);
@@ -526,8 +519,8 @@ public class SpanAnnotationModalWindowPage
 
         Set<TypeAdapter> typeAdapters = new HashSet<TypeAdapter>();
 
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(bratAnnotatorModel
-                .getProject())) {
+        for (AnnotationLayer layer : annotationService
+                .listAnnotationLayer(bratAnnotatorModel.getProject())) {
 
             typeAdapters.add(getAdapter(layer));
         }
@@ -541,9 +534,10 @@ public class SpanAnnotationModalWindowPage
                 continue;
             }
             if (tn.equals(attachTypeName)) {
-                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas, beginOffset,
-                        endOffset);
-                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
+                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                        beginOffset, endOffset);
+                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(),
+                        thisSentence.getEnd());
                 break;
             }
 
@@ -552,9 +546,10 @@ public class SpanAnnotationModalWindowPage
                 continue;
             }
             if (fn.equals(attachFeatureName)) {
-                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas, beginOffset,
-                        endOffset);
-                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(), thisSentence.getEnd());
+                Sentence thisSentence = BratAjaxCasUtil.getCurrentSentence(jCas,
+                        beginOffset, endOffset);
+                ad.deleteBySpan(jCas, fs, thisSentence.getBegin(),
+                        thisSentence.getEnd());
                 break;
             }
         }
@@ -564,29 +559,15 @@ public class SpanAnnotationModalWindowPage
         }
         // END HACK - Issue 933
         adapter.delete(jCas, selectedSpanId);
-        if (bratAnnotatorModel.getMode().equals(Mode.AUTOMATION)) {
-            for (AnnotationFeature f : annotationService.listAnnotationFeature(selectedLayer)) {
-                if (repository.getMiraTemplate(f) != null
-                        & repository.getMiraTemplate(f).isAnnotateAndPredict()) {
 
-                    Type type = CasUtil.getType(jCas.getCas(), selectedLayer.getName());
-                    Feature feature = type.getFeatureByBaseName(f.getName());
-
-                    AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
-                            annotationService, beginOffset, endOffset, f,
-                            fs.getFeatureValueAsString(feature));
-                    break;
-                }
-            }
-        }
-
-        repository.updateJCas(bratAnnotatorModel.getMode(), bratAnnotatorModel.getDocument(),
-                bratAnnotatorModel.getUser(), jCas);
+        repository.updateJCas(bratAnnotatorModel.getMode(),
+                bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
+                jCas);
         // update timestamp now
         int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, beginOffset);
         bratAnnotatorModel.getDocument().setSentenceAccessed(sentenceNumber);
-        repository.updateTimeStamp(bratAnnotatorModel.getDocument(), bratAnnotatorModel.getUser(),
-                bratAnnotatorModel.getMode());
+        repository.updateTimeStamp(bratAnnotatorModel.getDocument(),
+                bratAnnotatorModel.getUser(), bratAnnotatorModel.getMode());
 
         if (bratAnnotatorModel.isScrollPage()) {
             updateSentenceAddressAndOffsets(jCas, beginOffset);
@@ -651,7 +632,7 @@ public class SpanAnnotationModalWindowPage
             BratAnnotatorModel aBratAnnotatorModel, String aSelectedText, int aBeginOffset,
             int aEndOffset)
     {
-        super(aId);
+    	super(aId);
         this.beginOffset = aBeginOffset;
         this.endOffset = aEndOffset;
 
@@ -665,7 +646,7 @@ public class SpanAnnotationModalWindowPage
     public SpanAnnotationModalWindowPage(String aId, ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel, int selectedSpanId)
     {
-        super(aId);
+    	super(aId);
         this.selectedSpanId = selectedSpanId;
         this.bratAnnotatorModel = aBratAnnotatorModel;
         JCas jCas = null;
@@ -695,7 +676,7 @@ public class SpanAnnotationModalWindowPage
             type = type.substring(0, type.length() - ChainAdapter.LINK.length());
         }
 
-        selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
+        this.selectedLayer = annotationService.getLayer(type, bratAnnotatorModel.getProject());
         layersModel = new Model<AnnotationLayer>(selectedLayer);
 
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(selectedLayer)) {

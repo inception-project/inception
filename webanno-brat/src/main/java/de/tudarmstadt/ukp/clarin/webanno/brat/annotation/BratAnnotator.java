@@ -131,8 +131,7 @@ public class BratAnnotator
     /**
      * Data models for {@link BratAnnotator}
      *
-     * @param aModel
-     *            the model.
+     * @param aModel the model.
      */
     public void setModel(IModel<BratAnnotatorModel> aModel)
     {
@@ -359,14 +358,15 @@ public class BratAnnotator
         closeButtonClicked = false;
         if (aSelectedSpanId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Span Annotation");
-            openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog, getModelObject(), selectedSpanText,
-                    aBeginOffset, aEndOffset));
+            openAnnotationDialog.setContent(new  SpanAnnotationModalWindowPage(openAnnotationDialog
+                    .getContentId(),openAnnotationDialog,
+                    getModelObject(), selectedSpanText, aBeginOffset, aEndOffset));
         }
         else {
             openAnnotationDialog.setTitle("Edit Span Annotation");
             openAnnotationDialog.setContent(new SpanAnnotationModalWindowPage(openAnnotationDialog
-                    .getContentId(), openAnnotationDialog, getModelObject(), aSelectedSpanId));
+                    .getContentId(), openAnnotationDialog,
+                    getModelObject(), aSelectedSpanId));
         }
 
         openAnnotationDialog.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -379,6 +379,10 @@ public class BratAnnotator
                 if (!closeButtonClicked) {
 
                     onChange(aTarget, getModelObject());
+                    onAnnotate(aTarget,getModelObject(), beginOffset, endOffset);
+                    if (!getModelObject().isAnnotate()) {
+                            onDelete(aTarget, getModelObject(), beginOffset, endOffset);
+                        }
                     bratRender(aTarget, getJCas());
                 }
             }
@@ -459,19 +463,16 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 
         // BRAT helpers
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
 
         // BRAT modules
         aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
 
         StringBuilder script = new StringBuilder();
@@ -531,9 +532,10 @@ public class BratAnnotator
      */
     protected String bratInitLaterCommand()
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
-                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
-                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
+       return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
+                + "[{action: 'getCollectionInformation',collection: '"
+                + getCollection() + "'}, 'collectionLoaded', {collection: '" + getCollection()
+                + "',keep: true}]);";
     }
 
     /**
@@ -543,15 +545,14 @@ public class BratAnnotator
      */
     protected String bratRenderLaterCommand()
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "['"
-                + getCollection() + "', '1234', {}, true]);";
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', "
+                + "['" + getCollection() + "', '1234', {}, true]);";
     }
 
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
      *
-     * @param aResponse
-     *            the response.
+     * @param aResponse the response.
      */
     public void bratInitRenderLater(IHeaderResponse aResponse)
     {
@@ -562,8 +563,7 @@ public class BratAnnotator
     /**
      * Reload {@link BratAnnotator} when the Correction/Curation page is opened
      *
-     * @param aTarget
-     *            the AJAX target.
+     * @param aTarget the AJAX target.
      */
     public void bratInitRenderLater(AjaxRequestTarget aTarget)
     {
@@ -574,8 +574,7 @@ public class BratAnnotator
     /**
      * Render content in a separate request.
      *
-     * @param aTarget
-     *            the AJAX target.
+     * @param aTarget the AJAX target.
      */
     public void bratRenderLater(AjaxRequestTarget aTarget)
     {
@@ -585,10 +584,8 @@ public class BratAnnotator
     /**
      * Render content as part of the current request.
      *
-     * @param aTarget
-     *            the AJAX target.
-     * @param aJCas
-     *            the CAS to render.
+     * @param aTarget the AJAX target.
+     * @param aJCas the CAS to render.
      */
     public void bratRender(AjaxRequestTarget aTarget, JCas aJCas)
     {
@@ -628,6 +625,16 @@ public class BratAnnotator
 
     }
 
+    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
+    {
+        // Overriden in AutomationPage
+    }
+
+    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
+    {
+        // Overriden in AutomationPage
+    }
+
     private String toJson(Object result)
     {
         StringWriter out = new StringWriter();
@@ -638,7 +645,8 @@ public class BratAnnotator
             jsonGenerator.writeObject(result);
         }
         catch (IOException e) {
-            error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            error("Unable to produce JSON response " + ":"
+                    + ExceptionUtils.getRootCauseMessage(e));
         }
         return out.toString();
     }
