@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.automation.util;
+package de.tudarmstadt.ukp.clarin.webanno.brat.automation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.annotation.Resource;
-import javax.persistence.NoResultException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -94,7 +93,8 @@ public class AutomationUtil
     private static final String NILL = "__nill__";
 
     public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature)
+            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            String aValue)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         SourceDocument sourceDocument = aModel.getDocument();
@@ -110,14 +110,6 @@ public class AutomationUtil
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
-        MiraTemplate template;
-        try {
-            template = aRepository.getMiraTemplate(aFeature);
-        }
-        catch (NoResultException e) {
-            template = null;
-        }
-
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
@@ -130,9 +122,8 @@ public class AutomationUtil
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
                     SpanAdapter adapter = (SpanAdapter) getAdapter(aFeature.getLayer());
-                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, aFeature, value);
+                            + selectedText.length() - 1, aFeature, aValue);
 
                 }
             }
@@ -141,7 +132,8 @@ public class AutomationUtil
     }
 
     public static void deleteAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature)
+            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            String aValue)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 
@@ -158,14 +150,6 @@ public class AutomationUtil
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aRepository.getUser(username);
 
-        MiraTemplate template;
-        try {
-            template = aRepository.getMiraTemplate(aFeature);
-        }
-        catch (NoResultException e) {
-            template = null;
-        }
-
         int beginOffset = aModel.getSentenceBeginOffset();
 
         int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
@@ -178,9 +162,8 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    String value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.delete(jCas, aFeature, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, value);
+                            + selectedText.length() - 1, aValue);
                 }
             }
         }
