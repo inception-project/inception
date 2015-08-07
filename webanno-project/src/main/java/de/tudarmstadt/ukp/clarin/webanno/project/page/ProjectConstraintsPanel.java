@@ -223,6 +223,10 @@ public class ProjectConstraintsPanel
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
+                    
+                    // This is currently the only "cancel" button in the project settings. Better
+                    // activate when we add such buttons to other panels as well.
+                    setVisible(false);
                 }
                 
                 @Override
