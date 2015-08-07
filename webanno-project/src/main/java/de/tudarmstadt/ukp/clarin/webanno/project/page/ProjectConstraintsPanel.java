@@ -166,7 +166,8 @@ public class ProjectConstraintsPanel
             // when switching set selection
             script.setEnabled(false); 
 
-            add(new DownloadLink("export", new LoadableDetachableModel<File>()
+            final IModel<String> exportFilenameModel = new Model<>();
+            final IModel<File> exportFileModel = new LoadableDetachableModel<File>()
             {
                 private static final long serialVersionUID = 840863954694163375L;
 
@@ -174,6 +175,9 @@ public class ProjectConstraintsPanel
                 protected File load()
                 {
                     try {
+                        // Use the name of the constraints set instead of the ID under which the
+                        // file is saved internally.
+                        exportFilenameModel.setObject(DetailForm.this.getModelObject().getName());
                         return projectRepository.exportConstraintAsFile(DetailForm.this
                                 .getModelObject());
                     }
@@ -181,7 +185,8 @@ public class ProjectConstraintsPanel
                         throw new WicketRuntimeException(e);
                     }
                 }
-            }));
+            }; 
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel));
 
             add(new Button("delete", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
