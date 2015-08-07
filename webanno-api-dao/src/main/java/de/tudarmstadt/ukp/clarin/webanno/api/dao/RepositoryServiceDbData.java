@@ -2195,15 +2195,12 @@ public class RepositoryServiceDbData
         User user = userRepository.get(username);
 
         List<Project> allProjects = listProjects();
-        List<Authority> authorities = listAuthorities(user);
 
         // if global admin, show all projects
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                return allProjects;
-            }
+        if (SecurityUtil.isSuperAdmin(this, user)) {
+            return allProjects;
         }
-
+        
         // else only projects she is admin of
         for (Project project : allProjects) {
             if (SecurityUtil.isProjectAdmin(project, this, user)) {

@@ -47,6 +47,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ImportUtil;
@@ -366,7 +367,7 @@ public class ManageUsersPage
 
     private boolean isAdmin()
     {
-        return getActiveUser().getRoles().contains(Role.ROLE_ADMIN);
+        return SecurityUtil.isSuperAdmin(projectRepository, getActiveUser());
     }
 
     private User getActiveUser()

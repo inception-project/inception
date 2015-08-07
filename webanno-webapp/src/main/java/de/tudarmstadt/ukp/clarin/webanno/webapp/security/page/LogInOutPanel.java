@@ -63,11 +63,11 @@ public class LogInOutPanel
 			protected void onConfigure()
 			{
 				super.onConfigure();
-				if (AuthenticatedWebSession.get().isSignedIn()) {
+				if (isSignedIn()) {
 					setDefaultModel(new Model<String>(SecurityContextHolder.getContext()
 							.getAuthentication().getName()));
 				}
-				setVisible(AuthenticatedWebSession.get().isSignedIn());
+				setVisible(isSignedIn());
 			}
 		});
 
@@ -77,7 +77,7 @@ public class LogInOutPanel
 			protected void onConfigure()
 			{
 				super.onConfigure();
-				setVisible(!AuthenticatedWebSession.get().isSignedIn());
+				setVisible(!isSignedIn());
 			}
 
 			@Override
@@ -93,7 +93,7 @@ public class LogInOutPanel
 			protected void onConfigure()
 			{
 				super.onConfigure();
-				setVisible(AuthenticatedWebSession.get().isSignedIn());
+				setVisible(isSignedIn());
 			}
 
 			@Override
@@ -103,6 +103,12 @@ public class LogInOutPanel
 				setResponsePage(getApplication().getHomePage());
 			}
 		});
+	}
+	
+	private boolean isSignedIn()
+	{
+//        return AuthenticatedWebSession.get().isSignedIn();
+        return SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
 	}
 
 	private boolean isSignedInAnonymously()
