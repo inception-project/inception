@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import static java.lang.String.format;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
@@ -31,6 +32,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 /**
  *  An {@link AuthenticatedWebSession} based on {@link Authentication}
@@ -70,6 +72,9 @@ public class SpringAuthenticatedWebSession
     @Override
     public boolean authenticate(String username, String password)
     {
+        // If already signed in (in Spring Security), then sign out there first
+        signOut();
+        
         boolean authenticated = false;
         try {
             Authentication authentication = authenticationManager
@@ -94,23 +99,30 @@ public class SpringAuthenticatedWebSession
     @Override
     public Roles getRoles()
     {
+        SecurityContext ctx = SecurityContextHolder.getContext();
+        
         Roles roles = new Roles();
-        getRolesIfSignedIn(roles);
+        if (ctx.getAuthentication().isAuthenticated()) {
+            boolean isAnonymous = false;
+            
+            Authentication authentication = ctx.getAuthentication();
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                roles.add(authority.getAuthority());
+                if ("ROLE_ANONYMOUS".equals(authority.getAuthority())) {
+                    isAnonymous = true;
+                }
+            }
+            
+            // In case we are already signed in through Spring Security but never signed in to Wicket
+            // make sure we also sign in to Wicket - unless we are authenticated as anonymous!
+            if (!isSignedIn() && !isAnonymous) {
+                signIn(true);
+            }
+            else if (isSignedIn() && isAnonymous) {
+                signOut();
+                roles = new Roles();
+            }
+        }
         return roles;
-    }
-
-    private void getRolesIfSignedIn(Roles roles)
-    {
-        if (isSignedIn()) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            addRolesFromAuthentication(roles, authentication);
-        }
-    }
-
-    private void addRolesFromAuthentication(Roles roles, Authentication authentication)
-    {
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            roles.add(authority.getAuthority());
-        }
     }
 }

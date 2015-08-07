@@ -17,59 +17,76 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth;
 
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
 
 public class ShibbolethRequestHeaderAuthenticationFilter
     extends RequestHeaderAuthenticationFilter
 {
+    private final Log log = LogFactory.getLog(getClass());
 
     private UserDetailsManager userDetailsManager;
-    private boolean enable = true;
 
     @Resource(name = "userRepository")
     private UserDao userRepository;
 
-    public void newUserLogin(String aID, HttpServletRequest aRequest)
+    private void newUserLogin(String aID, HttpServletRequest aRequest)
     {
-
         User u = new User();
-        java.util.Set<Role> s = new java.util.HashSet<Role>();
-        s.add(Role.ROLE_USER);
-        s.add(Role.ROLE_PROJECT_CREATOR);
-        u.setRoles(s);
-        u.setUsername(aRequest.getHeader("eduPersonPrincipalName"));
+        u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
         u.setPassword("");
         u.setEnabled(true);
+        
+        Set<Role> s = new HashSet<>();
+        s.add(Role.ROLE_USER);
+        Properties settings = SettingsUtil.getSettings();
+        
+        String extraRoles = settings.getProperty("auth.newuser.roles");
+        if (StringUtils.isNotBlank(extraRoles)) {
+            for (String role : extraRoles.split(",")) {
+                try {
+                    s.add(Role.valueOf(role.trim()));
+                }
+                catch (IllegalArgumentException e) {
+                    log.debug("Ignoring unknown default role [" + role + "] for user ["
+                            + u.getUsername() + "]");
+                }
+            }
+        }
+        u.setRoles(s);
+        
         userRepository.create(u);
+        log.debug("Created new user [" + u.getUsername() + "] with roles " + u.getRoles());
     }
 
-    public User existingUserLogin(String aID, HttpServletRequest aRequest)
+    private void existingUserLogin(String aID, HttpServletRequest aRequest)
     {
-
-        return userRepository.get(aRequest.getHeader("eduPersonPrincipalName"));
-
+        // Nothing to do
     }
 
     public void setUserDetailsManager(UserDetailsManager aUserDetailsManager)
     {
-
         userDetailsManager = aUserDetailsManager;
     }
 
     protected Object getPreAuthenticatedPrincipal(HttpServletRequest aRequest)
     {
-
-        if (!enable)
-            return null;
-        String o = (String) (super.getPreAuthenticatedPrincipal(aRequest));
+        String o = (String) super.getPreAuthenticatedPrincipal(aRequest);
 
         if (o != null && !o.equals("")) {
             if (!userDetailsManager.userExists(o)) {
@@ -81,5 +98,4 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         }
         return o;
     }
-
 }

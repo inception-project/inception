@@ -17,16 +17,17 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
@@ -46,6 +47,26 @@ public class SecurityUtil
 {
     private static final Log LOG = LogFactory.getLog(SecurityUtil.class);
 
+    public static Set<String> getRoles(RepositoryService aProjectRepository, User aUser)
+    {
+        // When looking up roles for the user who is currently logged in, then we look in the
+        // security context - otherwise we as the database.
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Set<String> roles = new HashSet<>();
+        if (aUser.getUsername().equals(username)) {
+            for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
+                    .getAuthorities()) {
+                roles.add(ga.getAuthority());
+            }
+        }
+        else {
+            for (Authority a : aProjectRepository.listAuthorities(aUser)) {
+                roles.add(a.getAuthority());
+            }
+        }
+        return roles;
+    }
+    
     /**
      * IS user super Admin
      * 
@@ -56,9 +77,8 @@ public class SecurityUtil
     public static boolean isSuperAdmin(RepositoryService aProjectRepository, User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals(Role.ROLE_ADMIN.name())) {
+        for (String role : getRoles(aProjectRepository, aUser)) {
+            if (Role.ROLE_ADMIN.name().equals(role)) {
                 roleAdmin = true;
                 break;
             }
@@ -76,9 +96,8 @@ public class SecurityUtil
     public static boolean isProjectCreator(RepositoryService aProjectRepository, User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals(Role.ROLE_PROJECT_CREATOR.name())) {
+        for (String role : getRoles(aProjectRepository, aUser)) {
+            if (Role.ROLE_PROJECT_CREATOR.name().equals(role)) {
                 roleAdmin = true;
                 break;
             }
@@ -98,9 +117,8 @@ public class SecurityUtil
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
+        for (String role : getRoles(aProjectRepository, aUser)) {
+            if (Role.ROLE_ADMIN.name().equals(role)) {
                 roleAdmin = true;
                 break;
             }
@@ -140,9 +158,8 @@ public class SecurityUtil
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
+        for (String role : getRoles(aProjectRepository, aUser)) {
+            if (Role.ROLE_ADMIN.name().equals(role)) {
                 roleAdmin = true;
                 break;
             }
@@ -182,9 +199,8 @@ public class SecurityUtil
             User aUser)
     {
         boolean roleAdmin = false;
-        List<Authority> authorities = aProjectRepository.listAuthorities(aUser);
-        for (Authority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
+        for (String role : getRoles(aProjectRepository, aUser)) {
+            if (Role.ROLE_ADMIN.name().equals(role)) {
                 roleAdmin = true;
                 break;
             }
