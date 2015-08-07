@@ -56,7 +56,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         s.add(Role.ROLE_USER);
         Properties settings = SettingsUtil.getSettings();
         
-        String extraRoles = settings.getProperty("auth.newuser.roles");
+        String extraRoles = settings.getProperty("auth.preauth.newuser.roles");
         if (StringUtils.isNotBlank(extraRoles)) {
             for (String role : extraRoles.split(",")) {
                 try {
