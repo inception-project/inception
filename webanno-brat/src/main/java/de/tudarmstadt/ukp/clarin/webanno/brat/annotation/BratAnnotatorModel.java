@@ -134,6 +134,10 @@ public class BratAnnotatorModel
     private Map<AnnotationFeature, String> rememberedSpanFeatures = new HashMap<AnnotationFeature, String>();
     private Map<AnnotationFeature, String> rememberedArcFeatures = new HashMap<AnnotationFeature, String>();
 
+    AnnotationLayer selectedLayer;
+    
+    Integer selectedSpanId;
+    
     private boolean annotationCleared = false;
 
     // determine if static color for annotations will be used or we shall
@@ -320,6 +324,26 @@ public class BratAnnotatorModel
                 rememberedArcFeatures.put(fm.getKey(), fm.getValue());
             }
         }
+    }
+
+    public AnnotationLayer getSelectedLayer()
+    {
+        return selectedLayer;
+    }
+
+    public void setSelectedLayer(AnnotationLayer selectedLayer)
+    {
+        this.selectedLayer = selectedLayer;
+    }
+
+    public Integer getSelectedSpanId()
+    {
+        return selectedSpanId;
+    }
+
+    public void setSelectedSpanId(Integer selectedSpanId)
+    {
+        this.selectedSpanId = selectedSpanId;
     }
 
     public int getSentenceBeginOffset()

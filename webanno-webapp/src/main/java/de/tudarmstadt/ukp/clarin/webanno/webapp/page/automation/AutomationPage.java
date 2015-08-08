@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -35,6 +34,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CASRuntimeException;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -74,7 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -230,88 +234,55 @@ public class AutomationPage
             }
 
             @Override
-            protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            protected void onAnnotate(AjaxRequestTarget aTarget,
+                    BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd  )
+                throws UIMAException, ClassNotFoundException, IOException, CASRuntimeException,
+                BratAnnotationException
             {
-                MiraTemplate template;
-                Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
-                        .keySet();
-                AnnotationFeature autoFeature = null;
-                for (AnnotationFeature feature : features) {
-                    autoFeature = feature;
-                    break;
-                }
-                try {
-                    template = repository.getMiraTemplate(autoFeature);
-                    if (!template.isAnnotateAndPredict()) {
-                        return;
+                AnnotationLayer layer = aBratAnnotatorModel.getSelectedLayer();
+                int address = aBratAnnotatorModel.getSelectedSpanId();
+                JCas jCas = repository
+                        .readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                                .getDocument().getProject(), bratAnnotatorModel.getUser());
+                AnnotationFS fs = selectByAddr(jCas, address);
+                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                    if (repository.getMiraTemplate(f) != null
+                            & repository.getMiraTemplate(f).isAnnotateAndPredict()) {
+
+                        Type type = CasUtil.getType(fs.getCAS(), layer.getName());
+                        Feature feat = type.getFeatureByBaseName(f.getName());
+
+                        AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
+                                annotationService, aStart, aEnd, f,
+                                fs.getFeatureValueAsString(feat));
+                        break;
                     }
-                    /*
-                     * Tag tag = annotationService.getTag(bratAnnotatorModel
-                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
-                     */
-                    AutomationUtil.repeateAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, autoFeature);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
-                }
-                catch (NoResultException e) {// no automation layer is configured yet.
-                    template = null;
-                    return;
                 }
                 update(aTarget);
             }
 
             @Override
-            protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+            protected void onDelete(AjaxRequestTarget aTarget,
+                    BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
+                throws UIMAException, ClassNotFoundException, IOException, CASRuntimeException,
+                BratAnnotationException
             {
-                MiraTemplate template;
-                Set<AnnotationFeature> features = bratAnnotatorModel.getRememberedSpanFeatures()
-                        .keySet();
-                AnnotationFeature autoFeature = null;
-                for (AnnotationFeature feature : features) {
-                    autoFeature = feature;
-                    break;
-                }
-                if (autoFeature == null) {
-                    return;
-                }
-                try {
-                    template = repository.getMiraTemplate(autoFeature);
-                    if (!template.isAnnotateAndPredict()) {
-                        return;
+                AnnotationLayer layer = aBratAnnotatorModel.getSelectedLayer();
+                int address = aBratAnnotatorModel.getSelectedSpanId();
+                JCas jCas = repository
+                        .readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
+                                .getDocument().getProject(), bratAnnotatorModel.getUser());
+                AnnotationFS fs = selectByAddr(jCas, address);
+                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                    if (repository.getMiraTemplate(f) != null
+                            & repository.getMiraTemplate(f).isAnnotateAndPredict()) {
+
+                        Type type = CasUtil.getType(fs.getCAS(), layer.getName());
+                        Feature feat = type.getFeatureByBaseName(f.getName());
+                        AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
+                                annotationService, aStart, aEnd, f,
+                                fs.getFeatureValueAsString(feat));
                     }
-                    /*
-                     * Tag tag = annotationService.getTag(bratAnnotatorModel
-                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
-                     */
-                    AutomationUtil.deleteAnnotation(bratAnnotatorModel, repository,
-                            annotationService, aStart, aEnd, autoFeature);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
-                }
-                catch (NoResultException e) {// no automation layer is configured yet.
-                    template = null;
-                    return;
                 }
                 update(aTarget);
             }

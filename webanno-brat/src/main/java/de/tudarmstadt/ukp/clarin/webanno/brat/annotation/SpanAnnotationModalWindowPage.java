@@ -446,7 +446,8 @@ public class SpanAnnotationModalWindowPage
             }
           //  continue;// next time, it will update features
         }
-
+        bratAnnotatorModel.setSelectedSpanId(selectedSpanId);
+        bratAnnotatorModel.setSelectedLayer(selectedLayer);
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
         for (int i = 0; i < featureValueModels.size(); i++) {
@@ -553,6 +554,8 @@ public class SpanAnnotationModalWindowPage
                 break;
             }
         }
+        bratAnnotatorModel.setSelectedSpanId(selectedSpanId);
+        bratAnnotatorModel.setSelectedLayer(selectedLayer);
         // BEGIN HACK - Issue 933
         if (adapter instanceof ChainAdapter) {
             ((ChainAdapter) adapter).setArc(false);

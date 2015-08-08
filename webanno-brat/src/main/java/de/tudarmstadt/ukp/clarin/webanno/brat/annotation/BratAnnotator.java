@@ -24,6 +24,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcOpenDialogResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -355,7 +357,7 @@ public class BratAnnotator
             AjaxRequestTarget aTarget, final int aBeginOffset, final int aEndOffset,
             int aSelectedSpanId)
     {
-        closeButtonClicked = false;
+        closeButtonClicked = false;    
         if (aSelectedSpanId == -1) {// new annotation
             openAnnotationDialog.setTitle("New Span Annotation");
             openAnnotationDialog.setContent(new  SpanAnnotationModalWindowPage(openAnnotationDialog
@@ -379,10 +381,24 @@ public class BratAnnotator
                 if (!closeButtonClicked) {
 
                     onChange(aTarget, getModelObject());
-                    onAnnotate(aTarget,getModelObject(), beginOffset, endOffset);
-                    if (!getModelObject().isAnnotate()) {
+                    try {
+                        onAnnotate(aTarget,getModelObject(), beginOffset, endOffset);
+                        if (!getModelObject().isAnnotate()) {
                             onDelete(aTarget, getModelObject(), beginOffset, endOffset);
                         }
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                    catch (BratAnnotationException e) {
+                        error(e.getMessage());
+                    }
                     bratRender(aTarget, getJCas());
                 }
             }
@@ -625,12 +641,18 @@ public class BratAnnotator
 
     }
 
-    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
+            int aEnd)
+        throws UIMAException, ClassNotFoundException, IOException, CASRuntimeException,
+        BratAnnotationException
     {
         // Overriden in AutomationPage
     }
 
-    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
+    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
+            int aEnd)
+        throws UIMAException, ClassNotFoundException, IOException, CASRuntimeException,
+        BratAnnotationException
     {
         // Overriden in AutomationPage
     }
