@@ -155,13 +155,6 @@ public class AnnotationPage
                 annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                        .getSelection().getEnd());
-                if (!aBModel.getSelection().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                            .getSelection().getEnd());
-                }
-
             }
 
             @Override

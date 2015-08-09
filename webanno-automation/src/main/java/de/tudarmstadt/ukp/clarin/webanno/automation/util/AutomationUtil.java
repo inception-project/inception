@@ -38,8 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -67,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -90,35 +87,24 @@ public class AutomationUtil
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
-            UserDao aUserDao, AnnotationService aAnnotationService,
-            AutomationService aAutomationService, int aStart, int aEnd, AnnotationFeature aFeature)
+    public static void repeateAnnotation(BratAnnotatorModel aBModel, RepositoryService aRepository,
+            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            String aValue)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        SourceDocument sourceDocument = aModel.getDocument();
+        SourceDocument sourceDocument = aBModel.getDocument();
         JCas jCas = aRepository.readCorrectionCas(sourceDocument);
 
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
-                aModel.getUser());
+                aBModel.getUser());
         JCas annoCas = aRepository.readAnnotationCas(annoDoc);
 
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
+        int beginOffset = aBModel.getSentenceBeginOffset();
 
-        MiraTemplate template;
-        try {
-            template = aAutomationService.getMiraTemplate(aFeature);
-        }
-        catch (NoResultException e) {
-            template = null;
-        }
-
-        int beginOffset = aModel.getSentenceBeginOffset();
-
-        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
+        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aBModel.getLastSentenceAddress())
                 .getEnd();
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
             String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -129,47 +115,35 @@ public class AutomationUtil
 
                     SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
                             aFeature.getLayer());
-                    Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.add(jCas, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, aFeature, value);
+                            + selectedText.length() - 1, aFeature, aValue);
 
                 }
             }
         }
-        aRepository.writeCorrectionCas(jCas, aModel.getDocument(), user);
+        aRepository.writeCorrectionCas(jCas, aBModel.getDocument(), aBModel.getUser());
     }
 
-    public static void deleteAnnotation(BratAnnotatorModel aModel, RepositoryService aRepository,
-            AnnotationService aAnnotationService, AutomationService aAutomationService,
-            UserDao aUserDao, int aStart, int aEnd, AnnotationFeature aFeature)
+    public static void deleteAnnotation(BratAnnotatorModel aBModel, RepositoryService aRepository,
+            AnnotationService aAnnotationService,  int aStart, int aEnd, AnnotationFeature aFeature,  String aValue)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 
-        SourceDocument sourceDocument = aModel.getDocument();
+        SourceDocument sourceDocument = aBModel.getDocument();
         JCas jCas = aRepository.readCorrectionCas(sourceDocument);
 
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(sourceDocument,
-                aModel.getUser());
+                aBModel.getUser());
         JCas annoCas = aRepository.readAnnotationCas(annoDoc);
         // get selected text, concatenations of tokens
         String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
                 aFeature.getLayer());
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
 
-        MiraTemplate template;
-        try {
-            template = aAutomationService.getMiraTemplate(aFeature);
-        }
-        catch (NoResultException e) {
-            template = null;
-        }
+        int beginOffset = aBModel.getSentenceBeginOffset();
 
-        int beginOffset = aModel.getSentenceBeginOffset();
-
-        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aModel.getLastSentenceAddress())
+        int endOffset = BratAjaxCasUtil.selectByAddr(annoCas, aBModel.getLastSentenceAddress())
                 .getEnd();
 
         for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
@@ -179,13 +153,12 @@ public class AutomationUtil
                 if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                         sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                    Object value = aModel.getRememberedSpanFeatures().get(aFeature);
                     adapter.delete(jCas, aFeature, sentence.getBegin() + i, sentence.getBegin() + i
-                            + selectedText.length() - 1, value);
+                            + selectedText.length() - 1, aValue);
                 }
             }
         }
-        aRepository.writeCorrectionCas(jCas, aModel.getDocument(), user);
+        aRepository.writeCorrectionCas(jCas, aBModel.getDocument(), aBModel.getUser());
     }
 
     // generates training document that will be used to predict the training document
