@@ -44,7 +44,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -246,46 +245,75 @@ public class AutomationPage
             }
             
             @Override
-            public void onAnnotate(AjaxRequestTarget aTarget,
-                    BratAnnotatorModel aBModel, int aStart, int aEnd) throws CASRuntimeException, UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+            public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
+                    int aStart, int aEnd)
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 int address = aBModel.getSelection().getAnnotation().getId();
-                AnnotationDocument annodoc = repository.createOrGetAnnotationDocument(
-                        aBModel.getDocument(), aBModel.getUser());
-                JCas jCas = repository.readAnnotationCas(annodoc);
-                AnnotationFS fs = selectByAddr(jCas, address);
-                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-                    if (automationService.getMiraTemplate(f) != null
-                            & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                try {
+                    AnnotationDocument annodoc = repository.createOrGetAnnotationDocument(
+                            aBModel.getDocument(), aBModel.getUser());
+                    JCas jCas = repository.readAnnotationCas(annodoc);
+                    AnnotationFS fs = selectByAddr(jCas, address);
+                    for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                        if (automationService.getMiraTemplate(f) != null
+                                & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
 
-                        Type type = CasUtil.getType(fs.getCAS(), layer.getName());
-                        Feature feat = type.getFeatureByBaseName(f.getName());
+                            Type type = CasUtil.getType(fs.getCAS(), layer.getName());
+                            Feature feat = type.getFeatureByBaseName(f.getName());
 
-                        AutomationUtil.repeateAnnotation(aBModel, repository, annotationService,
-                                aStart, aEnd, f, fs.getFeatureValueAsString(feat));
+                            AutomationUtil.repeateAnnotation(aBModel, repository,
+                                    annotationService, aStart, aEnd, f,
+                                    fs.getFeatureValueAsString(feat));
+                            update(aTarget);
+                        }
                     }
                 }
-                update(aTarget);
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
             }
 
             @Override
             public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
                     AnnotationFS aFs)
-                throws IOException, CASRuntimeException, UIMAException, ClassNotFoundException,
-                BratAnnotationException
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                     if (automationService.getMiraTemplate(f) != null
                             & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
-                        Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
-                        Feature feat = type.getFeatureByBaseName(f.getName());
-                        AutomationUtil.deleteAnnotation(aBModel, repository, annotationService,
-                                aFs.getBegin(), aFs.getEnd(), f, aFs.getFeatureValueAsString(feat));
+                        try {
+                            Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
+                            Feature feat = type.getFeatureByBaseName(f.getName());
+                            AutomationUtil.deleteAnnotation(aBModel, repository, annotationService,
+                                    aFs.getBegin(), aFs.getEnd(), f,
+                                    aFs.getFeatureValueAsString(feat));
+                            update(aTarget);
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                            error(e.getMessage());
+                        }
+                        catch (BratAnnotationException e) {
+                            error(e.getMessage());
+                        }
                     }
                 }
-                update(aTarget);
+
             }
         };
 

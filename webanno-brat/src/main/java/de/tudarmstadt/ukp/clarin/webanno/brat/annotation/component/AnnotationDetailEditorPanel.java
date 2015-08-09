@@ -918,15 +918,11 @@ public class AnnotationDetailEditorPanel
 
     public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
             int aEnd)
-        throws IOException, CASRuntimeException, UIMAException, ClassNotFoundException,
-        BratAnnotationException
     {
         // Overriden in AutomationPage
     }
 
     public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, AnnotationFS aFs)
-        throws IOException, CASRuntimeException, UIMAException, ClassNotFoundException,
-        BratAnnotationException
     {
         // Overriden in AutomationPage
     }
