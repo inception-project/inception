@@ -1865,6 +1865,10 @@ public class AnnotationDetailEditorPanel
             }
         }
     }
+    
+    public void reload(AjaxRequestTarget aTarget){
+        aTarget.add(annotationFeatureForm);
+    }
 
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {

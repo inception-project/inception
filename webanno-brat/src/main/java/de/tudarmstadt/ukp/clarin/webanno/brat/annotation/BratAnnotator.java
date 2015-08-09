@@ -402,7 +402,7 @@ public class BratAnnotator
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
                 }
-                aTarget.add(aAnnotationDetailEditorPanel);
+                aAnnotationDetailEditorPanel.reload(aTarget);
             }
         };
 
