@@ -301,10 +301,18 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                // annotator.reloadContent(aTarget);
-                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;"
-                        + "window.location.reload()");
 
+                try {
+                    JCas jCas = getJCas();
+                    annotator.bratRender(aTarget, jCas);
+                    updateSentenceAddress(jCas, aTarget);
+                }
+                catch (UIMAException | ClassNotFoundException | IOException e) {
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                    return;
+                }
+                
             }
         });
 
@@ -662,13 +670,8 @@ public class AnnotationPage
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
                         JCas jCas = getJCas();
                         ubdateSentenceNumber(jCas, gotoPageAddress);
-
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        updateSentenceAddress(jCas, aTarget);
                         annotator.bratRenderLater(aTarget);
-                        aTarget.add(numberOfPages);
-                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(
-                                jCas, bModel.getSentenceAddress()) + 1);
-                        aTarget.add(gotoPageTextField);
                     }
                 }
                 catch (Exception e) {
@@ -695,17 +698,13 @@ public class AnnotationPage
 
         String labelText = "";
         if (bModel.getDocument() != null) {
-            // FIXME Why do we have to re-load the CAS here?
-            // bratAnnotatorModel.getUser() is always set to the logged-in user
-            JCas jCas1 = repository.readAnnotationCas(bModel.getDocument(), bModel.getUser());
-            JCas jCas = jCas1;
-            totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(jCas);
+            totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(aJCas);
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
                 bModel.setSentenceAddress(bModel.getFirstSentenceAddress());
             }
-            int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(jCas,
+            int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(aJCas,
                     bModel.getSentenceAddress());
             int firstSentenceNumber = sentenceNumber + 1;
             int lastSentenceNumber;
