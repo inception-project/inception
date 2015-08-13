@@ -245,8 +245,9 @@ public class AnnotationPage
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
@@ -289,7 +290,7 @@ public class AnnotationPage
                     }
                 });
                 // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
-                openDocumentsModal.show(target);
+                openDocumentsModal.show(aTarget);
             }
         });
 
@@ -312,7 +313,7 @@ public class AnnotationPage
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-                
+
             }
         });
 
@@ -329,6 +330,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -375,6 +377,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());

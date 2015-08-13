@@ -1884,7 +1884,13 @@ public class AnnotationDetailEditorPanel
     public void reload(AjaxRequestTarget aTarget){
         aTarget.add(annotationFeatureForm);
     }
-
+   
+    public void reset(AjaxRequestTarget aTarget){
+        annotationFeatureForm.getModelObject().getSelection().clear();
+        annotationFeatureForm.getModelObject().getSelection().setBegin(0);
+        annotationFeatureForm.getModelObject().getSelection().setEnd(0);
+        aTarget.add(annotationFeatureForm);
+    }
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {
         String action = aDeleted ? "deleted" : "created/updated";
