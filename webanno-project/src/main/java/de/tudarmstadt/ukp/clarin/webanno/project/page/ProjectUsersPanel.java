@@ -32,8 +32,8 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -404,9 +404,9 @@ public class ProjectUsersPanel
     private PermissionLevelDetailForm permissionLevelDetailForm;
     private UserDetailForm userDetailForm;
 
-    private Model<Project> selectedProject;
+    private IModel<Project> selectedProject;
 
-    public ProjectUsersPanel(String id, Model<Project> aProject)
+    public ProjectUsersPanel(String id, IModel<Project> aProject)
     {
         super(id);
         this.selectedProject = aProject;

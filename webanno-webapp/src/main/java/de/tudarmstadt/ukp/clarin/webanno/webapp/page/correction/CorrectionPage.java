@@ -220,12 +220,6 @@ public class CorrectionPage
                 annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                        .getSelection().getEnd());
-                if (!aBModel.getSelection().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                            .getSelection().getEnd());
-                }
 
             }
 
@@ -382,6 +376,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CORRECTION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -628,9 +623,10 @@ public class CorrectionPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(bModel.getProject());
@@ -655,7 +651,7 @@ public class CorrectionPage
 
                 // If the first the document
                 if (currentDocumentIndex == 0) {
-                    target.appendJavaScript("alert('This is the first document!')");
+                    aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
                     bModel.setDocumentName(listOfSourceDocuements.get(
@@ -666,7 +662,7 @@ public class CorrectionPage
                     try {
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
-                        update(target);
+                        update(aTarget);
 
                     }
                     catch (UIMAException e) {
@@ -679,14 +675,14 @@ public class CorrectionPage
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (BratAnnotationException e) {
-                        target.addChildren(getPage(), FeedbackPanel.class);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
 
                     finish.setModelObject(bModel);
-                    target.add(finish.setOutputMarkupId(true));
-                    target.add(documentNamePanel);
-                    annotator.bratRenderLater(target);
+                    aTarget.add(finish.setOutputMarkupId(true));
+                    aTarget.add(documentNamePanel);
+                    annotator.bratRenderLater(aTarget);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -701,9 +697,10 @@ public class CorrectionPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
                         .listSourceDocuments(bModel.getProject());
@@ -728,7 +725,7 @@ public class CorrectionPage
 
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    target.appendJavaScript("alert('This is the last document!')");
+                    aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
                 bModel.setDocumentName(listOfSourceDocuements.get(
@@ -739,7 +736,7 @@ public class CorrectionPage
                 try {
                     loadDocumentAction();
                     setCurationSegmentBeginEnd();
-                    update(target);
+                    update(aTarget);
 
                 }
                 catch (UIMAException e) {
@@ -752,18 +749,18 @@ public class CorrectionPage
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (BratAnnotationException e) {
-                    target.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
                 catch (Exception e) {
-                    target.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
 
                 finish.setModelObject(bModel);
-                target.add(finish.setOutputMarkupId(true));
-                target.add(documentNamePanel);
-                annotator.bratRenderLater(target);
+                aTarget.add(finish.setOutputMarkupId(true));
+                aTarget.add(documentNamePanel);
+                annotator.bratRenderLater(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 

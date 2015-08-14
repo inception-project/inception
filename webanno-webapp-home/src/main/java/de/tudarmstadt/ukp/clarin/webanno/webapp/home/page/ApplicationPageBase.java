@@ -47,6 +47,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
@@ -97,7 +98,8 @@ public abstract class ApplicationPageBase
             @Override
             public boolean accept(FeedbackMessage aMessage)
             {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String username = auth != null ? auth.getName() : "SYSTEM";
                 if (aMessage.isFatal()) {
                     LOG.fatal(username + ": " + aMessage.getMessage());
                 }

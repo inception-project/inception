@@ -34,6 +34,7 @@ import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
@@ -76,11 +77,11 @@ public class ProjectDocumentsPanel
 
     private ArrayList<String> readableFormats;
     private String selectedFormat;
-    private Model<Project> selectedProjectModel;
+    private IModel<Project> selectedProjectModel;
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public ProjectDocumentsPanel(String id, Model<Project> aProjectModel)
+    public ProjectDocumentsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id);
         this.selectedProjectModel = aProjectModel;

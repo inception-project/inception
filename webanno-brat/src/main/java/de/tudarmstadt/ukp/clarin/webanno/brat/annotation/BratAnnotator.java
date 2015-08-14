@@ -402,7 +402,7 @@ public class BratAnnotator
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
                 }
-                aTarget.add(aAnnotationDetailEditorPanel);
+                aAnnotationDetailEditorPanel.reload(aTarget);
             }
         };
 
@@ -700,18 +700,6 @@ public class BratAnnotator
     {
 
     }
-
-    public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
-            int aEnd)
-    {
-        // Overriden in AutomationPage
-    }
-
-    public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart, int aEnd)
-    {
-        // Overriden in AutomationPage
-    }
-
     private String toJson(Object result)
     {
         StringWriter out = new StringWriter();

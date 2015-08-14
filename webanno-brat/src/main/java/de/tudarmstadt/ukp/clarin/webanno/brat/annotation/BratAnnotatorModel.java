@@ -176,9 +176,6 @@ public class BratAnnotatorModel
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
 
-    // if the annotation element is missed, add an ellipsis at position 0,0
-    private boolean ellipsis;
-
     // enable automatic forward annotations
     private boolean forwardAnnotation;
 

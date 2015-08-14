@@ -48,8 +48,8 @@ import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
@@ -135,7 +135,7 @@ public class ProjectExportPanel extends Panel {
 	private boolean enabled = true;
 	private boolean canceled = false;
 
-	public ProjectExportPanel(String id, final Model<Project> aProjectModel) {
+	public ProjectExportPanel(String id, final IModel<Project> aProjectModel) {
 		super(id);
 		add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
 	}

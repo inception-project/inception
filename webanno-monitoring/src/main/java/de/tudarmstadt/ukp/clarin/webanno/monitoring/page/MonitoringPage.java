@@ -312,13 +312,10 @@ public class MonitoringPage
                             User user = userRepository.get(username);
 
                             List<Project> allProjects = repository.listProjects();
-                            List<Authority> authorities = repository.listAuthorities(user);
 
                             // if global admin, show all projects
-                            for (Authority authority : authorities) {
-                                if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                                    return allProjects;
-                                }
+                            if (SecurityUtil.isSuperAdmin(repository, user)) {
+                                return allProjects;
                             }
 
                             // else only projects she is admin of

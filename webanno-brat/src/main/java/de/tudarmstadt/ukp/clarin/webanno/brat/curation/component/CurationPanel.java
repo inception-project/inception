@@ -555,4 +555,8 @@ public class CurationPanel
                 userRepository);
     }
 
+    public void resetEditor(AjaxRequestTarget aTarget)
+    {
+        annotationDetailEditorPanel.reset(aTarget);
+    }
 }

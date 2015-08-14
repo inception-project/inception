@@ -23,8 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
@@ -54,7 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
  *
  *
  */
-public class ConstraintsPanel
+public class ProjectConstraintsPanel
     extends Panel
 {
     private static final long serialVersionUID = 8910455936756021733L;
@@ -68,7 +69,7 @@ public class ConstraintsPanel
     
     private ImportForm importForm;
 
-    public ConstraintsPanel(String id, Model<Project> aProjectModel)
+    public ProjectConstraintsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
         
@@ -98,7 +99,7 @@ public class ConstraintsPanel
                 @Override
                 protected List<ConstraintSet> load()
                 {
-                    return projectRepository.listConstraintSets(ConstraintsPanel.this
+                    return projectRepository.listConstraintSets(ProjectConstraintsPanel.this
                             .getModelObject());
                 }
             };
@@ -114,7 +115,7 @@ public class ConstraintsPanel
                 @Override
                 protected void onSelectionChanged(ConstraintSet aNewSelection)
                 {
-                    ConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
+                    ProjectConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
                 }
 
                 @Override
@@ -165,29 +166,27 @@ public class ConstraintsPanel
             // when switching set selection
             script.setEnabled(false); 
 
-            add(new DownloadLink("export", new LoadableDetachableModel<File>()
+            final IModel<String> exportFilenameModel = new Model<>();
+            final IModel<File> exportFileModel = new LoadableDetachableModel<File>()
             {
                 private static final long serialVersionUID = 840863954694163375L;
 
                 @Override
                 protected File load()
                 {
-                    File exportFile = null;
                     try {
-                        String constraintFilename = DetailForm.this.getModelObject().getName();
-                        exportFile = new File("tmp", constraintFilename);
-                        FileUtils.copyFile(projectRepository.exportConstraintAsFile(DetailForm.this.getModelObject()), exportFile);
-                                                
+                        // Use the name of the constraints set instead of the ID under which the
+                        // file is saved internally.
+                        exportFilenameModel.setObject(DetailForm.this.getModelObject().getName());
+                        return projectRepository.exportConstraintAsFile(DetailForm.this
+                                .getModelObject());
                     }
-                    catch (IOException e1) {
-                        error("Unable to export Constraint file");
+                    catch (IOException e) {
+                        throw new WicketRuntimeException(e);
                     }
-                    
-                    info("Constraints successfully exported to :" + exportFile.getAbsolutePath());
-
-                    return exportFile;
                 }
-            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
+            }; 
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel));
 
             add(new Button("delete", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
@@ -223,6 +222,10 @@ public class ConstraintsPanel
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
+                    
+                    // This is currently the only "cancel" button in the project settings. Better
+                    // activate when we add such buttons to other panels as well.
+                    setVisible(false);
                 }
                 
                 @Override
@@ -268,7 +271,7 @@ public class ConstraintsPanel
         
         private void importAction()
         {
-            Project project = ConstraintsPanel.this.getModelObject();
+            Project project = ProjectConstraintsPanel.this.getModelObject();
 
             if (project.getId() == 0) {
                 error("Project not yet created, please save project Details!");
@@ -302,7 +305,7 @@ public class ConstraintsPanel
                 if (constraintRuleFileIsOK) {
                     try {
                         ConstraintSet constraintSet = new ConstraintSet();
-                        constraintSet.setProject(ConstraintsPanel.this.getModelObject());
+                        constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
                         constraintSet.setName(constraintRulesFile.getClientFileName());
                         projectRepository.createConstraintSet(constraintSet);
                         projectRepository.writeConstraintSet(constraintSet,

@@ -59,10 +59,15 @@
 	<security:global-method-security
 		pre-post-annotations="enabled" />
 
-	<security:authentication-manager>
-		<security:authentication-provider>
-			<security:jdbc-user-service data-source-ref="dataSource" />
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider user-service-ref="userDetailsService">
 			<security:password-encoder ref="passwordEncoder" />
 		</security:authentication-provider>
 	</security:authentication-manager>
+    
+    <bean id="userDetailsService"
+        class="de.tudarmstadt.ukp.clarin.webanno.webapp.security.OverridableUserDetailsManager">
+        <property name="dataSource" ref="dataSource" />
+        <property name="authenticationManager" ref="authenticationManager" />
+    </bean>
 </beans>

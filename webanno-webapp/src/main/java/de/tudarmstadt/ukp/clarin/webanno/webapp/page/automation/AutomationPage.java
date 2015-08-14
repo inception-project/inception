@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.NoResultException;
 
@@ -43,7 +42,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -87,7 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -231,12 +234,6 @@ public class AutomationPage
                 annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
-                annotator.onAnnotate(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                        .getSelection().getEnd());
-                if (!aBModel.getSelection().isAnnotate()) {
-                    annotator.onDelete(aTarget, aBModel, aBModel.getSelection().getBegin(), aBModel
-                            .getSelection().getEnd());
-                }
             }
 
             @Override
@@ -250,6 +247,78 @@ public class AutomationPage
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
+            }
+            
+            @Override
+            public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
+                    int aStart, int aEnd)
+            {
+                AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
+                int address = aBModel.getSelection().getAnnotation().getId();
+                try {
+                    AnnotationDocument annodoc = repository.createOrGetAnnotationDocument(
+                            aBModel.getDocument(), aBModel.getUser());
+                    JCas jCas = repository.readAnnotationCas(annodoc);
+                    AnnotationFS fs = selectByAddr(jCas, address);
+                    for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                        if (automationService.getMiraTemplate(f) != null
+                                & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+
+                            Type type = CasUtil.getType(fs.getCAS(), layer.getName());
+                            Feature feat = type.getFeatureByBaseName(f.getName());
+
+                            AutomationUtil.repeateAnnotation(aBModel, repository,
+                                    annotationService, aStart, aEnd, f,
+                                    fs.getFeatureValueAsString(feat));
+                            update(aTarget);
+                        }
+                    }
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException e) {
+                    error(e.getMessage());
+                }
+                catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    error(e.getMessage());
+                }
+            }
+
+            @Override
+            public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
+                    AnnotationFS aFs)
+            {
+                AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
+                for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                    if (automationService.getMiraTemplate(f) != null
+                            & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                        try {
+                            Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
+                            Feature feat = type.getFeatureByBaseName(f.getName());
+                            AutomationUtil.deleteAnnotation(aBModel, repository, annotationService,
+                                    aFs.getBegin(), aFs.getEnd(), f,
+                                    aFs.getFeatureValueAsString(feat));
+                            update(aTarget);
+                        }
+                        catch (UIMAException e) {
+                            error(ExceptionUtils.getRootCause(e));
+                        }
+                        catch (ClassNotFoundException e) {
+                            error(e.getMessage());
+                        }
+                        catch (IOException e) {
+                            error(e.getMessage());
+                        }
+                        catch (BratAnnotationException e) {
+                            error(e.getMessage());
+                        }
+                    }
+                }
+
             }
         };
 
@@ -292,93 +361,6 @@ public class AutomationPage
                 }
                 catch (BratAnnotationException e) {
                     error(e.getMessage());
-                }
-                update(aTarget);
-            }
-
-            @Override
-            public void onAnnotate(AjaxRequestTarget aTarget,
-                    BratAnnotatorModel aBratAnnotatorModel, int aStart, int aEnd)
-            {
-                MiraTemplate template;
-                Set<AnnotationFeature> features = bModel.getRememberedSpanFeatures().keySet();
-                AnnotationFeature autoFeature = null;
-                for (AnnotationFeature feature : features) {
-                    autoFeature = feature;
-                    break;
-                }
-                try {
-                    template = automationService.getMiraTemplate(autoFeature);
-                    if (!template.isAnnotateAndPredict()) {
-                        return;
-                    }
-                    /*
-                     * Tag tag = annotationService.getTag(bratAnnotatorModel
-                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
-                     */
-                    AutomationUtil.repeateAnnotation(bModel, repository, userRepository,
-                            annotationService, automationService, aStart, aEnd, autoFeature);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
-                }
-                catch (NoResultException e) {// no automation layer is configured yet.
-                    template = null;
-                    return;
-                }
-                update(aTarget);
-            }
-
-            @Override
-            public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel,
-                    int aStart, int aEnd)
-            {
-                MiraTemplate template;
-                Set<AnnotationFeature> features = bModel.getRememberedSpanFeatures().keySet();
-                AnnotationFeature autoFeature = null;
-                for (AnnotationFeature feature : features) {
-                    autoFeature = feature;
-                    break;
-                }
-                if (autoFeature == null) {
-                    return;
-                }
-                try {
-                    template = automationService.getMiraTemplate(autoFeature);
-                    if (!template.isAnnotateAndPredict()) {
-                        return;
-                    }
-                    /*
-                     * Tag tag = annotationService.getTag(bratAnnotatorModel
-                     * .getRememberedSpanFeatures().get(autoFeature), autoFeature.getTagset());
-                     */
-                    AutomationUtil.deleteAnnotation(bModel, repository, annotationService,
-                            automationService, userRepository, aStart, aEnd, autoFeature);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
-                }
-                catch (NoResultException e) {// no automation layer is configured yet.
-                    template = null;
-                    return;
                 }
                 update(aTarget);
             }
@@ -477,6 +459,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -717,9 +700,10 @@ public class AutomationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -746,7 +730,7 @@ public class AutomationPage
 
                 // If the first the document
                 if (currentDocumentIndex == 0) {
-                    target.appendJavaScript("alert('This is the first document!')");
+                    aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
                     bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
@@ -758,7 +742,7 @@ public class AutomationPage
                                 .getUser().getUsername());
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
-                        update(target);
+                        update(aTarget);
 
                     }
                     catch (UIMAException e) {
@@ -771,15 +755,15 @@ public class AutomationPage
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (BratAnnotationException e) {
-                        target.addChildren(getPage(), FeedbackPanel.class);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
 
                     finish.setModelObject(bModel);
-                    target.add(finish.setOutputMarkupId(true));
-                    target.add(numberOfPages);
-                    target.add(documentNamePanel);
-                    annotator.bratRenderLater(target);
+                    aTarget.add(finish.setOutputMarkupId(true));
+                    aTarget.add(numberOfPages);
+                    aTarget.add(documentNamePanel);
+                    annotator.bratRenderLater(aTarget);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -794,9 +778,10 @@ public class AutomationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -823,7 +808,7 @@ public class AutomationPage
 
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    target.appendJavaScript("alert('This is the last document!')");
+                    aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
                 bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
@@ -835,7 +820,7 @@ public class AutomationPage
                             .getUser().getUsername());
                     loadDocumentAction();
                     setCurationSegmentBeginEnd();
-                    update(target);
+                    update(aTarget);
 
                 }
                 catch (UIMAException e) {
@@ -848,15 +833,15 @@ public class AutomationPage
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (BratAnnotationException e) {
-                    target.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
 
                 finish.setModelObject(bModel);
-                target.add(finish.setOutputMarkupId(true));
-                target.add(numberOfPages);
-                target.add(documentNamePanel);
-                annotator.bratRenderLater(target);
+                aTarget.add(finish.setOutputMarkupId(true));
+                aTarget.add(numberOfPages);
+                aTarget.add(documentNamePanel);
+                annotator.bratRenderLater(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 

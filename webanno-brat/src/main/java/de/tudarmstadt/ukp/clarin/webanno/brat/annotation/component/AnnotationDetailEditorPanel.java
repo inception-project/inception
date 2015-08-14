@@ -43,6 +43,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -82,6 +83,7 @@ import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -485,10 +487,11 @@ public class AnnotationDetailEditorPanel
         if (aBModel.isForwardAnnotation()) {
             onAutoForward(aTarget, aBModel);
         }
+        onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
     }
 
     private void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
-        throws IOException, UIMAException, ClassNotFoundException
+        throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException, BratAnnotationException
     {
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId());
@@ -661,6 +664,7 @@ public class AnnotationDetailEditorPanel
         aTarget.add(deleteButton);
         aTarget.add(reverseButton);
         onChange(aTarget, aBModel);
+        onDelete(aTarget, aBModel, fs);
     }
 
     private void actionReverse(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -910,6 +914,17 @@ public class AnnotationDetailEditorPanel
     protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
     {
         // Overriden in BratAnnotator
+    }
+
+    public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
+            int aEnd)
+    {
+        // Overriden in AutomationPage
+    }
+
+    public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, AnnotationFS aFs)
+    {
+        // Overriden in AutomationPage
     }
 
     public void setAnnotationLayers(BratAnnotatorModel aBModel)
@@ -1865,7 +1880,17 @@ public class AnnotationDetailEditorPanel
             }
         }
     }
-
+    
+    public void reload(AjaxRequestTarget aTarget){
+        aTarget.add(annotationFeatureForm);
+    }
+   
+    public void reset(AjaxRequestTarget aTarget){
+        annotationFeatureForm.getModelObject().getSelection().clear();
+        annotationFeatureForm.getModelObject().getSelection().setBegin(0);
+        annotationFeatureForm.getModelObject().getSelection().setEnd(0);
+        aTarget.add(annotationFeatureForm);
+    }
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {
         String action = aDeleted ? "deleted" : "created/updated";
