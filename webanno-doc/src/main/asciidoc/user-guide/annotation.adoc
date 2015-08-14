@@ -49,7 +49,7 @@ The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *
 
 .Navigation key bindings
 |====
-| Key | Action |
+| Key | Action 
 
 | *HOME*
 | jump to first sentence
