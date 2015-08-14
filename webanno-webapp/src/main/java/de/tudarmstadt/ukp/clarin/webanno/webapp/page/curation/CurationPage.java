@@ -248,6 +248,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                curationPanel.resetEditor(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CURATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -339,6 +340,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                curationPanel.resetEditor(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -393,6 +395,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                curationPanel.resetEditor(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());

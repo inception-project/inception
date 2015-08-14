@@ -38,8 +38,6 @@ import java.util.Map;
 
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.*;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,6 +87,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SourceLis
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.CuratorUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
@@ -454,6 +459,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+                annotationDetailEditorPanel.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -694,9 +700,10 @@ public class AutomationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -723,7 +730,7 @@ public class AutomationPage
 
                 // If the first the document
                 if (currentDocumentIndex == 0) {
-                    target.appendJavaScript("alert('This is the first document!')");
+                    aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
                     bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
@@ -735,7 +742,7 @@ public class AutomationPage
                                 .getUser().getUsername());
                         loadDocumentAction();
                         setCurationSegmentBeginEnd();
-                        update(target);
+                        update(aTarget);
 
                     }
                     catch (UIMAException e) {
@@ -748,15 +755,15 @@ public class AutomationPage
                         error(ExceptionUtils.getRootCause(e));
                     }
                     catch (BratAnnotationException e) {
-                        target.addChildren(getPage(), FeedbackPanel.class);
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
 
                     finish.setModelObject(bModel);
-                    target.add(finish.setOutputMarkupId(true));
-                    target.add(numberOfPages);
-                    target.add(documentNamePanel);
-                    annotator.bratRenderLater(target);
+                    aTarget.add(finish.setOutputMarkupId(true));
+                    aTarget.add(numberOfPages);
+                    aTarget.add(documentNamePanel);
+                    annotator.bratRenderLater(aTarget);
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
@@ -771,9 +778,10 @@ public class AutomationPage
              * window
              */
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                target.addChildren(getPage(), FeedbackPanel.class);
+                annotationDetailEditorPanel.reset(aTarget);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -800,7 +808,7 @@ public class AutomationPage
 
                 // If the first document
                 if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    target.appendJavaScript("alert('This is the last document!')");
+                    aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
                 bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
@@ -812,7 +820,7 @@ public class AutomationPage
                             .getUser().getUsername());
                     loadDocumentAction();
                     setCurationSegmentBeginEnd();
-                    update(target);
+                    update(aTarget);
 
                 }
                 catch (UIMAException e) {
@@ -825,15 +833,15 @@ public class AutomationPage
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (BratAnnotationException e) {
-                    target.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
 
                 finish.setModelObject(bModel);
-                target.add(finish.setOutputMarkupId(true));
-                target.add(numberOfPages);
-                target.add(documentNamePanel);
-                annotator.bratRenderLater(target);
+                aTarget.add(finish.setOutputMarkupId(true));
+                aTarget.add(numberOfPages);
+                aTarget.add(documentNamePanel);
+                annotator.bratRenderLater(aTarget);
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
