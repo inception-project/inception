@@ -1215,6 +1215,12 @@ public class RepositoryServiceDbData
         for (ProjectPermission permisions : getProjectPermisions(aProject)) {
             entityManager.remove(permisions);
         }
+        
+        //Remove Constraints
+        for (ConstraintSet set: listConstraintSets(aProject) ){
+            removeConstraintSet(set);
+        }
+        
         // remove metadata from DB
         entityManager.remove(aProject);
         createLog(aProject).info(
