@@ -257,7 +257,7 @@ public class BratAnnotator
                             }
                             else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
                                     .getArmedFeature().getType())) {
-                                // Fill slot with new annotation (only works if a concret type is
+                                // Fill slot with new annotation (only works if a concrete type is
                                 // set for the link feature!
                                 SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
                                         annotationService.getLayer(getModelObject()
