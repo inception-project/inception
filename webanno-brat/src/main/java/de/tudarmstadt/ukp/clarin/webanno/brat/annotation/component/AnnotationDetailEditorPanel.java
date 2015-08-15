@@ -38,6 +38,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -658,7 +660,7 @@ public class AnnotationDetailEditorPanel
 
         aBModel.getSelection().clear();
 
-        setLayerAndFeatureModels(jCas, aBModel);
+        setLayerAndFeatureModels(aTarget, jCas, aBModel);
 
         aTarget.add(featureEditorsContainer);
         aTarget.add(deleteButton);
@@ -712,7 +714,7 @@ public class AnnotationDetailEditorPanel
         aBModel.getSelection().setOrigin(aBModel.getSelection().getTarget());
         aBModel.getSelection().setTarget(temp);
 
-        setLayerAndFeatureModels(jCas, aBModel);
+        setLayerAndFeatureModels(aTarget, jCas, aBModel);
 
         onChange(aTarget, aBModel);
     }
@@ -785,7 +787,8 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public void setLayerAndFeatureModels(JCas aJCas, final BratAnnotatorModel aBModel)
+    public void setLayerAndFeatureModels(AjaxRequestTarget aTarget, JCas aJCas,
+            final BratAnnotatorModel aBModel)
     {
         annotationFeatureForm.setModelObject(aBModel);
 
@@ -866,26 +869,38 @@ public class AnnotationDetailEditorPanel
             AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
                     .getId());
             String type = annoFs.getType().getName();
-
-            if (type.endsWith(ChainAdapter.CHAIN)) {
-                type = type.substring(0, type.length() - ChainAdapter.CHAIN.length());
+            
+            try {
+                aBModel.setSelectedAnnotationLayer(annotationService.getLayer(type,
+                        aBModel.getProject()));
             }
-            else if (type.endsWith(ChainAdapter.LINK)) {
-                type = type.substring(0, type.length() - ChainAdapter.LINK.length());
+            catch (NoResultException e) {
+                reset(aTarget);
+                throw new IllegalStateException("Unknown layer ["+type+"]", e);
             }
 
-            aBModel.setSelectedAnnotationLayer(annotationService.getLayer(type,
-                    aBModel.getProject()));
-
-            // populate feature value
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
-                    .getSelectedAnnotationLayer())) {
-                if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
-                    continue;
+            // Might have been reset if we didn't find the layer above. Btw. this can happen if
+            // somebody imports a CAS that has subtypes of layers, e.g. DKPro Core pipelines 
+            // like to produce subtypes of POS for individual postags. We do not support such
+            // "elevated types" in WebAnno at this time.
+            if (aBModel.getSelection().getAnnotation().isSet()) {
+                if (type.endsWith(ChainAdapter.CHAIN)) {
+                    type = type.substring(0, type.length() - ChainAdapter.CHAIN.length());
                 }
-
-                featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
-                        .getFeature(annoFs, feature)));
+                else if (type.endsWith(ChainAdapter.LINK)) {
+                    type = type.substring(0, type.length() - ChainAdapter.LINK.length());
+                }
+        
+                // populate feature value
+                for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
+                        .getSelectedAnnotationLayer())) {
+                    if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
+                        continue;
+                    }
+        
+                    featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
+                            .getFeature(annoFs, feature)));
+                }
             }
         }
         else {
@@ -1889,6 +1904,7 @@ public class AnnotationDetailEditorPanel
         annotationFeatureForm.getModelObject().getSelection().clear();
         annotationFeatureForm.getModelObject().getSelection().setBegin(0);
         annotationFeatureForm.getModelObject().getSelection().setEnd(0);
+        featureModels = new ArrayList<>();
         aTarget.add(annotationFeatureForm);
     }
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)

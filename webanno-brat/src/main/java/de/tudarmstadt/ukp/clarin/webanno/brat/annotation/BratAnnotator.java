@@ -297,7 +297,7 @@ public class BratAnnotator
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
 
-                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(aTarget, jCas,
                                     getModelObject());
 
                             if (BratAnnotatorUtility.isDocumentFinished(repository,
@@ -334,7 +334,7 @@ public class BratAnnotator
                         selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
                                 .toInteger());
 
-                        aAnnotationDetailEditorPanel.setLayerAndFeatureModels(jCas,
+                        aAnnotationDetailEditorPanel.setLayerAndFeatureModels(aTarget, jCas,
                                 getModelObject());
 
                         if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
@@ -383,6 +383,9 @@ public class BratAnnotator
                     error(ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (IOException e) {
+                    error(e.getMessage());
+                }
+                catch (RuntimeException e) {
                     error(e.getMessage());
                 }
 
