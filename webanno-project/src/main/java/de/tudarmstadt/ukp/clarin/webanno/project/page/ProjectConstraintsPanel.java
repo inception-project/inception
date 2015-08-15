@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -59,6 +61,8 @@ public class ProjectConstraintsPanel
     extends Panel
 {
     private static final long serialVersionUID = 8910455936756021733L;
+
+    private static final Log LOG = LogFactory.getLog(ProjectConstraintsPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;
@@ -157,8 +161,12 @@ public class ProjectConstraintsPanel
                         return projectRepository.readConstrainSet(DetailForm.this.getModelObject());
                     }
                     catch (IOException e) {
-                        error("ERROR: " + ExceptionUtils.getRootCauseMessage(e));
-                        return "ERROR";
+                        // Cannot call "Component.error()" here - it causes a 
+                        // org.apache.wicket.WicketRuntimeException: Cannot modify component 
+                        // hierarchy after render phase has started (page version cant change then
+                        // anymore)
+                        LOG.error("Unable to load script", e);
+                        return "Unable to load script: " + ExceptionUtils.getRootCauseMessage(e);
                     }
                 }
             }));
