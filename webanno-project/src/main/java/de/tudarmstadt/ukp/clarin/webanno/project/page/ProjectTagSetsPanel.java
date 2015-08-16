@@ -362,14 +362,18 @@ public class ProjectTagSetsPanel
             AnnotationService aAnnotationService)
         throws IOException
     {
-        if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
-            aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
-                    project));
+        String importedTagSetName = importedTagSet.getName();
+        if (aAnnotationService.existsTagSet(importedTagSetName, project)) {
+            
+//            aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
+//                    project));
+            //Rename Imported TagSet instead of deleting the old one.
+            importedTagSetName = copyTagSetName(aAnnotationService, importedTagSetName, project);
         }
 
         de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
         newTagSet.setDescription(importedTagSet.getDescription());
-        newTagSet.setName(importedTagSet.getName());
+        newTagSet.setName(importedTagSetName);
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
         aAnnotationService.createTagSet(newTagSet, user);
@@ -379,6 +383,28 @@ public class ProjectTagSetsPanel
             newTag.setName(tag.getName());
             newTag.setTagSet(newTagSet);
             aAnnotationService.createTag(newTag, user);
+        }
+    }
+    /**
+     * Provides a new name if TagSet already exists.
+     * @param aAnnotationService
+     * @param importedTagSetName
+     * @return
+     */
+    private static String copyTagSetName(AnnotationService aAnnotationService,
+            String importedTagSetName, Project project)
+    {
+        String betterTagSetName = "copy_of_" + importedTagSetName;
+        int i = 1;
+        while (true) {
+            if (aAnnotationService.existsTagSet(betterTagSetName, project)) {
+                betterTagSetName = "copy_of_" + importedTagSetName + "(" + i + ")";
+                i++;
+            }
+            else {
+                return betterTagSetName;
+            }
+
         }
     }
 
