@@ -1106,10 +1106,21 @@ public interface RepositoryService
     // Methods related to Constraints
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Creates Constraint Set
+     * @param aSet
+     */
     void createConstraintSet(ConstraintSet aSet);
-
+    /**
+     * Returns list of ConstraintSets in a project
+     * @param aProject The project 
+     * @return List of Constraints in a project
+     */
     List<ConstraintSet> listConstraintSets(Project aProject);
-
+    /**
+     * Remove a constraint
+     * @param aSet
+     */
     void removeConstraintSet(ConstraintSet aSet);
 
     String readConstrainSet(ConstraintSet aSet)
@@ -1117,6 +1128,17 @@ public interface RepositoryService
 
     void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException;
-    
+    /**
+     * Returns Constraint as a file
+     * @param aSet The Constraint Set
+     * @return File pointing to Constraint
+     * @throws IOException
+     */
     File exportConstraintAsFile(ConstraintSet aSet) throws IOException; 
+    /**
+     * Checks if there's a constraint set already with the name
+     * @param constraintSetName The name of constraint set
+     * @return true if exists
+     */
+    boolean existConstraintSet(String constraintSetName, Project aProject);
 }

@@ -2361,6 +2361,27 @@ public class RepositoryServiceDbData
 
     }
 
+    /**
+     * Checks if there's a constraint set already with the name
+     * @param constraintSetName The name of constraint set
+     * @return true if exists
+     */
+    @Override
+    public boolean existConstraintSet(String constraintSetName, Project aProject){
+        
+        try {
+            entityManager.createQuery("FROM ConstraintSet WHERE project = :project" 
+                            + " AND name = :name ", ConstraintSet.class)
+                    .setParameter("project", aProject).
+                    setParameter("name", constraintSetName)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+        
+    }
     @Override
     public int getNumberOfSentences()
     {

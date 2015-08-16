@@ -222,6 +222,14 @@ public class ProjectConstraintsPanel
                 {
                     // Actually nothing to do here. Wicket will transfer the values from the
                     // form into the model object and Hibernate will persist it
+                    
+                    //Check if the modified name already exists, then ignore the changes.
+//                    if(projectRepository.existConstraintSet(modifiedName, ProjectConstraintsPanel.this.getModelObject()))
+//                    {
+//                        setDefaultFormProcessing(false);
+//                        setVisible(false);
+//                    }
+                    
                 }
             });
             add(new Button("cancel", new ResourceModel("label")) {
@@ -314,7 +322,12 @@ public class ProjectConstraintsPanel
                     try {
                         ConstraintSet constraintSet = new ConstraintSet();
                         constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
-                        constraintSet.setName(constraintRulesFile.getClientFileName());
+                        //Check if ConstraintSet already exists or not
+                        String constraintFilename = constraintRulesFile.getClientFileName();
+                        if(projectRepository.existConstraintSet(constraintFilename, project)){
+                            constraintFilename = copyConstraintName(projectRepository,constraintFilename);
+                        }
+                        constraintSet.setName(constraintFilename);
                         projectRepository.createConstraintSet(constraintSet);
                         projectRepository.writeConstraintSet(constraintSet,
                                 constraintRulesFile.getInputStream());
@@ -327,6 +340,27 @@ public class ProjectConstraintsPanel
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
+            }
+        }
+        /**
+         * Checks if name exists, if yes, creates an alternate name for ConstraintSet
+         * @param projectRepository
+         * @param constraintFilename
+         * @return
+         */
+        private String copyConstraintName(RepositoryService projectRepository, String constraintFilename)
+        {
+            String betterConstraintName = "copy_of_" + constraintFilename;
+            int i = 1;
+            while (true) {
+                if (projectRepository.existConstraintSet(betterConstraintName, ProjectConstraintsPanel.this.getModelObject())) {
+                    betterConstraintName = "copy_of_" + constraintFilename + "(" + i + ")";
+                    i++;
+                }
+                else {
+                    return betterConstraintName;
+                }
+
             }
         }
     }
