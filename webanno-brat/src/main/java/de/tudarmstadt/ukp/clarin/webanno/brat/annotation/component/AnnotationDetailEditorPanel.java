@@ -1927,6 +1927,18 @@ public class AnnotationDetailEditorPanel
         }
     }
     
+    /**
+     * remove this model, if new annotation is to be created
+     */
+    public void clearArmedSlotModel()
+    {
+        for (FeatureModel fm : featureModels) {
+            if (StringUtils.isNotBlank(fm.feature.getLinkTypeName())) {
+                fm.value = new ArrayList<>();
+            }
+        }
+    }
+
     private boolean isFeatureModelChanged(AnnotationLayer aLayer){
 
             for(FeatureModel fM: featureModels){

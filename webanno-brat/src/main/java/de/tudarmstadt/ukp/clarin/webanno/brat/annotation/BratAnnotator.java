@@ -302,6 +302,7 @@ public class BratAnnotator
                                 getModelObject().setForwardAnnotation(false);
                             }
                             // Doing anything but filling an armed slot will unarm it
+                            aAnnotationDetailEditorPanel.clearArmedSlotModel();
                             getModelObject().clearArmedSlot();
 
                             Selection selection = getModelObject().getSelection();
