@@ -54,6 +54,7 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
@@ -249,6 +250,12 @@ public class BratAnnotator
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;
 
+                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+                            error("This document is already closed. Please ask your project "
+                                    + "manager to re-open it via the Montoring page");
+                            return;
+                        }
+
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
@@ -278,7 +285,16 @@ public class BratAnnotator
                                 }
                             }
                             else {
-                                error("Cannot auto-create targets for generic links.");
+                                Selection selection = getModelObject().getSelection();
+
+                                selection.setRelationAnno(false);
+
+                                Offsets offsets = getSpanOffsets(request, jCas, paramId);
+
+                                selection.setAnnotation(paramId);
+                                selection.set(jCas, offsets.getBegin(), offsets.getEnd());
+                                aAnnotationDetailEditorPanel.actionAnnotate(aTarget,
+                                        getModelObject());
                             }
                         }
                         else {
@@ -297,22 +313,21 @@ public class BratAnnotator
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
 
-                            aAnnotationDetailEditorPanel.setLayerAndFeatureModels(aTarget, jCas,
-                                    getModelObject());
-
-                            if (BratAnnotatorUtility.isDocumentFinished(repository,
-                                    getModelObject())) {
-                                error("This document is already closed. Please ask your project "
-                                        + "manager to re-open it via the Montoring page");
-                            }
-
                             bratRenderHighlight(aTarget, selection.getAnnotation());
 
                             if (selection.getAnnotation().isNotSet()) {
-                                bratRenderGhostSpan(aTarget, jCas, offsets.getBegin(),
-                                        offsets.getEnd());
+                                selection.setAnnotate(true);
+                                if(aAnnotationDetailEditorPanel.isRelation()){
+                                    aAnnotationDetailEditorPanel.reloadBrush(aTarget,
+                                            WebAnnoConst.SPAN_TYPE);
+                                }
+                                aAnnotationDetailEditorPanel.actionAnnotate(aTarget,
+                                        getModelObject());
                             }
                             else {
+                                selection.setAnnotate(false);
+                                aAnnotationDetailEditorPanel.reloadBrush(aTarget,
+                                        WebAnnoConst.SPAN_TYPE);
                                 bratRender(aTarget, jCas);
                                 result = new SpanAnnotationResponse();
                             }
@@ -321,6 +336,9 @@ public class BratAnnotator
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
 
+                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+                            error("This document is already closed. Please ask admin to re-open");
+                        }
                         Selection selection = getModelObject().getSelection();
 
                         selection.setRelationAnno(true);
@@ -333,21 +351,21 @@ public class BratAnnotator
                                 .toString());
                         selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
                                 .toInteger());
-
-                        aAnnotationDetailEditorPanel.setLayerAndFeatureModels(aTarget, jCas,
-                                getModelObject());
-
-                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                            error("This document is already closed. Please ask admin to re-open");
-                        }
-
+                        
                         bratRenderHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
 
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                            bratRenderGhostArc(aTarget, jCas);
+                            selection.setAnnotate(true);
+                            aAnnotationDetailEditorPanel.reloadBrush(aTarget,
+                                    WebAnnoConst.RELATION_TYPE);
+
+                            aAnnotationDetailEditorPanel.actionAnnotate(aTarget, getModelObject());
                         }
                         else {
+                            selection.setAnnotate(false);
+                            aAnnotationDetailEditorPanel.reloadBrush(aTarget,
+                                    WebAnnoConst.RELATION_TYPE);
                             bratRender(aTarget, jCas);
                             result = new ArcAnnotationResponse();
                         }
@@ -387,6 +405,10 @@ public class BratAnnotator
                 }
                 catch (RuntimeException e) {
                     error(e.getMessage());
+                }
+                catch (BratAnnotationException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
 
                 // Serialize updated document to JSON

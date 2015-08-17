@@ -19,13 +19,12 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 	<wicket:panel>
-		<form wicket:id="annotationFeatureForm">
-			<fieldset>
+	<form wicket:id="annotationFeatureForm">
+		<fieldset>
 				<legend>Actions</legend>
 				<table>
 					<tr>
 						<td>
-							<button class="buttons" wicket:id="annotate">Create</button>
 							<button class="buttons" wicket:id="delete">Delete</button>
 							<button class="buttons" wicket:id="reverse">Reverse</button>
 						</td>
@@ -34,10 +33,15 @@
 						<td>Forward annotation ?</td>
 						<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
 					</tr>
+					<tr>
+						<td>Brush</td>
+						<td><select wicket:id="brush"
+							style="width: 100%"></select></td>
+					</tr>					
 				</table>
-			</fieldset>
-			<fieldset>
-				<legend>Annotation Layers</legend>
+		</fieldset>		
+		  <fieldset>
+				<legend>Layers</legend>
 				<table>
 					<tr>
 						<td>Selected text</td>
@@ -49,9 +53,7 @@
 							style="width: 100%"></select></td>
 					</tr>
 				</table>
-			</fieldset>
-			<fieldset wicket:id="featureEditorsContainer">
-				<legend>Features</legend>
+			<div wicket:id="featureEditorsContainer">
 				<table class="hfill">
 					<tr wicket:id="featureValues">
 						<td wicket:id="editor"></td>
@@ -115,8 +117,9 @@
 						-->
 					</tr>
 				</table>
-			</fieldset>
-		</form>
+			</div>
+		</fieldset>		
+</form>
 	</wicket:panel>
 </body>
 </html>

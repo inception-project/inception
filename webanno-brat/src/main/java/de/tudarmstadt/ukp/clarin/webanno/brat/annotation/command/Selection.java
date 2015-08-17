@@ -29,7 +29,7 @@ public class Selection
     private static final long serialVersionUID = 2257223261821341371L;
 
     // if it is annotation or delete operation
-    private boolean isAnnotate;
+    private boolean isAnnotate = true;
 
     // is the annotation span or arc annotation
     private boolean isRelationAnno;
