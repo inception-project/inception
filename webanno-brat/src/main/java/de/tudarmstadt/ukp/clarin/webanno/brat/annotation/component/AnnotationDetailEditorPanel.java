@@ -888,18 +888,38 @@ public class AnnotationDetailEditorPanel
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
-    {        
+    {
         annotationLayers.clear();
         AnnotationLayer l = null;
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-            if (!layer.isEnabled()
-                    || layer.isReadonly() || layer.getName().equals(Token.class.getName())) {
+            if (!layer.isEnabled() || layer.isReadonly()
+                    || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
-            if(brush.getModelObject().equals(layer.getType())){
+            if (brush.getModelObject().equals(layer.getType())) {
                 annotationLayers.add(layer);
                 l = layer;
             }
+            // manage chain type
+            else if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+                    if (!feature.isEnabled()) {
+                        continue;
+                    }
+                    // add it as relation
+                    else if (isRelation()
+                            && feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+                        annotationLayers.add(layer);
+                    }
+                    // add it as span
+                    else if (!isRelation()
+                            && feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                        annotationLayers.add(layer);
+                    }
+
+                }
+            }
+            // chain
         }
         if (l != null) {
             bModel.setSelectedAnnotationLayer(l);
