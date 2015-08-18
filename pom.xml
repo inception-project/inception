@@ -438,13 +438,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <!-- version>2.10.2-SNAPSHOT</version -->
                 <configuration>
                     <notimestamp>true</notimestamp>
                     <!-- Exclude UIMA types and internal API -->
                     <excludePackageNames>*.type:*.internal.*</excludePackageNames>
                     <sourceFileExcludes>
                         <exclude>**/*_Type.java</exclude>
+                        <exclude>**/webanno/constraints/grammar/**/*.java</exclude>
                     </sourceFileExcludes>
                     <tags>
                         <tag>

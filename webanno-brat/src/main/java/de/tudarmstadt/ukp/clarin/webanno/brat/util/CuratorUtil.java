@@ -259,10 +259,6 @@ public class CuratorUtil
      *            the segment.
      * @param aAnnotationService
      *            the annotation service.
-     * @param aJsonConverter
-     *            the JSON converter.
-     * @return the correction document in automation/correction mode and the curation document in
-     *         curation mode.
      * @throws UIMAException
      *             hum?
      * @throws ClassNotFoundException

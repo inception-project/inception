@@ -515,16 +515,11 @@ public interface RepositoryService
 
     /**
      * If at least one {@link AnnotationDocument} is finished in this project
-     *
-     * @return
      */
     boolean existsFinishedAnnotation(Project project);
 
     /**
      * list Projects which contain with those annotation documents state is finished
-     *
-     * @param project
-     * @return
      */
     List<Project> listProjectsWithFinishedAnnos();
 

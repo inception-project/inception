@@ -2222,8 +2222,6 @@ public class RepositoryServiceDbData
      *
      * @param aSourceDocument
      *            the source document.
-     * @param aUser
-     *            the user.
      * @param aProject
      *            the project.
      * @return if a finished document exists.

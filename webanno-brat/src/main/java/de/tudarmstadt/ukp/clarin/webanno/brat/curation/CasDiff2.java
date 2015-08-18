@@ -101,7 +101,7 @@ public class CasDiff2
 
     /**
      * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map)}.
+     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
      * 
      * @param aEntryType
      *            the type for which differences are to be calculated.
@@ -124,7 +124,7 @@ public class CasDiff2
 
     /**
      * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map)}.
+     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
      * 
      * @param aEntryType
      *            the type for which differences are to be calculated.
@@ -453,8 +453,6 @@ public class CasDiff2
         
         /**
          * Get the way in which links are compared and labels for links are generated.
-         * 
-         * @param aLinkTargetAsLabel use link target instead of role as label.
          */
         LinkCompareBehavior getLinkCompareBehavior();
         
