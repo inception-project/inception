@@ -406,6 +406,7 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
+        private Label name;
         private TextField<String> uiName;
         private static final String TYPE_PREFIX = "webanno.custom.";
         private String layerName;
@@ -446,6 +447,18 @@ public class ProjectLayersPanel
                 }
             });
 
+            add(name = new Label("name")
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setVisible(StringUtils.isNotBlank(LayerDetailForm.this.getModelObject()
+                            .getName()));
+                };
+            });
+            
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
