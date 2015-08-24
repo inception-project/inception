@@ -1223,40 +1223,8 @@ public class AnnotationDetailEditorPanel
                     // Earlier behavior,
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
-                field = new ComboBox<Tag>("value", tagset)
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected IJQueryTemplate newTemplate()
-                    {
-                        return new IJQueryTemplate()
-                        {
-                            private static final long serialVersionUID = 1L;
-
-                            @Override
-                            public String getText()
-                            {
-                                // Some docs on how the templates work in Kendo, in case we need
-                                // more fancy dropdowns
-                                // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("# if (data.reordered == 'true') { #");
-                                sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
-                                sb.append("# } else { #");
-                                sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
-                                sb.append("# } #");
-                                return sb.toString();
-                            }
-
-                            @Override
-                            public List<String> getTextProperties()
-                            {
-                                return Arrays.asList("name", "description", "reordered");
-                            }
-                        };
-                    }
-                };
+                field = new StyledComboBox<Tag>("value", tagset);
+                
                 field.setOutputMarkupId(true);
                 // Docs for the JQuery tooltip widget that we configure below:
                 // https://api.jqueryui.com/tooltip/
@@ -1443,43 +1411,8 @@ public class AnnotationDetailEditorPanel
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
 
-                text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
-                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name")){
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected IJQueryTemplate newTemplate()
-                    {
-                        return new IJQueryTemplate()
-                        {
-                            private static final long serialVersionUID = 1L;
-                            /**
-                             * Marks the reordered entries in bold.
-                             * Same as text feature editor.
-                             */
-                            @Override
-                            public String getText()
-                            {
-                                // Some docs on how the templates work in Kendo, in case we need
-                                // more fancy dropdowns
-                                // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                                StringBuilder sb = new StringBuilder();
-                                sb.append("# if (data.reordered == 'true') { #");
-                                sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
-                                sb.append("# } else { #");
-                                sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
-                                sb.append("# } #");
-                                return sb.toString();
-                            }
-
-                            @Override
-                            public List<String> getTextProperties()
-                            {
-                                return Arrays.asList("name", "description", "reordered");
-                            }
-                        };
-                    }
-                };
+                text = new StyledComboBox<Tag>("newRole", Model.of(""), tagset,
+                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
                 isDrop = true;
             }
@@ -2000,5 +1933,53 @@ public class AnnotationDetailEditorPanel
             msg += " Label: [" + aLabel + "]";
         }
         return msg;
+    }
+    
+    class StyledComboBox<T> extends ComboBox<T>{
+        public StyledComboBox(String id, IModel<String> model, List<T> choices,
+                com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<? super T> renderer)
+        {
+            super(id, model, choices, renderer);            
+        }
+
+        public StyledComboBox(String string, List<T> tagset)
+        {
+            super(string,tagset);
+        }
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        protected IJQueryTemplate newTemplate()
+        {
+            return new IJQueryTemplate()
+            {
+                private static final long serialVersionUID = 1L;
+                /**
+                 * Marks the reordered entries in bold.
+                 * Same as text feature editor.
+                 */
+                @Override
+                public String getText()
+                {
+                    // Some docs on how the templates work in Kendo, in case we need
+                    // more fancy dropdowns
+                    // http://docs.telerik.com/kendo-ui/framework/templates/overview
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("# if (data.reordered == 'true') { #");
+                    sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
+                    sb.append("# } else { #");
+                    sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
+                    sb.append("# } #");
+                    return sb.toString();
+                }
+
+                @Override
+                public List<String> getTextProperties()
+                {
+                    return Arrays.asList("name", "description", "reordered");
+                }
+            };
+        }
     }
 }
