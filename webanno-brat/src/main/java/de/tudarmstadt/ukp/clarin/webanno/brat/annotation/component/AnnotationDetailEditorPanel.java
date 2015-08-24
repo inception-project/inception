@@ -1241,14 +1241,18 @@ public class AnnotationDetailEditorPanel
                                 // more fancy dropdowns
                                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
                                 StringBuilder sb = new StringBuilder();
-                                sb.append("<div title=\"${ data.description }\">${ data.name }</div>\n");
+                                sb.append("# if (data.reordered == 'true') { #");
+                                sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
+                                sb.append("# } else { #");
+                                sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
+                                sb.append("# } #");
                                 return sb.toString();
                             }
 
                             @Override
                             public List<String> getTextProperties()
                             {
-                                return Arrays.asList("name", "description");
+                                return Arrays.asList("name", "description", "reordered");
                             }
                         };
                     }
@@ -1713,6 +1717,9 @@ public class AnnotationDetailEditorPanel
         for (PossibleValue value : possibleValues) {
             for (Tag tag : valuesFromTagset) {
                 if (value.getValue().equalsIgnoreCase(tag.getName())) {
+                    // HACK BEGIN
+                    tag.setReordered(true);
+                    // HACK END
                     returnList.add(tag);
                 }
             }
