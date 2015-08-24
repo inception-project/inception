@@ -1444,7 +1444,42 @@ public class AnnotationDetailEditorPanel
                 }
 
                 text = new ComboBox<Tag>("newRole", Model.of(""), tagset,
-                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
+                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name")){
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    protected IJQueryTemplate newTemplate()
+                    {
+                        return new IJQueryTemplate()
+                        {
+                            private static final long serialVersionUID = 1L;
+                            /**
+                             * Marks the reordered entries in bold.
+                             * Same as text feature editor.
+                             */
+                            @Override
+                            public String getText()
+                            {
+                                // Some docs on how the templates work in Kendo, in case we need
+                                // more fancy dropdowns
+                                // http://docs.telerik.com/kendo-ui/framework/templates/overview
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("# if (data.reordered == 'true') { #");
+                                sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
+                                sb.append("# } else { #");
+                                sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
+                                sb.append("# } #");
+                                return sb.toString();
+                            }
+
+                            @Override
+                            public List<String> getTextProperties()
+                            {
+                                return Arrays.asList("name", "description", "reordered");
+                            }
+                        };
+                    }
+                };
                 add(text);
                 isDrop = true;
             }
