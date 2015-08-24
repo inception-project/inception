@@ -28,7 +28,7 @@ After clicking on *Monitoring* in the main menu, the following page is displayed
 image::monitoring1.jpg[align="center"]
 
 In the right frame, the overall progress of all projects is displayed.
-on the left frame one sees all projects, that one has an administrator role in.  
+In the left frame one sees all projects, that one has an administrator role in.  
 By clicking on one of the projects on the left, it may be selected and the following view is opened:
 
 image::monitoring2.jpg[align="center"]
@@ -38,7 +38,7 @@ The percentual progress out of the workload for individual annotators may be vie
 [[sect_monitoring_status]]
 === Document Status ===
 
-The following table will explain the different symbols, which explain the status of a document for a user and the described task.
+The following table will explain the different symbols which explain the status of a document for a user and the described task.
 
 [cols="1^,2", options="header"]
 |===
@@ -74,8 +74,8 @@ image::monitoring_agreement.jpg[align="center"]
 [[sect_monitoring_agreement]]
 === Agreement ===
 
-Agreement can be inspected on a per-feature basis and it is calculates pair-wise between all 
-annotators across all document. Agreement is calculated using Cohen's kappa as implemented in
+Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
+annotators across all documents. Agreement is calculated using Cohen's kappa as implemented in
 DKPro Statistics.
 
 The first time a feature is selected for agreement inspection, it takes a moment to calculate the
@@ -87,7 +87,7 @@ Agreement is calculated in two steps:
 . *Generation of positions and configuration sets* - all documents are scanned for annotations and 
    annotations located at the same positions are collected in configuration sets. To determine if
    two annotations are at the same position, different approaches are used depending on the layer
-   type. For a span layer, the begin and end offsets are used. For a relation layer, the begin/end
+   type. For a span layer, the begin and end offsets are used. For a relation layer, the begin and end
    offsets of the source and target annotation are used. Chains are currently not supported. 
 . *Calculation of pairwise agreement* - based on the generated configuration sets, agreement is calculated.
   There are two cases where a configuration set may be omitted from the pairwise agreement calculation:
@@ -99,6 +99,6 @@ The lower part of the agreement matrix displays how many configuration sets were
 agreement and how many were found in total. The upper part of the agreement matrix displays the
 pairwise Cohen's kappa scores.
   
-CAUTION: Multiple interpretations in the form of stacked annotations not supported in the agreement 
+CAUTION: Multiple interpretations in the form of stacked annotations are not supported in the agreement 
       calculation!
 

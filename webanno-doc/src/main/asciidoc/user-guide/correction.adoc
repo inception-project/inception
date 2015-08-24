@@ -29,7 +29,7 @@ After clicking on the *Correction* symbol on the main page, the Correction page 
 
 image::correction1.jpg[align="center"]
 
-Afterwards the documents assigned to him are displayed. Now he may choose a document. Just like in <<sect_annotation>> and <<sect_curation>>, the colour of the document names signals the following: black- unopened document, blue- opened document and red - document finished. 
+Afterwards the documents assigned to him are displayed. Now he may choose a document. Just like in <<sect_annotation>> and <<sect_curation>>, the colour of the document names signals the following: black - unopened document, blue - opened document and red - document finished. 
 
 After having chosen the document, two frames are displayed. 
 
