@@ -35,7 +35,7 @@ by the current user, blue font means that it has already been opened, whereas re
 that the document has already been marked as *done*.
 
 Once the document is opened, a default of 10 sentences are loaded on the annotation  page.  The  
-*Settings*  button will  allow  you  to specify the settings of you the annotation layer.
+*Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
 The first option allows you to select an Annotation Layer you are displayed during annotation. The second option allows you to specify the number of sentences that will be displayed on one page. The last option allows you to select auto-scroll while annotating. Auto-scroll scrolls automatically forward by putting the last annotated sentence in the middle.
 
@@ -72,7 +72,7 @@ The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *
 
 A click on the *Help* button displays the Guidelines for the tool and *The Annotator's Guide to NER-Annotation*.
 When you are finished with annotating or curating a document, please click on the *Done*
-button, so that the document may be further processed. If the button above the *Done* is a cross symbol, it means the documents has already been finished. If the symbol has a tick, it is still open.
+button, so that the document may be further processed. If the button above the *Done* is a cross symbol, it means the documents have already been finished. If the symbol has a tick, it is still open.
 
 image::annotation4.jpg[align="center"]
 
@@ -140,7 +140,7 @@ link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one tok
 
 image::annotation_pos.jpg[align="center"]
 
-link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence have several co-ref spans simultaneously.
+link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence has several co-ref spans simultaneously.
 
 ==== Relations
 
@@ -154,12 +154,12 @@ To abort the creation of an annotation, hold *CTRL* when you release the mouse b
 Depending on the layer behavior configuration, relation annotations can stack, can cross each other,
 cross sentence boundaries. 
 
-NOTE: Currently, there can be at most one relation layer per span layer and relation between spans
+NOTE: Currently, there can be at most one relation layer per span layer. Relations between spans
       of different layers are not supported.
 
 NOTE: A special behavior for the built-in *Dependency* layer is the handling of the dependency 
       root. To mark a token as the *ROOT* of the dependency tree, create a dependency relation from
-      the POS tag a to itself (a circle). This behavior is not active for custom relation layers!
+      the POS tag to itself (a circle). This behavior is not active for custom relation layers!
 
 NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
       are induced by <<sect_annotation_link_features>>.
