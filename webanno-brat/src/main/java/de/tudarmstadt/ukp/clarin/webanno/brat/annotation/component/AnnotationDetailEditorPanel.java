@@ -1414,6 +1414,15 @@ public class AnnotationDetailEditorPanel
                 text = new StyledComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
+                // Docs for the JQuery tooltip widget that we configure below:
+                // https://api.jqueryui.com/tooltip/
+                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                options.set("content", "function() { return "
+                        + "'<div class=\"tooltip-title\">'+($(this).text() "
+                        + "? $(this).text() : 'no title')+'</div>"
+                        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
+                        + "? $(this).attr('title') : 'no description' )+'</div>' }");
+                text.add(new TooltipBehavior(options));
                 isDrop = true;
             }
             else {
