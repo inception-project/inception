@@ -25,23 +25,23 @@ NOTE: This functionality is only available to *project managers* (managers of ex
 This is the place to specify/edit annotation projects.  
 You can either select one of the existing projects for editing, or click *Create Project* to add a project.
 
-Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>>, <<sect_correction>>.
+Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>> and <<sect_correction>>.
 
 Only superadmins are allowed to create projects.	
 Click on *Create Project* to create a new project. 
 
 image::project1.jpg[align="center"]
 
-After doing so, a new pane is displayed, where you can name and describe your new project. It is also important to chose the kind of project you want to create. You have the choice between annotation, automation and correction.
+After doing so, a new pane is displayed, where you can name and describe your new project. It is also important to chose the kind of project you want to create. You have the choice between annotation, automation, and correction.
 Please do not forget to save.
 
 image::project2.jpg[align="center"]
 
-After saving the details of the new project, it can be treated like any other already existing one.  Also, you are displayed a new pane with many options to organize it.
+After saving the details of the new project, it can be treated like any other already existing one.  Also, a new pane with many options to organize the project is displayed.
 
 image::project10.jpg[align="center"]
 
-To delete a project, click on it in the frame *Details*. Then you are displayed the details of the project. Click on *Delete*.
+To delete a project, click on it in the frame *Details*. The project details are displayed. Now, click on *Delete*.
 
 The pane with the options to organize and edit a project, as described above, can also be reached by clicking on the desired project in the left frame.
 
@@ -51,15 +51,15 @@ By clicking on the tabs, you can now set up the chosen project.
 
 === Users
 
-After clicking on *Users*, you are displayed a new pane in which you can add new users by clicking on the button *Add User*.  After doing so, you get a list of users in the system which can be added to the project. By making a tick in front of the log in you can chose a new user.
+After clicking on *Users*, you are displayed a new pane in which you can add new users by clicking on the button *Add User*.  After doing so, you get a list of users in the system which can be added to the project. By making a tick in front of the login, you can chose a new user.
 
 image::project4.jpg[align="center"]
 
-Please do not forget to save after choosing all members of the project. Close the pane by clicking on *Cancel*. The rights of users created like this are that of an annotator. If you want to expand the user's status, you can do so by clicking on the user and then on *Change permission*. The following frame will pop up.
+Please do not forget to save after choosing all members of the project. Close the pane by clicking on *Cancel*. The rights of users created like this are that of an annotator. If you want to expand the user's status, you can do so by clicking on the user and then on *Change Permission*. The following frame will pop up.
 
 image::project5.jpg[align="center"]
 
-After ticking the wished permissions, click update.
+After ticking the wished permissions, click on *Update*.
 To remove a user, click on the login and then *Remove User*.
 
 === Documents
@@ -68,7 +68,7 @@ To add or delete documents, you have to click on the tab *Documents* in the proj
 
 image::project6.jpg[align="center"]
 
-Choose a document by clicking on *Choose files*. Please mind the format, which you have to choose above.  Then click on *Import document*. 
+Choose a document by clicking on *Choose Files*. Please mind the format, which you have to choose above. Then click on *Import Document*. 
 The imported documents can be seen in the frame below.
 To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner.
 
@@ -143,7 +143,7 @@ no sentence bounary crossing
 | Span
 | Locked to token offsets,
 no stacking,
-no sentence bounary crossing
+no sentence boundary crossing
 |====
 
 The colouring of the layers signal the following: 
@@ -193,7 +193,7 @@ image::layer2.jpg[align="center"]
 [[sect_projects_layers_technical_properties]]
 ==== Technical Properties 
 
-In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation or chain.
+In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
 
 .Technical Properites
 [cols="1v,2", options="header"]
@@ -230,11 +230,11 @@ The layer type defines the structure of the layer. WebAnno supports three differ
 | image:project_layer_type_chain.png[]
 |====
 
-For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here only non-default layers are displayed. To create a relation first the span annotation needs to be created.
+For relation annotations the type of the spans which are to be connected can be chosen in the field *Attach to layer*. Here, only non-default layers are displayed. To create a relation, first the span annotation needs to be created.
 
 NOTE: Currently for each span layer there can be at most one relation layer attaching to it.
 
-NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, instead create a single span layer *Person* with a feature *gender* what you can set to *Man* or *Woman*. Then you can define a relation layer *Married to* attaching to the *Person* layer.
+NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
 
 [[sect_projects_layers_behaviours]]
 ==== Behaviours
@@ -253,7 +253,7 @@ _(span, chain)_
 
 | Allow multiple tokens
 _(span, chain)_
-| Like _Lock to token offsets_ except that the annotation may cover multiple tokens. If this ie enabled, then _Lock to token offsets_ is automatically disabled.
+| Like _Lock to token offsets_ except that the annotation may cover multiple tokens. If this is enabled, then _Lock to token offsets_ is automatically disabled.
 
 | Allow stacking
 | Allow multiple annotations in this layer to be made at exactly the same position. If this option is disabled, a new annotation made at the same location as an existing annotation will replace the existing annotation.
@@ -263,7 +263,7 @@ _(chain)_
 | Allow annotations to cross sentence boundaries.
 
 | Behave like a linked list
-| Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closet following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly creation connection is made - arc labels are available.
+| Controls what happens when two chains are connected with each other. If this option is *disabled*, then the two entire chains will be merged into one large chain. Links between spans will be changed so that each span connects to the closest following span -  no arc labels are displayed. If this option is *enabled*, then the chains will be split if necessary at the source and target points, reconnecting the spans such that exactly the newly created connection is made - arc labels are available.
 |====
 
 NOTE: In order to create sub-token annotations, both *Lock to token offsets* and *Allow multiple tokens* need to be disabled.
@@ -293,7 +293,7 @@ In this section, features and their properties can be configured.
 | Features cannot be deleted, but they can be disabled
 
 | Show
-| Whether the feature value is show in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
+| Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
 
 | Remember
 | Whether the annotation detail editor should carry values of this feature
@@ -347,7 +347,7 @@ image::project8.jpg[align="center"]
 
 In the Frame *Tagset details*, you can change them,  export a tagset, save the changes you made on it or delete it by clicking on *Delete tagSet*.
 To change an individual tag, you select one in the list displayed in the frame *Tags*. You can then change its description or name or delete it by clicking *Delete tag* in *Tag details*.  Please do not forget to save your changes by clicking on *Save tag*.
-To add a new tag, you have to click on *Create tag* in *Tag details*. Then you add the name   and the description, which is optional. Again, do not forget to click *Save tag* or else the new tag will not be created.
+To add a new tag, you have to click on *Create tag* in *Tag details*. Then you add the name and the description, which is optional. Again, do not forget to click *Save tag* or the new tag will not be created.
 
 To create an own tagset, click on *Create tagset* and fill in the fields that will be displayed in the new frame. Only the first field is obligatory. Adding new tags works the same way as described for already existing tagsets. If you want to have a free annotation, as it could be used for lemma or meta information annotation, do not add any tags. 
 
@@ -375,7 +375,7 @@ missing users* (enabled by default). If this option is disabled, projects still 
 association to users by name. If the respective user accounts are created manually after the import,
 the users will start showing up in the projects.
 
-NOTE: Generated users are disabled and have no password. The must be explicitly enabled and a
+NOTE: Generated users are disabled and have no password. They must be explicitly enabled and a
       password must be set before the users can log in again.
 
 === Export
@@ -400,7 +400,7 @@ NOTE: Some browsers automatically extract ZIP files into a folder after the down
       best option is to disable the automatic extraction in your browser. E.g. in Safari, go to
       *Preferences* -> *General* and disable the setting *Open "safe" files after downloading*.
 
-When exporting a whole project, the structure of the exported ZIP file is a follows:
+When exporting a whole project, the structure of the exported ZIP file is as follows:
 
 ====
 * *<project ID>.json* - project metadata file
