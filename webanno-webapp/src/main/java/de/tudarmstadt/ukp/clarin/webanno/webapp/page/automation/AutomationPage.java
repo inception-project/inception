@@ -72,6 +72,7 @@ import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
@@ -260,17 +261,28 @@ public class AutomationPage
                             aBModel.getDocument(), aBModel.getUser());
                     JCas jCas = repository.readAnnotationCas(annodoc);
                     AnnotationFS fs = selectByAddr(jCas, address);
+
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         if (automationService.getMiraTemplate(f) != null
                                 & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
 
                             Type type = CasUtil.getType(fs.getCAS(), layer.getName());
                             Feature feat = type.getFeatureByBaseName(f.getName());
+                            if(layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)){
+                                AutomationUtil.repeateRelationAnnotation(aBModel, repository,
+                                        annotationService, fs, f,
+                                        fs.getFeatureValueAsString(feat));
+                                update(aTarget);
+                                break;
+                            }
+                            else if(layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)){
+                                AutomationUtil.repeateAnnotation(aBModel, repository,
+                                        annotationService, aStart, aEnd, f,
+                                        fs.getFeatureValueAsString(feat));
+                                update(aTarget);
+                                break;
+                            }
 
-                            AutomationUtil.repeateAnnotation(aBModel, repository,
-                                    annotationService, aStart, aEnd, f,
-                                    fs.getFeatureValueAsString(feat));
-                            update(aTarget);
                         }
                     }
                 }

@@ -37,6 +37,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -189,9 +190,10 @@ public class ProjectMiraTemplatePanel
                                                 .equals(Lemma.class.getName())) {
                                     continue;
                                 }
-                                if (feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                                    spanFeatures.add(feature);
-                                }
+                                // if (feature.getLayer().getType().equals(WebAnnoConst.SPAN_TYPE))
+                                // {
+                                spanFeatures.add(feature);
+                                // }
                             }
                             return spanFeatures;
                         }
@@ -635,6 +637,12 @@ public class ProjectMiraTemplatePanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
+                    if(!template.getTrainFeature().getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)){
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        error("Relation automation is not supported yet, but you can use the copy annotator.");
+                        // No support yet for relation automation
+                        return;
+                    }
                     AutomationStatus automationStatus = new AutomationStatus();
                     try {
                         // no training document is added / no curation is done yet!

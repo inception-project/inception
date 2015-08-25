@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,18 +36,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -59,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.AutomationTypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
@@ -124,6 +131,132 @@ public class AutomationUtil
         aRepository.writeCorrectionCas(jCas, aBModel.getDocument(), aBModel.getUser());
     }
 
+    public static void repeateRelationAnnotation(BratAnnotatorModel aBModel,
+            RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
+            AnnotationFeature aFeature, String aValue)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+        SourceDocument sourceDocument = aBModel.getDocument();
+        JCas jCas = aRepository.readCorrectionCas(sourceDocument);
+
+        ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
+        String sourceFName = adapter.getSourceFeatureName();
+        String targetFName = adapter.getTargetFeatureName();
+
+        Type type = getType(jCas.getCas(), aFeature.getLayer().getName());
+        Type spanType = getType(jCas.getCas(), adapter.getAttachTypeName());
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(adapter.getAttachFeatureName());
+
+        Feature dependentFeature = type.getFeatureByBaseName(targetFName);
+        Feature governorFeature = type.getFeatureByBaseName(sourceFName);
+
+        AnnotationFS dependentFs = null;
+        AnnotationFS governorFs = null;
+
+        if (adapter.getAttachFeatureName() != null) {
+            dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
+                    arcSpanFeature);
+            governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature).getFeatureValue(
+                    arcSpanFeature);
+
+        }
+        else {
+            dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+            governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+        }
+
+        if (adapter.isCrossMultipleSentence()) {
+            List<AnnotationFS> mSpanAnnos = new ArrayList<>(getAllAnnoFss(jCas,
+                    governorFs.getType()));
+            repeatRelation(aBModel, aFeature, aValue, jCas, adapter, dependentFs, governorFs,
+                    mSpanAnnos);
+        }
+        else {
+            for (Sentence sent : select(jCas, Sentence.class)) {
+                List<AnnotationFS> mSpanAnnos = selectCovered(jCas.getCas(), governorFs.getType(),
+                        sent.getBegin(), sent.getEnd());
+                repeatRelation(aBModel, aFeature, aValue, jCas, adapter, dependentFs, governorFs,
+                        mSpanAnnos);
+            }
+
+        }
+
+        aRepository.writeCorrectionCas(jCas, aBModel.getDocument(), aBModel.getUser());
+    }
+
+    private static void repeatRelation(BratAnnotatorModel aBModel, AnnotationFeature aFeature,
+            String aValue, JCas jCas, ArcAdapter adapter, AnnotationFS dependentFs,
+            AnnotationFS governorFs, List<AnnotationFS> mSpanAnnos)
+        throws BratAnnotationException
+    {
+        String dCoveredText = dependentFs.getCoveredText();
+        String gCoveredText = governorFs.getCoveredText();
+        AnnotationFS d = null, g = null;
+        Type attachSpanType = dependentFs.getType();
+
+        for (AnnotationFS mFs : mSpanAnnos) {
+            if (dCoveredText.equals(mFs.getCoveredText())) {
+                if (g != null && isSamAnno(attachSpanType, mFs, dependentFs)) {
+                    adapter.add(g, mFs, jCas, aBModel, aFeature, aValue);
+                    g = null;
+                    d = null;
+                    continue;// so we don't go to the other if
+                }
+                else if (d == null && isSamAnno(attachSpanType, mFs, dependentFs)) {
+                    d = mFs;
+                    continue; // so we don't go to the other if
+                }
+
+            }
+            // we don't use else, in case gov and dep are the same
+            if (gCoveredText.equals(mFs.getCoveredText())) {
+                if (d != null && isSamAnno(attachSpanType, mFs, governorFs)) {
+                    adapter.add(mFs, d, jCas, aBModel, aFeature, aValue);
+                    g = null;
+                    d = null;
+                }
+                else if (g == null && isSamAnno(attachSpanType, mFs, governorFs)) {
+                    g = mFs;
+                }
+            }
+        }
+    }
+
+    private static Collection<AnnotationFS> getAllAnnoFss(JCas aJcas, Type aType)
+    {
+        Collection<AnnotationFS> spanAnnos = select(aJcas.getCas(), aType);
+
+        Collections.sort(new ArrayList<AnnotationFS>(spanAnnos), new Comparator<AnnotationFS>()
+        {
+            @Override
+            public int compare(AnnotationFS arg0, AnnotationFS arg1)
+            {
+                return arg0.getBegin() - arg1.getBegin();
+            }
+        });
+        return spanAnnos;
+    }
+
+    private static boolean isSamAnno(Type aType, AnnotationFS aMFs, AnnotationFS aFs)
+    {
+        for (Feature f : aType.getFeatures()) {
+            // anywhere is ok
+            if (f.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)) {
+                continue;
+            }
+            // anywhere is ok
+            if (f.getName().equals(CAS.FEATURE_FULL_NAME_END)) {
+                continue;
+            }
+            if (!f.getRange().isPrimitive() && aMFs.getFeatureValue(f) instanceof SofaFS) {
+                continue;
+            }
+            if (!aMFs.getFeatureValueAsString(f).equals(aFs.getFeatureValueAsString(f))) {
+                return false;
+            }
+        }
+        return true;
+    }
     public static void deleteAnnotation(BratAnnotatorModel aBModel, RepositoryService aRepository,
             AnnotationService aAnnotationService,  int aStart, int aEnd, AnnotationFeature aFeature,  String aValue)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
