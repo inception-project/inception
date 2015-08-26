@@ -148,6 +148,16 @@ public class AnnotationDetailEditorPanel
 
     private List<FeatureModel> featureModels;
     BratAnnotatorModel bModel;
+    /**
+     * Function to return tooltip using jquery
+     *Docs for the JQuery tooltip widget that we configure below:
+     *https://api.jqueryui.com/tooltip/
+     */
+    private final String functionForTooltip = "function() { return "
+            + "'<div class=\"tooltip-title\">'+($(this).text() "
+            + "? $(this).text() : 'no title')+'</div>"
+            + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
+            + "? $(this).attr('title') : 'no description' )+'</div>' }";
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -1226,14 +1236,9 @@ public class AnnotationDetailEditorPanel
                 field = new StyledComboBox<Tag>("value", tagset);
                 
                 field.setOutputMarkupId(true);
-                // Docs for the JQuery tooltip widget that we configure below:
-                // https://api.jqueryui.com/tooltip/
+
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                options.set("content", "function() { return "
-                        + "'<div class=\"tooltip-title\">'+($(this).text() "
-                        + "? $(this).text() : 'no title')+'</div>"
-                        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
-                        + "? $(this).attr('title') : 'no description' )+'</div>' }");
+                options.set("content", functionForTooltip);
                 field.add(new TooltipBehavior(options));
                 isDrop = true;
             }
@@ -1414,14 +1419,9 @@ public class AnnotationDetailEditorPanel
                 text = new StyledComboBox<Tag>("newRole", Model.of(""), tagset,
                         new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
                 add(text);
-                // Docs for the JQuery tooltip widget that we configure below:
-                // https://api.jqueryui.com/tooltip/
+                
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                options.set("content", "function() { return "
-                        + "'<div class=\"tooltip-title\">'+($(this).text() "
-                        + "? $(this).text() : 'no title')+'</div>"
-                        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
-                        + "? $(this).attr('title') : 'no description' )+'</div>' }");
+                options.set("content", functionForTooltip);
                 text.add(new TooltipBehavior(options));
                 isDrop = true;
             }
