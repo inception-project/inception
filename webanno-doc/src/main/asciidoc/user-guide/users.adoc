@@ -19,11 +19,11 @@
 
 NOTE: This functionality is only available to *administrators*.
 
-After selecting this functionality, you are displayed a frame which shows all users. By selecting a user, a frame is displayed on the right. 
+After selecting this functionality, a frame which shows all users is displayed. By selecting a user, a frame is displayed on the right. 
 
 image::manage_users.jpg[align="center"]
 
-Now you may change his role or password, specify  an e-mail address or dis- or enable his account by placing the tick.
+Now you may change his role or password, specify  an e-mail address and dis- or enable his account by placing the tick.
 
 NOTE: Disabling an account prevents the user from logging in. The user remains associated with any
       projects and remains visible in on the <<sect_monitoring>> page.

@@ -17,7 +17,7 @@
 [[sect_upgrade]]
 == Upgrade
 
-This section describes how to upgrade the standalone version of WebAnno using an embedded database. For further information on how to upgrade WebAnno, in particular the WAR version, when using a MySQL database, or older versions of WebAnno, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
+This section describes how to upgrade the standalone version of WebAnno using an embedded database. For further information on how to upgrade WebAnno, in particular the WAR version when using a MySQL database or older versions of WebAnno, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
 === Make a backup
 
