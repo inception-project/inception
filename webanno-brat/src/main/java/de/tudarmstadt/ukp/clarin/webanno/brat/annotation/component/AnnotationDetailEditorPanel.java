@@ -149,7 +149,7 @@ public class AnnotationDetailEditorPanel
     private List<FeatureModel> featureModels;
     BratAnnotatorModel bModel;
     /**
-     * Function to return tooltip using jquery
+     *Function to return tooltip using jquery
      *Docs for the JQuery tooltip widget that we configure below:
      *https://api.jqueryui.com/tooltip/
      */
@@ -1357,8 +1357,9 @@ public class AnnotationDetailEditorPanel
                 {
                     aItem.setModel(new CompoundPropertyModel<LinkWithRoleModel>(aItem
                             .getModelObject()));
-
-                    aItem.add(new Label("role"));
+                    Label role = new Label("role");
+                    
+                    aItem.add(role);
                     final Label label;
                     if (aItem.getModelObject().targetAddr == -1
                             && bModel.isArmedSlot(aModel.feature, aItem.getIndex())) {
@@ -1375,7 +1376,7 @@ public class AnnotationDetailEditorPanel
                         protected void onEvent(AjaxRequestTarget aTarget)
                         {
                             if (bModel.isArmedSlot(aModel.feature, aItem.getIndex())) {
-                                bModel.clearArmedSlot();
+                                bModel.clearArmedSlot();                                
                             }
                             else {
                                 bModel.setArmedSlot(aModel.feature, aItem.getIndex());
@@ -1433,7 +1434,13 @@ public class AnnotationDetailEditorPanel
             add(new AjaxButton("add")
             {
                 private static final long serialVersionUID = 1L;
-
+                
+                @Override
+                protected void onConfigure(){
+                    BratAnnotatorModel model = bModel;
+                    setEnabled(!(model.isSlotArmed()
+                            && aModel.feature.equals(model.getArmedFeature())));
+                }
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
@@ -1452,6 +1459,33 @@ public class AnnotationDetailEditorPanel
 
                         aTarget.add(annotationFeatureForm);
                     }
+                }
+            });
+            //Allows user to update slot
+            add(new AjaxButton("update"){
+
+                private static final long serialVersionUID = 7923695373085126646L;
+
+                @Override
+                protected void onConfigure(){
+                    BratAnnotatorModel model = bModel;
+                    setEnabled(model.isSlotArmed()
+                            && aModel.feature.equals(model.getArmedFeature()));
+                }
+                /* (non-Javadoc)
+                 * @see org.apache.wicket.ajax.markup.html.form.AjaxButton#onSubmit(org.apache.wicket.ajax.AjaxRequestTarget, org.apache.wicket.markup.html.form.Form)
+                 */
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                {
+                    List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                            .getModelObject().value;
+                    BratAnnotatorModel model = bModel;
+                    //Update the slot
+                    links.get(model.getArmedSlot()).role=(String)text.getModelObject();
+                    model.clearArmedSlot();
+                    aTarget.add(annotationFeatureForm);
+
                 }
             });
 
