@@ -180,8 +180,7 @@ public class ProjectUsersPanel
                     }
                     userLists.remove(selectedUser);
                 }
-            }).add(new AttributeModifier(
-                    "onclick", "if(!confirm('Do you really want to remove this user?')) return false;"));
+            });
 
             add(new Button("addPermissionLevel", new ResourceModel("label"))
             {

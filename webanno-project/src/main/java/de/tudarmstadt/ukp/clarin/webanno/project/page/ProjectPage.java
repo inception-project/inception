@@ -36,7 +36,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -595,8 +594,7 @@ public class ProjectPage
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
-            }).add(new AttributeModifier(
-                    "onclick", "if(!confirm('Do you really want to delete this Project?')) return false;"));
+            });
         }
     }
 

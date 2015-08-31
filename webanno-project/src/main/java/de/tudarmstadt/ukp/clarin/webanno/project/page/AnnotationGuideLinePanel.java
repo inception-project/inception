@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -154,7 +153,6 @@ public class AnnotationGuideLinePanel
                     documents.remove(document);
                 }
             }
-        }).add(new AttributeModifier(
-                "onclick", "if(!confirm('Do you really want to delete this Guideline document?')) return false;"));
+        });
     }
 }
