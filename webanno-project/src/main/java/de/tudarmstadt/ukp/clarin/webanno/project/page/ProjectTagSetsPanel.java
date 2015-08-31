@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.Button;
@@ -499,7 +500,8 @@ public class ProjectTagSetsPanel
                     TagSetDetailForm.this
                             .setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                 }
-            });
+            }).add(new AttributeModifier(
+                    "onclick", "if(!confirm('Do you really want to delete this Tagset?')) return false;"));
 
             add(exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
                     new Model<String>(selectedExporTagsetFormat),
@@ -686,7 +688,8 @@ public class ProjectTagSetsPanel
                         TagDetailForm.this.setModelObject(new Tag());
                     }
                 }
-            });
+            }).add(new AttributeModifier(
+                    "onclick", "if(!confirm('Do you really want to delete this Tag?')) return false;"));
         }
     }
 
