@@ -500,6 +500,23 @@ public class ProjectTagSetsPanel
                             .setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                 }
             });
+            
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                    setVisible(true);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+//                    tagSetDetailForm.setModelObject(null);
+                    tagSetDetailForm.setVisible(false);
+                }
+            });
 
             add(exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
                     new Model<String>(selectedExporTagsetFormat),
@@ -685,6 +702,23 @@ public class ProjectTagSetsPanel
                     else {
                         TagDetailForm.this.setModelObject(new Tag());
                     }
+                }
+            });
+            
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                    setVisible(true);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+//                    tagDetailForm.setModelObject(null);
+                    tagDetailForm.setVisible(false);
                 }
             });
         }

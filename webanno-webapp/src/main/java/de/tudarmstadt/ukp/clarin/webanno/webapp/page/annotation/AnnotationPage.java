@@ -432,7 +432,7 @@ public class AnnotationPage
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != nextSentenceAddress) {
 
-                            ubdateSentenceNumber(jCas, nextSentenceAddress);
+                            updateSentenceNumber(jCas, nextSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
@@ -475,7 +475,7 @@ public class AnnotationPage
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
 
-                            ubdateSentenceNumber(jCas, previousSentenceAddress);
+                            updateSentenceNumber(jCas, previousSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
@@ -512,7 +512,7 @@ public class AnnotationPage
 
                         if (bModel.getFirstSentenceAddress() != bModel.getSentenceAddress()) {
 
-                            ubdateSentenceNumber(jCas, bModel.getFirstSentenceAddress());
+                            updateSentenceNumber(jCas, bModel.getFirstSentenceAddress());
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
@@ -552,7 +552,7 @@ public class AnnotationPage
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
 
-                            ubdateSentenceNumber(jCas, lastDisplayWindowBeginingSentenceAddress);
+                            updateSentenceNumber(jCas, lastDisplayWindowBeginingSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
@@ -611,7 +611,7 @@ public class AnnotationPage
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
                         JCas jCas = getJCas();
 
-                        ubdateSentenceNumber(jCas, gotoPageAddress);
+                        updateSentenceNumber(jCas, gotoPageAddress);
 
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         annotator.bratRenderLater(aTarget);
@@ -672,7 +672,7 @@ public class AnnotationPage
                     }
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
                         JCas jCas = getJCas();
-                        ubdateSentenceNumber(jCas, gotoPageAddress);
+                        updateSentenceNumber(jCas, gotoPageAddress);
                         updateSentenceAddress(jCas, aTarget);
                         annotator.bratRenderLater(aTarget);
                     }
@@ -759,7 +759,7 @@ public class AnnotationPage
         return repository.readAnnotationCas(annotationDocument);
     }
 
-    private void ubdateSentenceNumber(JCas aJCas, int aAddress)
+    private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
         bModel.setSentenceAddress(aAddress);
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);

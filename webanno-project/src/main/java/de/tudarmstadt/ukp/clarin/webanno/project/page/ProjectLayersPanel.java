@@ -889,6 +889,25 @@ public class ProjectLayersPanel
                     return exportFile;
                 }
             }).setOutputMarkupId(true));
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                    
+                    // This is currently the only "cancel" button in the project settings. Better
+                    // activate when we add such buttons to other panels as well.
+                    setVisible(true);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+//                    layerDetailForm.setModelObject(null);
+                    layerDetailForm.setVisible(false);
+                }
+            });
 
         }
     }
@@ -1035,6 +1054,21 @@ public class ProjectLayersPanel
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
                     }
+                }
+            });
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                    setVisible(true);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+                    FeatureDetailForm.this.setVisible(false);
                 }
             });
 

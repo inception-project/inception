@@ -595,6 +595,22 @@ public class ProjectPage
                     }
                 }
             });
+            add(new Button("cancel", new ResourceModel("label")) {
+                private static final long serialVersionUID = 1L;
+                
+                {
+                    // Avoid saving data
+                    setDefaultFormProcessing(false);
+                    setVisible(true);
+                }
+                
+                @Override
+                public void onSubmit()
+                {
+//                    projectSelectionForm.setModel(null);
+                    projectDetailForm.setVisible(false);
+                }
+            });
         }
     }
 
