@@ -895,17 +895,20 @@ public class ProjectLayersPanel
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
-                    
-                    // This is currently the only "cancel" button in the project settings. Better
-                    // activate when we add such buttons to other panels as well.
                     setVisible(true);
                 }
                 
                 @Override
                 public void onSubmit()
                 {
+//                    layerDetailForm.setModelObject(new AnnotationLayer());
+//                    layerSelectionForm.setModelObject(new SelectionModel());
+//                    featureSelectionForm.setModelObject(new SelectionModel());
+//                    featureDetailForm.setModelObject(new AnnotationFeature());
 //                    layerDetailForm.setModelObject(null);
                     layerDetailForm.setVisible(false);
+                    featureSelectionForm.setVisible(false);
+                    featureDetailForm.setVisible(false);
                 }
             });
 
@@ -1068,7 +1071,8 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    FeatureDetailForm.this.setVisible(false);
+                    featureDetailForm.setModelObject(new AnnotationFeature());
+//                    FeatureDetailForm.this.setVisible(false);
                 }
             });
 

@@ -608,7 +608,8 @@ public class ProjectPage
                 public void onSubmit()
                 {
 //                    projectSelectionForm.setModel(null);
-                    projectDetailForm.setVisible(false);
+//                    projectDetailForm.setVisible(false);
+                    projectDetailForm.setModelObject(new Project());
                 }
             });
         }

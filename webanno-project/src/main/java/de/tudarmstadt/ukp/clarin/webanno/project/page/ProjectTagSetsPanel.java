@@ -513,8 +513,11 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
-//                    tagSetDetailForm.setModelObject(null);
-                    tagSetDetailForm.setVisible(false);
+                    tagSetDetailForm.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
+//                    tagSetDetailForm.setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
+//                    tagSetDetailForm.setVisible(false);
+//                    tagSelectionForm.setVisible(false);
+//                    tagDetailForm.setVisible(false);
                 }
             });
 
@@ -717,8 +720,9 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
+                    tagDetailForm.setModelObject(new Tag());
 //                    tagDetailForm.setModelObject(null);
-                    tagDetailForm.setVisible(false);
+//                    tagDetailForm.setVisible(false);
                 }
             });
         }
