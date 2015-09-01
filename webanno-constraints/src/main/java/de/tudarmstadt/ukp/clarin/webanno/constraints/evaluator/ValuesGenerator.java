@@ -60,8 +60,12 @@ public class ValuesGenerator
 
         String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
         if (shortTypeName == null) {
-            throw new IllegalStateException("No import for [" + aContext.getType().getName()
+            //If no relevant rules are there for a particular type, just return empty list
+            log.error("No import for [" + aContext.getType().getName()
                     + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+            return possibleValues;
+//            throw new IllegalStateException("No import for [" + aContext.getType().getName()
+//                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
         }
 
         Scope scope = parsedConstraints.getScopeByName(shortTypeName);
