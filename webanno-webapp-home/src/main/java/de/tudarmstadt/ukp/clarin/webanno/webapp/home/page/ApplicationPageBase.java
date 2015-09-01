@@ -136,7 +136,7 @@ public abstract class ApplicationPageBase
 
         // Override warning about embedded database.
         Properties settings = SettingsUtil.getSettings();
-        if ("false".equals(settings.getProperty("warnings.embeddedDatabase"))) {
+        if ("false".equalsIgnoreCase(settings.getProperty("warnings.embeddedDatabase"))) {
             embeddedDbWarning.setVisible(false);
         }
         
@@ -158,7 +158,7 @@ public abstract class ApplicationPageBase
                 && !clientProperties.isBrowserChrome());
 
         // Override warning about browser.
-        if ("false".equals(settings.getProperty("warnings.unsupportedBrowser"))) {
+        if ("false".equalsIgnoreCase(settings.getProperty("warnings.unsupportedBrowser"))) {
             browserWarning.setVisible(false);
         }
         

@@ -128,6 +128,11 @@
 | Warn about unsupported browser
 | true
 | false
+
+| debug.showExceptionPage
+| Show a page with a stack trace instead of an "Internal error" page. Do not use in production!
+| false
+| true
 |===
 
 === Internal backups
