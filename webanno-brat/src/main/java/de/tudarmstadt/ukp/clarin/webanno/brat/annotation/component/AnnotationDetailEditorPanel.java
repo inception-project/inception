@@ -1482,9 +1482,34 @@ public class AnnotationDetailEditorPanel
                             .getModelObject().value;
                     BratAnnotatorModel model = bModel;
                     //Update the slot
-                    links.get(model.getArmedSlot()).role=(String)text.getModelObject();
+                    LinkWithRoleModel m = new LinkWithRoleModel();
+                    m = links.get(model.getArmedSlot());
+                    m.role = (String)text.getModelObject();
+                    links.remove(model.getArmedSlot());
+                    links.add(m);
+//                    links.get(model.getArmedSlot()).autoCreated = true;
+//                    links.get(model.getArmedSlot()).role=(String)text.getModelObject();
                     model.clearArmedSlot();
                     aTarget.add(annotationFeatureForm);
+                    try {
+                        actionAnnotate(aTarget, bModel);
+                    }
+                    catch (UIMAException e) {
+                      error(e.getMessage());
+                      LOG.error(ExceptionUtils.getRootCause(e),e);
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                        LOG.error(ExceptionUtils.getRootCause(e),e);
+                    }
+                    catch (IOException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                        LOG.error(ExceptionUtils.getRootCause(e),e);
+                    }
+                    catch (BratAnnotationException e) {
+                        error(e.getMessage());
+                        LOG.error(ExceptionUtils.getRootCause(e),e);
+                    }
 
                 }
             });
