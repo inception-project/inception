@@ -1588,6 +1588,9 @@ public class CasDiff2
             for (LinkFeatureDecl decl : linkFeatures) {
                 Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.name);
                 ArrayFS array = (ArrayFS) aFs.getFeatureValue(linkFeature);
+                if (array == null) {
+                    continue;
+                }
                 for (FeatureStructure linkFS : array.toArray()) {
                     String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName(
                             decl.roleFeature));

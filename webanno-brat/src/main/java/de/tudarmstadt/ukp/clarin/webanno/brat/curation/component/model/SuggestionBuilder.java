@@ -165,7 +165,7 @@ public class SuggestionBuilder
             Integer end = segmentBeginEnd.get(begin);
 
             DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
-                    entryTypes, LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, begin, end);
+                    entryTypes, LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, begin, end);
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
             curationSegment.setEnd(end);

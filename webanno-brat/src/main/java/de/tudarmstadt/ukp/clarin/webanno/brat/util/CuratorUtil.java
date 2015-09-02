@@ -305,7 +305,7 @@ public class CuratorUtil
         }
         else {
             diff = CasDiff2.doDiffSingle(aAnnotationService, bModel.getProject(), entryTypes,
-                    LinkCompareBehavior.LINK_TARGET_AS_LABEL, jCases, aCurationSegment.getBegin(),
+                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, aCurationSegment.getBegin(),
                     aCurationSegment.getEnd());
         }
 
