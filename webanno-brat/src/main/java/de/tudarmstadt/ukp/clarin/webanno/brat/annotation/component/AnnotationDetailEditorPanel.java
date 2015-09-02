@@ -1380,6 +1380,9 @@ public class AnnotationDetailEditorPanel
                             }
                             else {
                                 bModel.setArmedSlot(aModel.feature, aItem.getIndex());
+                                //TODO set dropdown value as slot name
+//                                text.setModelObject(aItem.getModelObject().role);
+//                                LinkFeatureEditor.this.getModelObject().value 
                             }
                             aTarget.add(annotationFeatureForm.featureEditorsContainer);
                         }
@@ -1438,8 +1441,10 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onConfigure(){
                     BratAnnotatorModel model = bModel;
-                    setEnabled(!(model.isSlotArmed()
+                    setVisible(!(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature())));
+//                    setEnabled(!(model.isSlotArmed()
+//                            && aModel.feature.equals(model.getArmedFeature())));
                 }
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -1462,15 +1467,17 @@ public class AnnotationDetailEditorPanel
                 }
             });
             //Allows user to update slot
-            add(new AjaxButton("update"){
+            add(new AjaxButton("set"){
 
                 private static final long serialVersionUID = 7923695373085126646L;
 
                 @Override
                 protected void onConfigure(){
                     BratAnnotatorModel model = bModel;
-                    setEnabled(model.isSlotArmed()
+                    setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
+//                    setEnabled(model.isSlotArmed()
+//                            && aModel.feature.equals(model.getArmedFeature()));
                 }
                 /* (non-Javadoc)
                  * @see org.apache.wicket.ajax.markup.html.form.AjaxButton#onSubmit(org.apache.wicket.ajax.AjaxRequestTarget, org.apache.wicket.markup.html.form.Form)
@@ -1521,8 +1528,10 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     BratAnnotatorModel model = bModel;
-                    setEnabled(model.isSlotArmed()
+                    setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
+//                    setEnabled(model.isSlotArmed()
+//                            && aModel.feature.equals(model.getArmedFeature()));
                 }
 
                 @Override
