@@ -1486,10 +1486,8 @@ public class AnnotationDetailEditorPanel
                     m = links.get(model.getArmedSlot());
                     m.role = (String)text.getModelObject();
                     links.remove(model.getArmedSlot());
-                    links.add(m);
-//                    links.get(model.getArmedSlot()).autoCreated = true;
-//                    links.get(model.getArmedSlot()).role=(String)text.getModelObject();
                     model.clearArmedSlot();
+                    links.add(m);
                     aTarget.add(annotationFeatureForm);
                     try {
                         actionAnnotate(aTarget, bModel);
