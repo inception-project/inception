@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -299,9 +300,14 @@ public class ProjectConstraintsPanel
             for (FileUpload constraintRulesFile : uploads) {
                 // Checking if file is OK as per Constraints Grammar specification
                 boolean constraintRuleFileIsOK = false;
+                //Handling Windows BOM
+//                InputStreamReader utfInputStream;
+                BOMInputStream bomInputStream;
                 try {
-                    ConstraintsGrammar parser = new ConstraintsGrammar(
-                            constraintRulesFile.getInputStream());
+                    bomInputStream = new BOMInputStream(constraintRulesFile.getInputStream(), false);
+                    ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
+//                    utfInputStream = new InputStreamReader(constraintRulesFile.getInputStream(),"UTF-8");
+//                    ConstraintsGrammar parser = new ConstraintsGrammar(utfInputStream);
                     parser.Parse();
                     constraintRuleFileIsOK = true;
                 }
