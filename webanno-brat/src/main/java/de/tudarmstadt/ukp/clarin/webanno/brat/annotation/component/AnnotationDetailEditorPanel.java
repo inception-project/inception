@@ -1011,8 +1011,7 @@ public class AnnotationDetailEditorPanel
                 // LinkFeatureEditors must be excluded because the auto-update will break the
                 // ability to add slots. Adding a slot is NOT an annotation action.
               // TODO annotate every time except when position is at (0,0)
-                if (!bModel.getSelection().isAnnotate()
-                        && bModel.getSelection().getAnnotation().isSet()
+                if (bModel.getSelection().getAnnotation().isSet()
                         && !(frag instanceof LinkFeatureEditor)) {
                     if (frag.isDropOrchoice()) {
                         addAnnotateActionBehavior(frag, "onchange");
