@@ -55,39 +55,38 @@ public class ValuesGenerator
             ParsedConstraints parsedConstraints)
         throws UIMAException
     {
-        imports = parsedConstraints.getImports();
+//        imports = parsedConstraints.getImports();
         List<PossibleValue> possibleValues = new ArrayList<PossibleValue>();
-
-        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-        if (shortTypeName == null) {
-            //If no relevant rules are there for a particular type, just return empty list
-            log.error("No import for [" + aContext.getType().getName()
-                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+        //If there are no rules for the FS, don't execute further
+        if(!areThereRulesFor(aContext, parsedConstraints)){
             return possibleValues;
-//            throw new IllegalStateException("No import for [" + aContext.getType().getName()
-//                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
         }
-
+//        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+//        if (shortTypeName == null) {
+//            //If no relevant rules are there for a particular type, just return empty list
+//            log.error("No import for [" + aContext.getType().getName()
+//                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+//            return possibleValues;
+////            throw new IllegalStateException("No import for [" + aContext.getType().getName()
+////                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+//        }
+        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
         Scope scope = parsedConstraints.getScopeByName(shortTypeName);
 
-        if (scope != null) {
-            for (Rule rule : scope.getRules()) {
-                // Check if conditions apply
-                if (!ruleTriggers(aContext, rule)) {
-                    continue;
-                }
+      
+        for (Rule rule : scope.getRules()) {
+            // Check if conditions apply
+            if (!ruleTriggers(aContext, rule)) {
+                continue;
+            }
 
-                // If all conditions apply, collect the possible values
-                for (Restriction res : rule.getRestrictions()) {
-                    if (aFeature.equals(res.getPath())) {
-                        PossibleValue pv = new PossibleValue(res.getValue(), res.isFlagImportant());
-                        possibleValues.add(pv);
-                    }
+            // If all conditions apply, collect the possible values
+            for (Restriction res : rule.getRestrictions()) {
+                if (aFeature.equals(res.getPath())) {
+                    PossibleValue pv = new PossibleValue(res.getValue(), res.isFlagImportant());
+                    possibleValues.add(pv);
                 }
             }
-        }
-        else {
-            log.debug("No rules found in scope [" + shortTypeName + "]");
         }
 
         return possibleValues;
@@ -200,5 +199,31 @@ public class ValuesGenerator
         }
 
         return covered;
+    }
+
+    @Override
+    public boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints)
+    {
+        String shortTypeName;
+        if(imports==null){
+            imports = parsedConstraints.getImports();
+        }
+        shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+        if (shortTypeName == null) {
+          //If no relevant rules are there for a particular type, just return empty list
+            log.error("No import for [" + aContext.getType().getName()
+                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
+            return false;
+        }
+        //If there's import statement but no scope rules defined for it
+        else if(parsedConstraints.getScopeByName(shortTypeName)==null
+              //If there's scope but no rules defined in it.
+                || parsedConstraints.getScopeByName(shortTypeName).getRules().isEmpty()){
+            log.debug("No rules found in scope [" + shortTypeName + "]");
+            return false;
+        }else{
+            return true;
+        }
+         
     }
 }
