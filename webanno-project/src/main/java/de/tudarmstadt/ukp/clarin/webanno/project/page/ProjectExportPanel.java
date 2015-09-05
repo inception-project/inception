@@ -413,6 +413,16 @@ public class ProjectExportPanel extends Panel {
                         thread.interrupt();
                     }
                 }
+
+                /* (non-Javadoc)
+                 * @see org.apache.wicket.Component#isEnabled()
+                 */
+                @Override
+                public boolean isEnabled()
+                {
+//                    Enabled only if the export button has been disabled (during export)
+                    return (!enabled) ;
+                }
             });
         }
     }
