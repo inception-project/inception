@@ -396,20 +396,12 @@ public class BratAnnotator
                     LOG.info("AJAX-RPC DONE: [" + action + "]");
                 }
                 catch (ClassNotFoundException e) {
+                    LOG.error("Invalid reader: " + e.getMessage(), e);
                     error("Invalid reader: " + e.getMessage());
                 }
-                catch (UIMAException e) {
+                catch (Exception e) {
+                    LOG.error(e);
                     error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (RuntimeException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
 
                 // Serialize updated document to JSON

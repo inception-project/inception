@@ -1494,19 +1494,7 @@ public class AnnotationDetailEditorPanel
                     try {
                         actionAnnotate(aTarget, bModel);
                     }
-                    catch (UIMAException e) {
-                      error(e.getMessage());
-                      LOG.error(ExceptionUtils.getRootCause(e),e);
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                        LOG.error(ExceptionUtils.getRootCause(e),e);
-                    }
-                    catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                        LOG.error(ExceptionUtils.getRootCause(e),e);
-                    }
-                    catch (BratAnnotationException e) {
+                    catch (Exception e) {
                         error(e.getMessage());
                         LOG.error(ExceptionUtils.getRootCause(e),e);
                     }
