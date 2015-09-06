@@ -1315,6 +1315,8 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = 7469241620229001983L;
 
+        private WebMarkupContainer content;
+
         @SuppressWarnings("rawtypes")
         private final AbstractTextComponent newRole;
         private boolean isDrop;
@@ -1331,7 +1333,13 @@ public class AnnotationDetailEditorPanel
             }
             add(new Label("feature", featureLabelText));
 
-            add(new RefreshingView<LinkWithRoleModel>("slots",
+            // Most of the content is inside this container such that we can refresh it independenly
+            // from the rest of the form
+            content = new WebMarkupContainer("content");
+            content.setOutputMarkupId(true);
+            add(content);
+
+            content.add(new RefreshingView<LinkWithRoleModel>("slots",
                     Model.of((List<LinkWithRoleModel>) aModel.value))
             {
                 private static final long serialVersionUID = 5475284956525780698L;
@@ -1376,14 +1384,14 @@ public class AnnotationDetailEditorPanel
                         {
                             if (bModel.isArmedSlot(aModel.feature, aItem.getIndex())) {
                                 bModel.clearArmedSlot();                                
+                                aTarget.add(content);
                             }
                             else {
                                 bModel.setArmedSlot(aModel.feature, aItem.getIndex());
-                                //TODO set dropdown value as slot name
-//                                text.setModelObject(aItem.getModelObject().role);
-//                                LinkFeatureEditor.this.getModelObject().value 
+                                // Need to re-render the whole form because a slot in another
+                                // link editor might get unarmed
+                                aTarget.add(annotationFeatureForm);
                             }
-                            aTarget.add(annotationFeatureForm.featureEditorsContainer);
                         }
                     });
                     label.add(new AttributeAppender("style", new Model<String>()
@@ -1408,28 +1416,57 @@ public class AnnotationDetailEditorPanel
 
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
-                BratAnnotatorModel model = bModel;
-
-                // verification to check whether constraints exist for this project or NOT
-                if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
-                    tagset = addTagsBasedOnRules(model, aModel);
+                if (bModel.getConstraints() != null && bModel.getSelection().getAnnotation().isSet()) {
+                    tagset = addTagsBasedOnRules(bModel, aModel);
                 }
                 else {
                     // add tagsets only, earlier behavior
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
 
-                newRole = new StyledComboBox<Tag>("newRole", Model.of(""), tagset);
-                add(newRole);
+                newRole = new StyledComboBox<Tag>("newRole", Model.of(""), tagset) {
+                    private static final long serialVersionUID = 1L;
+                    
+                    @Override
+                    protected void onConfigure()
+                    {
+                        super.onConfigure();
+                        if (bModel.isSlotArmed() && aModel.feature.equals(bModel.getArmedFeature())) {
+                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                    .getModelObject().value;
+                            setModelObject(links.get(bModel.getArmedSlot()).role);
+                        }
+                        else {
+                            setModelObject("");
+                        }
+                    }
+                };
+                content.add(newRole);
                 
                 isDrop = true;
             }
             else {
-                add(newRole = new TextField<String>("newRole", Model.of("")));
+                content.add(newRole = new TextField<String>("newRole", Model.of("")) {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    protected void onConfigure()
+                    {
+                        super.onConfigure();
+                        if (bModel.isSlotArmed() && aModel.feature.equals(bModel.getArmedFeature())) {
+                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                    .getModelObject().value;
+                            setModelObject(links.get(bModel.getArmedSlot()).role);
+                        }
+                        else {
+                            setModelObject("");
+                        }
+                    }
+                });
             }
 
             // Add a new empty slot with the specified role
-            add(new AjaxButton("add")
+            content.add(new AjaxButton("add")
             {
                 private static final long serialVersionUID = 1L;
                 
@@ -1441,6 +1478,7 @@ public class AnnotationDetailEditorPanel
 //                    setEnabled(!(model.isSlotArmed()
 //                            && aModel.feature.equals(model.getArmedFeature())));
                 }
+                
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
@@ -1456,13 +1494,16 @@ public class AnnotationDetailEditorPanel
                         links.add(m);
                         bModel.setArmedSlot(LinkFeatureEditor.this.getModelObject().feature,
                                 links.size() - 1);
-
+                        
+                        // Need to re-render the whole form because a slot in another
+                        // link editor might get unarmed
                         aTarget.add(annotationFeatureForm);
                     }
                 }
             });
-            //Allows user to update slot
-            add(new AjaxButton("set"){
+            
+            // Allows user to update slot
+            content.add(new AjaxButton("set"){
 
                 private static final long serialVersionUID = 7923695373085126646L;
 
@@ -1474,15 +1515,14 @@ public class AnnotationDetailEditorPanel
 //                    setEnabled(model.isSlotArmed()
 //                            && aModel.feature.equals(model.getArmedFeature()));
                 }
-                /* (non-Javadoc)
-                 * @see org.apache.wicket.ajax.markup.html.form.AjaxButton#onSubmit(org.apache.wicket.ajax.AjaxRequestTarget, org.apache.wicket.markup.html.form.Form)
-                 */
+                
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                             .getModelObject().value;
                     BratAnnotatorModel model = bModel;
+                    
                     //Update the slot
                     LinkWithRoleModel m = new LinkWithRoleModel();
                     m = links.get(model.getArmedSlot());
@@ -1490,20 +1530,19 @@ public class AnnotationDetailEditorPanel
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
                     links.add(m);
-                    aTarget.add(annotationFeatureForm);
+                    aTarget.add(content);
                     try {
                         actionAnnotate(aTarget, bModel);
                     }
                     catch (Exception e) {
-                        error(e.getMessage());
-                        LOG.error(ExceptionUtils.getRootCause(e),e);
+                      error(e.getMessage());
+                      LOG.error(ExceptionUtils.getRootCause(e),e);
                     }
-
                 }
             });
 
             // Add a new empty slot with the specified role
-            add(new AjaxButton("del")
+            content.add(new AjaxButton("del")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -1527,7 +1566,7 @@ public class AnnotationDetailEditorPanel
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
 
-                    aTarget.add(annotationFeatureForm);
+                    aTarget.add(content);
 
                     // Auto-commit if working on existing annotation
                     if (bModel.getSelection().getAnnotation().isSet()) {
