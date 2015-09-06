@@ -175,6 +175,12 @@ public class BratAnnotatorModel
 
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
+    
+    // the default annotation layer  
+    private AnnotationLayer defaultAnnotationLayer;
+    
+    // the name of the default annotation layer
+    private String layerName;
 
     // enable automatic forward annotations
     private boolean forwardAnnotation;
@@ -423,6 +429,16 @@ public class BratAnnotatorModel
     public void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer)
     {
         this.selectedAnnotationLayer = selectedAnnotationLayer;
+    }
+
+    public AnnotationLayer getDefaultAnnotationLayer()
+    {
+        return defaultAnnotationLayer;
+    }
+
+    public void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer)
+    {
+        this.defaultAnnotationLayer = defaultAnnotationLayer;
     }
 
     public boolean isForwardAnnotation()

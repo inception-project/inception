@@ -149,7 +149,7 @@ public class AutomationPage
 
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
-    private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+    private AnnotationDetailEditorPanel editor;
 
     private FinishImage finish;
 
@@ -213,7 +213,7 @@ public class AutomationPage
         automateView.setOutputMarkupId(true);
         add(automateView);
 
-        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+        editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -334,11 +334,11 @@ public class AutomationPage
             }
         };
 
-        annotationDetailEditorPanel.setOutputMarkupId(true);
-        add(annotationDetailEditorPanel);
+        editor.setOutputMarkupId(true);
+        add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
-                annotationDetailEditorPanel)
+                editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
@@ -471,7 +471,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -500,7 +500,7 @@ public class AutomationPage
                             setCurationSegmentBeginEnd();
                             update(target);
                             User user = userRepository.get(username);
-                            annotationDetailEditorPanel.setEnabled(!FinishImage.isFinished(
+                            editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
 
 
@@ -532,7 +532,7 @@ public class AutomationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel))
+                new Model<BratAnnotatorModel>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -714,7 +714,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
@@ -792,7 +792,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel

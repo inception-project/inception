@@ -295,7 +295,7 @@ public class CurationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel))
+                new Model<BratAnnotatorModel>(bModel), curationPanel.editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 

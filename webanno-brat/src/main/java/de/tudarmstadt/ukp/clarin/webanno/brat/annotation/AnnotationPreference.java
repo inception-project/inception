@@ -39,7 +39,10 @@ public class AnnotationPreference
     private int curationWindowSize = 10;
 
     private boolean scrollPage = true;
-
+    
+    // if a default layer is to be set
+    private boolean defaultLayer;
+    
     // determine if static color for annotations will be used or we shall
     // dynamically generate one
     private boolean staticColor = true;
@@ -102,6 +105,16 @@ public class AnnotationPreference
     public void setScrollPage(boolean aScrollPage)
     {
         scrollPage = aScrollPage;
+    }
+
+    public boolean isDefaultLayer()
+    {
+        return defaultLayer;
+    }
+
+    public void setDefaultLayer(boolean defaultLayer)
+    {
+        this.defaultLayer = defaultLayer;
     }
 
     public boolean isStaticColor()

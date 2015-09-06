@@ -114,7 +114,7 @@ public class AnnotationPage
     private FinishImage finish;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+    private AnnotationDetailEditorPanel editor;
 
     private int gotoPageAddress;
 
@@ -133,7 +133,7 @@ public class AnnotationPage
 
     public AnnotationPage()
     {
-        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+        editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -171,11 +171,11 @@ public class AnnotationPage
             }
         };
 
-        annotationDetailEditorPanel.setOutputMarkupId(true);
-        add(annotationDetailEditorPanel);
+        editor.setOutputMarkupId(true);
+        add(editor);
 
         annotator = new BratAnnotator("embedder1", new Model<BratAnnotatorModel>(bModel),
-                annotationDetailEditorPanel)
+                editor)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
@@ -247,7 +247,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
@@ -284,7 +284,7 @@ public class AnnotationPage
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = userRepository.get(username);
-                        annotationDetailEditorPanel.setEnabled(!FinishImage.isFinished(
+                        editor.setEnabled(!FinishImage.isFinished(
                                 new Model<BratAnnotatorModel>(bModel), user, repository));
 
                     }
@@ -295,7 +295,7 @@ public class AnnotationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel))
+                new Model<BratAnnotatorModel>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -330,7 +330,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
@@ -377,7 +377,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());

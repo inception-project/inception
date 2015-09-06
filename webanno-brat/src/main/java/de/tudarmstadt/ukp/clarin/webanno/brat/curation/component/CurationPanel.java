@@ -95,7 +95,7 @@ public class CurationPanel
 
     public SuggestionViewPanel suggestionViewPanel;
     private BratAnnotator annotator;
-    private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+    public AnnotationDetailEditorPanel editor;
 
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer corssSentAnnoView;
@@ -231,7 +231,7 @@ public class CurationPanel
         suggestionViewPanel.setOutputMarkupId(true);
         add(suggestionViewPanel);
 
-        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+        editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -269,11 +269,11 @@ public class CurationPanel
             }
         };
 
-        annotationDetailEditorPanel.setOutputMarkupId(true);
-        add(annotationDetailEditorPanel);
+        editor.setOutputMarkupId(true);
+        add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
-                annotationDetailEditorPanel)
+                editor)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
@@ -542,7 +542,7 @@ public class CurationPanel
          */
         aTarget.add(suggestionViewPanel);
         if (annotate) {
-            annotator.bratRender(aTarget, annotationDetailEditorPanel.getCas(bModel));
+            annotator.bratRender(aTarget, editor.getCas(bModel));
             annotator.bratRenderHighlight(aTarget, bModel.getSelection().getAnnotation());
 
         }
@@ -557,6 +557,6 @@ public class CurationPanel
 
     public void resetEditor(AjaxRequestTarget aTarget)
     {
-        annotationDetailEditorPanel.reset(aTarget);
+        editor.reset(aTarget);
     }
 }

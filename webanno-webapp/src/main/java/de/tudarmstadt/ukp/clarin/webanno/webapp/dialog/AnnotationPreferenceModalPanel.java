@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -78,7 +79,7 @@ public class AnnotationPreferenceModalPanel
         private static final long serialVersionUID = -683824912741426241L;
 
         @SuppressWarnings({})
-        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow)
+        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow, AnnotationDetailEditorPanel aEditor)
         {
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
                     new AnnotationLayerDetailFormModel()));
@@ -88,6 +89,7 @@ public class AnnotationPreferenceModalPanel
             getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
+            getModelObject().defaultLayer = bModel.getPreferences().isDefaultLayer();
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
@@ -95,14 +97,14 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
-
+            
             curationWindowSizeField = new NumberTextField<Integer>("curationWindowSize");
             curationWindowSizeField.setType(Integer.class);
             curationWindowSizeField.setMinimum(1);
             if (!bModel.getMode().equals(Mode.CURATION)) {
                 curationWindowSizeField.setEnabled(false);
             }
-            add(curationWindowSizeField);
+           // add(curationWindowSizeField);
 
             add(new CheckBoxMultipleChoice<AnnotationLayer>("annotationLayers")
             {
@@ -149,6 +151,8 @@ public class AnnotationPreferenceModalPanel
 
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
+            
+            add(new CheckBox("defaultLayer"));
 
             add(new CheckBox("staticColor"));
 
@@ -162,10 +166,11 @@ public class AnnotationPreferenceModalPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
+                    bModel.getPreferences().setDefaultLayer(getModelObject().defaultLayer);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
-                    bModel.getPreferences().setCurationWindowSize(
-                            getModelObject().curationWindowSize);
+                  /*  bModel.getPreferences().setCurationWindowSize(
+                            getModelObject().curationWindowSize);*/
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
@@ -177,6 +182,8 @@ public class AnnotationPreferenceModalPanel
                         error("Preference file not found");
                     }
                     modalWindow.close(aTarget);
+                    aTarget.add(aEditor);
+
                 }
 
                 @Override
@@ -214,16 +221,17 @@ public class AnnotationPreferenceModalPanel
         public int windowSize;
         public int curationWindowSize;
         public boolean scrollPage;
+        public boolean defaultLayer;
         public boolean staticColor;
         public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotatorModel aBModel)
+            BratAnnotatorModel aBModel, AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
         this.bModel = aBModel;
-        tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow);
+        tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow, aEditor);
         add(tagSelectionForm);
     }
 

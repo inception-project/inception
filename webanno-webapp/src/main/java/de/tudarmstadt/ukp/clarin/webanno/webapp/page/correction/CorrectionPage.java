@@ -134,7 +134,7 @@ public class CorrectionPage
 
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
-    private AnnotationDetailEditorPanel annotationDetailEditorPanel;
+    private AnnotationDetailEditorPanel editor;
 
     private FinishImage finish;
 
@@ -198,7 +198,7 @@ public class CorrectionPage
         automateView.setOutputMarkupId(true);
         add(automateView);
 
-        annotationDetailEditorPanel = new AnnotationDetailEditorPanel(
+        editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -237,11 +237,11 @@ public class CorrectionPage
             }
         };
 
-        annotationDetailEditorPanel.setOutputMarkupId(true);
-        add(annotationDetailEditorPanel);
+        editor.setOutputMarkupId(true);
+        add(editor);
 
         annotator = new BratAnnotator("mergeView",
-                new Model<BratAnnotatorModel>(bModel), annotationDetailEditorPanel)
+                new Model<BratAnnotatorModel>(bModel), editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
@@ -376,7 +376,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CORRECTION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -403,7 +403,7 @@ public class CorrectionPage
                             String username = SecurityContextHolder.getContext().getAuthentication()
                                     .getName();
                             User user = userRepository.get(username);
-                            annotationDetailEditorPanel.setEnabled(!FinishImage.isFinished(
+                            editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
 
                         }
@@ -435,7 +435,7 @@ public class CorrectionPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel))
+                new Model<BratAnnotatorModel>(bModel),editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -625,7 +625,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository
@@ -699,7 +699,7 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                annotationDetailEditorPanel.reset(aTarget);
+                editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository

@@ -28,8 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static java.util.Arrays.asList;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -124,8 +122,6 @@ public class AnnotationDetailEditorPanel
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
 
-    private final static List<String> BRUSHS = asList(WebAnnoConst.SPAN_TYPE,WebAnnoConst.RELATION_TYPE);
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -134,15 +130,13 @@ public class AnnotationDetailEditorPanel
 
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
-    private CheckBox forwardAnnotation;
+ //   private CheckBox forwardAnnotation;
 
     private AjaxButton deleteButton;
     private AjaxButton reverseButton;
 
-    private LayerSelector layer;
-    private BrushSelector brush;
-    
-    private String brushModel = WebAnnoConst.SPAN_TYPE;
+    private LayerSelector layer;   
+    private Label selectedAnnotationLayer;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
@@ -158,6 +152,7 @@ public class AnnotationDetailEditorPanel
             + "? $(this).text() : 'no title')+'</div>"
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
+    private String layerName ="";
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -168,13 +163,6 @@ public class AnnotationDetailEditorPanel
 
         annotationFeatureForm.setOutputMarkupId(true);
         add(annotationFeatureForm);
-        /*
-         * relationAnnotationFeatureForm = new
-         * AnnotationFeatureForm("relationAnnotationFeatureForm", aModel.getObject());
-         * 
-         * relationAnnotationFeatureForm.setOutputMarkupId(true);
-         * add(relationAnnotationFeatureForm);
-         */
     }
 
     private class AnnotationFeatureForm
@@ -193,8 +181,32 @@ public class AnnotationDetailEditorPanel
                     "selection.text"));
             selectedTextLabel.setOutputMarkupId(true);
             add(selectedTextLabel);
+            add(new Label("layerName","Layer"){
+                private static final long serialVersionUID = 6084341323607243784L;
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(bModel.getPreferences().isDefaultLayer());
+                }
+                
+            });
 
-            add(forwardAnnotation = new CheckBox("forwardAnnotation")
+            add(selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
+            {
+                private static final long serialVersionUID = 4059460390544343324L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setOutputMarkupId(true);
+                    setVisible(bModel.getPreferences().isDefaultLayer());
+                }
+
+            });
+            // TODO: to be done soon
+            /*add(forwardAnnotation = new CheckBox("forwardAnnotation")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
 
@@ -224,7 +236,7 @@ public class AnnotationDetailEditorPanel
                 }
             });
 
-            forwardAnnotation.setOutputMarkupId(true);
+            forwardAnnotation.setOutputMarkupId(true);*/
 
             add(deleteButton = new AjaxButton("delete")
             {
@@ -268,7 +280,7 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(isRelation()
+                    setVisible(bModel.getSelection().isRelationAnno()
                             && bModel.getSelection().getAnnotation().isSet());
 
                     // Avoid reversing in read-only layers
@@ -299,8 +311,7 @@ public class AnnotationDetailEditorPanel
             });
             reverseButton.setOutputMarkupPlaceholderTag(true);
 
-            add(layer = new LayerSelector("selectedAnnotationLayer", annotationLayers, false));
-            add(brush = new BrushSelector("brush", Model.of(brushModel), BRUSHS));
+            add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers, false));
 
             RefreshingView<FeatureModel> featureValues = new FeatureEditorPanelContent(
                     "featureValues");
@@ -371,7 +382,7 @@ public class AnnotationDetailEditorPanel
 
         Selection selection = aBModel.getSelection();
         if (selection.getAnnotation().isNotSet()) {
-            if (isRelation()) {
+            if (bModel.getSelection().isRelationAnno()) {
                 AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
                 AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
                 if (adapter instanceof ArcAdapter) {
@@ -432,7 +443,7 @@ public class AnnotationDetailEditorPanel
             autoScroll(jCas, aBModel);
         }
 
-        if (isRelation()) {
+        if (bModel.getSelection().isRelationAnno()) {
             aBModel.setRememberedArcLayer(aBModel.getSelectedAnnotationLayer());
             aBModel.setRememberedArcFeatures(featureModels);
         }
@@ -726,7 +737,7 @@ public class AnnotationDetailEditorPanel
             int aAnnotationId)
     {
         // Set an armed slot
-        if (!isRelation() && aBModel.isSlotArmed()) {
+        if (!bModel.getSelection().isRelationAnno() && aBModel.isSlotArmed()) {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getFeatureModel(aBModel
                     .getArmedFeature()).value;
             LinkWithRoleModel link = links.get(aBModel.getArmedSlot());
@@ -752,11 +763,16 @@ public class AnnotationDetailEditorPanel
     }
 
     private void setLayerAndFeatureModels(AjaxRequestTarget aTarget, JCas aJCas,
-            final BratAnnotatorModel aBModel)
+            final BratAnnotatorModel aBModel) throws BratAnnotationException
     {
         if (aBModel.getSelection().isRelationAnno()) {
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
+            if (aBModel.getPreferences().isDefaultLayer()
+                    && !aBModel.getDefaultAnnotationLayer().equals(spanLayer)) {
+                throw new BratAnnotationException("No relation annotation allowed on the "
+                        + "selected span layer");
+            }
 
             // If we drag an arc between POS annotations, then the relation must be a dependency
             // relation.
@@ -805,6 +821,7 @@ public class AnnotationDetailEditorPanel
                     && aBModel.getSelectedAnnotationLayer().isReadonly()) {
                 aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
             }
+            aBModel.setDefaultAnnotationLayer(spanLayer);
         }
     else if (aBModel.getSelection().getAnnotation().isSet()) {
             AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
@@ -895,6 +912,7 @@ public class AnnotationDetailEditorPanel
             }
         }
         populateFeatures(null);
+        setDefaultLayer();
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
@@ -906,7 +924,7 @@ public class AnnotationDetailEditorPanel
                     || layer.getName().equals(Token.class.getName())) {
                 continue;
             }
-            if (brush.getModelObject().equals(layer.getType())) {
+            if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
                 annotationLayers.add(layer);
                 l = layer;
             }
@@ -916,14 +934,7 @@ public class AnnotationDetailEditorPanel
                     if (!feature.isEnabled()) {
                         continue;
                     }
-                    // add it as relation
-                    else if (isRelation()
-                            && feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                        annotationLayers.add(layer);
-                    }
-                    // add it as span
-                    else if (!isRelation()
-                            && feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                    if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
                         annotationLayers.add(layer);
                     }
 
@@ -931,7 +942,10 @@ public class AnnotationDetailEditorPanel
             }
             // chain
         }
-        if (l != null) {
+        if (bModel.getDefaultAnnotationLayer() != null) {
+            bModel.setSelectedAnnotationLayer(bModel.getDefaultAnnotationLayer());
+        }
+        else if (l != null) {
             bModel.setSelectedAnnotationLayer(l);
         }
     }
@@ -1726,7 +1740,7 @@ public class AnnotationDetailEditorPanel
                         .getFeature(aFS, feature)));
             }
         }
-        else if (!isRelation() && bModel.getRememberedSpanFeatures() != null) {
+        else if (!bModel.getSelection().isRelationAnno() && bModel.getRememberedSpanFeatures() != null) {
             // Populate from remembered values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(bModel
                     .getSelectedAnnotationLayer())) {
@@ -1738,7 +1752,7 @@ public class AnnotationDetailEditorPanel
                         .get(feature)));
             }
         }
-        else if (isRelation() && bModel.getRememberedArcFeatures() != null) {
+        else if (bModel.getSelection().isRelationAnno() && bModel.getRememberedArcFeatures() != null) {
             // Populate from remembered values
             for (AnnotationFeature feature : annotationService.listAnnotationFeature(bModel
                     .getSelectedAnnotationLayer())) {
@@ -1750,10 +1764,6 @@ public class AnnotationDetailEditorPanel
                         .get(feature)));
             }
         }
-    }
-
-    public boolean isRelation(){
-        return brush.getModelObject().equals(WebAnnoConst.RELATION_TYPE);
     }
     public void addRemainingTags(List<Tag> tagset, List<Tag> valuesFromTagset)
     {
@@ -1815,9 +1825,12 @@ public class AnnotationDetailEditorPanel
                     // annotation selection highlight color
                     bModel.getSelection().setAnnotate(true); 
                     bModel.getSelection().setAnnotation(VID.NONE_ID);
+                    bModel.setSelectedAnnotationLayer(getModelObject());
+                    selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
+                    aTarget.add(selectedAnnotationLayer);
                     populateFeatures(null);
                     aTarget.add(annotationFeatureForm);
-                    aTarget.add(forwardAnnotation);
+                 //   aTarget.add(forwardAnnotation);
                 }
             });
         }
@@ -1831,7 +1844,7 @@ public class AnnotationDetailEditorPanel
      * @author seid
      *
      */
-    public class BrushSelector
+/*    public class BrushSelector
         extends DropDownChoice<String>
     {
         private static final long serialVersionUID = 2233133653137312264L;
@@ -1855,7 +1868,7 @@ public class AnnotationDetailEditorPanel
             });
         }
     }
-
+*/
     private FeatureModel getFeatureModel(AnnotationFeature aFeature)
     {
         for (FeatureModel f : featureModels) {
@@ -1977,26 +1990,40 @@ public class AnnotationDetailEditorPanel
         aTarget.add(annotationFeatureForm);
     }
 
-    public void reloadBrush(AjaxRequestTarget aTarget, String aModel)
+    public void reloadLayer(AjaxRequestTarget aTarget) throws BratAnnotationException
     {
         try {
-            brush.setModelObject(aModel);  
-            if(!isRelation()){
-                featureModels = new ArrayList<>(); 
+            featureModels = new ArrayList<>();
+            if (!bModel.getSelection().isRelationAnno()) {
+                setInitSpanLayers(bModel);
             }
-            setInitSpanLayers(bModel);
-            setLayerAndFeatureModels(aTarget, getCas(bModel), bModel); 
-            if(featureModels.size() ==0 ) {
+            setLayerAndFeatureModels(aTarget, getCas(bModel), bModel);
+            if (featureModels.size() == 0) {
                 populateFeatures(null);
             }
-            else if(isFeatureModelChanged(bModel.getSelectedAnnotationLayer()) ) {
-                populateFeatures(null); 
+            else if (isFeatureModelChanged(bModel.getSelectedAnnotationLayer())) {
+                populateFeatures(null);
             }
+
+            setDefaultLayer();
             aTarget.add(annotationFeatureForm);
         }
         catch (UIMAException | ClassNotFoundException | IOException e) {
-          error(e.getMessage());
+            error(e.getMessage());
         }
+    }
+
+    private void setDefaultLayer()
+    {
+        if(bModel.getPreferences().isDefaultLayer()){
+            if(bModel.getDefaultAnnotationLayer() == null){
+                bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
+            }
+        }
+        else if(!bModel.getSelection().isRelationAnno()){
+            bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
+        }
+        selectedAnnotationLayer.setDefaultModelObject(bModel.getSelectedAnnotationLayer().getUiName());
     }
     
     /**

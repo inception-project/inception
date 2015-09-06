@@ -30,27 +30,28 @@
 						</td>
 					</tr>
 					<tr>
+						<td>Layer</td>
+						<td><select wicket:id="defaultAnnotationLayer"
+							style="width: 100%"></select></td>
+					</tr>
+					<!-- 
+					<tr>
 						<td>Forward annotation ?</td>
 						<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
 					</tr>
-					<tr>
-						<td>Brush</td>
-						<td><select wicket:id="brush"
-							style="width: 100%"></select></td>
-					</tr>					
+					 -->				
 				</table>
 		</fieldset>		
 		  <fieldset>
-				<legend>Layers</legend>
+				<legend>Features</legend>
 				<table>
+					<tr>
+						<td><label wicket:id="layerName"></label></td>
+						<td><label wicket:id="selectedAnnotationLayer"></label></td>
+					</tr>
 					<tr>
 						<td>Selected text</td>
 						<td><span wicket:id="selectedText" style="color: red"></span></td>
-					</tr>
-					<tr>
-						<td>Layer</td>
-						<td><select wicket:id="selectedAnnotationLayer"
-							style="width: 100%"></select></td>
 					</tr>
 				</table>
 			<div wicket:id="featureEditorsContainer">
