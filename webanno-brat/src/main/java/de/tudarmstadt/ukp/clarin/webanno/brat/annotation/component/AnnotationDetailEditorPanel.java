@@ -1316,7 +1316,7 @@ public class AnnotationDetailEditorPanel
         private static final long serialVersionUID = 7469241620229001983L;
 
         @SuppressWarnings("rawtypes")
-        private final AbstractTextComponent text;
+        private final AbstractTextComponent newRole;
         private boolean isDrop;
 
         @SuppressWarnings("unchecked")
@@ -1419,17 +1419,13 @@ public class AnnotationDetailEditorPanel
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
 
-                text = new StyledComboBox<Tag>("newRole", Model.of(""), tagset,
-                        new com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<Tag>("name"));
-                add(text);
+                newRole = new StyledComboBox<Tag>("newRole", Model.of(""), tagset);
+                add(newRole);
                 
-                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                options.set("content", functionForTooltip);
-                text.add(new TooltipBehavior(options));
                 isDrop = true;
             }
             else {
-                add(text = new TextField<String>("newRole", Model.of("")));
+                add(newRole = new TextField<String>("newRole", Model.of("")));
             }
 
             // Add a new empty slot with the specified role
@@ -1448,7 +1444,7 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    if (StringUtils.isBlank((String) text.getModelObject())) {
+                    if (StringUtils.isBlank((String) newRole.getModelObject())) {
                         error("Must set slot label before adding!");
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                     }
@@ -1456,7 +1452,7 @@ public class AnnotationDetailEditorPanel
                         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                                 .getModelObject().value;
                         LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = (String) text.getModelObject();
+                        m.role = (String) newRole.getModelObject();
                         links.add(m);
                         bModel.setArmedSlot(LinkFeatureEditor.this.getModelObject().feature,
                                 links.size() - 1);
@@ -1490,7 +1486,7 @@ public class AnnotationDetailEditorPanel
                     //Update the slot
                     LinkWithRoleModel m = new LinkWithRoleModel();
                     m = links.get(model.getArmedSlot());
-                    m.role = (String)text.getModelObject();
+                    m.role = (String) newRole.getModelObject();
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
                     links.add(m);
@@ -1677,7 +1673,7 @@ public class AnnotationDetailEditorPanel
         @Override
         public Component getFocusComponent()
         {
-            return text;
+            return newRole;
         }
 
         @Override
@@ -2008,17 +2004,18 @@ public class AnnotationDetailEditorPanel
         }
         return msg;
     }
-    
-    class StyledComboBox<T> extends ComboBox<T>{
-        public StyledComboBox(String id, IModel<String> model, List<T> choices,
-                com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer<? super T> renderer)
+
+    class StyledComboBox<T>
+        extends ComboBox<T>
+    {
+        public StyledComboBox(String id, IModel<String> model, List<T> choices)
         {
-            super(id, model, choices, renderer);            
+            super(id, model, choices);            
         }
 
-        public StyledComboBox(String string, List<T> tagset)
+        public StyledComboBox(String string, List<T> choices)
         {
-            super(string,tagset);
+            super(string, choices);
         }
 
         private static final long serialVersionUID = 1L;
