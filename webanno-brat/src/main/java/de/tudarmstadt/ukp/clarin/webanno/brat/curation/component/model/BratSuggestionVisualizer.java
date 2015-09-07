@@ -17,17 +17,22 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
+import java.io.IOException;
+
+import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
@@ -74,7 +79,13 @@ public class BratSuggestionVisualizer
 
             @Override
 			protected void respond(AjaxRequestTarget aTarget) {
-				onSelectAnnotationForMerge(aTarget);
+				try {
+                    onSelectAnnotationForMerge(aTarget);
+                }
+                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    error(e.getMessage());
+                }
 			}
 
         };
@@ -159,7 +170,7 @@ public class BratSuggestionVisualizer
         return getModelObject().getCollectionData();
     }
 
-    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
+    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         // Overriden in Curation Panel
     }

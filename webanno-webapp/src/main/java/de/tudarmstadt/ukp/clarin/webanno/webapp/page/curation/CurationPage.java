@@ -284,7 +284,7 @@ public class CurationPage
                             loadDocumentAction(target);
 
                         }
-                        catch (IOException e) {
+                        catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
                             target.add(getFeedbackPanel());
                             error(e.getCause().getMessage());
                         }
@@ -375,7 +375,7 @@ public class CurationPage
 
                         loadDocumentAction(aTarget);
                     }
-                    catch (IOException e) {
+                    catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
                         aTarget.add(getFeedbackPanel());
                         error(e.getCause().getMessage());
                     }
@@ -432,7 +432,7 @@ public class CurationPage
 
                         loadDocumentAction(aTarget);
                     }
-                    catch (IOException e) {
+                    catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
                         aTarget.add(getFeedbackPanel());
                         error(e.getCause().getMessage());
                     }
@@ -678,7 +678,7 @@ public class CurationPage
 
                                 aTarget.appendJavaScript("alert('remerege finished!')");
                             }
-                            catch (IOException e) {
+                            catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
                                 aTarget.add(getFeedbackPanel());
                                 error(e.getCause().getMessage());
                             }
@@ -946,9 +946,8 @@ public class CurationPage
         bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget)
+    private void loadDocumentAction(AjaxRequestTarget aTarget) throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
-        try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                     .getAuthentication().getName());
@@ -1003,12 +1002,6 @@ public class CurationPage
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
             ubdateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
-
-        }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            error(ExceptionUtils.getRootCause(e));
-        }
 
         aTarget.add(finish);
         aTarget.add(numberOfPages);

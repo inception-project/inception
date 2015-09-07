@@ -177,7 +177,7 @@ public class BratAnnotator
             protected void respond(AjaxRequestTarget aTarget)
             {
                 final IRequestParameters request = getRequest().getPostParameters();
-
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // Parse annotation ID if present in request
                 VID paramId;
                 if (!request.getParameterValue(PARAM_ID).isEmpty()
@@ -195,7 +195,6 @@ public class BratAnnotator
                 // Ignore ghosts
                 if (paramId.isGhost()) {
                     error("This is a ghost annotation, select layer and feature to annotate.");
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     return;
                 }
 

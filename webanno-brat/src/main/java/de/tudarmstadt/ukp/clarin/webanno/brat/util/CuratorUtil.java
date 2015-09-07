@@ -132,7 +132,7 @@ public class CuratorUtil
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationService aAnnotationService, CurationContainer aCurationContainer,
-            final Map<Object, AnnotationState> aStates)
+            final Map<String, AnnotationState> aStates)
         throws IOException
     {
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
@@ -171,7 +171,10 @@ public class CuratorUtil
                     @Override
                     public String getColor(Object aObj, String aLabel)
                     {
-                        return aStates.get(aObj).getColorCode();
+                        if (aStates.get(aObj.toString())==null){
+                            return AnnotationState.NOT_SUPPORTED.getColorCode();
+                        }
+                        return aStates.get(aObj.toString()).getColorCode();
                     }
                 };
 
@@ -294,7 +297,7 @@ public class CuratorUtil
                 bModel.getAnnotationLayers(), aAnnotationService);
         List<AnnotationOption> annotationOptions = null;
 
-        Map<Object, AnnotationState> annoStates = new HashMap<>();
+        Map<String, AnnotationState> annoStates = new HashMap<>();
 
         DiffResult diff;
 
@@ -360,7 +363,7 @@ public class CuratorUtil
      * @param aCfgSet
      */
     private static void addSuggestionColor(AnnotationService aAnnotationService, Mode aMode,
-            Map<String, JCas> aCasMap, Map<Object, AnnotationState> aSuggestionColors,
+            Map<String, JCas> aCasMap, Map<String, AnnotationState> aSuggestionColors,
             Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
@@ -380,16 +383,16 @@ public class CuratorUtil
                         key = key + "-" + fs + "-" + link;
                     }
                     if (aAgree) {
-                        aSuggestionColors.put(key, AnnotationState.AGREE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
                         continue;
                     }
                     // automation and correction projects
                     if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            aSuggestionColors.put(key, AnnotationState.DO_NOT_USE);
+                            aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
                         }
                         else {
-                            aSuggestionColors.put(key, AnnotationState.DISAGREE);
+                            aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
                         }
                         continue;
                     }
@@ -407,19 +410,19 @@ public class CuratorUtil
                     }
 
                     if (aAgree) {
-                        aSuggestionColors.put(key, AnnotationState.AGREE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
                     }
                     else if (use) {
-                        aSuggestionColors.put(key, AnnotationState.USE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.USE);
                     }
                     else if (aI) {
-                        aSuggestionColors.put(key, AnnotationState.DISAGREE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        aSuggestionColors.put(key, AnnotationState.DISAGREE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
                     }
                     else {
-                        aSuggestionColors.put(key, AnnotationState.DO_NOT_USE);
+                        aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
                     }
                 }
             }

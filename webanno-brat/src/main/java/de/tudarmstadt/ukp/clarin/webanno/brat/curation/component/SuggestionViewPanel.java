@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -43,13 +43,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -152,9 +150,13 @@ public class SuggestionViewPanel
                      * Method is called, if user has clicked on a span or an arc in the sentence
                      * panel. The span or arc respectively is identified and copied to the merge
                      * cas.
+                     * @throws IOException 
+                     * @throws ClassNotFoundException 
+                     * @throws UIMAException 
+                     * @throws BratAnnotationException 
                      */
                     @Override
-                    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
+                    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
                     {
                         // TODO: chain the error from this component up in the
                         // CurationPage
@@ -165,7 +167,6 @@ public class SuggestionViewPanel
                                     + " Please ask admin to re-open')");
                             return;
                         }
-                        try {
                             final IRequestParameters request = getRequest().getPostParameters();
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
@@ -196,27 +197,6 @@ public class SuggestionViewPanel
                                 mergeArc(request, curationUserSegment, annotationJCas);
                             }
                             onChange(aTarget);
-                        }
-                        catch (UIMAException e) {
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            error(ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        catch (ClassNotFoundException e) {
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            error(ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        catch (DataRetrievalFailureException e) {
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            error(ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        catch (IOException e) {
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            error(e.getMessage());
-                        }
-                        catch (BratAnnotationException e) {
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            error(e.getMessage());
-                        }
                     }
                 };
                 curationVisualizer.setOutputMarkupId(true);
@@ -300,10 +280,29 @@ public class SuggestionViewPanel
                     continue;
                 }
                 else if (feature.isEnabled()) {
-                    Feature uimaFeature = fsClicked.getType().getFeatureByBaseName(
-                            feature.getName());
-                    adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
-                            fsClicked.getFeatureValueAsString(uimaFeature));
+                    Feature uimaFeature = fsClicked.getType()
+                            .getFeatureByBaseName(feature.getName());
+                    switch (feature.getType()) {
+                    case CAS.TYPE_NAME_STRING:
+                        adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
+                                fsClicked.getFeatureValueAsString(uimaFeature));
+                        break;
+                    case CAS.TYPE_NAME_BOOLEAN:
+                        adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
+                                fsClicked.getBooleanValue(uimaFeature));
+                        break;
+                    case CAS.TYPE_NAME_FLOAT:
+                        adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
+                                fsClicked.getFloatValue(uimaFeature));
+                        break;
+                    case CAS.TYPE_NAME_INTEGER:
+                        adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
+                                fsClicked.getIntValue(uimaFeature));
+                        break;
+                    default:
+                        adapter.updateFeature(aMergeJCas, feature, getAddr(fs),
+                                fsClicked.getFeatureValue(uimaFeature));
+                    }
                 }
             }
         }
@@ -342,7 +341,7 @@ public class SuggestionViewPanel
     private void mergeArc(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas)
         throws NoOriginOrTargetAnnotationSelectedException, ArcCrossedMultipleSentenceException,
-        BratAnnotationException, IOException
+        BratAnnotationException, IOException, UIMAException, ClassNotFoundException
     {
         Integer addressOriginClicked = aRequest.getParameterValue("originSpanId").toInteger();
         Integer addressTargetClicked = aRequest.getParameterValue("targetSpanId").toInteger();
@@ -380,7 +379,6 @@ public class SuggestionViewPanel
 
         AnnotationFS targetFs = selectSingleFsAt(aJcas, targetFsClicked.getType(),
                 targetFsClicked.getBegin(), targetFsClicked.getEnd());
-        try {
             if (originFs == null | targetFs == null) {
                 throw new NoOriginOrTargetAnnotationSelectedException(
                         "Either origin or target annotations not selected");
@@ -447,19 +445,9 @@ public class SuggestionViewPanel
             int sentenceNumber = getSentenceNumber(clickedJCas, originFs.getBegin());
             bModel.setSentenceNumber(sentenceNumber);
             bModel.getDocument().setSentenceAccessed(sentenceNumber);
-        }
-        catch (IOException e) {
-            throw new IOException();
-        }
-        catch (UIMAException e) {
-            error(e.getMessage());
-        }
-        catch (ClassNotFoundException e) {
-            error(e.getMessage());
-        }
 
         if (bModel.getPreferences().isScrollPage()) {
-            int address = getAddr(selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
+             address = getAddr(selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
                     bModel.getSentenceEndOffset()));
             bModel.setSentenceAddress(getSentenceBeginAddress(aJcas, address, originFs.getBegin(),
                     bModel.getProject(), bModel.getDocument(), bModel.getPreferences()
