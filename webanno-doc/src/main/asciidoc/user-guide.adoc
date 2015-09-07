@@ -37,13 +37,13 @@ The following image shows an exemplary workflow of an annotation project with We
 
 image::progress_workflow.jpg[align="center"]
 
-First, the projects needs to be set up. In more detail, this means that users are to be added, 
-guidelines need to provided, documents have to be uploaded, tagsets need to be defined and uploaded,
+First, the projects need to be set up. In more detail, this means that users are to be added, 
+guidelines need to be provided, documents have to be uploaded, tagsets need to be defined and uploaded,
 etc. The process of setting up and administrating a project are explicitly described in <<sect_projects>>.
 
-After the setup of a project, the users which were assigned with the task of annotation annotate the
+After the setup of a project, the users who were assigned with the task of annotation annotate the
 documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.
-The work of the annotators is managed and controlled by Monitoring. Here, the person in charge has
+The work of the annotators is managed and controlled by monitoring. Here, the person in charge has
 to assign the workload. For example, in order to prevent redundant annotation, documents which are
 already annotated by several other annotators and need not be annotated by another person, can be
 blocked for others. The person in charge is also able to follow the progress of individual
@@ -51,7 +51,7 @@ annotators. All these tasks are demonstrated in <<sect_monitoring>> in more deta
 annotations of individual annotators. This can be done by logging in with the credentials of the
 annotators.
 
-After at least two annotators finished the annotation of the same document by clicking on *Done*, the
+After at least two annotators have finished the annotation of the same document by clicking on *Done*, the
 curator can start his work. The curator compares the annotations and corrects them if needed. This
 task is further explained in <<sect_curation>>. 
 
