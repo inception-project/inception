@@ -49,6 +49,8 @@ public class ValuesGenerator
 {
     private final Log log = LogFactory.getLog(getClass());
     Map<String, String> imports = null;
+    private Scope scope;
+    private String shortTypeName;
 
     @Override
     public List<PossibleValue> generatePossibleValues(FeatureStructure aContext, String aFeature,
@@ -58,7 +60,7 @@ public class ValuesGenerator
 //        imports = parsedConstraints.getImports();
         List<PossibleValue> possibleValues = new ArrayList<PossibleValue>();
         //If there are no rules for the FS, don't execute further
-        if(!areThereRulesFor(aContext, parsedConstraints)){
+        if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
             return possibleValues;
         }
 //        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
@@ -70,8 +72,8 @@ public class ValuesGenerator
 ////            throw new IllegalStateException("No import for [" + aContext.getType().getName()
 ////                    + "] - Imports are: [" + parsedConstraints.getImports() + "]");
 //        }
-        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
-        Scope scope = parsedConstraints.getScopeByName(shortTypeName);
+        shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+        scope = parsedConstraints.getScopeByName(shortTypeName);
 
       
         for (Rule rule : scope.getRules()) {
@@ -204,7 +206,6 @@ public class ValuesGenerator
     @Override
     public boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints)
     {
-        String shortTypeName;
         if(imports==null){
             imports = parsedConstraints.getImports();
         }
@@ -226,4 +227,35 @@ public class ValuesGenerator
         }
          
     }
+
+    /**
+     *Checks if it is necessary to evaluate rules based on 
+        1. whether there are rules for this FeatureStructure and
+        2. whether the target is affected by any of the restrictions within rules
+     
+     */
+    @Override
+    public boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,
+            ParsedConstraints parsedConstraints)
+                throws UIMAException
+    {
+        if (areThereRulesFor(aContext, parsedConstraints)) {
+            return false;
+        }
+        else {
+            shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
+            scope = parsedConstraints.getScopeByName(shortTypeName);
+            //Check within every rule if any restriction affects aFeature
+            for (Rule rule : scope.getRules()) {
+                for (Restriction res : rule.getRestrictions()) {
+                    if (aFeature.equals(res.getPath())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        }
+    }
 }
+    
