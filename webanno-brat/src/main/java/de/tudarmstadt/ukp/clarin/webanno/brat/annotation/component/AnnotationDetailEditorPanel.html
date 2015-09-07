@@ -24,7 +24,7 @@
 		// Based on this accepted answer of so
 		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
 		function manageEnter() {
-			$(":input").keypress(function(e) {
+			$(".annotationFeatureForm :input").keypress(function(e) {
 			    if (e.which == 13) {
 			        e.preventDefault();
 			        var inputs = $(this).parents("form").eq(0).find(":input");
@@ -48,7 +48,7 @@
 </head>
 <body>
 	<wicket:panel>
-	<form wicket:id="annotationFeatureForm">
+	<form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
 		<fieldset>
 				<legend>Actions</legend>
 				<table>
