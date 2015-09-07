@@ -17,6 +17,35 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+<wicket:head>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		// Based on this accepted answer of so
+		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
+		function manageEnter() {
+			$(":input").keypress(function(e) {
+			    if (e.which == 13) {
+			        e.preventDefault();
+			        var inputs = $(this).parents("form").eq(0).find(":input");
+	                var idx = inputs.index(this);
+
+	                if (idx == inputs.length - 1) {
+	                    inputs[idx].blur();
+	                } else {
+	                    inputs[idx + 1].focus(); //  handles submit buttons
+	                    inputs[idx + 1].select();
+	                }
+	                return false;
+			    }
+			});
+		};
+		$(document).on("keypress", manageEnter);
+		manageEnter();
+	});
+	</script>
+</wicket:head>
+</head>
 <body>
 	<wicket:panel>
 	<form wicket:id="annotationFeatureForm">
@@ -60,7 +89,7 @@
 						<td wicket:id="editor"></td>
 						<wicket:fragment wicket:id="textFeatureEditor">
 							<td><span wicket:id="feature"></span></td>
-							<td><input style="width: 100%" wicket:id="value"></input></td>
+							<td><input  style="width: 100%" wicket:id="value"></input></td>
 						</wicket:fragment>
 						<wicket:fragment wicket:id="numberFeatureEditor">
 							<td><span wicket:id="feature"></span></td>
