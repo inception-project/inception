@@ -239,7 +239,7 @@ public class ValuesGenerator
             ParsedConstraints parsedConstraints)
                 throws UIMAException
     {
-        if (areThereRulesFor(aContext, parsedConstraints)) {
+        if (!areThereRulesFor(aContext, parsedConstraints)) {
             return false;
         }
         else {
