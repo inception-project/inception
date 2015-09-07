@@ -54,9 +54,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -84,6 +81,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Export
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import wicket.contrib.input.events.EventType;
+import wicket.contrib.input.events.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -612,7 +612,7 @@ public class CurationPage
                     finishCurationModal.setTitle("Are you sure you want to finish curating?");
                 }
                 finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal
-                        .getContentId(), bModel, finishCurationModal, Mode.CURATION));
+                        .getContentId(), bModel, finishCurationModal, Mode.CURATION, curationPanel.editor));
                 finishCurationModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;

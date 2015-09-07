@@ -32,6 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -60,11 +61,11 @@ public class YesNoFinishModalPanel
     private BratAnnotatorModel bratAnnotatorModel;
 
     public YesNoFinishModalPanel(String aId, BratAnnotatorModel aOpenDocumentModel,
-            ModalWindow aModalWindow, Mode aSubject)
+            ModalWindow aModalWindow, Mode aSubject,  AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
         this.bratAnnotatorModel = aOpenDocumentModel;
-        yesNoButtonsForm = new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aSubject);
+        yesNoButtonsForm = new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aSubject, aEditor);
         add(yesNoButtonsForm);
     }
 
@@ -73,7 +74,8 @@ public class YesNoFinishModalPanel
     {
         private static final long serialVersionUID = -5659356972501634268L;
 
-        public YesNoButtonsForm(String id, final ModalWindow modalWindow, final Mode aSubject)
+        public YesNoButtonsForm(String id, final ModalWindow modalWindow, final Mode aSubject, 
+                AnnotationDetailEditorPanel aEditor)
         {
             super(id);
             add(new AjaxSubmitLink("yesButton")
@@ -129,8 +131,10 @@ public class YesNoFinishModalPanel
 
                         }
                     }
-
+                    aEditor.setEnabled(false);
+                    aTarget.add(aEditor);
                     modalWindow.close(aTarget);
+                    
                 }
 
                 @Override

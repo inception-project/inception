@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.YesNoFinishModalPanel;
@@ -50,7 +51,7 @@ public class FinishLink
     ModalWindow yesNoModal;
 
     public FinishLink(String id, final IModel<BratAnnotatorModel> aModel,
-            final FinishImage finishImag)
+            final FinishImage finishImag,  AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
 
@@ -81,7 +82,7 @@ public class FinishLink
                 }
                 else {
                     FinishModal.setContent(new YesNoFinishModalPanel(FinishModal.getContentId(),
-                            aModel.getObject(), FinishModal, Mode.ANNOTATION));
+                            aModel.getObject(), FinishModal, Mode.ANNOTATION, aEditor));
                     FinishModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                     {
                         private static final long serialVersionUID = -1746088901018629567L;

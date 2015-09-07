@@ -151,7 +151,7 @@ public class BratAnnotator
     }
 
     public BratAnnotator(String id, IModel<BratAnnotatorModel> aModel,
-            final AnnotationDetailEditorPanel aAnnotationDetailEditorPanel)
+            final AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
 
@@ -247,18 +247,12 @@ public class BratAnnotator
                         result = controller.whoami();
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
-                        assert jCas != null;
-                        
-                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                            error("This document is already closed. Please ask your project "
-                                    + "manager to re-open it via the Montoring page");
-                            return;
-                        }
+                        assert jCas != null;                        
 
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
-                                aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
+                                aEditor.setSlot(aTarget, jCas,
                                         getModelObject(), paramId.getId());
                             }
                             else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
@@ -275,7 +269,7 @@ public class BratAnnotator
                                 try {
                                     int id = adapter.add(jCas, offsets.getBegin(),
                                             offsets.getEnd(), null, null);
-                                    aAnnotationDetailEditorPanel.setSlot(aTarget, jCas,
+                                    aEditor.setSlot(aTarget, jCas,
                                             getModelObject(), id);
                                 }
                                 catch (BratAnnotationException e) {
@@ -292,8 +286,8 @@ public class BratAnnotator
 
                                 selection.setAnnotation(paramId);
                                 selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                                aAnnotationDetailEditorPanel.reloadLayer(aTarget);
-                                aAnnotationDetailEditorPanel.actionAnnotate(aTarget,
+                                aEditor.reloadLayer(aTarget);
+                                aEditor.actionAnnotate(aTarget,
                                         getModelObject());
                             }
                         }
@@ -302,7 +296,7 @@ public class BratAnnotator
                                 getModelObject().setForwardAnnotation(false);
                             }
                             // Doing anything but filling an armed slot will unarm it
-                            aAnnotationDetailEditorPanel.clearArmedSlotModel();
+                            aEditor.clearArmedSlotModel();
                             getModelObject().clearArmedSlot();
 
                             Selection selection = getModelObject().getSelection();
@@ -315,11 +309,11 @@ public class BratAnnotator
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             
                             bratRenderHighlight(aTarget, selection.getAnnotation());
-                            aAnnotationDetailEditorPanel.reloadLayer(aTarget);
+                            aEditor.reloadLayer(aTarget);
                             
                             if (selection.getAnnotation().isNotSet()) {
                                 selection.setAnnotate(true);
-                                aAnnotationDetailEditorPanel.actionAnnotate(aTarget,
+                                aEditor.actionAnnotate(aTarget,
                                         getModelObject());
                             }
                             else {
@@ -332,9 +326,6 @@ public class BratAnnotator
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
 
-                        if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                            error("This document is already closed. Please ask admin to re-open");
-                        }
                         Selection selection = getModelObject().getSelection();
 
                         selection.setRelationAnno(true);
@@ -350,10 +341,10 @@ public class BratAnnotator
                         
                         bratRenderHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
-                        aAnnotationDetailEditorPanel.reloadLayer(aTarget);
+                        aEditor.reloadLayer(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                             selection.setAnnotate(true);
-                            aAnnotationDetailEditorPanel.actionAnnotate(aTarget, getModelObject());
+                            aEditor.actionAnnotate(aTarget, getModelObject());
                         }
                         else {
                             selection.setAnnotate(false);
@@ -408,9 +399,13 @@ public class BratAnnotator
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                    aAnnotationDetailEditorPanel.setAnnotationLayers(getModelObject());
+                    aEditor.setAnnotationLayers(getModelObject());
                 }
-                aAnnotationDetailEditorPanel.reload(aTarget);
+                aEditor.reload(aTarget);
+                if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
+                    error("This document is already closed. Please ask your project "
+                            + "manager to re-open it via the Montoring page");
+                }
             }
         };
 
