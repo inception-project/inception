@@ -2295,6 +2295,11 @@ public class RepositoryServiceDbData
     public void removeConstraintSet(ConstraintSet aSet)
     {
         entityManager.remove(entityManager.merge(aSet));
+        createLog(aSet.getProject()).info(
+                " Removed Curated document from  project [" + aSet.getProject()
+                        + "] for the source document [" + aSet.getId());
+        createLog(aSet.getProject()).removeAllAppenders();
+        
     }
 
     @Override
