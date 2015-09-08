@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -137,6 +139,7 @@ public class AnnotationDetailEditorPanel
 
     private LayerSelector layer;   
     private Label selectedAnnotationLayer;
+    private ModalWindow deleteModal;
 
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
@@ -175,36 +178,7 @@ public class AnnotationDetailEditorPanel
         {
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
 
-            featureModels = new ArrayList<>();
-
-            selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
-                    "selection.text"));
-            selectedTextLabel.setOutputMarkupId(true);
-            add(selectedTextLabel);
-            add(new Label("layerName","Layer"){
-                private static final long serialVersionUID = 6084341323607243784L;
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    setVisible(bModel.getPreferences().isDefaultLayer());
-                }
-                
-            });
-
-            add(selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
-            {
-                private static final long serialVersionUID = 4059460390544343324L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    setOutputMarkupId(true);
-                    setVisible(bModel.getPreferences().isDefaultLayer());
-                }
-
-            });
+            featureModels = new ArrayList<>();          
             // TODO: to be done soon
             /*add(forwardAnnotation = new CheckBox("forwardAnnotation")
             {
@@ -311,7 +285,7 @@ public class AnnotationDetailEditorPanel
             });
             reverseButton.setOutputMarkupPlaceholderTag(true);
 
-            add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers, false));
+            add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers));
 
             RefreshingView<FeatureModel> featureValues = new FeatureEditorPanelContent(
                     "featureValues");
@@ -325,7 +299,8 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
 
-                    setVisible(!featureModels.isEmpty());
+                    setVisible(!featureModels.isEmpty()
+                            && bModel.getSelection().getAnnotation().isSet());
                 }
             };
             // Add placeholder since wmc might start out invisible. Without the placeholder we
@@ -333,7 +308,51 @@ public class AnnotationDetailEditorPanel
             featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
             featureEditorsContainer.setOutputMarkupId(true);
             featureEditorsContainer.add(featureValues);
+            
+            // the selected text for annotation
+            selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
+                    "selection.text"));
+            selectedTextLabel.setOutputMarkupId(true);
+            featureEditorsContainer.add(selectedTextLabel);
+            
+            featureEditorsContainer.add(new Label("layerName","Layer"){
+                private static final long serialVersionUID = 6084341323607243784L;
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(bModel.getPreferences().isDefaultLayer());
+                }
+                
+            });
+
+            // the annotation layer for the selected annotation
+           selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
+            {
+                private static final long serialVersionUID = 4059460390544343324L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setOutputMarkupId(true);
+                    setVisible(bModel.getPreferences().isDefaultLayer());
+                }
+
+            };
+            featureEditorsContainer.add(selectedAnnotationLayer);
+            
             add(featureEditorsContainer);
+            
+            add(deleteModal = new ModalWindow("yesNoModal"));
+            deleteModal.setOutputMarkupId(true);
+
+            deleteModal.setInitialWidth(400);
+            deleteModal.setInitialHeight(50);
+            deleteModal.setResizable(true);
+            deleteModal.setWidthUnit("px");
+            deleteModal.setHeightUnit("px");
+            deleteModal.setTitle("Are you sure you want to delete the annotation?");
         }
     }
 
@@ -466,7 +485,7 @@ public class AnnotationDetailEditorPanel
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         BratAnnotationException
     {
@@ -638,7 +657,6 @@ public class AnnotationDetailEditorPanel
         // after delete will follow annotation
         bModel.getSelection().setAnnotate(true);
         aTarget.add(annotationFeatureForm);
-        // TODO aTarget.add(relationAnnotationFeatureForm.featureEditorsContainer);
 
         aTarget.add(deleteButton);
         aTarget.add(reverseButton);
@@ -1724,7 +1742,7 @@ public class AnnotationDetailEditorPanel
         }
     };
 
-    private void populateFeatures(FeatureStructure aFS)
+    public void populateFeatures(FeatureStructure aFS)
     {
         featureModels = new ArrayList<>();
 
@@ -1808,8 +1826,7 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = 2233133653137312264L;
 
-        public LayerSelector(String aId, List<? extends AnnotationLayer> aChoices,
-                final boolean aIsRelation)
+        public LayerSelector(String aId, List<? extends AnnotationLayer> aChoices)
         {
             super(aId, aChoices);
             setOutputMarkupId(true);
@@ -1821,16 +1838,33 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    // user like to annotate with different layer - //TODO - remove the 
-                    // annotation selection highlight color
-                    bModel.getSelection().setAnnotate(true); 
-                    bModel.getSelection().setAnnotation(VID.NONE_ID);
-                    bModel.setSelectedAnnotationLayer(getModelObject());
-                    selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
-                    aTarget.add(selectedAnnotationLayer);
-                    populateFeatures(null);
-                    aTarget.add(annotationFeatureForm);
-                 //   aTarget.add(forwardAnnotation);
+                    if (!bModel.getSelectedAnnotationLayer().equals(getModelObject())
+                            && bModel.getSelection().getAnnotation().isSet()) {
+                        deleteModal.setContent(new YesNoDeleteModalPanel(deleteModal.getContentId(),
+                                bModel, deleteModal, AnnotationDetailEditorPanel.this,
+                                getModelObject()));
+                        
+                        deleteModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                        {
+                            private static final long serialVersionUID = 4364820331676014559L;
+
+                            @Override
+                            public void onClose(AjaxRequestTarget target)
+                            {
+                               System.out.println(bModel.getDefaultAnnotationLayer().getUiName());
+                               target.add(annotationFeatureForm);
+                               
+                            }
+                        });
+                        deleteModal.show(aTarget);
+                    }
+                    else {
+                        bModel.setSelectedAnnotationLayer(getModelObject());
+                        selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
+                        aTarget.add(selectedAnnotationLayer);
+                        populateFeatures(null);
+                        aTarget.add(annotationFeatureForm);
+                    }                   
                 }
             });
         }
@@ -2036,6 +2070,19 @@ public class AnnotationDetailEditorPanel
                 fm.value = new ArrayList<>();
             }
         }
+    }
+
+    
+    
+    
+    public AnnotationFeatureForm getAnnotationFeatureForm()
+    {
+        return annotationFeatureForm;
+    }
+
+    public Label getSelectedAnnotationLayer()
+    {
+        return selectedAnnotationLayer;
     }
 
     private boolean isFeatureModelChanged(AnnotationLayer aLayer){

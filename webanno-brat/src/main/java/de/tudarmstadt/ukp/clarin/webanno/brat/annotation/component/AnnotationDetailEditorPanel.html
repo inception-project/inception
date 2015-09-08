@@ -49,6 +49,7 @@
 <body>
 	<wicket:panel>
 	<form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
+	<div wicket:id=yesNoModal></div>
 		<fieldset>
 				<legend>Actions</legend>
 				<table>
@@ -72,7 +73,8 @@
 				</table>
 		</fieldset>		
 		  <fieldset>
-				<legend>Features</legend>
+			<legend>Features</legend>
+			  <div wicket:id="featureEditorsContainer">
 				<table>
 					<tr>
 						<td><label wicket:id="layerName"></label></td>
@@ -83,7 +85,6 @@
 						<td><span wicket:id="selectedText" style="color: red"></span></td>
 					</tr>
 				</table>
-			<div wicket:id="featureEditorsContainer">
 				<table class="hfill">
 					<tr wicket:id="featureValues">
 						<td wicket:id="editor"></td>
