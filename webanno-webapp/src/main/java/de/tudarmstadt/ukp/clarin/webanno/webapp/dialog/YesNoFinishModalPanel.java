@@ -58,13 +58,13 @@ public class YesNoFinishModalPanel
 
     private YesNoButtonsForm yesNoButtonsForm;
 
-    private BratAnnotatorModel bratAnnotatorModel;
+    private BratAnnotatorModel bModel;
 
-    public YesNoFinishModalPanel(String aId, BratAnnotatorModel aOpenDocumentModel,
+    public YesNoFinishModalPanel(String aId, BratAnnotatorModel aBModel,
             ModalWindow aModalWindow, Mode aSubject,  AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
-        this.bratAnnotatorModel = aOpenDocumentModel;
+        this.bModel = aBModel;
         yesNoButtonsForm = new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aSubject, aEditor);
         add(yesNoButtonsForm);
     }
@@ -94,7 +94,7 @@ public class YesNoFinishModalPanel
 
                     if (aSubject.equals(Mode.ANNOTATION)) {
                         AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                                bratAnnotatorModel.getDocument(), user);
+                                bModel.getDocument(), user);
 
                         annotationDocument
                                 .setState(AnnotationDocumentStateTransition
@@ -112,18 +112,18 @@ public class YesNoFinishModalPanel
 
                     }
                     else {
-                        if (bratAnnotatorModel.getDocument().getState()
+                        if (bModel.getDocument().getState()
                                 .equals(SourceDocumentState.CURATION_FINISHED)) {
-                            bratAnnotatorModel.getDocument().setState(
+                            bModel.getDocument().setState(
                                     SourceDocumentState.CURATION_IN_PROGRESS);
                         }
                         else {
-                            bratAnnotatorModel.getDocument().setState(
+                            bModel.getDocument().setState(
                                     SourceDocumentState.CURATION_FINISHED);
-                            bratAnnotatorModel.getDocument().setProcessed(false);
+                            bModel.getDocument().setProcessed(false);
                         }
                         try {
-                            repository.createSourceDocument(bratAnnotatorModel.getDocument(), user);
+                            repository.createSourceDocument(bModel.getDocument(), user);
                         }
                         catch (IOException e) {
                             error("Unable to update source file "
