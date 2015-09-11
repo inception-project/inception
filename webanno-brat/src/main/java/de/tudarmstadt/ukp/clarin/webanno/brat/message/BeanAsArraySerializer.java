@@ -20,18 +20,18 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.BeanProperty;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.TypeSerializer;
-import org.codehaus.jackson.map.ser.std.AsArraySerializerBase;
-import org.codehaus.jackson.map.ser.std.ContainerSerializerBase;
-import org.codehaus.jackson.type.JavaType;
 import org.springframework.util.ReflectionUtils;
+
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.fasterxml.jackson.databind.ser.ContainerSerializer;
+import com.fasterxml.jackson.databind.ser.std.AsArraySerializerBase;
 
 /**
  * Fallback serializer for cases where Collection is not known to be of type for which more
@@ -47,18 +47,48 @@ public class BeanAsArraySerializer
     }
 
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
+            JsonSerializer<Object> valueSerializer) {
+        super(Collection.class, elemType, staticTyping, vts, valueSerializer);
+    }
+
+    public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
             BeanProperty property, JsonSerializer<Object> valueSerializer)
     {
         super(Collection.class, elemType, staticTyping, vts, property, null);
     }
 
+    public BeanAsArraySerializer(BeanAsArraySerializer src,
+            BeanProperty property, TypeSerializer vts, JsonSerializer<?> valueSerializer,
+            Boolean unwrapSingle) {
+        super(src, property, vts, valueSerializer, unwrapSingle);
+    }
+    
     @Override
-    public ContainerSerializerBase<?> _withValueTypeSerializer(TypeSerializer vts)
+    public ContainerSerializer<?> _withValueTypeSerializer(TypeSerializer vts)
     {
         return new BeanAsArraySerializer(_elementType, _staticTyping, vts, _property,
                 _elementSerializer);
     }
 
+    @Override
+    public BeanAsArraySerializer withResolved(BeanProperty aProperty, TypeSerializer aVts,
+            JsonSerializer<?> aElementSerializer, Boolean aUnwrapSingle)
+    {
+        return new BeanAsArraySerializer(this, aProperty, aVts, aElementSerializer, aUnwrapSingle);
+    }
+    
+    @Override
+    public boolean hasSingleElement(Object aValue)
+    {
+        if (aValue != null) {
+            if (aValue.getClass().isArray()) {
+                return ((Object[]) aValue).length == 1;
+            }
+        }
+        
+        return false;
+    }
+    
     @Override
     public void serializeContents(Object value, JsonGenerator jgen, SerializerProvider provider)
         throws IOException, JsonGenerationException

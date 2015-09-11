@@ -133,6 +133,16 @@
 | Show a page with a stack trace instead of an "Internal error" page. Do not use in production!
 | false
 | true
+
+| debug.casDoctor.checks
+| Extra checks to perform when a CAS is saved
+| _unset_
+| AllAnnotationsIndexedCheck
+
+| debug.casDoctor.fatal
+| If the extra checks trigger an exception
+| true
+| false
 |===
 
 === Internal backups

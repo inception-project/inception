@@ -18,7 +18,8 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 
 /**

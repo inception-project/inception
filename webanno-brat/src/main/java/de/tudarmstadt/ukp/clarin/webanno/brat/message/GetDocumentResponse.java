@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;

@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 

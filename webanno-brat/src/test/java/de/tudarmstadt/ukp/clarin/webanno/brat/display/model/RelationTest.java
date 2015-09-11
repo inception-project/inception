@@ -17,13 +17,13 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
-import static java.util.Arrays.*;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
@@ -33,7 +33,7 @@ public class RelationTest
     public void toJsonTest()
         throws IOException
     {
-        MappingJacksonHttpMessageConverter jsonConverter = new MappingJacksonHttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
 
         String json = JSONUtil.toJsonString(jsonConverter, new Relation(new VID(1, 2), "type",
                 asList(new Argument("arg1", 1), new Argument("arg2", 2)), "label", "color"));

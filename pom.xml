@@ -47,11 +47,11 @@
         <url>https://github.com/webanno/webanno</url>
     </scm>
     <properties>
-        <jackson.version>1.9.6</jackson.version>
         <uima.version>2.7.0</uima.version>
+        <jackson.version>2.6.1</jackson.version>
         <uimafit.version>2.1.0</uimafit.version>
-        <spring.version>3.1.4.RELEASE</spring.version>
-        <spring.security.version>3.1.4.RELEASE</spring.security.version>
+        <spring.version>4.2.1.RELEASE</spring.version>
+        <spring.security.version>4.0.2.RELEASE</spring.security.version>
         <slf4j.version>1.6.4</slf4j.version>
         <log4j.version>1.2.16</log4j.version>
         <wicket.version>6.20.0</wicket.version>
@@ -259,13 +259,13 @@
             </dependency>
 
             <dependency>
-                <groupId>org.codehaus.jackson</groupId>
-                <artifactId>jackson-mapper-asl</artifactId>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.jackson</groupId>
-                <artifactId>jackson-core-asl</artifactId>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
 

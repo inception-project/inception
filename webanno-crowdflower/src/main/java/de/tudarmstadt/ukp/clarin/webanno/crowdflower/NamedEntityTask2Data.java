@@ -17,8 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.crowdflower;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+
 
 /**
  * Represents one data row of the JSON data structure send to Crowdflower for NamedEntityTask1

@@ -20,9 +20,9 @@
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd 
-		http://www.springframework.org/schema/util  http://www.springframework.org/schema/util/spring-util-3.1.xsd">
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd 
+		http://www.springframework.org/schema/util  http://www.springframework.org/schema/util/spring-util-4.2.xsd">
 
 	<!-- setup wicket application -->
 	<bean id="wicketApplication"
@@ -82,6 +82,9 @@
 	<bean id="standaloneShutdownDialog"
 		class="de.tudarmstadt.ukp.clarin.webanno.webapp.standalone.StandaloneShutdownDialog"
 		lazy-init="false"></bean>
+
+    <bean id="casDoctor"
+        class="de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor"></bean>
 
     <!-- Poor man's database migration -->
     <bean id="fixCoreferenceMigration"

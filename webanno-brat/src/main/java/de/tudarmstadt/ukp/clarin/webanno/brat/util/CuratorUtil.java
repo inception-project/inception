@@ -38,8 +38,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.codehaus.jackson.JsonGenerator;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;

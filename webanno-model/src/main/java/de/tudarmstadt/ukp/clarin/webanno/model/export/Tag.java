@@ -17,8 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.model.export;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 /**
  * Gets only tag name and tag description to be exported.
  * No need to get the tag ID and other details from the persistent entity

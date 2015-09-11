@@ -22,9 +22,8 @@ import java.io.StringWriter;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.codehaus.jackson.JsonGenerator;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;

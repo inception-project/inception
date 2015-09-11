@@ -40,13 +40,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
 * Class that holds a template and job's data for a Crowdflower.com job
@@ -123,7 +124,7 @@ public class CrowdJob
         includedCountries = new Vector<String>();
         excludedCountries = new Vector<String>();
 
-        Iterator<Map.Entry<String, JsonNode>> jsonRootIt = template.getFields();
+        Iterator<Map.Entry<String, JsonNode>> jsonRootIt = template.fields();
 
         for (Map.Entry<String, JsonNode> elt ; jsonRootIt.hasNext(); )
         {
@@ -137,7 +138,7 @@ public class CrowdJob
                 //special processing for these arrays:
                 if(currentKey.equals(includedCountriesKey) || currentKey.equals(excludedCountriesKey))
                 {
-                    Iterator<JsonNode> jsonSubNodeIt = currentNode.getElements();
+                    Iterator<JsonNode> jsonSubNodeIt = currentNode.elements();
                     for (JsonNode subElt ; jsonSubNodeIt.hasNext(); )
                     {
                         subElt = jsonSubNodeIt.next();

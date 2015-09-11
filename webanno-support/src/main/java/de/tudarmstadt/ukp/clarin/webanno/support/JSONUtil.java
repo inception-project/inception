@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.wicket.Application;
-import org.codehaus.jackson.JsonGenerator;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 
@@ -40,7 +40,7 @@ public class JSONUtil
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public static void generateJson(MappingJacksonHttpMessageConverter jsonConverter,
+    public static void generateJson(MappingJackson2HttpMessageConverter jsonConverter,
             Object aObject, File aFile)
         throws IOException
     {
@@ -53,7 +53,7 @@ public class JSONUtil
         FileUtils.writeStringToFile(aFile, toJsonString(aObject));
     }
 
-    public static String toJsonString(MappingJacksonHttpMessageConverter jsonConverter,
+    public static String toJsonString(MappingJackson2HttpMessageConverter jsonConverter,
             Object aObject)
         throws IOException
     {
@@ -72,9 +72,9 @@ public class JSONUtil
         return toJsonString(getJsonConverter(), aObject);
     }
     
-    public static MappingJacksonHttpMessageConverter getJsonConverter()
+    public static MappingJackson2HttpMessageConverter getJsonConverter()
     {
         return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
-                MappingJacksonHttpMessageConverter.class);
+                MappingJackson2HttpMessageConverter.class);
     }
 }

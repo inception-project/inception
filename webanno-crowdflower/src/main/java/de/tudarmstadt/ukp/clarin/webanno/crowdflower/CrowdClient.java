@@ -30,18 +30,19 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
 * Abstracts away the details of communicating with crowdflower.com's API
@@ -97,7 +98,7 @@ public class CrowdClient implements Serializable
     CrowdJob createNewJob(CrowdJob job) throws HttpServerErrorException
     {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
         restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
 
         JsonNode result = restTemplate.postForObject(newJobURL, job.getArgumentMap(), JsonNode.class, apiKey);
@@ -115,7 +116,7 @@ public class CrowdClient implements Serializable
     {
         RestTemplate restTemplate = new RestTemplate();
         // restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
         JsonNode result = restTemplate.getForObject(baseJobURL, JsonNode.class, jobid, apiKey);
 
         return new CrowdJob(result);
@@ -233,7 +234,7 @@ public class CrowdClient implements Serializable
         Log LOG = LogFactory.getLog(getClass());
 
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
         restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
 
         MultiValueMap<String, String> argumentMap = new LinkedMultiValueMap<String, String>();
@@ -293,7 +294,7 @@ public class CrowdClient implements Serializable
     String retrieveRawJudgments(CrowdJob job) throws UnsupportedEncodingException, IOException
     {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
         //Crowdflower sends back a zip file with a single JSON file, which make things a bit awkward here:
         byte[] resultJsonZip = restTemplate.getForObject(judgmentsURL, byte[].class, job.getId(), apiKey);
@@ -321,7 +322,7 @@ public class CrowdClient implements Serializable
     JsonNode getUploadStatus(String jobId)
     {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
         JsonNode result = restTemplate.getForObject(pingUnitsURL, JsonNode.class, jobId, apiKey);
 
@@ -338,7 +339,7 @@ public class CrowdClient implements Serializable
     JsonNode getStatus(String jobId)
     {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
 
         JsonNode result = restTemplate.getForObject(pingURL, JsonNode.class, jobId, apiKey);
 

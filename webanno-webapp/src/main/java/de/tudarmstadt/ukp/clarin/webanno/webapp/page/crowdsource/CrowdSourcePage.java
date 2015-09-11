@@ -60,8 +60,9 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.codehaus.jackson.JsonProcessingException;
 import org.wicketstuff.annotation.mount.MountPath;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;

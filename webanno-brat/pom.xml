@@ -65,14 +65,14 @@
 		<!-- Jackson dependencies -->
 
 		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-core-asl</artifactId>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-		</dependency>
-
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
 		<!-- UIMA dependencies -->
 
 		<dependency>
@@ -204,6 +204,10 @@
         <dependency>
         	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         	<artifactId>webanno-constraints</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+            <artifactId>de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</artifactId>
         </dependency>
 	</dependencies>
 	<build>

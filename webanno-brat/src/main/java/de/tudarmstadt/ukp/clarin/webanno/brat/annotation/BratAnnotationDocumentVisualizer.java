@@ -33,8 +33,10 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.codehaus.jackson.JsonGenerator;
 import org.springframework.dao.DataRetrievalFailureException;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
