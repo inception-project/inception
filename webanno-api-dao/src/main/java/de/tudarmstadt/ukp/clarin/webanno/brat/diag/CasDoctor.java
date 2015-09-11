@@ -59,7 +59,18 @@ public class CasDoctor
             sb.append(clazz.getSimpleName());
         }
         activeChecks = sb.toString();
+        fatalChecks = false;
         afterPropertiesSet();
+    }
+
+    public void setFatalChecks(boolean aFatalChecks)
+    {
+        fatalChecks = aFatalChecks;
+    }
+    
+    public boolean isFatalChecks()
+    {
+        return fatalChecks;
     }
 
     public boolean analyze(CAS aCas)
