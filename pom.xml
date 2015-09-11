@@ -47,8 +47,8 @@
         <url>https://github.com/webanno/webanno</url>
     </scm>
     <properties>
-        <uima.version>2.7.0</uima.version>
         <jackson.version>2.6.1</jackson.version>
+        <uima.version>2.8.1</uima.version>
         <uimafit.version>2.1.0</uimafit.version>
         <spring.version>4.2.1.RELEASE</spring.version>
         <spring.security.version>4.0.2.RELEASE</spring.security.version>
