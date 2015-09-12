@@ -60,7 +60,9 @@ public class ValuesGenerator
 //        imports = parsedConstraints.getImports();
         List<PossibleValue> possibleValues = new ArrayList<PossibleValue>();
         //If there are no rules for the FS, don't execute further
-        if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
+        //Enabling the second option might take too much time for rules to execute.
+        if(!areThereRulesFor(aContext, parsedConstraints)){
+//        if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
             return possibleValues;
         }
 //        String shortTypeName = parsedConstraints.getShortName(aContext.getType().getName());
