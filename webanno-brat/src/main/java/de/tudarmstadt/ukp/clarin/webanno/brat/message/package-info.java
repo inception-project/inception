@@ -17,6 +17,6 @@
  ******************************************************************************/
 /**
  * Provides Provides Classes that represent the actual Brat Responses, which will be changed to the
- *Json format using {@link org.springframework.http.converter.json.MappingJacksonHttpMessageConverter}
+ *Json format using {@link org.springframework.http.converter.json.MappingJackson2HttpMessageConverter}
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
