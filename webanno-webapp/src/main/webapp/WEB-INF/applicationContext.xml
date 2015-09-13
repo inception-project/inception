@@ -53,6 +53,8 @@
 				<prop key="ui.brat.sentences.number">5</prop>
 				<prop key="crowdsource.enabled">0</prop>
                 <prop key="webanno.repository">#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/</prop>
+                <prop key="debug.casDoctor.checks"></prop>
+                <prop key="debug.casDoctor.fatal">false</prop>
 			</props>
 		</property>
 		<property name="locations">
