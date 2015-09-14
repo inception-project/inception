@@ -34,14 +34,14 @@ open it for annotation. Document names written in black show that the document h
 by the current user, blue font means that it has already been opened, whereas red font indicates 
 that the document has already been marked as *done*.
 
-Once the document is opened, a default of 10 sentences are loaded on the annotation  page.  The  
+Once the document is opened, a default of 10 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
-The first option allows you to select an Annotation Layer you are displayed during annotation. The second option allows you to specify the number of sentences that will be displayed on one page. The last option allows you to select auto-scroll while annotating. Auto-scroll scrolls automatically forward by putting the last annotated sentence in the middle.
+The first option allows you to select an annotation layer which is displayed during annotation. The second option allows you to specify the number of sentences that will be displayed on one page. The last option allows you to select auto-scroll while annotating. Auto-scroll scrolls automatically forward by putting the last annotated sentence in the middle.
 
 === Navigation
 
-Sentence  numbers  on  the  left  side  of  the  annotation  page  shows  the  exact sentence numbers in the document. 
+Sentence  numbers  on  the  left  side  of  the  annotation  page  show  the  exact sentence numbers in the document. 
 
 image::annotation3.jpg[align="center"]
 
@@ -145,19 +145,19 @@ link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be ma
 ==== Relations
 
 To create a relation annotation, click on a span annotation and drag the mouse to another span
-annotation. While you drag, an arc is drawn. It is not possible to create arbitrary relation 
+annotation. While you drag, an arc is drawn. It is not possible to create arbitrary relation
 annotations. In order to create one, a corresponding relation layer needs to be defined between
 the source and target spans.
 
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 
 Depending on the layer behavior configuration, relation annotations can stack, can cross each other,
-cross sentence boundaries. 
+and can cross sentence boundaries.
 
 NOTE: Currently, there can be at most one relation layer per span layer. Relations between spans
       of different layers are not supported.
 
-NOTE: A special behavior for the built-in *Dependency* layer is the handling of the dependency 
+NOTE: A special behavior for the built-in *Dependency* layer is the handling of the dependency
       root. To mark a token as the *ROOT* of the dependency tree, create a dependency relation from
       the POS tag to itself (a circle). This behavior is not active for custom relation layers!
 
@@ -168,8 +168,8 @@ image::annotation_span_many.jpg[align="center"]
 
 ==== Chains
 
-A chain layer includes both, span and relation annotations into a single structural layer. Creating
-a span annotation in a chain layer basically creates a chain of length one. Creating a relation 
+A chain layer includes both, span and relation annotations, into a single structural layer. Creating
+a span annotation in a chain layer basically creates a chain of length one. Creating a relation
 between two chain elements has different effects depending on whether the *linked list* behavior
 is enabled for the chain layer or not.
 
