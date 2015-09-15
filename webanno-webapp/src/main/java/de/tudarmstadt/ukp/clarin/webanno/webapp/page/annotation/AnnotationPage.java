@@ -884,7 +884,9 @@ public class AnnotationPage
                 else {
                     // Merge imports
                     for(Entry<String,String> e: constraints.getImports().entrySet()){
+                        //Check if the value already points to some other feature in previous constraint file(s).
                         if(merged.getImports().containsKey(e.getKey()) && !e.getValue().equalsIgnoreCase(merged.getImports().get(e.getKey()))){
+                            //If detected, notify user with proper message and abort merging
                             StringBuffer errorMessage = new StringBuffer();
                             errorMessage.append("Conflict detected in imports for key \"");
                             errorMessage.append(e.getKey());
