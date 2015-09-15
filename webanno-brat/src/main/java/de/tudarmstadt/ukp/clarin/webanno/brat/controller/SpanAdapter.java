@@ -387,7 +387,9 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
-                    setFeature(fs, aFeature, aValue);
+                    if (aValue != null) {
+                        setFeature(fs, aFeature, aValue);
+                    }
                     return getAddr(fs);
                 }
             }
