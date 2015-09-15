@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /***
  * Serialized Class containing objects after parsing and creating objects based on rules file
@@ -39,6 +41,8 @@ public class ParsedConstraints
     private final Map<String, String> imports;
     private final List<Scope> scopes;
     private Map<String, Scope> scopeMap = null;
+    //Contains possible scenarios for which rules are available.
+    private Set<FSFPair> rulesSet = null;
 
     /**
      * @param imports
@@ -99,6 +103,45 @@ public class ParsedConstraints
             }
         }
         return scopeMap.get(scopeName);
+    }
+    
+    //Checks if rules exists or not
+    public boolean areThereRules(String featureStructure, String feature){
+        if(rulesSet==null){
+            buildRulesSet();
+        }
+        
+        if(getShortName(featureStructure)==null){
+            return false;
+        }
+        if(getScopeByName(getShortName(featureStructure))==null){
+            return false;
+        }
+        FSFPair _tempFsfPair = new FSFPair(getShortName(featureStructure), feature);
+        if(rulesSet.contains(_tempFsfPair)){
+            //If it has rules satisfying with proper input FS and affecting feature
+            return true;
+        }
+        return false;
+    }
+/**
+ * Fill Set with values of different conditions for which rules are available.
+ */
+    private void buildRulesSet()
+    {
+        rulesSet = new HashSet<>();
+        FSFPair _temp;
+        for (Scope scope : scopes) {
+            for (Rule rule : scope.getRules()) {
+                for (Restriction restriction : rule.getRestrictions()) {
+                    _temp = new FSFPair(scope.getScopeName(), restriction.getPath());
+                    if (!rulesSet.contains(_temp)) {
+                        rulesSet.add(_temp);
+                    }
+                }
+            }
+        }
+        
     }
 
 }
