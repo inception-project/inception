@@ -74,6 +74,7 @@ public class YesNoDeleteModalPanel
                         aBModel.setDefaultAnnotationLayer(aLayer);
                         aEditor.getSelectedAnnotationLayer().setDefaultModelObject(aLayer.getUiName());
                         aEditor.populateFeatures(null);
+                        aEditor.actionAnnotate(aTarget, aBModel);
                         aTarget.add(aEditor.getAnnotationFeatureForm());
                     }
                     catch (CASRuntimeException | UIMAException | ClassNotFoundException
