@@ -340,6 +340,7 @@ public class AnnotationDetailEditorPanel
                 }
 
             };
+            selectedAnnotationLayer.setOutputMarkupId(true);
             featureEditorsContainer.add(selectedAnnotationLayer);
             
             add(featureEditorsContainer);
@@ -446,6 +447,12 @@ public class AnnotationDetailEditorPanel
                 }
             }
 
+            // ISSUE - #114 - git hub
+            if (fm.value == null) {
+                fm.value = getFeatureValue(
+                        selectByAddr(jCas.getCas(), aBModel.getSelection().getAnnotation().getId()),
+                        fm.feature);
+            }
             adapter.updateFeature(jCas, fm.feature, aBModel.getSelection().getAnnotation().getId(),
                     fm.value);
         }
@@ -485,6 +492,22 @@ public class AnnotationDetailEditorPanel
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
     }
 
+    private Serializable getFeatureValue(FeatureStructure aFs, AnnotationFeature aFeature)
+    {
+        Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        switch (aFeature.getType()) {
+        case CAS.TYPE_NAME_STRING:
+            return aFs.getFeatureValueAsString(uimaFeature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return aFs.getBooleanValue(uimaFeature);
+        case CAS.TYPE_NAME_FLOAT:
+            return aFs.getFloatValue(uimaFeature);
+        case CAS.TYPE_NAME_INTEGER:
+            return aFs.getIntValue(uimaFeature);
+        default:
+            return null;
+        }
+    }
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         BratAnnotationException
