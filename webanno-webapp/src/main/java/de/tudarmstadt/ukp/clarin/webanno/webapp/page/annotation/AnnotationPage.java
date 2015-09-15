@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -50,9 +51,6 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -85,6 +83,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Finish
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import wicket.contrib.input.events.EventType;
+import wicket.contrib.input.events.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -882,7 +883,22 @@ public class AnnotationPage
                 }
                 else {
                     // Merge imports
-                    // FIXME check if there are import conflicts
+                    for(Entry<String,String> e: constraints.getImports().entrySet()){
+                        if(merged.getImports().containsKey(e.getKey()) && !e.getValue().equalsIgnoreCase(merged.getImports().get(e.getKey()))){
+                            StringBuffer errorMessage = new StringBuffer();
+                            errorMessage.append("Conflict detected in imports for key \"");
+                            errorMessage.append(e.getKey());
+                            errorMessage.append("\", conflicting values are \"");
+                            errorMessage.append(e.getValue());
+                            errorMessage.append("\" & \"");
+                            errorMessage.append(merged.getImports().get(e.getKey()));
+                            errorMessage.append("\". Please contact Project Admin for correcting this. Constraints feature may not work.");
+                            errorMessage.append("\nAborting Constraint rules merge!");
+                            LOG.error(errorMessage.toString());
+                            error(errorMessage.toString());
+                            break; 
+                        }
+                    }
                     merged.getImports().putAll(constraints.getImports());
 
                     // Merge scopes
