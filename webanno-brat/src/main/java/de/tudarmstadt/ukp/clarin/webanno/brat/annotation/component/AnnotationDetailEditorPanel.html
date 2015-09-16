@@ -23,7 +23,7 @@
 	$(document).ready(function() {
 		// Based on this accepted answer of so
 		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
-		function manageEnter() {
+		function manageEnter() {			
 			$(".annotationFeatureForm :input").keypress(function(e) {
 			    if (e.which == 13) {
 			        e.preventDefault();
@@ -38,7 +38,7 @@
 	                }
 	                return false;
 			    }
-			});
+			});		
 		};
 		$(document).on("keypress", manageEnter);
 		manageEnter();
@@ -55,7 +55,7 @@
 				<table>
 					<tr>
 						<td>
-							<button class="buttons" wicket:id="delete">Delete</button>
+							<button type="button"  wicket:id="delete">Delete</button>
 							<button class="buttons" wicket:id="reverse">Reverse</button>
 							<button class="buttons" wicket:id="clear">Clear</button>
 						</td>
