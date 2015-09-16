@@ -155,7 +155,6 @@ public class AnnotationDetailEditorPanel
             + "? $(this).text() : 'no title')+'</div>"
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
-    private String layerName ="";
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -869,15 +868,6 @@ public class AnnotationDetailEditorPanel
                     .getId());
             String type = annoFs.getType().getName();
 
-            try {
-                aBModel.setSelectedAnnotationLayer(annotationService.getLayer(type,
-                        aBModel.getProject()));
-            }
-            catch (NoResultException e) {
-                reset(aTarget);
-                throw new IllegalStateException("Unknown layer [" + type + "]", e);
-            }
-
             // Might have been reset if we didn't find the layer above. Btw. this can happen if
             // somebody imports a CAS that has subtypes of layers, e.g. DKPro Core pipelines
             // like to produce subtypes of POS for individual postags. We do not support such
@@ -889,16 +879,31 @@ public class AnnotationDetailEditorPanel
                 else if (type.endsWith(ChainAdapter.LINK)) {
                     type = type.substring(0, type.length() - ChainAdapter.LINK.length());
                 }
-
+                
+                try {
+                    aBModel.setSelectedAnnotationLayer(annotationService.getLayer(type,
+                            aBModel.getProject()));
+                }
+                catch (NoResultException e) {
+                    reset(aTarget);
+                    throw new IllegalStateException("Unknown layer [" + type + "]", e);
+                }
                 // populate feature value
-                for (AnnotationFeature feature : annotationService.listAnnotationFeature(aBModel
-                        .getSelectedAnnotationLayer())) {
-                    if (!feature.isEnabled() || isSuppressedFeature(aBModel, feature)) {
+                for (AnnotationFeature feature : annotationService
+                        .listAnnotationFeature(aBModel.getSelectedAnnotationLayer())) {
+                    if (!feature.isEnabled()) {
                         continue;
                     }
-
-                    featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
-                            .getFeature(annoFs, feature)));
+                    if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                        if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+                            featureModels.add(new FeatureModel(feature,
+                                    (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature)));
+                        }
+                    }
+                    else {
+                        featureModels.add(new FeatureModel(feature,
+                                (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature)));
+                    }
                 }
             }
         }
@@ -1771,38 +1776,71 @@ public class AnnotationDetailEditorPanel
 
         if (aFS != null) {
             // Populate from feature structure
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(bModel
-                    .getSelectedAnnotationLayer())) {
-                if (!feature.isEnabled() || isSuppressedFeature(bModel, feature)) {
+            for (AnnotationFeature feature : annotationService
+                    .listAnnotationFeature(bModel.getSelectedAnnotationLayer())) {
+                if (!feature.isEnabled()) {
                     continue;
                 }
+                if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                    if (bModel.getSelection().isRelationAnno()) {
+                        if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                            featureModels.add(new FeatureModel(feature,
+                                    (Serializable) BratAjaxCasUtil.getFeature(aFS, feature)));
+                        }
+                    }
+                    else {
+                        if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+                            featureModels.add(new FeatureModel(feature,
+                                    (Serializable) BratAjaxCasUtil.getFeature(aFS, feature)));
+                        }
+                    }
 
-                featureModels.add(new FeatureModel(feature, (Serializable) BratAjaxCasUtil
-                        .getFeature(aFS, feature)));
+                }
+                else {
+                    featureModels.add(new FeatureModel(feature,
+                            (Serializable) BratAjaxCasUtil.getFeature(aFS, feature)));
+                }
             }
         }
         else if (!bModel.getSelection().isRelationAnno() && bModel.getRememberedSpanFeatures() != null) {
             // Populate from remembered values
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(bModel
-                    .getSelectedAnnotationLayer())) {
-                if (!feature.isEnabled() || isSuppressedFeature(bModel, feature)) {
+            for (AnnotationFeature feature : annotationService
+                    .listAnnotationFeature(bModel.getSelectedAnnotationLayer())) {
+                if (!feature.isEnabled()) {
                     continue;
                 }
+                if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                    if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+                        featureModels.add(new FeatureModel(feature,
+                                bModel.getRememberedSpanFeatures().get(feature)));
+                    }
+                }
+                else {
+                    featureModels.add(new FeatureModel(feature,
+                            bModel.getRememberedSpanFeatures().get(feature)));
+                }
 
-                featureModels.add(new FeatureModel(feature, bModel.getRememberedSpanFeatures()
-                        .get(feature)));
             }
         }
-        else if (bModel.getSelection().isRelationAnno() && bModel.getRememberedArcFeatures() != null) {
+        else if (bModel.getSelection().isRelationAnno()
+                && bModel.getRememberedArcFeatures() != null) {
             // Populate from remembered values
-            for (AnnotationFeature feature : annotationService.listAnnotationFeature(bModel
-                    .getSelectedAnnotationLayer())) {
-                if (!feature.isEnabled() || isSuppressedFeature(bModel, feature)) {
+            for (AnnotationFeature feature : annotationService
+                    .listAnnotationFeature(bModel.getSelectedAnnotationLayer())) {
+                if (!feature.isEnabled()) {
                     continue;
                 }
+                if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+                    if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                        featureModels.add(new FeatureModel(feature,
+                                bModel.getRememberedArcFeatures().get(feature)));
+                    }
+                }
+                else {
+                    featureModels.add(new FeatureModel(feature,
+                            bModel.getRememberedArcFeatures().get(feature)));
+                }
 
-                featureModels.add(new FeatureModel(feature, bModel.getRememberedArcFeatures()
-                        .get(feature)));
             }
         }
     }
