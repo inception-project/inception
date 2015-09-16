@@ -283,6 +283,36 @@ public class AnnotationDetailEditorPanel
                 }
             });
             reverseButton.setOutputMarkupPlaceholderTag(true);
+            
+            add(new AjaxButton("clear")
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(bModel.getSelection().getAnnotation().isSet());
+                }
+
+                @Override
+                public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                {
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                    try {
+                        actionClear(aTarget, bModel);
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                    }
+                    catch (Exception e) {
+                        error(e.getMessage());
+                        LOG.error(e.getMessage(), e);
+                    }
+                }
+            });
 
             add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers));
 
@@ -734,6 +764,13 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
+    private void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    {
+        aBModel.getSelection().clear();
+        aTarget.add(annotationFeatureForm);
+        onChange(aTarget, aBModel);
+    }
     public JCas getCas(BratAnnotatorModel aBModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
