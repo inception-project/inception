@@ -57,7 +57,7 @@ public class ValuesGenerator
             ParsedConstraints parsedConstraints)
         throws UIMAException
     {
-//        imports = parsedConstraints.getImports();
+        imports = parsedConstraints.getImports();
         List<PossibleValue> possibleValues = new ArrayList<PossibleValue>();
         //If there are no rules for the FS, don't execute further
         //Enabling the second option might take too much time for rules to execute.
@@ -136,7 +136,6 @@ public class ValuesGenerator
         List<String> values = new ArrayList<>();
 
         if (head.startsWith("@")) {
-
             String typename = imports.get(head.substring(1));
             Type type = aContext.getCAS().getTypeSystem().getType(typename);
             AnnotationFS ctxAnnFs = (AnnotationFS) aContext;
