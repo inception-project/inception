@@ -23,11 +23,11 @@ NOTE: This functionality is only available to *project managers* (managers of ex
 
 When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>.  The *Page* navigation is also equivalent to <<sect_annotation>>.
 
-In the left frame of the window, named *Sentences*, the sentences of the chosen document are displayed. The ones shaded in red created a conflict in annotation.
+In the left frame of the window, named *Sentences*, an overview of the chosen document is displayed. Sentences are represented by their number inside the document. The ones shaded in red created a conflict in annotation.
 
 // FIXME: Make and upload new screenshots; new functionality: go between docs
 
-image::curation1.jpg[align="center"]
+image::curation1.PNG[align="center"]
 
 If you want to see the annotations that were made in a sentence, you have to click on the sentence. Then on the right side of the window, the annotations are displayed.
 

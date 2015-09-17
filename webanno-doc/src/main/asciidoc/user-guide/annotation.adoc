@@ -185,7 +185,7 @@ To abort the creation of an annotation, hold *CTRL* when you release the mouse b
 
 | disabled
 | the two spans are in different chains
-| the two chains are merged FIXME
+| the two chains are merged //FIXME
 
 | enabled
 | the two spans are already in the same chains
