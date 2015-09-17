@@ -102,6 +102,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -155,6 +156,8 @@ public class AnnotationDetailEditorPanel
             + "? $(this).text() : 'no title')+'</div>"
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
+    //For showing the status of Constraints rules kicking in.
+    private RulesIndicator indicator = new RulesIndicator();
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -1378,7 +1381,7 @@ public class AnnotationDetailEditorPanel
                         + restrictionFeaturePath + "]: " + possibleValues);
 
                 // only adds tags which are suggested by rules and exist in tagset.
-                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, indicator);
 
                 // add remaining tags
                 addRemainingTags(tagset, valuesFromTagset);
@@ -1510,10 +1513,14 @@ public class AnnotationDetailEditorPanel
 
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
+                //reset the indicator
+                indicator.reset();
                 if (bModel.getConstraints() != null && bModel.getSelection().getAnnotation().isSet()) {
+                    indicator.setRulesExist(true); //Constraint rules exist!
                     tagset = addTagsBasedOnRules(bModel, aModel);
                 }
                 else {
+                    indicator.setRulesExist(false); //No constraint rules.
                     // add tagsets only, earlier behavior
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
@@ -1558,7 +1565,48 @@ public class AnnotationDetailEditorPanel
                     }
                 });
             }
+          //Shows whether constraints are triggered or not
+            //also shows state of constraints use.
+            Component constraintsInUseIndicator = new WebMarkupContainer("indicator"){
 
+                private static final long serialVersionUID = 4346767114287766710L;
+
+                /* (non-Javadoc)
+                 * @see org.apache.wicket.Component#isVisible()
+                 */
+                @Override
+                public boolean isVisible()
+                {
+                    return indicator.areThereRules();
+                }
+            }.add(new AttributeAppender("class", new Model<String>(){
+                //adds symbol to indicator
+                private static final long serialVersionUID = -7683195283137223296L;
+
+                @Override
+                public String getObject()
+                {
+                    StringBuffer path = new StringBuffer();
+                    path.append(indicator.getStatusSymbol());
+                    return path.toString();
+                }
+            }))
+              .add(new AttributeAppender("style", new Model<String>(){
+                  //adds color to indicator
+                  
+                private static final long serialVersionUID = -5255873539738210137L;
+
+                @Override
+                public String getObject()
+                {
+                    StringBuffer path = new StringBuffer();
+                    path.append("; color: ");
+                    path.append(indicator.getStatusColor());
+                    return path.toString();
+                }
+            }));
+            content.add(constraintsInUseIndicator);
+            
             // Add a new empty slot with the specified role
             content.add(new AjaxButton("add")
             {
@@ -1712,7 +1760,7 @@ public class AnnotationDetailEditorPanel
                         + restrictionFeaturePath + "]: " + possibleValues);
 
                 // Only adds tags which are suggested by rules and exist in tagset.
-                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset);
+                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, indicator);
                 removeAutomaticallyAddedUnusedEntries();
 
                 // Create entries for important tags.
@@ -1899,16 +1947,23 @@ public class AnnotationDetailEditorPanel
      * afterwards.
      */
     private static List<Tag> compareSortAndAdd(List<PossibleValue> possibleValues,
-            List<Tag> valuesFromTagset)
+            List<Tag> valuesFromTagset, RulesIndicator rulesIndicator)
     {
+        //if no possible values, means didn't satisfy conditions
+        if(possibleValues.isEmpty())
+        {
+            rulesIndicator.doesntSatisfyRules();
+        }
         List<Tag> returnList = new ArrayList<Tag>();
-        // // Sorting based on important flag
+        // Sorting based on important flag
         // possibleValues.sort(null);
         // Comparing to check which values suggested by rules exists in existing
         // tagset and adding them first in list.
         for (PossibleValue value : possibleValues) {
             for (Tag tag : valuesFromTagset) {
                 if (value.getValue().equalsIgnoreCase(tag.getName())) {
+                    //Matching values found in tagset and shown in dropdown
+                    rulesIndicator.rulesApplied();
                     // HACK BEGIN
                     tag.setReordered(true);
                     // HACK END
@@ -1916,7 +1971,10 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-
+        //If no matching tags found
+        if(returnList.isEmpty()){
+            rulesIndicator.noMatchingTagset();
+        }
         return returnList;
     }
 
