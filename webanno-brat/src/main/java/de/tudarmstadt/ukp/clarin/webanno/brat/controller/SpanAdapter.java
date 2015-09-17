@@ -31,6 +31,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -376,7 +377,57 @@ public class SpanAdapter
                     + "limit your annotation to single sentence!");
         }
     }
+    
+    // get feature Value of existing span annotation 
+    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
+            String aLabelValue)
+    {
+        if(allowStacking){
+            return null;
+        }
+        int begin;
+        int end;
+        // update the begin and ends (no sub token selection)
+        if (lockToTokenOffsets) {
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+            begin = tokens.get(0).getBegin();
+            end = tokens.get(tokens.size() - 1).getEnd();
+        }
+        else if (allowMultipleToken) {
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+            begin = tokens.get(0).getBegin();
+            end = tokens.get(tokens.size() - 1).getEnd();
+        }
+        else {
+            begin = aBegin;
+            end = aEnd;
+        }
+        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
 
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, begin, end)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                return getFeatureValue(fs, aFeature);
+            }
+        }
+        return null;
+    }
+
+    public static Serializable getFeatureValue(FeatureStructure aFs, AnnotationFeature aFeature)
+       {
+           Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+           switch (aFeature.getType()) {
+           case CAS.TYPE_NAME_STRING:
+               return aFs.getFeatureValueAsString(uimaFeature);
+           case CAS.TYPE_NAME_BOOLEAN:
+               return aFs.getBooleanValue(uimaFeature);
+           case CAS.TYPE_NAME_FLOAT:
+               return aFs.getFloatValue(uimaFeature);
+           case CAS.TYPE_NAME_INTEGER:
+               return aFs.getIntValue(uimaFeature);
+           default:
+               return aFs.getFeatureValueAsString(uimaFeature);
+           }
+       }
     /**
      * A Helper method to add annotation to CAS
      */
@@ -387,9 +438,7 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
-                    if (aValue != null) {
-                        setFeature(fs, aFeature, aValue);
-                    }
+                    setFeature(fs, aFeature, aValue);
                     return getAddr(fs);
                 }
             }

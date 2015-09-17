@@ -272,7 +272,7 @@ public class BratAnnotator
                                             getModelObject(), id);
                                 }
                                 catch (BratAnnotationException e) {
-                                    error(e.getMessage());
+                                    error(ExceptionUtils.getRootCauseMessage(e));
                                     LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                                 }
                             }
@@ -380,8 +380,8 @@ public class BratAnnotator
                     error("Invalid reader: " + e.getMessage());
                 }
                 catch (Exception e) {
-                    LOG.error(e);
-                    error(ExceptionUtils.getRootCauseMessage(e));
+                    error( e.getMessage());
+                    LOG.error(ExceptionUtils.getRootCauseMessage(e));
                 }
 
                 // Serialize updated document to JSON

@@ -428,28 +428,49 @@ public class AnnotationDetailEditorPanel
         }
 
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
-
         Selection selection = aBModel.getSelection();
         if (selection.getAnnotation().isNotSet()) {
             if (bModel.getSelection().isRelationAnno()) {
                 AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
                 AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
                 if (adapter instanceof ArcAdapter) {
-                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas,
-                            aBModel, null, null);
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, aBModel,
+                            null, null);
                     selection.setAnnotation(new VID(getAddr(arc)));
                 }
                 else {
-                    selection.setAnnotation(new VID(((ChainAdapter) adapter).addArc(jCas, originFs,
-                            targetFs, null, null)));
+                    selection.setAnnotation(new VID(
+                            ((ChainAdapter) adapter).addArc(jCas, originFs, targetFs, null, null)));
                 }
                 selection.setBegin(originFs.getBegin());
             }
             else if (adapter instanceof SpanAdapter) {
+                for (FeatureModel fm : featureModels) {
+                    if (((SpanAdapter) adapter).getSpan(jCas, selection.getBegin(),
+                            selection.getEnd(), fm.feature, null) != null) {
+                        actionClear(aTarget, bModel);
+                        throw new BratAnnotationException(
+                                "Cannot create another annotation of layer [" + ""
+                                        + bModel.getSelectedAnnotationLayer().getUiName()
+                                        + " at this"
+                                        + " location - stacking is not enabled for this layer.");
+                    }
+                }
                 selection.setAnnotation(new VID(((SpanAdapter) adapter).add(jCas,
                         selection.getBegin(), selection.getEnd(), null, null)));
             }
             else {
+                for (FeatureModel fm : featureModels) {
+                    if (((ChainAdapter) adapter).getSpan(jCas, selection.getBegin(),
+                            selection.getEnd(), fm.feature, null) != null) {
+                        actionClear(aTarget, bModel);
+                        throw new BratAnnotationException(
+                                "Cannot create another annotation of layer [" + ""
+                                        + bModel.getSelectedAnnotationLayer().getUiName()
+                                        + " at this"
+                                        + " location - stacking is not enabled for this layer.");
+                    }
+                }
                 selection.setAnnotation(new VID(((ChainAdapter) adapter).addSpan(jCas,
                         selection.getBegin(), selection.getEnd(), null, null)));
             }
@@ -474,13 +495,6 @@ public class AnnotationDetailEditorPanel
                         annotationService.createTag(selectedTag, aBModel.getUser());
                     }
                 }
-            }
-
-            // ISSUE - #114 - git hub
-            if (fm.value == null) {
-                fm.value = getFeatureValue(
-                        selectByAddr(jCas.getCas(), aBModel.getSelection().getAnnotation().getId()),
-                        fm.feature);
             }
             adapter.updateFeature(jCas, fm.feature, aBModel.getSelection().getAnnotation().getId(),
                     fm.value);
@@ -519,23 +533,6 @@ public class AnnotationDetailEditorPanel
             onAutoForward(aTarget, aBModel);
         }
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
-    }
-
-    private Serializable getFeatureValue(FeatureStructure aFs, AnnotationFeature aFeature)
-    {
-        Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        switch (aFeature.getType()) {
-        case CAS.TYPE_NAME_STRING:
-            return aFs.getFeatureValueAsString(uimaFeature);
-        case CAS.TYPE_NAME_BOOLEAN:
-            return aFs.getBooleanValue(uimaFeature);
-        case CAS.TYPE_NAME_FLOAT:
-            return aFs.getFloatValue(uimaFeature);
-        case CAS.TYPE_NAME_INTEGER:
-            return aFs.getIntValue(uimaFeature);
-        default:
-            return null;
-        }
     }
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
@@ -1175,7 +1172,7 @@ public class AnnotationDetailEditorPanel
                         actionAnnotate(aTarget, bModel);
                     }
                     catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                        error(ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
                     catch (Exception e) {
@@ -1631,6 +1628,10 @@ public class AnnotationDetailEditorPanel
                     try {
                         actionAnnotate(aTarget, bModel);
                     }
+                    catch(BratAnnotationException e){
+                        error(ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(ExceptionUtils.getRootCause(e),e);
+                    }
                     catch (Exception e) {
                       error(e.getMessage());
                       LOG.error(ExceptionUtils.getRootCause(e),e);
@@ -1671,7 +1672,7 @@ public class AnnotationDetailEditorPanel
                             actionAnnotate(aTarget, bModel);
                         }
                         catch (BratAnnotationException e) {
-                            error(e.getMessage());
+                            error(ExceptionUtils.getRootCauseMessage(e));
                             LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                         }
                         catch (Exception e) {

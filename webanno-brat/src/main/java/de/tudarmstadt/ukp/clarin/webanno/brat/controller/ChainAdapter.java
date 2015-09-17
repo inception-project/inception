@@ -17,9 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectOverlapping;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -254,6 +256,23 @@ public class ChainAdapter
         return BratAjaxCasUtil.getAddr(newLink);
     }
 
+    // get feature Value of existing span annotation
+    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
+            String aLabelValue)
+    {
+        List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+        int begin = tokens.get(0).getBegin();
+        int end = tokens.get(tokens.size() - 1).getEnd();
+        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
+        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
+        
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), linkType, begin, end)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                return SpanAdapter.getFeatureValue(fs, aFeature);
+            }
+        }
+        return null;
+    }
     public int addArc(JCas aJCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, AnnotationFeature aFeature, String aValue)
     {
