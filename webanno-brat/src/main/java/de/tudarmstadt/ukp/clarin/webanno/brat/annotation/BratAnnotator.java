@@ -277,17 +277,8 @@ public class BratAnnotator
                                 }
                             }
                             else {
-                                Selection selection = getModelObject().getSelection();
-
-                                selection.setRelationAnno(false);
-
-                                Offsets offsets = getSpanOffsets(request, jCas, paramId);
-
-                                selection.setAnnotation(paramId);
-                                selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                                aEditor.reloadLayer(aTarget);
-                                aEditor.actionAnnotate(aTarget,
-                                        getModelObject());
+                              throw new BratAnnotationException("Unable to create annotation of type ["+
+                                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
                             }
                         }
                         else {
