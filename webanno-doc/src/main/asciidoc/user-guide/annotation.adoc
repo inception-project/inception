@@ -171,7 +171,11 @@ image::annotation_span_many.jpg[align="center"]
 A chain layer includes both, span and relation annotations, into a single structural layer. Creating
 a span annotation in a chain layer basically creates a chain of length one. Creating a relation
 between two chain elements has different effects depending on whether the *linked list* behavior
-is enabled for the chain layer or not.
+is enabled for the chain layer or not. To enable or disable the *linked list* behaviour, go to *Layers*
+in the *Projects Settings* mode. After choosing *Coreference*, *linked list* behaviour
+is displayed in the checkbox and can either be marked or unmarked.
+
+image::LinkedList_1.PNG[align="center"]
 
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 
@@ -185,7 +189,7 @@ To abort the creation of an annotation, hold *CTRL* when you release the mouse b
 
 | disabled
 | the two spans are in different chains
-| the two chains are merged //FIXME
+| the two chains are merged
 
 | enabled
 | the two spans are already in the same chains
