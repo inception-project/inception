@@ -1952,7 +1952,7 @@ public class AnnotationDetailEditorPanel
         //if no possible values, means didn't satisfy conditions
         if(possibleValues.isEmpty())
         {
-            rulesIndicator.doesntSatisfyRules();
+            rulesIndicator.didntMatchAnyRule();
         }
         List<Tag> returnList = new ArrayList<Tag>();
         // Sorting based on important flag
@@ -1973,7 +1973,7 @@ public class AnnotationDetailEditorPanel
         }
         //If no matching tags found
         if(returnList.isEmpty()){
-            rulesIndicator.noMatchingTagset();
+            rulesIndicator.didntMatchAnyTag();
         }
         return returnList;
     }
