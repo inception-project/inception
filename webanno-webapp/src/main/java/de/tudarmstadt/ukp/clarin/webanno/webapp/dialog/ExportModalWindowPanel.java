@@ -32,12 +32,11 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -54,8 +53,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.WebAnnoCssReference;
  *
  *
  */
-public class ExportModalWindowPage
-    extends WebPage
+public class ExportModalWindowPanel
+    extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
@@ -90,7 +89,6 @@ public class ExportModalWindowPage
                 error("The Class name in the properties is not found " + ":"
                         + ExceptionUtils.getRootCauseMessage(e));
             }
-            add(new FeedbackPanel("feedbackPanel"));
             add(writeableFormatsChoice = new DropDownChoice<String>("writeableFormats", new Model(
                     selectedFormat), writeableFormats));
             writeableFormatsChoice.add(new AjaxFormComponentUpdatingBehavior("onchange")
@@ -227,9 +225,10 @@ public class ExportModalWindowPage
     private ExportDetailsForm exportForm;
     private BratAnnotatorModel bratAnnotatorModel;
 
-    public ExportModalWindowPage(final ModalWindow modalWindow,
+    public ExportModalWindowPanel(String aId, final ModalWindow modalWindow,
             BratAnnotatorModel aBratAnnotatorModel)
     {
+        super(aId);
         this.bratAnnotatorModel = aBratAnnotatorModel;
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);

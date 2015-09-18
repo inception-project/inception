@@ -20,28 +20,32 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.dialog;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.PopupSettings;
 import org.apache.wicket.markup.html.link.ResourceLink;
 import org.apache.wicket.markup.html.list.AbstractItem;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.RepeatingView;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.ResourceStreamResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.WebAnnoCssReference;
 
 /**
  * Modal window to display annotation guidelines
  *
  *
  */
-public class GuidelineModalWindowPage
-    extends WebPage
+public class GuidelineModalWindowPanel
+    extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
@@ -53,33 +57,29 @@ public class GuidelineModalWindowPage
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        public guidelineForm(String id, final ModalWindow modalWindow)
+        public guidelineForm(String id, final ModalWindow modalWindow, final IModel<BratAnnotatorModel> aModel)
         {
             super(id);
-
 
             // Overall progress by Projects
             RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
             add(guidelineRepeater);
+                for (String guidelineFileName : repository.listGuidelines(aModel.getObject().getProject())) {
+                    AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
 
-            for (String guidelineFileName : repository.listGuidelines(project)) {
-                AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
+                    guidelineRepeater.add(item);
 
-                guidelineRepeater.add(item);
+                 // Add a popup window link to display annotation guidelines
+                    PopupSettings popupSettings = new PopupSettings(PopupSettings.RESIZABLE
+                            | PopupSettings.SCROLLBARS).setHeight(500).setWidth(700);
 
-             // Add a popup window link to display annotation guidelines
-                PopupSettings popupSettings = new PopupSettings(PopupSettings.RESIZABLE
-                        | PopupSettings.SCROLLBARS).setHeight(500).setWidth(700);
-
-                IResourceStream stream = new FileResourceStream(repository.getGuideline(project, guidelineFileName));
-                ResourceStreamResource resource = new ResourceStreamResource(stream);
-                ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
-                rlink.setPopupSettings(popupSettings);
-                item.add(new Label("guidelineName", guidelineFileName));
-                item.add(rlink);
-
-            }
-
+                    IResourceStream stream = new FileResourceStream(repository.getGuideline(aModel.getObject().getProject(), guidelineFileName));
+                    ResourceStreamResource resource = new ResourceStreamResource(stream);
+                    ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
+                    rlink.setPopupSettings(popupSettings);
+                    item.add(new Label("guidelineName", guidelineFileName));
+                    item.add(rlink);
+                }
             add(new AjaxLink<Void>("close")
             {
                 private static final long serialVersionUID = 7202600912406469768L;
@@ -92,14 +92,22 @@ public class GuidelineModalWindowPage
             });
         }
     }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // Loading WebAnno CSS because this doesn't inherit from ApplicationPageBase
+        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
+    }
 
     private guidelineForm guidelineForm;
-    private Project project;
 
-    public GuidelineModalWindowPage(final ModalWindow modalWindow, Project aProject)
+    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<BratAnnotatorModel> aModel)
     {
-        this.project = aProject;
-        guidelineForm = new guidelineForm("guidelineForm", modalWindow);
+        super(aId);
+        guidelineForm = new guidelineForm("guidelineForm", modalWindow, aModel);
         add(guidelineForm);
     }
 
