@@ -45,6 +45,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
@@ -299,6 +300,86 @@ public class CasDiff2Test
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
+    @Test
+    public void singleNoDifferencesWithAdditionalCas1Test()
+        throws Exception
+    {
+        JCas user1 = JCasFactory.createJCas();
+        user1.setDocumentText("test");
+
+        JCas user2 = JCasFactory.createJCas();
+        user2.setDocumentText("test");
+        
+        JCas user3 = JCasFactory.createJCas();
+        user3.setDocumentText("test");
+        POS pos3 = new POS(user3, 0, 4);
+        pos3.setPosValue("test");
+        pos3.addToIndexes();
+        
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1));
+        casByUser.put("user2", asList(user2));
+        casByUser.put("user3", asList(user3));
+        
+        List<String> entryTypes = asList(POS.class.getName());
+
+        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS);
+
+        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+
+        result.print(System.out);
+        
+        casByUser.remove("user3");
+        
+        AgreementResult agreement = AgreementUtils.getAgreement(
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
+                entryTypes.get(0), "PosValue", casByUser);
+        
+        assertEquals(1, agreement.getTotalSetCount());
+        assertEquals(1, agreement.getIrrelevantSets().size());
+        assertEquals(0, agreement.getRelevantSetCount());
+    }
+
+    @Test
+    public void singleNoDifferencesWithAdditionalCas2Test()
+        throws Exception
+    {
+        JCas user1 = JCasFactory.createJCas();
+        user1.setDocumentText("test");
+
+        JCas user2 = JCasFactory.createJCas();
+        user2.setDocumentText("test");
+        
+        JCas user3 = JCasFactory.createJCas();
+        user3.setDocumentText("test");
+        POS pos3 = new POS(user3, 0, 4);
+        pos3.addToIndexes();
+        
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1));
+        casByUser.put("user2", asList(user2));
+        casByUser.put("user3", asList(user3));
+        
+        List<String> entryTypes = asList(POS.class.getName());
+
+        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS);
+
+        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+
+        result.print(System.out);
+        
+        casByUser.remove("user3");
+        
+        AgreementResult agreement = AgreementUtils.getAgreement(
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
+                entryTypes.get(0), "PosValue", casByUser);
+        
+        assertEquals(1, agreement.getTotalSetCount());
+        assertEquals(1, agreement.getIrrelevantSets().size());
+        assertEquals(0, agreement.getRelevantSetCount());
+    }
     @Test
     public void someDifferencesTest()
         throws Exception
