@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -466,9 +466,9 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aAddress)
+    public void delete(JCas aJCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
     }
 

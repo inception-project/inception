@@ -673,14 +673,8 @@ public class AnnotationDetailEditorPanel
             // Do nothing ;)
         }
 
-        // BEGIN HACK - Issue 933
-        if (adapter instanceof ChainAdapter) {
-            ((ChainAdapter) adapter).setArc(false);
-        }
-        // END HACK - Issue 933
-
         // Actually delete annotation
-        adapter.delete(jCas, aBModel.getSelection().getAnnotation().getId());
+        adapter.delete(jCas, aBModel.getSelection().getAnnotation());
 
         // Store CAS again
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
@@ -1869,7 +1863,9 @@ public class AnnotationDetailEditorPanel
                 }
                 if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
                     if (bModel.getSelection().isRelationAnno()) {
-                        if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                        if (feature.getLayer().isLinkedListBehavior()
+                                && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
+                                        .getName())) {
                             featureModels.add(new FeatureModel(feature,
                                     (Serializable) BratAjaxCasUtil.getFeature(aFS, feature)));
                         }
@@ -1917,9 +1913,10 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
                 if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                    if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
-                        featureModels.add(new FeatureModel(feature,
-                                bModel.getRememberedArcFeatures().get(feature)));
+                    if (feature.getLayer().isLinkedListBehavior()
+                            && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                        featureModels.add(new FeatureModel(feature, bModel
+                                .getRememberedArcFeatures().get(feature)));
                     }
                 }
                 else {
