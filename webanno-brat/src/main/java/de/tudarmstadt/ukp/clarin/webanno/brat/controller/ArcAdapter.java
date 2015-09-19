@@ -472,52 +472,8 @@ public class ArcAdapter
         aJCas.removeFsFromIndexes(fs);
     }
 
-    @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS afs, int aBegin, int aEnd)
-    {
-        Type type = getType(aJCas.getCas(), annotationTypeName);
-        Feature targetFeature = type.getFeatureByBaseName(targetFeatureName);
-        Feature sourceFeature = type.getFeatureByBaseName(sourceFeatureName);
-
-        Type spanType = getType(aJCas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
-
-        Set<AnnotationFS> fsToDelete = new HashSet<AnnotationFS>();
-
-        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-
-            if (attachFeatureName != null) {
-                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature).getFeatureValue(
-                        arcSpanFeature);
-                if (getAddr(afs) == getAddr(dependentFs)) {
-                    fsToDelete.add(fs);
-                }
-                FeatureStructure governorFs = fs.getFeatureValue(sourceFeature).getFeatureValue(
-                        arcSpanFeature);
-                if (getAddr(afs) == getAddr(governorFs)) {
-                    fsToDelete.add(fs);
-                }
-            }
-            else {
-                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature);
-                if (getAddr(afs) == getAddr(dependentFs)) {
-                    fsToDelete.add(fs);
-                }
-                FeatureStructure governorFs = fs.getFeatureValue(sourceFeature);
-                if (getAddr(afs) == getAddr(governorFs)) {
-                    fsToDelete.add(fs);
-                }
-            }
-        }
-        for (AnnotationFS fs : fsToDelete) {
-            aJCas.removeFsFromIndexes(fs);
-        }
-    }
-
     /**
      * Argument lists for the arc annotation
-     *
-     * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {

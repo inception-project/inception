@@ -537,6 +537,7 @@ public class AnnotationDetailEditorPanel
         }
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
     }
+    
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         BratAnnotationException
@@ -938,19 +939,6 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-    }
-
-    private static boolean isSuppressedFeature(BratAnnotatorModel aBModel,
-            AnnotationFeature aFeature)
-    {
-        String featName = aFeature.getName();
-
-        if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
-            return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName)
-                    || WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
-        }
-
-        return false;
     }
 
     protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)

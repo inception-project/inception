@@ -117,12 +117,6 @@ public interface TypeAdapter
      * @param aVid
      *            the VID of the object to be deleted.
      */
-
-    /**
-     * @deprecated use {@link #delete(JCas, int)} instead.
-     */
-    @Deprecated
-    void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
     void delete(JCas aJCas, VID aVid);
 
     AnnotationLayer getLayer();

@@ -593,12 +593,6 @@ public class SpanAdapter
     }
 
     @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
-    {
-
-    }
-
-    @Override
     public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
         Type type = getType(aJcas.getCas(), getAnnotationTypeName());

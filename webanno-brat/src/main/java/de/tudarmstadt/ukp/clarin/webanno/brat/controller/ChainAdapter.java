@@ -508,13 +508,6 @@ public class ChainAdapter
     }
 
     @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
-    {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
     {
         return new ArrayList<String>();
