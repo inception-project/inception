@@ -204,6 +204,7 @@ public class ProjectTagSetsPanel
                         tagSetDetailForm.setModelObject(aNewSelection);
                         tagSetDetailForm.setVisible(true);
                         tagSelectionForm.setVisible(true);
+                        tagDetailForm.setModelObject(new Tag());
                         tagDetailForm.setVisible(true);
                         TagSetSelectionForm.this.setVisible(true);
 
