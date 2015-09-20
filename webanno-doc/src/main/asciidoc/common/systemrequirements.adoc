@@ -27,17 +27,17 @@
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 7 or higher
+| version 8 or higher
 |===
 
 .Requirements run a WebAnno server
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 7 or higher
+| version 8 or higher
 
 | Apache Tomcat
-| version 6 or higher
+| version 7 or higher
 
 | MySQL Server
 | version 5 or higher

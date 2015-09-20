@@ -45,21 +45,17 @@ mysql> GRANT ALL PRIVILEGES ON webanno.* TO 'webanno'@'localhost';
 
 === Dedicated Tomcat instance
 
-   * Install Tomcat. 
-----
-$ aptitude install tomcat6
-----
    * Install package to install user-instances of Tomcat. 
 ----
-$ aptitude install tomcat6-user
+$ aptitude install tomcat7-user
 ----
    * Create new instance
 ----
 $ cd /opt
-$ tomcat6-instance-create -p 18080 -c 18005 webanno
+$ tomcat7-instance-create -p 18080 -c 18005 webanno
 $ chown -R www-data /opt/webanno
 ----
-Now we have the /opt/webanno/ apache tomcat installation. You will put the <font color="red"> *webanno.war*</font>  file in the /opt/webanno/webapps/ folder. If you get the war file in different name, such as Webanno-1.1-beta-10.war, *PLEASE RE-NAME IT TO* <font color="red">*webanno.war*</font>
+Now we have the /opt/webanno/ apache tomcat installation. You will put the `webanno.war` file in the `/opt/webanno/webapps` folder. If you get the war file in different name, such as `webanno-webapp-3.0.war`, *PLEASE RE-NAME IT TO* `webanno.war`
    * Configure the startup script. Edit `/etc/init.d/webanno` and add the following contents:
 ----
 #!/bin/sh
@@ -94,7 +90,7 @@ $ update-rc.d webanno defaults
 ----
 $ cp webanno.war /opt/webanno/webapps/webanno.war
 ----
-   * Create WebAnno home folder. This is the directory wher webanno settings files and projects (Serialized Cases, Source documents...) are stored
+   * Create WebAnno home folder. This is the directory where webanno settings files and projects (Serialized Cases, Source documents...) are stored
 ----
 $ mkdir /srv/webanno
 ----
