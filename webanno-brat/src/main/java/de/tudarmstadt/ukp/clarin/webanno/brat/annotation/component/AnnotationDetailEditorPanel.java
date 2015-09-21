@@ -257,7 +257,9 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     setVisible(bModel.getSelection().isRelationAnno()
-                            && bModel.getSelection().getAnnotation().isSet());
+                            && bModel.getSelection().getAnnotation().isSet()
+                            && bModel.getSelectedAnnotationLayer().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE));
 
                     // Avoid reversing in read-only layers
                     setEnabled(bModel.getSelectedAnnotationLayer() != null
@@ -759,7 +761,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
-    private void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public  void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         aBModel.getSelection().clear();
@@ -1982,23 +1984,34 @@ public class AnnotationDetailEditorPanel
                 {
                     if (!bModel.getSelectedAnnotationLayer().equals(getModelObject())
                             && bModel.getSelection().getAnnotation().isSet()) {
-                        deleteModal.setContent(new YesNoDeleteModalPanel(deleteModal.getContentId(),
-                                bModel, deleteModal, AnnotationDetailEditorPanel.this,
-                                getModelObject()));
-                        
-                        deleteModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                        {
-                            private static final long serialVersionUID = 4364820331676014559L;
-
-                            @Override
-                            public void onClose(AjaxRequestTarget target)
-                            {
-                               System.out.println(bModel.getDefaultAnnotationLayer().getUiName());
-                               target.add(annotationFeatureForm);
-                               
+                        if (bModel.getSelection().isRelationAnno()) {
+                            try {
+                                actionClear(aTarget, bModel);
                             }
-                        });
-                        deleteModal.show(aTarget);
+                            catch (UIMAException | ClassNotFoundException | IOException
+                                    | BratAnnotationException e) {
+                                error(e.getMessage());
+                            }
+                        }
+                        else {
+                            deleteModal.setContent(new YesNoDeleteModalPanel(
+                                    deleteModal.getContentId(), bModel, deleteModal,
+                                    AnnotationDetailEditorPanel.this, getModelObject()));
+
+                            deleteModal
+                                    .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                            {
+                                private static final long serialVersionUID = 4364820331676014559L;
+
+                                @Override
+                                public void onClose(AjaxRequestTarget target)
+                                {
+                                    target.add(annotationFeatureForm);
+
+                                }
+                            });
+                            deleteModal.show(aTarget);
+                        }
                     }
                     else {
                         bModel.setSelectedAnnotationLayer(getModelObject());
@@ -2006,7 +2019,7 @@ public class AnnotationDetailEditorPanel
                         aTarget.add(selectedAnnotationLayer);
                         populateFeatures(null);
                         aTarget.add(annotationFeatureForm);
-                    }                   
+                    }
                 }
             });
         }
