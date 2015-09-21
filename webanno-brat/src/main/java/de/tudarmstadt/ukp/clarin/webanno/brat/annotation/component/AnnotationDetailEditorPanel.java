@@ -257,7 +257,9 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     setVisible(bModel.getSelection().isRelationAnno()
-                            && bModel.getSelection().getAnnotation().isSet());
+                            && bModel.getSelection().getAnnotation().isSet()
+                            && bModel.getSelectedAnnotationLayer().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE));
 
                     // Avoid reversing in read-only layers
                     setEnabled(bModel.getSelectedAnnotationLayer() != null
