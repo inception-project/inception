@@ -156,8 +156,6 @@ public class AnnotationDetailEditorPanel
             + "? $(this).text() : 'no title')+'</div>"
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
-    //For showing the status of Constraints rules kicking in.
-    private RulesIndicator indicator = new RulesIndicator();
 
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
@@ -1289,6 +1287,8 @@ public class AnnotationDetailEditorPanel
         @SuppressWarnings("rawtypes")
         private final AbstractTextComponent field;
         private boolean isDrop;
+        //For showing the status of Constraints rules kicking in.
+        private RulesIndicator indicator = new RulesIndicator();
 
         public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
                 FeatureModel aModel)
@@ -1300,16 +1300,18 @@ public class AnnotationDetailEditorPanel
                 featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
             }
             add(new Label("feature", featureLabelText));
-
+            indicator.reset(); //reset the indicator
             if (aModel.feature.getTagset() != null) {
 
                 List<Tag> tagset = null;
                 BratAnnotatorModel model = bModel;
                 // verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
+//                    indicator.setRulesExist(true);
                     tagset = populateTagsBasedOnRules(model, aModel);
                 }
                 else {
+//                    indicator.setRulesExist(false);
                     // Earlier behavior,
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
@@ -1319,12 +1321,56 @@ public class AnnotationDetailEditorPanel
 
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", functionForTooltip);
-                field.add(new TooltipBehavior(options));
+                //Avoiding leak, instead of setting on document level, setting it to specific component
+                field.add(new TooltipBehavior("#value", options));
                 isDrop = true;
             }
             else {
                 field = new TextField<String>("value");
             }
+            
+          //Shows whether constraints are triggered or not
+            //also shows state of constraints use.
+            Component constraintsInUseIndicator = new WebMarkupContainer("textIndicator"){
+
+                private static final long serialVersionUID = 4346767114287766710L;
+
+                /* (non-Javadoc)
+                 * @see org.apache.wicket.Component#isVisible()
+                 */
+                @Override
+                public boolean isVisible()
+                {
+                    return indicator.areThereRules();
+                }
+            }.add(new AttributeAppender("class", new Model<String>(){
+                //adds symbol to indicator
+                private static final long serialVersionUID = -7683195283137223296L;
+
+                @Override
+                public String getObject()
+                {
+                    StringBuffer path = new StringBuffer();
+                    path.append(indicator.getStatusSymbol());
+                    return path.toString();
+                }
+            }))
+              .add(new AttributeAppender("style", new Model<String>(){
+                  //adds color to indicator
+                  
+                private static final long serialVersionUID = -5255873539738210137L;
+
+                @Override
+                public String getObject()
+                {
+                    StringBuffer path = new StringBuffer();
+                    path.append("; color: ");
+                    path.append(indicator.getStatusColor());
+                    return path.toString();
+                }
+            }));
+            add(constraintsInUseIndicator);
+
             add(field);
         }
 
@@ -1358,6 +1404,7 @@ public class AnnotationDetailEditorPanel
                         .getAnnotation().getId());
 
                 Evaluator evaluator = new ValuesGenerator();
+                indicator.setRulesExist(evaluator.isThisAffectedByConstraintRules(featureStructure, restrictionFeaturePath, model.getConstraints()));
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
@@ -1397,6 +1444,8 @@ public class AnnotationDetailEditorPanel
         private static final long serialVersionUID = 7469241620229001983L;
 
         private WebMarkupContainer content;
+        //For showing the status of Constraints rules kicking in.
+        private RulesIndicator indicator = new RulesIndicator();
 
         @SuppressWarnings("rawtypes")
         private final AbstractTextComponent newRole;
@@ -1414,7 +1463,7 @@ public class AnnotationDetailEditorPanel
             }
             add(new Label("feature", featureLabelText));
 
-            // Most of the content is inside this container such that we can refresh it independenly
+            // Most of the content is inside this container such that we can refresh it independently
             // from the rest of the form
             content = new WebMarkupContainer("content");
             content.setOutputMarkupId(true);
@@ -1500,11 +1549,11 @@ public class AnnotationDetailEditorPanel
                 //reset the indicator
                 indicator.reset();
                 if (bModel.getConstraints() != null && bModel.getSelection().getAnnotation().isSet()) {
-                    indicator.setRulesExist(true); //Constraint rules exist!
+//                    indicator.setRulesExist(true); //Constraint rules exist!
                     tagset = addTagsBasedOnRules(bModel, aModel);
                 }
                 else {
-                    indicator.setRulesExist(false); //No constraint rules.
+//                    indicator.setRulesExist(false); //No constraint rules.
                     // add tagsets only, earlier behavior
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
@@ -1549,9 +1598,9 @@ public class AnnotationDetailEditorPanel
                     }
                 });
             }
-          //Shows whether constraints are triggered or not
+            //Shows whether constraints are triggered or not
             //also shows state of constraints use.
-            Component constraintsInUseIndicator = new WebMarkupContainer("indicator"){
+            Component constraintsInUseIndicator = new WebMarkupContainer("linkIndicator"){
 
                 private static final long serialVersionUID = 4346767114287766710L;
 
@@ -1736,7 +1785,7 @@ public class AnnotationDetailEditorPanel
                         .getAnnotation().getId());
 
                 Evaluator evaluator = new ValuesGenerator();
-
+                indicator.setRulesExist(evaluator.isThisAffectedByConstraintRules(featureStructure, restrictionFeaturePath, model.getConstraints()));
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
