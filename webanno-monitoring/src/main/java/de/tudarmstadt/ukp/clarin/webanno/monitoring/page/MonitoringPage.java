@@ -768,10 +768,16 @@ public class MonitoringPage
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     updateAgreementTable(aTarget, false);
-                    // Adding this as well because when choosing a different measure, it may affect
-                    // the ability to exclude incomplete conifgurations.
-                    aTarget.add(excludeIncomplete);
-                    aTarget.add(linkCompareBehaviorDropDown);
+//                    // Adding this as well because when choosing a different measure, it may affect
+//                    // the ability to exclude incomplete configurations.
+//                    aTarget.add(excludeIncomplete);
+//                    aTarget.add(linkCompareBehaviorDropDown);
+                    
+                    // #1791 - for some reason the updateAgreementTableBehavior does not work
+                    // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
+                    // control its visibility in onConfigure()
+                    // as a workaround, we currently just re-render the whole form
+                    aTarget.add(agreementForm);
                 }
             });
         }
