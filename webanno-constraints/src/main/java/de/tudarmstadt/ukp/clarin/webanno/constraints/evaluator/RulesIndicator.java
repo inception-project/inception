@@ -36,7 +36,7 @@ public class RulesIndicator
         if(status==1){
             return "red";
         }else if(status==2){
-            return "yellow";
+            return "orange";
         }else if(status==3){
             return "green";
         }else{
@@ -90,7 +90,7 @@ public class RulesIndicator
     {
         if(status==1){ //red
             return "fa fa-exclamation-circle";
-        }else if(status==2){ //yellow
+        }else if(status==2){ //orange
             return "fa fa-info-circle";
         }else if(status==3){ //green
             return "fa fa-check-circle";
