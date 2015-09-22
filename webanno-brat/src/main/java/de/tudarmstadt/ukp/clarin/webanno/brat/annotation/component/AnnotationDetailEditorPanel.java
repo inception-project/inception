@@ -2007,7 +2007,10 @@ public class AnnotationDetailEditorPanel
                     // HACK BEGIN
                     tag.setReordered(true);
                     // HACK END
-                    returnList.add(tag);
+                    //Avoid duplicate entries
+                    if(!returnList.contains(tag)){ 
+                        returnList.add(tag); 
+                    }
                 }
             }
         }
