@@ -1704,9 +1704,11 @@ public class AnnotationDetailEditorPanel
                     LinkWithRoleModel m = new LinkWithRoleModel();
                     m = links.get(model.getArmedSlot());
                     m.role = (String) newRole.getModelObject();
-                    links.remove(model.getArmedSlot());
-                    model.clearArmedSlot();
-                    links.add(m);
+//                    int index = model.getArmedSlot(); //retain index
+//                    links.remove(model.getArmedSlot());
+//                    model.clearArmedSlot();
+//                    links.add(m);
+                    links.set(model.getArmedSlot(), m); //avoid reordering
                     aTarget.add(content);
                     try {
                         actionAnnotate(aTarget, bModel);
