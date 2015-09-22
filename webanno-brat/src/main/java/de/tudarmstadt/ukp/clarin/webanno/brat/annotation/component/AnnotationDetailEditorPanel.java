@@ -1319,7 +1319,8 @@ public class AnnotationDetailEditorPanel
 
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", functionForTooltip);
-                field.add(new TooltipBehavior(options));
+                //Avoiding leak, instead of setting on document level, setting it to specific component
+                field.add(new TooltipBehavior("#value", options));
                 isDrop = true;
             }
             else {
