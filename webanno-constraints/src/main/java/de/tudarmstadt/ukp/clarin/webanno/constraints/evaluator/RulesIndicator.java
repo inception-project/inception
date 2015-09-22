@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import java.io.Serializable;
 /***
- * Class for indicating whether Constraints affected this feature or not.
+ * Class for indicating whether Constraints affected a feature or not.
  * https://github.com/webanno/webanno/issues/46
  * 
  *
@@ -30,7 +30,7 @@ public class RulesIndicator
 
     private static final long serialVersionUID = -5606299056181945134L;
     private int status= 0;
-    private boolean areThereRules;
+    private boolean affected;
     
     public String getStatusColor(){
         if(status==1){
@@ -44,25 +44,25 @@ public class RulesIndicator
         }
     }
     
-    public boolean areThereRules(){
-        return areThereRules;
+    public boolean isAffected(){
+        return affected;
     }
     public void reset()
     {
         status=0;
-        areThereRules=false;
+        affected=false;
         
     }
 
-    //Sets if rules are there or not.
-    public void setRulesExist(boolean existence){
-        areThereRules=existence;
+    //Sets if rules can affect or not.
+    public void setAffected(boolean existence){
+        affected=existence;
     }
     
     // if a feature is affected by a constraint but there is no tagset defined on
     // the feature. In such a case the constraints cannot reorder tags and have no effect.
     public void didntMatchAnyTag(){
-        if(areThereRules && status!=2 && status!=3){
+        if(affected && status!=2 && status!=3){
             status=1;
         }
     }
@@ -72,7 +72,7 @@ public class RulesIndicator
     // constraint. However, if the actual lemma annotated in the document is walk and there is
     // no rule that covers walk, then we should also indicate that.
     public void didntMatchAnyRule(){
-        if(areThereRules && status!=3 && status!=1){
+        if(affected && status!=3 && status!=1){
             status =2;
         }
     }

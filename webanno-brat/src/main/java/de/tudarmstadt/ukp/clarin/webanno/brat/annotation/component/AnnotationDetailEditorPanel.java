@@ -1341,7 +1341,7 @@ public class AnnotationDetailEditorPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return indicator.areThereRules();
+                    return indicator.isAffected();
                 }
             }.add(new AttributeAppender("class", new Model<String>(){
                 //adds symbol to indicator
@@ -1404,7 +1404,9 @@ public class AnnotationDetailEditorPanel
                         .getAnnotation().getId());
 
                 Evaluator evaluator = new ValuesGenerator();
-                indicator.setRulesExist(evaluator.isThisAffectedByConstraintRules(featureStructure, restrictionFeaturePath, model.getConstraints()));
+                //Only show indicator if this feature can be affected by Constraint rules!
+                indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
+                        restrictionFeaturePath, model.getConstraints()));
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
@@ -1610,7 +1612,7 @@ public class AnnotationDetailEditorPanel
                 @Override
                 public boolean isVisible()
                 {
-                    return indicator.areThereRules();
+                    return indicator.isAffected();
                 }
             }.add(new AttributeAppender("class", new Model<String>(){
                 //adds symbol to indicator
@@ -1785,7 +1787,9 @@ public class AnnotationDetailEditorPanel
                         .getAnnotation().getId());
 
                 Evaluator evaluator = new ValuesGenerator();
-                indicator.setRulesExist(evaluator.isThisAffectedByConstraintRules(featureStructure, restrictionFeaturePath, model.getConstraints()));
+                //Only show indicator if this feature can be affected by Constraint rules!
+                indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
+                        restrictionFeaturePath, model.getConstraints()));
                 List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
                         featureStructure, restrictionFeaturePath, model.getConstraints());
 
