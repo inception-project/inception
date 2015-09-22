@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -192,8 +193,8 @@ public class ChainAdapter
                     Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin,
                             linkFs.getEnd() - windowBegin);
 
-                    aResponse.addEntity(new Entity(BratAjaxCasUtil.getAddr(linkFs), bratTypeName,
-                            offsets, bratLabelText, color));
+                    VID vid = new VID(BratAjaxCasUtil.getAddr(linkFs), VID.NONE, VID.NONE, VID.NONE);
+                    aResponse.addEntity(new Entity(vid, bratTypeName, offsets, bratLabelText, color));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -216,8 +217,9 @@ public class ChainAdapter
                             new Argument("Arg1", BratAjaxCasUtil.getAddr(prevLinkFs)),
                             new Argument("Arg2", BratAjaxCasUtil.getAddr(linkFs)));
 
-                    aResponse.addRelation(new Relation(BratAjaxCasUtil.getAddr(prevLinkFs),
-                            bratTypeName, argumentList, bratLabelText, color));
+                    VID vid = new VID(BratAjaxCasUtil.getAddr(prevLinkFs), 1, VID.NONE, VID.NONE);
+                    aResponse.addRelation(new Relation(vid, bratTypeName, argumentList,
+                            bratLabelText, color));
                 }
 
 //                if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
@@ -374,19 +376,17 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aAddress)
+    public void delete(JCas aJCas, VID aVid)
     {
-        // BEGIN HACK - ISSUE 933
-        if (isArc) {
-            deleteArc(aJCas, aAddress);
+        if (aVid.getSubId() == VID.NONE) {
+            deleteSpan(aJCas, aVid.getId());
         }
         else {
-            deleteSpan(aJCas, aAddress);
+            deleteArc(aJCas, aVid.getId());
         }
-        // END HACK - ISSUE 933
     }
 
-    public void deleteArc(JCas aJCas, int aAddress)
+    private void deleteArc(JCas aJCas, int aAddress)
     {
         AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
@@ -399,7 +399,7 @@ public class ChainAdapter
         setNextLink(linkToDelete, null);
     }
 
-    public void deleteSpan(JCas aJCas, int aAddress)
+    private void deleteSpan(JCas aJCas, int aAddress)
     {
         Type chainType = getAnnotationType(aJCas.getCas());
 
@@ -505,13 +505,6 @@ public class ChainAdapter
     public String getAttachFeatureName()
     {
         return null;
-    }
-
-    @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
-    {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -687,16 +680,6 @@ public class ChainAdapter
         return (AnnotationFS) aLink.getFeatureValue(aLink.getType().getFeatureByBaseName(
                 linkNextFeatureName));
     }
-
-
-    // BEGIN HACK - ISSUE 933
-    private boolean isArc = false;
-
-    public void setArc(boolean aIsArc)
-    {
-        isArc = aIsArc;
-    }
-    // END HACK - ISSUE 933
 
     /**
      * Controls whether the chain behaves like a linked list or like a set. When operating as a

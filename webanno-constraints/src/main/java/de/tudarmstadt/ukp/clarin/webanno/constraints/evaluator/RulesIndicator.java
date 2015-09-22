@@ -61,7 +61,7 @@ public class RulesIndicator
     
     // if a feature is affected by a constraint but there is no tagset defined on
     // the feature. In such a case the constraints cannot reorder tags and have no effect.
-    public void noMatchingTagset(){
+    public void didntMatchAnyTag(){
         if(areThereRules && status!=2 && status!=3){
             status=1;
         }
@@ -71,7 +71,7 @@ public class RulesIndicator
     // value, e.g. @Lemma.value = "go" -> aFrame = "going". Here aFrame is affected by a
     // constraint. However, if the actual lemma annotated in the document is walk and there is
     // no rule that covers walk, then we should also indicate that.
-    public void doesntSatisfyRules(){
+    public void didntMatchAnyRule(){
         if(areThereRules && status!=3 && status!=1){
             status =2;
         }

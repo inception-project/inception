@@ -210,6 +210,9 @@ public class AgreementUtils
         JCas someCas = findSomeCas(aCasMap);
         if (someCas == null) {
             // Well... there is NOTHING here!
+            // All positions are irrelevant
+            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
+            
             return new AgreementResult(aType, aFeature, aDiff, study, users, completeSets,
                     irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
@@ -219,6 +222,9 @@ public class AgreementUtils
         // This happens in our testcases when we feed the process with uninitialized CASes.
         // We should just do the right thing here which is: do nothing
         if (ts.getType(aType) == null) {
+            // All positions are irrelevant
+            aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
+            
             return new AgreementResult(aType, aFeature, aDiff, study, users, completeSets,
                     irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
@@ -257,6 +263,12 @@ public class AgreementUtils
             // Check if subposition is for the feature we are looking for or for a different 
             // feature
             if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
+                irrelevantSets.add(cfgSet);
+                continue nextPosition;
+            }
+            
+            // If non of the current users has made any annotation at this position, then skip it
+            if (users.stream().filter(u -> cfgSet.getCasGroupIds().contains(u)).count() == 0) {
                 irrelevantSets.add(cfgSet);
                 continue nextPosition;
             }

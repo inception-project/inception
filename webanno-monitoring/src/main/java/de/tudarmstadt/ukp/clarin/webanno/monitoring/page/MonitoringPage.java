@@ -109,7 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -622,7 +622,23 @@ public class MonitoringPage
 
             add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
-                    new EnumChoiceRenderer<LinkCompareBehavior>(MonitoringPage.this)));
+                    new EnumChoiceRenderer<LinkCompareBehavior>(MonitoringPage.this)) {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    AgreementFormModel model = AgreementForm.this.getModelObject();
+                    if (model != null && model.feature != null) {
+                        setVisible(!LinkMode.NONE.equals(model.feature.getLinkMode()));
+                    }
+                    else {
+                        setVisible(false);
+                    }
+                }
+            });
+            linkCompareBehaviorDropDown.setOutputMarkupId(true);
+            linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
             add(exportFormat = new DropDownChoice<AgreementReportExportFormat>(
@@ -755,6 +771,7 @@ public class MonitoringPage
                     // Adding this as well because when choosing a different measure, it may affect
                     // the ability to exclude incomplete conifgurations.
                     aTarget.add(excludeIncomplete);
+                    aTarget.add(linkCompareBehaviorDropDown);
                 }
             });
         }

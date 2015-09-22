@@ -22,10 +22,10 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -114,16 +114,10 @@ public interface TypeAdapter
      *
      * @param aJCas
      *            the CAS object
-     * @param aAddress
-     *            the low-level address of the span annotation.
+     * @param aVid
+     *            the VID of the object to be deleted.
      */
-    void delete(JCas aJCas, int aAddress);
-
-    /**
-     * @deprecated use {@link #delete(JCas, int)} instead.
-     */
-    @Deprecated
-    void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd);
+    void delete(JCas aJCas, VID aVid);
 
     AnnotationLayer getLayer();
     

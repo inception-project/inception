@@ -17,7 +17,6 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component;
 
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -25,7 +24,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
@@ -53,18 +52,7 @@ public class GuidelineModalPanel
         guidelineModal.setWidthUnit("px");
         guidelineModal.setHeightUnit("px");
         guidelineModal.setTitle("Open Annotation Guideline, in separate window");
-
-        guidelineModal.setPageCreator(new ModalWindow.PageCreator()
-        {
-            private static final long serialVersionUID = -2827824968207807739L;
-
-            @Override
-            public Page createPage()
-            {
-                return new GuidelineModalWindowPage(guidelineModal, aModel.getObject().getProject());
-            }
-
-        });
+       
         add(new AjaxLink<Void>("showGuidelineModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
@@ -72,6 +60,9 @@ public class GuidelineModalPanel
             @Override
             public void onClick(AjaxRequestTarget target)
             {
+                guidelineModal.setContent(new GuidelineModalWindowPanel(guidelineModal.getContentId(),
+                        guidelineModal, aModel));
+
                 guidelineModal.show(target);
 
             }

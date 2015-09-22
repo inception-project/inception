@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -466,58 +466,14 @@ public class ArcAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aAddress)
+    public void delete(JCas aJCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
-    }
-
-    @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS afs, int aBegin, int aEnd)
-    {
-        Type type = getType(aJCas.getCas(), annotationTypeName);
-        Feature targetFeature = type.getFeatureByBaseName(targetFeatureName);
-        Feature sourceFeature = type.getFeatureByBaseName(sourceFeatureName);
-
-        Type spanType = getType(aJCas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
-
-        Set<AnnotationFS> fsToDelete = new HashSet<AnnotationFS>();
-
-        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-
-            if (attachFeatureName != null) {
-                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature).getFeatureValue(
-                        arcSpanFeature);
-                if (getAddr(afs) == getAddr(dependentFs)) {
-                    fsToDelete.add(fs);
-                }
-                FeatureStructure governorFs = fs.getFeatureValue(sourceFeature).getFeatureValue(
-                        arcSpanFeature);
-                if (getAddr(afs) == getAddr(governorFs)) {
-                    fsToDelete.add(fs);
-                }
-            }
-            else {
-                FeatureStructure dependentFs = fs.getFeatureValue(targetFeature);
-                if (getAddr(afs) == getAddr(dependentFs)) {
-                    fsToDelete.add(fs);
-                }
-                FeatureStructure governorFs = fs.getFeatureValue(sourceFeature);
-                if (getAddr(afs) == getAddr(governorFs)) {
-                    fsToDelete.add(fs);
-                }
-            }
-        }
-        for (AnnotationFS fs : fsToDelete) {
-            aJCas.removeFsFromIndexes(fs);
-        }
     }
 
     /**
      * Argument lists for the arc annotation
-     *
-     * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {

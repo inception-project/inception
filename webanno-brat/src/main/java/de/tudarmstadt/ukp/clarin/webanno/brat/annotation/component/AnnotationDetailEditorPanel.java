@@ -257,7 +257,9 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     setVisible(bModel.getSelection().isRelationAnno()
-                            && bModel.getSelection().getAnnotation().isSet());
+                            && bModel.getSelection().getAnnotation().isSet()
+                            && bModel.getSelectedAnnotationLayer().getType()
+                                    .equals(WebAnnoConst.RELATION_TYPE));
 
                     // Avoid reversing in read-only layers
                     setEnabled(bModel.getSelectedAnnotationLayer() != null
@@ -537,6 +539,7 @@ public class AnnotationDetailEditorPanel
         }
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
     }
+    
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         BratAnnotationException
@@ -673,14 +676,8 @@ public class AnnotationDetailEditorPanel
             // Do nothing ;)
         }
 
-        // BEGIN HACK - Issue 933
-        if (adapter instanceof ChainAdapter) {
-            ((ChainAdapter) adapter).setArc(false);
-        }
-        // END HACK - Issue 933
-
         // Actually delete annotation
-        adapter.delete(jCas, aBModel.getSelection().getAnnotation().getId());
+        adapter.delete(jCas, aBModel.getSelection().getAnnotation());
 
         // Store CAS again
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
@@ -764,7 +761,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
-    private void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public  void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         aBModel.getSelection().clear();
@@ -944,19 +941,6 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-    }
-
-    private static boolean isSuppressedFeature(BratAnnotatorModel aBModel,
-            AnnotationFeature aFeature)
-    {
-        String featName = aFeature.getName();
-
-        if (WebAnnoConst.CHAIN_TYPE.equals(aFeature.getLayer().getType())) {
-            return WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(featName)
-                    || WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(featName);
-        }
-
-        return false;
     }
 
     protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -1869,7 +1853,9 @@ public class AnnotationDetailEditorPanel
                 }
                 if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
                     if (bModel.getSelection().isRelationAnno()) {
-                        if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                        if (feature.getLayer().isLinkedListBehavior()
+                                && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
+                                        .getName())) {
                             featureModels.add(new FeatureModel(feature,
                                     (Serializable) BratAjaxCasUtil.getFeature(aFS, feature)));
                         }
@@ -1917,9 +1903,10 @@ public class AnnotationDetailEditorPanel
                     continue;
                 }
                 if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                    if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
-                        featureModels.add(new FeatureModel(feature,
-                                bModel.getRememberedArcFeatures().get(feature)));
+                    if (feature.getLayer().isLinkedListBehavior()
+                            && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+                        featureModels.add(new FeatureModel(feature, bModel
+                                .getRememberedArcFeatures().get(feature)));
                     }
                 }
                 else {
@@ -1952,7 +1939,7 @@ public class AnnotationDetailEditorPanel
         //if no possible values, means didn't satisfy conditions
         if(possibleValues.isEmpty())
         {
-            rulesIndicator.doesntSatisfyRules();
+            rulesIndicator.didntMatchAnyRule();
         }
         List<Tag> returnList = new ArrayList<Tag>();
         // Sorting based on important flag
@@ -1973,7 +1960,7 @@ public class AnnotationDetailEditorPanel
         }
         //If no matching tags found
         if(returnList.isEmpty()){
-            rulesIndicator.noMatchingTagset();
+            rulesIndicator.didntMatchAnyTag();
         }
         return returnList;
     }
@@ -1997,23 +1984,34 @@ public class AnnotationDetailEditorPanel
                 {
                     if (!bModel.getSelectedAnnotationLayer().equals(getModelObject())
                             && bModel.getSelection().getAnnotation().isSet()) {
-                        deleteModal.setContent(new YesNoDeleteModalPanel(deleteModal.getContentId(),
-                                bModel, deleteModal, AnnotationDetailEditorPanel.this,
-                                getModelObject()));
-                        
-                        deleteModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                        {
-                            private static final long serialVersionUID = 4364820331676014559L;
-
-                            @Override
-                            public void onClose(AjaxRequestTarget target)
-                            {
-                               System.out.println(bModel.getDefaultAnnotationLayer().getUiName());
-                               target.add(annotationFeatureForm);
-                               
+                        if (bModel.getSelection().isRelationAnno()) {
+                            try {
+                                actionClear(aTarget, bModel);
                             }
-                        });
-                        deleteModal.show(aTarget);
+                            catch (UIMAException | ClassNotFoundException | IOException
+                                    | BratAnnotationException e) {
+                                error(e.getMessage());
+                            }
+                        }
+                        else {
+                            deleteModal.setContent(new YesNoDeleteModalPanel(
+                                    deleteModal.getContentId(), bModel, deleteModal,
+                                    AnnotationDetailEditorPanel.this, getModelObject()));
+
+                            deleteModal
+                                    .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+                            {
+                                private static final long serialVersionUID = 4364820331676014559L;
+
+                                @Override
+                                public void onClose(AjaxRequestTarget target)
+                                {
+                                    target.add(annotationFeatureForm);
+
+                                }
+                            });
+                            deleteModal.show(aTarget);
+                        }
                     }
                     else {
                         bModel.setSelectedAnnotationLayer(getModelObject());
@@ -2021,7 +2019,7 @@ public class AnnotationDetailEditorPanel
                         aTarget.add(selectedAnnotationLayer);
                         populateFeatures(null);
                         aTarget.add(annotationFeatureForm);
-                    }                   
+                    }
                 }
             });
         }

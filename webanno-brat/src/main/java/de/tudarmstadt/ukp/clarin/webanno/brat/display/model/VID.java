@@ -35,7 +35,12 @@ public class VID
 {
     private static final long serialVersionUID = -8490129995678288943L;
     
-    public static final Pattern PATTERN_VID = Pattern.compile("(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?");
+    private static final String ID = "ID";
+    private static final String SUB = "SUB";
+    private static final String ATTR = "ATTR";
+    private static final String SLOT = "SLOT";
+    
+    public static final Pattern PATTERN_VID = Pattern.compile("(?<ID>\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
     public static final int NONE = -1;
     public static final int GHOST = -2;
 
@@ -43,22 +48,29 @@ public class VID
     public static final VID NONE_ID = new VID(NONE);
 
     private final int annotationId;
+    private final int subAnnotationId;
     private final int attribute;
     private final int slot;
 
     public VID(int aAnnotationID)
     {
-        this(aAnnotationID, NONE, NONE);
+        this(aAnnotationID, NONE, NONE, NONE);
     }
 
     public VID(int aAnnotationID, int aAttribute)
     {
-        this(aAnnotationID, aAttribute, NONE);
+        this(aAnnotationID, NONE, aAttribute, NONE);
     }
-
+    
     public VID(int aAnnotationID, int aAttribute, int aSlot)
     {
+        this(aAnnotationID, NONE, aAttribute, aSlot);
+    }
+
+    public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
+    {
         annotationId = aAnnotationID;
+        subAnnotationId = aSubAnnotationId;
         attribute = aAttribute;
         slot = aSlot;
     }
@@ -83,6 +95,11 @@ public class VID
         return annotationId;
     }
 
+    public int getSubId()
+    {
+        return subAnnotationId;
+    }
+    
     public int getAttribute()
     {
         return attribute;
@@ -112,16 +129,20 @@ public class VID
     {
         Matcher m = PATTERN_VID.matcher(aVid);
         if (m.matches()) {
-            int annotationId = Integer.valueOf(m.group(1));
+            int annotationId = Integer.valueOf(m.group(ID));
+            int subAnnotationId = NONE;
             int feature = NONE;
             int slot = NONE;
-            if (m.group(2) != null) {
-                feature = Integer.valueOf(m.group(2));
+            if (m.group(SUB) != null) {
+                subAnnotationId = Integer.valueOf(m.group(SUB));
             }
-            if (m.group(3) != null) {
-                slot = Integer.valueOf(m.group(3));
+            if (m.group(ATTR) != null) {
+                feature = Integer.valueOf(m.group(ATTR));
             }
-            return new VID(annotationId, feature, slot);
+            if (m.group(SLOT) != null) {
+                slot = Integer.valueOf(m.group(SLOT));
+            }
+            return new VID(annotationId, subAnnotationId, feature, slot);
         }
         else {
             throw new IllegalArgumentException("Cannot parse visual identifier [" + aVid + "]");
@@ -135,6 +156,11 @@ public class VID
 
         sb.append(annotationId);
 
+        if (subAnnotationId >= 0) {
+            sb.append('-');
+            sb.append(subAnnotationId);
+        }
+        
         if (attribute >= 0) {
             sb.append('.');
             sb.append(attribute);

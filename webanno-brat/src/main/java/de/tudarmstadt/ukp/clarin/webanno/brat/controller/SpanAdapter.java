@@ -521,9 +521,9 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, int aAddress)
+    public void delete(JCas aJCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
@@ -548,7 +548,7 @@ public class SpanAdapter
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
-                    delete(aJCas, getAddr(fs));
+                    delete(aJCas, new VID(getAddr(fs)));
                 }
             }
         }
@@ -590,12 +590,6 @@ public class SpanAdapter
     public String getAttachFeatureName()
     {
         return layer.getAttachFeature() == null ? null : layer.getAttachFeature().getName();
-    }
-
-    @Override
-    public void deleteBySpan(JCas aJCas, AnnotationFS fs, int aBegin, int aEnd)
-    {
-
     }
 
     @Override

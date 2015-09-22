@@ -17,27 +17,35 @@
 -->
 <html
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<head>
+<wicket:head>
+	<script type="text/javascript">
+		Wicket.Window.unloadConfirmation = false;
+	</script>
+</wicket:head>
+</head>
 <body>
-	<form wicket:id="exportForm">
-		<div wicket:id="feedbackPanel"></div>
-		<table>
-			<tr>
-				<td><span wicket:id="automated"></span></td>
-				<td><select wicket:id="documentChoice"></select></td>
-			</tr>
-			<tr>
-				<td>Writable Formats: <select wicket:id="writeableFormats">
-				</select>
-				</td>
-				<td><input type="button" wicket:id="export" value="Export" />
-				</td>
-			</tr>
-			<tr>
-				<td><a wicket:id="close">
-						<button>Close</button>
-				</a></td>
-			</tr>
-		</table>
-	</form>
+	<wicket:panel>
+		<form wicket:id="exportForm">
+			<table>
+				<tr>
+					<td><span wicket:id="automated"></span></td>
+					<td><select wicket:id="documentChoice"></select></td>
+				</tr>
+				<tr>
+					<td>Writable Formats: <select wicket:id="writeableFormats">
+					</select>
+					</td>
+					<td><input type="button" wicket:id="export" value="Export" />
+					</td>
+				</tr>
+				<tr>
+					<td><a wicket:id="close">
+							<button>Close</button>
+					</a></td>
+				</tr>
+			</table>
+		</form>
+	</wicket:panel>
 </body>
 </html>

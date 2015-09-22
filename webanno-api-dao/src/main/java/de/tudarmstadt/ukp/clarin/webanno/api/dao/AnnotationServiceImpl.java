@@ -639,11 +639,12 @@ public class AnnotationServiceImpl
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
-        // FIXME - Ok, this doesn't do yet what it is supposed to do.
         return entityManager
                 .createQuery(
-                        "FROM AnnotationLayer WHERE type = :type AND (attachType = :attachType OR "
-                                + "attachFeature.type = :attachTypeName) ORDER BY uiName",
+                        "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f "
+                        + "WHERE l.type = :type AND "
+                        + "(l.attachType = :attachType OR f.type = :attachTypeName) "
+                        + "ORDER BY l.uiName",
                         AnnotationLayer.class).setParameter("type", RELATION_TYPE)
                 .setParameter("attachType", aLayer)
                 .setParameter("attachTypeName", aLayer.getName()).getResultList();
