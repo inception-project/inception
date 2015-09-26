@@ -17,88 +17,37 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctorUtils.getNonIndexedFSes;
+
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIterator;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.LowLevelCAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 
 public class AllAnnotationsIndexedCheck
     implements Check
 {
     @Override
-    public boolean check(CAS aCas, List<String> aMessages)
+    public boolean check(CAS aCas, List<LogMessage> aMessages)
     {
-        TypeSystem ts = aCas.getTypeSystem();
-        
-        Set<FeatureStructure> allReachableFS = collectReachable(aCas);
-        Set<FeatureStructure> allIndexedFS = collectIndexed(aCas);
-        
-        // Remove all that are indexed
-        allReachableFS.removeAll(allIndexedFS);
-        
-        // Remove all that are not annotations
-        allReachableFS.removeIf(fs -> !ts.subsumes(aCas.getAnnotationType(), fs.getType()));
-        
-        // All that is left are non-index annotations
-        if (!allReachableFS.isEmpty()) {
-            aMessages.add(String.format("[%s] Unindexed annotations: %d", getClass()
-                    .getSimpleName(), allReachableFS.size()));
-            
-            for (FeatureStructure fs : allReachableFS) {
-                aMessages.add(String.format("[%s] %s", getClass().getSimpleName(), fs));
+        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
+
+        if (!nonIndexed.isEmpty()) {
+            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
+                    nonIndexed.size()));
+
+            for (FeatureStructure fs : nonIndexed) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR, "%s", fs));
             }
         }
-//        else {
-//            aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
-//        }
-        
-        return allReachableFS.isEmpty();
-    }
+        // else {
+        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
+        // }
 
-    private Set<FeatureStructure> collectIndexed(CAS aCas)
-    {
-        LowLevelCAS llcas = aCas.getLowLevelCAS();
-        Set<FeatureStructure> fses = new TreeSet<>((fs1, fs2) -> llcas.ll_getFSRef(fs1)
-                - llcas.ll_getFSRef(fs2));
-
-        FSIterator<FeatureStructure> i = aCas.getIndexRepository().getAllIndexedFS(
-                aCas.getTypeSystem().getTopType());        
-
-        i.forEachRemaining(fs -> fses.add(fs));
-        
-        return fses;
-    }
-    
-    private Set<FeatureStructure> collectReachable(CAS aCas)
-    {
-        LowLevelCAS llcas = aCas.getLowLevelCAS();
-        Set<FeatureStructure> fses = new TreeSet<>((fs1, fs2) -> llcas.ll_getFSRef(fs1)
-                - llcas.ll_getFSRef(fs2));
-
-        FSIterator<FeatureStructure> i = aCas.getIndexRepository().getAllIndexedFS(
-                aCas.getTypeSystem().getTopType());        
-
-        i.forEachRemaining(fs -> collect(fses, fs));
-
-        return fses;
-    }
-    
-    private void collect(Set<FeatureStructure> aFSes, FeatureStructure aFS)
-    {
-        if (aFS != null && !aFSes.contains(aFS)) {
-            aFSes.add(aFS);
-            
-            for (Feature f : aFS.getType().getFeatures()) {
-                if (!f.getRange().isPrimitive()) {
-                    collect(aFSes, aFS.getFeatureValue(f));
-                }
-            }
-        }
+        return nonIndexed.isEmpty();
     }
 }

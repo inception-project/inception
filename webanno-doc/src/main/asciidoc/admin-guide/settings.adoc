@@ -135,7 +135,7 @@
 | true
 
 | debug.casDoctor.checks
-| Extra checks to perform when a CAS is saved
+| Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
 | _unset_
 | AllAnnotationsIndexedCheck
 
@@ -143,6 +143,11 @@
 | If the extra checks trigger an exception
 | true
 | false
+
+| debug.casDoctor.repairs
+| Repairs to be performed when a CAS is loaded
+| _unset_
+| RemoveDanglingRelationsRepair
 |===
 
 === Internal backups

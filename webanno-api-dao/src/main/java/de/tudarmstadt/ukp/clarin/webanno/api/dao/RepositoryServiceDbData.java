@@ -1611,9 +1611,7 @@ public class RepositoryServiceDbData
      * @param aUserName
      *            the user who annotates the document if it is user's annotation document OR the
      *            CURATION_USER
-     * @throws IOException
      */
-
     private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
@@ -1800,6 +1798,9 @@ public class RepositoryServiceDbData
 
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
+
+                casDoctor.repair(cas);
+
                 return cas.getJCas();
             }
             catch (UIMAException e) {

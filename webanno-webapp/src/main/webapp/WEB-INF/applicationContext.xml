@@ -54,6 +54,7 @@
 				<prop key="crowdsource.enabled">0</prop>
                 <prop key="webanno.repository">#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/repository/</prop>
                 <prop key="debug.casDoctor.checks"></prop>
+                <prop key="debug.casDoctor.repairs"></prop>
                 <prop key="debug.casDoctor.fatal">false</prop>
 			</props>
 		</property>

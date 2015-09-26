@@ -34,6 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class AllAnnotationsIndexedCheckTest
@@ -66,7 +67,7 @@ public class AllAnnotationsIndexedCheckTest
         anno3.setFeatureValue(refType.getFeatureByBaseName("ref"), anno2);
         cas.addFsToIndexes(anno3);
         
-        List<String> messages = new ArrayList<>();
+        List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
         boolean result = cd.analyze(cas, messages);
         
@@ -104,7 +105,7 @@ public class AllAnnotationsIndexedCheckTest
         anno3.setFeatureValue(refType.getFeatureByBaseName("ref"), anno2);
         cas.addFsToIndexes(anno3);
         
-        List<String> messages = new ArrayList<>();
+        List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
         boolean result = cd.analyze(cas, messages);
         

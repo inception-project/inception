@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks;
+package de.tudarmstadt.ukp.clarin.webanno.brat.diag.repairs;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 
-public interface Check
+public interface Repair
 {
-    boolean check(CAS aCas, List<LogMessage> aMessages);
+    void repair(CAS aCas, List<LogMessage> aMessages);
 }
