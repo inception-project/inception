@@ -31,6 +31,9 @@ public class WebAnnoConst
     public static final String COREFERENCE = "coreference";
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
+    
+    public static final String FEAT_REL_TARGET = "Dependent";
+    public static final String FEAT_REL_SOURCE = "Governor";
 
     public static final String ROOT = "ROOT";
 

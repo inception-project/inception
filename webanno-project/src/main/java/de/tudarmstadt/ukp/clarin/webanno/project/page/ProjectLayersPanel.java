@@ -108,8 +108,6 @@ public class ProjectLayersPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private final String DEPENDENT = "Dependent";
-    private final String GOVERNOR = "Governor";
     private final String FIRST = "first";
     private final String NEXT = "next";
 
@@ -1033,7 +1031,8 @@ public class ProjectLayersPanel
                     String name = feature.getUiName();
                     name = name.replaceAll("\\W", "");
                     if (layerDetailForm.getModelObject().getType().equals(RELATION_TYPE)
-                            && (name.equals(GOVERNOR) || name.equals(DEPENDENT)
+                            && (name.equals(WebAnnoConst.FEAT_REL_SOURCE)
+                                    || name.equals(WebAnnoConst.FEAT_REL_TARGET)
                                     || name.equals(FIRST) || name.equals(NEXT))) {
                         error("layer " + name + " is not allowed as a feature name");
                         return;

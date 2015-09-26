@@ -58,6 +58,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.TOP;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -1659,7 +1660,8 @@ public class CasDiff2
     public static class ArcDiffAdapter extends DiffAdapter_ImplBase
     {
         public static final ArcDiffAdapter DEPENDENCY = new ArcDiffAdapter(
-                Dependency.class.getName(), "Dependent", "Governor", "DependencyType");
+                Dependency.class.getName(), WebAnnoConst.FEAT_REL_TARGET,
+                WebAnnoConst.FEAT_REL_SOURCE, "DependencyType");
         
         private String sourceFeature;
         private String targetFeature;

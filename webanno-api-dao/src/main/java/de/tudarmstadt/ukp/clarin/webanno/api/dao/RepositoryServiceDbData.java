@@ -2074,8 +2074,8 @@ public class RepositoryServiceDbData
                 TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
                 AnnotationLayer attachType = type.getAttachType();
 
-                td.addFeature("Dependent", "", attachType.getName());
-                td.addFeature("Governor", "", attachType.getName());
+                td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
+                td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
 
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(type);
                 for (AnnotationFeature feature : features) {

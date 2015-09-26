@@ -53,10 +53,10 @@ public final class TypeUtil
             return adapter;
         }
         else if (aLayer.getType().equals(WebAnnoConst.RELATION_TYPE)) {
-            ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(), "Dependent",
-                    "Governor", aLayer.getAttachFeature() == null ? null : aLayer
-                            .getAttachFeature().getName(), aLayer.getAttachType().getName(),
-                            aRepo.listAnnotationFeature(aLayer));
+            ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(),
+                    WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
+                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
+                    aLayer.getAttachType().getName(), aRepo.listAnnotationFeature(aLayer));
 
             adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
             adapter.setAllowStacking(aLayer.isAllowStacking());
