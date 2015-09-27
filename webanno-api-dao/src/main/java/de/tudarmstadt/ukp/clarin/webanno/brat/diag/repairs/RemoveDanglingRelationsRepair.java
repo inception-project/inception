@@ -58,16 +58,16 @@ public class RemoveDanglingRelationsRepair
             FeatureStructure target = fs.getFeatureValue(targetFeat);
             
             // Does it point to deleted spans?
-            if (!nonIndexed.isEmpty()) {
-                aMessages.add(new LogMessage(this, LogLevel.INFO,
-                        "Removing [%d] dangling relations.", nonIndexed.size()));
-                if (nonIndexed.contains(source) || nonIndexed.contains(target)) {
-                    toDelete.add(fs);
-                }
+            if (nonIndexed.contains(source) || nonIndexed.contains(target)) {
+                toDelete.add(fs);
             }
         }
-        
+
         // Delete those relations that pointed to deleted spans
-        toDelete.forEach(fs -> aCas.removeFsFromIndexes(fs));
+        if (!toDelete.isEmpty()) {
+            toDelete.forEach(fs -> aCas.removeFsFromIndexes(fs));
+            aMessages.add(new LogMessage(this, LogLevel.INFO, "Removed [%d] dangling relations.",
+                    nonIndexed.size()));
+        }
     }
 }

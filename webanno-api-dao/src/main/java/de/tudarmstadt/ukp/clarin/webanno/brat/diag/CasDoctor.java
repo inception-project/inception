@@ -103,28 +103,31 @@ public class CasDoctor
     {
         List<LogMessage> messages = new ArrayList<>();
         repair(aCas, messages);
-        if (log.isDebugEnabled()) {
-            messages.forEach(s -> log.debug(s));
+        if (log.isWarnEnabled() && !messages.isEmpty()) {
+            messages.forEach(s -> log.warn(s));
         }
     }
     
     public void repair(CAS aCas, List<LogMessage> aMessages)
     {
+        boolean exception = false;
         for (Class<? extends Repair> repairClass : repairClasses) {
             try {
                 Repair repair = repairClass.newInstance();
                 repair.repair(aCas, aMessages);
             }
-            catch (InstantiationException | IllegalAccessException e) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
+            catch (Exception e) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
                         repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
                 log.error(e);
+                exception = true;
             }
         }
         
-        if (!repairClasses.isEmpty() && !analyze(aCas, aMessages, false)) {
+        if (!repairClasses.isEmpty() && (exception || !analyze(aCas, aMessages, false))) {
             aMessages.forEach(s -> log.error(s));
-            throw new IllegalStateException("Repair attempt left CAS in inconsistent state.");
+            throw new IllegalStateException("Repair attempt failed - ask system administrator "
+                    + "for details.");
         }
     }
     
