@@ -768,6 +768,29 @@ public class RepositoryServiceDbData
                     // we create them here lazily
                     jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
                             getReadableFormats().get(aDocument.getFormat()), aDocument);
+
+                    try {
+                        casDoctor.repair(jcas.getCas());
+                    }
+                    catch (Exception e) {
+                        throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                                + INITIAL_CAS_PSEUDO_USER + "] for source document ["
+                                + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
+                                + aDocument.getProject().getName() + "] ("
+                                + aDocument.getProject().getId() + ")", e);
+                    }
+                    
+                    try {
+                        casDoctor.analyze(jcas.getCas());
+                    }
+                    catch (Exception e) {
+                        throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                                + INITIAL_CAS_PSEUDO_USER + "] for source document [" + aDocument.getName() + "] ("
+                                + aDocument.getId() + ") in project["
+                                + aDocument.getProject().getName() + "] ("
+                                + aDocument.getProject().getId() + ")", e);
+                    }
+                    
                     writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                 }
 
@@ -777,6 +800,17 @@ public class RepositoryServiceDbData
                     jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null)
                             .getJCas();
                     readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+                    
+                    try {
+                        casDoctor.repair(jcas.getCas());
+                    }
+                    catch (Exception e) {
+                        throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                                + INITIAL_CAS_PSEUDO_USER + "] for source document ["
+                                + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
+                                + aDocument.getProject().getName() + "] ("
+                                + aDocument.getProject().getId() + ")", e);
+                    }
                 }
             }
             catch (UIMAException e) {
@@ -1808,17 +1842,6 @@ public class RepositoryServiceDbData
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
 
-//                try {
-//                    casDoctor.analyze(cas);
-//                }
-//                catch (Exception e) {
-//                    throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-//                            + aUsername + "] for source document [" + aDocument.getName() + "] ("
-//                            + aDocument.getId() + ") in project["
-//                            + aDocument.getProject().getName() + "] ("
-//                            + aDocument.getProject().getId() + ")", e);
-//                }
-                
                 try {
                     casDoctor.repair(cas);
                 }
@@ -2040,6 +2063,17 @@ public class RepositoryServiceDbData
             pipeline.process(cas.getJCas());
         }
 
+        try {
+            casDoctor.repair(cas);
+        }
+        catch (Exception e) {
+            throw new DataRetrievalFailureException(
+                    "Error repairing CAS on import for source document [" + aDocument.getName()
+                            + "] (" + aDocument.getId() + ") in project["
+                            + aDocument.getProject().getName() + "] ("
+                            + aDocument.getProject().getId() + ")", e);
+        }
+        
         return jCas;
     }
 
