@@ -86,6 +86,8 @@ public class CasDiff2
     private final Map<String, DiffAdapter> typeAdapters = new HashMap<>();
     
     private final LinkCompareBehavior linkCompareBehavior;
+
+    private boolean recurseIntoLinkFeatures = false;
     
     private CasDiff2(int aBegin, int aEnd, Collection<? extends DiffAdapter> aAdapters,
             LinkCompareBehavior aLinkCompareBehavior)
@@ -1050,31 +1052,39 @@ public class CasDiff2
 
         // Sort features by name to be independent over implementation details that may change the
         // order of the features as returned from Type.getFeatures().
-        String[] sortedFeatures = sortedFeaturesCache.get(type1.getName());
-        if (sortedFeatures == null) {
-            sortedFeatures = new String[type1.getNumberOfFeatures()];
+        String[] cachedSortedFeatures = sortedFeaturesCache.get(type1.getName());
+        if (cachedSortedFeatures == null) {
+            cachedSortedFeatures = new String[type1.getNumberOfFeatures()];
             int i = 0;
             for (Feature f : aFS1.getType().getFeatures()) {
-                sortedFeatures[i] = f.getShortName();
+                cachedSortedFeatures[i] = f.getShortName();
                 i++;
             }
-            sortedFeaturesCache.put(type1.getName(), sortedFeatures);
+            sortedFeaturesCache.put(type1.getName(), cachedSortedFeatures);
         }
         
-        Set<String> labelFeatures = typeAdapters.containsKey(type1.getName()) ? typeAdapters.get(
-                type1.getName()).getLabelFeatures() : null;
+        DiffAdapter adapter = typeAdapters.get(type1.getName());
 
-        if (labelFeatures == null) {
+        if (adapter == null) {
             log.warn("No diff adapter for type [" + type1.getName() + "] -- ignoring!");
+            return true;
         }
-                
-        for (String feature : sortedFeatures) {
-            // Only consider label features. In particular these must not include position features
-            // such as begin, end, etc.
-            if (labelFeatures == null || !labelFeatures.contains(feature)) {
-                continue;
-            }
 
+        // Only consider label features. In particular these must not include position features
+        // such as begin, end, etc.
+        List<String> sortedFeatures = new ArrayList<>(asList(cachedSortedFeatures));
+        Set<String> labelFeatures = adapter.getLabelFeatures();
+        sortedFeatures.removeIf(f -> !labelFeatures.contains(f));
+
+        if (!recurseIntoLinkFeatures ) {
+            // #1795 Chili REC: We can/should change CasDiff2 such that it does not recurse into
+            // link features (or rather into any features that are covered by their own
+            // sub-positions). So when when comparing two spans that differ only in their slots
+            // (sub-positions) the main position could still exhibit agreement.
+            sortedFeatures.removeIf(f -> adapter.getLinkFeature(f) != null);
+        }
+        
+        for (String feature : sortedFeatures) {
             Feature f1 = type1.getFeatureByBaseName(feature);
             Feature f2 = type2.getFeatureByBaseName(feature);
             
