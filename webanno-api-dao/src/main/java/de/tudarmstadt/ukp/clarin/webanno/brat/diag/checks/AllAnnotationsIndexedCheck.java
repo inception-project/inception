@@ -62,7 +62,7 @@ public class AllAnnotationsIndexedCheck
                         nonIndexed.size()));
 
                 for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "[%s] reachable through [%s]", e
+                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Non-index annotation [%s] reachable through [%s]", e
                         .getKey(), e.getValue()));
                 }
             }
