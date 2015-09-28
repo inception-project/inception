@@ -371,7 +371,7 @@ public class BratAnnotator
                     error("Invalid reader: " + e.getMessage());
                 }
                 catch (Exception e) {
-                    error( e.getMessage());
+                    error("Unexpected error: " + e.getMessage());
                     LOG.error(ExceptionUtils.getRootCauseMessage(e));
                 }
 
