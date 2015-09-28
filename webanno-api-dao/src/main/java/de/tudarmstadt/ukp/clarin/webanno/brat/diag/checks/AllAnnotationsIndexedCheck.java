@@ -17,10 +17,11 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctorUtils.getNonIndexedFSes;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctorUtils.getNonIndexedFSesWithOwner;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -31,23 +32,44 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 public class AllAnnotationsIndexedCheck
     implements Check
 {
-    @Override
-    public boolean check(CAS aCas, List<LogMessage> aMessages)
-    {
-        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
+//    @Override
+//    public boolean check(CAS aCas, List<LogMessage> aMessages)
+//    {
+//        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
+//
+//        if (!nonIndexed.isEmpty()) {
+//            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
+//                    nonIndexed.size()));
+//
+//            for (FeatureStructure fs : nonIndexed) {
+//                aMessages.add(new LogMessage(this, LogLevel.ERROR, "%s", fs));
+//            }
+//        }
+//        // else {
+//        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
+//        // }
+//
+//        return nonIndexed.isEmpty();
+//    }
+    
+        @Override
+        public boolean check(CAS aCas, List<LogMessage> aMessages)
+        {
+            Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
-        if (!nonIndexed.isEmpty()) {
-            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
-                    nonIndexed.size()));
+            if (!nonIndexed.isEmpty()) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
+                        nonIndexed.size()));
 
-            for (FeatureStructure fs : nonIndexed) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "%s", fs));
+                for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR, "[%s] reachable through [%s]", e
+                        .getKey(), e.getValue()));
+                }
             }
-        }
-        // else {
-        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
-        // }
+            // else {
+            // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
+            // }
 
-        return nonIndexed.isEmpty();
-    }
+            return nonIndexed.isEmpty();
+        }
 }

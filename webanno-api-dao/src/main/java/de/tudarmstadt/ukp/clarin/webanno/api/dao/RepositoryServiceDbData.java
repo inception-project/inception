@@ -1619,7 +1619,16 @@ public class RepositoryServiceDbData
                 + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId() + "]");
         // DebugUtils.smallStack();
 
-        casDoctor.analyze(aJcas.getCas());
+        try {
+            casDoctor.analyze(aJcas.getCas());
+        }
+        catch (Exception e) {
+            throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                    + aUserName + "] for source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") in project["
+                    + aDocument.getProject().getName() + "] ("
+                    + aDocument.getProject().getId() + ")", e);
+        }
         
         synchronized (lock) {
             File annotationFolder = getAnnotationFolder(aDocument);
@@ -1791,7 +1800,7 @@ public class RepositoryServiceDbData
                 if (!serializedCasFile.exists()) {
                     throw new FileNotFoundException("Annotation document of user [" + aUsername
                             + "] for source document [" + aDocument.getName() + "] ("
-                            + aDocument.getId() + "). not found in project["
+                            + aDocument.getId() + ") not found in project["
                             + aDocument.getProject().getName() + "] ("
                             + aDocument.getProject().getId() + ")");
                 }
@@ -1799,7 +1808,27 @@ public class RepositoryServiceDbData
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
 
-                casDoctor.repair(cas);
+//                try {
+//                    casDoctor.analyze(cas);
+//                }
+//                catch (Exception e) {
+//                    throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+//                            + aUsername + "] for source document [" + aDocument.getName() + "] ("
+//                            + aDocument.getId() + ") in project["
+//                            + aDocument.getProject().getName() + "] ("
+//                            + aDocument.getProject().getId() + ")", e);
+//                }
+                
+                try {
+                    casDoctor.repair(cas);
+                }
+                catch (Exception e) {
+                    throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                            + aUsername + "] for source document [" + aDocument.getName() + "] ("
+                            + aDocument.getId() + ") in project["
+                            + aDocument.getProject().getName() + "] ("
+                            + aDocument.getProject().getId() + ")", e);
+                }
 
                 return cas.getJCas();
             }
