@@ -592,7 +592,7 @@ public class AutomationPage
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
 
-                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
+                        updateSentenceNumber(mergeJCas, gotoPageAddress);
 
                         SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
@@ -670,7 +670,7 @@ public class AutomationPage
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
 
-                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
+                        updateSentenceNumber(mergeJCas, gotoPageAddress);
 
                         SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
@@ -889,7 +889,7 @@ public class AutomationPage
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
                                 address, bModel.getPreferences().getWindowSize());
                         if (address != nextSentenceAddress) {
-                            ubdateSentenceNumber(mergeJCas, nextSentenceAddress);
+                            updateSentenceNumber(mergeJCas, nextSentenceAddress);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -942,7 +942,7 @@ public class AutomationPage
                                         .getSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
-                            ubdateSentenceNumber(mergeJCas, previousSentenceAddress);
+                            updateSentenceNumber(mergeJCas, previousSentenceAddress);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -995,7 +995,7 @@ public class AutomationPage
                         int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
-                            ubdateSentenceNumber(mergeJCas, firstAddress);
+                            updateSentenceNumber(mergeJCas, firstAddress);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -1044,7 +1044,7 @@ public class AutomationPage
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
-                            ubdateSentenceNumber(mergeJCas,
+                            updateSentenceNumber(mergeJCas,
                                     lastDisplayWindowBeginingSentenceAddress);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
@@ -1130,7 +1130,7 @@ public class AutomationPage
 
             jCas = repository.readAnnotationCas(bModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
-            // by another annotater
+            // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
             }
@@ -1138,7 +1138,7 @@ public class AutomationPage
         catch (NoResultException e) {
             jCas = repository.readAnnotationCas(bModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
-            // by another annotater
+            // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
             }
@@ -1185,7 +1185,7 @@ public class AutomationPage
 
     }
 
-    private void ubdateSentenceNumber(JCas aJCas, int aAddress)
+    private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
         bModel.setSentenceAddress(aAddress);
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);

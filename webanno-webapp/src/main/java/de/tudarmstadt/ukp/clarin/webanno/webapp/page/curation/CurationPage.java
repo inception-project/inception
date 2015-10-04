@@ -321,7 +321,7 @@ public class CurationPage
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     curationPanel.updatePanel(aTarget, curationContainer);
                     updatePanel(curationContainer, aTarget);
-                    ubdateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+                    updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCauseMessage(e));
@@ -473,7 +473,7 @@ public class CurationPage
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
 
-                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
+                        updateSentenceNumber(mergeJCas, gotoPageAddress);
 
                         aTarget.add(numberOfPages);
                         updatePanel(curationContainer, aTarget);
@@ -546,7 +546,7 @@ public class CurationPage
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     if (bModel.getSentenceAddress() != gotoPageAddress) {
 
-                        ubdateSentenceNumber(mergeJCas, gotoPageAddress);
+                        updateSentenceNumber(mergeJCas, gotoPageAddress);
 
                         aTarget.add(numberOfPages);
                         curationPanel.updatePanel(aTarget, curationContainer);
@@ -721,7 +721,7 @@ public class CurationPage
                         if (bModel.getSentenceAddress() != nextSentenceAddress) {
                             aTarget.add(getFeedbackPanel());
 
-                            ubdateSentenceNumber(mergeJCas, nextSentenceAddress);
+                            updateSentenceNumber(mergeJCas, nextSentenceAddress);
 
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
@@ -771,7 +771,7 @@ public class CurationPage
                                         .getWindowSize());
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
 
-                            ubdateSentenceNumber(mergeJCas, previousSentenceAddress);
+                            updateSentenceNumber(mergeJCas, previousSentenceAddress);
 
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
@@ -819,7 +819,7 @@ public class CurationPage
 
                         if (firstAddress != address) {
 
-                            ubdateSentenceNumber(mergeJCas, firstAddress);
+                            updateSentenceNumber(mergeJCas, firstAddress);
 
                             aTarget.add(numberOfPages);
                             curationPanel.updatePanel(aTarget, curationContainer);
@@ -865,7 +865,7 @@ public class CurationPage
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
 
-                            ubdateSentenceNumber(mergeJCas,
+                            updateSentenceNumber(mergeJCas,
                                     lastDisplayWindowBeginingSentenceAddress);
 
                             aTarget.add(numberOfPages);
@@ -938,7 +938,7 @@ public class CurationPage
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
 
-    private void ubdateSentenceNumber(JCas aJCas, int aAddress)
+    private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
         bModel.setSentenceAddress(aAddress);
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
@@ -1012,7 +1012,7 @@ public class CurationPage
             curationContainer.setBratAnnotatorModel(bModel);
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
-            ubdateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+            updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
          // Load constraints
             bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
 
