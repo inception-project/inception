@@ -247,7 +247,13 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;                        
-
+                        // do not annotate closed documents
+                        if (aEditor.isAnnotationFinished()) {
+                            error("This document is already closed. Please ask your project manager to re-open it via the Montoring page");
+                            LOG.error(
+                                    "This document is already closed. Please ask your project manager to re-open it via the Montoring page");
+                            return;
+                        }
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
@@ -297,7 +303,6 @@ public class BratAnnotator
 
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                            
                             bratRenderHighlight(aTarget, selection.getAnnotation());
                             aEditor.reloadLayer(aTarget);
                             

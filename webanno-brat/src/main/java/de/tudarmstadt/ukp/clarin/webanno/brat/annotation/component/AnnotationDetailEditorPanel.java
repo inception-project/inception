@@ -183,7 +183,7 @@ public class AnnotationDetailEditorPanel
         add(annotationFeatureForm);
     }
 
-    private boolean isAnnotationFinished()
+    public boolean isAnnotationFinished()
     {
         if (bModel.getMode().equals(Mode.CURATION)) {
             return bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
