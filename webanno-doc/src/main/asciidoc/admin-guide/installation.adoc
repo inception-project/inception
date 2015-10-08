@@ -29,19 +29,25 @@
 ----
 $ sudo apt-get install mysql-server
 ----
+   * make sure your MySQL server is configured for UTF-8. Check the following line is present in `/etc/mysql/my.cnf`:
+----
+character-set-server = utf8
+----
    * login to MySQL
 ----
 $ mysql -u root -p
 ----
-   * Create databases
+   * create a database
 ----
 mysql> CREATE DATABASE webanno DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
 ----
-   * create a database user called `webanno` with the password `t0t4llYSecreT`which is later used by the application to access the database (instructions for `settings.properties`file below).
+   * create a database user called `webanno` with the password `t0t4llYSecreT` which is later used by the application to access the database (instructions for `settings.properties` file below).
 ----
 mysql> CREATE USER 'webanno'@'localhost' IDENTIFIED BY 't0t4llYSecreT';
 mysql> GRANT ALL PRIVILEGES ON webanno.* TO 'webanno'@'localhost';
 ----
+
+IMPORTANT: For production use, make sure you choose a different, secret, and secure password.
 
 === Dedicated Tomcat instance
 
