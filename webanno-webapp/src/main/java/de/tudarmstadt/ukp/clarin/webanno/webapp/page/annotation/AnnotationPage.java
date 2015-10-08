@@ -688,7 +688,7 @@ public class AnnotationPage
         finish = new FinishImage("finishImage", new Model<BratAnnotatorModel>(bModel));
         finish.setOutputMarkupId(true);
 
-        add(new FinishLink("showYesNoModalPanel", new Model<BratAnnotatorModel>(bModel), finish, editor)
+        add(new FinishLink("showYesNoModalPanel", new Model<BratAnnotatorModel>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
         });

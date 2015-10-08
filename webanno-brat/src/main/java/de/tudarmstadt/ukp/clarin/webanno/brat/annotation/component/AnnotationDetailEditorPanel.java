@@ -104,10 +104,12 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -162,10 +164,35 @@ public class AnnotationDetailEditorPanel
         super(id, aModel);
         bModel = aModel.getObject();
         annotationFeatureForm = new AnnotationFeatureForm("annotationFeatureForm",
-                aModel.getObject());
+                aModel.getObject())
+        {
+
+            private static final long serialVersionUID = 8081614428845920047L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+
+                // Avoid reversing in read-only layers
+                setEnabled(bModel.getDocument() != null && !isAnnotationFinished());
+            }
+        };
 
         annotationFeatureForm.setOutputMarkupId(true);
         add(annotationFeatureForm);
+    }
+
+    private boolean isAnnotationFinished()
+    {
+        if (bModel.getMode().equals(Mode.CURATION)) {
+            return bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
+
+        }
+        else {
+            return repository.getAnnotationDocument(bModel.getDocument(), bModel.getUser())
+                    .getState().equals(AnnotationDocumentState.FINISHED);
+        }
     }
 
     private class AnnotationFeatureForm

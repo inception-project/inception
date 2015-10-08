@@ -618,7 +618,7 @@ public class CorrectionPage
         });
 
         add(new FinishLink("showYesNoModalPanel",
-                new Model<BratAnnotatorModel>(bModel), finish, editor)
+                new Model<BratAnnotatorModel>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
         });

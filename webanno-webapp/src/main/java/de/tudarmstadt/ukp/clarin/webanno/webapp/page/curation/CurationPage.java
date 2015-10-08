@@ -623,7 +623,7 @@ public class CurationPage
                     finishCurationModal.setTitle("Are you sure you want to finish curating?");
                 }
                 finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal
-                        .getContentId(), bModel, finishCurationModal, Mode.CURATION, curationPanel.editor));
+                        .getContentId(), bModel, finishCurationModal, Mode.CURATION));
                 finishCurationModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
                 {
                     private static final long serialVersionUID = -1746088901018629567L;

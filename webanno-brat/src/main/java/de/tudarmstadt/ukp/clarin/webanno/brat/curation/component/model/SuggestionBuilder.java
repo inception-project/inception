@@ -428,6 +428,7 @@ public class SuggestionBuilder
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0, mergeJCas.getDocumentText()
                         .length());
 
+        diff.print(System.out);
         for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
                 .entrySet()) {
             // Remove FSes with differences from the merge CAS
