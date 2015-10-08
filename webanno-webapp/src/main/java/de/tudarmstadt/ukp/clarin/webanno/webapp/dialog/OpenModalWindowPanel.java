@@ -90,13 +90,13 @@ public class OpenModalWindowPanel
     // Dialog is for annotation or curation
 
     private final Mode mode;
-    private final BratAnnotatorModel bratAnnotatorModel;
+    private final BratAnnotatorModel bModel;
 
     private List<Project> allowedProject = new ArrayList<Project>();
     private List<Project> projectesWithFinishedAnnos;
     private Map<Project, String> projectColors = new HashMap<Project, String>();
 
-    public OpenModalWindowPanel(String aId, BratAnnotatorModel aBratAnnotatorModel,
+    public OpenModalWindowPanel(String aId, BratAnnotatorModel aBModel,
             ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);
@@ -110,7 +110,7 @@ public class OpenModalWindowPanel
             selectedProject = getAllowedProjects().get(0);
         }
 
-        this.bratAnnotatorModel = aBratAnnotatorModel;
+        this.bModel = aBModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
@@ -321,9 +321,15 @@ public class OpenModalWindowPanel
                 @Override
                 protected void onEvent(final AjaxRequestTarget aTarget)
                 {
+                    // do not use this default layer in that other project
+                    if(bModel.getProject()!=null){
+                        if(!bModel.getProject().equals(selectedProject)){
+                            bModel.setDefaultAnnotationLayer(null);
+                        }
+                    }
                     if (selectedProject != null && selectedDocument != null) {
-                        bratAnnotatorModel.setProject(selectedProject);
-                        bratAnnotatorModel.setDocument(selectedDocument);
+                        bModel.setProject(selectedProject);
+                        bModel.setDocument(selectedDocument);
                         modalWindow.close(aTarget);
                     }
                 }
@@ -418,8 +424,15 @@ public class OpenModalWindowPanel
                         }
                     }
                     else {
-                        bratAnnotatorModel.setProject(selectedProject);
-                        bratAnnotatorModel.setDocument(selectedDocument);
+                        // do not use this default layer in that other project
+                        if(bModel.getProject()!=null){
+                            if(!bModel.getProject().equals(selectedProject)){
+                                bModel.setDefaultAnnotationLayer(null);
+                            }
+                        }
+                        
+                        bModel.setProject(selectedProject);
+                        bModel.setDocument(selectedDocument);
                         modalWindow.close(aTarget);
                     }
                 }
@@ -441,7 +454,7 @@ public class OpenModalWindowPanel
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
                     if (mode.equals(Mode.CURATION)) {
-                        bratAnnotatorModel.setDocument(null); // on cancel, go welcomePage
+                        bModel.setDocument(null); // on cancel, go welcomePage
                     }
                     onCancel(aTarget);
                     modalWindow.close(aTarget);
