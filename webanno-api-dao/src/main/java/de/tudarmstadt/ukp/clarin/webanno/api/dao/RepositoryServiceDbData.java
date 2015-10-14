@@ -119,6 +119,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks.AllAnnotationsIndexedCheck;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -1617,6 +1620,12 @@ public class RepositoryServiceDbData
     public void writeCurationCas(JCas aJcas, SourceDocument aDocument, User aUser)
         throws IOException
     {
+        // repair dangling relation annotations from mergeCas
+        List<LogMessage> messages = new ArrayList<>();
+        CasDoctor cd = new CasDoctor(RemoveDanglingRelationsRepair.class,
+                AllAnnotationsIndexedCheck.class);
+        cd.repair(aJcas.getCas(), messages);
+        
         writeCas(aDocument, aJcas, CURATION_USER);
     }
 
