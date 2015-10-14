@@ -37,9 +37,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -436,7 +438,9 @@ public class SuggestionBuilder
                     CurationPanel.CURATION_USER);
             for (Configuration cfg : cfgsForCurationUser) {
                 FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                removeDanglingRelation(mergeJCas, fs,entryTypes);     
                 mergeJCas.removeFsFromIndexes(fs);
+               
             }
         }
 
@@ -447,6 +451,7 @@ public class SuggestionBuilder
                     CurationPanel.CURATION_USER);
             for (Configuration cfg : cfgsForCurationUser) {
                 FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                removeDanglingRelation(mergeJCas, fs,entryTypes);
                 mergeJCas.removeFsFromIndexes(fs);
             }
         }
@@ -456,6 +461,31 @@ public class SuggestionBuilder
         return mergeJCas;
     }
 
+    private void removeDanglingRelation(JCas aMergeJCas, FeatureStructure aFs, List<Type> aEntryTypes)
+    {
+        checkPerType: for (Type type : aEntryTypes) {
+            for (FeatureStructure fs : CasUtil.selectFS(aMergeJCas.getCas(), type)) {
+                Type t = fs.getType();
+                Feature sourceFeat = t.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
+                Feature targetFeat = t.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
+
+                // Is this a relation?
+                if (!(sourceFeat != null && targetFeat != null)) {
+                    continue checkPerType;
+                }
+                else {
+                    FeatureStructure source = fs.getFeatureValue(sourceFeat);
+                    FeatureStructure target = fs.getFeatureValue(targetFeat);
+                    if (source.equals(aFs)) {
+                        aMergeJCas.removeFsFromIndexes(fs);
+                    }
+                    if (target.equals(aFs)) {
+                        aMergeJCas.removeFsFromIndexes(fs);
+                    }
+                }
+            }
+        }
+    }
     private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel,
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
