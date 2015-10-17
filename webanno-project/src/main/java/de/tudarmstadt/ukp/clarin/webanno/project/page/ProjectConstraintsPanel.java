@@ -27,6 +27,7 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -196,9 +197,10 @@ public class ProjectConstraintsPanel
                 }
             }; 
             add(new DownloadLink("export", exportFileModel, exportFilenameModel));
+            
+            Button deleteButton = new Button("delete", new ResourceModel("label")) {
 
-            add(new Button("delete", new ResourceModel("label")) {
-                private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = -1195565364207114557L;
 
                 @Override
                 public void onSubmit()
@@ -214,7 +216,30 @@ public class ProjectConstraintsPanel
                     super.onConfigure();
                     setVisible(DetailForm.this.getModelObject().getId() >= 0);
                 }
-            });
+            };
+            // Add check to prevent accidental delete operation
+            deleteButton.add(new AttributeModifier("onclick",
+                    "if(!confirm('Do you really want to delete this Constraints rule?')) return false;"));
+
+            add(deleteButton);
+//            add(new Button("delete", new ResourceModel("label")) {
+//                private static final long serialVersionUID = 1L;
+//
+//                @Override
+//                public void onSubmit()
+//                {
+//                    projectRepository.removeConstraintSet(DetailForm.this.getModelObject());
+//                    DetailForm.this.setModelObject(null);
+//                    selectionForm.setModelObject(null);
+//                }
+//                
+//                @Override
+//                protected void onConfigure()
+//                {
+//                    super.onConfigure();
+//                    setVisible(DetailForm.this.getModelObject().getId() >= 0);
+//                }
+//            });
             add(new Button("save", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 

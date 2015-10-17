@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.Button;
@@ -474,10 +475,11 @@ public class ProjectTagSetsPanel
                     }
                 }
             });
-
-            add(new Button("remove", new ResourceModel("label"))
+            
+            Button removeTagSetButton =new Button("remove", new ResourceModel("label"))
             {
-                private static final long serialVersionUID = 1L;
+
+                private static final long serialVersionUID = -3794689234509984031L;
 
                 @Override
                 public void onSubmit()
@@ -501,7 +503,41 @@ public class ProjectTagSetsPanel
                     TagSetDetailForm.this
                             .setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
                 }
-            });
+            };
+
+            // Add check to prevent accidental delete operation
+            removeTagSetButton.add(new AttributeModifier("onclick",
+                    "if(!confirm('Do you really want to delete this Tagset?')) return false;"));
+            add(removeTagSetButton);
+
+ 
+//            add(new Button("remove", new ResourceModel("label"))
+//            {
+//                private static final long serialVersionUID = 1L;
+//
+//                @Override
+//                public void onSubmit()
+//                {
+//                    de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = TagSetDetailForm.this
+//                            .getModelObject();
+//                    if (tagSet.getId() != 0) {
+//                        for (AnnotationFeature ft : annotationService.listAnnotationFeature(tagSet
+//                                .getProject())) {
+//                            if (ft.getTagset() != null && ft.getTagset().equals(tagSet)) {
+//                                ft.setTagset(null);
+//                                annotationService.createFeature(ft);
+//                            }
+//                        }
+//                        annotationService.removeTagSet(tagSet);
+//                        TagSetDetailForm.this.setModelObject(null);
+//                        tagSelectionForm.setVisible(false);
+//                        tagDetailForm.setVisible(false);
+//                        TagSetDetailForm.this.setVisible(false);
+//                    }
+//                    TagSetDetailForm.this
+//                            .setModelObject(new de.tudarmstadt.ukp.clarin.webanno.model.TagSet());
+//                }
+//            });
             
             add(new Button("cancel", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;

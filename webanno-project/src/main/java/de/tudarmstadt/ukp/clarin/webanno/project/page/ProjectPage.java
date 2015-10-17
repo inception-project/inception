@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -557,9 +558,11 @@ public class ProjectPage
                     }
                 }
             });
-            add(new Button("remove", new ResourceModel("label"))
+            
+            Button removeProjectButton = new Button("remove", new ResourceModel("label"))
             {
-                private static final long serialVersionUID = 1L;
+
+                private static final long serialVersionUID = 3822752631615693388L;
 
                 @Override
                 public void onSubmit()
@@ -594,7 +597,52 @@ public class ProjectPage
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
-            });
+            };
+            
+            // Add check to prevent accidental delete operation
+            removeProjectButton.add(new AttributeModifier("onclick",
+                    "if(!confirm('Do you really want to delete this Project and all of its contents?')) return false;"));
+            
+            add(removeProjectButton);
+ 
+//            add(new Button("remove", new ResourceModel("label"))
+//            {
+//                private static final long serialVersionUID = 1L;
+//
+//                @Override
+//                public void onSubmit()
+//                {
+//                    Project project = projectDetailForm.getModelObject();
+//                    if (project.getId() == 0) {
+//
+//                    }
+//                    try {
+//                        String username = SecurityContextHolder.getContext().getAuthentication()
+//                                .getName();
+//                        User user = userRepository.get(username);
+//
+//                        // BEGIN: Remove automation stuff
+//                        for (MiraTemplate template : automationService.listMiraTemplates(project)) {
+//                            automationService.removeMiraTemplate(template);
+//                        }
+//
+//                        for (SourceDocument document : automationService
+//                                .listTabSepDocuments(project)) {
+//                            repository.removeSourceDocument(document);
+//                        }
+//                        // END: Remove automation stuff
+//
+//                        repository.removeProject(project, user);
+//                        projectDetailForm.setVisible(false);
+//                    }
+//                    catch (IOException e) {
+//                        LOG.error("Unable to remove project :"
+//                                + ExceptionUtils.getRootCauseMessage(e));
+//                        error("Unable to remove project " + ":"
+//                                + ExceptionUtils.getRootCauseMessage(e));
+//                    }
+//                }
+//            });
             add(new Button("cancel", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 

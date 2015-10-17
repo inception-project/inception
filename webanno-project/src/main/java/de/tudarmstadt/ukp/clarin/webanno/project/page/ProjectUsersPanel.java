@@ -156,9 +156,11 @@ public class ProjectUsersPanel
 
                 }
             });
-            add(new Button("removeUser", new ResourceModel("label"))
+            
+            Button removeUserButton = new Button("removeUser", new ResourceModel("label"))
             {
-                private static final long serialVersionUID = 1L;
+
+                private static final long serialVersionUID = 5032883366656500162L;
 
                 @Override
                 public void onSubmit()
@@ -180,7 +182,37 @@ public class ProjectUsersPanel
                     }
                     userLists.remove(selectedUser);
                 }
-            });
+            };
+            // Add check to prevent accidental delete operation
+            removeUserButton.add(new AttributeModifier("onclick",
+                    "if(!confirm('Do you really want to remove this User?')) return false;"));
+            
+            add(removeUserButton);           
+//            add(new Button("removeUser", new ResourceModel("label"))
+//            {
+//                private static final long serialVersionUID = 1L;
+//
+//                @Override
+//                public void onSubmit()
+//                {
+//                    if (selectedUser == null) {
+//                        info("No user is selected to remove");
+//                        return;
+//                    }
+//                    List<ProjectPermission> projectPermissions = projectRepository
+//                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+//                    for (ProjectPermission projectPermission : projectPermissions) {
+//                        try {
+//                            projectRepository.removeProjectPermission(projectPermission);
+//                        }
+//                        catch (IOException e) {
+//                            error("Unable to remove project permission level "
+//                                    + ExceptionUtils.getRootCauseMessage(e));
+//                        }
+//                    }
+//                    userLists.remove(selectedUser);
+//                }
+//            });
 
             add(new Button("addPermissionLevel", new ResourceModel("label"))
             {

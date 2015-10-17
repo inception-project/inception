@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -131,10 +132,11 @@ public class AnnotationGuideLinePanel
                 });
             }
         });
-
-        add(new Button("remove", new ResourceModel("label"))
+        
+        Button removeGuidelineButton =new Button("remove", new ResourceModel("label"))
         {
-            private static final long serialVersionUID = 1L;
+
+            private static final long serialVersionUID = -5021618538109114902L;
 
             @Override
             public void onSubmit()
@@ -153,6 +155,35 @@ public class AnnotationGuideLinePanel
                     documents.remove(document);
                 }
             }
-        });
+        };
+        
+        // Add check to prevent accidental delete operation
+        removeGuidelineButton.add(new AttributeModifier("onclick",
+                "if(!confirm('Do you really want to delete this Guideline document?')) return false;"));
+        
+        add(removeGuidelineButton);
+ 
+//        add(new Button("remove", new ResourceModel("label"))
+//        {
+//            private static final long serialVersionUID = 1L;
+//
+//            @Override
+//            public void onSubmit()
+//            {
+//                Project project = selectedProjectModel.getObject();
+//                for (String document : selectedDocuments) {
+//                    try {
+//                        String username = SecurityContextHolder.getContext().getAuthentication()
+//                                .getName();
+//                        projectRepository.removeGuideline(project, document, username);
+//                    }
+//                    catch (IOException e) {
+//                        error("Error while removing a document document "
+//                                + ExceptionUtils.getRootCauseMessage(e));
+//                    }
+//                    documents.remove(document);
+//                }
+//            }
+//        });
     }
 }

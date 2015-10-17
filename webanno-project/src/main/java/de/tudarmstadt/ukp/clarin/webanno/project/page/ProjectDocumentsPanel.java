@@ -28,6 +28,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
@@ -191,10 +192,11 @@ public class ProjectDocumentsPanel
                 });
             }
         });
-
-        add(new Button("remove", new ResourceModel("label"))
+        
+        Button removeDocumentButton = new Button("remove", new ResourceModel("label"))
         {
-            private static final long serialVersionUID = 1L;
+
+            private static final long serialVersionUID = 4053376790104708784L;
 
             @Override
             public void onSubmit()
@@ -215,6 +217,35 @@ public class ProjectDocumentsPanel
                     documents.remove(document);
                 }
             }
-        });
+        };
+        // Add check to prevent accidental delete operation
+        removeDocumentButton.add(new AttributeModifier("onclick",
+                "if(!confirm('Do you really want to delete this Document?')) return false;"));
+        add(removeDocumentButton);
+        
+//        add(new Button("remove", new ResourceModel("label"))
+//        {
+//            private static final long serialVersionUID = 1L;
+//
+//            @Override
+//            public void onSubmit()
+//            {
+//                Project project = selectedProjectModel.getObject();
+//                for (String document : selectedDocuments) {
+//                    try {
+//                        String username = SecurityContextHolder.getContext().getAuthentication()
+//                                .getName();
+//                        User user = userRepository.get(username);
+//                        repository.removeSourceDocument(
+//                                repository.getSourceDocument(project, document));
+//                    }
+//                    catch (IOException e) {
+//                        error("Error while removing a document document "
+//                                + ExceptionUtils.getRootCauseMessage(e));
+//                    }
+//                    documents.remove(document);
+//                }
+//            }
+//        });
     }
 }
