@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeatureFS;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
@@ -40,6 +41,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
@@ -532,10 +534,39 @@ public class ArcAdapter
         return new ArrayList<String>();
     }
 
-    @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
+            String aDepCoveredText, String aGovCoveredText, Object aValue)
     {
-        // TODO Auto-generated method stub
+        Feature dependentFeature = getAnnotationType(aJCas.getCas()).getFeatureByBaseName(getTargetFeatureName());
+        Feature governorFeature = getAnnotationType(aJCas.getCas()).getFeatureByBaseName(getSourceFeatureName());
+
+        AnnotationFS dependentFs = null;
+        AnnotationFS governorFs = null;
+        
+        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
+        Type spanType = getType(aJCas.getCas(), getAttachTypeName());
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(getAttachFeatureName());
+        
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+
+            if (getAttachFeatureName() != null) {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
+                        arcSpanFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature).getFeatureValue(
+                        arcSpanFeature);
+
+            }
+            else {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+            }
+         if(aDepCoveredText.equals(dependentFs.getCoveredText()) && aGovCoveredText.equals(governorFs.getCoveredText())){
+             if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
+                 delete(aJCas, new VID(getAddr(fs)));
+             }
+         }
+            
+        }
     }
 
     public boolean isCrossMultipleSentence()
@@ -626,5 +657,12 @@ public class ArcAdapter
     public String getTargetFeatureName()
     {
         return targetFeatureName;
+    }
+
+    @Override
+    public void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue)
+    {
+        // TODO Auto-generated method stub
+        
     }
 }

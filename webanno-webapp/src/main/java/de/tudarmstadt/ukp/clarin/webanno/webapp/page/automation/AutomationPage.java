@@ -101,6 +101,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
@@ -273,19 +275,26 @@ public class AutomationPage
                     AnnotationFS fs = selectByAddr(jCas, address);
 
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-                        if (automationService.getMiraTemplate(f) != null
-                                & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                        Type type = CasUtil.getType(fs.getCAS(), layer.getName());
+                        Feature feat = type.getFeatureByBaseName(f.getName());
+                        TagSet tagSet = f.getTagset();
+                        boolean isRepeatabl = false;
+                        for (Tag tag : annotationService.listTags(tagSet)) {
+                            if (fs.getFeatureValueAsString(feat).equals(tag.getName())) {
+                                isRepeatabl = true;
+                                break;
+                            }
+                        }
+                        if (automationService.getMiraTemplate(f) != null && isRepeatabl
+                                && automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
 
-                            Type type = CasUtil.getType(fs.getCAS(), layer.getName());
-                            Feature feat = type.getFeatureByBaseName(f.getName());
-                            if(layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)){
+                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
                                 AutomationUtil.repeateRelationAnnotation(aBModel, repository,
-                                        annotationService, fs, f,
-                                        fs.getFeatureValueAsString(feat));
+                                        annotationService, fs, f, fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
                             }
-                            else if(layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)){
+                            else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
                                 AutomationUtil.repeateAnnotation(aBModel, repository,
                                         annotationService, aStart, aEnd, f,
                                         fs.getFeatureValueAsString(feat));
@@ -321,9 +330,16 @@ public class AutomationPage
                         try {
                             Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
                             Feature feat = type.getFeatureByBaseName(f.getName());
-                            AutomationUtil.deleteAnnotation(aBModel, repository, annotationService,
-                                    aFs.getBegin(), aFs.getEnd(), f,
-                                    aFs.getFeatureValueAsString(feat));
+                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
+                                AutomationUtil.deleteRelationAnnotation(aBModel, repository,
+                                        annotationService, aFs, f,
+                                        aFs.getFeatureValueAsString(feat));
+                            }
+                            else {
+                                AutomationUtil.deleteSpanAnnotation(aBModel, repository,
+                                        annotationService, aFs.getBegin(), aFs.getEnd(), f,
+                                        aFs.getFeatureValueAsString(feat));
+                            }
                             update(aTarget);
                         }
                         catch (UIMAException e) {
