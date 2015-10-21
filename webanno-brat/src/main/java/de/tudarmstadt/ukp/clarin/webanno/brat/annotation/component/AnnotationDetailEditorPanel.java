@@ -111,6 +111,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -1110,6 +1111,11 @@ public class AnnotationDetailEditorPanel
                         + "]");
             }
             item.add(frag);
+
+            // Put focus on first feature
+            if (item.getIndex() == item.size() - 1) {
+                frag.getFocusComponent().add(new DefaultFocusBehavior());
+            }
 
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
