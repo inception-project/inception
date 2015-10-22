@@ -247,6 +247,9 @@ public class WebannoCustomTsvReader
 
         for (Type layer : relationayers.keySet()) {
 
+            if (relationTargets.get(layer) == null) {
+                continue;
+            }
             Feature dependentFeature = layer.getFeatureByBaseName("Dependent");
             Feature governorFeature = layer.getFeatureByBaseName("Governor");
 
