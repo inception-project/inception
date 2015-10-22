@@ -661,6 +661,7 @@ public class SuggestionBuilder
     }
     private void removeDanglingRelation(JCas aMergeJCas, FeatureStructure aFs, List<Type> aEntryTypes)
     {
+        List<FeatureStructure> relToDelet = new ArrayList<>();
         checkPerType: for (Type type : aEntryTypes) {
             for (FeatureStructure fs : CasUtil.selectFS(aMergeJCas.getCas(), type)) {
                 Type t = fs.getType();
@@ -675,13 +676,16 @@ public class SuggestionBuilder
                     FeatureStructure source = fs.getFeatureValue(sourceFeat);
                     FeatureStructure target = fs.getFeatureValue(targetFeat);
                     if (source.equals(aFs)) {
-                        aMergeJCas.removeFsFromIndexes(fs);
+                        relToDelet.add(fs);
                     }
                     if (target.equals(aFs)) {
-                        aMergeJCas.removeFsFromIndexes(fs);
+                        relToDelet.add(fs);
                     }
                 }
             }
+        }
+        for (FeatureStructure fs : relToDelet) {
+            aMergeJCas.removeFsFromIndexes(fs);
         }
     }
     private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel,
