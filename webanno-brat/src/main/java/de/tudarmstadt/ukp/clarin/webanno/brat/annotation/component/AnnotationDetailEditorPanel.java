@@ -258,18 +258,29 @@ public class AnnotationDetailEditorPanel
                 @Override
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-
                     try {
-                        actionDelete(aTarget, bModel);
+
+                        JCas jCas = getCas(bModel);
+                        AnnotationFS fs = selectByAddr(jCas, bModel.getSelection().getAnnotation().getId());
+
+                        AnnotationLayer layer = bModel.getSelectedAnnotationLayer();
+                        TypeAdapter adapter = getAdapter(annotationService, layer);
+                        if (adapter instanceof SpanAdapter && getAttachedRels(jCas, fs, layer).size() > 0) {
+                            deleteModal.setTitle("Are you sure you like to delete all attached relations to this span annotation?");
+                            deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel(
+                                    deleteModal.getContentId(), bModel, deleteModal,
+                                    AnnotationDetailEditorPanel.this,
+                                    bModel.getSelectedAnnotationLayer(), false));
+                            deleteModal.show(aTarget);
+                        }
+                        else {
+
+                            actionDelete(aTarget, bModel);
+                        }
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
-                    }
-                    catch (Exception e) {
-                        error(e.getMessage());
-                        LOG.error(e.getMessage(), e);
+                    catch (UIMAException | ClassNotFoundException | IOException
+                            | CASRuntimeException | BratAnnotationException e) {
+                     error(e.getMessage());
                     }
                 }
             });
@@ -408,12 +419,12 @@ public class AnnotationDetailEditorPanel
             add(deleteModal = new ModalWindow("yesNoModal"));
             deleteModal.setOutputMarkupId(true);
 
-            deleteModal.setInitialWidth(400);
+            deleteModal.setInitialWidth(600);
             deleteModal.setInitialHeight(50);
             deleteModal.setResizable(true);
             deleteModal.setWidthUnit("px");
             deleteModal.setHeightUnit("px");
-            deleteModal.setTitle("Are you sure you want to delete the annotation?");
+            deleteModal.setTitle("Are you sure you want to delete the existing annotation?");
         }
     }
 
@@ -585,59 +596,11 @@ public class AnnotationDetailEditorPanel
         // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationLayer relationLayer : annotationService
-                    .listAttachedRelationLayers(layer)) {
-                ArcAdapter relationAdapter = (ArcAdapter) getAdapter(annotationService,
-                        relationLayer);
-                Type relationType = CasUtil.getType(jCas.getCas(), relationLayer.getName());
-                Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
-                        .getSourceFeatureName());
-                Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
-                        .getTargetFeatureName());
-
-                // This code is already prepared for the day that relations can go between
-                // different layers and may have different attach features for the source and
-                // target layers.
-                Feature relationSourceAttachFeature = null;
-                Feature relationTargetAttachFeature = null;
-                if (relationAdapter.getAttachFeatureName() != null) {
-                    relationSourceAttachFeature = sourceFeature.getRange().getFeatureByBaseName(
-                            relationAdapter.getAttachFeatureName());
-                    relationTargetAttachFeature = targetFeature.getRange().getFeatureByBaseName(
-                            relationAdapter.getAttachFeatureName());
-                }
-
-                List<AnnotationFS> toBeDeleted = new ArrayList<AnnotationFS>();
-                for (AnnotationFS relationFS : CasUtil.select(jCas.getCas(), relationType)) {
-                    // Here we get the annotations that the relation is pointing to in the UI
-                    FeatureStructure sourceFS;
-                    if (relationSourceAttachFeature != null) {
-                        sourceFS = relationFS.getFeatureValue(sourceFeature).getFeatureValue(
-                                relationSourceAttachFeature);
-                    }
-                    else {
-                        sourceFS = relationFS.getFeatureValue(sourceFeature);
-                    }
-
-                    FeatureStructure targetFS;
-                    if (relationTargetAttachFeature != null) {
-                        targetFS = relationFS.getFeatureValue(targetFeature).getFeatureValue(
-                                relationTargetAttachFeature);
-                    }
-                    else {
-                        targetFS = relationFS.getFeatureValue(targetFeature);
-                    }
-
-                    if (isSame(sourceFS, fs) || isSame(targetFS, fs)) {
-                        toBeDeleted.add(relationFS);
-                        LOG.debug("Deleted relation [" + getAddr(relationFS) + "] from layer ["
-                                + relationLayer.getName() + "]");
-                    }
-                }
-
-                for (AnnotationFS attachedFs : toBeDeleted) {
-                    jCas.getCas().removeFsFromIndexes(attachedFs);
-                }
+            for (AnnotationFS attachedFs : getAttachedRels(jCas, fs, layer)) {
+                jCas.getCas().removeFsFromIndexes(attachedFs);
+                info("The attached annotation for relation type [" + annotationService
+                        .getLayer(attachedFs.getType().getName(), bModel.getProject()).getUiName()
+                        + "] is deleted");
             }
         }
 
@@ -2083,11 +2046,11 @@ public class AnnotationDetailEditorPanel
                                     | BratAnnotationException e) {
                                 error(e.getMessage());
                             }
-                        }
+                        } 
                         else {
-                            deleteModal.setContent(new YesNoDeleteModalPanel(
+                            deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel(
                                     deleteModal.getContentId(), bModel, deleteModal,
-                                    AnnotationDetailEditorPanel.this, getModelObject()));
+                                    AnnotationDetailEditorPanel.this, getModelObject(), true));
 
                             deleteModal
                                     .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -2115,40 +2078,7 @@ public class AnnotationDetailEditorPanel
             });
         }
     }
-
-    /**
-     * A selector to enable either span or relation annotations. Based on this brush selection, the
-     * user can pre-fill the annotation details before selecting a span annotation or relation arc
-     * drawing
-     * 
-     * @author seid
-     *
-     */
-/*    public class BrushSelector
-        extends DropDownChoice<String>
-    {
-        private static final long serialVersionUID = 2233133653137312264L;
-
-        public BrushSelector(String aId, Model<String> aModel, List<? extends String> aChoices)
-        {
-            super(aId, aModel, aChoices);
-            setOutputMarkupId(true);
-
-            add(new AjaxFormComponentUpdatingBehavior("onchange")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    setInitSpanLayers(bModel);
-                    populateFeatures(null);
-                    aTarget.add(annotationFeatureForm);
-                }
-            });
-        }
-    }
-*/
+    
     private FeatureModel getFeatureModel(AnnotationFeature aFeature)
     {
         for (FeatureModel f : featureModels) {
@@ -2318,7 +2248,61 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    
+    private  Set<AnnotationFS> getAttachedRels(JCas aJCas, AnnotationFS aFs, AnnotationLayer aLayer) throws UIMAException, ClassNotFoundException, IOException{
+        
+        Set<AnnotationFS> toBeDeleted = new HashSet<AnnotationFS>();
+        for (AnnotationLayer relationLayer : annotationService
+                .listAttachedRelationLayers(aLayer)) {
+            ArcAdapter relationAdapter = (ArcAdapter) getAdapter(annotationService,
+                    relationLayer);
+            Type relationType = CasUtil.getType(aJCas.getCas(), relationLayer.getName());
+            Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
+                    .getSourceFeatureName());
+            Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
+                    .getTargetFeatureName());
+
+            // This code is already prepared for the day that relations can go between
+            // different layers and may have different attach features for the source and
+            // target layers.
+            Feature relationSourceAttachFeature = null;
+            Feature relationTargetAttachFeature = null;
+            if (relationAdapter.getAttachFeatureName() != null) {
+                relationSourceAttachFeature = sourceFeature.getRange().getFeatureByBaseName(
+                        relationAdapter.getAttachFeatureName());
+                relationTargetAttachFeature = targetFeature.getRange().getFeatureByBaseName(
+                        relationAdapter.getAttachFeatureName());
+            }
+            
+            for (AnnotationFS relationFS : CasUtil.select(aJCas.getCas(), relationType)) {
+                // Here we get the annotations that the relation is pointing to in the UI
+                FeatureStructure sourceFS;
+                if (relationSourceAttachFeature != null) {
+                    sourceFS = relationFS.getFeatureValue(sourceFeature).getFeatureValue(
+                            relationSourceAttachFeature);
+                }
+                else {
+                    sourceFS = relationFS.getFeatureValue(sourceFeature);
+                }
+
+                FeatureStructure targetFS;
+                if (relationTargetAttachFeature != null) {
+                    targetFS = relationFS.getFeatureValue(targetFeature).getFeatureValue(
+                            relationTargetAttachFeature);
+                }
+                else {
+                    targetFS = relationFS.getFeatureValue(targetFeature);
+                }
+
+                if (isSame(sourceFS, aFs) || isSame(targetFS, aFs)) {
+                    toBeDeleted.add(relationFS);
+                    LOG.debug("Deleted relation [" + getAddr(relationFS) + "] from layer ["
+                            + relationLayer.getName() + "]");
+                }
+            }
+        }
+        return toBeDeleted;
+        
+    }
     
     
     public AnnotationFeatureForm getAnnotationFeatureForm()

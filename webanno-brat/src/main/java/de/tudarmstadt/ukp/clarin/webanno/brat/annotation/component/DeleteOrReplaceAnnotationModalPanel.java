@@ -37,16 +37,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
  *
  *
  */
-public class YesNoDeleteModalPanel
+public class DeleteOrReplaceAnnotationModalPanel
     extends Panel
 {
     private static final long serialVersionUID = 9059154802785333743L;
 
-    public YesNoDeleteModalPanel(String aId, BratAnnotatorModel aBModel, ModalWindow aModalWindow,
-            AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer)
+    public DeleteOrReplaceAnnotationModalPanel(String aId, BratAnnotatorModel aBModel,
+            ModalWindow aModalWindow, AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer,
+            boolean aIsReplace)
     {
         super(aId);
-        add(new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aBModel, aEditor, aLayer));  
+        add(new YesNoButtonsForm("yesNoButtonsForm", aModalWindow, aBModel, aEditor, aLayer,
+                aIsReplace));
     }
 
     private class YesNoButtonsForm
@@ -55,7 +57,8 @@ public class YesNoDeleteModalPanel
         private static final long serialVersionUID = 2676469299552059617L;
 
         public YesNoButtonsForm(String id, final ModalWindow modalWindow,
-                BratAnnotatorModel aBModel, AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer)
+                BratAnnotatorModel aBModel, AnnotationDetailEditorPanel aEditor,
+                AnnotationLayer aLayer, boolean aIsReplace)
         {
             super(id);
             add(new AjaxLink<Void>("yesButton")
@@ -65,21 +68,27 @@ public class YesNoDeleteModalPanel
                 @Override
                 public void onClick(AjaxRequestTarget aTarget)
                 {
-                    
+
                     try {
-                        aEditor.actionDelete(aTarget, aBModel);
-                        aBModel.getSelection().setAnnotate(true); 
-                        aBModel.getSelection().setAnnotation(VID.NONE_ID);
-                        aBModel.setSelectedAnnotationLayer(aLayer);
-                        aBModel.setDefaultAnnotationLayer(aLayer);
-                        aEditor.getSelectedAnnotationLayer().setDefaultModelObject(aLayer.getUiName());
-                        aEditor.populateFeatures(null);
-                        aEditor.actionAnnotate(aTarget, aBModel);
-                        aTarget.add(aEditor.getAnnotationFeatureForm());
+                        if (aIsReplace) {
+                            aEditor.actionDelete(aTarget, aBModel);
+                            aBModel.getSelection().setAnnotate(true);
+                            aBModel.getSelection().setAnnotation(VID.NONE_ID);
+                            aBModel.setSelectedAnnotationLayer(aLayer);
+                            aBModel.setDefaultAnnotationLayer(aLayer);
+                            aEditor.getSelectedAnnotationLayer()
+                                    .setDefaultModelObject(aLayer.getUiName());
+                            aEditor.populateFeatures(null);
+                            aEditor.actionAnnotate(aTarget, aBModel);
+                            aTarget.add(aEditor.getAnnotationFeatureForm());
+                        }
+                        else {
+                            aEditor.actionDelete(aTarget, aBModel);
+                        }
                     }
                     catch (CASRuntimeException | UIMAException | ClassNotFoundException
                             | IOException | BratAnnotationException e) {
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        error(e.getMessage() + "')");
                     }
                     modalWindow.close(aTarget);
 
@@ -92,10 +101,15 @@ public class YesNoDeleteModalPanel
 
                 @Override
                 public void onClick(AjaxRequestTarget aTarget)
-                {                 
-                    aBModel.setDefaultAnnotationLayer(aBModel.getSelectedAnnotationLayer());
-                    aTarget.add(aEditor.getAnnotationFeatureForm());
-                    modalWindow.close(aTarget);
+                {
+                    if (aIsReplace) {
+                        aBModel.setDefaultAnnotationLayer(aBModel.getSelectedAnnotationLayer());
+                        aTarget.add(aEditor.getAnnotationFeatureForm());
+                        modalWindow.close(aTarget);
+                    }
+                    else {
+                        modalWindow.close(aTarget);
+                    }
 
                 }
             });
