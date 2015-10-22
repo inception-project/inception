@@ -452,7 +452,11 @@ public class SuggestionBuilder
             List<Configuration> cfgsForCurationUser = diffEntry.getValue()
                     .getConfigurations(CurationPanel.CURATION_USER);
             for (Configuration cfg : cfgsForCurationUser) {
-                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                // ALL-Vote - if ALL agree on an annotation and SOME have additional DIS-agreed annotation, apply ALL-Vote
+                if(cfg.getCasGroupIds().size() == jCases.size()){
+                    continue; // nothing to remove
+                }
+                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);              
                 Type t = fs.getType();
                 AnnotationLayer layer = annotationService.getLayer(t.getName(), aProject);
                 if (isLinkMode(layer)) {
