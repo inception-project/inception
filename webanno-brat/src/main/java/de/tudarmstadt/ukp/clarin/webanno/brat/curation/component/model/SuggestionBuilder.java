@@ -436,16 +436,6 @@ public class SuggestionBuilder
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0, mergeJCas.getDocumentText()
                         .length());
 
-        diff.print(System.out);
-        List<FeatureStructure> agreeFs = new ArrayList<>();
-      //  List<FeatureStructure> disAgreeFs = new ArrayList<>();
-        for (ConfigurationSet set : diff.getConfigurationSets()) {
-            if (diff.isAgreement(set)) {
-                for (Configuration cfg : set.getConfigurations()) {
-                    agreeFs.add(cfg.getFs(CurationPanel.CURATION_USER, jCases));
-                }
-            }
-        }
         for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
                 .entrySet()) {
             // Remove FSes with differences from the merge CAS
