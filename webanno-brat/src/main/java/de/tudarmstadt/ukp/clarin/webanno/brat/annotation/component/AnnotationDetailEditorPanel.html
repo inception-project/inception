@@ -65,12 +65,11 @@
 						<td><select wicket:id="defaultAnnotationLayer"
 							style="width: 100%"></select></td>
 					</tr>
-					<!-- 
+					
 					<tr>
 						<td>Forward annotation ?</td>
 						<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
-					</tr>
-					 -->				
+					</tr>					 				
 				</table>
 		</fieldset>		
 		  <fieldset>
@@ -86,7 +85,10 @@
 						<td><span wicket:id="selectedText" style="color: red"></span></td>
 					</tr>
 				</table>
-				<table class="hfill">
+					<div style="width: 0;overflow: hidden;">
+						<input style="width: 100%; " wicket:id=forwardAnno></input>
+					</div>
+					<table class="hfill">
 					<tr wicket:id="featureValues" id="featureValues">
 						<td wicket:id="editor"></td>
 						<wicket:fragment wicket:id="textFeatureEditor">

@@ -35,7 +35,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -57,6 +59,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -111,7 +114,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -136,12 +141,13 @@ public class AnnotationDetailEditorPanel
 
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
- //   private CheckBox forwardAnnotation;
+    private CheckBox forwardAnnotationCheck;
 
     private AjaxButton deleteButton;
     private AjaxButton reverseButton;
 
     private LayerSelector layer;   
+    private TextField<String> forwardAnnotationText;
     private Label selectedAnnotationLayer;
     private ModalWindow deleteModal;
 
@@ -181,6 +187,20 @@ public class AnnotationDetailEditorPanel
         };
 
         annotationFeatureForm.setOutputMarkupId(true);
+        annotationFeatureForm.add(new AjaxFormValidatingBehavior(annotationFeatureForm, "onsubmit") { 
+
+			private static final long serialVersionUID = -5642108496844056023L;
+
+			@Override 
+            protected void onSubmit(AjaxRequestTarget aTarget) { 
+               try {
+				actionAnnotate(aTarget, bModel, false);
+			} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+				error(e.getMessage());
+			}
+            } 
+
+        }); 
         add(annotationFeatureForm);
     }
 
@@ -207,8 +227,8 @@ public class AnnotationDetailEditorPanel
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
 
             featureModels = new ArrayList<>();          
-            // TODO: to be done soon
-            /*add(forwardAnnotation = new CheckBox("forwardAnnotation")
+
+            add(forwardAnnotationCheck = new CheckBox("forwardAnnotation")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
 
@@ -217,16 +237,12 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
 
-                    setEnabled(bModel.getSelectedAnnotationLayer() != null
-                            && bModel.getSelectedAnnotationLayer().getId() > 0
-                            && bModel.getSelectedAnnotationLayer().getType()
-                                    .equals(WebAnnoConst.SPAN_TYPE)
-                            && bModel.getSelectedAnnotationLayer().isLockToTokenOffset());
+                    setEnabled(isForwardable());
                     updateForwardAnnotation(bModel);
 
                 }
             });
-            forwardAnnotation.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            forwardAnnotationCheck.add(new AjaxFormComponentUpdatingBehavior("onchange")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 
@@ -234,11 +250,10 @@ public class AnnotationDetailEditorPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     updateForwardAnnotation(getModelObject());
-                    aTarget.add(forwardAnnotation);
                 }
             });
 
-            forwardAnnotation.setOutputMarkupId(true);*/
+            forwardAnnotationCheck.setOutputMarkupId(true);
 
             add(deleteButton = new AjaxButton("delete")
             {
@@ -378,9 +393,26 @@ public class AnnotationDetailEditorPanel
             // cannot make it visible in an AJAX call
             featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
             featureEditorsContainer.setOutputMarkupId(true);
+            
+			forwardAnnotationText = new TextField<String>("forwardAnno");
+			forwardAnnotationText.setOutputMarkupId(true);
+			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("onkeyup") {
+				private static final long serialVersionUID = 4554834769861958396L;
+
+				protected void onUpdate(AjaxRequestTarget aTarget) {					
+					featureModels.get(0).value = getKeyBindValue(forwardAnnotationText.getModelObject(),getBindTags());
+					aTarget.add(forwardAnnotationText);
+					aTarget.add(featureValues.get(0));
+				}
+			});
+            forwardAnnotationText.setOutputMarkupId(true);
+            forwardAnnotationText.add(new AttributeAppender("style", "opacity:0", ";"));
+           // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
+            featureEditorsContainer.add(forwardAnnotationText);
+            
             featureEditorsContainer.add(featureValues);
             
-            // the selected text for annotation
+            // the selected text for annotationa
             selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
                     "selection.text"));
             selectedTextLabel.setOutputMarkupId(true);
@@ -428,7 +460,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         // If there is no annotation yet, create one. During creation, the adapter
@@ -436,10 +468,10 @@ public class AnnotationDetailEditorPanel
         // an existing annotation instead of a new one.
         JCas jCas = getCas(aBModel);
 
-        actionAnnotate(aTarget, aBModel, jCas);
+        actionAnnotate(aTarget, aBModel, jCas, aIsForwarded);
     }
 
-    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, JCas jCas)
+    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, JCas jCas, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         if (aBModel.getSelectedAnnotationLayer() == null) {
@@ -570,11 +602,11 @@ public class AnnotationDetailEditorPanel
             info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
         }
 
-        onChange(aTarget, aBModel);
-        if (aBModel.isForwardAnnotation()) {
+        if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value!=null ) {
             onAutoForward(aTarget, aBModel);
         }
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
+        onChange(aTarget, aBModel);
     }
     
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -812,7 +844,7 @@ public class AnnotationDetailEditorPanel
         // Auto-commit if working on existing annotation
         if (bModel.getSelection().getAnnotation().isSet()) {
             try {
-                actionAnnotate(aTarget, bModel, aJCas);
+                actionAnnotate(aTarget, bModel, aJCas, false);
             }
             catch (BratAnnotationException e) {
                 error(e.getMessage());
@@ -1075,11 +1107,14 @@ public class AnnotationDetailEditorPanel
             }
             item.add(frag);
 
-            // Put focus on first feature
-            if (item.getIndex() == item.size() - 1) {
-                frag.getFocusComponent().add(new DefaultFocusBehavior());
-            }
-
+			if (bModel.isForwardAnnotation()) {
+				forwardAnnotationText.add(new DefaultFocusBehavior2());
+			} else {
+				// Put focus on first feature
+				if (item.getIndex() == item.size() - 1) {
+					frag.getFocusComponent().add(new DefaultFocusBehavior());
+				}
+			}
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
@@ -1150,7 +1185,7 @@ public class AnnotationDetailEditorPanel
                             // constraints the contents may have to be re-rendered
                             aTarget.add(annotationFeatureForm);
                         }
-                        actionAnnotate(aTarget, bModel);
+                        actionAnnotate(aTarget, bModel, false);
                     }
                     catch (BratAnnotationException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
@@ -1707,7 +1742,7 @@ public class AnnotationDetailEditorPanel
                     links.set(model.getArmedSlot(), m); //avoid reordering
                     aTarget.add(content);
                     try {
-                        actionAnnotate(aTarget, bModel);
+                        actionAnnotate(aTarget, bModel, false);
                     }
                     catch(BratAnnotationException e){
                         error(ExceptionUtils.getRootCauseMessage(e));
@@ -1750,7 +1785,7 @@ public class AnnotationDetailEditorPanel
                     // Auto-commit if working on existing annotation
                     if (bModel.getSelection().getAnnotation().isSet()) {
                         try {
-                            actionAnnotate(aTarget, bModel);
+                            actionAnnotate(aTarget, bModel, false);
                         }
                         catch (BratAnnotationException e) {
                             error(ExceptionUtils.getRootCauseMessage(e));
@@ -2152,20 +2187,15 @@ public class AnnotationDetailEditorPanel
 
     }
 
-    private void updateForwardAnnotation(BratAnnotatorModel aBModel)
-    {
-        if (aBModel.getSelection().getAnnotation().isSet()) {
-            aBModel.setForwardAnnotation(false);// this is editing
-
-        }
-        else if (aBModel.getSelectedAnnotationLayer() != null
-                && !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
-            aBModel.setForwardAnnotation(false);// no forwarding for sub-/multitoken annotation
-        }
-        else {
-            aBModel.setForwardAnnotation(aBModel.isForwardAnnotation());
-        }
-    }
+	private void updateForwardAnnotation(BratAnnotatorModel aBModel) {
+		if (aBModel.getSelectedAnnotationLayer() != null
+				&& !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
+			aBModel.setForwardAnnotation(false);// no forwarding for
+												// sub-/multitoken annotation
+		} else {
+			aBModel.setForwardAnnotation(aBModel.isForwardAnnotation());
+		}
+	}
 
     public static class FeatureModel
         implements Serializable
@@ -2185,6 +2215,52 @@ public class AnnotationDetailEditorPanel
             }
         }
     }
+    
+	private Map<String, String> getBindTags() {
+
+		AnnotationFeature f = annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0);
+		TagSet tagSet = f.getTagset();
+		Map<Character, String> tagNames = new LinkedHashMap<>();
+		Map<String, String> bindTag2Key = new LinkedHashMap<>();
+		for (Tag tag : annotationService.listTags(tagSet)) {
+			if (tagNames.containsKey(tag.getName().toLowerCase().charAt(0))) {
+				String oldBinding = tagNames.get(tag.getName().toLowerCase().charAt(0));
+				String newBinding = oldBinding + tag.getName().toLowerCase().charAt(0);
+				tagNames.put(tag.getName().toLowerCase().charAt(0), newBinding);
+				bindTag2Key.put(newBinding, tag.getName());
+			} else {
+				tagNames.put(tag.getName().toLowerCase().charAt(0), tag.getName().toLowerCase().substring(0, 1));
+				bindTag2Key.put(tag.getName().toLowerCase().substring(0, 1), tag.getName());
+			}
+		}
+		return bindTag2Key;
+
+	}
+	
+	private String getKeyBindValue(String aKey, Map<String, String> aBindTags){
+		// check if all the key pressed are the same character
+		// if not, just check a Tag for the last char pressed
+		if(aKey==null){
+			return aBindTags.get(aBindTags.keySet().iterator().next());
+		}
+		char prevC = aKey.charAt(0);
+		for(char ch:aKey.toCharArray()){
+			if(ch!=prevC){
+				break;
+			}
+		}
+		
+		if (aBindTags.get(aKey)!=null){
+			return aBindTags.get(aKey);
+		}
+		// re-cycle suggestions
+		if(aBindTags.containsKey(aKey.substring(0,1))){
+			forwardAnnotationText.setModelObject(aKey.substring(0,1));
+			return aBindTags.get(aKey.substring(0,1));
+		}
+		// set it to the first in the tag list , when arbitrary key is pressed
+		return aBindTags.get(aBindTags.keySet().iterator().next());
+	}
 
     public void reload(AjaxRequestTarget aTarget)
     {
@@ -2325,6 +2401,34 @@ public class AnnotationDetailEditorPanel
             return false;
         
     }
+    
+	private boolean isForwardable() {
+		if (bModel.getSelectedAnnotationLayer() == null)
+			return false;
+		if (bModel.getSelectedAnnotationLayer().getId() <= 0)
+			return false;
+
+		if (!bModel.getSelectedAnnotationLayer().getType().equals(WebAnnoConst.SPAN_TYPE))
+			return false;
+		if (!bModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
+			return false;
+		}
+		// no forward annotation for multifeature layers.
+		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).size()>1){
+			return false;
+		}
+		// we allow forward annotation only for a feature with a tagset
+		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0).getTagset()==null){
+			return false;
+		}
+		TagSet tagSet = annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0).getTagset();
+		
+		// there should be at least one tag in the tagset
+		if(annotationService.listTags(tagSet).size()==0){
+			return false;
+		}
+		return true;
+	}
     private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
     {
         String action = aDeleted ? "deleted" : "created/updated";

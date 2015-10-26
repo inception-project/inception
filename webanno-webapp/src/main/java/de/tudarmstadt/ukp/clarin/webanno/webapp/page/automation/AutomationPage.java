@@ -255,7 +255,7 @@ public class AutomationPage
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;

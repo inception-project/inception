@@ -110,7 +110,6 @@ public class BratAnnotator
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_TYPE = "originType";
 
-    private static final String GHOST_PLACE_HOLDER = "###";
     private static final String GHOST_COLOR = "orange";
 
     @SpringBean(name = "documentRepository")
@@ -122,6 +121,7 @@ public class BratAnnotator
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior controller;
     private String collection = "";
+    AnnotationDetailEditorPanel editor;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -154,7 +154,7 @@ public class BratAnnotator
             final AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
-
+        this.editor = aEditor;
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -248,7 +248,7 @@ public class BratAnnotator
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;                        
                         // do not annotate closed documents
-                        if (aEditor.isAnnotationFinished()) {
+                        if (editor.isAnnotationFinished()) {
                             error("This document is already closed. Please ask your project manager to re-open it via the Montoring page");
                             LOG.error(
                                     "This document is already closed. Please ask your project manager to re-open it via the Montoring page");
@@ -257,7 +257,7 @@ public class BratAnnotator
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
-                                aEditor.setSlot(aTarget, jCas,
+                                editor.setSlot(aTarget, jCas,
                                         getModelObject(), paramId.getId());
                             }
                             else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
@@ -274,7 +274,7 @@ public class BratAnnotator
                                 try {
                                     int id = adapter.add(jCas, offsets.getBegin(),
                                             offsets.getEnd(), null, null);
-                                    aEditor.setSlot(aTarget, jCas,
+                                    editor.setSlot(aTarget, jCas,
                                             getModelObject(), id);
                                 }
                                 catch (BratAnnotationException e) {
@@ -288,11 +288,11 @@ public class BratAnnotator
                             }
                         }
                         else {
-                            if (paramId.isSet()) {
+                            /*if (paramId.isSet()) {
                                 getModelObject().setForwardAnnotation(false);
-                            }
+                            }*/
                             // Doing anything but filling an armed slot will unarm it
-                            aEditor.clearArmedSlotModel();
+                            editor.clearArmedSlotModel();
                             getModelObject().clearArmedSlot();
 
                             Selection selection = getModelObject().getSelection();
@@ -304,12 +304,12 @@ public class BratAnnotator
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             bratRenderHighlight(aTarget, selection.getAnnotation());
-                            aEditor.reloadLayer(aTarget);
+                            editor.reloadLayer(aTarget);
                             
                             if (selection.getAnnotation().isNotSet()) {
                                 selection.setAnnotate(true);
-                                aEditor.actionAnnotate(aTarget,
-                                        getModelObject());
+                                editor.actionAnnotate(aTarget,
+                                        getModelObject(), false);
                             }
                             else {
                                 selection.setAnnotate(false);
@@ -336,10 +336,10 @@ public class BratAnnotator
                         
                         bratRenderHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
-                        aEditor.reloadLayer(aTarget);
+                        editor.reloadLayer(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                             selection.setAnnotate(true);
-                            aEditor.actionAnnotate(aTarget, getModelObject());
+                            editor.actionAnnotate(aTarget, getModelObject(), false);
                         }
                         else {
                             selection.setAnnotate(false);
@@ -394,9 +394,9 @@ public class BratAnnotator
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                    aEditor.setAnnotationLayers(getModelObject());
+                    editor.setAnnotationLayers(getModelObject());
                 }
-                aEditor.reload(aTarget);
+                editor.reload(aTarget);
                 if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
                     error("This document is already closed. Please ask your project "
                             + "manager to re-open it via the Montoring page");
@@ -515,53 +515,6 @@ public class BratAnnotator
                 + "]);";
     }
 
-    public void bratRenderGhostSpan(AjaxRequestTarget aTarget, JCas aJCas, int aBeginOffset,
-            int aEndOffset)
-    {
-        LOG.info("BEGIN ghostAnnoRender");
-        // the first sentence in this page
-        Sentence firstSent = selectSentenceAt(aJCas, getModelObject().getSentenceBeginOffset(),
-                getModelObject().getSentenceEndOffset());
-        int bo = firstSent.getBegin();
-
-        GetDocumentResponse response = addGhost(aBeginOffset - bo, aEndOffset - bo);
-
-        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
-
-        String json = toJson(response);
-        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                + "').dispatcher.post('renderData', [" + json + "]);");
-        LOG.info("END ghostAnnoRender");
-    }
-
-    private GetDocumentResponse addGhost(int aBeginOffset, int aEndOffset)
-    {
-        GetDocumentResponse response = new GetDocumentResponse();
-        // SpanAdapter.renderTokenAndSentence(aJCas, response, getModelObject());
-        List<Offsets> offsets = new ArrayList<Offsets>();
-        offsets.add(new Offsets(aBeginOffset, aEndOffset));
-        response.addEntity(new Entity(VID.GHOST, GHOST_PLACE_HOLDER, offsets, GHOST_PLACE_HOLDER,
-                GHOST_COLOR));
-        return response;
-    }
-
-    public void bratRenderGhostArc(AjaxRequestTarget aTarget, JCas aJCas)
-    {
-        LOG.info("BEGIN ghostArcAnnoRender");
-        GetDocumentResponse response = new GetDocumentResponse();
-        List<Argument> argumentList = asList(new Argument("Arg1", getModelObject().getSelection()
-                .getOrigin()), new Argument("Arg2", getModelObject().getSelection().getTarget()));
-        response.addRelation(new Relation(VID.GHOST, GHOST_PLACE_HOLDER, argumentList,
-                GHOST_PLACE_HOLDER, GHOST_COLOR));
-
-        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
-
-        String json = toJson(response);
-        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                + "').dispatcher.post('renderData', [" + json + "]);");
-        LOG.info("END ghostArcAnnoRender");
-    }
-
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
      *
@@ -621,11 +574,15 @@ public class BratAnnotator
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
 /**
- * Display the ghost annotation on the next token if auto forwarding is enabled
+ * Display an annotation on the next token if auto forwarding is enabled
  * @param aTarget
  * @param aJCas
+ * @throws BratAnnotationException 
+ * @throws IOException 
+ * @throws ClassNotFoundException 
+ * @throws UIMAException 
  */
-    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas)
+    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         LOG.info("BEGIN auto-forward annotation");
         GetDocumentResponse response = new GetDocumentResponse();
@@ -637,20 +594,17 @@ public class BratAnnotator
             // The first sentence address in the display window!
             Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-            int bratBegin = nextToken.getBegin() - firstSentence.getBegin();
-
-            int bratEnd = nextToken.getEnd() - firstSentence.getBegin();
             int la = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
                     firstSentence.getAddress(), getModelObject().getPreferences().getWindowSize());
             Sentence ls = (Sentence) BratAjaxCasUtil.selectByAddr(aJCas.getCas(), la);
             if (ls.getEnd() > nextToken.getBegin()) {
-                response = addGhost(bratBegin, bratEnd);
-
                 selection.clear();
                 selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                editor.actionAnnotate(aTarget, getModelObject(), true);
             }
         }
         BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+        
         String json = toJson(response);
         LOG.info("auto-forward annotation");
         aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()

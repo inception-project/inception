@@ -79,7 +79,7 @@ public class DeleteOrReplaceAnnotationModalPanel
                             aEditor.getSelectedAnnotationLayer()
                                     .setDefaultModelObject(aLayer.getUiName());
                             aEditor.populateFeatures(null);
-                            aEditor.actionAnnotate(aTarget, aBModel);
+                            aEditor.actionAnnotate(aTarget, aBModel, false);
                             aTarget.add(aEditor.getAnnotationFeatureForm());
                         }
                         else {

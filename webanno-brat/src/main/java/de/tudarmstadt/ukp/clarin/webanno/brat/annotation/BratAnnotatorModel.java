@@ -176,6 +176,8 @@ public class BratAnnotatorModel
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
     
+    // Text field to capture key-bindings for forward annoatations
+    private String forwardAnno;
     // the default annotation layer  
     private AnnotationLayer defaultAnnotationLayer;
     
