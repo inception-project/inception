@@ -50,6 +50,10 @@ body{
     max-height:none;
 }
 
+.k-list{
+	width: 200%  !important;
+}
+
 /* 
  * Safari does not apply height:100% in table cells, but relative positioning works. In Firefox
  * this does not work.
