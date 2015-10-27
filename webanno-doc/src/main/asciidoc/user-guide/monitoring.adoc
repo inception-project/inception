@@ -67,7 +67,7 @@ The second column of the document status frame displays the status of the curati
 
 As there is only one curator for one document, curation is not divided into individual curators.
 
-Scrolling down, two further frames become visible. The left one, named *Layer*, allows you to chose a layer in which pairwise kappa agreement between annotators will be calculated.
+Scrolling down, two further frames become visible. The left one, named *Layer*, allows you to chose a layer in which pairwise link:https://en.wikipedia.org/wiki/Cohen%27s_kappa [kappa agreement] between annotators will be calculated.
 
 image::monitoring_agreement.jpg[align="center"]
 
@@ -75,8 +75,8 @@ image::monitoring_agreement.jpg[align="center"]
 === Agreement ===
 
 Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
-annotators across all documents. Agreement is calculated using Cohen's kappa as implemented in
-DKPro Statistics.
+annotators across all documents. Possible units for measuring the agreement are link: https://en.wikipedia.org/wiki/Cohen%27s_kappa[Cohen's kappa] as implemented in
+DKPro Statistics, link:https://en.wikipedia.org/wiki/Fleiss%27_kappa[Fleiss' kappa] and link:https://en.wikipedia.org/wiki/Krippendorff%27s_alpha[Krippendorff's alpha].
 
 The first time a feature is selected for agreement inspection, it takes a moment to calculate the
 differences between the annotated documents. Switching between different features subsequently
