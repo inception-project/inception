@@ -86,6 +86,7 @@ Link annotations (between POS tags) are created by selecting the starting POS-ta
 
 image::annotation_pos_span.jpg[align="center"]
 
+
 === Export
 
 Annotations are always immediately persistent in the backend database. Thus, it is not necessary to  save the annotations explicitly. Also, losing the connection through network issues or timeouts does not cause data loss. To obtain a local copy of the current document, click on *export* button. The following frame will appear:
@@ -139,6 +140,9 @@ image::annotation_lemma.jpg[align="center"]
 link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
 
 image::annotation_pos.jpg[align="center"]
+To improve the speed of POS annotation, select *forward annotation* in the *Actions* box on the left side of your screen and activate the drop-down menu by opening it. This allows you to select POS-tags via the arrow keys of your keyboard. Once a POS-tag has been selected, it is automatically assigned to the token in focus and the next token can be annotated via arrow keys.
+
+image::key_binding_POS.PNG[align="center"]
 
 link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence has several co-ref spans simultaneously.
 
