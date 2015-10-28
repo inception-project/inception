@@ -85,7 +85,8 @@ public class AnnotationPreferenceModalPanel
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
-            getModelObject().windowSize = bModel.getPreferences().getWindowSize();
+            getModelObject().windowSize = bModel.getPreferences().getWindowSize() < 1 ? 1
+                    : bModel.getPreferences().getWindowSize();
             getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
