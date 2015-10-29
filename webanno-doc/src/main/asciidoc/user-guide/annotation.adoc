@@ -207,7 +207,7 @@ To abort the creation of an annotation, hold *CTRL* when you release the mouse b
   of the original chains.
 |====
 
-==== Primitive features
+==== Primitive Features
 
 WebAnno supports primitive features that can be of the type string, boolean, integer, and float.
 Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
@@ -215,7 +215,7 @@ float features are displayed using a number field. String features are displayed
 or - in case they have a tagset - using a combobox.
 
 [[sect_annotation_link_features]]
-==== Link features
+==== Link Features
 
 Link features can be used to link one annotation to others. Before a link can be made, a slot with 
 a role must be added. Enter the role label in the text field and press the *add* button to create
@@ -223,3 +223,11 @@ the slot. Next, click on field in the newly created slot to *arm* it. The field'
 to indicate that it is armed. Now you can fill the slot by double-clicking on a span 
 annotation. To remove a slot, arm it and then press the *del* button.
 
+==== Choosing Layers
+
+* Choose one of the predefined layers in the *Actions* box on the right side of the screen.
+* In the *Settings* section, the option *Set default layer?* can be chosen. 
+* If you select this option, the layer, which has been chosen manually, will work as main layer during the annotation process. Only instances of this layer will be created, even if other layers are activated afterwards. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+* If the box is unchecked, the most recently selected layer stays activated.
+ 
+The *Actions* box always shows the presently activated layer, the *Features* box shows the layer of the activated instance. Subsequently, the settings of the two boxes can differ. To change settings during the annotation process, cancel the previously selected layer by clicking on *Clear* in the *Action* box and choose a new layer.
