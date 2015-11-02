@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -359,55 +358,48 @@ public class WebannoCustomTsvWriter
             boolean first = true;
             boolean previous = false; // exists previous annotation, place-holed O-_ should be kept
             for (Token token : selectCovered(Token.class, annoFs)) {
-                try {
-                    if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
-                        String annotation = annoFs.getFeatureValueAsString(aFeature);
-                        if (annotation == null) {
-                            annotation = aType.getName()+"_";
-                        }
-                        if (aTokenAnnoMap.get(token.getAddress()) == null) {
-                            if (previous) {
-                                if (!multipleSpans.contains(aType.getName())) {
-                                    aTokenAnnoMap.put(token.getAddress(), annotation);
-                                }
-                                else {
-                                    aTokenAnnoMap.put(token.getAddress(), "O-_|"
-                                            + (first ? "B-" : "I-") + annotation);
-                                    first = false;
-                                }
+                if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
+                    String annotation = annoFs.getFeatureValueAsString(aFeature);
+                    if (annotation == null) {
+                        annotation = aType.getName()+"_";
+                    }
+                    if (aTokenAnnoMap.get(token.getAddress()) == null) {
+                        if (previous) {
+                            if (!multipleSpans.contains(aType.getName())) {
+                                aTokenAnnoMap.put(token.getAddress(), annotation);
                             }
                             else {
-                                if (!multipleSpans.contains(aType.getName())) {
-                                    aTokenAnnoMap.put(token.getAddress(), annotation);
-                                }
-                                else {
-                                    aTokenAnnoMap.put(token.getAddress(), (first ? "B-" : "I-")
-                                            + annotation);
-                                    first = false;
-                                }
+                                aTokenAnnoMap.put(token.getAddress(), "O-_|"
+                                        + (first ? "B-" : "I-") + annotation);
+                                first = false;
                             }
                         }
                         else {
                             if (!multipleSpans.contains(aType.getName())) {
-                                aTokenAnnoMap.put(token.getAddress(),
-                                        aTokenAnnoMap.get(token.getAddress()) + "|" + annotation);
-                                previous = true;
+                                aTokenAnnoMap.put(token.getAddress(), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(token.getAddress(),
-                                        aTokenAnnoMap.get(token.getAddress()) + "|"
-                                                + (first ? "B-" : "I-") + annotation);
+                                aTokenAnnoMap.put(token.getAddress(), (first ? "B-" : "I-")
+                                        + annotation);
                                 first = false;
-                                previous = true;
                             }
                         }
-
                     }
-                }
-                catch (CASRuntimeException e) {
-                    // Ignore this 
-                    getLogger().error(ExceptionUtils.getRootCauseMessage(e), e);
-                    continue;
+                    else {
+                        if (!multipleSpans.contains(aType.getName())) {
+                            aTokenAnnoMap.put(token.getAddress(),
+                                    aTokenAnnoMap.get(token.getAddress()) + "|" + annotation);
+                            previous = true;
+                        }
+                        else {
+                            aTokenAnnoMap.put(token.getAddress(),
+                                    aTokenAnnoMap.get(token.getAddress()) + "|"
+                                            + (first ? "B-" : "I-") + annotation);
+                            first = false;
+                            previous = true;
+                        }
+                    }
+
                 }
             }
         }
@@ -432,52 +424,45 @@ public class WebannoCustomTsvWriter
             boolean first = true;
             for (Token token : selectCovered(aCas.getJCas(), Token.class, annoFs.getBegin(),
                     annoFs.getEnd())) {
-                try {
-                    if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
-                        annoFs = temp;
+                if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
+                    annoFs = temp;
 
-                        String annotation = annoFs.getFeatureValueAsString(aFeature);
-                        if (annotation == null) {
-                            annotation = aType.getName()+"_";
-                        }
-                        if (aRelAnnoMap.get(token.getAddress()) == null) {
+                    String annotation = annoFs.getFeatureValueAsString(aFeature);
+                    if (annotation == null) {
+                        annotation = aType.getName()+"_";
+                    }
+                    if (aRelAnnoMap.get(token.getAddress()) == null) {
 
-                            if (!multipleSpans.contains(aType.getName())) {
+                        if (!multipleSpans.contains(aType.getName())) {
 
-                                aRelAnnoMap.put(token.getAddress(), annotation);
-                            }
-                            else {
-
-                                aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
-                                first = false;
-                            }
+                            aRelAnnoMap.put(token.getAddress(), annotation);
                         }
                         else {
 
-                            if (!multipleSpans.contains(aType.getName())) {
-                                aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                        + "|" + annotation);
-                            }
-                            else {
-                                aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                        + "|" + (first ? "B-" : "I-") + annotation);
-                                first = false;
-                            }
-
+                            aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
+                            first = false;
                         }
                     }
-                    //TODO: remove the B- and I- code in the if/else above. no such a thing of
-            // multiplespan annotation on relations.
+                    else {
 
-                    // if the annotation gov/dep span annotation is on multiple tokens,
-                    //we just need an arc to the first token.
-                       break;
+                        if (!multipleSpans.contains(aType.getName())) {
+                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
+                                    + "|" + annotation);
+                        }
+                        else {
+                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
+                                    + "|" + (first ? "B-" : "I-") + annotation);
+                            first = false;
+                        }
+
+                    }
                 }
-                catch (CASRuntimeException e) {
-                    // Ignore and move on for now
-                    getLogger().error(ExceptionUtils.getRootCauseMessage(e), e);
-                   continue;
-                }
+                //TODO: remove the B- and I- code in the if/else above. no such a thing of
+               // multiplespan annotation on relations.
+
+                // if the annotation gov/dep span annotation is on multiple tokens,
+                //we just need an arc to the first token.
+                   break;
             }
         }
     }
