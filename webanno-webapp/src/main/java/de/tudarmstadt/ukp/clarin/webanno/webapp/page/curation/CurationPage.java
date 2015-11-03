@@ -271,33 +271,39 @@ public class CurationPage
                     {
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
-
-                        if (bModel.getDocument() == null) {
+                        /*
+                         * Changed for #152, getDocument was returning null even after opening a document
+                         * Also, surrounded following code into if block to avoid error.
+                         */
+                        if (bModel.getProject() == null) {
                             setResponsePage(WelcomePage.class);
                             return;
                         }
+                        if(bModel.getDocument()!=null){
+                            User user = userRepository.get(username);
+                            // Update source document state to
+                            // CURRATION_INPROGRESS, if it was not
+                            // ANNOTATION_FINISHED
+                            if (!bModel.getDocument().getState()
+                                    .equals(SourceDocumentState.CURATION_FINISHED)) {
 
-                        User user = userRepository.get(username);
-                        // Update source document state to
-                        // CURRATION_INPROGRESS, if it was not
-                        // ANNOTATION_FINISHED
-                        if (!bModel.getDocument().getState()
-                                .equals(SourceDocumentState.CURATION_FINISHED)) {
+                                bModel.getDocument()
+                                        .setState(SourceDocumentState.CURATION_IN_PROGRESS);
+                            }
 
-                            bModel.getDocument().setState(SourceDocumentState.CURATION_IN_PROGRESS);
-                        }
+                            try {
+                                repository.createSourceDocument(bModel.getDocument(), user);
+                                repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
+                                        username);
 
-                        try {
-                            repository.createSourceDocument(bModel.getDocument(), user);
-                            repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
-                                    username);
+                                loadDocumentAction(target);
 
-                            loadDocumentAction(target);
-
-                        }
-                        catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
-                            target.add(getFeedbackPanel());
-                            error(e.getCause().getMessage());
+                            }
+                            catch (IOException | UIMAException | ClassNotFoundException
+                                    | BratAnnotationException e) {
+                                target.add(getFeedbackPanel());
+                                error(e.getCause().getMessage());
+                            }
                         }
                     }
                 });
