@@ -277,16 +277,22 @@ public class AutomationPage
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         Type type = CasUtil.getType(fs.getCAS(), layer.getName());
                         Feature feat = type.getFeatureByBaseName(f.getName());
+                        if (!automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                            continue;
+                        }
                         TagSet tagSet = f.getTagset();
                         boolean isRepeatabl = false;
+                        // repeat only if the value is in the tagset
                         for (Tag tag : annotationService.listTags(tagSet)) {
+                            if (fs.getFeatureValueAsString(feat) == null) {
+                                break; // this is new annotation without values
+                            }
                             if (fs.getFeatureValueAsString(feat).equals(tag.getName())) {
                                 isRepeatabl = true;
                                 break;
                             }
                         }
-                        if (automationService.getMiraTemplate(f) != null && isRepeatabl
-                                && automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                        if (automationService.getMiraTemplate(f) != null && isRepeatabl) {
 
                             if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
                                 AutomationUtil.repeateRelationAnnotation(aBModel, repository,
