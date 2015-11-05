@@ -37,13 +37,13 @@ The percentual progress out of the workload for individual annotators may be vie
 
 [[sect_monitoring_status]]
 
-Below the document overview, a measuring for the inter-annotator-agreement can be selected by opening the *Maß* dropdown menu. Three different units of measurement are possible: https://en.wikipedia.org/wiki/Cohen%27s_kappa[Cohen's kappa] as implemented in
+Below the document overview, a measuring for the inter-annotator-agreement can be selected by opening the *Measure* dropdown menu. Three different units of measurement are possible: https://en.wikipedia.org/wiki/Cohen%27s_kappa[Cohen's kappa] as implemented in
 DKPro Statistics, link:https://en.wikipedia.org/wiki/Fleiss%27_kappa[Fleiss' kappa] and link:https://en.wikipedia.org/wiki/Krippendorff%27s_alpha[Krippendorff's alpha].
-Below the *Maß* dropdown menu, an export format can be chosen. Currently, only link:https://en.wikipedia.org/wiki/Comma-separated_values[CSV] format is possible.
+Below the *Measure* dropdown menu, an export format can be chosen. Currently, only link:https://en.wikipedia.org/wiki/Comma-separated_values[CSV] format is possible.
 
 image::monitoring3.PNG[align="center"]
 
-Above the *Maß* dropbdown menu, the *Merkmal* box allows the selection of layers for which an agreement shall be computed. Doubleclicking on a layer starts the computation of the agreement and an outline is shown to the left side of the box:
+Above the *Measure* dropbdown menu, the *Feature* box allows the selection of layers for which an agreement shall be computed. Doubleclicking on a layer starts the computation of the agreement and an outline is shown to the left side of the box:
 
 image::monitoring4.PNG[align="center"]
 
