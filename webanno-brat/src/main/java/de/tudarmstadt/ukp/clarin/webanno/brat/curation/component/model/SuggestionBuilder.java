@@ -397,6 +397,7 @@ public class SuggestionBuilder
         return entryTypes;
     }
 
+    
     /**
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
@@ -412,10 +413,11 @@ public class SuggestionBuilder
      * @return the JCas.
      * @throws IOException
      *             if an I/O error occurs.
+     * @throws UIMAException 
      */
     public JCas createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, List<AnnotationLayer> aAnnotationLayers)
-                throws IOException
+                throws IOException, UIMAException
     {
         User userLoggedIn = userRepository
                 .get(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -429,281 +431,231 @@ public class SuggestionBuilder
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0,
                 mergeJCas.getDocumentText().length());
 
-        // this contains annotations which disagree on slot annotation while everything elese is in
-        // agreement.
-        Map<Integer, Map<AnnotationFeature, Set<LinkWithRoleModel>>> agreedLinkFeatures = new HashMap<>();
-        Map<Integer, Set<Integer>> relsToDel = new HashMap<>();
-        for (Entry<Position, ConfigurationSet> diffEntry : diff.getDifferingConfigurationSets()
-                .entrySet()) {
-            // Remove FSes with differences from the merge CAS
-            List<Configuration> cfgsForCurationUser = diffEntry.getValue().getConfigurations();
-            int address = -1;//
-            boolean dis = false;
-            AnnotationLayer layer = null;
-            for (Configuration cfg : cfgsForCurationUser) {
-
+        Set<FeatureStructure> agreeFs = new HashSet<>();
+        Set<FeatureStructure> danglingRelsToDel = new HashSet<>();
+        for (ConfigurationSet acfgs : diff.getConfigurationSets()) {
+            for (Configuration cfg : acfgs.getConfigurations()) {
+              
+                // when multiple annotations exist on a position, check if all annotators agree in this Configuration
                 if (cfg.getCasGroupIds().size() == jCases.size()) {
-                    FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
-                    setDanglingRelToDel(mergeJCas, fs, entryTypes, relsToDel);
-                    mergeJCas.removeFsFromIndexes(fs);
-                  //  continue;
-                }
-                else if (cfg.getFs(CurationPanel.CURATION_USER, jCases) != null) {
-                    FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
-                    Type t = fs.getType();
-                    layer = annotationService.getLayer(t.getName(), aProject);
-                    address = getAddr(fs);
-                    dis = true;
-                    setDanglingRelToDel(mergeJCas, fs, entryTypes, relsToDel);
-                    mergeJCas.removeFsFromIndexes(fs);
-                }
-            }
-            if (dis) {
-                setAgreeLinkFses(cfgsForCurationUser, layer, jCases, agreedLinkFeatures, address);
-            }
-            else {
-                cfgsForCurationUser = diffEntry.getValue()
-                        .getConfigurations(CurationPanel.CURATION_USER);
-                for (Configuration cfg : cfgsForCurationUser) {
-                    // ALL-Vote - if ALL agree on an annotation and SOME have additional DIS-agreed
-                    // annotation, apply ALL-Vote
-                    FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                    FeatureStructure mergeFs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                    Type t = mergeFs.getType();
+                    AnnotationLayer l = annotationService.getLayer(t.getName(), aProject);
+                    boolean isAgreed = true; // do all annotation agreed on non-slot features
+                    for (AnnotationFeature f : annotationService.listAnnotationFeature(l)) {
+                        Map<String, String> featureValues = new HashMap<>();
+                        if (isFsOnFeaturesSame(cfg, f, jCases, featureValues)) {
+                            if (f.getLinkMode() != LinkMode.NONE) {
+                                Set<LinkWithRoleModel> agreedLinkFeatures = new HashSet<>();
+                                setAgreeLinkFses(cfg, f, jCases, agreedLinkFeatures, mergeFs);
+                            }
 
-                    Type t = fs.getType();
-                    layer = annotationService.getLayer(t.getName(), aProject);
-                    if (cfg.getCasGroupIds().size() == jCases.size()) {
-                        setMultiAnnoAgreeLinkFses(cfg, layer, jCases, agreedLinkFeatures);
+                        }
+                        else {
+                            isAgreed = false;
+                            break;
+                        }
+                    }
+                    if (isAgreed) {
+                        agreeFs.add(mergeFs);
+                    }
+                    else {
+                        mergeJCas.removeFsFromIndexes(mergeFs);
+                        setDanglingRelToDel(mergeJCas, mergeFs, entryTypes, danglingRelsToDel);
+                    }
+                }
+                // if annotators agree on non-slot features in this ConfigurationSet
+                else {
+                    FeatureStructure mergeFs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
+                    if (mergeFs != null && !agreeFs.contains(mergeFs)) {
+                        boolean agreed = true;
+                        Type t = mergeFs.getType();
+                        AnnotationLayer l = annotationService.getLayer(t.getName(), aProject);
+                        for (AnnotationFeature f : annotationService.listAnnotationFeature(l)) {
+                            if (acfgs.getCasGroupIds().size() == jCases.size()
+                                    && isFsOnFeaturesSame(acfgs.getConfigurations(), f, jCases)) {
+                                if (f.getLinkMode() != LinkMode.NONE) {
+                                    Set<LinkWithRoleModel> agreedLinkFeatures = new HashSet<>();
+                                    setAgreeLinkFses(acfgs.getConfigurations(), f, jCases,
+                                            agreedLinkFeatures, mergeFs);
+                                }
+                            }
+
+                            else {
+                                agreed = false;
+                                break;
+                            }
+                        }
+                        if (agreed) {
+                            agreeFs.add(mergeFs);
+                        }
+                        else {
+                            mergeJCas.removeFsFromIndexes(mergeFs);
+                            setDanglingRelToDel(mergeJCas, mergeFs, entryTypes, danglingRelsToDel);
+                        }
                     }
                 }
             }
         }
-
+       
         for (Entry<Position, ConfigurationSet> diffEntry : diff.getIncompleteConfigurationSets()
                 .entrySet()) {
-            // Remove FSes with differences from the merge CAS
+            // Remove annotations from incomplete Configurationsets
             List<Configuration> cfgsForCurationUser = diffEntry.getValue()
                     .getConfigurations(CurationPanel.CURATION_USER);
             for (Configuration cfg : cfgsForCurationUser) {
-                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);
-                setDanglingRelToDel(mergeJCas, fs, entryTypes, relsToDel);
-                mergeJCas.removeFsFromIndexes(fs);
-            }
-        }
-
-        for (int address : agreedLinkFeatures.keySet()) {
-            AnnotationFS fs = selectByAddr(mergeJCas, address);
-            updateNewAnnotationWithLink(mergeJCas.getCas(), fs,
-                    agreedLinkFeatures.get(address));
-        }
-        for (int address : relsToDel.keySet()) {
-            if (!agreedLinkFeatures.keySet().contains(address)) {
-                for (int addressToDel : relsToDel.get(address)) {
-                    AnnotationFS fs = selectByAddr(mergeJCas, addressToDel);
+                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);             
+                if(!agreeFs.contains(fs)) {
                     mergeJCas.removeFsFromIndexes(fs);
                 }
+                
             }
+        }
+        
+        // removing dangling relations
+        for (FeatureStructure relFs : danglingRelsToDel) {
+            mergeJCas.removeFsFromIndexes(relFs);
         }
 
         repository.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 userLoggedIn);
         return mergeJCas;
     }
+    
+    
     /**
      * 
      * For slot annotations with at least one different slot value,  we could 
-     * retain those in agreement as is. Add them to the new annotation
+     * retain those in agreement AS IS. Retain only slot annotations in agreement
      * 
      */
-    private void updateNewAnnotationWithLink(CAS aCas, AnnotationFS aFs,
-            Map<AnnotationFeature, Set<LinkWithRoleModel>> aLinkFses)
+    private void updateNewAnnotationWithLink(FeatureStructure aFs,
+            AnnotationFeature feature, Set<LinkWithRoleModel> aLinkFses)
     {
-        for (AnnotationFeature feature : aLinkFses.keySet()) {
 
-            List<LinkWithRoleModel> links = new ArrayList<>(aLinkFses.get(feature));
+            List<LinkWithRoleModel> links = new ArrayList<>(aLinkFses);
             // clean old link annotations
             Feature uimaFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             aFs.setFeatureValue(uimaFeature, null);
             // re-populate all agreed only link annotations
             setFeature(aFs, feature, links);
-        }
-        
-        aCas.addFsToIndexes(aFs);
     }
     /**
-     * Do annotators agree on every other features except slot values?
+     * Do annotators agree on every other features except slot annotations in this {@link ConfigurationSet}?
      */
-    private boolean isFsOnFeaturesSame(List<Configuration> aCfgs, AnnotationLayer aLayer,
+    private boolean isFsOnFeaturesSame(List<Configuration> aCfgs, AnnotationFeature aFeature,
             Map<String, JCas> aJCases)
     {
         Map<String, String> featureValues = new HashMap<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            if (feature.getLinkMode() != LinkMode.NONE) {
-                continue;
-            }
-            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                continue;
-            }
             for (Configuration cfg : aCfgs) {
-                for (String usr : cfg.getCasGroupIds()) {
-                    FeatureStructure fsu = cfg.getFs(usr, aJCases);
-                    Feature uimaFeature = fsu.getType().getFeatureByBaseName(feature.getName());
-                    switch (feature.getType()) {
-                    case CAS.TYPE_NAME_STRING:
-                        String f = fsu.getFeatureValueAsString(uimaFeature);
-                        if (featureValues.get(feature.getName()) == null) {
-                            featureValues.put(feature.getName(), f);
-                        }
-                        else if (!featureValues.get(feature.getName()).equals(f)) {
-                            return false;
-                        }
-                        break;
-                    case CAS.TYPE_NAME_BOOLEAN:
-                        boolean fb = fsu.getBooleanValue(uimaFeature);
-                        if (featureValues.get(feature.getName()) == null) {
-                            featureValues.put(feature.getName(), String.valueOf(fb));
-                        }
-                        else if (!featureValues.get(feature.getName()).equals(String.valueOf(fb))) {
-                            return false;
-                        }
-                        break;
-                    case CAS.TYPE_NAME_FLOAT:
-                        float ff = fsu.getFloatValue(uimaFeature);
-                        if (featureValues.get(feature.getName()) == null) {
-                            featureValues.put(feature.getName(), String.valueOf(ff));
-                        }
-                        else if (!featureValues.get(feature.getName()).equals(String.valueOf(ff))) {
-                            return false;
-                        }
-                        break;
-                    case CAS.TYPE_NAME_INTEGER:
-                        float fi = fsu.getIntValue(uimaFeature);
-                        if (featureValues.get(feature.getName()) == null) {
-                            featureValues.put(feature.getName(), String.valueOf(fi));
-                        }
-                        else if (!featureValues.get(feature.getName()).equals(String.valueOf(fi))) {
-                            return false;
-                        }
-                        break;
-                    default:
-                        String fo = fsu.getFeatureValueAsString(uimaFeature);
-                        if (featureValues.get(feature.getName()) == null) {
-                            featureValues.put(feature.getName(), fo);
-                        }
-                        else if (!featureValues.get(feature.getName()).equals(fo)) {
-                            return false;
-                        }
-                    }
+              if(!isFsOnFeaturesSame(cfg, aFeature, aJCases, featureValues)){
+                  return false;
+              }
+            }
+        return true;
+    }
+    /**
+     * 
+     * Check if the non slot features in a {@link Configuration} are the same
+     */
+    private boolean isFsOnFeaturesSame(Configuration cfg, AnnotationFeature feature,
+            Map<String, JCas> aJCases, Map<String, String> aFeatureValue)
+    {
+        if (feature.getLinkMode() != LinkMode.NONE) {
+            return true;
+        }
+        if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
+            return true;
+        }
+        for (String usr : cfg.getCasGroupIds()) {
+            FeatureStructure fsu = cfg.getFs(usr, aJCases);
+            Feature uimaFeature = fsu.getType().getFeatureByBaseName(feature.getName());
+            switch (feature.getType()) {
+            case CAS.TYPE_NAME_STRING:
+                String f = fsu.getFeatureValueAsString(uimaFeature);
+                if (aFeatureValue.get(feature.getName()) == null) {
+                    aFeatureValue.put(feature.getName(), f);
+                }
+                else if (!aFeatureValue.get(feature.getName()).equals(f)) {
+                    return false;
+                }
+                break;
+            case CAS.TYPE_NAME_BOOLEAN:
+                boolean fb = fsu.getBooleanValue(uimaFeature);
+                if (aFeatureValue.get(feature.getName()) == null) {
+                    aFeatureValue.put(feature.getName(), String.valueOf(fb));
+                }
+                else if (!aFeatureValue.get(feature.getName()).equals(String.valueOf(fb))) {
+                    return false;
+                }
+                break;
+            case CAS.TYPE_NAME_FLOAT:
+                float ff = fsu.getFloatValue(uimaFeature);
+                if (aFeatureValue.get(feature.getName()) == null) {
+                    aFeatureValue.put(feature.getName(), String.valueOf(ff));
+                }
+                else if (!aFeatureValue.get(feature.getName()).equals(String.valueOf(ff))) {
+                    return false;
+                }
+                break;
+            case CAS.TYPE_NAME_INTEGER:
+                float fi = fsu.getIntValue(uimaFeature);
+                if (aFeatureValue.get(feature.getName()) == null) {
+                    aFeatureValue.put(feature.getName(), String.valueOf(fi));
+                }
+                else if (!aFeatureValue.get(feature.getName()).equals(String.valueOf(fi))) {
+                    return false;
+                }
+                break;
+            default:
+                String fo = fsu.getFeatureValueAsString(uimaFeature);
+                if (aFeatureValue.get(feature.getName()) == null) {
+                    aFeatureValue.put(feature.getName(), fo);
+                }
+                else if (!aFeatureValue.get(feature.getName()).equals(fo)) {
+                    return false;
                 }
             }
         }
         return true;
     }
     
-    /**
-     * Get agreed-upon slot values to add them to the merge CAS where multiple span annotation on an
-     * offset exists
-     */
-    private void setMultiAnnoAgreeLinkFses(Configuration aCfg, AnnotationLayer aLayer,
-            Map<String, JCas> aJCases,
-            Map<Integer, Map<AnnotationFeature, Set<LinkWithRoleModel>>> aLinkedAnnoPerFeat)
-    {
-        Map<AnnotationFeature, Set<LinkWithRoleModel>> linkFeatureValues = new HashMap<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                continue;
-            }
-            if (feature.getLinkMode() == LinkMode.NONE) {
-                continue;
-            }
-            Set<LinkWithRoleModel> links = null;
-            for (String usr : aCfg.getCasGroupIds()) {
-                FeatureStructure fs = aCfg.getFs(usr, aJCases);
 
-                if (links == null) {
-                    links = new HashSet<>();
-                    links.addAll(getFeature(fs, feature));
-                }
-                else {
-                    links.retainAll(getFeature(fs, feature));
-                }
-            }
-            linkFeatureValues.put(feature, links);
-        }
-        int address = getAddr(aCfg.getFs(CurationPanel.CURATION_USER, aJCases));
-        if (aLinkedAnnoPerFeat.get(address) == null) {
-            aLinkedAnnoPerFeat.put(address, linkFeatureValues);
-        }
-        else {
-            for (AnnotationFeature f : aLinkedAnnoPerFeat.get(address).keySet()) {
-                aLinkedAnnoPerFeat.get(address).get(f).addAll(linkFeatureValues.get(f));
-            }
+    /**
+     * Get agreed slot annotations in this {@link ConfigurationSet}
+     */
+    private void setAgreeLinkFses(List<Configuration> aCfgs, AnnotationFeature aFeature,
+            Map<String, JCas> aJCases, Set<LinkWithRoleModel> aLinkedAnnoPerFeat,
+            FeatureStructure aFs)
+    {
+        for (Configuration cfg : aCfgs) {
+            setAgreeLinkFses(cfg, aFeature, aJCases, aLinkedAnnoPerFeat, aFs);
         }
     }
 
     /**
-     * For slotable annotation layers, get the agreed slots attributes
+     * 
+     * Get agreed slot annotations in this {@link Configuration}
+     * 
      */
-    private void setAgreeLinkFses(List<Configuration> aCfgs, AnnotationLayer aLayer,
-            Map<String, JCas> aJCases,
-            Map<Integer, Map<AnnotationFeature, Set<LinkWithRoleModel>>> aLinkedAnnoPerFeat,
-            int aAddress)
+    private void setAgreeLinkFses(Configuration aCfg, AnnotationFeature aFeature,
+            Map<String, JCas> aJCases, Set<LinkWithRoleModel> aLinkedAnnoPerFeat,
+            FeatureStructure aFs)
     {
-        Map<AnnotationFeature, Set<LinkWithRoleModel>> linkFeatureValues = new HashMap<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            if (feature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)) {
-                continue;
+        for (String usr : aCfg.getCasGroupIds()) {
+            FeatureStructure fs = aCfg.getFs(usr, aJCases);
+            if (aLinkedAnnoPerFeat.size() == 0) {
+                aLinkedAnnoPerFeat = new HashSet<>();
+                aLinkedAnnoPerFeat.addAll(getFeature(fs, aFeature));
             }
-            if (feature.getLinkMode() == LinkMode.NONE) {
-                continue;
-            }
-            Set<LinkWithRoleModel> links = null;
-            if (isLinkMode(aLayer)) {
-                if (isFsOnFeaturesSame(aCfgs, aLayer, aJCases)) {
-
-                    for (Configuration cfg : aCfgs) {
-                        for (String usr : cfg.getCasGroupIds()) {
-                            FeatureStructure fs = cfg.getFs(usr, aJCases);
-
-                            if (links == null) {
-                                links = new HashSet<>();
-                                links.addAll(getFeature(fs, feature));
-                            }
-                            else {
-                                links.retainAll(getFeature(fs, feature));
-                            }
-                        }
-                        linkFeatureValues.put(feature, links);
-                    }
-
-                if (aLinkedAnnoPerFeat.get(aAddress) == null) {
-                    aLinkedAnnoPerFeat.put(aAddress, linkFeatureValues);
-                }
-                else {
-                    for (AnnotationFeature f : aLinkedAnnoPerFeat.get(aAddress).keySet()) {
-                        aLinkedAnnoPerFeat.get(aAddress).get(f).addAll(linkFeatureValues.get(f));
-                    }
-                }
-            }
+            else {
+                aLinkedAnnoPerFeat.retainAll(getFeature(fs, aFeature));
             }
         }
-
+        updateNewAnnotationWithLink(aFs, aFeature, aLinkedAnnoPerFeat);
     }
-    /**
-     * We don't care for any disagreement, except it is in a LinkMode so that we should check 
-     * if annotators agree on every other features except slot values
-     */
-    private boolean isLinkMode(AnnotationLayer aLayer)
-    {
 
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
-            // slot span is copied from the suggestion to the curation
-            if (feature.getLinkMode() != LinkMode.NONE) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private void setDanglingRelToDel(JCas aMergeJCas, FeatureStructure aFs, List<Type> aEntryTypes, Map<Integer, Set<Integer>> aRelsToDel)
+    private void setDanglingRelToDel(JCas aMergeJCas, FeatureStructure aFs, List<Type> aEntryTypes,  Set<FeatureStructure> aRelsToDel)
     {
         checkPerType: for (Type type : aEntryTypes) {
             for (FeatureStructure fs : CasUtil.selectFS(aMergeJCas.getCas(), type)) {
@@ -719,24 +671,13 @@ public class SuggestionBuilder
                     FeatureStructure source = fs.getFeatureValue(sourceFeat);
                     FeatureStructure target = fs.getFeatureValue(targetFeat);
                     if (source.equals(aFs)) {
-                        addRelsToDel(aFs, aRelsToDel, fs);
+                        aRelsToDel.add(fs);
                     }
                     if (target.equals(aFs)) {
-                        addRelsToDel(aFs, aRelsToDel, fs);
+                        aRelsToDel.add(fs);
                     }
                 }
             }
-        }
-    }
-
-    private void addRelsToDel(FeatureStructure aFs, Map<Integer, Set<Integer>> aRelsToDel,
-            FeatureStructure fs)
-    {
-        if(aRelsToDel.containsKey(getAddr(aFs))){
-            aRelsToDel.get(getAddr(aFs)).add(getAddr(fs));
-        }
-        else{
-            aRelsToDel.put(getAddr(aFs), new HashSet<>(getAddr(fs)));
         }
     }
     private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel,
