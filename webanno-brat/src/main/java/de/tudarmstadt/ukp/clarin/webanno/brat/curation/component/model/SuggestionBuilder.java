@@ -504,9 +504,10 @@ public class SuggestionBuilder
             List<Configuration> cfgsForCurationUser = diffEntry.getValue()
                     .getConfigurations(CurationPanel.CURATION_USER);
             for (Configuration cfg : cfgsForCurationUser) {
-                FeatureStructure fs = cfg.getFs(CurationPanel.CURATION_USER, jCases);             
-                if(!agreeFs.contains(fs)) {
-                    mergeJCas.removeFsFromIndexes(fs);
+                FeatureStructure mergeFs = cfg.getFs(CurationPanel.CURATION_USER, jCases); 
+                setDanglingRelToDel(mergeJCas, mergeFs, entryTypes, danglingRelsToDel);
+                if(!agreeFs.contains(mergeFs)) {
+                    mergeJCas.removeFsFromIndexes(mergeFs);
                 }
                 
             }
