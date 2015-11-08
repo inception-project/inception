@@ -672,7 +672,7 @@ public class ProjectExportPanel extends Panel {
             List<de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate> exTemplates = new ArrayList<>();
             for (MiraTemplate template : automationService.listMiraTemplates(aProject)) {
                 de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate exTemplate = new de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate();
-                exTemplate.setAnnotateAndPredict(template.isAnnotateAndPredict());
+                exTemplate.setAnnotateAndPredict(template.isAnnotateAndRepeat());
                 exTemplate.setAutomationStarted(template.isAutomationStarted());
                 exTemplate.setCurrentLayer(template.isCurrentLayer());
                 exTemplate.setResult(template.getResult());

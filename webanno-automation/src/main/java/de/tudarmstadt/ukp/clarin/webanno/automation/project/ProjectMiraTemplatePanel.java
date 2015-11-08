@@ -440,7 +440,7 @@ public class ProjectMiraTemplatePanel
             super(id, new CompoundPropertyModel<MiraTemplate>(new EntityModel<MiraTemplate>(
                     new MiraTemplate())));
 
-            add(new CheckBox("annotateAndPredict"));
+            add(new CheckBox("annotateAndRepeat"));
 
             add(new Button("save", new ResourceModel("label"))
             {

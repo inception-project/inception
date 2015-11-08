@@ -64,12 +64,13 @@ public class MiraTemplate
     private boolean currentLayer = false;// The current training layer for this mira template
 
     /**
-     * Annotate the Automate view while annotating
+     * Repeat span annotation to the suggestions view 
      */
-    private boolean annotateAndPredict = true;
+    private boolean annotateAndRepeat = true;
+    
 
     /**
-     * Results comprising of the tarining accuracy and number of examples used
+     * Results comprising of the training accuracy and number of examples used
      */
     private String result = "";
 
@@ -103,16 +104,15 @@ public class MiraTemplate
         this.id = id;
     }
 
-    public boolean isAnnotateAndPredict()
+    public boolean isAnnotateAndRepeat()
     {
-        return annotateAndPredict;
+        return annotateAndRepeat;
     }
 
-    public void setAnnotateAndPredict(boolean annotateAndPredict)
+    public void setAnnotateAndRepeat(boolean annotateAndRepeat)
     {
-        this.annotateAndPredict = annotateAndPredict;
+        this.annotateAndRepeat = annotateAndRepeat;
     }
-
     public String getResult()
     {
         return result;

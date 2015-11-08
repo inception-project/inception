@@ -277,7 +277,10 @@ public class AutomationPage
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         Type type = CasUtil.getType(fs.getCAS(), layer.getName());
                         Feature feat = type.getFeatureByBaseName(f.getName());
-                        if (!automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
+                        if (!automationService.existsMiraTemplate(f)) {
+                            continue;
+                        }
+                        if (!automationService.getMiraTemplate(f).isAnnotateAndRepeat()) {
                             continue;
                         }
                         TagSet tagSet = f.getTagset();
@@ -294,7 +297,7 @@ public class AutomationPage
                         }
                         if (automationService.getMiraTemplate(f) != null && isRepeatabl) {
 
-                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
+                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {                               
                                 AutomationUtil.repeateRelationAnnotation(aBModel, repository,
                                         annotationService, fs, f, fs.getFeatureValueAsString(feat));
                                 update(aTarget);
@@ -331,35 +334,37 @@ public class AutomationPage
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-                    if (automationService.getMiraTemplate(f) != null
-                            & automationService.getMiraTemplate(f).isAnnotateAndPredict()) {
-                        try {
-                            Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
-                            Feature feat = type.getFeatureByBaseName(f.getName());
-                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
-                                AutomationUtil.deleteRelationAnnotation(aBModel, repository,
-                                        annotationService, aFs, f,
-                                        aFs.getFeatureValueAsString(feat));
-                            }
-                            else {
-                                AutomationUtil.deleteSpanAnnotation(aBModel, repository,
-                                        annotationService, aFs.getBegin(), aFs.getEnd(), f,
-                                        aFs.getFeatureValueAsString(feat));
-                            }
-                            update(aTarget);
+                    if (!automationService.existsMiraTemplate(f)) {
+                        continue;
+                    }
+                    if (!automationService.getMiraTemplate(f).isAnnotateAndRepeat()) {
+                        continue;
+                    }
+                    try {
+                        Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
+                        Feature feat = type.getFeatureByBaseName(f.getName());
+                        if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
+                            AutomationUtil.deleteRelationAnnotation(aBModel, repository,
+                                    annotationService, aFs, f, aFs.getFeatureValueAsString(feat));
                         }
-                        catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
+                        else {
+                            AutomationUtil.deleteSpanAnnotation(aBModel, repository,
+                                    annotationService, aFs.getBegin(), aFs.getEnd(), f,
+                                    aFs.getFeatureValueAsString(feat));
                         }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        catch (BratAnnotationException e) {
-                            error(e.getMessage());
-                        }
+                        update(aTarget);
+                    }
+                    catch (UIMAException e) {
+                        error(ExceptionUtils.getRootCause(e));
+                    }
+                    catch (ClassNotFoundException e) {
+                        error(e.getMessage());
+                    }
+                    catch (IOException e) {
+                        error(e.getMessage());
+                    }
+                    catch (BratAnnotationException e) {
+                        error(e.getMessage());
                     }
                 }
 

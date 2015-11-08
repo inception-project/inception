@@ -488,7 +488,7 @@ public class ImportUtil
     {
         for (MiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
             de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate();
-            template.setAnnotateAndPredict(exTemplate.isAnnotateAndPredict());
+            template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
             template.setAutomationStarted(false);
             template.setCurrentLayer(exTemplate.isCurrentLayer());
             template.setResult("---");
