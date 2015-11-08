@@ -301,7 +301,7 @@ public class AutomationPage
                                 break;
                             }
                             else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
-                                AutomationUtil.repeateAnnotation(aBModel, repository,
+                                AutomationUtil.repeateSpanAnnotation(aBModel, repository,
                                         annotationService, aStart, aEnd, f,
                                         fs.getFeatureValueAsString(feat));
                                 update(aTarget);

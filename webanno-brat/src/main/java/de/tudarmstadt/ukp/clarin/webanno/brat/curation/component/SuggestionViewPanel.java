@@ -421,9 +421,16 @@ public class SuggestionViewPanel
             }
             else {
                 ArcAdapter adapter = (ArcAdapter) getAdapter(annotationService, layer);
-
+                
+                Sentence sentence = selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
+                        bModel.getSentenceEndOffset());
+                int start = sentence.getBegin();
+                int end = selectByAddr(aJcas,
+                        Sentence.class, getLastSentenceAddressInDisplayWindow(aJcas,
+                                getAddr(sentence), bModel.getPreferences().getWindowSize()))
+                                        .getEnd();
                 // Add annotation - we set no feature values yet.
-                int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas, bModel, null,
+                int selectedSpanId = getAddr(adapter.add(originFs, targetFs, aJcas, start, end, null,
                         null));
 
                 // Set the feature values

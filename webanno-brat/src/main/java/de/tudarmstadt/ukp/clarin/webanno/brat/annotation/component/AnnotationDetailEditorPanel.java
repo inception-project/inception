@@ -399,7 +399,8 @@ public class AnnotationDetailEditorPanel
 			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("onkeyup") {
 				private static final long serialVersionUID = 4554834769861958396L;
 
-				protected void onUpdate(AjaxRequestTarget aTarget) {					
+				@Override
+                protected void onUpdate(AjaxRequestTarget aTarget) {					
 					featureModels.get(0).value = getKeyBindValue(forwardAnnotationText.getModelObject(),getBindTags());
 					aTarget.add(forwardAnnotationText);
 					aTarget.add(featureValues.get(0));
@@ -508,7 +509,15 @@ public class AnnotationDetailEditorPanel
                 AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
                 AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
                 if (adapter instanceof ArcAdapter) {
-                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, aBModel,
+                    Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                            bModel.getSentenceEndOffset());
+                    int start = sentence.getBegin();
+                    int end = selectByAddr(jCas,
+                            Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
+                                    getAddr(sentence), bModel.getPreferences().getWindowSize()))
+                                            .getEnd();
+
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end,
                             null, null);
                     selection.setAnnotation(new VID(getAddr(arc)));
                 }
@@ -748,9 +757,16 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(jCas, aBModel.getSelection().getTarget());
 
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
+        Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+        int start = sentence.getBegin();
+        int end = selectByAddr(jCas,
+                Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
+                        getAddr(sentence), bModel.getPreferences().getWindowSize()))
+                                .getEnd();
         if (adapter instanceof ArcAdapter) {
             for (FeatureModel fm : featureModels) {
-                AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, aBModel,
+                AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, start, end,
                         fm.feature, fm.value);
                 aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
             }
@@ -2403,13 +2419,16 @@ public class AnnotationDetailEditorPanel
     }
     
 	private boolean isForwardable() {
-		if (bModel.getSelectedAnnotationLayer() == null)
-			return false;
-		if (bModel.getSelectedAnnotationLayer().getId() <= 0)
-			return false;
+		if (bModel.getSelectedAnnotationLayer() == null) {
+            return false;
+        }
+		if (bModel.getSelectedAnnotationLayer().getId() <= 0) {
+            return false;
+        }
 
-		if (!bModel.getSelectedAnnotationLayer().getType().equals(WebAnnoConst.SPAN_TYPE))
-			return false;
+		if (!bModel.getSelectedAnnotationLayer().getType().equals(WebAnnoConst.SPAN_TYPE)) {
+            return false;
+        }
 		if (!bModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
 			return false;
 		}

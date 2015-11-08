@@ -351,22 +351,13 @@ public class ArcAdapter
      * @throws BratAnnotationException
      *             if the annotation could not be created/updated.
      */
-    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            BratAnnotatorModel aBratAnnotatorModel, AnnotationFeature aFeature, Object aLabelValue)
-        throws BratAnnotationException
+    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas, int aStart,
+            int aEnd, AnnotationFeature aFeature, Object aLabelValue)
+                throws BratAnnotationException
     {
-        Sentence sentence = selectSentenceAt(aJCas, aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset());
-
-        int beginOffset = sentence.getBegin();
-        int endOffset = selectByAddr(
-                aJCas,
-                Sentence.class,
-                getLastSentenceAddressInDisplayWindow(aJCas, getAddr(sentence), aBratAnnotatorModel
-                        .getPreferences().getWindowSize())).getEnd();
-        if (crossMultipleSentence
+          if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            return updateCas(aJCas, beginOffset, endOffset, aOriginFs, aTargetFs, aLabelValue,
+            return updateCas(aJCas, aStart, aEnd, aOriginFs, aTargetFs, aLabelValue,
                     aFeature);
         }
         else {
