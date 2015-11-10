@@ -66,7 +66,7 @@ public class MiraTemplate
     /**
      * Repeat span annotation to the suggestions view 
      */
-    private boolean annotateAndRepeat = true;
+    private boolean annotateAndPredict = true;
     
 
     /**
@@ -106,12 +106,12 @@ public class MiraTemplate
 
     public boolean isAnnotateAndRepeat()
     {
-        return annotateAndRepeat;
+        return annotateAndPredict;
     }
 
     public void setAnnotateAndRepeat(boolean annotateAndRepeat)
     {
-        this.annotateAndRepeat = annotateAndRepeat;
+        this.annotateAndPredict = annotateAndRepeat;
     }
     public String getResult()
     {
