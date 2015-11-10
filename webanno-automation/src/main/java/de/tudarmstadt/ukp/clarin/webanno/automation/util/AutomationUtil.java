@@ -261,6 +261,13 @@ public class AutomationUtil
             if (!f.getRange().isPrimitive() && aMFs.getFeatureValue(f) instanceof SofaFS) {
                 continue;
             }
+            // do not attach relation on empty span annotations
+            if (aMFs.getFeatureValueAsString(f) == null){
+                continue;
+            }
+            if (aFs.getFeatureValueAsString(f) == null){
+                continue;
+            }
             if (!aMFs.getFeatureValueAsString(f).equals(aFs.getFeatureValueAsString(f))) {
                 return false;
             }
