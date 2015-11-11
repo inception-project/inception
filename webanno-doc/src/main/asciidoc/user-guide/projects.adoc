@@ -355,6 +355,45 @@ image::project_tagset_new.jpg[align="center"]
 
 To export a tagset, choose the format of the export at the bottom of the frame and click *Export tagset*.
 
+=== Constraints
+
+Constraints limit the number of options between which the annotators can choose. Subsequently, the annotation speeds up.
+To import a constraint, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*.
+A *constraint set* consists of two components:
+
+* import statement
+
+* scopes
+
+*Import statements* are composed in the following way:
+
+====
+import <fully_qualified_name_of_feature> as <shortName>;
+====
+
+*Scopes* contain rules that refer to a particular annotation layer. This leads to the following structure:
+
+====
+<scopeName>{
+
+<rule_1>;
+
+...
+
+<rule_n>;
+
+}  
+====
+
+As you can see, *scopes* consist of a *scope name* and one or more *rules*. While scope names can be freely chosen, scope rules have a fixed structure. They consist of *conditions* and *restrictions*, separated by an arrow symbol (*->*).
+Conditions consist of a *path* and a *value*, separated by an equal sign (*=*). Values always have to be embraced by double-quotes. Multiple conditions in the same rule are connected via the *&*-operator, multiple restrictions in the same rule are connected via the *|*-operator.
+Both conditions and restrictions are composed of a *path* and a *value*.
+A path is composed of one or more steps, separated by a dot.
+
+====
+E.g.: pos.PosValue
+====
+
 === Guidelines
 
 To add or delete guidelines, which will be accessible by users in the project, you have to select the tab *Guidelines*. Two new frames will be displayed.
