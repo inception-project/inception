@@ -623,7 +623,7 @@ var VisualizerUI = (function($, window, undefined) {
               var onResize = function(evt) {
                 if (evt.target === window) {
                   clearTimeout(resizerTimeout);
-                  resizerTimeout = setTimeout(resizeFunction, 100); // TODO is 100ms okay?
+                  resizerTimeout = setTimeout(resizeFunction, 2000); // TODO is 2000ms okay?
                 }
               };
               
