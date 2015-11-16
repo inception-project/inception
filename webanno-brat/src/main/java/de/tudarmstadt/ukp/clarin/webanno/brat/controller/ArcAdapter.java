@@ -401,7 +401,7 @@ public class ArcAdapter
                 continue;
             }
 
-            if (isDuplicate((AnnotationFS) governorFs, aOriginFs, (AnnotationFS) dependentFs,
+            if (isDuplicate( governorFs, aOriginFs,  dependentFs,
                     aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
 
                 if (!allowStacking) {
