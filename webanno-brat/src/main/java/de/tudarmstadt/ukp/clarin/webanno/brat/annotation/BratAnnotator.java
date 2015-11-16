@@ -110,8 +110,6 @@ public class BratAnnotator
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_TYPE = "originType";
 
-    private static final String GHOST_COLOR = "orange";
-
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
@@ -139,7 +137,6 @@ public class BratAnnotator
         setDefaultModelObject(aModel);
     }
 
-    @SuppressWarnings("unchecked")
     public IModel<BratAnnotatorModel> getModel()
     {
         return (IModel<BratAnnotatorModel>) getDefaultModel();
@@ -320,7 +317,13 @@ public class BratAnnotator
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
-
+                        // do not annotate closed documents
+                        if (editor.isAnnotationFinished()) {
+                            error("This document is already closed. Please ask your project manager to re-open it via the Montoring page");
+                            LOG.error(
+                                    "This document is already closed. Please ask your project manager to re-open it via the Montoring page");
+                            return;
+                        }
                         Selection selection = getModelObject().getSelection();
 
                         selection.setRelationAnno(true);
