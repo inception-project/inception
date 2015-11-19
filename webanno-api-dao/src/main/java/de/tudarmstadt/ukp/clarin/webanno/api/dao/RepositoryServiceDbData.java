@@ -1943,6 +1943,14 @@ public class RepositoryServiceDbData
     {
         upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
+    
+    @Override
+    public void upgradeCorrectionCas(CAS aCas, SourceDocument aDocument)
+        throws UIMAException, IOException
+    {
+        upgradeCas(aCas, aDocument, CORRECTION_USER);
+    }
+       
 
     private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException

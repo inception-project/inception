@@ -1070,8 +1070,12 @@ public interface RepositoryService
      */
     int isCrowdSourceEnabled();
 
-    void upgradeCas(CAS aCurCas, AnnotationDocument aAnnotationDocument)
+    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
         throws UIMAException, IOException;
+    
+    void upgradeCorrectionCas(CAS aCurCas, SourceDocument document)
+            throws UIMAException, IOException;
+
 
     /**
      * List project accessible by current user

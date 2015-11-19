@@ -530,9 +530,7 @@ public class AutomationPage
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
-
-                            repository.upgradeCasAndSave(bModel.getDocument(), Mode.AUTOMATION,
-                                    username);
+                            
                             loadDocumentAction();
                             setCurationSegmentBeginEnd();
                             update(target);
@@ -1147,6 +1145,12 @@ public class AutomationPage
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
                     bModel.getDocument(), logedInUser);
             jCas = repository.readAnnotationCas(logedInUserAnnotationDocument);
+         // upgrade this cas
+            repository.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), logedInUser);
+            
+            // upgrade this automation cas
+            repository.upgradeCorrectionCas(repository.readCorrectionCas(bModel.getDocument()).getCas(),  bModel.getDocument());
         }
         catch (IOException e) {
             throw e;
@@ -1155,19 +1159,33 @@ public class AutomationPage
         //
         catch (DataRetrievalFailureException e) {
 
-            jCas = repository.readAnnotationCas(bModel.getDocument(), logedInUser);
+            jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+            // upgrade this cas
+            repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
             }
+            else {
+                // upgrade this automation cas
+                repository.upgradeCorrectionCas(repository.readCorrectionCas(bModel.getDocument()).getCas(),  bModel.getDocument());
+            }
         }
         catch (NoResultException e) {
-            jCas = repository.readAnnotationCas(bModel.getDocument(), logedInUser);
+            jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+            // upgrade this cas
+            repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), logedInUser);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
                 repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
+            }
+            else{
+                // upgrade this automation cas
+                repository.upgradeCorrectionCas(repository.readCorrectionCas(bModel.getDocument()).getCas(),  bModel.getDocument());
             }
         }
 

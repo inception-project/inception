@@ -289,6 +289,7 @@ public class AutomationUtil
                 AnnotationDocument logedInUserAnnotationDocument = aRepository
                         .getAnnotationDocument(aDocument, logedInUser);
                 jCas = aRepository.readAnnotationCas(logedInUserAnnotationDocument);
+                aRepository.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
                 aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
             catch (IOException e) {
@@ -296,13 +297,22 @@ public class AutomationUtil
             }
             catch (DataRetrievalFailureException e) {
 
-                jCas = aRepository.readAnnotationCas(aDocument, logedInUser);
+                jCas = aRepository.readAnnotationCas(aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                // upgrade this cas
+                aRepository.upgradeCas(jCas.getCas(), aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));             
                 aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
             catch (NoResultException e) {
-                jCas = aRepository.readAnnotationCas(aDocument, logedInUser);
+                jCas = aRepository.readAnnotationCas(aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                // upgrade this cas
+                aRepository.upgradeCas(jCas.getCas(), aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));      
                 aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
+        }
+        else{
+            jCas = aRepository.readCorrectionCas(aDocument);
+            // upgrade this automation cas
+            aRepository.upgradeCorrectionCas(jCas.getCas(), aDocument);
         }
     }
 
@@ -344,7 +354,7 @@ public class AutomationUtil
                     }
                 }
             }
-            aRepository.writeCorrectionCas(jCas, aBModel.getDocument(), aBModel.getUser());
+            aRepository.writeCorrectionCas(jCas,d, aBModel.getUser());
         }
     }
 
