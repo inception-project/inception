@@ -1046,12 +1046,12 @@ public class AutomationPage
         
         JCas jCas = null;
         try {
-            AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     bModel.getDocument(), logedInUser);
-            
-            repository.upgradeCasAndSave(bModel.getDocument(),
-                    Mode.AUTOMATION, username);
-            jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
+            jCas = repository.getAnnotationDocumentContent(annotationDocument);
+            repository.upgrade(jCas.getCas(), bModel.getProject());      
+            repository.upgrade( repository.getCorrectionDocumentContent(bModel.getDocument()).getCas(), bModel.getProject());
+            jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         }
         catch (UIMAException e) {

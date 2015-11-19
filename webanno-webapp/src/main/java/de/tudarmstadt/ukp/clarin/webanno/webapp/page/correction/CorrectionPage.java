@@ -1006,8 +1006,9 @@ public class CorrectionPage
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     bModel.getDocument(), logedInUser);
             jCas = repository.getAnnotationDocumentContent(annotationDocument);
-            repository.upgradeCasAndSave(bModel.getDocument(), Mode.CORRECTION,
-                    logedInUser.getUsername());
+            repository.upgrade(jCas.getCas(), bModel.getProject());      
+            repository.upgrade( repository.getCorrectionDocumentContent(bModel.getDocument()).getCas(), bModel.getProject());
+            jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         }
         catch (UIMAException e) {
