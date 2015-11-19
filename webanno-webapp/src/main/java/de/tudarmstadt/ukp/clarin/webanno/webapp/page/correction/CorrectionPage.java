@@ -1005,9 +1005,9 @@ public class CorrectionPage
         try {
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     bModel.getDocument(), logedInUser);
+            jCas = repository.getAnnotationDocumentContent(annotationDocument);
             repository.upgradeCasAndSave(bModel.getDocument(), Mode.CORRECTION,
                     logedInUser.getUsername());
-            jCas = repository.getAnnotationDocumentContent(annotationDocument);
 
         }
         catch (UIMAException e) {
@@ -1016,9 +1016,18 @@ public class CorrectionPage
         catch (ClassNotFoundException e) {
             throw e;
         }
-        // First time the Merge Cas is opened
+        // Raised if the annotation CAS do not exist while annotation document entry is in DB
         catch (IOException e) {
-            throw e;
+            AnnotationDocument annoDoc = repository.getAnnotationDocument(
+                    bModel.getDocument(), logedInUser);
+            jCas = repository.createJCas(bModel.getDocument(),
+                    annoDoc, bModel.getProject(), logedInUser);
+            repository.createCorrectionDocumentContent(jCas, bModel.getDocument(),
+                    logedInUser);
+            repository.upgradeCasAndSave(bModel.getDocument(), Mode.CORRECTION,
+                    logedInUser.getUsername());
+            jCas = BratAnnotatorUtility.clearJcasAnnotations(repository.getAnnotationDocumentContent(annoDoc),
+                    bModel.getDocument(), logedInUser, repository);
         }
         // Get information to be populated to bratAnnotatorModel from the JCAS of the logged in user
         // or from the previous correction document
@@ -1048,7 +1057,7 @@ public class CorrectionPage
                 repository.upgradeCasAndSave(bModel.getDocument(), Mode.CORRECTION,
                         logedInUser.getUsername());  
                 
-                jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
+                jCas = BratAnnotatorUtility.clearJcasAnnotations(repository.getAnnotationDocumentContent(annotationDocument),
                         bModel.getDocument(), logedInUser, repository);
             }
             else {
