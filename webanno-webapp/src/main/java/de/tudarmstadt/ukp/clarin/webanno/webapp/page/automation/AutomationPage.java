@@ -57,9 +57,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
@@ -92,6 +89,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Finish
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import wicket.contrib.input.events.EventType;
+import wicket.contrib.input.events.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
@@ -401,12 +401,7 @@ public class AutomationPage
                             target.addChildren(getPage(), FeedbackPanel.class);
                             bratAnnotatorModel.setDocument(bratAnnotatorModel.getDocument());
                             bratAnnotatorModel.setProject(bratAnnotatorModel.getProject());
-
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-
-                            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
-                                    Mode.AUTOMATION, username);
+                         
                             loadDocumentAction();
                             setCurationSegmentBeginEnd();
                             update(target);
@@ -1052,6 +1047,9 @@ public class AutomationPage
         try {
             AnnotationDocument logedInUserAnnotationDocument = repository.getAnnotationDocument(
                     bratAnnotatorModel.getDocument(), logedInUser);
+            
+            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                    Mode.AUTOMATION, username);
             jCas = repository.getAnnotationDocumentContent(logedInUserAnnotationDocument);
 
         }
@@ -1077,6 +1075,8 @@ public class AutomationPage
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }
+            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                    Mode.AUTOMATION, username);
         }
         catch (NoResultException e) {
             jCas = repository.readJCas(bratAnnotatorModel.getDocument(), bratAnnotatorModel
@@ -1087,6 +1087,8 @@ public class AutomationPage
                 repository.createCorrectionDocumentContent(jCas, bratAnnotatorModel.getDocument(),
                         logedInUser);
             }
+            repository.upgradeCasAndSave(bratAnnotatorModel.getDocument(),
+                    Mode.AUTOMATION, username);
         }
         
         // (Re)initialize brat model after potential creating / upgrading CAS
