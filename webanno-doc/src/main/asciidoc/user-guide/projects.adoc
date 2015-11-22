@@ -118,7 +118,7 @@ WebAnno comes with a set of built-in layers that allow you to start annotating i
 | Span
 | Lock to multiple tokens,
 no stacking,
-no sentence bounary crossing
+no sentence boundary crossing
 
 | Coreference
 | Chain
@@ -127,13 +127,13 @@ no sentence bounary crossing
 | Dependency
 | Relation over POS,
 | No stacking,
-no sentence bounary crossing
+no sentence boundary crossing
 
 | Lemma
 | Span
 | Locked to token offsets,
 no stacking,
-no sentence bounary crossing
+no sentence boundary crossing
 
 | Named Entity
 | Span
