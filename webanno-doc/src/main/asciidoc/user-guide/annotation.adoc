@@ -107,7 +107,7 @@ To create annotations in WebAnno, you have mainly two options:
 
 The definition of layers is covered in section <<sect_projects_layers>>.
 
-===Changing role names
+=== Changing role names
 
 To change a previously selected role name, no prior deletion is needed. Just doubleclick on the instance you want to change, it will be highlighted in orange, and chose another role name.
 ==== Spans
