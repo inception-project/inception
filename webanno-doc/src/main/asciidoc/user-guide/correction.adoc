@@ -29,7 +29,7 @@ After clicking on the *Correction* symbol on the main page, the Correction page 
 
 image::correction1.jpg[align="center"]
 
-Afterwards the documents assigned to him are displayed. Now he may choose a document. Just like in <<sect_annotation>> and <<sect_curation>>, the colour of the document names signals the following: black - unopened document, blue - opened document and red - document finished. 
+Afterwards the documents assigned to him are displayed. Now he may choose a document. Just like in <<sect_annotation>> and <<sect_curation>>, the color of the document names signals the following: black - unopened document, blue - opened document and red - document finished. 
 
 After having chosen the document, two frames are displayed. 
 
@@ -39,4 +39,4 @@ The upper one, Annotation, is the frame in which annotations can be made by the 
 The lower frame, User: Suggestion, displays the annotation that was previously made in the uploaded document. By clicking on the annotations (not the words), they are chosen as _right_ and are therefore displayed in the Annotation frame. Additional annotations may be made just like in _Annotation_, by selecting the span or relation to be annotated, choosing the layer and tag. For more detailed instruction or the guidelines for the navigation in the upper frames (Document, Page, Help, Workflow), see the guidelines for <<sect_annotation>>. 
 No changes may be made in the lower frame.
 
-The colouring of the annotation signals the same as in <<sect_curation>>.
+The coloring of the annotation signals the same as in <<sect_curation>>.

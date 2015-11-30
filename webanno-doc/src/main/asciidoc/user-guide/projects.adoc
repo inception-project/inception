@@ -146,7 +146,7 @@ no stacking,
 no sentence boundary crossing
 |====
 
-The colouring of the layers signal the following: 
+The coloring of the layers signal the following: 
 
 .Color legend
 [cols="1,2", options="header"]
