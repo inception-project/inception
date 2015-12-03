@@ -55,7 +55,7 @@ After at least two annotators have finished the annotation of the same document 
 curator can start his work. The curator compares the annotations and corrects them if needed. This
 task is further explained in <<sect_curation>>. 
 
-The document merged by the curator can be exported as soon as the curator clicked on "Done" for the
+The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
 document. The extraction of curated documents is also explained in <<sect_projects>>.
 
 ////
