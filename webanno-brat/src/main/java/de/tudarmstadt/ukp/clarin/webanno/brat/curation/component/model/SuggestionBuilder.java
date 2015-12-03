@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.uima.UIMAException;
@@ -61,7 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Position;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.MergeCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -431,7 +430,9 @@ public class SuggestionBuilder
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0,
                 mergeJCas.getDocumentText().length());
 
-        Set<FeatureStructure> agreeFs = new HashSet<>();
+        mergeJCas = MergeCas.geMergeCas(diff, jCases);
+        
+/*        Set<FeatureStructure> agreeFs = new HashSet<>();
         Set<FeatureStructure> danglingRelsToDel = new HashSet<>();
         for (ConfigurationSet acfgs : diff.getConfigurationSets()) {
             for (Configuration cfg : acfgs.getConfigurations()) {
@@ -516,7 +517,7 @@ public class SuggestionBuilder
         // removing dangling relations
         for (FeatureStructure relFs : danglingRelsToDel) {
             mergeJCas.removeFsFromIndexes(relFs);
-        }
+        }*/
 
         repository.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 userLoggedIn);
