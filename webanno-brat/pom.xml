@@ -209,6 +209,11 @@
             <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
             <artifactId>de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</artifactId>
         </dependency>
+        <dependency>
+        	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        	<artifactId>webanno-tsv</artifactId>
+        	<scope>test</scope>
+        </dependency>
 	</dependencies>
 	<build>
 		<resources>

@@ -1,0 +1,13 @@
+ # de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS | PosValue # de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency | DependencyType | AttachTo=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
+#id=1
+#text=This is a simple sentence to be executed.
+1-1	This	_	_	_	
+1-2	is	VAFIN	_	_	
+1-3	a	_	_	_	
+1-4	simple	_	_	_	
+1-5	sentence	NN	OBJB	1-2	
+1-6	to	_	_	_	
+1-7	be	_	_	_	
+1-8	executed	_	_	_	
+1-9	.	_	_	_	
+

@@ -1,0 +1,19 @@
+ # webanno.custom.Opinion | aspect | opinion
+#id=1
+#text=Mourinho admitted a top four finish for Champions League qualification would now be tough.
+1-1	Mourinho	_	_	
+1-2	admitted	_	_		
+1-3	a	_	_	
+1-4	top	_	_	
+1-5	four	_	_	
+1-6	finish	_	_	
+1-7	for	_	_	
+1-8	Champions	_	_	
+1-9	League	_	_	
+1-10	qualification	_	_	
+1-11	would	_	_	
+1-12	now	_	_	
+1-13	be	_	_	
+1-14	tough	_	_	
+1-15	.	_	_	
+

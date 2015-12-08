@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class CasDiff2
@@ -1621,6 +1622,9 @@ public class CasDiff2
     {
         public static final SpanDiffAdapter POS = new SpanDiffAdapter(POS.class.getName(),
                 "PosValue");
+        
+        public static final SpanDiffAdapter NER = new SpanDiffAdapter(NamedEntity.class.getName(),
+                "value");
         
         public <T extends TOP> SpanDiffAdapter(Class<T> aType, String... aLabelFeatures)
         {
