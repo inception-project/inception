@@ -723,7 +723,6 @@ public class MergeCasTest {
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
 		SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
-		;
 		adapter.addLinkFeature("links", "role", "target");
 		List<? extends DiffAdapter> diffAdapters = asList(adapter);
 

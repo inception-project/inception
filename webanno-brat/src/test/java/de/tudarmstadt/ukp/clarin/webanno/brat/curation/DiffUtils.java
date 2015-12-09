@@ -216,7 +216,7 @@ public class DiffUtils {
 		aJCas.getCas().addFsToIndexes(hostA1);
 	}
 
-	public static void makeLinkHostMultiSPanFeatureFS(JCas aJCas, int aBegin, int aEnd, Feature aSpanFeature,
+	public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aJCas, int aBegin, int aEnd, Feature aSpanFeature,
 			String aValue, FeatureStructure... aLinks) {
 		Type hostType = aJCas.getTypeSystem().getType(HOST_TYPE);
 		AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
@@ -224,6 +224,7 @@ public class DiffUtils {
 				FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
 		hostA1.setStringValue(aSpanFeature, aValue);
 		aJCas.getCas().addFsToIndexes(hostA1);
+		return hostA1;
 	}
 
 	public static FeatureStructure makeLinkFS(JCas aJCas, String aSlotLabel, int aTargetBegin, int aTargetEnd) {

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -832,46 +833,7 @@ public class BratAjaxCasUtil
             switch (aFeature.getLinkMode()) {
             case WITH_ROLE: {
                 // Get type and features - we need them later in the loop
-                Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-                Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeRoleFeatureName());
-                Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeTargetFeatureName());
-
-                // Create all the links
-                // FIXME: actually we could re-use existing link link feature structures
-                List<FeatureStructure> linkFSes = new ArrayList<FeatureStructure>();
-                List<LinkWithRoleModel> linksList = (List<LinkWithRoleModel>) aValue;
-
-                if (linksList != null) {
-                    // remove duplicate links
-                    Set<LinkWithRoleModel> links = new HashSet<LinkWithRoleModel>(linksList);
-                    for (LinkWithRoleModel e : links) {
-                        // Skip links that have been added in the UI but where the target has not
-                        // yet been
-                        // set
-                        if (e.targetAddr == -1) {
-                            continue;
-                        }
-
-                        FeatureStructure link = aFS.getCAS().createFS(linkType);
-                        link.setStringValue(roleFeat, e.role);
-                        link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
-                        linkFSes.add(link);
-                    }
-                }
-
-                // Create a new array if size differs otherwise re-use existing one
-                ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getName());
-                if (array == null || (array.size() != linkFSes.size())) {
-                    array = aFS.getCAS().createArrayFS(linkFSes.size());
-                }
-
-                // Fill in links
-                array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
-                        linkFSes.size());
-
-                aFS.setFeatureValue(feature, array);
+                setLinkFeature(aFS, aFeature, (List<LinkWithRoleModel>) aValue, feature);
                 break;
             }
             default:
@@ -884,6 +846,57 @@ public class BratAjaxCasUtil
             throw new IllegalArgumentException("Unsupported multi-value mode ["
                     + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
+    }
+
+    private static void setLinkFeature(FeatureStructure aFS, AnnotationFeature aFeature,
+            List<LinkWithRoleModel> aValue, Feature feature)
+    {
+        Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+        Feature roleFeat = linkType.getFeatureByBaseName(aFeature
+                .getLinkTypeRoleFeatureName());
+        Feature targetFeat = linkType.getFeatureByBaseName(aFeature
+                .getLinkTypeTargetFeatureName());
+
+        // Create all the links
+        // FIXME: actually we could re-use existing link link feature structures
+        List<FeatureStructure> linkFSes = new ArrayList<>();
+        List<LinkWithRoleModel> linksList = aValue;
+
+        if (linksList != null) {
+            // remove duplicate links
+            Set<LinkWithRoleModel> links = new HashSet<>(linksList);
+            for (LinkWithRoleModel e : links) {
+                // Skip links that have been added in the UI but where the target has not
+                // yet been
+                // set
+                if (e.targetAddr == -1) {
+                    continue;
+                }
+
+                FeatureStructure link = aFS.getCAS().createFS(linkType);
+                link.setStringValue(roleFeat, e.role);
+                link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
+                linkFSes.add(link);
+            }
+        }
+        setLinkFeatureValue(aFS, feature, linkFSes);
+
+    }
+
+    public static void setLinkFeatureValue(FeatureStructure aFS, Feature aFeature,
+            List<FeatureStructure> linkFSes)
+    {
+        // Create a new array if size differs otherwise re-use existing one
+        ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getShortName());
+        if (array == null || (array.size() != linkFSes.size())) {
+            array = aFS.getCAS().createArrayFS(linkFSes.size());
+        }
+
+        // Fill in links
+        array.copyFromArray(linkFSes.toArray(new FeatureStructure[linkFSes.size()]), 0, 0,
+                linkFSes.size());
+
+        aFS.setFeatureValue(aFeature, array);
     }
 
     /**
