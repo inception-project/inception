@@ -443,7 +443,7 @@ public class MergeCas
             aFS.setStringValue(aFeature, aValue == null ? null : aValue.toString());
             break;
         case CAS.TYPE_NAME_BOOLEAN:
-            aFS.setBooleanValue(aFeature, Boolean.getBoolean(aValue.toString()));
+            aFS.setBooleanValue(aFeature, Boolean.valueOf(aValue.toString()));
             break;
         case CAS.TYPE_NAME_FLOAT:
             aFS.setFloatValue(aFeature, Float.valueOf(aValue.toString()));
@@ -458,7 +458,7 @@ public class MergeCas
             aFS.setDoubleValue(aFeature, Double.valueOf(aValue.toString()));
             break;
         case CAS.TYPE_NAME_LONG:
-            aFS.setLongValue(aFeature, Long.getLong(aValue.toString()));
+            aFS.setLongValue(aFeature, Long.valueOf(aValue.toString()));
             break;
         case CAS.TYPE_NAME_SHORT:
             aFS.setShortValue(aFeature, Short.valueOf(aValue.toString()));

@@ -174,7 +174,7 @@ public class SuggestionViewPanel
                                 repository.readCurationCas(sourceDocument);
                         StringValue action = request.getParameterValue("action");
                         // check if clicked on a span
-                        if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
+                        if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {                    
                             mergeSpan(request, curationUserSegment, annotationJCas, repository,
                                     annotationService);
                         }
@@ -196,6 +196,15 @@ public class SuggestionViewPanel
         add(sentenceListView);
     }
 
+	boolean isCorefType(AnnotationFS aFS) {
+		for (Feature f : MergeCas.getAllFeatures(aFS)) {
+			if (f.getShortName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)
+					|| f.getShortName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+				return true;
+			}
+		}
+		return false;
+	}
     protected void onChange(AjaxRequestTarget aTarget)
     {
         // Overriden in curationPanel
@@ -240,6 +249,10 @@ public class SuggestionViewPanel
 
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
+       	if(isCorefType(fsClicked)){
+       		
+    		throw new BratAnnotationException(" Coreference Annotation not supported in curation");
+    	}
         long layerId = TypeUtil.getLayerId(spanType);
 
         MergeCas.addSpanAnnotation(aMergeJCas, fsClicked, annotationService.getLayer(layerId).isAllowStacking());
@@ -310,6 +323,11 @@ public class SuggestionViewPanel
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
         AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
 
+     	if(isCorefType(clickedFS)){
+       		
+    		throw new BratAnnotationException(" Coreference Annotation not supported in curation");
+    	}
+     	
         MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
                 clickedJCas, annotationService.listAnnotationFeature(layer), clickedFS,
                 layer.getAttachType()!=null, layer.isAllowStacking());
