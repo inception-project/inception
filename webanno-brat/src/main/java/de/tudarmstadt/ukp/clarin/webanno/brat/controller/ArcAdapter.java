@@ -341,8 +341,6 @@ public class ArcAdapter
      *            the target FS.
      * @param aJCas
      *            the JCas.
-     * @param aBratAnnotatorModel
-     *            the annotator model.
      * @param aFeature
      *            the feature.
      * @param aLabelValue
