@@ -54,6 +54,9 @@ public class AnnotationFeature
 
     @JsonProperty("remember")
     private boolean remember = false;
+    
+    @JsonProperty("hideUnconstraintFeature")
+    private boolean hideUnconstraintFeature = false;
 
     @JsonProperty("description")
     private String description;
@@ -214,7 +217,15 @@ public class AnnotationFeature
         remember = aRemember;
     }
 
-    @Override
+    public boolean isHideUnconstraintFeature() {
+		return hideUnconstraintFeature;
+	}
+
+	public void setHideUnconstraintFeature(boolean hideUnconstraintFeature) {
+		this.hideUnconstraintFeature = hideUnconstraintFeature;
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -227,28 +238,37 @@ public class AnnotationFeature
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		AnnotationFeature other = (AnnotationFeature) obj;
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
-		} else if (!name.equals(other.name))
+			}
+		} else if (!name.equals(other.name)) {
 			return false;
+		}
 		if (projectName == null) {
-			if (other.projectName != null)
+			if (other.projectName != null) {
 				return false;
-		} else if (!projectName.equals(other.projectName))
+			}
+		} else if (!projectName.equals(other.projectName)) {
 			return false;
+		}
 		if (type == null) {
-			if (other.type != null)
+			if (other.type != null) {
 				return false;
-		} else if (!type.equals(other.type))
+			}
+		} else if (!type.equals(other.type)) {
 			return false;
+		}
 		return true;
 	}
 

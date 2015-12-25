@@ -300,9 +300,12 @@ In this section, features and their properties can be configured.
 over when creating a new annotation of the same type. This can be useful when creating many annotations
 of the same type in a row.
 
+| HideUnconstraintFeature
+| Whether the annotation detail editor should show the feature or not based on constraint rules. If rules evaluate returns in perfect match, it's shown otherwise hidden.
+
 | Tagset
 _(String)_
-| The tagset controlling the possible values for a string feture.
+| The tagset controlling the possible values for a string feature.
 |====
 
 WebAnno supports the following feature types.

@@ -202,6 +202,10 @@ so this is a way to not allow editing/displaying of these types anymore.
 | Remember feature value - whether the annotation detail editor should carry values of this feature
 over when creating a new annotation of the same type. This can be useful when creating many annotations
 of the same type in a row.
+
+| hideUnconstraintFeature
+| Hides un-constraint feature - whether the feature should be showed if constraints rules are enabled and 
+based on the evaluation of constraint rules on a feature.  
 |====
 
 ===== Examples

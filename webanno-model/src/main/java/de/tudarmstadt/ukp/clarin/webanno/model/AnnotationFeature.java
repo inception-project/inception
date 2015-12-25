@@ -85,6 +85,8 @@ public class AnnotationFeature
     private boolean visible = true;
     
     private boolean remember;
+    
+    private boolean hideUnconstraintFeature;
 
     @Column(name = "multi_value_mode")
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
@@ -348,7 +350,15 @@ public class AnnotationFeature
         remember = aRemember;
     }
 
-    @Override
+    public boolean isHideUnconstraintFeature() {
+		return hideUnconstraintFeature;
+	}
+
+	public void setHideUnconstraintFeature(boolean hideUnconstraintFeature) {
+		this.hideUnconstraintFeature = hideUnconstraintFeature;
+	}
+
+	@Override
     public int hashCode()
     {
         final int prime = 31;
