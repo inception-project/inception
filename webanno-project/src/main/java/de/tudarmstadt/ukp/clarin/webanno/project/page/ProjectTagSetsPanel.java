@@ -449,7 +449,8 @@ public class ProjectTagSetsPanel
 					
 					super.validate();
 					//Check if name is already used
-					if(annotationService.existsTagSet(tagSetName.getModelObject(), project)){
+					if(annotationService.existsTagSet(tagSetName.getInput(), project) 
+							&& !tagSetName.getInput().equals(tagSetName.getModelObject())){
 						error("Only one tagset per project is allowed!");
 					}
 				}
