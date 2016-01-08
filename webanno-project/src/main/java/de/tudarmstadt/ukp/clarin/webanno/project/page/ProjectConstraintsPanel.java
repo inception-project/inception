@@ -237,7 +237,8 @@ public class ProjectConstraintsPanel
 				public void validate() {
 					super.validate();
 					//Checking if the name provided already exists or not
-					if(projectRepository.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())){
+					if(projectRepository.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())
+							&& !constraintNameTextField.getInput().equals(constraintNameTextField.getModelObject())){
 						error("Provided name for Constraint already exists, please choose a different name");
 					}
 				}
