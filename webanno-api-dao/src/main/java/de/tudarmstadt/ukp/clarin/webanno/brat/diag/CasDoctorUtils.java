@@ -80,7 +80,14 @@ public class CasDoctorUtils
             Set<FeatureStructure> aIndexed, FeatureStructure aFS, FeatureStructure aLastIndexed)
     {
         if (aFS != null && !aFSes.containsKey(aFS)) {
-            aFSes.put(aFS, aLastIndexed);
+            // We might find an annotation indirectly. In that case make sure we consider it as 
+            // an indexed annotation instead of wrongly recording it as non-indexed
+            if (aIndexed.contains(aFS)) {
+                aFSes.put(aFS, aFS);
+            }
+            else {
+                aFSes.put(aFS, aLastIndexed);
+            }
 
             for (Feature f : aFS.getType().getFeatures()) {
                 if (!f.getRange().isPrimitive() && !CAS.FEATURE_BASE_NAME_SOFA.equals(f.getShortName())) {
