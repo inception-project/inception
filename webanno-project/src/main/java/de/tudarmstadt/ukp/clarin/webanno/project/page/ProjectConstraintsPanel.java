@@ -149,8 +149,8 @@ public class ProjectConstraintsPanel
         public DetailForm(String aId)
         {
             super(aId, new CompoundPropertyModel<ConstraintSet>(new EntityModel<ConstraintSet>(null)));
-            
-            add(new TextField<String>("name"));
+            TextField<String> constraintNameTextField = new TextField<>("name");
+            add(constraintNameTextField);
             
             add(script = new TextArea<String>("script", new LoadableDetachableModel<String>()
             {
@@ -222,24 +222,7 @@ public class ProjectConstraintsPanel
                     "if(!confirm('Do you really want to delete this Constraints rule?')) return false;"));
 
             add(deleteButton);
-//            add(new Button("delete", new ResourceModel("label")) {
-//                private static final long serialVersionUID = 1L;
-//
-//                @Override
-//                public void onSubmit()
-//                {
-//                    projectRepository.removeConstraintSet(DetailForm.this.getModelObject());
-//                    DetailForm.this.setModelObject(null);
-//                    selectionForm.setModelObject(null);
-//                }
-//                
-//                @Override
-//                protected void onConfigure()
-//                {
-//                    super.onConfigure();
-//                    setVisible(DetailForm.this.getModelObject().getId() >= 0);
-//                }
-//            });
+
             add(new Button("save", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
@@ -247,16 +230,18 @@ public class ProjectConstraintsPanel
                 public void onSubmit()
                 {
                     // Actually nothing to do here. Wicket will transfer the values from the
-                    // form into the model object and Hibernate will persist it
-                    
-                    //Check if the modified name already exists, then ignore the changes.
-//                    if(projectRepository.existConstraintSet(modifiedName, ProjectConstraintsPanel.this.getModelObject()))
-//                    {
-//                        setDefaultFormProcessing(false);
-//                        setVisible(false);
-//                    }
-                    
+                    // form into the model object and Hibernate will persist it                    
                 }
+
+				@Override
+				public void validate() {
+					super.validate();
+					//Checking if the name provided already exists or not
+					if(projectRepository.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())
+							&& !constraintNameTextField.getInput().equals(constraintNameTextField.getModelObject())){
+						error("Provided name for Constraint already exists, please choose a different name");
+					}
+				}
             });
             add(new Button("cancel", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;

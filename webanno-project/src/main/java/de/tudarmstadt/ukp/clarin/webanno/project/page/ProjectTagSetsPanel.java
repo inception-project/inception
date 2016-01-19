@@ -432,7 +432,9 @@ public class ProjectTagSetsPanel
                     new EntityModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
                             new de.tudarmstadt.ukp.clarin.webanno.model.TagSet())));
             final Project project = selectedProjectModel.getObject();
-            add(new TextField<String>("name").setRequired(true));
+            TextField<String> tagSetName = new TextField<String>("name");
+            tagSetName.setRequired(true);
+            add(tagSetName);
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
@@ -443,6 +445,17 @@ public class ProjectTagSetsPanel
                 private static final long serialVersionUID = 1L;
 
                 @Override
+				public void validate() {
+					
+					super.validate();
+					//Check if name is already used
+					if(annotationService.existsTagSet(tagSetName.getInput(), project) 
+							&& !tagSetName.getInput().equals(tagSetName.getModelObject())){
+						error("Only one tagset per project is allowed!");
+					}
+				}
+
+				@Override
                 public void onSubmit()
                 {
                     de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagSet = TagSetDetailForm.this

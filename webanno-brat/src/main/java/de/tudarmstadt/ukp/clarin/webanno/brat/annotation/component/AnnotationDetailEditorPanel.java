@@ -1336,12 +1336,30 @@ public class AnnotationDetailEditorPanel
         private boolean isDrop;
         //For showing the status of Constraints rules kicking in.
         private RulesIndicator indicator = new RulesIndicator();
+        private boolean hideUnconstraintFeature;
+        /**
+         * Hides feature if "Hide un-constraint feature" is enabled
+         * and constraint rules are applied and feature doesn't match any constraint rule
+         */
+        @Override
+		public boolean isVisible() {
+			if (hideUnconstraintFeature) {
+				//if enabled and constraints rule execution returns anything other than green
+				if (indicator.isAffected() && !indicator.getStatusColor().equals("green")) {
+					return false;
+				}
+			}
+			return true;
+			
+		}
 
-        public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+		public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
                 FeatureModel aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
-
+            //Checks whether hide un-constraint feature is enabled or not
+            hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
+            
             String featureLabelText = aModel.feature.getUiName();
             if (aModel.feature.getTagset() != null) {
                 featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
@@ -1499,13 +1517,30 @@ public class AnnotationDetailEditorPanel
         @SuppressWarnings("rawtypes")
         private final AbstractTextComponent newRole;
         private boolean isDrop;
-
+        private boolean hideUnconstraintFeature;
+        /**
+         * Hides feature if "Hide un-constraint feature" is enabled
+         * and constraint rules are applied and feature doesn't match any constraint rule
+         */
+        @Override
+		public boolean isVisible() {
+			if (hideUnconstraintFeature) {
+				//if enabled and constraints rule execution returns anything other than green
+				if (indicator.isAffected() && !indicator.getStatusColor().equals("green")) {
+					return false;
+				}
+			}
+			return true;
+			
+		}
+        
         @SuppressWarnings("unchecked")
         public LinkFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
                 final FeatureModel aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
-
+            //Checks whether hide un-constraint feature is enabled or not
+            hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
             String featureLabelText = aModel.feature.getUiName();
             if (aModel.feature.getTagset() != null) {
                 featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";

@@ -464,7 +464,9 @@ public class ProjectPage
         public ProjectDetailsPanel(String id)
         {
             super(id);
-            add(new TextField<String>("name").setRequired(true));
+            TextField<String> projectNameTextField = new TextField<String>("name");
+            projectNameTextField.setRequired(true);
+            add(projectNameTextField);
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
@@ -479,8 +481,23 @@ public class ProjectPage
             {
 
                 private static final long serialVersionUID = 1L;
-
+                
+                
                 @Override
+				public void validate() {
+					super.validate();
+					if(!ImportUtil.isNameValid(projectNameTextField.getModelObject())){
+						error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+                        LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+					}
+					if(repository.existsProject(projectNameTextField.getInput()) && 
+							!projectNameTextField.getInput().equals(projectNameTextField.getModelObject())){
+						error("Another project with same name exists. Please try a different name");
+					}
+				}
+
+
+				@Override
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
@@ -498,10 +515,10 @@ public class ProjectPage
                         LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
                         return;
                     }
-                    if (repository.existsProject(project.getName()) && project.getId() == 0) {
-                        error("Another project with name [" + project.getName() + "] exists");
-                        return;
-                    }
+//                    if (repository.existsProject(project.getName()) && project.getId() == 0) {
+//                        error("Another project with name [" + project.getName() + "] exists");
+//                        return;
+//                    }
 
                     if (repository.existsProject(project.getName()) && project.getId() != 0) {
                         error("project updated with name [" + project.getName() + "]");

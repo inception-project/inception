@@ -40,6 +40,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -170,7 +171,7 @@ public class ProjectExportPanel extends Panel {
      *            The folder where curated documents are copied to be exported as Zip File
      */
     private void exportCuratedDocuments(ProjectExportModel aModel, File aCopyDir)
-        throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException
+        throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException, ProjectExportException
     {
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
@@ -209,10 +210,16 @@ public class ProjectExportPanel extends Panel {
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
                     
                     // Copy secondary export format for convenience - not used during import
-                    File curationFile = repository.exportAnnotationDocument(sourceDocument,
-                            CURATION_USER, writer, CURATION_USER, Mode.CURATION);
-                    FileUtils.copyFileToDirectory(curationFile, curationDir);
-                    FileUtils.forceDelete(curationFile);
+                    try {
+						File curationFile = repository.exportAnnotationDocument(sourceDocument,
+						        CURATION_USER, writer, CURATION_USER, Mode.CURATION);
+						FileUtils.copyFileToDirectory(curationFile, curationDir);
+						FileUtils.forceDelete(curationFile);
+					} catch (Exception e) {
+						error("Unexpected error while exporting project: " + ExceptionUtils.getRootCauseMessage(e) );
+						throw new ProjectExportException("Aborting due to unrecoverable error while exporting!");
+//						throw e;
+					}
                 }
             }
             
@@ -287,9 +294,16 @@ public class ProjectExportPanel extends Panel {
                                     + ".zip");
 
                         }
-                    } catch (Exception e) {
+                    } catch (CASRuntimeException e) {
+                    	cancelOperationOnError();
                         error(e.getMessage());
-                    } finally {
+                    } 
+                    catch (Exception e){
+                    	error(e.getMessage());
+                    	cancelOperationOnError();
+                    	
+                    }
+                    finally {
                         try {
                             FileUtils.forceDelete(exportTempDir);
                         } catch (IOException e) {
@@ -299,6 +313,14 @@ public class ProjectExportPanel extends Panel {
 
                     return exportFile;
                 }
+
+				private void cancelOperationOnError() {
+					if (thread != null) {
+                        progress = 100;
+                        thread.interrupt();
+                    }
+					
+				}
             }) {
                 private static final long serialVersionUID = 5630612543039605914L;
 
@@ -466,10 +488,20 @@ public class ProjectExportPanel extends Panel {
                 projectName = model.project.getName();
                 canceled = false;
             }
-            catch (Throwable e) {
-                LOG.error("Unexpected error during project export", e);
+            catch (FileNotFoundException e) {
+                LOG.error("Unable to find some project file during project export", e);
+                messages.add("Unable to find file during project export: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+            catch (Throwable e){
+            	LOG.error("Unexpected error during project export", e);
                 messages.add("Unexpected error during project export: "
                         + ExceptionUtils.getRootCauseMessage(e));
+                if(thread!=null){
+                	canceled = true;
+                	progress = 100; 
+                    thread.interrupt();
+                }
+                
             }
         }
 
@@ -506,7 +538,15 @@ public class ProjectExportPanel extends Panel {
             exportProjectMetaInf(aModel.project, exportTempDir);
             exportProjectConstraints(aModel.project, exportTempDir);
             progress = 90;
-            exportCuratedDocuments(aModel, exportTempDir);
+            try {
+				exportCuratedDocuments(aModel, exportTempDir);
+			} catch (ProjectExportException e) {
+				//cancel export operation here
+				if (thread != null) {
+                    progress = 100;
+                    thread.interrupt();
+                }
+			}
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }
@@ -713,10 +753,17 @@ public class ProjectExportPanel extends Panel {
             documents.addAll(automationService.listTabSepDocuments(aProject));
             int i = 1;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
-                FileUtils.copyFileToDirectory(repository.getSourceDocumentFile(sourceDocument),
-                        sourceDocumentDir);
-                progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
-                i++;
+                try {
+					FileUtils.copyFileToDirectory(repository.getSourceDocumentFile(sourceDocument),
+					        sourceDocumentDir);
+					progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
+					i++;
+				} catch (FileNotFoundException e) {
+//					error(e.getMessage());
+					LOG.error(ExceptionUtils.getRootCause(e));
+					continue;
+					
+				}
             }
         }
 

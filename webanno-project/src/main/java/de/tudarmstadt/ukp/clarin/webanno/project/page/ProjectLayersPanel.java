@@ -936,6 +936,7 @@ public class ProjectLayersPanel
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
             add(new CheckBox("remember"));
+            add(new CheckBox("hideUnconstraintFeature"));
 
             spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
             for (AnnotationLayer spanLayer : annotationService
