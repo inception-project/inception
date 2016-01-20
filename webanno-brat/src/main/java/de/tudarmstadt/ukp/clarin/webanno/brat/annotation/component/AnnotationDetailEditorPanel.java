@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
@@ -142,6 +143,7 @@ public class AnnotationDetailEditorPanel
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
     private CheckBox forwardAnnotationCheck;
+    RefreshingView<FeatureModel> featureValues;
 
     private AjaxButton deleteButton;
     private AjaxButton reverseButton;
@@ -373,7 +375,7 @@ public class AnnotationDetailEditorPanel
 
             add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers));
 
-            RefreshingView<FeatureModel> featureValues = new FeatureEditorPanelContent(
+            featureValues = new FeatureEditorPanelContent(
                     "featureValues");
 
             featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer")
@@ -502,62 +504,73 @@ public class AnnotationDetailEditorPanel
             }
         }
 
-        TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
-        Selection selection = aBModel.getSelection();
-        if (selection.getAnnotation().isNotSet()) {
-            if (bModel.getSelection().isRelationAnno()) {
-                AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-                AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-                if (adapter instanceof ArcAdapter) {
-                    Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                            bModel.getSentenceEndOffset());
-                    int start = sentence.getBegin();
-                    int end = selectByAddr(jCas,
-                            Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
-                                    getAddr(sentence), bModel.getPreferences().getWindowSize()))
-                                            .getEnd();
+		TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
+		Selection selection = aBModel.getSelection();
+		if (selection.getAnnotation().isNotSet()) {
+			if (bModel.getSelection().isRelationAnno()) {
+				AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+				AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+				if (adapter instanceof ArcAdapter) {
+					Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+							bModel.getSentenceEndOffset());
+					int start = sentence.getBegin();
+					int end = selectByAddr(jCas, Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
+							getAddr(sentence), bModel.getPreferences().getWindowSize())).getEnd();
 
-                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end,
-                            null, null);
-                    selection.setAnnotation(new VID(getAddr(arc)));
-                }
-                else {
-                    selection.setAnnotation(new VID(
-                            ((ChainAdapter) adapter).addArc(jCas, originFs, targetFs, null, null)));
-                }
-                selection.setBegin(originFs.getBegin());
-            }
-            else if (adapter instanceof SpanAdapter) {
-                for (FeatureModel fm : featureModels) {
-                    if (((SpanAdapter) adapter).getSpan(jCas, selection.getBegin(),
-                            selection.getEnd(), fm.feature, null) != null) {
-                        actionClear(aTarget, bModel);
-                        throw new BratAnnotationException(
-                                "Cannot create another annotation of layer [" + ""
-                                        + bModel.getSelectedAnnotationLayer().getUiName()
-                                        + " at this"
-                                        + " location - stacking is not enabled for this layer.");
-                    }
-                }
-                selection.setAnnotation(new VID(((SpanAdapter) adapter).add(jCas,
-                        selection.getBegin(), selection.getEnd(), null, null)));
-            }
-            else {
-                for (FeatureModel fm : featureModels) {
-                    if (((ChainAdapter) adapter).getSpan(jCas, selection.getBegin(),
-                            selection.getEnd(), fm.feature, null) != null) {
-                        actionClear(aTarget, bModel);
-                        throw new BratAnnotationException(
-                                "Cannot create another annotation of layer [" + ""
-                                        + bModel.getSelectedAnnotationLayer().getUiName()
-                                        + " at this"
-                                        + " location - stacking is not enabled for this layer.");
-                    }
-                }
-                selection.setAnnotation(new VID(((ChainAdapter) adapter).addSpan(jCas,
-                        selection.getBegin(), selection.getEnd(), null, null)));
-            }
-        }
+					AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end, null, null);
+					selection.setAnnotation(new VID(getAddr(arc)));
+				} else {
+					selection.setAnnotation(
+							new VID(((ChainAdapter) adapter).addArc(jCas, originFs, targetFs, null, null)));
+				}
+				selection.setBegin(originFs.getBegin());
+			} else if (adapter instanceof SpanAdapter) {
+				
+				for (FeatureModel fm : featureModels) {
+					Serializable spanValue = ((SpanAdapter) adapter).getSpan(jCas, selection.getBegin(),
+							selection.getEnd(), fm.feature, null);
+					if (spanValue != null) {
+						// allow modification for forward annotation
+						if (aBModel.isForwardAnnotation()) {
+							fm.value = spanValue;	
+							featureModels.get(0).value = spanValue;
+							forwardAnnotationText.setModelObject(
+									getBindTags().entrySet().stream().filter(e -> e.getValue().equals(spanValue))
+											.map(Map.Entry::getKey).findFirst().orElse(null));
+						} else {
+							actionClear(aTarget, bModel);
+							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
+									+ bModel.getSelectedAnnotationLayer().getUiName() + " at this"
+									+ " location - stacking is not enabled for this layer.");
+						}
+					}
+				}
+				selection.setAnnotation(new VID(
+						((SpanAdapter) adapter).add(jCas, selection.getBegin(), selection.getEnd(), null, null)));
+			} else {
+
+				for (FeatureModel fm : featureModels) {
+					Serializable spanValue = ((ChainAdapter) adapter).getSpan(jCas, selection.getBegin(),
+							selection.getEnd(), fm.feature, null);
+					if (spanValue != null) {
+						// allow modification for forward annotation
+						if (aBModel.isForwardAnnotation()) {
+							fm.value = spanValue;
+							forwardAnnotationText.setModelObject(
+									getBindTags().entrySet().stream().filter(e -> e.getValue().equals(spanValue))
+											.map(Map.Entry::getKey).findFirst().orElse(null));
+						} else {
+							actionClear(aTarget, bModel);
+							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
+									+ bModel.getSelectedAnnotationLayer().getUiName() + " at this"
+									+ " location - stacking is not enabled for this layer.");
+						}
+					}
+				}
+				selection.setAnnotation(new VID(
+						((ChainAdapter) adapter).addSpan(jCas, selection.getBegin(), selection.getEnd(), null, null)));
+			}
+		}
 
         // Set feature values
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
@@ -591,10 +604,6 @@ public class AnnotationDetailEditorPanel
         // persist changes
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
 
-        if (aBModel.getPreferences().isScrollPage()) {
-            autoScroll(jCas, aBModel);
-        }
-
         if (bModel.getSelection().isRelationAnno()) {
             aBModel.setRememberedArcLayer(aBModel.getSelectedAnnotationLayer());
             aBModel.setRememberedArcFeatures(featureModels);
@@ -604,18 +613,27 @@ public class AnnotationDetailEditorPanel
             aBModel.setRememberedSpanFeatures(featureModels);
         }
 
-        aBModel.getSelection().setAnnotate(true);
-        if (aBModel.getSelection().getAnnotation().isSet()) {
-            String bratLabelText = TypeUtil.getBratLabelText(adapter,
-                    selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId()), features);
-            info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
-        }
+		aBModel.getSelection().setAnnotate(true);
+		if (aBModel.getSelection().getAnnotation().isSet()) {
+			String bratLabelText = TypeUtil.getBratLabelText(adapter,
+					selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId()), features);
+			info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
+		}
 
-        if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value!=null ) {
-            onAutoForward(aTarget, aBModel);
-        }
+		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
+			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
+				autoForwardScroll(jCas, aBModel);
+			}
+			onAutoForward(aTarget, aBModel);
+			
+		} 
+		else if (aBModel.getPreferences().isScrollPage()) {
+			autoScroll(jCas, aBModel);
+		}
+
         onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
         onChange(aTarget, aBModel);
+        reload(aTarget);
     }
     
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -843,6 +861,25 @@ public class AnnotationDetailEditorPanel
         aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
+    private void autoForwardScroll(JCas jCas, BratAnnotatorModel aBModel)
+    {
+        int address = getNextSentenceAddress(jCas, selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress()));
+        aBModel.setSentenceAddress(address);
+
+        Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
+        aBModel.setSentenceBeginOffset(sentence.getBegin());
+        aBModel.setSentenceEndOffset(sentence.getEnd());
+
+        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
+                aBModel.getSentenceEndOffset());
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence),
+                aBModel.getPreferences().getWindowSize());
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
+                lastAddressInPage);
+        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+    }
     @SuppressWarnings("unchecked")
     public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final BratAnnotatorModel aBModel,
             int aAnnotationId)
@@ -2316,6 +2353,7 @@ public class AnnotationDetailEditorPanel
     public void reload(AjaxRequestTarget aTarget)
     {
         aTarget.add(annotationFeatureForm);
+
     }
 
     public void reset(AjaxRequestTarget aTarget)

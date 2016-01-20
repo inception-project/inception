@@ -339,7 +339,12 @@ public class BratAjaxCasUtil
     public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
     {
 
-        AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+    	AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+		// thid happens when tokens such as Dr. OR Ms. selected with double
+		// click, which make  seletected text as Dr OR Ms
+		if (currentToken == null) {
+			currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
+		}
         Token nextToken = null;
 
         for (Token token : selectFollowing(Token.class, currentToken, 1)) {
@@ -468,6 +473,13 @@ public class BratAjaxCasUtil
         return getAddr(s);
     }
 
+	public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence) {
+		try {
+			return selectFollowing(Sentence.class, aSentence, 1).get(0).getAddress();
+		} catch (Exception e) { // end of the document reached
+			return aSentence.getAddress();
+		}
+	}
     /**
      * Move to the next page of size display window.
      *
