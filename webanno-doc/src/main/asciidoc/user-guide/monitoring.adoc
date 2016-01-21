@@ -25,13 +25,13 @@ As an administrator, you are able to observe the progress and document status of
 responsible for. Moreover, you are able to see the time of the last login of every user and observe the agreement between the annotators.
 After clicking on *Monitoring* in the main menu, the following page is displayed:
 
-image::monitoring1.jpg[align="center"]
+image::version3_monitoring1.PNG[align="center"]
 
 In the right frame, the overall progress of all projects is displayed.
 In the left frame one sees all projects, that one has an administrator role in.  
 By clicking on one of the projects on the left, it may be selected and the following view is opened:
 
-image::monitoring2.jpg[align="center"]
+image::version3_monitoring2.PNG[align="center"]
 
 The percentual progress out of the workload for individual annotators may be viewed as well as the number of finished documents.
 
