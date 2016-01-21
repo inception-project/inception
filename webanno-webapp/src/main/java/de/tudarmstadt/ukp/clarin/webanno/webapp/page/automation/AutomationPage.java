@@ -248,23 +248,9 @@ public class AutomationPage
 
                 annotator.onChange(aTarget, aBModel);
             }
-
-            @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
-            {
-                try {
-                    annotator.autoForward(aTarget, getCas(aBModel));
-                }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
-                    return;
-                }
-            }
             
             @Override
-            public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
-                    int aStart, int aEnd)
+            public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 int address = aBModel.getSelection().getAnnotation().getId();
@@ -305,7 +291,7 @@ public class AutomationPage
                             }
                             else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
                                 AutomationUtil.repeateSpanAnnotation(aBModel, repository,
-                                        annotationService, aStart, aEnd, f,
+                                        annotationService, fs.getBegin(), fs.getEnd(), f,
                                         fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
@@ -328,6 +314,20 @@ public class AutomationPage
                 }
             }
 
+            @Override
+            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            {
+                try {
+                    annotator.autoForward(aTarget, getCas(aBModel));
+                    onAnnotate(aTarget, aBModel);
+                }
+                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                    return;
+                }
+            }
+            
             @Override
             public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
                     AnnotationFS aFs)

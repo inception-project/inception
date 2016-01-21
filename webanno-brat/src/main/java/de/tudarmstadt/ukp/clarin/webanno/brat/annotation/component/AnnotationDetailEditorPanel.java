@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceBeginAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
@@ -620,6 +620,8 @@ public class AnnotationDetailEditorPanel
 			info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
 		}
 
+        onAnnotate(aTarget, aBModel);
+        
 		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
 			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
 				autoForwardScroll(jCas, aBModel);
@@ -631,7 +633,6 @@ public class AnnotationDetailEditorPanel
 			autoScroll(jCas, aBModel);
 		}
 
-        onAnnotate(aTarget, aBModel, selection.getBegin(), selection.getEnd());
         onChange(aTarget, aBModel);
         reload(aTarget);
     }
@@ -1027,8 +1028,7 @@ public class AnnotationDetailEditorPanel
         // Overriden in BratAnnotator
     }
 
-    public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, int aStart,
-            int aEnd)
+    public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel)
     {
         // Overriden in AutomationPage
     }
