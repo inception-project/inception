@@ -252,6 +252,9 @@ public class AutomationPage
             @Override
             public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
             {
+            	if(aBModel.isForwardAnnotation()){
+            		return;
+            	}
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 int address = aBModel.getSelection().getAnnotation().getId();
                 try {
@@ -319,7 +322,7 @@ public class AutomationPage
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
-                    onAnnotate(aTarget, aBModel);
+                   // onAnnotate(aTarget, aBModel);
                 }
                 catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
