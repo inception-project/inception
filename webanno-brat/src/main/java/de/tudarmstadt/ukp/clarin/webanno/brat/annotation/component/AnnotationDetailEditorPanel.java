@@ -59,6 +59,9 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxCallListener;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.attributes.IAjaxCallListener;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -81,6 +84,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.Request;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -104,6 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
@@ -156,7 +162,8 @@ public class AnnotationDetailEditorPanel
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
     private List<FeatureModel> featureModels;
-    BratAnnotatorModel bModel;
+    private BratAnnotatorModel bModel;
+    private String selectedTag = "";
     /**
      *Function to return tooltip using jquery
      *Docs for the JQuery tooltip widget that we configure below:
@@ -252,6 +259,9 @@ public class AnnotationDetailEditorPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     updateForwardAnnotation(getModelObject());
+                    if(bModel.isForwardAnnotation()){
+                    	aTarget.appendJavaScript(JavascriptUtils.getFocusScript(forwardAnnotationText));
+                    }
                 }
             });
 
@@ -377,7 +387,6 @@ public class AnnotationDetailEditorPanel
 
             featureValues = new FeatureEditorPanelContent(
                     "featureValues");
-
             featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
@@ -400,12 +409,46 @@ public class AnnotationDetailEditorPanel
 			forwardAnnotationText.setOutputMarkupId(true);
 			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("onkeyup") {
 				private static final long serialVersionUID = 4554834769861958396L;
+				
+				   @Override
+			        protected void updateAjaxAttributes(AjaxRequestAttributes attributes) {
+			            super.updateAjaxAttributes(attributes);
 
+			            IAjaxCallListener listener = new AjaxCallListener(){
+							private static final long serialVersionUID = -7968540662654079601L;
+
+							@Override
+			                public CharSequence getPrecondition(Component component) {
+			                    return  "var keycode = Wicket.Event.keyCode(attrs.event);" +			    
+			                            "    return true;" ;
+			                }
+			            };
+			            attributes.getAjaxCallListeners().add(listener);
+
+			            attributes.getDynamicExtraParameters()
+			                .add("var eventKeycode = Wicket.Event.keyCode(attrs.event);" +
+			                     "return {keycode: eventKeycode};");
+			            attributes.setAllowDefault(true);
+			        }
+				   
 				@Override
-                protected void onUpdate(AjaxRequestTarget aTarget) {					
-					featureModels.get(0).value = getKeyBindValue(forwardAnnotationText.getModelObject(),getBindTags());
+                protected void onUpdate(AjaxRequestTarget aTarget) {	
+					final Request request = RequestCycle.get().getRequest();
+		            final String jsKeycode = request.getRequestParameters()
+		                            .getParameterValue("keycode").toString("");
+		            if (jsKeycode.equals("32")){
+		            	try {
+							actionAnnotate(aTarget, aBModel, false);
+						} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+						error(e);
+						}
+		            	return;
+		            }
+					selectedTag = forwardAnnotationText.getModelObject().charAt(0) + selectedTag;					
+		            featureModels.get(0).value = getKeyBindValue(selectedTag, getBindTags());
 					aTarget.add(forwardAnnotationText);
 					aTarget.add(featureValues.get(0));
+
 				}
 			});
             forwardAnnotationText.setOutputMarkupId(true);
@@ -2343,7 +2386,7 @@ public class AnnotationDetailEditorPanel
 		}
 		// re-cycle suggestions
 		if(aBindTags.containsKey(aKey.substring(0,1))){
-			forwardAnnotationText.setModelObject(aKey.substring(0,1));
+			selectedTag = aKey.substring(0,1);
 			return aBindTags.get(aKey.substring(0,1));
 		}
 		// set it to the first in the tag list , when arbitrary key is pressed
