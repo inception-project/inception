@@ -261,6 +261,7 @@ public class AnnotationDetailEditorPanel
                     updateForwardAnnotation(getModelObject());
                     if(bModel.isForwardAnnotation()){
                     	aTarget.appendJavaScript(JavascriptUtils.getFocusScript(forwardAnnotationText));
+                    	selectedTag = "";
                     }
                 }
             });
@@ -578,9 +579,9 @@ public class AnnotationDetailEditorPanel
 						if (aBModel.isForwardAnnotation()) {
 							fm.value = spanValue;	
 							featureModels.get(0).value = spanValue;
-							forwardAnnotationText.setModelObject(
+							selectedTag = 
 									getBindTags().entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-											.map(Map.Entry::getKey).findFirst().orElse(null));
+									.map(Map.Entry::getKey).findFirst().orElse(null);
 						} else {
 							actionClear(aTarget, bModel);
 							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
@@ -600,9 +601,10 @@ public class AnnotationDetailEditorPanel
 						// allow modification for forward annotation
 						if (aBModel.isForwardAnnotation()) {
 							fm.value = spanValue;
-							forwardAnnotationText.setModelObject(
+							featureModels.get(0).value = spanValue;
+							selectedTag = 
 									getBindTags().entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-											.map(Map.Entry::getKey).findFirst().orElse(null));
+									.map(Map.Entry::getKey).findFirst().orElse(null);
 						} else {
 							actionClear(aTarget, bModel);
 							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
@@ -666,7 +668,7 @@ public class AnnotationDetailEditorPanel
 
         onAnnotate(aTarget, aBModel);
         
-		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
+		if (aBModel.isForwardAnnotation() && !aIsForwarded && !selectedTag.isEmpty()) {
 			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
 				autoForwardScroll(jCas, aBModel);
 			}
@@ -676,7 +678,7 @@ public class AnnotationDetailEditorPanel
 		else if (aBModel.getPreferences().isScrollPage()) {
 			autoScroll(jCas, aBModel);
 		}
-
+		forwardAnnotationText.setModelObject(null);
         onChange(aTarget, aBModel);
         reload(aTarget);
     }
