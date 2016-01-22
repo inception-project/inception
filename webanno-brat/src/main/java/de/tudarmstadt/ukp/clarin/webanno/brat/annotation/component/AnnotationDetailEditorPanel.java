@@ -444,8 +444,9 @@ public class AnnotationDetailEditorPanel
 						}
 		            	return;
 		            }
-					selectedTag = forwardAnnotationText.getModelObject().charAt(0) + selectedTag;					
-		            featureModels.get(0).value = getKeyBindValue(selectedTag, getBindTags());
+					selectedTag = (forwardAnnotationText.getModelObject() == null ? ""
+							: forwardAnnotationText.getModelObject().charAt(0)) + selectedTag;
+					featureModels.get(0).value = getKeyBindValue(selectedTag, getBindTags());
 					aTarget.add(forwardAnnotationText);
 					aTarget.add(featureValues.get(0));
 
@@ -2371,7 +2372,7 @@ public class AnnotationDetailEditorPanel
 	private String getKeyBindValue(String aKey, Map<String, String> aBindTags){
 		// check if all the key pressed are the same character
 		// if not, just check a Tag for the last char pressed
-		if(aKey==null){
+		if(aKey.isEmpty()){
 			return aBindTags.get(aBindTags.keySet().iterator().next());
 		}
 		char prevC = aKey.charAt(0);
