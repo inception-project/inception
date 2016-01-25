@@ -637,17 +637,26 @@ public class RepositoryServiceDbData
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
             List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument
                     .getProject());
-            List<String> multipleSpans = new ArrayList<String>();
+            List<String> spanLayers = new ArrayList<String>();
             for (AnnotationLayer layer : layers) {
-                if (layer.isMultipleTokens()) {
-                    multipleSpans.add(layer.getName());
+                if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
+                    spanLayers.add(layer.getName());
                 }
             }
 
+            
+            List<String> relationLayers = new ArrayList<String>();
+            for (AnnotationLayer layer : layers) {
+                if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
+                   relationLayers.add(layer.getName());
+                }
+            }
+            
+            
             writer = createEngineDescription(aWriter,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
-                    "multipleSpans", multipleSpans);
+                    "spanLayers", spanLayers, "relationLayers", relationLayers);
         }
         else {
             writer = createEngineDescription(aWriter,
