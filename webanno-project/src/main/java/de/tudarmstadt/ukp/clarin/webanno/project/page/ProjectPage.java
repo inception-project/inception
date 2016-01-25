@@ -486,14 +486,15 @@ public class ProjectPage
                 @Override
 				public void validate() {
 					super.validate();
-					if(!ImportUtil.isNameValid(projectNameTextField.getModelObject())){
-						error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-                        LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-					}
-					if(repository.existsProject(projectNameTextField.getInput()) && 
-							!projectNameTextField.getInput().equals(projectNameTextField.getModelObject())){
-						error("Another project with same name exists. Please try a different name");
-					}
+						if (!ImportUtil.isNameValid(projectNameTextField.getInput())) {
+							error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+							LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+						}
+						if (projectNameTextField.getModelObject()!=null && repository.existsProject(projectNameTextField.getInput())
+								&& !projectNameTextField.getInput().equals(projectNameTextField.getModelObject())) {
+							error("Another project with same name exists. Please try a different name");
+						} 
+					
 				}
 
 
