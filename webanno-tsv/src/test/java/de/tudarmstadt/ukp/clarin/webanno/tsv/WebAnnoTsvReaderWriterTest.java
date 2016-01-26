@@ -31,6 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -39,50 +40,45 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class WebAnnoTsvReaderWriterTest
-{
-    @Test
-    public void test()
-        throws Exception
-    {
-        CollectionReader reader = createCollectionReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_PATH,
-                new File("src/test/resources/tsv/").getAbsolutePath(),
-                WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
-     
-        List<String> multipleSpans = new ArrayList<String>();
-        multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-        multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
-        AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
-                WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output",
-                WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
-       
-        runPipeline(reader, writer);
-        
-        CollectionReader reader1 = createCollectionReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_PATH,
-                new File("src/test/resources/tsv/").getAbsolutePath(),
-                WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
-        CAS cas1 = JCasFactory.createJCas().getCas();
-        reader1.getNext(cas1);
+public class WebAnnoTsvReaderWriterTest {
+	@Ignore("TODO write more test cases for import/export including span (including sub-tokens), relation, slot and coreference annotations")
+	@Test
+	public void test() throws Exception {
+		CollectionReader reader = createCollectionReader(WebannoCustomTsvReader.class,
+				WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/tsv/").getAbsolutePath(),
+				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
 
-        CollectionReader reader2 = createCollectionReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_PATH,
-                new File("target/test-output/").getAbsolutePath(),
-                WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
+		List<String> multipleSpans = new ArrayList<String>();
+		multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
+		multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
+		AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
+				WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output",
+				WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
 
-        CAS cas2 = JCasFactory.createJCas().getCas();
-        reader2.getNext(cas2);
+		runPipeline(reader, writer);
 
-        assertEquals(JCasUtil.select(cas2.getJCas(), Token.class).size(),
-                JCasUtil.select(cas1.getJCas(), Token.class).size());
-        assertEquals(JCasUtil.select(cas2.getJCas(), POS.class).size(),
-                JCasUtil.select(cas1.getJCas(), POS.class).size());
-        assertEquals(JCasUtil.select(cas2.getJCas(), Lemma.class).size(),
-                JCasUtil.select(cas1.getJCas(), Lemma.class).size());
-        assertEquals(JCasUtil.select(cas2.getJCas(), NamedEntity.class).size(),
-                JCasUtil.select(cas1.getJCas(), NamedEntity.class).size());
-        assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
-                JCasUtil.select(cas1.getJCas(), Sentence.class).size());
-    }
+		CollectionReader reader1 = createCollectionReader(WebannoCustomTsvReader.class,
+				WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/tsv/").getAbsolutePath(),
+				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
+		CAS cas1 = JCasFactory.createJCas().getCas();
+		reader1.getNext(cas1);
+
+		CollectionReader reader2 = createCollectionReader(WebannoCustomTsvReader.class,
+				WebannoCustomTsvReader.PARAM_PATH, new File("target/test-output/").getAbsolutePath(),
+				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
+
+		CAS cas2 = JCasFactory.createJCas().getCas();
+		reader2.getNext(cas2);
+
+		assertEquals(JCasUtil.select(cas2.getJCas(), Token.class).size(),
+				JCasUtil.select(cas1.getJCas(), Token.class).size());
+		assertEquals(JCasUtil.select(cas2.getJCas(), POS.class).size(),
+				JCasUtil.select(cas1.getJCas(), POS.class).size());
+		assertEquals(JCasUtil.select(cas2.getJCas(), Lemma.class).size(),
+				JCasUtil.select(cas1.getJCas(), Lemma.class).size());
+		assertEquals(JCasUtil.select(cas2.getJCas(), NamedEntity.class).size(),
+				JCasUtil.select(cas1.getJCas(), NamedEntity.class).size());
+		assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
+				JCasUtil.select(cas1.getJCas(), Sentence.class).size());
+	}
 }

@@ -28,8 +28,11 @@ import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
@@ -82,6 +85,11 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private Map<AnnotationUnit, String> unitsLineNumbers;
 	private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsoerPostion;
+
+	private Map<Integer, Integer> annotaionRef = new HashMap<>();
+	private Map<String, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
+	// reference annotations per offset per type
+	private Map<String, Map<String, Integer>> annosPerType = new HashMap<>();
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
@@ -182,7 +190,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				IOUtils.write(feature + TAB, docOS, encoding);
 			}
 		}
-		IOUtils.write(LF , docOS, encoding);
+		IOUtils.write(LF, docOS, encoding);
 	}
 
 	private void setAnnotation(JCas aJCas) {
@@ -278,6 +286,25 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		return aSTABegin;
 	}
 
+	/**
+	 * If there is at least one non-sub-token annotation whose begin is larger
+	 * than this one, it is a multiple tokens (or crossing multiple tokens)
+	 * annotation
+	 * 
+	 * @param aBegin
+	 * @param aEnd
+	 * @return
+	 */
+	private boolean isMultipleToken(int aBegin, int aEnd) {
+		for (AnnotationUnit unit : units) {
+			if (unit.begin > aBegin && unit.begin < aEnd && !unit.isSubtoken) {
+				return true;
+			}
+		}
+		// this is the last token
+		return false;
+	}
+
 	private void updateUnitLists(List<AnnotationUnit> tmpUnits, AnnotationUnit unit, AnnotationUnit newUnit) {
 		if (!tmpUnits.contains(newUnit)) {
 			newUnit.isSubtoken = true;
@@ -291,6 +318,9 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private void setAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
 			AnnotationFS fs, AnnotationUnit unit, boolean aIsMultiToken, boolean aIsFirst) {
 		List<String> annoPerFeatures = new ArrayList<>();
+
+		int ref = getRefId(type, fs, unit);
+
 		for (Feature feature : type.getFeatures()) {
 			if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
 					|| feature.toString().equals("uima.tcas.Annotation:begin")
@@ -301,10 +331,23 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
 			featurePerLayer.get(type.getName()).add(feature.getName());
 
+/*			try {
+				ArrayFS array = (ArrayFS) fs.getFeatureValue(feature);
+				for (FeatureStructure linkFS : array.toArray()) {
+					String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName("role"));
+					AnnotationFS target = (AnnotationFS) linkFS
+							.getFeatureValue(linkFS.getType().getFeatureByBaseName("target"));
+					System.out.println(role);
+				}
+			} catch (Exception e) {
+
+			}*/
+
 			String annotation = fs.getFeatureValueAsString(feature);
 			if (annotation == null) {
 				annotation = feature.getName();
 			}
+			annotation = annotation + (ref > 1 ? "[" + ref + "]" : "");
 			// only add BIO markers to multiple annotations
 			if (aIsMultiToken) {
 				if (aIsFirst) {
@@ -319,6 +362,34 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		}
 		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
 		annotationsPertype.get(unit).add(annoPerFeatures);
+	}
+
+	/**
+	 * Annotations of same type those: <br>
+	 * 1) crosses multiple sentences AND <br>
+	 * 2) repeated on the same unit (even if different value) <br>
+	 * Will be referenced by a number so that re-importing or processing outside
+	 * WebAnno can be easily distinguish same sets of annotations. This much
+	 * Meaningful for relation/slot and chain annotations
+	 * 
+	 * @param type
+	 *            The annotation type
+	 * @param fs
+	 *            the annotation
+	 * @param unit
+	 *            the annotation element (Token or sub-tokens)
+	 * @return the reference number to be attached on this annotation value
+	 */
+	private int getRefId(Type type, AnnotationFS fs, AnnotationUnit unit) {
+		if (annotaionRef.get(((FeatureStructureImpl) fs).getAddress()) == null) {
+			int i = isMultipleToken(fs.getBegin(), fs.getEnd()) ? 2 : 1;
+			unitRef.putIfAbsent(type.getName(), new HashMap<>());
+			unitRef.get(type.getName()).put(unit, unitRef.get(type.getName()).getOrDefault(unit, 0) + i);
+			annotaionRef.put(((FeatureStructureImpl) fs).getAddress(), unitRef.get(type.getName()).get(unit));
+		} else {
+			unitRef.get(type.getName()).put(unit, annotaionRef.get(((FeatureStructureImpl) fs).getAddress()));
+		}
+		return unitRef.get(type.getName()).get(unit);
 	}
 
 	private void setTokenSentenceAddress(JCas aJCas) {
