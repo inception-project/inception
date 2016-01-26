@@ -153,12 +153,14 @@ public class ProjectDocumentsPanel
                         LOG.error(e.getMessage(), e);
                     }
                     catch (IOException e) {
-                        error("Error uploading document " + e.getMessage());
-                        LOG.error(e.getMessage(), e);
+                        error("IO Error while uploading document " + fileName + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(fileName + ": " + e.getMessage(), e);
                     }
                     catch (UIMAException e) {
-                        error("Error uploading document " + ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error(e.getMessage(), e);
+                        error("UIMA Error uploading document " + fileName + ": " 
+                    + ExceptionUtils.getRootCauseMessage(e));
+                        LOG.error(fileName + ": " + e.getMessage(), e);
                     }
                 }
 
