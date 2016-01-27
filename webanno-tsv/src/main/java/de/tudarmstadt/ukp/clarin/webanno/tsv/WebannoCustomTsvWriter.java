@@ -81,8 +81,10 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private final String DEPENDENT = "Dependent";
 	private final String GOVERNOR = "Governor";
 	private List<AnnotationUnit> units;
+	// number of subunits under this Annotation Unit
+	private Map<AnnotationUnit, Integer> subUnits = new HashMap<>();
 	private Map<String, Set<String>> featurePerLayer = new LinkedHashMap<>();
-	private Map<AnnotationUnit, String> unitsLineNumbers;
+	private Map<AnnotationUnit, String> unitsLineNumber;
 	private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsoerPostion;
 
@@ -101,27 +103,19 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			setAnnotation(aJCas);
 
 			writeHeader(docOS);
-			String tokenLineNumber = "";
-			int subtokenLineNumber = 1;
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
 					IOUtils.write(LF + "#" + sentenceUnits.get(unit) + LF, docOS, encoding);
 				}
 				if (unit.isSubtoken) {
-					IOUtils.write("-->" + tokenLineNumber + "." + subtokenLineNumber + TAB + unit.begin + "-" + unit.end
-							+ TAB + unit.token + TAB, docOS, encoding);
-					subtokenLineNumber++;
-				} else {
-					/*
-					 * IOUtils.write(unitsLineNumbers.get(unit) + TAB +
-					 * unit.token + TAB, docOS, encoding); subtokenLineNumber =
-					 * 1; tokenLineNumber = unitsLineNumbers.get(unit);
-					 */
 					IOUtils.write(
-							unitsLineNumbers.get(unit) + TAB + unit.begin + "-" + unit.end + TAB + unit.token + TAB,
+							unitsLineNumber.get(unit) + TAB + unit.begin + "-" + unit.end + TAB + unit.token + TAB,
 							docOS, encoding);
-					subtokenLineNumber = 1;
-					tokenLineNumber = unitsLineNumbers.get(unit);
+
+				} else {
+					IOUtils.write(
+							unitsLineNumber.get(unit) + TAB + unit.begin + "-" + unit.end + TAB + unit.token + TAB,
+							docOS, encoding);
 				}
 				for (String type : featurePerLayer.keySet()) {
 					List<List<String>> annos = annotationsoerPostion.getOrDefault(type, new HashMap<>())
@@ -141,7 +135,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 						for (String anno : merged) {
 							IOUtils.write(anno + TAB, docOS, encoding);
 						}
-					} // No annotation of this taype in this layer
+					} // No annotation of this type in this layer
 					else {
 						for (String feature : featurePerLayer.get(type)) {
 							IOUtils.write("_" + TAB, docOS, encoding);
@@ -150,25 +144,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				}
 				IOUtils.write(LF, docOS, encoding);
 			}
-
-			for (String layer : annotationsoerPostion.keySet()) {
-				for (AnnotationUnit unit : annotationsoerPostion.get(layer).keySet()) {
-					List<List<String>> annos = annotationsoerPostion.get(layer).get(unit);
-					List<String> merged = null;
-					for (List<String> annofs : annos) {
-						if (merged == null) {
-							merged = annofs;
-						} else {
-
-							for (int i = 0; i < annofs.size(); i++) {
-								merged.set(i, merged.get(i) + "|" + annofs.get(i));
-							}
-						}
-					}
-					System.out.println(merged);
-				}
-			}
-
 		} catch (Exception e) {
 			throw new AnalysisEngineProcessException(e);
 		} finally {
@@ -311,6 +286,8 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			// is this sub-token already there
 			if (!tmpUnits.contains(newUnit)) {
 				tmpUnits.add(tmpUnits.indexOf(unit) + 1, newUnit);
+				subUnits.put(unit, subUnits.getOrDefault(unit, 0) + 1);
+				unitsLineNumber.put(newUnit, "-->" + unitsLineNumber.get(unit) + "." + subUnits.get(unit));
 			}
 		}
 	}
@@ -318,7 +295,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private void setAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
 			AnnotationFS fs, AnnotationUnit unit, boolean aIsMultiToken, boolean aIsFirst) {
 		List<String> annoPerFeatures = new ArrayList<>();
-
+		featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
 		int ref = getRefId(type, fs, unit);
 
 		for (Feature feature : type.getFeatures()) {
@@ -328,40 +305,78 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					|| feature.getShortName().equals(DEPENDENT)) {
 				continue;
 			}
-			featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
-			featurePerLayer.get(type.getName()).add(feature.getName());
 
-/*			try {
+			try {
 				ArrayFS array = (ArrayFS) fs.getFeatureValue(feature);
+				StringBuffer sb = new StringBuffer();
 				for (FeatureStructure linkFS : array.toArray()) {
 					String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName("role"));
-					AnnotationFS target = (AnnotationFS) linkFS
+					AnnotationFS targetFs = (AnnotationFS) linkFS
 							.getFeatureValue(linkFS.getType().getFeatureByBaseName("target"));
-					System.out.println(role);
+					Type tType = targetFs.getType();
+
+					AnnotationUnit firstUnit = getFirstUnit(targetFs);
+					ref = getRefId(tType, targetFs, firstUnit);
+
+					if (role == null) {
+						role = feature.getName();
+					}
+					if (sb.length() < 1) {
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+					} else {
+						sb.append("|");
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+					}
+					featurePerLayer.get(type.getName())
+							.add(linkFS.getType().getFeatureByBaseName("role").getName() + "["
+									+ linkFS.getType().getFeatureByBaseName("target").getName() + "=" + tType.getName()
+									+ "]");
 				}
+				annoPerFeatures.add(sb.toString());
+				continue;
 			} catch (Exception e) {
 
-			}*/
+			}
 
 			String annotation = fs.getFeatureValueAsString(feature);
 			if (annotation == null) {
 				annotation = feature.getName();
 			}
-			annotation = annotation + (ref > 1 ? "[" + ref + "]" : "");
+			annotation = annotation + (ref > 1 ? "_" + ref : "");
 			// only add BIO markers to multiple annotations
-			if (aIsMultiToken) {
-				if (aIsFirst) {
-					annoPerFeatures.add("B-" + annotation);
-				} else {
-					annoPerFeatures.add("I-" + annotation);
-				}
-			} else {
-				annoPerFeatures.add(annotation);
-			}
+			setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
 
+			featurePerLayer.get(type.getName()).add(feature.getName());
 		}
 		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
 		annotationsPertype.get(unit).add(annoPerFeatures);
+	}
+
+	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
+			String annotation) {
+		if (aIsMultiToken) {
+			if (aIsFirst) {
+				aAnnoPerFeatures.add("B-" + annotation);
+			} else {
+				aAnnoPerFeatures.add("I-" + annotation);
+			}
+		} else {
+			aAnnoPerFeatures.add(annotation);
+		}
+	}
+
+	private AnnotationUnit getFirstUnit(AnnotationFS targetFs) {
+		SubTokenAnno sta = new SubTokenAnno();
+		sta.setBegin(targetFs.getBegin());
+		sta.setEnd(targetFs.getEnd());
+		sta.setText(targetFs.getCoveredText());
+		Set<AnnotationUnit> sus = new LinkedHashSet<>();
+		AnnotationUnit firstUnit = null;
+		for (AnnotationUnit u : getUnits(sta, sus)) {
+			firstUnit = u;
+			break;
+		}
+		return firstUnit;
 	}
 
 	/**
@@ -394,7 +409,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 
 	private void setTokenSentenceAddress(JCas aJCas) {
 		units = new ArrayList<>();
-		unitsLineNumbers = new HashMap<>();
+		unitsLineNumber = new HashMap<>();
 		int sentNMumber = 1;
 		for (Sentence sentence : select(aJCas, Sentence.class)) {
 			int lineNumber = 1;
@@ -405,7 +420,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				if (lineNumber == 1) {
 					sentenceUnits.put(unit, sentence.getCoveredText());
 				}
-				unitsLineNumbers.put(unit, sentNMumber + "-" + lineNumber);
+				unitsLineNumber.put(unit, sentNMumber + "-" + lineNumber);
 				lineNumber++;
 			}
 			sentNMumber++;
