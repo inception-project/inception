@@ -816,7 +816,7 @@ public class ProjectLayersPanel
                             annotationService.createLayer(layer, user);
                             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
-                                relationFeature.setType(layer.getName());
+                                relationFeature.setType(CAS.TYPE_NAME_STRING);
                                 relationFeature.setName(COREFERENCE_RELATION_FEATURE);
                                 relationFeature.setLayer(layer);
                                 relationFeature.setEnabled(true);
@@ -826,7 +826,7 @@ public class ProjectLayersPanel
                                 annotationService.createFeature(relationFeature);
 
                                 AnnotationFeature typeFeature = new AnnotationFeature();
-                                typeFeature.setType(layer.getName());
+                                typeFeature.setType(CAS.TYPE_NAME_STRING);
                                 typeFeature.setName(COREFERENCE_TYPE_FEATURE);
                                 typeFeature.setLayer(layer);
                                 typeFeature.setEnabled(true);
