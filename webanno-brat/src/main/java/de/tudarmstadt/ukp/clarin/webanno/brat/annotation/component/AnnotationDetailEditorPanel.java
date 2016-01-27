@@ -605,12 +605,7 @@ public class AnnotationDetailEditorPanel
 							selectedTag = 
 									getBindTags().entrySet().stream().filter(e -> e.getValue().equals(spanValue))
 									.map(Map.Entry::getKey).findFirst().orElse(null);
-						} else {
-							actionClear(aTarget, bModel);
-							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
-									+ bModel.getSelectedAnnotationLayer().getUiName() + " at this"
-									+ " location - stacking is not enabled for this layer.");
-						}
+						} 
 					}
 				}
 				selection.setAnnotation(new VID(
