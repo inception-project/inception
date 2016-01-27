@@ -637,6 +637,7 @@ public class RepositoryServiceDbData
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
             List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument
                     .getProject());
+            
             List<String> spanLayers = new ArrayList<String>();
             for (AnnotationLayer layer : layers) {
                 if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
@@ -644,6 +645,12 @@ public class RepositoryServiceDbData
                 }
             }
 
+            List<String> chainLayers = new ArrayList<String>();
+            for (AnnotationLayer layer : layers) {
+                if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
+                	chainLayers.add(layer.getName());
+                }
+            }
             
             List<String> relationLayers = new ArrayList<String>();
             for (AnnotationLayer layer : layers) {
@@ -651,12 +658,10 @@ public class RepositoryServiceDbData
                    relationLayers.add(layer.getName());
                 }
             }
-            
-            
-            writer = createEngineDescription(aWriter,
-                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
-                    "spanLayers", spanLayers, "relationLayers", relationLayers);
+                      
+			writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+					JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers, 
+					"chainLayers", chainLayers, "relationLayers", relationLayers);
         }
         else {
             writer = createEngineDescription(aWriter,
