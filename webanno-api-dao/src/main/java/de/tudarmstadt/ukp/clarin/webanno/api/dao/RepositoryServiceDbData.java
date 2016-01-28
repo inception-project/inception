@@ -654,7 +654,7 @@ public class RepositoryServiceDbData
             
             List<String> relationLayers = new ArrayList<String>();
             for (AnnotationLayer layer : layers) {
-                if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
+                if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
                    relationLayers.add(layer.getName());
                 }
             }

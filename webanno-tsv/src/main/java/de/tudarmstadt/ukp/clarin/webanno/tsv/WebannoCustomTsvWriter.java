@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -40,9 +41,11 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Export annotations in TAB separated format. Header includes information about
@@ -90,18 +93,16 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private final String FIRST = "first";
 	private final String NEXT = "next";
 
-	private List<AnnotationUnit> units;
+	private List<AnnotationUnit> units = new ArrayList<>();;
 	// number of subunits under this Annotation Unit
 	private Map<AnnotationUnit, Integer> subUnits = new HashMap<>();
 	private Map<String, Set<String>> featurePerLayer = new LinkedHashMap<>();
-	private Map<AnnotationUnit, String> unitsLineNumber;
+	private Map<AnnotationUnit, String> unitsLineNumber = new HashMap<>();
 	private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
-	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsoerPostion;
+	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsoerPostion = new HashMap<>();
 
 	private Map<Integer, Integer> annotaionRef = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
-	// reference annotations per offset per type
-	private Map<String, Map<String, Integer>> annosPerType = new HashMap<>();
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
@@ -112,7 +113,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			setTokenSentenceAddress(aJCas);
 			setSpanAnnotation(aJCas);
 			setChainAnnotation(aJCas);
-
+			setRelationAnnotation(aJCas);
 			writeHeader(docOS);
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
@@ -171,16 +172,29 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	 */
 	private void writeHeader(OutputStream docOS) throws IOException {
 		for (String type : featurePerLayer.keySet()) {
-			IOUtils.write(" # " + type + TAB, docOS, encoding);
-			for (String feature : featurePerLayer.get(type)) {
-				IOUtils.write(feature + TAB, docOS, encoding);
+			String annoType;
+			if (spanLayers.contains(type)) {
+				annoType = "SPAN";
+			} else if (chainLayers.contains(type)) {
+				annoType = "CHAIN";
+			} else {
+				annoType = "RELATION";
 			}
+			IOUtils.write("#_" + annoType + "_" + type + "|", docOS, encoding);
+			StringBuffer fsb = new StringBuffer();
+			for (String feature : featurePerLayer.get(type)) {
+				if (fsb.length() < 1) {
+					fsb.append(feature);
+				} else {
+					fsb.append("|" + feature);
+				}
+			}
+			IOUtils.write(fsb.toString(), docOS, encoding);
 		}
 		IOUtils.write(LF, docOS, encoding);
 	}
 
 	private void setSpanAnnotation(JCas aJCas) {
-		annotationsoerPostion = new HashMap<>();
 		for (String l : spanLayers) {
 			if (l.equals(Token.class.getName())) {
 				continue;
@@ -221,7 +235,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	}
 
 	private void setChainAnnotation(JCas aJCas) {
-		annotationsoerPostion = new HashMap<>();
 		for (String l : chainLayers) {
 			if (l.equals(Token.class.getName())) {
 				continue;
@@ -232,8 +245,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			Feature chainFirst = type.getFeatureByBaseName(FIRST);
 			for (FeatureStructure chainFs : selectFS(aJCas.getCas(), type)) {
 				AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
-				AnnotationUnit unit = new AnnotationUnit(linkFs.getBegin(), linkFs.getEnd(), false,
-						linkFs.getCoveredText());
+				AnnotationUnit unit = getUnit(linkFs.getBegin(), linkFs.getEnd(), linkFs.getCoveredText());
 				Type lType = linkFs.getType();
 				AnnotationUnit nextUnit = null;
 
@@ -257,14 +269,13 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					}
 					tmpFs = (AnnotationFS) tmpFs.getFeatureValue(linkNext);
 					if (tmpFs != null)
-						tmpUnit = new AnnotationUnit(tmpFs.getBegin(), tmpFs.getEnd(), false, tmpFs.getCoveredText());
+						tmpUnit = getUnit(tmpFs.getBegin(), tmpFs.getEnd(), tmpFs.getCoveredText());
 				}
 
 				while (linkFs != null) {
 					AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 					if (nextLinkFs != null) {
-						nextUnit = new AnnotationUnit(nextLinkFs.getBegin(), nextLinkFs.getEnd(), false,
-								nextLinkFs.getCoveredText());
+						nextUnit = getUnit(nextLinkFs.getBegin(), nextLinkFs.getEnd(), nextLinkFs.getCoveredText());
 						addChinFeatureAnno(annotationsPertype, lType, linkFs, unit, nextUnit, ref);
 					} else {
 						nextUnit = null;
@@ -281,6 +292,52 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		}
 	}
 
+	private void setRelationAnnotation(JCas aJCas) {
+		for (String l : relationLayers) {
+			if (l.equals(Token.class.getName())) {
+				continue;
+			}
+			Map<AnnotationUnit, List<List<String>>> annotationsPertype;
+			if (annotationsoerPostion.get(l) == null) {
+				annotationsPertype = new HashMap<>();
+
+			} else {
+				annotationsPertype = annotationsoerPostion.get(l);
+			}
+			Type type = getType(aJCas.getCas(), l);
+			Feature dependentFeature = null;
+			Feature governorFeature = null;
+
+			for (Feature feature : type.getFeatures()) {
+				if (feature.getShortName().equals(DEPENDENT)) {
+					dependentFeature = feature;
+				}
+				if (feature.getShortName().equals(GOVERNOR)) {
+					governorFeature = feature;
+				}
+			}
+			for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
+				AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+				AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+				if (type.getName().equals(Dependency.class.getName())) {
+					depFs = selectCovered(aJCas.getCas(), aJCas.getTypeSystem().getType(POS.class.getName()),
+							depFs.getBegin(), depFs.getEnd()).get(0);
+					govFs = selectCovered(aJCas.getCas(), aJCas.getTypeSystem().getType(POS.class.getName()),
+							govFs.getBegin(), govFs.getEnd()).get(0);
+				}
+
+				AnnotationUnit depUnit = getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
+				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress());
+				int depRef = annotaionRef.get(((FeatureStructureImpl) depFs).getAddress());
+				setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govRef, depRef, govFs.getType());
+
+			}
+			if (annotationsPertype.keySet().size() > 0) {
+				annotationsoerPostion.put(l, annotationsPertype);
+			}
+		}
+	}
+
 	private boolean isMultiToken(AnnotationFS aFs) {
 
 		for (AnnotationUnit unit : units) {
@@ -289,6 +346,16 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			}
 		}
 		return false;
+	}
+
+	private AnnotationUnit getUnit(int aBegin, int aEnd, String aText) {
+		List<AnnotationUnit> tmpUnits = new ArrayList<>(units);
+		for (AnnotationUnit unit : units) {
+			if (unit.begin == aBegin && unit.end == aEnd) {
+				return unit;
+			}
+		}
+		return new AnnotationUnit(aBegin, aEnd, false, aText);
 	}
 
 	private Set<AnnotationUnit> getUnits(SubTokenAnno aSTA, Set<AnnotationUnit> aSubUnits) {
@@ -395,24 +462,25 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 						role = feature.getName();
 					}
 					if (sb.length() < 1) {
-						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : "") + "]");
 					} else {
 						sb.append("|");
-						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : "") + "]");
 					}
 					featurePerLayer.get(type.getName())
-							.add(linkFS.getType().getFeatureByBaseName("role").getName() + "["
+							.add("_ROLE_" + linkFS.getType().getFeatureByBaseName("role").getName() + "["
 									+ linkFS.getType().getFeatureByBaseName("target").getName() + "=" + tType.getName()
 									+ "]");
 				}
 				annoPerFeatures.add(sb.toString());
+				continue;
 				// non-slot features
 			} catch (Exception e) {
 				String annotation = fs.getFeatureValueAsString(feature);
 				if (annotation == null) {
 					annotation = feature.getName();
 				}
-				annotation = annotation + (ref > 1 ? "_" + ref : "");
+				annotation = annotation + (ref > 1 ? "[" + ref + "]" : "");
 				// only add BIO markers to multiple annotations
 				setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
 
@@ -457,7 +525,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		if (aNextUnit != null) {
 			sbAnnotation.append("[" + unitsLineNumber.get(aNextUnit) + "]");
 		}
-		
+
 		if (aRef > 1) {
 			sbAnnotation.append("[" + aRef + "]");
 		}
@@ -465,6 +533,35 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		annoPerFeatures.add(sbAnnotation.toString());
 		annotationsPertype.get(aUnit).add(annoPerFeatures);
 
+	}
+
+	private void setRelationAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
+			AnnotationFS fs, AnnotationUnit unit, int aGovRef, int aDepRef, Type aDepType) {
+		List<String> annoPerFeatures = new ArrayList<>();
+		featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
+		for (Feature feature : type.getFeatures()) {
+			if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
+					|| feature.toString().equals("uima.tcas.Annotation:begin")
+					|| feature.toString().equals("uima.tcas.Annotation:end") || feature.getShortName().equals(GOVERNOR)
+					|| feature.getShortName().equals(DEPENDENT) || feature.getShortName().equals(FIRST)
+					|| feature.getShortName().equals(NEXT)) {
+				continue;
+			}
+			String annotation = fs.getFeatureValueAsString(feature);
+			if (annotation == null) {
+				annotation = feature.getName();
+			}
+			annotation = annotation + (aGovRef > 1 ? "[" + aGovRef + "]" : "");
+			annoPerFeatures.add(annotation);
+			featurePerLayer.get(type.getName()).add(feature.getName());
+		}
+		// add the dependent unit address
+		String govRef = unitsLineNumber.get(unit) + (aDepRef > 1 ? "[" + aDepRef + "]" : "");
+		annoPerFeatures.add(govRef);
+		featurePerLayer.get(type.getName()).add(aDepType.getName());
+		// the column for the dependent unit address
+		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
+		annotationsPertype.get(unit).add(annoPerFeatures);
 	}
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
@@ -523,8 +620,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	}
 
 	private void setTokenSentenceAddress(JCas aJCas) {
-		units = new ArrayList<>();
-		unitsLineNumber = new HashMap<>();
 		int sentNMumber = 1;
 		for (Sentence sentence : select(aJCas, Sentence.class)) {
 			int lineNumber = 1;
