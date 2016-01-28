@@ -197,7 +197,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				AnnotationUnit unit = new AnnotationUnit(fs.getBegin(), fs.getEnd(), false, fs.getCoveredText());
 				// annotation is per Token
 				if (units.contains(unit)) {
-					setAnnoPerFeature(annotationsPertype, type, fs, unit, false, false, false, null);
+					setSpanAnnoPerFeature(annotationsPertype, type, fs, unit, false, false);
 				}
 				// Annotation is on sub-token or multiple tokens
 				else {
@@ -209,7 +209,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					boolean isFirst = true;
 					Set<AnnotationUnit> sus = new LinkedHashSet<>();
 					for (AnnotationUnit newUnit : getUnits(sta, sus)) {
-						setAnnoPerFeature(annotationsPertype, type, fs, newUnit, isMultiToken, isFirst, false, null);
+						setSpanAnnoPerFeature(annotationsPertype, type, fs, newUnit, isMultiToken, isFirst);
 						isFirst = false;
 					}
 				}
@@ -245,17 +245,30 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				} else {
 					annotationsPertype = annotationsoerPostion.get(l);
 				}
+				Feature linkNext = linkFs.getType().getFeatureByBaseName(NEXT);
+
+				AnnotationFS tmpFs = linkFs;
+				int ref = 1;
+				AnnotationUnit tmpUnit = unit;
+				while (tmpFs != null) {
+					int tmpRef = getRefId(lType, tmpFs, tmpUnit);
+					if (tmpRef > ref) {
+						ref = tmpRef;
+					}
+					tmpFs = (AnnotationFS) tmpFs.getFeatureValue(linkNext);
+					if (tmpFs != null)
+						tmpUnit = new AnnotationUnit(tmpFs.getBegin(), tmpFs.getEnd(), false, tmpFs.getCoveredText());
+				}
 
 				while (linkFs != null) {
-					Feature linkNext = linkFs.getType().getFeatureByBaseName(NEXT);
 					AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 					if (nextLinkFs != null) {
 						nextUnit = new AnnotationUnit(nextLinkFs.getBegin(), nextLinkFs.getEnd(), false,
 								nextLinkFs.getCoveredText());
-						setAnnoPerFeature(annotationsPertype, lType, linkFs, unit, false, false, true, nextUnit);
+						addChinFeatureAnno(annotationsPertype, lType, linkFs, unit, nextUnit, ref);
 					} else {
 						nextUnit = null;
-						setAnnoPerFeature(annotationsPertype, lType, linkFs, unit, false, false, true, nextUnit);
+						addChinFeatureAnno(annotationsPertype, lType, linkFs, unit, nextUnit, ref);
 					}
 					linkFs = nextLinkFs;
 					unit = nextUnit;
@@ -351,74 +364,70 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		}
 	}
 
-	private void setAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
-			AnnotationFS fs, AnnotationUnit unit, boolean aIsMultiToken, boolean aIsFirst, boolean aIsChain,
-			AnnotationUnit aNextUnit) {
+	private void setSpanAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
+			AnnotationFS fs, AnnotationUnit unit, boolean aIsMultiToken, boolean aIsFirst) {
 		List<String> annoPerFeatures = new ArrayList<>();
 		featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
 		int ref = getRefId(type, fs, unit);
-
-		if (aIsChain) {
-			addChinFeatureAnno(type, fs, aNextUnit, annoPerFeatures);
-		} else {
-			for (Feature feature : type.getFeatures()) {
-				if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-						|| feature.toString().equals("uima.tcas.Annotation:begin")
-						|| feature.toString().equals("uima.tcas.Annotation:end")
-						|| feature.getShortName().equals(GOVERNOR) || feature.getShortName().equals(DEPENDENT)
-						|| feature.getShortName().equals(FIRST) || feature.getShortName().equals(NEXT)) {
-					continue;
-				}
-
-				// if slot feature
-				try {
-					ArrayFS array = (ArrayFS) fs.getFeatureValue(feature);
-					StringBuffer sb = new StringBuffer();
-					for (FeatureStructure linkFS : array.toArray()) {
-						String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName("role"));
-						AnnotationFS targetFs = (AnnotationFS) linkFS
-								.getFeatureValue(linkFS.getType().getFeatureByBaseName("target"));
-						Type tType = targetFs.getType();
-
-						AnnotationUnit firstUnit = getFirstUnit(targetFs);
-						ref = getRefId(tType, targetFs, firstUnit);
-
-						if (role == null) {
-							role = feature.getName();
-						}
-						if (sb.length() < 1) {
-							sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
-						} else {
-							sb.append("|");
-							sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
-						}
-						featurePerLayer.get(type.getName())
-								.add(linkFS.getType().getFeatureByBaseName("role").getName() + "["
-										+ linkFS.getType().getFeatureByBaseName("target").getName() + "="
-										+ tType.getName() + "]");
-					}
-					annoPerFeatures.add(sb.toString());
-					// non-slot features
-				} catch (Exception e) {
-					String annotation = fs.getFeatureValueAsString(feature);
-					if (annotation == null) {
-						annotation = feature.getName();
-					}
-					annotation = annotation + (ref > 1 ? "_" + ref : "");
-					// only add BIO markers to multiple annotations
-					setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
-
-					featurePerLayer.get(type.getName()).add(feature.getName());
-				}
-
+		for (Feature feature : type.getFeatures()) {
+			if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
+					|| feature.toString().equals("uima.tcas.Annotation:begin")
+					|| feature.toString().equals("uima.tcas.Annotation:end") || feature.getShortName().equals(GOVERNOR)
+					|| feature.getShortName().equals(DEPENDENT) || feature.getShortName().equals(FIRST)
+					|| feature.getShortName().equals(NEXT)) {
+				continue;
 			}
+
+			// if slot feature
+			try {
+				ArrayFS array = (ArrayFS) fs.getFeatureValue(feature);
+				StringBuffer sb = new StringBuffer();
+				for (FeatureStructure linkFS : array.toArray()) {
+					String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName("role"));
+					AnnotationFS targetFs = (AnnotationFS) linkFS
+							.getFeatureValue(linkFS.getType().getFeatureByBaseName("target"));
+					Type tType = targetFs.getType();
+
+					AnnotationUnit firstUnit = getFirstUnit(targetFs);
+					ref = getRefId(tType, targetFs, firstUnit);
+
+					if (role == null) {
+						role = feature.getName();
+					}
+					if (sb.length() < 1) {
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+					} else {
+						sb.append("|");
+						sb.append(role + "[" + unitsLineNumber.get(firstUnit) + (ref > 1 ? "_" + ref : "") + "]");
+					}
+					featurePerLayer.get(type.getName())
+							.add(linkFS.getType().getFeatureByBaseName("role").getName() + "["
+									+ linkFS.getType().getFeatureByBaseName("target").getName() + "=" + tType.getName()
+									+ "]");
+				}
+				annoPerFeatures.add(sb.toString());
+				// non-slot features
+			} catch (Exception e) {
+				String annotation = fs.getFeatureValueAsString(feature);
+				if (annotation == null) {
+					annotation = feature.getName();
+				}
+				annotation = annotation + (ref > 1 ? "_" + ref : "");
+				// only add BIO markers to multiple annotations
+				setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
+
+				featurePerLayer.get(type.getName()).add(feature.getName());
+			}
+
 		}
 		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
 		annotationsPertype.get(unit).add(annoPerFeatures);
 	}
 
-	private void addChinFeatureAnno(Type type, AnnotationFS fs, AnnotationUnit aNextUnit,
-			List<String> annoPerFeatures) {
+	private void addChinFeatureAnno(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
+			AnnotationFS fs, AnnotationUnit aUnit, AnnotationUnit aNextUnit, int aRef) {
+		featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
+		List<String> annoPerFeatures = new ArrayList<>();
 		StringBuffer sbAnnotation = new StringBuffer();
 		StringBuffer sbFeature = new StringBuffer();
 		for (Feature feature : type.getFeatures()) {
@@ -448,7 +457,14 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		if (aNextUnit != null) {
 			sbAnnotation.append("[" + unitsLineNumber.get(aNextUnit) + "]");
 		}
+		
+		if (aRef > 1) {
+			sbAnnotation.append("[" + aRef + "]");
+		}
+		annotationsPertype.putIfAbsent(aUnit, new ArrayList<>());
 		annoPerFeatures.add(sbAnnotation.toString());
+		annotationsPertype.get(aUnit).add(annoPerFeatures);
+
 	}
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
