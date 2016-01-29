@@ -126,7 +126,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -635,33 +637,43 @@ public class RepositoryServiceDbData
         AnalysisEngineDescription writer;
         if (aWriter.getName()
                 .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
-            List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument
-                    .getProject());
-            
-            List<String> spanLayers = new ArrayList<String>();
-            for (AnnotationLayer layer : layers) {
-                if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
-                    spanLayers.add(layer.getName());
-                }
-            }
+			List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
 
-            List<String> chainLayers = new ArrayList<String>();
-            for (AnnotationLayer layer : layers) {
-                if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
-                	chainLayers.add(layer.getName());
-                }
-            }
-            
-            List<String> relationLayers = new ArrayList<String>();
-            for (AnnotationLayer layer : layers) {
-                if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
-                   relationLayers.add(layer.getName());
-                }
-            }
-                      
+			List<String> slotFeatures = new ArrayList<String>();
+			List<String> slotTargets = new ArrayList<String>();
+
+			List<String> spanLayers = new ArrayList<String>();
+			for (AnnotationLayer layer : layers) {
+				if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
+					spanLayers.add(layer.getName());
+					for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+						if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
+								&& LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
+							slotFeatures.add(layer.getName() + ":" + f.getName());
+							slotTargets.add(f.getType());
+						}
+					}
+				}
+			}
+
+			List<String> chainLayers = new ArrayList<String>();
+			for (AnnotationLayer layer : layers) {
+				if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
+					chainLayers.add(layer.getName());
+				}
+			}
+
+			List<String> relationLayers = new ArrayList<String>();
+			for (AnnotationLayer layer : layers) {
+				if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
+					relationLayers.add(layer.getName());
+				}
+			}
+
 			writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-					JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers, 
-					"chainLayers", chainLayers, "relationLayers", relationLayers);
+					JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
+					"slotFeatures", slotFeatures, "slotTargets", slotTargets, "chainLayers", chainLayers,
+					"relationLayers", relationLayers);
         }
         else {
             writer = createEngineDescription(aWriter,
