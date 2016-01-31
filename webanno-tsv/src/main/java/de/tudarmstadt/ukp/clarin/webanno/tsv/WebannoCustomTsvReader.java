@@ -100,16 +100,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			}
 
 			if (line.startsWith("#Text=")) {
-				String text = line.substring(6);
-				String beginEnd = text.substring(0, text.indexOf("#"));
-				text = text.substring(text.indexOf("#") + 1);
-
-				int begin = Integer.parseInt(beginEnd.split("-")[0]);
-				int end = Integer.parseInt(beginEnd.split("-")[1]);
-
-				coveredText.append(text + LF);
-				Sentence sentence = new Sentence(aJCas, begin, end);
-				sentence.addToIndexes();
+				createSentence(aJCas, line);
 				continue;
 			}
 			if (line.trim().isEmpty()) {
@@ -135,16 +126,20 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				throw new IOException(fileName + " This is not a valid TSV File. check this line: " + line);
 			}
 			String[] lines = line.split(TAB);
+
 			int begin = Integer.parseInt(lines[1].split("-")[0]);
 			int end = Integer.parseInt(lines[1].split("-")[1]);
 
+			createTokens(aJCas, lines, begin, end);
+
 			int ind = 3;
+
 			for (Type type : spanLayers.keySet()) {
 				AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type, begin, end);
 				for (Feature feat : spanLayers.get(type)) {
-					if (!lines[ind].equals("_")) {					
+					if (!lines[ind].equals("_")) {
 						newAnnotation.setFeatureValueFromString(feat, lines[ind]);
-						aJCas.addFsToIndexes(newAnnotation);					
+						aJCas.addFsToIndexes(newAnnotation);
 					}
 					ind++;
 				}
@@ -157,6 +152,27 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				 * value)
 				 */ }
 		}
+	}
+
+	private void createTokens(JCas aJCas, String[] lines, int begin, int end) {
+
+		if (!lines[0].startsWith("-")) {
+			Token token = new Token(aJCas, begin, end);
+			token.addToIndexes();
+		}
+	}
+
+	private void createSentence(JCas aJCas, String line) {
+		String text = line.substring(6);
+		String beginEnd = text.substring(0, text.indexOf("#"));
+		text = text.substring(text.indexOf("#") + 1);
+
+		int begin = Integer.parseInt(beginEnd.split("-")[0]);
+		int end = Integer.parseInt(beginEnd.split("-")[1]);
+
+		coveredText.append(text + LF);
+		Sentence sentence = new Sentence(aJCas, begin, end);
+		sentence.addToIndexes();
 	}
 
 	private void setLayerAndFeature(JCas aJcas, String header) throws IOException {
