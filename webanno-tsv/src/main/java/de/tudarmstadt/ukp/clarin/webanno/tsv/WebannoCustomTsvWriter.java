@@ -40,6 +40,7 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
@@ -104,7 +105,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	public static final String CH = "T_CH"; // chain annotation type
 	public static final String RL = "T_RL"; // relation annotation type
 
-	private List<AnnotationUnit> units = new ArrayList<>();;
+	private List<AnnotationUnit> units = new ArrayList<>();
 	// number of subunits under this Annotation Unit
 	private Map<AnnotationUnit, Integer> subUnits = new HashMap<>();
 	private Map<String, Set<String>> featurePerLayer = new LinkedHashMap<>();
@@ -374,7 +375,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	}
 
 	private AnnotationUnit getUnit(int aBegin, int aEnd, String aText) {
-		List<AnnotationUnit> tmpUnits = new ArrayList<>(units);
 		for (AnnotationUnit unit : units) {
 			if (unit.begin == aBegin && unit.end == aEnd) {
 				return unit;
@@ -697,54 +697,5 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			this.text = text;
 		}
 
-	}
-
-	/**
-	 * An UNIT to be exported in one line of a TSV file format (annotations
-	 * separated by TAB character). <br>
-	 * This UNIT can be a Token element or a sub-token element<br>
-	 * Sub-token elements start with the "--"
-	 *
-	 */
-	class AnnotationUnit {
-		int begin;
-		int end;
-		String token;
-		boolean isSubtoken;
-
-		public AnnotationUnit(int aBegin, int aEnd, boolean aIsSubToken, String aToken) {
-			this.begin = aBegin;
-			this.end = aEnd;
-			this.isSubtoken = aIsSubToken;
-			this.token = aToken;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + begin;
-			result = prime * result + end;
-			result = prime * result + (isSubtoken ? 1231 : 1237);
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			AnnotationUnit other = (AnnotationUnit) obj;
-			if (begin != other.begin)
-				return false;
-			if (end != other.end)
-				return false;
-			if (isSubtoken != other.isSubtoken)
-				return false;
-			return true;
-		}
 	}
 }

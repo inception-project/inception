@@ -20,10 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -38,6 +41,8 @@ import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
@@ -71,6 +76,8 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	// for each type, for each unit, annotations per position
 
 	private Map<Type, Map<String, Map<Feature, String>>> annotaionsPerUnits = new LinkedHashMap<>();
+	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new HashMap<>();
+	private List<AnnotationUnit> units = new ArrayList<>();
 
 	public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
@@ -130,35 +137,65 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			int begin = Integer.parseInt(lines[1].split("-")[0]);
 			int end = Integer.parseInt(lines[1].split("-")[1]);
 
-			createTokens(aJCas, lines, begin, end);
+			AnnotationUnit unit = createTokens(aJCas, lines, begin, end);
 
 			int ind = 3;
 
+			// Map<String, List<String>> featuresPerTypes = new
+			// LinkedHashMap<>();
 			for (Type type : spanLayers.keySet()) {
-				AnnotationFS newAnnotation = aJCas.getCas().createAnnotation(type, begin, end);
-				for (Feature feat : spanLayers.get(type)) {
-					if (!lines[ind].equals("_")) {
-						newAnnotation.setFeatureValueFromString(feat, lines[ind]);
-						aJCas.addFsToIndexes(newAnnotation);
-					}
+				annotationsPerPostion.putIfAbsent(type, new HashMap<>());
+				for (Feature f : spanLayers.get(type)) {
+					annotationsPerPostion.get(type).put(unit,
+							annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
+					annotationsPerPostion.get(type).get(unit).add(lines[ind]);
+					// featuresPerTypes.put(type.getName(),
+					// Arrays.asList(lines[ind]));
 					ind++;
 				}
-				/*
-				 * annotaionsPerUnits.putIfAbsent(type, new HashMap<>());
-				 * 
-				 * annotaionsPerUnits.get(type).putIfAbsent(lines[0], new
-				 * HashMap<>()); for() //
-				 * annotaionsPerUnits.get(type.getName()).get(lines[0]).put(key,
-				 * value)
-				 */ }
+			}
+
+			for (Type type : annotationsPerPostion.keySet()) {
+				List<AnnotationFS> annos = new ArrayList<>();
+				// if there are multiple annos
+				int multAnnos = annotationsPerPostion.get(type).get(unit).get(0).split("\\|").length;
+				for (int i = 0; i < multAnnos; i++) {
+					annos.add(aJCas.getCas().createAnnotation(type, begin, end));
+				}
+
+				int j = 0;
+				for (Feature feat : spanLayers.get(type)) {
+					String anno = annotationsPerPostion.get(type).get(unit).get(j);
+					if (!annotationsPerPostion.get(type).get(unit).get(0).equals("_")) {
+						int i = 0;
+						for (String mAnno : anno.split("\\|")) {
+							if (mAnno.endsWith("]"))
+								mAnno = mAnno.substring(0, mAnno.indexOf("["));
+							if (mAnno.equals(feat.getName()))
+								mAnno = null;
+							annos.get(i).setFeatureValueFromString(feat, mAnno);
+							aJCas.addFsToIndexes(annos.get(i));
+							i++;
+						}
+					}
+					j++;
+				}
+			}
 		}
 	}
 
-	private void createTokens(JCas aJCas, String[] lines, int begin, int end) {
+	private AnnotationUnit createTokens(JCas aJCas, String[] lines, int begin, int end) {
 
 		if (!lines[0].startsWith("-")) {
 			Token token = new Token(aJCas, begin, end);
+			AnnotationUnit unit = new AnnotationUnit(begin, end, false, "");
+			units.add(unit);
 			token.addToIndexes();
+			return unit;
+		} else {
+			AnnotationUnit unit = new AnnotationUnit(begin, end, true, "");
+			units.add(unit);
+			return unit;
 		}
 	}
 
