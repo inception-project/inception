@@ -34,6 +34,7 @@ import java.util.StringTokenizer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -79,6 +80,10 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new HashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
 
+	// record the annotation at ref position when it is mutiple token annotation
+	private Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
+	private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
+
 	public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
 	{
@@ -113,19 +118,16 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			if (line.trim().isEmpty()) {
 				continue;
 			}
-	/*		// some times, the sentence in #text= might have a new line which
-			// break this reader,
-			// so skip such lines
-			if (!Character.isDigit(line.split(" ")[0].charAt(0))) {
-				continue;
-			}
-
-			// If we are still unlucky, the line starts with a number from the
-			// sentence but not
-			// a token number, check if it didn't in the format NUM-NUM
-			if (!Character.isDigit(line.split("-")[1].charAt(0))) {
-				continue;
-			}*/
+			/*
+			 * // some times, the sentence in #text= might have a new line which
+			 * // break this reader, // so skip such lines if
+			 * (!Character.isDigit(line.split(" ")[0].charAt(0))) { continue; }
+			 * 
+			 * // If we are still unlucky, the line starts with a number from
+			 * the // sentence but not // a token number, check if it didn't in
+			 * the format NUM-NUM if
+			 * (!Character.isDigit(line.split("-")[1].charAt(0))) { continue; }
+			 */
 
 			int count = StringUtils.countMatches(line, "\t");
 
@@ -141,16 +143,12 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 
 			int ind = 3;
 
-			// Map<String, List<String>> featuresPerTypes = new
-			// LinkedHashMap<>();
 			for (Type type : spanLayers.keySet()) {
 				annotationsPerPostion.putIfAbsent(type, new HashMap<>());
 				for (Feature f : spanLayers.get(type)) {
 					annotationsPerPostion.get(type).put(unit,
 							annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
 					annotationsPerPostion.get(type).get(unit).add(lines[ind]);
-					// featuresPerTypes.put(type.getName(),
-					// Arrays.asList(lines[ind]));
 					ind++;
 				}
 			}
@@ -169,12 +167,28 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 					if (!annotationsPerPostion.get(type).get(unit).get(0).equals("_")) {
 						int i = 0;
 						for (String mAnno : anno.split("\\|")) {
-							if (mAnno.endsWith("]"))
+							int ref = 1;
+							if (mAnno.endsWith("]")) {
+								ref = Integer.valueOf(mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
 								mAnno = mAnno.substring(0, mAnno.indexOf("["));
-							if (mAnno.equals(feat.getName()))
-								mAnno = null;
-							annos.get(i).setFeatureValueFromString(feat, mAnno);
-							aJCas.addFsToIndexes(annos.get(i));
+							}
+							if (mAnno.startsWith("B-")) {
+								multiTokUnits.put(ref, annos.get(i));
+								mAnno = mAnno.substring(2);
+							}
+							if (mAnno.startsWith("I-")) {
+								Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+								multiTokUnits.get(ref).setIntValue(endF, end);
+								setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
+
+							} else {
+								if (mAnno.equals(feat.getName()))
+									mAnno = null;
+								annos.get(i).setFeatureValueFromString(feat, mAnno);
+								aJCas.addFsToIndexes(annos.get(i));
+								setAnnoRefPerUnit(unit, type, ref, annos.get(i));
+
+							}
 							i++;
 						}
 					}
@@ -182,6 +196,12 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				}
 			}
 		}
+	}
+
+	private void setAnnoRefPerUnit(AnnotationUnit unit, Type type, int ref, AnnotationFS aAnnoFs) {
+		annoUnitperAnnoFs.putIfAbsent(type, new HashMap<>());
+		annoUnitperAnnoFs.get(type).putIfAbsent(unit, new HashMap<>());
+		annoUnitperAnnoFs.get(type).get(unit).put(ref, aAnnoFs);
 	}
 
 	private AnnotationUnit createTokens(JCas aJCas, String[] lines, int begin, int end) {
