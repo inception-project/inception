@@ -130,8 +130,9 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			writeHeader(docOS);
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
-					IOUtils.write(LF + "#Text=" + sentenceBeginEnd.get(unit) + "#" + sentenceUnits.get(unit) + LF,
-							docOS, encoding);
+					// TODO: This removes any in-line line breaks
+					IOUtils.write(LF + "#Text=" + sentenceBeginEnd.get(unit) + "#"
+							+ sentenceUnits.get(unit).replace(LF, "") + LF, docOS, encoding);
 				}
 				if (unit.isSubtoken) {
 					IOUtils.write(

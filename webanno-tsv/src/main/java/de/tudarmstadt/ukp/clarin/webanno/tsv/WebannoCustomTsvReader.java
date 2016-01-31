@@ -113,7 +113,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			if (line.trim().isEmpty()) {
 				continue;
 			}
-			// some times, the sentence in #text= might have a new line which
+	/*		// some times, the sentence in #text= might have a new line which
 			// break this reader,
 			// so skip such lines
 			if (!Character.isDigit(line.split(" ")[0].charAt(0))) {
@@ -125,7 +125,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			// a token number, check if it didn't in the format NUM-NUM
 			if (!Character.isDigit(line.split("-")[1].charAt(0))) {
 				continue;
-			}
+			}*/
 
 			int count = StringUtils.countMatches(line, "\t");
 
