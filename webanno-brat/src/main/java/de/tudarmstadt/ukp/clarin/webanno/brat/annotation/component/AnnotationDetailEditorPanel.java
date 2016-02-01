@@ -1205,9 +1205,10 @@ public class AnnotationDetailEditorPanel
 				forwardAnnotationText.add(new DefaultFocusBehavior2());
 			} else {
 				// Put focus on first feature
-				if (item.getIndex() == item.size() - 1) {
+				//TODO: Allow puting focus to next text/dropbox field on TAB
+				/*if (item.getIndex() == item.size() - 1) {
 					frag.getFocusComponent().add(new DefaultFocusBehavior());
-				}
+				}*/
 			}
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
