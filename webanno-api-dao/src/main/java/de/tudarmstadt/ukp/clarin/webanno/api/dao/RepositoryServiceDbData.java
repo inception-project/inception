@@ -641,6 +641,7 @@ public class RepositoryServiceDbData
 
 			List<String> slotFeatures = new ArrayList<String>();
 			List<String> slotTargets = new ArrayList<String>();
+			List<String> linkTypes = new ArrayList<String>();
 
 			List<String> spanLayers = new ArrayList<String>();
 			for (AnnotationLayer layer : layers) {
@@ -651,6 +652,7 @@ public class RepositoryServiceDbData
 								&& LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
 							slotFeatures.add(layer.getName() + ":" + f.getName());
 							slotTargets.add(f.getType());
+							linkTypes.add(f.getLinkTypeName());
 						}
 					}
 				}
@@ -672,8 +674,8 @@ public class RepositoryServiceDbData
 
 			writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
 					JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
-					"slotFeatures", slotFeatures, "slotTargets", slotTargets, "chainLayers", chainLayers,
-					"relationLayers", relationLayers);
+					"slotFeatures", slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers",
+					chainLayers, "relationLayers", relationLayers);
         }
         else {
             writer = createEngineDescription(aWriter,

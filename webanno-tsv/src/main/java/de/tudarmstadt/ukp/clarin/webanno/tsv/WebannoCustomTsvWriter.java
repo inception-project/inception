@@ -81,6 +81,10 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	@ConfigurationParameter(name = SLOT_FEATS, mandatory = true, defaultValue = {})
 	private List<String> slotFeatures;
 
+	public static final String LINK_TYPES = "linkTypes";
+	@ConfigurationParameter(name = LINK_TYPES, mandatory = true, defaultValue = {})
+	private List<String> linkTypes;
+
 	public static final String SLOT_Targets = "slotTargets";
 	@ConfigurationParameter(name = SLOT_Targets, mandatory = true, defaultValue = {})
 	private List<String> slotTargets;
@@ -116,6 +120,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private Map<Feature, Type> slotFeatureTypes = new HashMap<>();
 	private Map<Integer, Integer> annotaionRef = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
+	private Map<String, String> slotLinkTypes = new HashMap<>();
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
@@ -123,6 +128,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		try {
 			docOS = getOutputStream(aJCas, filenameSuffix);
 			// convertToTsv(aJCas, docOS, encoding);
+			setSlotLinkTypes();
 			setTokenSentenceAddress(aJCas);
 			setSpanAnnotation(aJCas);
 			setChainAnnotation(aJCas);
@@ -154,7 +160,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 						} else {
 
 							for (int i = 0; i < annofs.size(); i++) {
-								merged.set(i, merged.get(i) + "|" + annofs.get(i));
+								merged.set(i, merged.get(i) + "||" + annofs.get(i));
 							}
 						}
 					}
@@ -175,6 +181,14 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			throw new AnalysisEngineProcessException(e);
 		} finally {
 			closeQuietly(docOS);
+		}
+	}
+
+	private void setSlotLinkTypes() {
+		int i = 0;
+		for (String f : slotFeatures) {
+			slotLinkTypes.put(f, linkTypes.get(i));
+			i++;
 		}
 	}
 
@@ -490,22 +504,31 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 							role = feature.getName();
 						}
 						if (sbRole.length() < 1) {
-							sbRole.append(role + (ref > 1 ? "[" + ref + "]" : ""));
+							sbRole.append(role /*
+												 * + (ref > 1 ? "[" + ref + "]"
+												 * : "")
+												 */);
 							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : ""));
 						} else {
 							sbRole.append("|");
 							sbTarget.append("|");
-							sbRole.append(role + (ref > 1 ? "[" + ref + "]" : ""));
+							sbRole.append(role /*
+												 * + (ref > 1 ? "[" + ref + "]"
+												 * : "")
+												 */);
 							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : ""));
 						}
 					}
-					annoPerFeatures.add(sbRole.toString() + TAB + sbTarget.toString());
+					annoPerFeatures.add(sbRole.toString());
+					annoPerFeatures.add(sbTarget.toString());
 				} else {
 					// setting it to null
-					annoPerFeatures.add(feature.getShortName() + TAB + "_");
+					annoPerFeatures.add(feature.getShortName());
+					annoPerFeatures.add("_");
 				}
-				featurePerLayer.get(type.getName()).add("ROLE_" + feature.getShortName());
-				featurePerLayer.get(type.getName()).add("TARG_" + slotFeatureTypes.get(feature));
+				featurePerLayer.get(type.getName())
+						.add("ROLE_" + feature.getName() + "_" + slotLinkTypes.get(feature.getName()));
+				featurePerLayer.get(type.getName()).add(slotFeatureTypes.get(feature).getName());
 			} else {
 				String annotation = fs.getFeatureValueAsString(feature);
 				if (annotation == null) {

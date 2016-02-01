@@ -34,8 +34,11 @@ import java.util.StringTokenizer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import org.apache.tools.ant.taskdefs.condition.HasMethod;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionException;
@@ -71,17 +74,17 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	private int columns = 2;// token number + token columns (minimum required)
 	private Map<Type, Set<Feature>> spanLayers = new LinkedHashMap<Type, Set<Feature>>();
 	private Map<Type, Set<Feature>> relationLayers = new LinkedHashMap<Type, Set<Feature>>();
+	private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
+	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
 	private Map<Type, Set<Feature>> chainLayers = new LinkedHashMap<Type, Set<Feature>>();
 	private StringBuilder coveredText = new StringBuilder();
 	// for each type, for each unit, annotations per position
-
-	private Map<Type, Map<String, Map<Feature, String>>> annotaionsPerUnits = new LinkedHashMap<>();
-	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new HashMap<>();
+	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
+	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
 
 	// record the annotation at ref position when it is mutiple token annotation
-	private Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
 	private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
 
 	public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
@@ -118,16 +121,6 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			if (line.trim().isEmpty()) {
 				continue;
 			}
-			/*
-			 * // some times, the sentence in #text= might have a new line which
-			 * // break this reader, // so skip such lines if
-			 * (!Character.isDigit(line.split(" ")[0].charAt(0))) { continue; }
-			 * 
-			 * // If we are still unlucky, the line starts with a number from
-			 * the // sentence but not // a token number, check if it didn't in
-			 * the format NUM-NUM if
-			 * (!Character.isDigit(line.split("-")[1].charAt(0))) { continue; }
-			 */
 
 			int count = StringUtils.countMatches(line, "\t");
 
@@ -143,58 +136,141 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 
 			int ind = 3;
 
-			for (Type type : spanLayers.keySet()) {
-				annotationsPerPostion.putIfAbsent(type, new HashMap<>());
-				for (Feature f : spanLayers.get(type)) {
-					annotationsPerPostion.get(type).put(unit,
-							annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
-					annotationsPerPostion.get(type).get(unit).add(lines[ind]);
-					ind++;
-				}
-			}
+			setSpanAnnosPerTypePerUnit(lines, unit, ind);
+		}
 
-			for (Type type : annotationsPerPostion.keySet()) {
-				List<AnnotationFS> annos = new ArrayList<>();
-				// if there are multiple annos
-				int multAnnos = annotationsPerPostion.get(type).get(unit).get(0).split("\\|").length;
-				for (int i = 0; i < multAnnos; i++) {
-					annos.add(aJCas.getCas().createAnnotation(type, begin, end));
-				}
+		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
+		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
 
+		Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
+		for (Type type : annotationsPerPostion.keySet()) {
+			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
+
+				int end = unit.end;
+				List<AnnotationFS> annos = annosPerTypePerUnit.get(type).get(unit);
 				int j = 0;
+				Map<AnnotationFS, List<FeatureStructure>> linkFSesPerAnno = new HashMap<>();
+				boolean isSlot = false;
+				Feature LinkeF = null;
 				for (Feature feat : spanLayers.get(type)) {
 					String anno = annotationsPerPostion.get(type).get(unit).get(j);
 					if (!annotationsPerPostion.get(type).get(unit).get(0).equals("_")) {
 						int i = 0;
-						for (String mAnno : anno.split("\\|")) {
-							int ref = 1;
-							if (mAnno.endsWith("]")) {
-								ref = Integer.valueOf(mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
-								mAnno = mAnno.substring(0, mAnno.indexOf("["));
-							}
-							if (mAnno.startsWith("B-")) {
-								multiTokUnits.put(ref, annos.get(i));
-								mAnno = mAnno.substring(2);
-							}
-							if (mAnno.startsWith("I-")) {
-								Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-								multiTokUnits.get(ref).setIntValue(endF, end);
-								setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
+						for (String mAnnos : anno.split("\\|\\|")) {
+							// if it is a slot annotation (multiple slots per
+							// single annotation
+							// (Target1<--role1--Base--role2-->Target2)
+							int slot = 0;
+							for (String mAnno : mAnnos.split("\\|")) {
+								int ref = 1;
+								if (mAnno.endsWith("]")) {
 
-							} else {
-								if (mAnno.equals(feat.getName()))
-									mAnno = null;
-								annos.get(i).setFeatureValueFromString(feat, mAnno);
-								aJCas.addFsToIndexes(annos.get(i));
-								setAnnoRefPerUnit(unit, type, ref, annos.get(i));
+									ref = Integer.valueOf(mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
+									mAnno = mAnno.substring(0, mAnno.indexOf("["));
+								}
+								if (mAnno.startsWith("B-")) {
 
+									multiTokUnits.put(ref, annos.get(i));
+									mAnno = mAnno.substring(2);
+								}
+								if (mAnno.startsWith("I-")) {
+
+									Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+									multiTokUnits.get(ref).setIntValue(endF, end);
+									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
+
+								} else {
+									if (mAnno.equals(feat.getName()))
+										mAnno = null;
+									if (roleLinks.containsKey(feat)) {
+										LinkeF = feat;
+										isSlot = true;
+										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
+										Feature roleFeat = link.getType().getFeatureByBaseName("role");
+										link.setStringValue(roleFeat, mAnno);
+										linkFSesPerAnno.putIfAbsent(annos.get(i), new ArrayList<>());
+										linkFSesPerAnno.get(annos.get(i)).add(link);
+
+									} else if (roleTargets.containsKey(feat)) {
+
+										FeatureStructure link = linkFSesPerAnno.get(annos.get(i)).get(slot);
+										AnnotationUnit targetUnit = token2Units.get(mAnno);
+										AnnotationFS targetFs = annosPerTypePerUnit.get(roleTargets.get(feat))
+												.get(targetUnit).get(ref - 1);
+										link.setFeatureValue(feat, targetFs);
+										slot++;
+
+									} else {
+
+										annos.get(i).setFeatureValueFromString(feat, mAnno);
+										aJCas.addFsToIndexes(annos.get(i));
+										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
+									}
+
+								}
 							}
 							i++;
 						}
 					}
 					j++;
 				}
+				if (isSlot) {
+					for (AnnotationFS anno : linkFSesPerAnno.keySet()) {
+						ArrayFS array = anno.getCAS().createArrayFS(linkFSesPerAnno.get(anno).size());
+						array.copyFromArray(
+								linkFSesPerAnno.get(anno)
+										.toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]),
+								0, 0, linkFSesPerAnno.get(anno).size());
+						anno.setFeatureValue(LinkeF, array);
+					}
+					linkFSesPerAnno = new HashMap<>();
+					isSlot = false;
+				}
 			}
+		}
+	}
+
+	private int setSpanAnnosPerTypePerUnit(String[] lines, AnnotationUnit unit, int ind) {
+		for (Type type : spanLayers.keySet()) {
+
+			annotationsPerPostion.putIfAbsent(type, new LinkedHashMap<>());
+			for (Feature f : spanLayers.get(type)) {
+				annotationsPerPostion.get(type).put(unit,
+						annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
+				annotationsPerPostion.get(type).get(unit).add(lines[ind]);
+				ind++;
+				/*
+				 * if (roleTargets.containsKey(f)) { ind++; }
+				 */
+			}
+		}
+		return ind;
+	}
+
+	private void setAnnosPerUnit(JCas aJCas, Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
+		for (Type type : annotationsPerPostion.keySet()) {
+			Map<AnnotationUnit, List<AnnotationFS>> annosPerUnit = new HashMap<>();
+			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
+
+				int begin = unit.begin;
+				int end = unit.end;
+				List<AnnotationFS> annos = new ArrayList<>();
+				// if there are multiple annos
+				int multAnnos = 1;
+				for (String anno : annotationsPerPostion.get(type).get(unit)) {
+
+					if (!anno.startsWith("[") && anno.split("\\|").length > multAnnos) {
+						multAnnos = anno.split("\\|").length;
+					}
+				}
+
+				for (int i = 0; i < multAnnos; i++) {
+
+					annos.add(aJCas.getCas().createAnnotation(type, begin, end));
+				}
+				annosPerUnit.put(unit, annos);
+			}
+			aAnnosPerTypePerUnit.put(type, annosPerUnit);
 		}
 	}
 
@@ -211,10 +287,12 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			AnnotationUnit unit = new AnnotationUnit(begin, end, false, "");
 			units.add(unit);
 			token.addToIndexes();
+			token2Units.put(lines[0], unit);
 			return unit;
 		} else {
 			AnnotationUnit unit = new AnnotationUnit(begin, end, true, "");
 			units.add(unit);
+			token2Units.put(lines[0], unit);
 			return unit;
 		}
 	}
@@ -263,14 +341,32 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			while (layerTk.hasMoreTokens()) {
 				String ft = layerTk.nextToken().trim();
 				columns++;
+				Feature feature = layer.getFeatureByBaseName(ft);
 				if (ft.startsWith("ROLE_")) {
 					ft = ft.substring(5);
 					String t = layerTk.nextToken().toString();
 					columns++;
-					Type tType = CasUtil.getType(aJcas.getCas(), t.substring(5));
-					roleTargets.put(layer.getFeatureByBaseName(ft), tType);
+					Type tType = CasUtil.getType(aJcas.getCas(), t);
+					String fName = ft.substring(0, ft.indexOf("_"));
+					Feature slotF = layer.getFeatureByBaseName(fName.substring(fName.indexOf(":") + 1));
+					if (slotF == null) {
+						throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
+								+ " is not created for the layer " + layerName);
+					}
+					features.add(slotF);
+					roleLinks.put(slotF, tType);
+					Type slotType = CasUtil.getType(aJcas.getCas(), ft.substring(ft.indexOf("_") + 1));
+					Feature tFeatore = slotType.getFeatureByBaseName("target");
+					if (tFeatore == null) {
+						throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
+								+ " is not created for the layer " + layerName);
+					}
+					roleTargets.put(tFeatore, tType);
+					features.add(tFeatore);
+					slotLinkTypes.put(slotF, slotType);
+					continue;
 				}
-				Feature feature = layer.getFeatureByBaseName(ft);
+
 				if (feature == null) {
 					throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
 							+ " is not created for the layer " + layerName);
