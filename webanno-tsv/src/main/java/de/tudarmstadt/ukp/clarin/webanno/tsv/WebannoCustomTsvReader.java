@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -55,32 +57,39 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This class reads a WebAnno compatible TSV files and create annotations from
- * the information provided. The very beginning of the file, the header,
- * mentions the existing annotation layers with their feature structure
- * information Annotation layers are separated by # character and features by |
- * character. If the layer is a relation annotation, it includes the string
- * AttachToType=... where the attach type is expressed.There is no Chain TSV
- * reader Writer yet.
- *
- *
+ * the information provided. The the header of the file records the existing
+ * annotation layers with their features names.<br>
+ * If the annotation type or a feature in the type do not exist in the CAS, it throws an error.<br>
+ * Span types starts with the prefix <b> #T_SP=</b>. <br>
+ * Relation types starts with the prefix <b> #T_RL=</b>. <br>
+ * Chain types starts with the prefix <b> #T_CH=</b>. <br>
+ * Slot features start with prefix <b> ROLE_</b>. <br>
+ * All features of a type follows the the name separated by <b>|</b> character. <br>
  */
 public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBase {
 
 	private static final String TAB = "\t";
 	private static final String LF = "\n";
+	private static final String REF_REL = "referenceRelation";
+	private static final String REF_LINK = "referenceType";
+	private static final String CHAIN = "Chain";
+	private static final String FIRST = "first";
+	private static final String NEXT = "next";
 
 	private String fileName;
-	private Map<String, Token> indexedTokens;
 	private int columns = 2;// token number + token columns (minimum required)
-	private Map<Type, Set<Feature>> spanLayers = new LinkedHashMap<Type, Set<Feature>>();
-	private Map<Type, Set<Feature>> relationLayers = new LinkedHashMap<Type, Set<Feature>>();
-	private Map<Feature, Type> roleLinks = new HashMap<>();
+	private Map<Type, Set<Feature>> allLayers = new LinkedHashMap<Type, Set<Feature>>();
+	/*
+	 * private Map<Type, Set<Feature>> relationLayers = new LinkedHashMap<Type,
+	 * Set<Feature>>(); private Map<Type, Set<Feature>> chainLayers = new
+	 * LinkedHashMap<Type, Set<Feature>>();
+	 */ private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
 	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
-	private Map<Type, Set<Feature>> chainLayers = new LinkedHashMap<Type, Set<Feature>>();
 	private StringBuilder coveredText = new StringBuilder();
 	// for each type, for each unit, annotations per position
 	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
+	private Map<Type, Map<Integer, Map<Integer, AnnotationFS>>> chainAnnosPerTyep = new HashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
 
@@ -136,23 +145,67 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 
 			int ind = 3;
 
-			setSpanAnnosPerTypePerUnit(lines, unit, ind);
+			setAnnosPerTypePerUnit(lines, unit, ind);
 		}
 
 		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
 		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
+		addSpanAnnotations(aJCas, annosPerTypePerUnit);
+		addChainAnnotations(aJCas);
+	}
 
+	/**
+	 * The individual link annotations are stored in a {@link TreeMap}
+	 * (chainAnnosPerTye) with chain number and link number references, sorted
+	 * in an ascending order <br>
+	 * Iterate over each chain number and link number references and construct
+	 * the chain
+	 * 
+	 * @param aJCas
+	 */
+	private void addChainAnnotations(JCas aJCas) {
+		for (Type linkType : chainAnnosPerTyep.keySet()) {
+			for (int chainNo : chainAnnosPerTyep.get(linkType).keySet()) {
+
+				Type chainType = aJCas.getCas().getTypeSystem()
+						.getType(linkType.getName().substring(0, linkType.getName().length() - 4) + CHAIN);
+				Feature firstF = chainType.getFeatureByBaseName(FIRST);
+				Feature nextF = linkType.getFeatureByBaseName(NEXT);
+				AnnotationFS chain = aJCas.getCas().createAnnotation(chainType, 0, 0);
+
+				aJCas.addFsToIndexes(chain);
+				AnnotationFS firstFs = chainAnnosPerTyep.get(linkType).get(chainNo).get(1);
+				AnnotationFS linkFs = firstFs;
+				chain.setFeatureValue(firstF, firstFs);
+				for (int i = 2; i <= chainAnnosPerTyep.get(linkType).get(chainNo).size(); i++) {
+					linkFs.setFeatureValue(nextF, chainAnnosPerTyep.get(linkType).get(chainNo).get(i));
+					linkFs = chainAnnosPerTyep.get(linkType).get(chainNo).get(i);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Importing span annotations including slot annotations
+	 * 
+	 * @param aJCas
+	 * @param aAnnosPerTypePerUnit
+	 */
+
+	private void addSpanAnnotations(JCas aJCas,
+			Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
 		Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
 		for (Type type : annotationsPerPostion.keySet()) {
+
 			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
 
 				int end = unit.end;
-				List<AnnotationFS> annos = annosPerTypePerUnit.get(type).get(unit);
+				List<AnnotationFS> annos = aAnnosPerTypePerUnit.get(type).get(unit);
 				int j = 0;
 				Map<AnnotationFS, List<FeatureStructure>> linkFSesPerAnno = new HashMap<>();
 				boolean isSlot = false;
-				Feature LinkeF = null;
-				for (Feature feat : spanLayers.get(type)) {
+				Feature linkeF = null;
+				for (Feature feat : allLayers.get(type)) {
 					String anno = annotationsPerPostion.get(type).get(unit).get(j);
 					if (!annotationsPerPostion.get(type).get(unit).get(0).equals("_")) {
 						int i = 0;
@@ -183,7 +236,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 									if (mAnno.equals(feat.getName()))
 										mAnno = null;
 									if (roleLinks.containsKey(feat)) {
-										LinkeF = feat;
+										linkeF = feat;
 										isSlot = true;
 										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
 										Feature roleFeat = link.getType().getFeatureByBaseName("role");
@@ -195,10 +248,26 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 
 										FeatureStructure link = linkFSesPerAnno.get(annos.get(i)).get(slot);
 										AnnotationUnit targetUnit = token2Units.get(mAnno);
-										AnnotationFS targetFs = annosPerTypePerUnit.get(roleTargets.get(feat))
+										AnnotationFS targetFs = aAnnosPerTypePerUnit.get(roleTargets.get(feat))
 												.get(targetUnit).get(ref - 1);
 										link.setFeatureValue(feat, targetFs);
 										slot++;
+
+									} else if (feat.getShortName().equals(REF_REL)) {
+
+										String refRel = mAnno.split("->")[0];
+										annos.get(i).setFeatureValueFromString(feat, refRel);
+
+										int chainNo = Integer.valueOf(mAnno.split("->")[1].split("-")[0]);
+										int LinkNo = Integer.valueOf(mAnno.split("->")[1].split("-")[1]);
+										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
+										chainAnnosPerTyep.get(type).putIfAbsent(chainNo, new TreeMap<>());
+										chainAnnosPerTyep.get(type).get(chainNo).put(LinkNo, annos.get(i));
+
+									} else if (feat.getShortName().equals(REF_LINK)) {
+
+										annos.get(i).setFeatureValueFromString(feat, mAnno);
+										aJCas.addFsToIndexes(annos.get(i));
 
 									} else {
 
@@ -215,36 +284,55 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 					j++;
 				}
 				if (isSlot) {
-					for (AnnotationFS anno : linkFSesPerAnno.keySet()) {
-						ArrayFS array = anno.getCAS().createArrayFS(linkFSesPerAnno.get(anno).size());
-						array.copyFromArray(
-								linkFSesPerAnno.get(anno)
-										.toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]),
-								0, 0, linkFSesPerAnno.get(anno).size());
-						anno.setFeatureValue(LinkeF, array);
-					}
-					linkFSesPerAnno = new HashMap<>();
+					addSlotAnnotations(linkFSesPerAnno, linkeF);
 					isSlot = false;
 				}
 			}
 		}
 	}
 
-	private int setSpanAnnosPerTypePerUnit(String[] lines, AnnotationUnit unit, int ind) {
-		for (Type type : spanLayers.keySet()) {
+	/**
+	 * update a base annotation with slot annotations
+	 * 
+	 * @param linkFSesPerAnno
+	 *            contains list of slot annotations per a base annotation
+	 * @param aLinkeF
+	 *            The link slot annotation feature
+	 */
+	private void addSlotAnnotations(Map<AnnotationFS, List<FeatureStructure>> linkFSesPerAnno, Feature aLinkeF) {
+		for (AnnotationFS anno : linkFSesPerAnno.keySet()) {
+			ArrayFS array = anno.getCAS().createArrayFS(linkFSesPerAnno.get(anno).size());
+			array.copyFromArray(
+					linkFSesPerAnno.get(anno).toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]), 0, 0,
+					linkFSesPerAnno.get(anno).size());
+			anno.setFeatureValue(aLinkeF, array);
+		}
+		linkFSesPerAnno = new HashMap<>();
+	}
+
+	/**
+	 * Gets annotations from lines (of {@link AnnotationUnit}s) and save for the
+	 * later access, while reading the document the first time. <br>
+	 * 
+	 * @param lines
+	 *            TSV lines exported from WebAnno
+	 * @param unit
+	 *            the annotation unit (Token or sub-tokens)
+	 * @param ind
+	 *            index of the annotation, from the TAB separated annotations in
+	 *            the TSV lines
+	 */
+	private void setAnnosPerTypePerUnit(String[] lines, AnnotationUnit unit, int ind) {
+		for (Type type : allLayers.keySet()) {
 
 			annotationsPerPostion.putIfAbsent(type, new LinkedHashMap<>());
-			for (Feature f : spanLayers.get(type)) {
+			for (Feature f : allLayers.get(type)) {
 				annotationsPerPostion.get(type).put(unit,
 						annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
 				annotationsPerPostion.get(type).get(unit).add(lines[ind]);
 				ind++;
-				/*
-				 * if (roleTargets.containsKey(f)) { ind++; }
-				 */
 			}
 		}
-		return ind;
 	}
 
 	private void setAnnosPerUnit(JCas aJCas, Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
@@ -259,8 +347,8 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				int multAnnos = 1;
 				for (String anno : annotationsPerPostion.get(type).get(unit)) {
 
-					if (!anno.startsWith("[") && anno.split("\\|").length > multAnnos) {
-						multAnnos = anno.split("\\|").length;
+					if (anno.split("\\|\\|").length > multAnnos) {
+						multAnnos = anno.split("\\|\\|").length;
 					}
 				}
 
@@ -310,77 +398,82 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 		sentence.addToIndexes();
 	}
 
+	/**
+	 * Get the type and feature information from the TSV file header
+	 * 
+	 * @param aJcas
+	 * @param header
+	 *            the header line
+	 * @throws IOException
+	 *             If the type or the feature do not exist in the CAs
+	 */
 	private void setLayerAndFeature(JCas aJcas, String header) throws IOException {
-		StringTokenizer headerTk = new StringTokenizer(header, "#");
-		while (headerTk.hasMoreTokens()) {
-			String layerNames = headerTk.nextToken().trim();
-			StringTokenizer layerTk = new StringTokenizer(layerNames, "|");
+		try {
+			StringTokenizer headerTk = new StringTokenizer(header, "#");
+			while (headerTk.hasMoreTokens()) {
+				String layerNames = headerTk.nextToken().trim();
+				StringTokenizer layerTk = new StringTokenizer(layerNames, "|");
 
-			Set<Feature> features = new LinkedHashSet<Feature>();
-			// get the layer name [ which are coded as 0_=span, 1_=chain, and
-			// 2_=relation
-			String layerName = layerTk.nextToken().trim();
-			String layerType = layerName.substring(0, layerName.indexOf("="));
-			layerName = layerName.substring(layerName.indexOf("=") + 1);
+				Set<Feature> features = new LinkedHashSet<Feature>();
+				String layerName = layerTk.nextToken().trim();
+				layerName = layerName.substring(layerName.indexOf("=") + 1);
 
-			Iterator<Type> types = aJcas.getTypeSystem().getTypeIterator();
-			boolean layerExists = false;
-			while (types.hasNext()) {
+				Iterator<Type> types = aJcas.getTypeSystem().getTypeIterator();
+				boolean layerExists = false;
+				while (types.hasNext()) {
 
-				if (types.next().getName().equals(layerName)) {
-					layerExists = true;
-					break;
+					if (types.next().getName().equals(layerName)) {
+						layerExists = true;
+						break;
+					}
 				}
-			}
-			if (!layerExists) {
-				throw new IOException(fileName + " This is not a valid TSV File. The layer " + layerName
-						+ " is not created in the project.");
-			}
-			Type layer = CasUtil.getType(aJcas.getCas(), layerName);
+				if (!layerExists) {
+					throw new IOException(fileName + " This is not a valid TSV File. The layer " + layerName
+							+ " is not created in the project.");
+				}
+				Type layer = CasUtil.getType(aJcas.getCas(), layerName);
 
-			while (layerTk.hasMoreTokens()) {
-				String ft = layerTk.nextToken().trim();
-				columns++;
-				Feature feature = layer.getFeatureByBaseName(ft);
-				if (ft.startsWith("ROLE_")) {
-					ft = ft.substring(5);
-					String t = layerTk.nextToken().toString();
+				while (layerTk.hasMoreTokens()) {
+					String ft = layerTk.nextToken().trim();
 					columns++;
-					Type tType = CasUtil.getType(aJcas.getCas(), t);
-					String fName = ft.substring(0, ft.indexOf("_"));
-					Feature slotF = layer.getFeatureByBaseName(fName.substring(fName.indexOf(":") + 1));
-					if (slotF == null) {
+					Feature feature = layer.getFeatureByBaseName(ft);
+					if (ft.startsWith("ROLE_")) {
+						ft = ft.substring(5);
+						String t = layerTk.nextToken().toString();
+						columns++;
+						Type tType = CasUtil.getType(aJcas.getCas(), t);
+						String fName = ft.substring(0, ft.indexOf("_"));
+						Feature slotF = layer.getFeatureByBaseName(fName.substring(fName.indexOf(":") + 1));
+						if (slotF == null) {
+							throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
+									+ " is not created for the layer " + layerName);
+						}
+						features.add(slotF);
+						roleLinks.put(slotF, tType);
+						Type slotType = CasUtil.getType(aJcas.getCas(), ft.substring(ft.indexOf("_") + 1));
+						Feature tFeatore = slotType.getFeatureByBaseName("target");
+						if (tFeatore == null) {
+							throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
+									+ " is not created for the layer " + layerName);
+						}
+						roleTargets.put(tFeatore, tType);
+						features.add(tFeatore);
+						slotLinkTypes.put(slotF, slotType);
+						continue;
+					}
+
+					if (feature == null) {
 						throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
 								+ " is not created for the layer " + layerName);
 					}
-					features.add(slotF);
-					roleLinks.put(slotF, tType);
-					Type slotType = CasUtil.getType(aJcas.getCas(), ft.substring(ft.indexOf("_") + 1));
-					Feature tFeatore = slotType.getFeatureByBaseName("target");
-					if (tFeatore == null) {
-						throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
-								+ " is not created for the layer " + layerName);
-					}
-					roleTargets.put(tFeatore, tType);
-					features.add(tFeatore);
-					slotLinkTypes.put(slotF, slotType);
-					continue;
+					features.add(feature);
 				}
-
-				if (feature == null) {
-					throw new IOException(fileName + " This is not a valid TSV File. The feature " + ft
-							+ " is not created for the layer " + layerName);
-				}
-				features.add(feature);
+				allLayers.put(layer, features);
 			}
-			if (layerType.equals(WebannoCustomTsvWriter.SP)) {
-				spanLayers.put(layer, features);
-			} else if (layerType.equals(WebannoCustomTsvWriter.CH)) {
-				chainLayers.put(layer, features);
-			} else {
-				relationLayers.put(layer, features);
-			}
-
+		} catch (Exception e) {
+			throw new IOException(
+					"Unable to import the TSV file. Please check if all the annotation types and features are already created in the"
+							+ " project. The TSV header looks the following:\n" + header);
 		}
 	}
 
