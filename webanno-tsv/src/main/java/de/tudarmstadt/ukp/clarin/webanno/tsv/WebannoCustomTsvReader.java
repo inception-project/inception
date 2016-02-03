@@ -59,12 +59,14 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * This class reads a WebAnno compatible TSV files and create annotations from
  * the information provided. The the header of the file records the existing
  * annotation layers with their features names.<br>
- * If the annotation type or a feature in the type do not exist in the CAS, it throws an error.<br>
+ * If the annotation type or a feature in the type do not exist in the CAS, it
+ * throws an error.<br>
  * Span types starts with the prefix <b> #T_SP=</b>. <br>
  * Relation types starts with the prefix <b> #T_RL=</b>. <br>
  * Chain types starts with the prefix <b> #T_CH=</b>. <br>
  * Slot features start with prefix <b> ROLE_</b>. <br>
- * All features of a type follows the the name separated by <b>|</b> character. <br>
+ * All features of a type follows the the name separated by <b>|</b> character.
+ * <br>
  */
 public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBase {
 
@@ -75,6 +77,11 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	private static final String CHAIN = "Chain";
 	private static final String FIRST = "first";
 	private static final String NEXT = "next";
+	public static final String ROLE = "ROLE_";
+	public static final String BT = "BT_"; // base type for the relation
+											// annotation
+	private static final String DEPENDENT = "Dependent";
+	private static final String GOVERNOR = "Governor";
 
 	private String fileName;
 	private int columns = 2;// token number + token columns (minimum required)
@@ -92,6 +99,9 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	private Map<Type, Map<Integer, Map<Integer, AnnotationFS>>> chainAnnosPerTyep = new HashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
+
+	private Map<Type, Feature> depFeatures = new HashMap<>();
+	private Map<Type, Type> depTypess = new HashMap<>();
 
 	// record the annotation at ref position when it is mutiple token annotation
 	private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
@@ -150,7 +160,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 
 		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
 		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
-		addSpanAnnotations(aJCas, annosPerTypePerUnit);
+		addAnnotations(aJCas, annosPerTypePerUnit);
 		addChainAnnotations(aJCas);
 	}
 
@@ -192,8 +202,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	 * @param aAnnosPerTypePerUnit
 	 */
 
-	private void addSpanAnnotations(JCas aJCas,
-			Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
+	private void addAnnotations(JCas aJCas, Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
 		Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
 		for (Type type : annotationsPerPostion.keySet()) {
 
@@ -216,9 +225,12 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 							int slot = 0;
 							for (String mAnno : mAnnos.split("\\|")) {
 								int ref = 1;
+								String depRef = "";
 								if (mAnno.endsWith("]")) {
-
-									ref = Integer.valueOf(mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
+									depRef = mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1);
+									ref = depRef.contains("_") ? 1
+											: Integer.valueOf(
+													mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
 									mAnno = mAnno.substring(0, mAnno.indexOf("["));
 								}
 								if (mAnno.startsWith("B-")) {
@@ -269,8 +281,28 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 
-									} else {
+									}
 
+									else if (depFeatures.get(type) != null && depFeatures.get(type).equals(feat)) {
+
+										int g = depRef.isEmpty() ? 1 : Integer.valueOf(depRef.split("_")[0]);
+										int d = depRef.isEmpty() ? 1 : Integer.valueOf(depRef.split("_")[1]);
+										Type depType = depTypess.get(type);
+										AnnotationUnit govUnit = token2Units.get(mAnno);
+										AnnotationFS govFs  = aAnnosPerTypePerUnit.get(depType).get(govUnit).get(g - 1);
+										AnnotationFS depFs = aAnnosPerTypePerUnit.get(depType).get(unit).get(d - 1);
+
+										annos.get(i).setFeatureValue(feat, govFs);
+										annos.get(i).setFeatureValue(type.getFeatureByBaseName(GOVERNOR), depFs);
+										if (depFs.getBegin() <= annos.get(i).getBegin()) {
+											Feature beginF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_BEGIN);
+											annos.get(i).setIntValue(beginF, depFs.getBegin());
+										} else {
+											Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+											annos.get(i).setIntValue(endF, depFs.getEnd());
+										}
+
+									} else {
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
@@ -289,6 +321,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				}
 			}
 		}
+
 	}
 
 	/**
@@ -436,8 +469,16 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				while (layerTk.hasMoreTokens()) {
 					String ft = layerTk.nextToken().trim();
 					columns++;
-					Feature feature = layer.getFeatureByBaseName(ft);
-					if (ft.startsWith("ROLE_")) {
+					Feature feature;
+
+					if (ft.startsWith(BT)) {
+						feature = layer.getFeatureByBaseName(DEPENDENT);
+						depFeatures.put(layer, feature);
+						depTypess.put(layer, CasUtil.getType(aJcas.getCas(), ft.substring(3)));
+					} else {
+						feature = layer.getFeatureByBaseName(ft);
+					}
+					if (ft.startsWith(ROLE)) {
 						ft = ft.substring(5);
 						String t = layerTk.nextToken().toString();
 						columns++;
@@ -471,9 +512,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 				allLayers.put(layer, features);
 			}
 		} catch (Exception e) {
-			throw new IOException(
-					"Unable to import the TSV file. Please check if all the annotation types and features are already created in the"
-							+ " project. The TSV header looks the following:\n" + header);
+			throw new IOException(e.getMessage() + "\nTSV header:\n" + header);
 		}
 	}
 
