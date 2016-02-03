@@ -62,7 +62,7 @@ public class BratAjaxCasUtil
 {
 
     /**
-     * Annotation a and annotation b are the same if the have the same address ( used for
+     * Annotation a and annotation b are the same if they have the same address ( used for
      * {@link CoreferenceChain})
      *
      * @param a

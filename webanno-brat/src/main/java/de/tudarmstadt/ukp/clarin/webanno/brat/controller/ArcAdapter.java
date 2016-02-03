@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeatureFS;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -475,16 +476,9 @@ public class ArcAdapter
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
             AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
             AnnotationFS aAnnotationFSNewTarget)
-    {
-        if (aAnnotationFSOldOrigin.getBegin() == aAnnotationFSNewOrigin.getBegin()
-                && aAnnotationFSOldOrigin.getEnd() == aAnnotationFSNewOrigin.getEnd()
-                && aAnnotationFSOldTarget.getBegin() == aAnnotationFSNewTarget.getBegin()
-                && aAnnotationFSOldTarget.getEnd() == aAnnotationFSNewTarget.getEnd()) {
-            return true;
-        }
-        else {
-            return false;
-        }
+ {
+		return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
+				&& isSame(aAnnotationFSNewOrigin, aAnnotationFSNewTarget);
     }
 
     @Override
