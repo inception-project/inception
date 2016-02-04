@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.junit.Assert.assertEquals;
 
@@ -29,14 +27,10 @@ import java.util.List;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -103,5 +97,7 @@ public class WebAnnoTsvReaderWriterTest {
 				JCasUtil.select(cas1.getJCas(), NamedEntity.class).size());
 		assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
 				JCasUtil.select(cas1.getJCas(), Sentence.class).size());
+		assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
+				JCasUtil.select(cas1.getJCas(), Dependency.class).size());
 	}
 }
