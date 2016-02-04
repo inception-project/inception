@@ -50,7 +50,7 @@ public class WebAnnoTsvReaderWriterTest {
 		CollectionReader reader = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-				new String[] { "[+]example2.tsv" });
+				new String[] { "[+]coref.tsv" });
 
 		List<String> slotFeatures = new ArrayList<String>();
 		List<String> slotTargets = new ArrayList<String>();
@@ -74,12 +74,12 @@ public class WebAnnoTsvReaderWriterTest {
 		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-				new String[] { "[+]example2.tsv" });
+				new String[] {  "[+]coref.tsv" });
 
 		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-				new String[] { "[+]example2.tsv" });
+				new String[] {  "[+]coref.tsv" });
 
 		CAS cas1 = JCasFactory.createJCas().getCas();
 		reader1.getNext(cas1);

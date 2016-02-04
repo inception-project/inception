@@ -105,7 +105,8 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	private Map<Type, Feature> depFeatures = new HashMap<>();
 	private Map<Type, Type> depTypess = new HashMap<>();
 
-	// record the annotation at ref position when it is mutiple token annotation
+	// record the annotation at ref position when it is multiple token
+	// annotation
 	private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
 
 	public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
@@ -205,9 +206,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	 */
 
 	private void addAnnotations(JCas aJCas, Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
-		Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
-		for (Type type : annotationsPerPostion.keySet()) {
 
+		for (Type type : annotationsPerPostion.keySet()) {
+			Map<Integer, AnnotationFS> multiTokUnits = new HashMap<>();
 			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
 
 				int end = unit.end;
@@ -244,6 +245,10 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 
 									Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
 									multiTokUnits.get(ref).setIntValue(endF, end);
+									if (feat.getShortName().equals(REF_LINK)) {
+										// since REF_REL do not start with BIO, update it it...
+										annos.set(i, multiTokUnits.get(ref));
+									}
 									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
 
 								} else {
@@ -269,11 +274,15 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 
 									} else if (feat.getShortName().equals(REF_REL)) {
 
-										String refRel = mAnno.split("->")[0];
-										annos.get(i).setFeatureValueFromString(feat, refRel);
-
 										int chainNo = Integer.valueOf(mAnno.split("->")[1].split("-")[0]);
 										int LinkNo = Integer.valueOf(mAnno.split("->")[1].split("-")[1]);
+										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
+										if (chainAnnosPerTyep.get(type).get(chainNo) != null
+												&& chainAnnosPerTyep.get(type).get(chainNo).get(LinkNo) != null) {
+											continue;
+										}
+										String refRel = mAnno.split("->")[0];
+										annos.get(i).setFeatureValueFromString(feat, refRel);
 										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
 										chainAnnosPerTyep.get(type).putIfAbsent(chainNo, new TreeMap<>());
 										chainAnnosPerTyep.get(type).get(chainNo).put(LinkNo, annos.get(i));

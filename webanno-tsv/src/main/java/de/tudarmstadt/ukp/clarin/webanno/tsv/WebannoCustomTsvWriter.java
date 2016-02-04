@@ -561,9 +561,31 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private void addChinFeatureAnno(Map<AnnotationUnit, List<List<String>>> aAnnotationsPertype, Type aType,
 			AnnotationFS aFs, AnnotationUnit aUnit, int aLinkNo, int achainNo) {
 		featurePerLayer.putIfAbsent(aType.getName(), new LinkedHashSet<>());
-		List<String> annoPerFeatures = new ArrayList<>();
 		// StringBuffer sbAnnotation = new StringBuffer();
+		// annotation is per Token
+		if (units.contains(aUnit)) {
+			setChainAnnoPerFeature(aAnnotationsPertype, aType, aFs, aUnit, aLinkNo, achainNo, false, false);
+		}
+		// Annotation is on sub-token or multiple tokens
+		else {
+			SubTokenAnno sta = new SubTokenAnno();
+			sta.setBegin(aFs.getBegin());
+			sta.setEnd(aFs.getEnd());
+			sta.setText(aFs.getCoveredText());
+			boolean isMultiToken = isMultiToken(aFs);
+			boolean isFirst = true;
+			Set<AnnotationUnit> sus = new LinkedHashSet<>();
+			for (AnnotationUnit newUnit : getSubUnits(sta, sus)) {
+				setChainAnnoPerFeature(aAnnotationsPertype, aType, aFs, newUnit, aLinkNo, achainNo, isMultiToken,
+						isFirst);
+				isFirst = false;
+			}
+		}
+	}
 
+	private void setChainAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> aAnnotationsPertype, Type aType,
+			AnnotationFS aFs, AnnotationUnit aUnit, int aLinkNo, int achainNo, boolean aMultiUnit, boolean aFirst) {
+		List<String> annoPerFeatures = new ArrayList<>();
 		for (Feature feature : aType.getFeatures()) {
 			if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
 					|| feature.toString().equals("uima.tcas.Annotation:begin")
@@ -577,14 +599,21 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 
 			if (feature.getShortName().equals(REF_REL)) {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
+			} else if (aMultiUnit) {
+				if (aFirst) {
+					annotation = "B-" + annotation + "[" + achainNo + "]";
+				} else {
+					annotation = "I-" + annotation + "[" + achainNo + "]";
+				}
+			} else {
+				annotation = annotation + "[" + achainNo + "]";
 			}
-
 			featurePerLayer.get(aType.getName()).add(feature.getShortName());
+
 			annoPerFeatures.add(annotation);
 		}
 		aAnnotationsPertype.putIfAbsent(aUnit, new ArrayList<>());
 		aAnnotationsPertype.get(aUnit).add(annoPerFeatures);
-
 	}
 
 	private void setRelationAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
