@@ -50,6 +50,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -99,6 +100,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 	private Map<Type, Map<Integer, Map<Integer, AnnotationFS>>> chainAnnosPerTyep = new HashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
+	private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
 	private Map<Type, Feature> depFeatures = new HashMap<>();
 	private Map<Type, Type> depTypess = new HashMap<>();
@@ -289,8 +291,18 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 										int d = depRef.isEmpty() ? 1 : Integer.valueOf(depRef.split("_")[1]);
 										Type depType = depTypess.get(type);
 										AnnotationUnit govUnit = token2Units.get(mAnno);
-										AnnotationFS govFs  = aAnnosPerTypePerUnit.get(depType).get(govUnit).get(g - 1);
-										AnnotationFS depFs = aAnnosPerTypePerUnit.get(depType).get(unit).get(d - 1);
+										AnnotationFS govFs;
+										AnnotationFS depFs;
+
+										if (depType.getName().equals(POS.class.getName())) {
+											depType = aJCas.getCas().getTypeSystem().getType(Token.class.getName());
+											govFs = units2Tokens.get(govUnit);
+											depFs = units2Tokens.get(unit);
+
+										} else {
+											govFs = aAnnosPerTypePerUnit.get(depType).get(govUnit).get(g - 1);
+											depFs = aAnnosPerTypePerUnit.get(depType).get(unit).get(d - 1);
+										}
 
 										annos.get(i).setFeatureValue(feat, govFs);
 										annos.get(i).setFeatureValue(type.getFeatureByBaseName(GOVERNOR), depFs);
@@ -409,6 +421,7 @@ public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBas
 			units.add(unit);
 			token.addToIndexes();
 			token2Units.put(lines[0], unit);
+			units2Tokens.put(unit, token);
 			return unit;
 		} else {
 			AnnotationUnit unit = new AnnotationUnit(begin, end, true, "");

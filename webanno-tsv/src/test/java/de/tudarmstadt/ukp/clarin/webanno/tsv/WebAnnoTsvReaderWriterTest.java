@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createPrimitiveDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -28,44 +29,66 @@ import java.util.List;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.io.ResourceCollectionReaderBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class WebAnnoTsvReaderWriterTest {
-	@Ignore("TODO write more test cases for import/export including span (including sub-tokens), relation, slot and coreference annotations")
+
 	@Test
 	public void test() throws Exception {
-		CollectionReader reader = createCollectionReader(WebannoCustomTsvReader.class,
-				WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/tsv/").getAbsolutePath(),
-				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
 
-		List<String> multipleSpans = new ArrayList<String>();
-		multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-		multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
-		AnalysisEngineDescription writer = createPrimitiveDescription(WebannoCustomTsvWriter.class,
-				WebannoCustomTsvWriter.PARAM_TARGET_LOCATION, "target/test-output",
-				WebannoCustomTsvWriter.PARAM_STRIP_EXTENSION, true, "multipleSpans", multipleSpans);
+		CollectionReader reader = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
+				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
+				new String[] { "[+]example2.tsv" });
+
+		List<String> slotFeatures = new ArrayList<String>();
+		List<String> slotTargets = new ArrayList<String>();
+		List<String> linkTypes = new ArrayList<String>();
+		List<String> spanLayers = new ArrayList<String>();
+		spanLayers.add(NamedEntity.class.getName());
+		spanLayers.add(POS.class.getName());
+		List<String> chainLayers = new ArrayList<String>();
+		chainLayers.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
+		List<String> relationLayers = new ArrayList<String>();
+		relationLayers.add(Dependency.class.getName());
+
+		AnalysisEngineDescription writer = createEngineDescription(WebannoCustomTsvWriter.class,
+				JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, "target/test-output",
+				JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "spanLayers", spanLayers, "slotFeatures",
+				slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers", chainLayers,
+				"relationLayers", relationLayers);
 
 		runPipeline(reader, writer);
 
-		CollectionReader reader1 = createCollectionReader(WebannoCustomTsvReader.class,
-				WebannoCustomTsvReader.PARAM_PATH, new File("src/test/resources/tsv/").getAbsolutePath(),
-				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
+		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
+				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
+				new String[] { "[+]example2.tsv" });
+
+		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
+				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
+				new String[] { "[+]example2.tsv" });
+
 		CAS cas1 = JCasFactory.createJCas().getCas();
 		reader1.getNext(cas1);
-
-		CollectionReader reader2 = createCollectionReader(WebannoCustomTsvReader.class,
-				WebannoCustomTsvReader.PARAM_PATH, new File("target/test-output/").getAbsolutePath(),
-				WebannoCustomTsvReader.PARAM_PATTERNS, new String[] { "[+]example2.tsv" });
 
 		CAS cas2 = JCasFactory.createJCas().getCas();
 		reader2.getNext(cas2);
