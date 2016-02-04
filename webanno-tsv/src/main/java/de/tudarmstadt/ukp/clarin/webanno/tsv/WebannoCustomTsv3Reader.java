@@ -183,7 +183,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 						.getType(linkType.getName().substring(0, linkType.getName().length() - 4) + CHAIN);
 				Feature firstF = chainType.getFeatureByBaseName(FIRST);
 				Feature nextF = linkType.getFeatureByBaseName(NEXT);
-				AnnotationFS chain = aJCas.getCas().createAnnotation(chainType, 0, 0);
+				FeatureStructure chain = aJCas.getCas().createFS(chainType);
 
 				aJCas.addFsToIndexes(chain);
 				AnnotationFS firstFs = chainAnnosPerTyep.get(linkType).get(chainNo).get(1);
