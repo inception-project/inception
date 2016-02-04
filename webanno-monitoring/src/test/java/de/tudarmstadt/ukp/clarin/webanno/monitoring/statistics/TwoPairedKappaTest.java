@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvReader;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
@@ -77,26 +77,26 @@ public class TwoPairedKappaTest
         document = new SourceDocument();
 
         kappatestCas = JCasFactory.createJCas().getCas();
-        CollectionReader reader1 = createReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+        CollectionReader reader1 = createReader(WebannoCustomTsv2Reader.class,
+                WebannoCustomTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
                 TcfReader.PARAM_PATTERNS, "kappatest.tsv");
         reader1.getNext(kappatestCas);
 
         kappaspandiff = JCasFactory.createJCas().getCas();
-        CollectionReader reader2 = createReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+        CollectionReader reader2 = createReader(WebannoCustomTsv2Reader.class,
+                WebannoCustomTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
                 TcfReader.PARAM_PATTERNS, "kappaspandiff.tsv");
         reader2.getNext(kappaspandiff);
 
         kappaarcdiff = JCasFactory.createJCas().getCas();
-        CollectionReader reader3 = createReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+        CollectionReader reader3 = createReader(WebannoCustomTsv2Reader.class,
+                WebannoCustomTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
                 TcfReader.PARAM_PATTERNS, "kappaarcdiff.tsv");
         reader3.getNext(kappaarcdiff);
 
         kappaspanarcdiff = JCasFactory.createJCas().getCas();
-        CollectionReader reader4 = createReader(WebannoCustomTsvReader.class,
-                WebannoCustomTsvReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+        CollectionReader reader4 = createReader(WebannoCustomTsv2Reader.class,
+                WebannoCustomTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
                 TcfReader.PARAM_PATTERNS, "kappaspanarcdiff.tsv");
         reader4.getNext(kappaspanarcdiff);
     }

@@ -46,7 +46,7 @@ import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvReader;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
 import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
@@ -103,8 +103,8 @@ public class DiffUtils {
 	}
 
 	public static JCas readWebAnnoTSV(String aPath, TypeSystemDescription aType) throws UIMAException, IOException {
-		CollectionReader reader = createReader(WebannoCustomTsvReader.class,
-				WebannoCustomTsvReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
+		CollectionReader reader = createReader(WebannoCustomTsv2Reader.class,
+				WebannoCustomTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 		JCas jcas;
 		if (aType != null) {
 			TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory.createTypeSystemDescription();

@@ -69,7 +69,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * All features of a type follows the the name separated by <b>|</b> character.
  * <br>
  */
-public class WebannoCustomTsvReader extends JCasResourceCollectionReader_ImplBase {
+public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 	private static final String TAB = "\t";
 	private static final String LF = "\n";

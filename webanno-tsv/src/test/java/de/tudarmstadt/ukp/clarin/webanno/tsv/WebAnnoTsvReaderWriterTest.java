@@ -47,7 +47,7 @@ public class WebAnnoTsvReaderWriterTest {
 	@Test
 	public void test() throws Exception {
 
-		CollectionReader reader = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+		CollectionReader reader = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]example2.tsv" });
@@ -71,12 +71,12 @@ public class WebAnnoTsvReaderWriterTest {
 
 		runPipeline(reader, writer);
 
-		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]example2.tsv" });
 
-		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsvReader.class,
+		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]example2.tsv" });
