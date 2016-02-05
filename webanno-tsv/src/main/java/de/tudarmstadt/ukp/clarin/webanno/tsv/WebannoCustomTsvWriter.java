@@ -350,16 +350,20 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
 				AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
 				if (type.getName().equals(Dependency.class.getName())) {
-					depFs = selectCovered(aJCas.getCas(), aJCas.getTypeSystem().getType(POS.class.getName()),
-							depFs.getBegin(), depFs.getEnd()).get(0);
-					govFs = selectCovered(aJCas.getCas(), aJCas.getTypeSystem().getType(POS.class.getName()),
-							govFs.getBegin(), govFs.getEnd()).get(0);
+					depFs = ((Token) depFs).getPos();
+					govFs = ((Token) govFs).getPos();
 				}
 
 				AnnotationUnit govUnit = getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText());
 				AnnotationUnit depUnit = getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
-				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress());
-				int depRef = annotaionRef.get(((FeatureStructureImpl) depFs).getAddress());
+				// sometimes there are POS annotation attached to the token  but
+				// not in the POS type
+				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress()) == null
+						? getRefId(govFs.getType(), govFs, govUnit)
+						: annotaionRef.get(((FeatureStructureImpl) govFs).getAddress());
+				int depRef = annotaionRef.get(((FeatureStructureImpl) depFs).getAddress()) == null
+						? getRefId(depFs.getType(), depFs, govUnit)
+						: annotaionRef.get(((FeatureStructureImpl) depFs).getAddress());
 				setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef, depRef,
 						govFs.getType());
 
@@ -510,8 +514,8 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
 						}
 					}
-					annoPerFeatures.add(sbRole.toString());
-					annoPerFeatures.add(sbTarget.toString());
+					annoPerFeatures.add(sbRole.toString().isEmpty() ? "_" : sbRole.toString());
+					annoPerFeatures.add(sbTarget.toString().isEmpty() ? "_" : sbTarget.toString());
 				} else {
 					// setting it to null
 					annoPerFeatures.add(feature.getShortName());

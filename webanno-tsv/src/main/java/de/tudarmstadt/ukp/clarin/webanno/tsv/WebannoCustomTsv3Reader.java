@@ -216,7 +216,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 				Feature linkeF = null;
 				for (Feature feat : allLayers.get(type)) {
 					String anno = annotationsPerPostion.get(type).get(unit).get(j);
-					if (!annotationsPerPostion.get(type).get(unit).get(0).equals("_")) {
+					if (!anno.equals("_")) {
 						int i = 0;
 						for (String mAnnos : anno.split("\\|\\|")) {
 							// if it is a slot annotation (multiple slots per
@@ -265,6 +265,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 
 										FeatureStructure link = linkFSesPerAnno.get(annos.get(i)).get(slot);
 										AnnotationUnit targetUnit = token2Units.get(mAnno);
+
 										AnnotationFS targetFs = aAnnosPerTypePerUnit.get(roleTargets.get(feat))
 												.get(targetUnit).get(ref - 1);
 										link.setFeatureValue(feat, targetFs);
