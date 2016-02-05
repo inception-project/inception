@@ -360,7 +360,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				AnnotationUnit depUnit = getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
 				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress());
 				int depRef = annotaionRef.get(((FeatureStructureImpl) depFs).getAddress());
-				setRelationAnnoPerFeature(annotationsPertype, type, fs, govUnit, depUnit, govRef, depRef,
+				setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef, depRef,
 						govFs.getType());
 
 			}
@@ -499,7 +499,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 												 * + (ref > 1 ? "[" + ref + "]"
 												 * : "")
 												 */);
-							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : ""));
+							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
 						} else {
 							sbRole.append("|");
 							sbTarget.append("|");
@@ -507,7 +507,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 												 * + (ref > 1 ? "[" + ref + "]"
 												 * : "")
 												 */);
-							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 1 ? "[" + ref + "]" : ""));
+							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
 						}
 					}
 					annoPerFeatures.add(sbRole.toString());
@@ -525,7 +525,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				if (annotation == null) {
 					annotation = feature.getName();
 				}
-				annotation = annotation + (ref > 1 ? "[" + ref + "]" : "");
+				annotation = annotation + (ref > 0 ? "[" + ref + "]" : "");
 				// only add BIO markers to multiple annotations
 				setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
 
@@ -637,7 +637,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		}
 		// add the governor and dependent unit addresses (separated by _
 		String govRef = unitsLineNumber.get(govUnit)
-				+ ((aDepRef > 1 || aGovRef > 1) ? "[" + aGovRef + "_" + aDepRef + "]" : "");
+				+ ((aDepRef > 0 || aGovRef > 0) ? "[" + aGovRef + "_" + aDepRef + "]" : "");
 		annoPerFeatures.add(govRef);
 		featurePerLayer.get(type.getName()).add(BT + aDepType.getName());
 		// the column for the dependent unit address
@@ -690,7 +690,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	 */
 	private int getRefId(Type type, AnnotationFS fs, AnnotationUnit unit) {
 		if (annotaionRef.get(((FeatureStructureImpl) fs).getAddress()) == null) {
-			int i = isMultipleToken(fs.getBegin(), fs.getEnd()) ? 2 : 1;
+			int i = isMultipleToken(fs.getBegin(), fs.getEnd()) ? 1 : 0;
 			unitRef.putIfAbsent(type.getName(), new HashMap<>());
 			unitRef.get(type.getName()).put(unit, unitRef.get(type.getName()).getOrDefault(unit, 0) + i);
 			annotaionRef.put(((FeatureStructureImpl) fs).getAddress(), unitRef.get(type.getName()).get(unit));

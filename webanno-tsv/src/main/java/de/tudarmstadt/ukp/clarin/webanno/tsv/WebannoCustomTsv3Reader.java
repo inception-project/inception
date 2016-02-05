@@ -21,8 +21,6 @@ import static org.apache.commons.io.IOUtils.closeQuietly;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -36,7 +34,6 @@ import java.util.TreeMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
-import org.apache.tools.ant.taskdefs.condition.HasMethod;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -246,7 +243,8 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 									Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
 									multiTokUnits.get(ref).setIntValue(endF, end);
 									if (feat.getShortName().equals(REF_LINK)) {
-										// since REF_REL do not start with BIO, update it it...
+										// since REF_REL do not start with BIO,
+										// update it it...
 										annos.set(i, multiTokUnits.get(ref));
 									}
 									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
@@ -313,8 +311,8 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 											depFs = aAnnosPerTypePerUnit.get(depType).get(unit).get(d - 1);
 										}
 
-										annos.get(i).setFeatureValue(feat, govFs);
-										annos.get(i).setFeatureValue(type.getFeatureByBaseName(GOVERNOR), depFs);
+										annos.get(i).setFeatureValue(feat, depFs);
+										annos.get(i).setFeatureValue(type.getFeatureByBaseName(GOVERNOR), govFs);
 										if (depFs.getBegin() <= annos.get(i).getBegin()) {
 											Feature beginF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_BEGIN);
 											annos.get(i).setIntValue(beginF, depFs.getBegin());
@@ -330,6 +328,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 									}
 
 								}
+							}
+							if (type.getName().equals(POS.class.getName())) {
+								units2Tokens.get(unit).setPos((POS) annos.get(i));
 							}
 							i++;
 						}

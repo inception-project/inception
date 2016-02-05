@@ -74,12 +74,12 @@ public class WebAnnoTsvReaderWriterTest {
 		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-				new String[] {  "[+]coref.tsv" });
+				new String[] { "[+]coref.tsv" });
 
 		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
-				new String[] {  "[+]coref.tsv" });
+				new String[] { "[+]coref.tsv"});
 
 		CAS cas1 = JCasFactory.createJCas().getCas();
 		reader1.getNext(cas1);
