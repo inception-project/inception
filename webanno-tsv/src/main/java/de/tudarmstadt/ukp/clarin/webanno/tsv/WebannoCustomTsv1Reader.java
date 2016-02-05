@@ -52,8 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Reads a specific TSV File (9 TAB separated) annotation and change it to CAS object. Example of
  * Input Files: <br>
  * 1 Heutzutage heutzutage ADV _ _ 2 ADV _ _ <br>
- * Columns are separated by a TAB character and sentences are separated by a blank new line see the
- * {@link WebannoTsvReader#setAnnotations}
+ * Columns are separated by a TAB character and sentences are separated by a blank new line.
  *
  *
  */
