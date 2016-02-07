@@ -76,9 +76,9 @@ button, so that the document may be further processed. If the button above the *
 
 image::annotation4.jpg[align="center"]
 
-Annotation of spans works by selecting the span, or double-clicking on a word. This opens the annotation dialog, where you can add a new annotation. The layer can be selected on the left side of the frame. The tag can be selected out of the right box, containing the tags of the tagset. One can also type in the initial letters and chose the needed tag. In the case of lemma annotation, a lemma can be typed into the box on the right. 
+Annotation of spans works by selecting the span, or double-clicking on a word. This activates the *Actions*-box on the right, where you can choose a layer. One can also type in the initial letters and chose the needed layer. After having chosen a layer, the drop-down menu inside the *Features*-box displays the features you can use during the annotation. The tag can be selected out of the drop-down menu inside the *Features*-box which contains the tags of the chosen layer.
 
-image::annotation_edit.jpg[align="center"]
+image::annotation_edit_version3.PNG[align="center"]
 
 To change or delete an annotation, double-click on the annotation (span or link annotations).
 
