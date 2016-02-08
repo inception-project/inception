@@ -1106,7 +1106,7 @@ public class RepositoryServiceDbData
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
+                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
         List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
         for (SourceDocument sourceDocument : sourceDocuments) {
