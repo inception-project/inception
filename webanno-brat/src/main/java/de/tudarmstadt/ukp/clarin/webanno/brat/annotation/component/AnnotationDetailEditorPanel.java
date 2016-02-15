@@ -1461,13 +1461,14 @@ public class AnnotationDetailEditorPanel
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
                 field = new StyledComboBox<Tag>("value", tagset);
-                
                 field.setOutputMarkupId(true);
 
+                // Must add behavior to editor, not to combobox to ensure proper order of the
+                // initializing JS header items: first combo box, then tooltip.
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", functionForTooltip);
-                //Avoiding leak, instead of setting on document level, setting it to specific component
-                field.add(new TooltipBehavior("#value", options));
+                add(new TooltipBehavior("#"+field.getMarkupId()+"_listbox *[title]", options));
+                
                 isDrop = true;
             }
             else {
@@ -1739,6 +1740,14 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 };
+                newRole.setOutputMarkupId(true);
+                
+                // Must add behavior to editor, not to combobox to ensure proper order of the
+                // initializing JS header items: first combo box, then tooltip.
+                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                options.set("content", functionForTooltip);
+                content.add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options));
+                
                 content.add(newRole);
                 
                 isDrop = true;
