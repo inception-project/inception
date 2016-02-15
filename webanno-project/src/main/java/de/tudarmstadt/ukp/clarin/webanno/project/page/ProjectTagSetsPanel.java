@@ -233,7 +233,7 @@ public class ProjectTagSetsPanel
     {
 
         private static final long serialVersionUID = 5286655225171641733L;
-
+        private CheckBox overwriteTagsetFlag;
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportTagSetForm(String id)
         {
@@ -243,6 +243,8 @@ public class ProjectTagSetsPanel
                     new Model<String>(selectedExporTagsetFormat),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
                             ExportedTagSetConstant.TAB_FORMAT })));
+            overwriteTagsetFlag = new CheckBox("overwriteTagset", Model.of(Boolean.FALSE));
+            add(overwriteTagsetFlag);
             add(new Button("import", new ResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
@@ -270,8 +272,14 @@ public class ProjectTagSetsPanel
                             InputStream tagInputStream;
                             try {
                                 tagInputStream = tagFile.getInputStream();
-                                importTagSetFromJson(project, user, tagInputStream,
-                                        annotationService);
+                                if(overwriteTagsetFlag.getModelObject()){
+                                	importTagSetFromJsonWithOverwrite(project, user, tagInputStream, 
+                                			annotationService);
+                                }else{
+                                	importTagSetFromJson(project, user, tagInputStream,
+                                			annotationService);
+                                }
+                                		                                        
 
                             }
                             catch (IOException e) {
@@ -309,14 +317,20 @@ public class ProjectTagSetsPanel
                                         tagsetLanguage = key;
                                         // remove and replace the tagset if it
                                         // exist
-                                        if (annotationService.existsTagSet(tagSetName, project)) {
+										if (annotationService.existsTagSet(tagSetName, project)) {
+											
+											// If overwrite is enabled
+											if (overwriteTagsetFlag.getModelObject()) { 
+												tagSet = annotationService.getTagSet(tagSetName, project);
+												annotationService.removeAllTags(tagSet);
+											} else {
+												tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+												tagSet.setName(copyTagSetName(annotationService, tagSetName, project));
+											}
 
-                                            annotationService.removeTagSet(annotationService
-                                                    .getTagSet(tagSetName, project));
-
-                                        }
-                                        tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-                                        tagSet.setName(tagSetName);
+										}
+//                                        tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+//                                        tagSet.setName(tagSetName);
                                         tagSet.setDescription(tagSetDescription
                                                 .replace("\\n", "\n"));
                                         tagSet.setLanguage(tagsetLanguage);
@@ -360,14 +374,56 @@ public class ProjectTagSetsPanel
                 .readValue(text, TagSet.class);
         createTagSet(project, user, importedTagSet, aAnnotationService);
     }
+    
+	/*
+	 * Works for scenarios with overwrite enabled Checks if tagset already
+	 * exists, then overwrites otherwise works normally
+	 */
+	public static void importTagSetFromJsonWithOverwrite(Project project, User user, InputStream tagInputStream,
+			AnnotationService aAnnotationService) throws IOException, JsonParseException, JsonMappingException {
+		String text = IOUtils.toString(tagInputStream, "UTF-8");
+
+		TagSet importedTagSet = JSONUtil.getJsonConverter().getObjectMapper().readValue(text, TagSet.class);
+		
+		if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
+			// A tagset exists so we'll have to replace it
+			replaceTagSet(project, user, importedTagSet, aAnnotationService);
+		} else {
+			// Proceed normally
+			createTagSet(project, user, importedTagSet, aAnnotationService);
+		}
+	}
+	
+	private static void replaceTagSet(Project project, User user, TagSet importedTagSet,
+            AnnotationService aAnnotationService)
+        throws IOException
+    {
+        String importedTagSetName = importedTagSet.getName();
+        de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagsetInUse = aAnnotationService.getTagSet(importedTagSetName, project);
+        //Remove all tags associated with Tagset
+        aAnnotationService.removeAllTags(tagsetInUse);
+        //Copy and update TagSet Information from imported tagset
+        tagsetInUse.setDescription(importedTagSet.getDescription());
+        tagsetInUse.setName(importedTagSetName);
+        tagsetInUse.setLanguage(importedTagSet.getLanguage());
+        tagsetInUse.setProject(project);
+        aAnnotationService.createTagSet(tagsetInUse, user);
+        //Add all tags from imported tagset
+        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
+            Tag newTag = new Tag();
+            newTag.setDescription(tag.getDescription());
+            newTag.setName(tag.getName());
+            newTag.setTagSet(tagsetInUse);
+            aAnnotationService.createTag(newTag, user);
+        }
+    }
 
     private static void createTagSet(Project project, User user, TagSet importedTagSet,
             AnnotationService aAnnotationService)
         throws IOException
     {
         String importedTagSetName = importedTagSet.getName();
-        if (aAnnotationService.existsTagSet(importedTagSetName, project)) {
-            
+        if (aAnnotationService.existsTagSet(importedTagSetName, project)) {           
 //            aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
 //                    project));
             //Rename Imported TagSet instead of deleting the old one.
