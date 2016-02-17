@@ -17,13 +17,23 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
+import java.io.File;
+import java.util.Properties;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
+import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.request.resource.SharedResourceReference;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
 /**
  * A login form.
  *
@@ -42,6 +52,10 @@ public class LoginForm
         setModel(new CompoundPropertyModel<LoginForm>(this));
         add(new RequiredTextField<String>("username"));
         add(new PasswordTextField("password"));
+        Properties settings = SettingsUtil.getSettings();
+        String loginMessage = settings.getProperty("login.message");
+        String styleLoginMessage = settings.getProperty("style.login.message");
+       add(new MultiLineLabel("loginMessage", loginMessage).add(new AttributeModifier("style", styleLoginMessage)));
     }
 
     @Override
