@@ -249,7 +249,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                editor.reset(aTarget);
+              
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
@@ -288,6 +288,12 @@ public class AnnotationPage
                         User user = userRepository.get(username);
                         editor.setEnabled(!FinishImage.isFinished(
                                 new Model<BratAnnotatorModel>(bModel), user, repository));
+                        try {
+							editor.reloadLayer(target);
+						} catch (BratAnnotationException e) {
+							error("Error loading layers"+e.getMessage());
+						}
+                       // target.add(editor.reset(target));
 
                     }
                 });
