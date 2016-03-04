@@ -258,8 +258,7 @@ public class CurationPage
 
             @Override
             public void onClick(AjaxRequestTarget aTarget)
-            {
-                curationPanel.resetEditor(aTarget);
+            {              
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CURATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -297,6 +296,7 @@ public class CurationPage
                                         username);
 
                                 loadDocumentAction(target);
+                                curationPanel.reloadEditorLayer(target);
 
                             }
                             catch (IOException | UIMAException | ClassNotFoundException
@@ -361,9 +361,6 @@ public class CurationPage
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
                         .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
 
                 List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {

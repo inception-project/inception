@@ -511,7 +511,6 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                editor.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -540,8 +539,8 @@ public class AutomationPage
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
-
-
+    						editor.reloadLayer(target);
+    		
                         }
                         catch (UIMAException e) {
                             target.addChildren(getPage(), FeedbackPanel.class);

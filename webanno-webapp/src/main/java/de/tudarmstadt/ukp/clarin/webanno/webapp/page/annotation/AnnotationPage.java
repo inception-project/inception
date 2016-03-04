@@ -293,7 +293,6 @@ public class AnnotationPage
 						} catch (BratAnnotationException e) {
 							error("Error loading layers"+e.getMessage());
 						}
-                       // target.add(editor.reset(target));
 
                     }
                 });
