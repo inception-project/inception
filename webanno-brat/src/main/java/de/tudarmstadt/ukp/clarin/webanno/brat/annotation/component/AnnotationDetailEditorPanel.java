@@ -440,9 +440,14 @@ public class AnnotationDetailEditorPanel
 		            if (jsKeycode.equals("32")){
 		            	try {
 							actionAnnotate(aTarget, aBModel, false);
+							selectedTag ="";
 						} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
 						error(e);
 						}
+		            	return;
+		            }
+		            if (jsKeycode.equals("13")){
+		            	selectedTag ="";
 		            	return;
 		            }
 					selectedTag = (forwardAnnotationText.getModelObject() == null ? ""
@@ -661,24 +666,23 @@ public class AnnotationDetailEditorPanel
 			info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
 		}
 
-        onAnnotate(aTarget, aBModel);
-        
-		if (aBModel.isForwardAnnotation() && !aIsForwarded && !selectedTag.isEmpty()) {
+		onAnnotate(aTarget, aBModel);
+
+		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
 			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
 				autoForwardScroll(jCas, aBModel);
 			}
 			onAutoForward(aTarget, aBModel);
-			
-		} 
-		else if (aBModel.getPreferences().isScrollPage()) {
+
+		} else if (aBModel.getPreferences().isScrollPage()) {
 			autoScroll(jCas, aBModel);
 		}
 		forwardAnnotationText.setModelObject(null);
-        onChange(aTarget, aBModel);
-		if (aBModel.isForwardAnnotation() && !selectedTag.isEmpty()) {
+		onChange(aTarget, aBModel);
+		if (aBModel.isForwardAnnotation() && featureModels.get(0).value != null) {
 			reload(aTarget);
 		}
-    }
+	}
     
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
