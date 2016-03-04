@@ -675,7 +675,7 @@ public class AnnotationDetailEditorPanel
 		}
 		forwardAnnotationText.setModelObject(null);
         onChange(aTarget, aBModel);
-		if (aBModel.isForwardAnnotation()) {
+		if (aBModel.isForwardAnnotation() && !selectedTag.isEmpty()) {
 			reload(aTarget);
 		}
     }
