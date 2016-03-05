@@ -220,7 +220,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					fsb.append("|" + feature);
 				}
 			}
-			IOUtils.write(fsb.toString(), docOS, encoding);
+			IOUtils.write(fsb.toString() + LF, docOS, encoding);
 		}
 		IOUtils.write(LF, docOS, encoding);
 	}
