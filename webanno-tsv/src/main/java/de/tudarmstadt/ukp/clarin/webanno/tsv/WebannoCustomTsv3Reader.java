@@ -84,11 +84,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	private String fileName;
 	private int columns = 2;// token number + token columns (minimum required)
 	private Map<Type, Set<Feature>> allLayers = new LinkedHashMap<Type, Set<Feature>>();
-	/*
-	 * private Map<Type, Set<Feature>> relationLayers = new LinkedHashMap<Type,
-	 * Set<Feature>>(); private Map<Type, Set<Feature>> chainLayers = new
-	 * LinkedHashMap<Type, Set<Feature>>();
-	 */ private Map<Feature, Type> roleLinks = new HashMap<>();
+	private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
 	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
 	private StringBuilder coveredText = new StringBuilder();
