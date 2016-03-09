@@ -358,6 +358,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 					linkFSesPerAnno.get(anno).toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]), 0, 0,
 					linkFSesPerAnno.get(anno).size());
 			anno.setFeatureValue(aLinkeF, array);
+			anno.getCAS().addFsToIndexes(anno);
 		}
 		linkFSesPerAnno = new HashMap<>();
 	}
