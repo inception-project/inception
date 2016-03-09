@@ -31,6 +31,7 @@ import java.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.ArrayFS;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -498,19 +499,30 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 							role = feature.getName();
 						} else {
 							// Escape special character
-							role = escapeAnnotation(role);
+							role = replaceEscapeChars(role);
 						}
 						if (sbRole.length() < 1) {
 							sbRole.append(role);
-							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
+							// record the actual target type if slot target is
+							// uima.tcas.Annotation
+							String targetType = "";
+							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
+								targetType = tType.getName();
+							}
+							sbTarget.append(
+									unitsLineNumber.get(firstUnit) + (targetType.isEmpty() ? "" : "-" + targetType)
+											+ (ref > 0 ? "[" + ref + "]" : ""));
 						} else {
 							sbRole.append("|");
 							sbTarget.append("|");
-							sbRole.append(role /*
-												 * + (ref > 1 ? "[" + ref + "]"
-												 * : "")
-												 */);
-							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
+							sbRole.append(role);
+							String targetType = "";
+							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
+								targetType = tType.getName();
+							}
+							sbTarget.append(
+									unitsLineNumber.get(firstUnit) + (targetType.isEmpty() ? "" : "-" + targetType)
+											+ (ref > 0 ? "[" + ref + "]" : ""));
 						}
 					}
 					annoPerFeatures.add(sbRole.toString().isEmpty() ? "_" : sbRole.toString());
@@ -529,7 +541,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					annotation = feature.getName();
 				} else {
 					// Escape special character
-					annotation = escapeAnnotation(annotation);
+					annotation = replaceEscapeChars(annotation);
 				}
 				annotation = annotation + (ref > 0 ? "[" + ref + "]" : "");
 				// only add BIO markers to multiple annotations
@@ -605,7 +617,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			if (annotation == null)
 				annotation = feature.getName();
 			else
-				annotation = escapeAnnotation(annotation);
+				annotation = replaceEscapeChars(annotation);
 
 			if (feature.getShortName().equals(REF_REL)) {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
@@ -643,7 +655,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				annotation = feature.getName();
 			}
 			else{
-				annotation = escapeAnnotation(annotation);
+				annotation = replaceEscapeChars(annotation);
 			}
 			annoPerFeatures.add(annotation);
 			featurePerLayer.get(type.getName()).add(feature.getShortName());
@@ -658,7 +670,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
 	}
 
-	private String escapeAnnotation(String annotation) {
+	private String replaceEscapeChars(String annotation) {
 		return annotation.replace("[", "`[`").replace("]", "`]`").replace("|", "`|`").replace("_", "`_`")
 			.replace("->", "`->`");
 	}

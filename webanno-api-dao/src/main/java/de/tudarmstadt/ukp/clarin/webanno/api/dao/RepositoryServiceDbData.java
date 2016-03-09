@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -643,21 +644,26 @@ public class RepositoryServiceDbData
 			List<String> slotTargets = new ArrayList<String>();
 			List<String> linkTypes = new ArrayList<String>();
 
-			List<String> spanLayers = new ArrayList<String>();
+			Set<String> spanLayers = new HashSet<String>();
+			Set<String> slotLayers = new HashSet<String>();
 			for (AnnotationLayer layer : layers) {
 				if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
-					spanLayers.add(layer.getName());
+					
 					for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
 						if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
 								&& LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
 							slotFeatures.add(layer.getName() + ":" + f.getName());
 							slotTargets.add(f.getType());
 							linkTypes.add(f.getLinkTypeName());
+							slotLayers.add(layer.getName());
+						}
+						else{
+							spanLayers.add(layer.getName());
 						}
 					}
 				}
 			}
-
+			spanLayers.addAll(slotLayers);
 			List<String> chainLayers = new ArrayList<String>();
 			for (AnnotationLayer layer : layers) {
 				if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
