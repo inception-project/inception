@@ -78,6 +78,10 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	public static final String ROLE = "ROLE_";
 	public static final String BT = "BT_"; // base type for the relation
 											// annotation
+	// If | is used as annotation, escape it with `|` and replace it with WEBANNO_BAR for processing
+	// WEBANNO_BAR will be a reserved word
+	private static String WEBANNO_BAR = "WEBANNOBAR";
+	private static String WEBANNO_UNDERSCORE = "WEBANNOUNDERSCORE";
 	private static final String DEPENDENT = "Dependent";
 	private static final String GOVERNOR = "Governor";
 
@@ -137,6 +141,10 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 				continue;
 			}
 
+			// replace the `|` with WEBANNOBAR
+			line = line.replace("`|`", WEBANNO_BAR);
+			line = line.replace("`_`", WEBANNO_UNDERSCORE);
+			
 			int count = StringUtils.countMatches(line, "\t");
 
 			if (columns != count) {
@@ -253,6 +261,10 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 										isSlot = true;
 										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
 										Feature roleFeat = link.getType().getFeatureByBaseName("role");
+										
+										mAnno = mAnno.replace(WEBANNO_BAR, "|");
+										mAnno = mAnno.replace(WEBANNO_UNDERSCORE, "_");
+						
 										link.setStringValue(roleFeat, mAnno);
 										linkFSesPerAnno.putIfAbsent(annos.get(i), new ArrayList<>());
 										linkFSesPerAnno.get(annos.get(i)).add(link);
@@ -277,13 +289,20 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 											continue;
 										}
 										String refRel = mAnno.split("->")[0];
+
+										refRel = refRel.replace(WEBANNO_BAR, "|");
+										refRel = refRel.replace(WEBANNO_UNDERSCORE, "_");
+										
 										annos.get(i).setFeatureValueFromString(feat, refRel);
 										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
 										chainAnnosPerTyep.get(type).putIfAbsent(chainNo, new TreeMap<>());
 										chainAnnosPerTyep.get(type).get(chainNo).put(LinkNo, annos.get(i));
 
 									} else if (feat.getShortName().equals(REF_LINK)) {
-
+									
+										mAnno = mAnno.replace(WEBANNO_BAR, "|");
+										mAnno = mAnno.replace(WEBANNO_UNDERSCORE, "_");
+										
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 
@@ -319,6 +338,10 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 										}
 
 									} else {
+										
+										mAnno = mAnno.replace(WEBANNO_BAR, "|");
+										mAnno = mAnno.replace(WEBANNO_UNDERSCORE, "_");
+										
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));

@@ -111,7 +111,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	public static final String ROLE = "ROLE_";
 	public static final String BT = "BT_"; // base type for the relation
 											// annotation
-
 	private List<AnnotationUnit> units = new ArrayList<>();
 	// number of subunits under this Annotation Unit
 	private Map<AnnotationUnit, Integer> subUnits = new HashMap<>();
@@ -497,12 +496,12 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 
 						if (role == null) {
 							role = feature.getName();
+						} else {
+							// Escape special character
+							role = escapeAnnotation(role);
 						}
 						if (sbRole.length() < 1) {
-							sbRole.append(role /*
-												 * + (ref > 1 ? "[" + ref + "]"
-												 * : "")
-												 */);
+							sbRole.append(role);
 							sbTarget.append(unitsLineNumber.get(firstUnit) + (ref > 0 ? "[" + ref + "]" : ""));
 						} else {
 							sbRole.append("|");
@@ -518,7 +517,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					annoPerFeatures.add(sbTarget.toString().isEmpty() ? "_" : sbTarget.toString());
 				} else {
 					// setting it to null
-					annoPerFeatures.add(feature.getShortName());
+					annoPerFeatures.add("_");
 					annoPerFeatures.add("_");
 				}
 				featurePerLayer.get(type.getName())
@@ -528,6 +527,9 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 				String annotation = fs.getFeatureValueAsString(feature);
 				if (annotation == null) {
 					annotation = feature.getName();
+				} else {
+					// Escape special character
+					annotation = escapeAnnotation(annotation);
 				}
 				annotation = annotation + (ref > 0 ? "[" + ref + "]" : "");
 				// only add BIO markers to multiple annotations
@@ -598,8 +600,12 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 					|| feature.getShortName().equals(NEXT)) {
 				continue;
 			}
-			String annotation = aFs.getFeatureValueAsString(feature) == null ? feature.getName()
-					: aFs.getFeatureValueAsString(feature);
+			String annotation = aFs.getFeatureValueAsString(feature);
+			
+			if (annotation == null)
+				annotation = feature.getName();
+			else
+				annotation = escapeAnnotation(annotation);
 
 			if (feature.getShortName().equals(REF_REL)) {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
@@ -636,6 +642,9 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 			if (annotation == null) {
 				annotation = feature.getName();
 			}
+			else{
+				annotation = escapeAnnotation(annotation);
+			}
 			annoPerFeatures.add(annotation);
 			featurePerLayer.get(type.getName()).add(feature.getShortName());
 		}
@@ -647,6 +656,11 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		// the column for the dependent unit address
 		annotationsPertype.putIfAbsent(depUnit, new ArrayList<>());
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
+	}
+
+	private String escapeAnnotation(String annotation) {
+		return annotation.replace("[", "`[`").replace("]", "`]`").replace("|", "`|`").replace("_", "`_`")
+			.replace("->", "`->`");
 	}
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
