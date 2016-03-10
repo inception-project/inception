@@ -104,6 +104,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private static final String GOVERNOR = "Governor";
 	private static final String REF_REL = "referenceRelation";
 	private static final String CHAIN = "Chain";
+	private static final String LINK = "Link";
 	private static final String FIRST = "first";
 	private static final String NEXT = "next";
 	public static final String SP = "T_SP"; // span annotation type
@@ -124,6 +125,8 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	private Map<Integer, Integer> annotaionRef = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
 	private Map<String, String> slotLinkTypes = new HashMap<>();
+	
+	private Map<Type, Integer> layerMaps = new LinkedHashMap<>();
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
@@ -131,6 +134,7 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		try {
 			docOS = getOutputStream(aJCas, filenameSuffix);
 			setSlotLinkTypes();
+			setLinkMaps(aJCas);
 			setTokenSentenceAddress(aJCas);
 			setSpanAnnotation(aJCas);
 			setChainAnnotation(aJCas);
@@ -191,6 +195,24 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 		for (String f : slotFeatures) {
 			slotLinkTypes.put(f, linkTypes.get(i));
 			i++;
+		}
+	}
+	
+	private void setLinkMaps(JCas aJCas) {
+		for (String l : spanLayers) {
+			if (l.equals(Token.class.getName())) {
+				continue;
+			}
+			Type type = getType(aJCas.getCas(), l);
+			layerMaps.put(type, layerMaps.size() + 1);
+		}
+		for (String l : chainLayers) {
+			Type type = getType(aJCas.getCas(), l + LINK);
+			layerMaps.put(type, layerMaps.size() + 1);
+		}
+		for (String l : relationLayers) {
+			Type type = getType(aJCas.getCas(), l);
+			layerMaps.put(type, layerMaps.size() + 1);
 		}
 	}
 
@@ -503,25 +525,25 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 						}
 						if (sbRole.length() < 1) {
 							sbRole.append(role);
-							// record the actual target type if slot target is
+							// record the actual target type column number if slot target is
 							// uima.tcas.Annotation
-							String targetType = "";
+							int targetTypeNumber = 0;
 							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
-								targetType = tType.getName();
+								targetTypeNumber = layerMaps.get(tType);
 							}
 							sbTarget.append(
-									unitsLineNumber.get(firstUnit) + (targetType.isEmpty() ? "" : "-" + targetType)
+									unitsLineNumber.get(firstUnit) + (targetTypeNumber ==0 ? "" : "-" + targetTypeNumber)
 											+ (ref > 0 ? "[" + ref + "]" : ""));
 						} else {
 							sbRole.append("|");
 							sbTarget.append("|");
 							sbRole.append(role);
-							String targetType = "";
+							int targetTypeNumber = 0;
 							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
-								targetType = tType.getName();
+								targetTypeNumber = layerMaps.get(tType);
 							}
 							sbTarget.append(
-									unitsLineNumber.get(firstUnit) + (targetType.isEmpty() ? "" : "-" + targetType)
+									unitsLineNumber.get(firstUnit) + (targetTypeNumber ==0 ? "" : "-" + targetTypeNumber)
 											+ (ref > 0 ? "[" + ref + "]" : ""));
 						}
 					}

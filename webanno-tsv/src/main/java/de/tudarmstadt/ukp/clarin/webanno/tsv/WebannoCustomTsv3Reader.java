@@ -102,6 +102,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
 	private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
+	private Map<Integer, Type> layerMaps = new LinkedHashMap<>(); 
 	private Map<Type, Feature> depFeatures = new HashMap<>();
 	private Map<Type, Type> depTypess = new HashMap<>();
 
@@ -278,19 +279,19 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 									} else if (roleTargets.containsKey(feat)) {
 
 										FeatureStructure link = linkFSesPerSlotAnno.get(annos.get(i)).get(slot);
-										String customType = "";
+										int customTypeNumber = 0;
 										if(mAnno.split("-").length>2){
-											customType = mAnno.substring(mAnno.lastIndexOf("-")+1);
+											customTypeNumber =Integer.valueOf(mAnno.substring(mAnno.lastIndexOf("-")+1));
 											mAnno  = mAnno.substring(0,mAnno.lastIndexOf("-"));			
 										}
 										
 										AnnotationUnit targetUnit = token2Units.get(mAnno);	
 										Type tType = null;
-										if (customType.isEmpty()){
+										if (customTypeNumber == 0){
 											tType = roleTargets.get(feat);
 										}
 										else{
-											tType = aJCas.getTypeSystem().getType(customType);
+											tType = layerMaps.get(customTypeNumber);
 										}
 										AnnotationFS targetFs = aAnnosPerTypePerUnit.get(tType)
 												.get(targetUnit).get(ref - 1);
@@ -576,6 +577,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 					features.add(feature);
 				}
 				allLayers.put(layer, features);
+				layerMaps.put(layerMaps.size()+1, layer);
 			}
 		} catch (Exception e) {
 			throw new IOException(e.getMessage() + "\nTSV header:\n" + header);
