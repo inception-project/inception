@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBas
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -263,8 +265,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
 
 								} else {
-									if (mAnno.equals(feat.getName()))
-										mAnno = null;
+									if (mAnno.equals(feat.getName())) {
+                                        mAnno = null;
+                                    }
 									if (roleLinks.containsKey(feat)) {
 										linkeF = feat;
 										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
@@ -371,6 +374,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 							if (type.getName().equals(POS.class.getName())) {
 								units2Tokens.get(unit).setPos((POS) annos.get(i));
 							}
+                            if (type.getName().equals(Lemma.class.getName())) {
+                                units2Tokens.get(unit).setLemma((Lemma) annos.get(i));
+                            }
 							i++;
 						}
 						
