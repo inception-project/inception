@@ -27,7 +27,7 @@ In the left frame of the window, named *Sentences*, an overview of the chosen do
 
 // FIXME: Make and upload new screenshots; new functionality: go between docs
 
-image::curation1.PNG[align="center"]
+image::curation1.png[align="center"]
 
 If you want to see the annotations that were made in a sentence, you have to click on the sentence. Then on the right side of the window, the annotations are displayed.
 
