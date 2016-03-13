@@ -41,7 +41,7 @@ If you want to train a non-custom layer, please make sure you created or importe
 ////
 <wiki:comment>
 The following frame will appear in the right frame:
-<img src="https://webanno.googlecode.com/svn/wiki/images/auto3.PNG" width="600"/>
+<img src="https://webanno.googlecode.com/svn/wiki/images/auto3.png" width="600"/>
 
 It gives you the possibility to decide, whether annotations chosen later on on the Automation page will be automatically changed to this annotation or not. After choosing this feature, the following frame will be displayed:
 </wiki:comment>
