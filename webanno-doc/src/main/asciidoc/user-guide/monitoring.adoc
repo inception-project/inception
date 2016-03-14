@@ -25,13 +25,13 @@ As an administrator, you are able to observe the progress and document status of
 responsible for. Moreover, you are able to see the time of the last login of every user and observe the agreement between the annotators.
 After clicking on *Monitoring* in the main menu, the following page is displayed:
 
-image::version3_monitoring1.PNG[align="center"]
+image::monitoring1.png[align="center"]
 
 In the right frame, the overall progress of all projects is displayed.
 In the left frame one sees all projects, that one has an administrator role in.  
 By clicking on one of the projects on the left, it may be selected and the following view is opened:
 
-image::version3_monitoring2.PNG[align="center"]
+image::monitoring2.png[align="center"]
 
 The percentual progress out of the workload for individual annotators may be viewed as well as the number of finished documents.
 
@@ -41,7 +41,7 @@ Below the document overview, a measuring for the inter-annotator-agreement can b
 DKPro Statistics, link:https://en.wikipedia.org/wiki/Fleiss%27_kappa[Fleiss' kappa] and link:https://en.wikipedia.org/wiki/Krippendorff%27s_alpha[Krippendorff's alpha].
 Below the *Measure* dropdown menu, an export format can be chosen. Currently, only link:https://en.wikipedia.org/wiki/Comma-separated_values[CSV] format is possible.
 
-image::monitoring3.PNG[align="center"]
+image::monitoring3.png[align="center"]
 
 Above the *Measure* dropbdown menu, the *Feature* box allows the selection of layers for which an agreement shall be computed. Doubleclicking on a layer starts the computation of the agreement and an outline is shown to the left side of the box:
 
