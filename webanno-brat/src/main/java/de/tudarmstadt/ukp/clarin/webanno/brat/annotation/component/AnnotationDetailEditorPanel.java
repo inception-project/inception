@@ -2577,7 +2577,11 @@ public class AnnotationDetailEditorPanel
 		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).size()>1){
 			return false;
 		}
-		// we allow forward annotation only for a feature with a tagset
+        // if there are no features at all, no forward annotation
+        if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).isEmpty()){
+            return false;
+        }
+        // we allow forward annotation only for a feature with a tagset
 		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0).getTagset()==null){
 			return false;
 		}
