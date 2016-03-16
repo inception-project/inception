@@ -60,7 +60,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  */
 
-public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
+public class WebannoTsvWriter extends JCasFileWriter_ImplBase {
 
 	/**
 	 * Name of configuration parameter that contains the character encoding used
