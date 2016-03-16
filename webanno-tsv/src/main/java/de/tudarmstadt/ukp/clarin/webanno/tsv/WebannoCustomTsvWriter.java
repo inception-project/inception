@@ -587,8 +587,6 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	 *            the feature structure
 	 * @param aUnit
 	 *            the current annotation unit of the coreference chain
-	 * @param aNextUnit
-	 *            the next annotation unit
 	 * @param aLinkNo
 	 *            a reference to the link in a chain, starting at one for the
 	 *            first link and n for the last link in the chain
@@ -693,8 +691,8 @@ public class WebannoCustomTsvWriter extends JCasFileWriter_ImplBase {
 	}
 
 	private String replaceEscapeChars(String annotation) {
-		return annotation.replace("[", "`[`").replace("]", "`]`").replace("|", "`|`").replace("_", "`_`")
-			.replace("->", "`->`");
+		return annotation.replace("[", "\\[").replace("]", "\\]").replace("|", "\\|").replace("_", "\\_")
+			.replace("->", "\\->");
 	}
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,

@@ -174,8 +174,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	}
 
 	private String replaceEscapeChars(String line) {
-		line = line.replace("`|`", WEBANNO_BAR).replace("`_`", WEBANNO_UNDERSCORE)
-				.replace("`[`", WEBANNO_RBR).replace("`]`", WEBANNO_LBR);
+		// because these characters are used to separate multiple annotations, empty annotations...
+		line = line.replace("\\|", WEBANNO_BAR).replace("\\_", WEBANNO_UNDERSCORE)
+				.replace("\\[", WEBANNO_RBR).replace("\\]", WEBANNO_LBR);
 		return line;
 	}
 
