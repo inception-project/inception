@@ -602,7 +602,7 @@ public class AnnotationDetailEditorPanel
 						} else {
 							actionClear(aTarget, bModel);
 							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
-									+ bModel.getSelectedAnnotationLayer().getUiName() + " at this"
+									+ bModel.getSelectedAnnotationLayer().getUiName() + " ] at this"
 									+ " location - stacking is not enabled for this layer.");
 						}
 					}
