@@ -480,6 +480,13 @@ public class AnnotationPage
                                 .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
                                         .getSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
+                        //Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same address 
+                        //if there are not much sentences to go back to as defined in windowSize
+                        if(previousSentenceAddress==bModel.getSentenceAddress()
+                        		//Check whether it's not the beginning of document
+                        		&& bModel.getSentenceAddress()!=bModel.getFirstSentenceAddress()){
+                        	previousSentenceAddress = bModel.getFirstSentenceAddress();
+                        }
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
 
                             updateSentenceNumber(jCas, previousSentenceAddress);
