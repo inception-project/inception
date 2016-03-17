@@ -392,8 +392,11 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 	}
 
-	private String getEscapeChars(String mAnno) {
-		return mAnno.replace(WEBANNO_BAR, "|").replace(WEBANNO_UNDERSCORE, "_")
+	private String getEscapeChars(String aAnno) {
+		if(aAnno==null){
+			return null;
+		}
+		return aAnno.replace(WEBANNO_BAR, "|").replace(WEBANNO_UNDERSCORE, "_")
 				.replace(WEBANNO_RBR, "[").replace(WEBANNO_LBR, "]");
 	}
 
