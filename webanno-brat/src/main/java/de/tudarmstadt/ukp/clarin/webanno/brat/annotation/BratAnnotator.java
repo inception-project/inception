@@ -236,13 +236,6 @@ public class BratAnnotator
                     }
                     else if (action.equals(SpanAnnotationResponse.COMMAND)) {
                         assert jCas != null;                        
-                        // do not annotate closed documents
-                        if (editor.isAnnotationFinished()) {
-                            error("This document is already closed. Please ask your project manager to re-open it via the Montoring page");
-                            LOG.error(
-                                    "This document is already closed. Please ask your project manager to re-open it via the Montoring page");
-                            return;
-                        }
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
@@ -309,13 +302,6 @@ public class BratAnnotator
                     }
                     else if (action.equals(ArcAnnotationResponse.COMMAND)) {
                         assert jCas != null;
-                        // do not annotate closed documents
-                        if (editor.isAnnotationFinished()) {
-                            error("This document is already closed. Please ask your project manager to re-open it via the Montoring page");
-                            LOG.error(
-                                    "This document is already closed. Please ask your project manager to re-open it via the Montoring page");
-                            return;
-                        }
                         Selection selection = getModelObject().getSelection();
 
                         selection.setRelationAnno(true);
@@ -390,10 +376,6 @@ public class BratAnnotator
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     editor.setAnnotationLayers(getModelObject());
-                }
-                if (BratAnnotatorUtility.isDocumentFinished(repository, getModelObject())) {
-                    error("This document is already closed. Please ask your project "
-                            + "manager to re-open it via the Montoring page");
                 }
             }
         };
