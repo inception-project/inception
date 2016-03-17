@@ -47,7 +47,7 @@ public class WebAnnoTsvReaderWriterTest {
 	@Test
 	public void test() throws Exception {
 
-		CollectionReader reader = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
+		CollectionReader reader = CollectionReaderFactory.createReader(WebannoTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]coref.tsv" });
@@ -63,7 +63,7 @@ public class WebAnnoTsvReaderWriterTest {
 		List<String> relationLayers = new ArrayList<String>();
 		relationLayers.add(Dependency.class.getName());
 
-		AnalysisEngineDescription writer = createEngineDescription(WebannoCustomTsvWriter.class,
+		AnalysisEngineDescription writer = createEngineDescription(WebannoTsvWriter.class,
 				JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, "target/test-output",
 				JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, true, "spanLayers", spanLayers, "slotFeatures",
 				slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers", chainLayers,
@@ -71,12 +71,12 @@ public class WebAnnoTsvReaderWriterTest {
 
 		runPipeline(reader, writer);
 
-		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
+		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]coref.tsv" });
 
-		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoCustomTsv3Reader.class,
+		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoTsv3Reader.class,
 				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
 				new File("src/test/resources/tsv/").getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
 				new String[] { "[+]coref.tsv"});

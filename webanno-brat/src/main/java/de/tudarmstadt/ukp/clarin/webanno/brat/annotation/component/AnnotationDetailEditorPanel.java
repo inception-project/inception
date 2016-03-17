@@ -440,9 +440,14 @@ public class AnnotationDetailEditorPanel
 		            if (jsKeycode.equals("32")){
 		            	try {
 							actionAnnotate(aTarget, aBModel, false);
+							selectedTag ="";
 						} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
 						error(e);
 						}
+		            	return;
+		            }
+		            if (jsKeycode.equals("13")){
+		            	selectedTag ="";
 		            	return;
 		            }
 					selectedTag = (forwardAnnotationText.getModelObject() == null ? ""
@@ -539,6 +544,18 @@ public class AnnotationDetailEditorPanel
             AnnotationFeature feature = featureModels.get(i).feature;
             if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
                 String value = (String) featureModels.get(i).value;
+            	
+                if (value!=null && value.equals("WEBANNOBAR")){
+            	    aTarget.addChildren(getPage(), FeedbackPanel.class);
+            		error("WEBANNOBAR is a reserved word.");
+            		return;
+            	}
+            	if (value!=null &&  value.equals("WEBANNOUNDERSCORE")){
+            	    aTarget.addChildren(getPage(), FeedbackPanel.class);
+            		error("WEBANNOBAR is a reserved word.");
+            		return;
+            	}
+            	
                 // Check if tag is necessary, set, and correct
                 if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
                         && !annotationService.existsTag(value, feature.getTagset())) {
@@ -585,7 +602,7 @@ public class AnnotationDetailEditorPanel
 						} else {
 							actionClear(aTarget, bModel);
 							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
-									+ bModel.getSelectedAnnotationLayer().getUiName() + " at this"
+									+ bModel.getSelectedAnnotationLayer().getUiName() + " ] at this"
 									+ " location - stacking is not enabled for this layer.");
 						}
 					}
@@ -661,24 +678,23 @@ public class AnnotationDetailEditorPanel
 			info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
 		}
 
-        onAnnotate(aTarget, aBModel);
-        
-		if (aBModel.isForwardAnnotation() && !aIsForwarded && !selectedTag.isEmpty()) {
+		onAnnotate(aTarget, aBModel);
+
+		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
 			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
 				autoForwardScroll(jCas, aBModel);
 			}
 			onAutoForward(aTarget, aBModel);
-			
-		} 
-		else if (aBModel.getPreferences().isScrollPage()) {
+
+		} else if (aBModel.getPreferences().isScrollPage()) {
 			autoScroll(jCas, aBModel);
 		}
 		forwardAnnotationText.setModelObject(null);
-        onChange(aTarget, aBModel);
-		if (aBModel.isForwardAnnotation()) {
+		onChange(aTarget, aBModel);
+		if (aBModel.isForwardAnnotation() && featureModels.get(0).value != null) {
 			reload(aTarget);
 		}
-    }
+	}
     
     public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
@@ -1461,13 +1477,14 @@ public class AnnotationDetailEditorPanel
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
                 field = new StyledComboBox<Tag>("value", tagset);
-                
                 field.setOutputMarkupId(true);
 
+                // Must add behavior to editor, not to combobox to ensure proper order of the
+                // initializing JS header items: first combo box, then tooltip.
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", functionForTooltip);
-                //Avoiding leak, instead of setting on document level, setting it to specific component
-                field.add(new TooltipBehavior("#value", options));
+                add(new TooltipBehavior("#"+field.getMarkupId()+"_listbox *[title]", options));
+                
                 isDrop = true;
             }
             else {
@@ -1739,6 +1756,14 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 };
+                newRole.setOutputMarkupId(true);
+                
+                // Must add behavior to editor, not to combobox to ensure proper order of the
+                // initializing JS header items: first combo box, then tooltip.
+                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                options.set("content", functionForTooltip);
+                content.add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options));
+                
                 content.add(newRole);
                 
                 isDrop = true;
@@ -2552,7 +2577,11 @@ public class AnnotationDetailEditorPanel
 		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).size()>1){
 			return false;
 		}
-		// we allow forward annotation only for a feature with a tagset
+        // if there are no features at all, no forward annotation
+        if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).isEmpty()){
+            return false;
+        }
+        // we allow forward annotation only for a feature with a tagset
 		if(annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0).getTagset()==null){
 			return false;
 		}

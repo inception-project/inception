@@ -559,4 +559,12 @@ public class CurationPanel
     {
         editor.reset(aTarget);
     }
+    public void reloadEditorLayer(AjaxRequestTarget aTarget)
+    {
+        try {
+			editor.reloadLayer(aTarget);
+		} catch (BratAnnotationException e) {
+			// DO NOTHING
+		}
+    }
 }

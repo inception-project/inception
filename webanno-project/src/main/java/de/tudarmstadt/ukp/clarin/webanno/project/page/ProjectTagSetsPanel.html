@@ -46,10 +46,14 @@
 								<td class="hfill"><input wicket:id="content" type="file"
 									multiple /></td>
 							</tr>
+							<tr>
+								<td colspan="1"><input type="checkbox" wicket:id="overwriteTagset">Overwrite</input></td>
+								<td><div class="buttons">
+										<input type="submit" wicket:id="import" />
+									</div></td>
+							</tr>
 						</table>
-						<div class="buttons">
-							<input type="submit" wicket:id="import" />
-						</div>
+						
 					</fieldset>
 				</form>
 			</td>

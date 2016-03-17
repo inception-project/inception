@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBas
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -66,7 +68,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * All features of a type follows the the name separated by <b>|</b> character.
  * <br>
  */
-public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBase {
+public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 	private static final String TAB = "\t";
 	private static final String LF = "\n";
@@ -78,17 +80,20 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	public static final String ROLE = "ROLE_";
 	public static final String BT = "BT_"; // base type for the relation
 											// annotation
+	// If | is used as annotation, escape it with `|` and replace it with WEBANNO_BAR for processing
+	// WEBANNO_BAR will be a reserved word, the same for [, ],  and _
+	private static String WEBANNO_BAR = "WEBANNOBAR";
+	private static String WEBANNO_RBR = "WEBANNORBR";
+	private static String WEBANNO_LBR = "WEBANNOLBR";
+	private static String WEBANNO_UNDERSCORE = "WEBANNOUNDERSCORE";
+	
 	private static final String DEPENDENT = "Dependent";
 	private static final String GOVERNOR = "Governor";
 
 	private String fileName;
 	private int columns = 2;// token number + token columns (minimum required)
 	private Map<Type, Set<Feature>> allLayers = new LinkedHashMap<Type, Set<Feature>>();
-	/*
-	 * private Map<Type, Set<Feature>> relationLayers = new LinkedHashMap<Type,
-	 * Set<Feature>>(); private Map<Type, Set<Feature>> chainLayers = new
-	 * LinkedHashMap<Type, Set<Feature>>();
-	 */ private Map<Feature, Type> roleLinks = new HashMap<>();
+	private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
 	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
 	private StringBuilder coveredText = new StringBuilder();
@@ -99,6 +104,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
 	private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
+	private Map<Integer, Type> layerMaps = new LinkedHashMap<>(); 
 	private Map<Type, Feature> depFeatures = new HashMap<>();
 	private Map<Type, Type> depTypess = new HashMap<>();
 
@@ -141,6 +147,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 				continue;
 			}
 
+			// replace the `|` with WEBANNOBAR
+			line = replaceEscapeChars(line);
+			
 			int count = StringUtils.countMatches(line, "\t");
 
 			if (columns != count) {
@@ -162,6 +171,13 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
 		addAnnotations(aJCas, annosPerTypePerUnit);
 		addChainAnnotations(aJCas);
+	}
+
+	private String replaceEscapeChars(String line) {
+		// because these characters are used to separate multiple annotations, empty annotations...
+		line = line.replace("\\|", WEBANNO_BAR).replace("\\_", WEBANNO_UNDERSCORE)
+				.replace("\\[", WEBANNO_RBR).replace("\\]", WEBANNO_LBR);
+		return line;
 	}
 
 	/**
@@ -211,18 +227,18 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 				int end = unit.end;
 				List<AnnotationFS> annos = aAnnosPerTypePerUnit.get(type).get(unit);
 				int j = 0;
-				Map<AnnotationFS, List<FeatureStructure>> linkFSesPerAnno = new HashMap<>();
-				boolean isSlot = false;
 				Feature linkeF = null;
+				Map<AnnotationFS, List<FeatureStructure>> linkFSesPerSlotAnno = new HashMap<>();
 				for (Feature feat : allLayers.get(type)) {
 					String anno = annotationsPerPostion.get(type).get(unit).get(j);
 					if (!anno.equals("_")) {
 						int i = 0;
+						// if it is a slot annotation (multiple slots per
+						// single annotation
+						// (Target1<--role1--Base--role2-->Target2)
+						int slot = 0;
+						boolean targetAdd = false;
 						for (String mAnnos : anno.split("\\|\\|")) {
-							// if it is a slot annotation (multiple slots per
-							// single annotation
-							// (Target1<--role1--Base--role2-->Target2)
-							int slot = 0;
 							for (String mAnno : mAnnos.split("\\|")) {
 								int ref = 1;
 								String depRef = "";
@@ -250,26 +266,44 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
 
 								} else {
-									if (mAnno.equals(feat.getName()))
-										mAnno = null;
+									if (mAnno.equals(feat.getName())) {
+                                        mAnno = null;
+                                    }
 									if (roleLinks.containsKey(feat)) {
 										linkeF = feat;
-										isSlot = true;
 										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
 										Feature roleFeat = link.getType().getFeatureByBaseName("role");
+										
+										mAnno = getEscapeChars(mAnno);
+						
 										link.setStringValue(roleFeat, mAnno);
-										linkFSesPerAnno.putIfAbsent(annos.get(i), new ArrayList<>());
-										linkFSesPerAnno.get(annos.get(i)).add(link);
+										linkFSesPerSlotAnno.putIfAbsent(annos.get(i), new ArrayList<>());
+										linkFSesPerSlotAnno.get(annos.get(i)).add(link);
 
 									} else if (roleTargets.containsKey(feat)) {
 
-										FeatureStructure link = linkFSesPerAnno.get(annos.get(i)).get(slot);
-										AnnotationUnit targetUnit = token2Units.get(mAnno);
-
-										AnnotationFS targetFs = aAnnosPerTypePerUnit.get(roleTargets.get(feat))
+										FeatureStructure link = linkFSesPerSlotAnno.get(annos.get(i)).get(slot);
+										int customTypeNumber = 0;
+										if(mAnno.split("-").length>2){
+											customTypeNumber =Integer.valueOf(mAnno.substring(mAnno.lastIndexOf("-")+1));
+											mAnno  = mAnno.substring(0,mAnno.lastIndexOf("-"));			
+										}
+										
+										AnnotationUnit targetUnit = token2Units.get(mAnno);	
+										Type tType = null;
+										if (customTypeNumber == 0){
+											tType = roleTargets.get(feat);
+										}
+										else{
+											tType = layerMaps.get(customTypeNumber);
+										}
+										AnnotationFS targetFs = aAnnosPerTypePerUnit.get(tType)
 												.get(targetUnit).get(ref - 1);
 										link.setFeatureValue(feat, targetFs);
+										addSlotAnnotations(linkFSesPerSlotAnno, linkeF);		
+										targetAdd = true;
 										slot++;
+										
 
 									} else if (feat.getShortName().equals(REF_REL)) {
 
@@ -281,13 +315,18 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 											continue;
 										}
 										String refRel = mAnno.split("->")[0];
+
+										refRel = getEscapeChars(refRel);
+										
 										annos.get(i).setFeatureValueFromString(feat, refRel);
 										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
 										chainAnnosPerTyep.get(type).putIfAbsent(chainNo, new TreeMap<>());
 										chainAnnosPerTyep.get(type).get(chainNo).put(LinkNo, annos.get(i));
 
 									} else if (feat.getShortName().equals(REF_LINK)) {
-
+									
+										mAnno = getEscapeChars(mAnno);
+										
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 
@@ -323,6 +362,9 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 										}
 
 									} else {
+										
+										mAnno = getEscapeChars(mAnno);
+										
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
@@ -333,18 +375,26 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 							if (type.getName().equals(POS.class.getName())) {
 								units2Tokens.get(unit).setPos((POS) annos.get(i));
 							}
+                            if (type.getName().equals(Lemma.class.getName())) {
+                                units2Tokens.get(unit).setLemma((Lemma) annos.get(i));
+                            }
 							i++;
+						}
+						
+						if(targetAdd){
+							linkFSesPerSlotAnno = new HashMap<>();
 						}
 					}
 					j++;
 				}
-				if (isSlot) {
-					addSlotAnnotations(linkFSesPerAnno, linkeF);
-					isSlot = false;
-				}
 			}
 		}
 
+	}
+
+	private String getEscapeChars(String mAnno) {
+		return mAnno.replace(WEBANNO_BAR, "|").replace(WEBANNO_UNDERSCORE, "_")
+				.replace(WEBANNO_RBR, "[").replace(WEBANNO_LBR, "]");
 	}
 
 	/**
@@ -362,8 +412,8 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 					linkFSesPerAnno.get(anno).toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]), 0, 0,
 					linkFSesPerAnno.get(anno).size());
 			anno.setFeatureValue(aLinkeF, array);
+			anno.getCAS().addFsToIndexes(anno);
 		}
-		linkFSesPerAnno = new HashMap<>();
 	}
 
 	/**
@@ -534,6 +584,7 @@ public class WebannoCustomTsv3Reader extends JCasResourceCollectionReader_ImplBa
 					features.add(feature);
 				}
 				allLayers.put(layer, features);
+				layerMaps.put(layerMaps.size()+1, layer);
 			}
 		} catch (Exception e) {
 			throw new IOException(e.getMessage() + "\nTSV header:\n" + header);

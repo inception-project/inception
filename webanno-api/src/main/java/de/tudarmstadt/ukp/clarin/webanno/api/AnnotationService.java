@@ -360,6 +360,11 @@ public interface AnnotationService
      * @param tagset the tagset.
      */
     void removeTagSet(TagSet tagset);
+    /**
+     * Removes all tags linked to a tagset
+     * @param tagSet 
+     */
+    void removeAllTags(TagSet tagSet);
 
     /**
      * Should be called with care. Only when a project hosting this feature is removed

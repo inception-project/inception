@@ -386,7 +386,6 @@ public class CorrectionPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                editor.reset(aTarget);
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CORRECTION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
@@ -415,7 +414,7 @@ public class CorrectionPage
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
-
+    						editor.reloadLayer(target);
                         }
                         catch (UIMAException e) {
                             target.appendJavaScript("alert('" + e.getMessage() + "')");

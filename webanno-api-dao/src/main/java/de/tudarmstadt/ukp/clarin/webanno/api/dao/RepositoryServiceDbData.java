@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -104,6 +105,7 @@ import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
+import org.hibernate.sql.Select;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -643,24 +645,40 @@ public class RepositoryServiceDbData
 			List<String> slotTargets = new ArrayList<String>();
 			List<String> linkTypes = new ArrayList<String>();
 
-			List<String> spanLayers = new ArrayList<String>();
+			Set<String> spanLayers = new HashSet<String>();
+			Set<String> slotLayers = new HashSet<String>();
 			for (AnnotationLayer layer : layers) {
+				
 				if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
-					spanLayers.add(layer.getName());
+					// TSV will not use this
+					if(!annotationExists(cas, layer.getName())){
+						continue;
+					}
+					boolean isslotLayer = false;
 					for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
 						if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
 								&& LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
+							isslotLayer = true;
 							slotFeatures.add(layer.getName() + ":" + f.getName());
 							slotTargets.add(f.getType());
 							linkTypes.add(f.getLinkTypeName());
 						}
 					}
+					
+					if (isslotLayer) {
+						slotLayers.add(layer.getName());
+					} else {
+						spanLayers.add(layer.getName());
+					}
 				}
 			}
-
+			spanLayers.addAll(slotLayers);
 			List<String> chainLayers = new ArrayList<String>();
 			for (AnnotationLayer layer : layers) {
 				if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
+					if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
+						continue;
+					}
 					chainLayers.add(layer.getName());
 				}
 			}
@@ -668,6 +686,10 @@ public class RepositoryServiceDbData
 			List<String> relationLayers = new ArrayList<String>();
 			for (AnnotationLayer layer : layers) {
 				if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
+					// TSV will not use this
+					if(!annotationExists(cas, layer.getName())){
+						continue;
+					}
 					relationLayers.add(layer.getName());
 				}
 			}
@@ -709,6 +731,23 @@ public class RepositoryServiceDbData
         return exportFile;
     }
 
+	private boolean annotationExists(CAS aCas, String aType) {
+
+		Type type = aCas.getTypeSystem().getType(aType);
+		if (CasUtil.select(aCas, type).size() == 0) {
+			return false;
+		}
+		return true;
+	}
+    
+	private boolean chainAnnotationExists(CAS aCas, String aType) {
+
+		Type type = aCas.getTypeSystem().getType(aType);
+		if (CasUtil.selectFS(aCas, type).size() == 0) {
+			return false;
+		}
+		return true;
+	}
     @Override
     public File getSourceDocumentFile(SourceDocument aDocument)
     {
@@ -1218,7 +1257,7 @@ public class RepositoryServiceDbData
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument where project =:project", SourceDocument.class)
+                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
         List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
         for (SourceDocument sourceDocument : sourceDocuments) {

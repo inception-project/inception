@@ -249,7 +249,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                editor.reset(aTarget);
+              
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
@@ -288,6 +288,11 @@ public class AnnotationPage
                         User user = userRepository.get(username);
                         editor.setEnabled(!FinishImage.isFinished(
                                 new Model<BratAnnotatorModel>(bModel), user, repository));
+                        try {
+							editor.reloadLayer(target);
+						} catch (BratAnnotationException e) {
+							error("Error loading layers"+e.getMessage());
+						}
 
                     }
                 });
@@ -475,6 +480,13 @@ public class AnnotationPage
                                 .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
                                         .getSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
+                        //Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same address 
+                        //if there are not much sentences to go back to as defined in windowSize
+                        if(previousSentenceAddress==bModel.getSentenceAddress()
+                        		//Check whether it's not the beginning of document
+                        		&& bModel.getSentenceAddress()!=bModel.getFirstSentenceAddress()){
+                        	previousSentenceAddress = bModel.getFirstSentenceAddress();
+                        }
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
 
                             updateSentenceNumber(jCas, previousSentenceAddress);

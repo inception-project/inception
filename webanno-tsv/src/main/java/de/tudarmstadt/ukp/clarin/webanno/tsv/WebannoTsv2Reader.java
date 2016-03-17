@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  *
  */
-public class WebannoCustomTsv2Reader extends JCasResourceCollectionReader_ImplBase {
+public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 
 	private String fileName;
 	Map<String, Token> indexedTokens;

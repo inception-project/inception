@@ -771,4 +771,13 @@ public class AnnotationServiceImpl
         logger.setLevel(Level.ALL);
         return logger;
     }
+
+	@Override
+	@Transactional
+	public void removeAllTags(TagSet aTagSet) {
+		for (Tag tag : listTags(aTagSet)) {
+			entityManager.remove(tag);
+		}
+
+	}
 }
