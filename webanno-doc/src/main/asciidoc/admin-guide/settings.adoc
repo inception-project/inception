@@ -148,6 +148,11 @@
 | Repairs to be performed when a CAS is loaded
 | _unset_
 | RemoveDanglingRelationsRepair
+
+| login.message
+| Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
+| _unset_
+| <h5> <span style="color:red ; font-size: 200%;"><p>This instance of WebAnno is publicly available and your data are freely visible to the public. The instance is only for demo purposes and projects might be modified or deleted at any time by anyone. We also do not guarantee the availability of  the service 24/7.</p></span></h5>
 |===
 
 === Internal backups
