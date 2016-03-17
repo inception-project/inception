@@ -217,7 +217,8 @@ public class BratAjaxCasController
                     || (layer.getType().equals(CHAIN_TYPE) && (aBModel.getMode().equals(
                             Mode.AUTOMATION)
                             || aBModel.getMode().equals(Mode.CORRECTION) || aBModel.getMode()
-                            .equals(Mode.CURATION)))) {
+                            .equals(Mode.CURATION)))
+                    		|| !layer.isEnabled()) /*Hide layer if not enabled*/{
                 continue;
             }
 
