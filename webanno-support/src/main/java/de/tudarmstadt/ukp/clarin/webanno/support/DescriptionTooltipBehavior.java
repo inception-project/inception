@@ -84,12 +84,6 @@ public class DescriptionTooltipBehavior
         return options;
     }
 
-    @Override
-    protected String escape(String content)
-    {
-        return content.replace("\t", "").replace("\n", "\\n").replace("\r", "").replace("\"", "'");
-    }
-    
     private static class DescriptionTooltipPanel extends Panel
     {
         private static final long serialVersionUID = 1L;
