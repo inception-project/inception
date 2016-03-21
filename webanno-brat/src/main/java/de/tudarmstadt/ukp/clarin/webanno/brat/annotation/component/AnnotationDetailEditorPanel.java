@@ -2462,17 +2462,19 @@ public class AnnotationDetailEditorPanel
 
     private void setDefaultLayer()
     {
-        if(bModel.getPreferences().isDefaultLayer()){
-            if(bModel.getDefaultAnnotationLayer() == null){
-                bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
-            }
-        }
-        else if(!bModel.getSelection().isRelationAnno()){
-            bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
-        }
-        selectedAnnotationLayer.setDefaultModelObject(bModel.getSelectedAnnotationLayer().getUiName());
-    }
-    
+		if (bModel.getPreferences().isDefaultLayer()) {
+			if (bModel.getDefaultAnnotationLayer() == null) {
+				bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
+			}
+		} else if (!bModel.getSelection().isRelationAnno()) {
+			bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
+		}
+		// if no layer is selected in Settings
+		if (bModel.getSelectedAnnotationLayer() != null) {
+			selectedAnnotationLayer.setDefaultModelObject(bModel.getSelectedAnnotationLayer().getUiName());
+		} 
+	}
+
     /**
      * remove this model, if new annotation is to be created
      */

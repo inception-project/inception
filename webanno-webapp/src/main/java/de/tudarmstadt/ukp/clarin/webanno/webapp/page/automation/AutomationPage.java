@@ -511,6 +511,7 @@ public class AutomationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
+            	 bModel.getSelection().clear();
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.AUTOMATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

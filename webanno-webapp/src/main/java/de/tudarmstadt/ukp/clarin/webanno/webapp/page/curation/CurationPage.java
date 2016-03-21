@@ -259,6 +259,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {              
+            	bModel.getSelection().clear();
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.CURATION));
                 openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

@@ -249,7 +249,7 @@ public class AnnotationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-              
+            	bModel.getSelection().clear();             
                 closeButtonClicked = false;
                 openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
                         .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
