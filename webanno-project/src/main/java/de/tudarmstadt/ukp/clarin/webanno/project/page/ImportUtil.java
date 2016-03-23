@@ -36,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -374,10 +375,10 @@ public class ImportUtil
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setLayer(aFeature.getLayer());
-		boolean isItChainedLayer = aFeature.getLayer().getType().equals("chain");
-		if (isItChainedLayer &&
-				(aExFeature.getName().equals("referenceType") || aExFeature.getName().equals("referenceRelation"))) {
-			aFeature.setType("uima.cas.String");
+		boolean isItChainedLayer = aFeature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE);
+		if (isItChainedLayer && (aExFeature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
+				|| aExFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE))) {
+			aFeature.setType(CAS.TYPE_NAME_STRING);
 		} else {
 			aFeature.setType(aExFeature.getType());
 		}
