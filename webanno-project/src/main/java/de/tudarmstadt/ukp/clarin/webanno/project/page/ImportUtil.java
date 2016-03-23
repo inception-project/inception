@@ -331,7 +331,7 @@ public class ImportUtil
         aAnnotationService.createTagSet(aTagSet, aUser);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag : aExTagSet.getTags()) {
-            // du not duplicate tag
+            // do not duplicate tag
             if (aAnnotationService.existsTag(exTag.getName(), aTagSet)) {
                 continue;
             }
@@ -374,7 +374,13 @@ public class ImportUtil
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setLayer(aFeature.getLayer());
-        aFeature.setType(aExFeature.getType());
+		boolean isItChainedLayer = aFeature.getLayer().getType().equals("chain");
+		if (isItChainedLayer &&
+				(aExFeature.getName().equals("referenceType") || aExFeature.getName().equals("referenceRelation"))) {
+			aFeature.setType("uima.cas.String");
+		} else {
+			aFeature.setType(aExFeature.getType());
+		}
         aFeature.setName(aExFeature.getName());
         aFeature.setRemember(aExFeature.isRemember());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
