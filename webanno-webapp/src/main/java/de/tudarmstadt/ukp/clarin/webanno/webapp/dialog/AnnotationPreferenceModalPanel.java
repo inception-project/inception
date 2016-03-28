@@ -90,7 +90,7 @@ public class AnnotationPreferenceModalPanel
             getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
-            getModelObject().defaultLayer = bModel.getPreferences().isDefaultLayer();
+            getModelObject().brushMode = bModel.getPreferences().isBrushMode();
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
@@ -153,7 +153,7 @@ public class AnnotationPreferenceModalPanel
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
             
-            add(new CheckBox("defaultLayer"));
+            add(new CheckBox("brushMode"));
 
             add(new CheckBox("staticColor"));
 
@@ -167,7 +167,7 @@ public class AnnotationPreferenceModalPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
-                    bModel.getPreferences().setDefaultLayer(getModelObject().defaultLayer);
+                    bModel.getPreferences().setBrushMode(getModelObject().brushMode);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
                   /*  bModel.getPreferences().setCurationWindowSize(
@@ -222,7 +222,7 @@ public class AnnotationPreferenceModalPanel
         public int windowSize;
         public int curationWindowSize;
         public boolean scrollPage;
-        public boolean defaultLayer;
+        public boolean brushMode;
         public boolean staticColor;
         public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
     }

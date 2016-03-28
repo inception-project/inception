@@ -477,13 +477,13 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(bModel.getPreferences().isDefaultLayer());
+                    setVisible(bModel.getPreferences().isBrushMode());
                 }
                 
             });
 
             // the annotation layer for the selected annotation
-           selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
+            selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
             {
                 private static final long serialVersionUID = 4059460390544343324L;
 
@@ -492,7 +492,7 @@ public class AnnotationDetailEditorPanel
                 {
                     super.onConfigure();
                     setOutputMarkupId(true);
-                    setVisible(bModel.getPreferences().isDefaultLayer());
+                    setVisible(bModel.getPreferences().isBrushMode());
                 }
 
             };
@@ -980,7 +980,7 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelection().isRelationAnno()) {
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
-            if (aBModel.getPreferences().isDefaultLayer()
+            if (aBModel.getPreferences().isBrushMode()
                     && !aBModel.getDefaultAnnotationLayer().equals(spanLayer)) {
                 throw new BratAnnotationException("No relation annotation allowed on the "
                         + "selected span layer");
@@ -1116,7 +1116,7 @@ public class AnnotationDetailEditorPanel
             }
         }
         populateFeatures(null);
-        setDefaultLayer();
+        updateBrushMode();
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
@@ -2452,7 +2452,7 @@ public class AnnotationDetailEditorPanel
                 populateFeatures(null);
             }
 
-            setDefaultLayer();
+            updateBrushMode();
             aTarget.add(annotationFeatureForm);
         }
         catch (UIMAException | ClassNotFoundException | IOException e) {
@@ -2460,9 +2460,9 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void setDefaultLayer()
+    private void updateBrushMode()
     {
-		if (bModel.getPreferences().isDefaultLayer()) {
+		if (bModel.getPreferences().isBrushMode()) {
 			if (bModel.getDefaultAnnotationLayer() == null) {
 				bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
 			}

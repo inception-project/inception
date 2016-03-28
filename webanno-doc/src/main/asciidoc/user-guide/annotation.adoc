@@ -230,7 +230,7 @@ annotation. To remove a slot, arm it and then press the *del* button.
 ==== Choosing Layers
 
 * Choose one of the predefined layers in the *Actions* box on the right side of the screen.
-* In the *Settings* section, the option *Set default layer?* can be chosen. 
+* In the *Settings* section, the option *Brush mode* can be chosen.
 * If you select this option, the layer, which has been chosen manually, will work as main layer during the annotation process. Only instances of this layer will be created, even if other layers are activated afterwards. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
 * If the box is unchecked, the most recently selected layer stays activated.
  
