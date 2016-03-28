@@ -481,6 +481,7 @@ public class AnnotationDetailEditorPanel
                 }
                 
             });
+            featureEditorsContainer.setOutputMarkupId(true);
 
             // the annotation layer for the selected annotation
             selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
@@ -491,7 +492,6 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setOutputMarkupId(true);
                     setVisible(bModel.getPreferences().isBrushMode());
                 }
 
