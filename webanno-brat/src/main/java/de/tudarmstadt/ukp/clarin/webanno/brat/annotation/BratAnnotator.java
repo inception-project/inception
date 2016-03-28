@@ -44,8 +44,6 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -78,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReferen
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -342,8 +339,8 @@ public class BratAnnotator
                     }
                     else if (action.equals(GetDocumentResponse.COMMAND)) {
                         if (getModelObject().getProject() != null) {
-                            result = controller
-                                    .getDocumentResponse(getModelObject(), 0, jCas, true);
+                            result = controller.getDocumentResponse(getModelObject(), 0, jCas,
+                                    true, annotationService);
                         }
                         else {
                             result = new GetDocumentResponse();

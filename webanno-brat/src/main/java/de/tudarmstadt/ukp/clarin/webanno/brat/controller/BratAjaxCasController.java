@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -75,7 +75,7 @@ public class BratAjaxCasController
     private RepositoryService repository;
 
     @Resource(name = "annotationService")
-    private static AnnotationService annotationService;
+    private AnnotationService annotationService;
 
     public BratAjaxCasController()
     {
@@ -149,11 +149,13 @@ public class BratAjaxCasController
      *             if a DKPro Core reader/writer cannotbe loaded.
      */
     public GetDocumentResponse getDocumentResponse(BratAnnotatorModel aBratAnnotatorModel,
-            int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument)
+            int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
+            AnnotationService aAnnotationService)
         throws UIMAException, IOException, ClassNotFoundException
     {
         GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument);
+        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument,
+                aAnnotationService);
 
         return response;
     }
@@ -174,7 +176,7 @@ public class BratAjaxCasController
      */
     public static void render(GetDocumentResponse aResponse,
             BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
-            boolean aIsGetDocument)
+            boolean aIsGetDocument, AnnotationService aAnnotationService)
     {
         // Maybe this section should be moved elsewehere and the aIsGetDocument parameter should
         // be removed, so that this method really only renders and does not additionally update
@@ -186,7 +188,7 @@ public class BratAjaxCasController
                     aBratAnnotatorModel.getPreferences().getWindowSize()));
         }
 
-        render(aResponse, aBratAnnotatorModel, aJCas, annotationService);
+        render(aResponse, aBratAnnotatorModel, aJCas, aAnnotationService);
     }
 
     /**
@@ -266,12 +268,30 @@ public class BratAjaxCasController
         for (AnnotationLayer layer : layers) {
             EntityType entityType = configureEntityType(layer);
 
-            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers,
-                    aAnnotationService)) {
-                RelationType arc = configureRelationType(layer, attachingLayer);
-                entityType.setArcs(asList(arc));
+            List<RelationType> arcs = new ArrayList<>();
+            
+            // For link features, we also need to configure the arcs, even though there is no arc
+            // layer here.
+            boolean hasLinkFeatures = false;
+            for (AnnotationFeature f : aAnnotationService.listAnnotationFeature(layer)) {
+                if (!LinkMode.NONE.equals(f.getLinkMode())) {
+                    hasLinkFeatures = true;
+                    break;
+                }
+            }
+            if (hasLinkFeatures) {
+                String bratTypeName = getBratTypeName(layer);
+                arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
+                        bratTypeName, null, "triangle,5", "3,3"));
             }
 
+            // Styles for the remaining relation and chain layers
+            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers,
+                    aAnnotationService)) {
+                arcs.add(configureRelationType(layer, attachingLayer));
+            }
+
+            entityType.setArcs(arcs);
             entityTypes.add(entityType);
         }
 
@@ -318,15 +338,6 @@ public class BratAjaxCasController
     private static RelationType configureRelationType(AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
-        // For link features, we also need to configure the arcs, even though there is no arc
-        // layer here.
-        if (aAttachingLayer == null) {
-            String bratTypeName = getBratTypeName(aLayer);
-            RelationType arc = new RelationType(aLayer.getName(), aLayer.getUiName(), bratTypeName,
-                    bratTypeName, null, null, "3,3");
-            return arc;
-        }
-
         String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
