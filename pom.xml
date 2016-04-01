@@ -59,9 +59,13 @@
             - https://issues.apache.org/jira/browse/WICKET-6108
             - https://github.com/jquery/jquery/issues/2963 
           -->
-        <wicket.version>6.21.0</wicket.version>
+        <wicket.version>6.20.0</wicket.version>
         <wicketstuff.version>${wicket.version}</wicketstuff.version>
-        <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+        <!-- 
+            Cannot upgrade to higher than 6.20.1 due to 
+            - https://github.com/webanno/webanno/issues/132
+          -->
+        <wicket-jquery-ui.version>6.20.1</wicket-jquery-ui.version>
         <hibernate.version>4.1.4.Final</hibernate.version>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <dkpro.version>1.7.0</dkpro.version>

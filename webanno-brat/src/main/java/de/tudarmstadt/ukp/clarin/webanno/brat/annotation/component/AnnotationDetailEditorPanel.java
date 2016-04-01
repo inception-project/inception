@@ -1747,6 +1747,18 @@ public class AnnotationDetailEditorPanel
                     private static final long serialVersionUID = 1L;
                     
                     @Override
+                    protected void onInitialize()
+                    {
+                        super.onInitialize();
+                        
+                        // Ensure proper order of the initializing JS header items: first combo box
+                        // behavior (in super.onInitialize()), then tooltip.
+                        Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                        options.set("content", functionForTooltip);
+                        add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options));
+                    }
+                    
+                    @Override
                     protected void onConfigure()
                     {
                         super.onConfigure();
@@ -1761,13 +1773,6 @@ public class AnnotationDetailEditorPanel
                     }
                 };
                 newRole.setOutputMarkupId(true);
-                
-                // Must add behavior to editor, not to combobox to ensure proper order of the
-                // initializing JS header items: first combo box, then tooltip.
-                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                options.set("content", functionForTooltip);
-                content.add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options));
-                
                 content.add(newRole);
                 
                 isDrop = true;
