@@ -70,6 +70,7 @@ public class AnnotationPreferenceModalPanel
 
     private NumberTextField<Integer> windowSizeField;
     private NumberTextField<Integer> curationWindowSizeField;
+    private NumberTextField<Integer> sidebarSizeField;
 
     private final BratAnnotatorModel bModel;
 
@@ -88,6 +89,7 @@ public class AnnotationPreferenceModalPanel
             getModelObject().windowSize = bModel.getPreferences().getWindowSize() < 1 ? 1
                     : bModel.getPreferences().getWindowSize();
             getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
+            getModelObject().sidebarSize = bModel.getPreferences().getSidebarSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
             getModelObject().brushMode = bModel.getPreferences().isBrushMode();
@@ -98,7 +100,13 @@ public class AnnotationPreferenceModalPanel
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
-            
+
+            sidebarSizeField = new NumberTextField<Integer>("sidebarSize");
+            sidebarSizeField.setType(Integer.class);
+            sidebarSizeField.setMinimum(10);
+            sidebarSizeField.setMaximum(50);
+            add(sidebarSizeField);
+
             curationWindowSizeField = new NumberTextField<Integer>("curationWindowSize");
             curationWindowSizeField.setType(Integer.class);
             curationWindowSizeField.setMinimum(1);
@@ -170,6 +178,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setBrushMode(getModelObject().brushMode);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
+                    bModel.getPreferences().setSidebarSize(getModelObject().sidebarSize);
                   /*  bModel.getPreferences().setCurationWindowSize(
                             getModelObject().curationWindowSize);*/
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
@@ -220,6 +229,7 @@ public class AnnotationPreferenceModalPanel
         public Project project;
         public SourceDocument document;
         public int windowSize;
+        public int sidebarSize;
         public int curationWindowSize;
         public boolean scrollPage;
         public boolean brushMode;

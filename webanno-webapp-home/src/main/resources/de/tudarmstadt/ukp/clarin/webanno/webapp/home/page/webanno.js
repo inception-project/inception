@@ -54,7 +54,8 @@ $(document).ready(function() {
 				'position' : 'relative',
 				'top' : 'auto',
 				'overflow-y': 'auto',
-				'height' : '70%'
+				'height' : '70%',
+				'width' : $annoPanel.parent().width() + 'px'
 			});
 			
 		}
@@ -67,7 +68,8 @@ $(document).ready(function() {
 				'position' : 'fixed',
 				'top' : editorTop  + 'px',
 				'overflow-y': 'auto',
-				'height' : '70%'
+				'height' : '70%',
+				'width' : $annoPanel.parent().width() + 'px'
 			});
 		}
 	}

@@ -39,8 +39,10 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -51,6 +53,9 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import wicket.contrib.input.events.EventType;
+import wicket.contrib.input.events.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -84,9 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Finish
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -121,7 +123,7 @@ public class AnnotationPage
     private int gotoPageAddress;
 
     // Open the dialog window on first load
-    boolean firstLoad = true;
+    private boolean firstLoad = true;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -131,10 +133,39 @@ public class AnnotationPage
     private int totalNumberOfSentence;
 
     private boolean closeButtonClicked;
-    public BratAnnotatorModel bModel = new BratAnnotatorModel();
+    private BratAnnotatorModel bModel = new BratAnnotatorModel();
 
+    private WebMarkupContainer sidebarCell;
+    private WebMarkupContainer annotationViewCell;
+    
     public AnnotationPage()
     {
+        sidebarCell = new WebMarkupContainer("sidebarCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", bModel.getPreferences().getSidebarSize()+"%");
+            }
+        };
+        sidebarCell.setOutputMarkupId(true);
+        add(sidebarCell);
+
+        annotationViewCell = new WebMarkupContainer("annotationViewCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", (100-bModel.getPreferences().getSidebarSize())+"%");
+            }
+        };
+        annotationViewCell.setOutputMarkupId(true);
+        add(annotationViewCell);
+
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
         {
@@ -172,14 +203,12 @@ public class AnnotationPage
                 }
             }
         };
-
         editor.setOutputMarkupId(true);
-        add(editor);
-
+        sidebarCell.add(editor);
+        
         annotator = new BratAnnotator("embedder1", new Model<BratAnnotatorModel>(bModel),
                 editor)
         {
-
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
@@ -208,10 +237,10 @@ public class AnnotationPage
                 }
             }
         };
+        annotationViewCell.add(annotator);
 
         // This is an Annotation Operation, set model to ANNOTATION mode
         bModel.setMode(Mode.ANNOTATION);
-        add(annotator);
 
         add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
                 new Model<BratAnnotatorModel>(bModel)).setOutputMarkupId(true));
@@ -311,6 +340,8 @@ public class AnnotationPage
             {
 
                 try {
+                    // Re-render the whole page because the width of the sidebar may have changed
+                    aTarget.add(AnnotationPage.this);
                     JCas jCas = getJCas();
                     annotator.bratRender(aTarget, jCas);
                     updateSentenceAddress(jCas, aTarget);
@@ -831,6 +862,9 @@ public class AnnotationPage
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bModel, Mode.ANNOTATION);
+            // Resize areas according to preferences
+            aTarget.add(sidebarCell);
+            aTarget.add(annotationViewCell);
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != bModel.getProject().getId()) {

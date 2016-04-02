@@ -46,6 +46,8 @@ public class AnnotationPreference
     // determine if static color for annotations will be used or we shall
     // dynamically generate one
     private boolean staticColor = true;
+    
+    private int sidebarSize;
 
     public List<Long> getAnnotationLayers()
     {
@@ -127,4 +129,26 @@ public class AnnotationPreference
         this.staticColor = staticColor;
     }
 
+    public int getSidebarSize()
+    {
+        if (sidebarSize < 10 || sidebarSize > 50) {
+            return 20;
+        }
+        else {
+            return sidebarSize;
+        }
+    }
+
+    public void setSidebarSize(int aSidebarSize)
+    {
+        if (aSidebarSize > 50) {
+            sidebarSize = 50;
+        }
+        else if (aSidebarSize < 10) {
+            sidebarSize = 10;
+        }
+        else {
+            sidebarSize = aSidebarSize;
+        }
+    }
 }

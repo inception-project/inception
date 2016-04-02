@@ -49,8 +49,10 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -160,6 +162,30 @@ public class CorrectionPage
         bModel = new BratAnnotatorModel();
         bModel.setMode(Mode.CORRECTION);
 
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", bModel.getPreferences().getSidebarSize()+"%");
+            }
+        };
+        add(sidebarCell);
+
+        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", (100-bModel.getPreferences().getSidebarSize())+"%");
+            }
+        };
+        add(annotationViewCell);
+        
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (bModel.getDocument() != null) {
@@ -206,7 +232,7 @@ public class CorrectionPage
         };
 
         automateView.setOutputMarkupId(true);
-        add(automateView);
+        annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
@@ -248,7 +274,7 @@ public class CorrectionPage
         };
 
         editor.setOutputMarkupId(true);
-        add(editor);
+        sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView",
                 new Model<BratAnnotatorModel>(bModel), editor)
@@ -292,7 +318,7 @@ public class CorrectionPage
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
-        add(annotator);
+        annotationViewCell.add(annotator);
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bModel);
@@ -406,7 +432,7 @@ public class CorrectionPage
                             bModel.setDocument(bModel.getDocument());
                             bModel.setProject(bModel.getProject());
 
-                            loadDocumentAction();
+                            loadDocumentAction(target);
                             setCurationSegmentBeginEnd();
                             update(target);
 
@@ -452,6 +478,9 @@ public class CorrectionPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
+                // Re-render the whole page because the width of the sidebar may have changed
+                aTarget.add(CorrectionPage.this);
+                
                 curationContainer.setBratAnnotatorModel(bModel);
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -670,7 +699,7 @@ public class CorrectionPage
                             .get(currentDocumentIndex - 1));
 
                     try {
-                        loadDocumentAction();
+                        loadDocumentAction(aTarget);
                         setCurationSegmentBeginEnd();
                         update(aTarget);
 
@@ -744,7 +773,7 @@ public class CorrectionPage
                         .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 try {
-                    loadDocumentAction();
+                    loadDocumentAction(aTarget);
                     setCurationSegmentBeginEnd();
                     update(aTarget);
 
@@ -1068,7 +1097,7 @@ public class CorrectionPage
 
     }
 
-    private void loadDocumentAction()
+    private void loadDocumentAction(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         User logedInUser = userRepository.get(SecurityContextHolder.getContext()
@@ -1184,6 +1213,8 @@ public class CorrectionPage
         // Load user preferences
         PreferencesUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
                 annotationService, bModel, Mode.CORRECTION);
+        // Re-render whole page as sidebar size preference may have changed
+        aTarget.add(CorrectionPage.this);
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bModel.getProject().getId()) {

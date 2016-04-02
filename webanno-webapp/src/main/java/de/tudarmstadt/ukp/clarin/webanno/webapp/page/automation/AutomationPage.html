@@ -122,18 +122,18 @@
 		</div>
 		<table class="hfill">
 			<tr style="vertical-align: top;">
-				<td width="80%">
-				<fieldset class="anno-view">
-				    	<legend> Annotation</legend>
-				    	<div class="merge-view" wicket:id="mergeView" />
-				</fieldset>
+				<td wicket:id="annotationViewCell" width="80%">
+					<fieldset class="anno-view">
+						<legend> Annotation</legend>
+						<div class="merge-view" wicket:id="mergeView" />
+					</fieldset>
 					<div wicket:id="automateView">
 						<div class="sentence-list-view" wicket:id="sentenceListView">
 							<div wicket:id="sentence" />
 						</div>
 					</div>
 				</td>
-				<td width="20%">
+				<td wicket:id="sidebarCell" width="20%">
 					<div id="annotationDetailEditorPanel"
 						wicket:id="annotationDetailEditorPanel"></div>
 				</td>

@@ -55,8 +55,10 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -177,6 +179,30 @@ public class AutomationPage
         bModel = new BratAnnotatorModel();
         bModel.setMode(Mode.AUTOMATION);
 
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", bModel.getPreferences().getSidebarSize()+"%");
+            }
+        };
+        add(sidebarCell);
+
+        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", (100-bModel.getPreferences().getSidebarSize())+"%");
+            }
+        };
+        add(annotationViewCell);
+        
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (bModel.getDocument() != null) {
@@ -221,9 +247,8 @@ public class AutomationPage
                 update(aTarget);
             }
         };
-
         automateView.setOutputMarkupId(true);
-        add(automateView);
+        annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
@@ -373,9 +398,8 @@ public class AutomationPage
 
             }
         };
-
         editor.setOutputMarkupId(true);
-        add(editor);
+        sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
                 editor)
@@ -420,7 +444,7 @@ public class AutomationPage
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
-        add(annotator);
+        annotationViewCell.add(annotator);
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(bModel);
@@ -534,7 +558,7 @@ public class AutomationPage
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
                             
-                            loadDocumentAction();
+                            loadDocumentAction(target);
                             setCurationSegmentBeginEnd();
                             update(target);
                             User user = userRepository.get(username);
@@ -577,6 +601,9 @@ public class AutomationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
+                // Re-render the whole page because the width of the sidebar may have changed
+                aTarget.add(AutomationPage.this);
+                
                 curationContainer.setBratAnnotatorModel(bModel);
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -790,7 +817,7 @@ public class AutomationPage
                     try {
                         repository.upgradeCasAndSave(bModel.getDocument(), Mode.AUTOMATION, bModel
                                 .getUser().getUsername());
-                        loadDocumentAction();
+                        loadDocumentAction(aTarget);
                         setCurationSegmentBeginEnd();
                         update(aTarget);
 
@@ -868,7 +895,7 @@ public class AutomationPage
                 try {
                     repository.upgradeCasAndSave(bModel.getDocument(), Mode.AUTOMATION, bModel
                             .getUser().getUsername());
-                    loadDocumentAction();
+                    loadDocumentAction(aTarget);
                     setCurationSegmentBeginEnd();
                     update(aTarget);
 
@@ -1134,7 +1161,7 @@ public class AutomationPage
 
     }
 
-    private void loadDocumentAction()
+    private void loadDocumentAction(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -1198,6 +1225,8 @@ public class AutomationPage
         // Load user preferences
         PreferencesUtil.setAnnotationPreference(username, repository, annotationService, bModel,
                 Mode.AUTOMATION);
+        // Re-render whole page as sidebar size preference may have changed
+        aTarget.add(AutomationPage.this);
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bModel.getProject().getId()) {

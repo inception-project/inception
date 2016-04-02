@@ -320,6 +320,9 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
+                // Re-render the whole page because the width of the sidebar may have changed
+                aTarget.add(CurationPage.this);
+                
                 aTarget.add(getFeedbackPanel());
                 aTarget.add(numberOfPages);
                 JCas mergeJCas = null;
@@ -971,6 +974,8 @@ public class CurationPage
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bModel, Mode.CURATION);
+            // Re-render whole page as sidebar size preference may have changed
+            aTarget.add(CurationPage.this);
 
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 

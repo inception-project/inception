@@ -172,6 +172,30 @@ public class CurationPanel
     public CurationPanel(String id, final IModel<CurationContainer> cCModel)
     {
         super(id, cCModel);
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", bModel.getPreferences().getSidebarSize()+"%");
+            }
+        };
+        add(sidebarCell);
+
+        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                aTag.put("width", (100-bModel.getPreferences().getSidebarSize())+"%");
+            }
+        };
+        add(annotationViewCell);
+        
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
         sentencesListView.setOutputMarkupId(true);
@@ -182,7 +206,7 @@ public class CurationPanel
         // outside of the current page
         corssSentAnnoView = new WebMarkupContainer("corssSentAnnoView");
         corssSentAnnoView.setOutputMarkupId(true);
-        add(corssSentAnnoView);
+        annotationViewCell.add(corssSentAnnoView);
 
         bModel = getModelObject().getBratAnnotatorModel();
 
@@ -229,7 +253,7 @@ public class CurationPanel
         };
 
         suggestionViewPanel.setOutputMarkupId(true);
-        add(suggestionViewPanel);
+        annotationViewCell.add(suggestionViewPanel);
 
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
@@ -270,7 +294,7 @@ public class CurationPanel
         };
 
         editor.setOutputMarkupId(true);
-        add(editor);
+        sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
                 editor)
@@ -302,7 +326,7 @@ public class CurationPanel
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
-        add(annotator);
+        annotationViewCell.add(annotator);
 
         LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
         {
