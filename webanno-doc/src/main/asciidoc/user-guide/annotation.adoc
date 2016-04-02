@@ -34,10 +34,34 @@ open it for annotation. Document names written in black show that the document h
 by the current user, blue font means that it has already been opened, whereas red font indicates 
 that the document has already been marked as *done*.
 
+=== Settings
+
 Once the document is opened, a default of 10 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
-The first option allows you to select an annotation layer which is displayed during annotation. The second option allows you to specify the number of sentences that will be displayed on one page. The last option allows you to select auto-scroll while annotating. Auto-scroll scrolls automatically forward by putting the last annotated sentence in the middle.
+image::annotation_settings.png[align="center"]
+
+Next to *Annotation layers*, you to select the annotation layer which are displayed during annotation.
+This is useful to reduce clutter if there are many annotation layers. Mind that hiding a layer which
+has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
+no dependency relations will be visible anymore.
+
+The *Brush mode* controls if the annotation layer selected in the *Actions* box, will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+
+The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
+actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
+configured to take between 10% and 50% of the screen.
+
+The *Number of sentences* controls how many sentences are visible in the annotation area. The more
+sentences are visible, the slower WebAnno will react.
+
+The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
+last annotation was made. This can be useful to avoid manual navigation.
+
+If *Use the same color for all tags in a layer*, annotations are colored per layer. If this option
+is off, then annotations are colored by their labels (all annotations with the same label also have
+the same color). Mind that there is a limited number of colors such that eventually colors will
+be reused.
 
 === Navigation
 
@@ -230,8 +254,5 @@ annotation. To remove a slot, arm it and then press the *del* button.
 ==== Choosing Layers
 
 * Choose one of the predefined layers in the *Actions* box on the right side of the screen.
-* In the *Settings* section, the option *Brush mode* can be chosen.
-* If you select this option, the layer, which has been chosen manually, will work as main layer during the annotation process. Only instances of this layer will be created, even if other layers are activated afterwards. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
-* If the box is unchecked, the most recently selected layer stays activated.
  
 The *Actions* box always shows the presently activated layer, the *Features* box shows the layer of the activated instance. Subsequently, the settings of the two boxes can differ. To change settings during the annotation process, cancel the previously selected layer by clicking on *Clear* in the *Action* box and choose a new layer.
