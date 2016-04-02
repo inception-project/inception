@@ -49,8 +49,8 @@
 <body>
 	<wicket:panel>
 	<form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
-	<div wicket:id=yesNoModal></div>
-		<fieldset>
+		<div wicket:id=yesNoModal></div>
+			<fieldset>
 				<legend>Actions</legend>
 				<table>
 					<tr>
@@ -65,14 +65,13 @@
 						<td><select wicket:id="defaultAnnotationLayer"
 							style="width: 100%"></select></td>
 					</tr>
-					
 					<tr>
 						<td colspan="2">Forward annotation ?</td>
 						<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
 					</tr>					 				
 				</table>
-		</fieldset>		
-		  <fieldset>
+		    </fieldset>		
+		    <fieldset>
 			<legend>Features</legend>
 			  <div wicket:id="featureEditorsContainer">
 				<table>
@@ -85,15 +84,18 @@
 						<td><span wicket:id="selectedText" style="color: red"></span></td>
 					</tr>
 				</table>
-					<div style="width: 0;overflow: hidden;">
+				<div style="width: 0;overflow: hidden;">
 					<input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
-					</div>
-					<table class="hfill">
+				</div>
+				<table class="hfill">
 					<tr wicket:id="featureValues" id="featureValues">
 						<td wicket:id="editor"></td>
 						<wicket:fragment wicket:id="textFeatureEditor">
-							<td><span wicket:id="feature"></span></td>
-							<td><input  style="width: 100%" wicket:id="value"></input><i wicket:id="textIndicator" class="" style=""></i></td>
+							<td>
+						        <span wicket:id="feature"></span>
+						        <span wicket:id="textIndicator" class="" style=""></span>
+						    </td>
+							<td><input  style="width: 100%" wicket:id="value"></input></td>
 						</wicket:fragment>
 						<wicket:fragment wicket:id="numberFeatureEditor">
 							<td><span wicket:id="feature"></span></td>
@@ -110,31 +112,32 @@
 								<fieldset>
 									<legend>
 										<span wicket:id="feature"></span>
+										<span wicket:id="linkIndicator" class="" style=""></span>
 									</legend>
 									<div wicket:id="content">
-									<table class="hfill">
-										<tr wicket:id="slots">
-											<td><span wicket:id="role"></span></td>
-											<td><div class="hfill k-textbox"
-												style="display: block; white-space: nowrap; background: 0; line-height: 2.13em; max-width: 20em; max-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%; overflow:hidden; text-overflow: ellipsis;"
-												wicket:id="label"></div></td>
-										</tr>
-										<tr>
-											<td colspan="2" class="hfill">
-												<table class="hfill">
-													<tr rowspan="2"><td><i wicket:id="linkIndicator" class="" style=""></i></td>
-														<td class="hfill"><input style="width: 100%"
-															wicket:id="newRole" placeholder="Select slot"></input></td>
-														<td>
-															<button style="" wicket:id="add">Add</button>
-															<button style="" wicket:id="del">Del</button>
-															<button style="" wicket:id="set">Set</button>
-														</td>
-													</tr>
-												</table>
-											</td>
-										</tr>
-									</table>
+										<table class="hfill">
+											<tr wicket:id="slots">
+												<td><span wicket:id="role"></span></td>
+												<td><div class="hfill k-textbox"
+													style="display: block; white-space: nowrap; background: 0; line-height: 2.13em; max-width: 20em; max-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%; overflow:hidden; text-overflow: ellipsis;"
+													wicket:id="label"></div></td>
+											</tr>
+											<tr>
+												<td colspan="2" class="hfill">
+													<table class="hfill">
+														<tr>
+															<td class="hfill"><input style="width: 100%"
+																wicket:id="newRole" placeholder="Select slot"></input></td>
+															<td>
+																<button style="" wicket:id="add">Add</button>
+																<button style="" wicket:id="del">Del</button>
+																<button style="" wicket:id="set">Set</button>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
 									</div>
 								</fieldset>
 							</td>
@@ -156,7 +159,7 @@
 				</table>
 			</div>
 		</fieldset>		
-</form>
+    </form>
 	</wicket:panel>
 </body>
 </html>

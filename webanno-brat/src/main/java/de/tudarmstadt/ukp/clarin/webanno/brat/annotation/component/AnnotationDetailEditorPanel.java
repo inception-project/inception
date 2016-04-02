@@ -1261,11 +1261,18 @@ public class AnnotationDetailEditorPanel
                  */
 
                 // Add tooltip on label
+                StringBuilder tooltipTitle = new StringBuilder();
+                tooltipTitle.append(fm.feature.getUiName());
+                if (fm.feature.getTagset() != null) {
+                    tooltipTitle.append(" (");
+                    tooltipTitle.append(fm.feature.getTagset().getName());
+                    tooltipTitle.append(')');
+                }
+                
                 Component labelComponent = frag.getLabelComponent();
                 labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
-                labelComponent.add(new DescriptionTooltipBehavior(fm.feature.getUiName(),
+                labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
                         fm.feature.getDescription()));
-
             }
             else {
                 frag.getFocusComponent().setEnabled(false);
@@ -1460,11 +1467,8 @@ public class AnnotationDetailEditorPanel
             //Checks whether hide un-constraint feature is enabled or not
             hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
             
-            String featureLabelText = aModel.feature.getUiName();
-            if (aModel.feature.getTagset() != null) {
-                featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
-            }
-            add(new Label("feature", featureLabelText));
+            add(new Label("feature", aModel.feature.getUiName()));
+
             indicator.reset(); //reset the indicator
             if (aModel.feature.getTagset() != null) {
 
@@ -1495,44 +1499,34 @@ public class AnnotationDetailEditorPanel
                 field = new TextField<String>("value");
             }
             
-          //Shows whether constraints are triggered or not
+            //Shows whether constraints are triggered or not
             //also shows state of constraints use.
             Component constraintsInUseIndicator = new WebMarkupContainer("textIndicator"){
-
                 private static final long serialVersionUID = 4346767114287766710L;
 
-                /* (non-Javadoc)
-                 * @see org.apache.wicket.Component#isVisible()
-                 */
                 @Override
                 public boolean isVisible()
                 {
                     return indicator.isAffected();
                 }
             }.add(new AttributeAppender("class", new Model<String>(){
-                //adds symbol to indicator
                 private static final long serialVersionUID = -7683195283137223296L;
 
                 @Override
                 public String getObject()
                 {
-                    StringBuffer path = new StringBuffer();
-                    path.append(indicator.getStatusSymbol());
-                    return path.toString();
+                    //adds symbol to indicator
+                    return indicator.getStatusSymbol();
                 }
             }))
               .add(new AttributeAppender("style", new Model<String>(){
-                  //adds color to indicator
-                  
                 private static final long serialVersionUID = -5255873539738210137L;
 
                 @Override
                 public String getObject()
                 {
-                    StringBuffer path = new StringBuffer();
-                    path.append("; color: ");
-                    path.append(indicator.getStatusColor());
-                    return path.toString();
+                    //adds color to indicator
+                    return "; color: " + indicator.getStatusColor();
                 }
             }));
             add(constraintsInUseIndicator);
@@ -1642,11 +1636,7 @@ public class AnnotationDetailEditorPanel
             super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
             //Checks whether hide un-constraint feature is enabled or not
             hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
-            String featureLabelText = aModel.feature.getUiName();
-            if (aModel.feature.getTagset() != null) {
-                featureLabelText += " (" + aModel.feature.getTagset().getName() + ")";
-            }
-            add(new Label("feature", featureLabelText));
+            add(new Label("feature", aModel.feature.getUiName()));
 
             // Most of the content is inside this container such that we can refresh it independently
             // from the rest of the form
@@ -1796,47 +1786,38 @@ public class AnnotationDetailEditorPanel
                     }
                 });
             }
+            
             //Shows whether constraints are triggered or not
             //also shows state of constraints use.
             Component constraintsInUseIndicator = new WebMarkupContainer("linkIndicator"){
-
                 private static final long serialVersionUID = 4346767114287766710L;
 
-                /* (non-Javadoc)
-                 * @see org.apache.wicket.Component#isVisible()
-                 */
                 @Override
                 public boolean isVisible()
                 {
                     return indicator.isAffected();
                 }
             }.add(new AttributeAppender("class", new Model<String>(){
-                //adds symbol to indicator
                 private static final long serialVersionUID = -7683195283137223296L;
 
                 @Override
                 public String getObject()
                 {
-                    StringBuffer path = new StringBuffer();
-                    path.append(indicator.getStatusSymbol());
-                    return path.toString();
+                    //adds symbol to indicator
+                    return indicator.getStatusSymbol();
                 }
             }))
               .add(new AttributeAppender("style", new Model<String>(){
-                  //adds color to indicator
-                  
                 private static final long serialVersionUID = -5255873539738210137L;
 
                 @Override
                 public String getObject()
                 {
-                    StringBuffer path = new StringBuffer();
-                    path.append("; color: ");
-                    path.append(indicator.getStatusColor());
-                    return path.toString();
+                    //adds color to indicator
+                    return "; color: " + indicator.getStatusColor();
                 }
             }));
-            content.add(constraintsInUseIndicator);
+            add(constraintsInUseIndicator);
             
             // Add a new empty slot with the specified role
             content.add(new AjaxButton("add")
