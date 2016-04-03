@@ -220,7 +220,7 @@ public class AutomationPage
             public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    // update begin/end of the curationsegment based on bratAnnotatorModel changes
+                    // update begin/end of the curation segment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     curationContainer.setBratAnnotatorModel(bModel);
@@ -298,18 +298,18 @@ public class AutomationPage
                             continue;
                         }
                         TagSet tagSet = f.getTagset();
-                        boolean isRepeatabl = false;
+                        boolean isRepeatable = false;
                         // repeat only if the value is in the tagset
                         for (Tag tag : annotationService.listTags(tagSet)) {
                             if (fs.getFeatureValueAsString(feat) == null) {
                                 break; // this is new annotation without values
                             }
                             if (fs.getFeatureValueAsString(feat).equals(tag.getName())) {
-                                isRepeatabl = true;
+                                isRepeatable = true;
                                 break;
                             }
                         }
-                        if (automationService.getMiraTemplate(f) != null && isRepeatabl) {
+                        if (automationService.getMiraTemplate(f) != null && isRepeatable) {
 
                             if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {                               
                                 AutomationUtil.repeateRelationAnnotation(aBModel, repository,
@@ -358,7 +358,7 @@ public class AutomationPage
             
             @Override
             public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
-                    AnnotationFS aFs)
+                    AnnotationFS aFS)
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
                 for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
@@ -369,16 +369,16 @@ public class AutomationPage
                         continue;
                     }
                     try {
-                        Type type = CasUtil.getType(aFs.getCAS(), layer.getName());
+                        Type type = CasUtil.getType(aFS.getCAS(), layer.getName());
                         Feature feat = type.getFeatureByBaseName(f.getName());
                         if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
                             AutomationUtil.deleteRelationAnnotation(aBModel, repository,
-                                    annotationService, aFs, f, aFs.getFeatureValueAsString(feat));
+                                    annotationService, aFS, f, aFS.getFeatureValueAsString(feat));
                         }
                         else {
                             AutomationUtil.deleteSpanAnnotation(aBModel, repository,
-                                    annotationService, aFs.getBegin(), aFs.getEnd(), f,
-                                    aFs.getFeatureValueAsString(feat));
+                                    annotationService, aFS.getBegin(), aFS.getEnd(), f,
+                                    aFS.getFeatureValueAsString(feat));
                         }
                         update(aTarget);
                     }
