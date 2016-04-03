@@ -569,7 +569,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-
+        aTarget.add(annotationFeatureForm);
 		TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 		Selection selection = aBModel.getSelection();
 		if (selection.getAnnotation().isNotSet()) {
