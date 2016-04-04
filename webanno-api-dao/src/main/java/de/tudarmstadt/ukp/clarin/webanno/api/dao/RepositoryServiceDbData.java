@@ -105,7 +105,6 @@ import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
-import org.hibernate.sql.Select;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -1472,8 +1471,6 @@ public class RepositoryServiceDbData
                 }
             }
         }
-        FileUtils
-                .forceDeleteOnExit(new File(propertiesPath, annotationPreferencePropertiesFileName));
         FileUtils.forceMkdir(new File(propertiesPath));
         property.store(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
