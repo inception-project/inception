@@ -80,7 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsvWriter;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
@@ -180,13 +180,13 @@ public class ProjectExportPanel extends Panel {
         // Determine which format to use for export.
         Class<?> writer;
         if (FORMAT_AUTO.equals(aModel.format)) {
-            writer = WebannoTsvWriter.class;
+            writer = WebannoTsv3Writer.class;
         }
         else {
             writer = repository.getWritableFormats().get(
                     repository.getWritableFormatId(aModel.format));
             if (writer == null) {
-                writer = WebannoTsvWriter.class;
+                writer = WebannoTsv3Writer.class;
             }
         }
         
@@ -799,7 +799,7 @@ public class ProjectExportPanel extends Panel {
                     if (!messages.contains(msg)) {
                         messages.add(msg);
                     }
-                    writer = WebannoTsvWriter.class;
+                    writer = WebannoTsv3Writer.class;
                 }
 
                 // Export annotations from regular users
