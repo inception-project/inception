@@ -74,28 +74,28 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	@ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".tsv")
 	private String filenameSuffix;
 
-	public static final String SPAN_LAYERS = "spanLayers";
-	@ConfigurationParameter(name = SPAN_LAYERS, mandatory = true, defaultValue = {})
+	public static final String PARAM_SPAN_LAYERS = "spanLayers";
+	@ConfigurationParameter(name = PARAM_SPAN_LAYERS, mandatory = true, defaultValue = {})
 	private List<String> spanLayers;
 
-	public static final String SLOT_FEATS = "slotFeatures";
-	@ConfigurationParameter(name = SLOT_FEATS, mandatory = true, defaultValue = {})
+	public static final String PARAM_SLOT_FEATS = "slotFeatures";
+	@ConfigurationParameter(name = PARAM_SLOT_FEATS, mandatory = true, defaultValue = {})
 	private List<String> slotFeatures;
 
-	public static final String LINK_TYPES = "linkTypes";
-	@ConfigurationParameter(name = LINK_TYPES, mandatory = true, defaultValue = {})
+	public static final String PARAM_LINK_TYPES = "linkTypes";
+	@ConfigurationParameter(name = PARAM_LINK_TYPES, mandatory = true, defaultValue = {})
 	private List<String> linkTypes;
 
-	public static final String SLOT_Targets = "slotTargets";
-	@ConfigurationParameter(name = SLOT_Targets, mandatory = true, defaultValue = {})
+	public static final String PARAM_SLOT_TARGETS = "slotTargets";
+	@ConfigurationParameter(name = PARAM_SLOT_TARGETS, mandatory = true, defaultValue = {})
 	private List<String> slotTargets;
 
-	public static final String Chain_LAYERS = "chainLayers";
-	@ConfigurationParameter(name = Chain_LAYERS, mandatory = true, defaultValue = {})
+	public static final String PARAM_CHAIN_LAYERS = "chainLayers";
+	@ConfigurationParameter(name = PARAM_CHAIN_LAYERS, mandatory = true, defaultValue = {})
 	private List<String> chainLayers;
 
-	public static final String RELATION_LAYERS = "relationLayers";
-	@ConfigurationParameter(name = RELATION_LAYERS, mandatory = true, defaultValue = {})
+	public static final String PARAM_RELATION_LAYERS = "relationLayers";
+	@ConfigurationParameter(name = PARAM_RELATION_LAYERS, mandatory = true, defaultValue = {})
 	private List<String> relationLayers;
 
 	private static final String TAB = "\t";
