@@ -133,8 +133,39 @@ public class WelcomePage
         add(annotation);
         annotation.setVisible(annotationEnabeled(user, Mode.ANNOTATION));
 
+        // Add correction Link
+        // Only project admins and annotators can see this link
+        correction = new AjaxLink<Void>("correction")
+        {
+            private static final long serialVersionUID = -3113946217791583714L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(CorrectionPage.class);
+            }
+        };
+        add(correction);
+        correction.setVisible(annotationEnabeled(user, Mode.CORRECTION));
+
+        // Add automation Link
+        // Only project admins and annotators can see this link
+        automation = new AjaxLink<Void>("automation")
+        {
+            private static final long serialVersionUID = -6527983833667707141L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                setResponsePage(AutomationPage.class);
+            }
+        };
+        add(automation);
+        automation.setVisible(annotationEnabeled(user, Mode.AUTOMATION));
+        
         // if not either a curator or annotator, display warning message
-        if (!annotation.isVisible() && !curation.isVisible()) {
+        if (!annotation.isVisible() && !correction.isVisible() && !automation.isVisible()
+                && !curation.isVisible()) {
             info("You are not member of any projects to annotate or curate");
         }
         
@@ -181,36 +212,6 @@ public class WelcomePage
         add(crowdSource);
         crowdSource.setVisible(projectSettingsEnabeled(user)
                 && repository.isCrowdSourceEnabled() != 0);
-
-        // Add correction Link
-        // Only project admins and annotators can see this link
-        correction = new AjaxLink<Void>("correction")
-        {
-            private static final long serialVersionUID = -3113946217791583714L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                setResponsePage(CorrectionPage.class);
-            }
-        };
-        add(correction);
-        correction.setVisible(annotationEnabeled(user, Mode.CORRECTION));
-
-        // Add automation Link
-        // Only project admins and annotators can see this link
-        automation = new AjaxLink<Void>("automation")
-        {
-            private static final long serialVersionUID = -6527983833667707141L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                setResponsePage(AutomationPage.class);
-            }
-        };
-        add(automation);
-        automation.setVisible(annotationEnabeled(user, Mode.AUTOMATION));
     }
 
     private boolean projectSettingsEnabeled(User user)
