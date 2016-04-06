@@ -17,7 +17,7 @@
 [[sect_annotation]]
 == Annotation
 
-NOTE: This functionality is only available to *annotators*, *project managers*, and 
+note: This functionality is only available to *annotators*, *project managers*, and 
       *administrators*. Annotators and project managers only see projects in which
       they hold the respective roles. 
 
@@ -168,7 +168,7 @@ image::annotation_lemma.jpg[align="center"]
 link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
 
 image::annotation_pos.jpg[align="center"]
-To improve the speed of POS annotation, select *forward annotation* in the *Actions* box on the left side of your screen and activate the drop-down menu by opening it. This allows you to select POS-tags via the arrow keys of your keyboard. Once a POS-tag has been selected, it is automatically assigned to the token in focus and the next token can be annotated via arrow keys.
+To improve the speed of POS-annotation, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to tags starting with *$*. Once a POS-tag has been selected, pushing *space* automatically assignes the POS-tag to the token in focus and the next token can be annotated as described.
 
 image::key_binding_POS.png[align="center"]
 
