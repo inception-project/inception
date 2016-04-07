@@ -216,11 +216,11 @@ public class BratAjaxCasController
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE) && (aBModel.getMode().equals(
-                            Mode.AUTOMATION)
-                            || aBModel.getMode().equals(Mode.CORRECTION) || aBModel.getMode()
-                            .equals(Mode.CURATION)))
-                    		|| !layer.isEnabled()){ /*Hide layer if not enabled*/
+                    || (layer.getType().equals(CHAIN_TYPE)
+                            && (aBModel.getMode().equals(Mode.AUTOMATION)
+                                    || aBModel.getMode().equals(Mode.CORRECTION)
+                                    || aBModel.getMode().equals(Mode.CURATION)))
+                    || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
 

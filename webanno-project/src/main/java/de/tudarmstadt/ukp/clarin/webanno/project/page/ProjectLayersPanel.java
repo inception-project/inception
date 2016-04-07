@@ -1012,25 +1012,26 @@ public class ProjectLayersPanel
 
                 @Override
                 protected void onConfigure()
-				{
-					AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
-					// Only display tagset choice for link features with role
-					// and string features
-					// Since we currently set the LinkRole only when saving, we
-					// have to rely on the
-					// feature type here.
-					setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
-							|| !PRIMITIVE_TYPES.contains(feature.getType()));
+                {
+                    AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
+                    // Only display tagset choice for link features with role
+                    // and string features
+                    // Since we currently set the LinkRole only when saving, we
+                    // have to rely on the
+                    // feature type here.
+                    setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
+                            || !PRIMITIVE_TYPES.contains(feature.getType()));
 
-					// update choices for types of a feature
-					for (AnnotationLayer spanLayer : annotationService
-							.listAnnotationLayer(selectedProjectModel.getObject())) {
-						if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE) && !types.contains(spanLayer.getName())) {
-							types.add(spanLayer.getName());
-						}
-					}
-				}
-			});
+                    // update choices for types of a feature
+                    for (AnnotationLayer spanLayer : annotationService
+                            .listAnnotationLayer(selectedProjectModel.getObject())) {
+                        if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)
+                                && !types.contains(spanLayer.getName())) {
+                            types.add(spanLayer.getName());
+                        }
+                    }
+                }
+            });
 
             add(new Button("save", new ResourceModel("label"))
             {

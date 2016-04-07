@@ -375,13 +375,14 @@ public class ImportUtil
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setLayer(aFeature.getLayer());
-		boolean isItChainedLayer = aFeature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE);
-		if (isItChainedLayer && (aExFeature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
-				|| aExFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE))) {
-			aFeature.setType(CAS.TYPE_NAME_STRING);
-		} else {
-			aFeature.setType(aExFeature.getType());
-		}
+        boolean isItChainedLayer = aFeature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE);
+        if (isItChainedLayer && (aExFeature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
+                || aExFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE))) {
+            aFeature.setType(CAS.TYPE_NAME_STRING);
+        }
+        else {
+            aFeature.setType(aExFeature.getType());
+        }
         aFeature.setName(aExFeature.getName());
         aFeature.setRemember(aExFeature.isRemember());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
