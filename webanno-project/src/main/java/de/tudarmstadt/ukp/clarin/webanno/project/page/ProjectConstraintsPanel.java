@@ -288,12 +288,22 @@ public class ProjectConstraintsPanel
                 @Override
                 public void onSubmit()
                 {
-                    importAction();
+                    try {
+                        importAction();
+                    }
+                    catch (ParseException e) {
+                        error("Exception while parsing the constraint rules file. Please check it. "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    catch (IOException e) {
+                        error("Unable to read constraints file "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
                 }
             });
         }
         
-        private void importAction()
+        private void importAction() throws ParseException, IOException
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
 
@@ -311,24 +321,15 @@ public class ProjectConstraintsPanel
                 // Checking if file is OK as per Constraints Grammar specification
                 boolean constraintRuleFileIsOK = false;
                 //Handling Windows BOM
-//                InputStreamReader utfInputStream;
                 BOMInputStream bomInputStream;
-                try {
-                    bomInputStream = new BOMInputStream(constraintRulesFile.getInputStream(), false);
-                    ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
-//                    utfInputStream = new InputStreamReader(constraintRulesFile.getInputStream(),"UTF-8");
-//                    ConstraintsGrammar parser = new ConstraintsGrammar(utfInputStream);
-                    parser.Parse();
-                    constraintRuleFileIsOK = true;
-                }
-                catch (IOException e) {
-                    error("Unable to read constraints file "
-                            + ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ParseException e) {
-                    error("Exception while parsing the constraint rules file. Please check it"
-                            + ExceptionUtils.getRootCauseMessage(e));
-                }
+
+                bomInputStream = new BOMInputStream(constraintRulesFile.getInputStream(), false);
+                ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
+                // utfInputStream = new
+                // InputStreamReader(constraintRulesFile.getInputStream(),"UTF-8");
+                // ConstraintsGrammar parser = new ConstraintsGrammar(utfInputStream);
+                parser.Parse();
+                constraintRuleFileIsOK = true;
 
                 // Persist rules
                 if (constraintRuleFileIsOK) {
