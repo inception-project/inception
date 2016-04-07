@@ -925,8 +925,7 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
         DropDownChoice<TagSet> tagSet;
         DropDownChoice<String> featureType;
-        List<String> types = new ArrayList<String>(PRIMITIVE_TYPES);
-;
+        List<String> types = new ArrayList<String>();
 
         public FeatureDetailForm(String id)
         {
@@ -940,16 +939,16 @@ public class ProjectLayersPanel
             add(new CheckBox("remember"));
             add(new CheckBox("hideUnconstraintFeature"));
 
-            spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
-            for (AnnotationLayer spanLayer : annotationService
-                    .listAnnotationLayer(selectedProjectModel.getObject())) {
-                if (spanLayer.getName().equals(Token.class.getName())) {
-                    continue;
-                }
-                if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                    spanTypes.add(spanLayer.getName());
-                }
-            }
+//            spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
+//            for (AnnotationLayer spanLayer : annotationService
+//                    .listAnnotationLayer(selectedProjectModel.getObject())) {
+//                if (spanLayer.getName().equals(Token.class.getName())) {
+//                    continue;
+//                }
+//                if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+//                    spanTypes.add(spanLayer.getName());
+//                }
+//            }
 
             add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
             {
@@ -968,7 +967,7 @@ public class ProjectLayersPanel
                             if (getModelObject() != null) {
                                 return Arrays.asList(getModelObject());
                             }
-                            types.addAll(spanTypes);
+//                            types.addAll(spanTypes);
                             return types;
                         }
                     });
@@ -1021,13 +1020,20 @@ public class ProjectLayersPanel
                     // feature type here.
                     setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
                             || !PRIMITIVE_TYPES.contains(feature.getType()));
-
-                    // update choices for types of a feature
-                    for (AnnotationLayer spanLayer : annotationService
-                            .listAnnotationLayer(selectedProjectModel.getObject())) {
-                        if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)
-                                && !types.contains(spanLayer.getName())) {
-                            types.add(spanLayer.getName());
+                    
+                    //Empty the 'type' list drop-down in FeatureDetailForm
+                    types.clear();
+                    //Add primitive types
+                    types.addAll(PRIMITIVE_TYPES);
+                    // Add non-primitive types only when layer is of type SPAN (#62)
+                    if (layerDetailForm.getModelObject().getType().equals(WebAnnoConst.SPAN_TYPE)) {
+                        spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
+                        //Add layers of type SPAN available in the project
+                        for (AnnotationLayer spanLayer : annotationService
+                                .listAnnotationLayer(selectedProjectModel.getObject())) {
+                            if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+                                types.add(spanLayer.getName());
+                            }
                         }
                     }
                 }
