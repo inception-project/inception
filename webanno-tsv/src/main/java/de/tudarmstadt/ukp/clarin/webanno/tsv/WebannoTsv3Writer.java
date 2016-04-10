@@ -484,7 +484,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			if (!tmpUnits.contains(newUnit)) {
 				tmpUnits.add(tmpUnits.indexOf(unit) + 1, newUnit);
 				subUnits.put(unit, subUnits.getOrDefault(unit, 0) + 1);
-				unitsLineNumber.put(newUnit, "-->" + unitsLineNumber.get(unit) + "." + subUnits.get(unit));
+				unitsLineNumber.put(newUnit, unitsLineNumber.get(unit) + "." + subUnits.get(unit));
 			}
 		}
 	}
