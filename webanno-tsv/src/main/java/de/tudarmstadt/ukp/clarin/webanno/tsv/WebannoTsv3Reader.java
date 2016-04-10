@@ -143,6 +143,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				createSentence(aJCas, line);
 				continue;
 			}
+			if (line.startsWith("#FORMAT=")) {
+				continue;
+			}
 			if (line.trim().isEmpty()) {
 				continue;
 			}

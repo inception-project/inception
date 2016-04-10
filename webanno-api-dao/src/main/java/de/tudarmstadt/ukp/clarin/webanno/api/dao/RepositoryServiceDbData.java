@@ -637,7 +637,7 @@ public class RepositoryServiceDbData
 
         AnalysisEngineDescription writer;
         if (aWriter.getName()
-                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoCustomTsvWriter")) {
+                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
 			List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
 
 			List<String> slotFeatures = new ArrayList<String>();
