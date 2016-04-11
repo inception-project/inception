@@ -438,7 +438,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				updateUnitLists(tmpUnits, unit, newUnit);
 
 				aSTA.setBegin(getNextUnitBegin(aSTA.getBegin()));
-				aSTA.setText(aSTA.getText().substring(thisSubTextLen + 1));
+				
+				aSTA.setText(aSTA.getText().trim().substring(thisSubTextLen));
 				getSubUnits(aSTA, aSubUnits);
 			} else if (unit.end > aSTA.end) {
 				break;
