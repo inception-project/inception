@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -80,13 +82,6 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	public static final String ROLE = "ROLE_";
 	public static final String BT = "BT_"; // base type for the relation
 											// annotation
-	// If | is used as annotation, escape it with `|` and replace it with WEBANNO_BAR for processing
-	// WEBANNO_BAR will be a reserved word, the same for [, ],  and _
-	private static String WEBANNO_BAR = "WEBANNOBAR";
-	private static String WEBANNO_RBR = "WEBANNORBR";
-	private static String WEBANNO_LBR = "WEBANNOLBR";
-	private static String WEBANNO_UNDERSCORE = "WEBANNOUNDERSCORE";
-	
 	private static final String DEPENDENT = "Dependent";
 	private static final String GOVERNOR = "Governor";
 
@@ -149,17 +144,16 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			if (line.trim().isEmpty()) {
 				continue;
 			}
-
-			// replace the `|` with WEBANNOBAR
-			line = replaceEscapeChars(line);
 			
 			int count = StringUtils.countMatches(line, "\t");
 
 			if (columns != count) {
 				throw new IOException(fileName + " This is not a valid TSV File. check this line: " + line);
 			}
-			String[] lines = line.split(TAB);
-
+			
+			String regex = "(?<!\\\\)" + Pattern.quote(TAB);
+			String[] lines = line.split(regex);
+			
 			int begin = Integer.parseInt(lines[1].split("-")[0]);
 			int end = Integer.parseInt(lines[1].split("-")[1]);
 
@@ -174,13 +168,6 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
 		addAnnotations(aJCas, annosPerTypePerUnit);
 		addChainAnnotations(aJCas);
-	}
-
-	private String replaceEscapeChars(String line) {
-		// because these characters are used to separate multiple annotations, empty annotations...
-		line = line.replace("\\|", WEBANNO_BAR).replace("\\_", WEBANNO_UNDERSCORE)
-				.replace("\\[", WEBANNO_RBR).replace("\\]", WEBANNO_LBR);
-		return line;
 	}
 
 	/**
@@ -241,8 +228,10 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 						// (Target1<--role1--Base--role2-->Target2)
 						int slot = 0;
 						boolean targetAdd = false;
-						for (String mAnnos : anno.split("\\|\\|")) {
-							for (String mAnno : mAnnos.split("\\|")) {
+						String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+						for (String mAnnos : anno.split(stackedAnnoRegex)) {
+							String multipleAnnoRegex =  "(?<!\\\\)" + Pattern.quote("|");
+							for (String mAnno : mAnnos.split(multipleAnnoRegex)) {
 								int ref = 1;
 								String depRef = "";
 								if (mAnno.endsWith("]")) {
@@ -399,8 +388,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		if(aAnno==null){
 			return null;
 		}
-		return aAnno.replace(WEBANNO_BAR, "|").replace(WEBANNO_UNDERSCORE, "_")
-				.replace(WEBANNO_RBR, "[").replace(WEBANNO_LBR, "]");
+		
+		return unescapeJava(aAnno);
 	}
 
 	/**
@@ -458,9 +447,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				// if there are multiple annos
 				int multAnnos = 1;
 				for (String anno : annotationsPerPostion.get(type).get(unit)) {
-
-					if (anno.split("\\|\\|").length > multAnnos) {
-						multAnnos = anno.split("\\|\\|").length;
+					String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+					if (anno.split(stackedAnnoRegex).length > multAnnos) {
+						multAnnos = anno.split(stackedAnnoRegex).length;
 					}
 				}
 
