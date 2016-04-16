@@ -29,7 +29,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,14 +62,23 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
     @Test
     public void runTest() throws Exception
     {
+        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        TypeSystemDescription local = TypeSystemDescriptionFactory
+                .createTypeSystemDescriptionFromPath(
+                        "src/test/resources/desc/type/webannoTestTypes.xml");
+       
+        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        
         String targetFolder = "target/test-output/WebAnnoTsv3ReaderWriterRoundTripTest/"
                 + referenceFolder.getName();
         
-        CollectionReaderDescription reader = createReaderDescription(WebannoTsv3Reader.class, 
+        CollectionReaderDescription reader = createReaderDescription(WebannoTsv3Reader.class,
+                merged,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, referenceFolder,
                 WebannoTsv3Reader.PARAM_PATTERNS, "reference.tsv");
         
-        AnalysisEngineDescription writer = createEngineDescription(WebannoTsv3Writer.class, 
+        AnalysisEngineDescription writer = createEngineDescription(WebannoTsv3Writer.class,
+                merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true,
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));

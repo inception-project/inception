@@ -33,14 +33,19 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -152,6 +157,28 @@ public class WebAnnoTsv3ReaderWriterTest
 
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
+
+    @Test
+    public void testZeroLengthSpansWithoutFeatures() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        
+        CAS cas = jcas.getCas();
+        
+        Type simpleSpanType = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(simpleSpanType, 0, 0);
+        cas.addFsToIndexes(fs1);
+
+        // One at the end
+        AnnotationFS fs2 = cas.createAnnotation(simpleSpanType, jcas.getDocumentText().length(),
+                jcas.getDocumentText().length());
+        cas.addFsToIndexes(fs2);
+
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
     }
 
     @Test
@@ -389,7 +416,14 @@ public class WebAnnoTsv3ReaderWriterTest
 
     private JCas makeJCasOneSentence() throws UIMAException
     {
-        JCas jcas = JCasFactory.createJCas();
+        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        TypeSystemDescription local = TypeSystemDescriptionFactory
+                .createTypeSystemDescriptionFromPath(
+                        "src/test/resources/desc/type/webannoTestTypes.xml");
+       
+        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        
+        JCas jcas = JCasFactory.createJCas(merged);
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
@@ -402,7 +436,14 @@ public class WebAnnoTsv3ReaderWriterTest
 
     private JCas makeJCasTwoSentences() throws UIMAException
     {
-        JCas jcas = JCasFactory.createJCas();
+        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        TypeSystemDescription local = TypeSystemDescriptionFactory
+                .createTypeSystemDescriptionFromPath(
+                        "src/test/resources/desc/type/webannoTestTypes.xml");
+       
+        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        
+        JCas jcas = JCasFactory.createJCas(merged);
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
