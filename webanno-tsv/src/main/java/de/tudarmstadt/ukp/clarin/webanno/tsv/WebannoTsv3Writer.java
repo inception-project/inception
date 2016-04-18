@@ -520,7 +520,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 						ref = getRefId(tType, targetFs, firstUnit);
 
 						if (role == null) {
-							role = feature.getName();
+							role = "*";
 						} else {
 							// Escape special character
 							role = replaceEscapeChars(role);
@@ -562,7 +562,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			} else {
 				String annotation = fs.getFeatureValueAsString(feature);
 				if (annotation == null) {
-					annotation = feature.getName();
+					annotation = "*";
 				} else {
 					// Escape special character
 					annotation = replaceEscapeChars(annotation);
@@ -637,7 +637,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			String annotation = aFs.getFeatureValueAsString(feature);
 			
 			if (annotation == null)
-				annotation = feature.getName();
+				annotation = "*";
 			else
 				annotation = replaceEscapeChars(annotation);
 
@@ -674,7 +674,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			}
 			String annotation = fs.getFeatureValueAsString(feature);
 			if (annotation == null) {
-				annotation = feature.getName();
+				annotation = "*";
 			}
 			else{
 				annotation = replaceEscapeChars(annotation);

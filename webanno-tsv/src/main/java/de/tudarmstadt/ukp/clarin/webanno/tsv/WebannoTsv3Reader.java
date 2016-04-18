@@ -258,7 +258,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
 
 								} else {
-									if (mAnno.equals(feat.getName())) {
+									if (mAnno.equals("*")) {
                                         mAnno = null;
                                     }
 									if (roleLinks.containsKey(feat)) {
