@@ -219,6 +219,12 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				int j = 0;
 				Feature linkeF = null;
 				Map<AnnotationFS, List<FeatureStructure>> linkFSesPerSlotAnno = new HashMap<>();
+				
+				if(allLayers.get(type).size() == 0){
+				    addAnnotationWithNoFeature(aJCas, type, unit, annos, multiTokUnits, end);
+				    continue;
+				}
+				
 				for (Feature feat : allLayers.get(type)) {
 					String anno = annotationsPerPostion.get(type).get(unit).get(j);
 					if (!anno.equals("_")) {
@@ -384,6 +390,46 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 	}
 
+    private void addAnnotationWithNoFeature(JCas aJCas, Type aType, AnnotationUnit aUnit,
+            List<AnnotationFS> aAnnos, Map<Integer, AnnotationFS> aMultiTokUnits, int aEnd)
+    {
+        String anno = annotationsPerPostion.get(aType).get(aUnit).get(0);
+        if (!anno.equals("_")) {
+            int i = 0;
+            String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+            for (String mAnnos : anno.split(stackedAnnoRegex)) {
+                String multipleAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
+                for (String mAnno : mAnnos.split(multipleAnnoRegex)) {
+                    int ref = 1;
+                    String depRef = "";
+                    if (mAnno.endsWith("]")) {
+                        depRef = mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1);
+                        ref = depRef.contains("_") ? 1
+                                : Integer.valueOf(mAnno.substring(mAnno.indexOf("[") + 1,
+                                        mAnno.length() - 1));
+                        mAnno = mAnno.substring(0, mAnno.indexOf("["));
+                    }
+                    if (mAnno.startsWith("B-")) {
+
+                        aMultiTokUnits.put(ref, aAnnos.get(i));
+                    }
+                    if (mAnno.startsWith("I-")) {
+
+                        Feature endF = aType.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+                        aMultiTokUnits.get(ref).setIntValue(endF, aEnd);
+                        setAnnoRefPerUnit(aUnit, aType, ref, aMultiTokUnits.get(ref));
+
+                    }
+                    else {
+                        
+                        aJCas.addFsToIndexes(aAnnos.get(i));
+                        setAnnoRefPerUnit(aUnit, aType, ref, aAnnos.get(i));
+                    }
+                }
+                i++;
+            }
+        }
+    }
 	private String getEscapeChars(String aAnno) {
 		if(aAnno==null){
 			return null;
@@ -427,6 +473,16 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		for (Type type : allLayers.keySet()) {
 
 			annotationsPerPostion.putIfAbsent(type, new LinkedHashMap<>());
+			
+			if(allLayers.get(type).size() ==0){
+				
+				annotationsPerPostion.get(type).put(unit,
+						annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
+				annotationsPerPostion.get(type).get(unit).add(lines[ind]);
+				ind++;
+				continue;
+			}
+			
 			for (Feature f : allLayers.get(type)) {
 				annotationsPerPostion.get(type).put(unit,
 						annotationsPerPostion.get(type).getOrDefault(unit, new ArrayList<>()));
@@ -534,7 +590,13 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 							+ " is not created in the project.");
 				}
 				Type layer = CasUtil.getType(aJcas.getCas(), layerName);
-
+				// if the layer do not have a feature, just update columns count for the place holder
+				if(!layerTk.hasMoreTokens()){
+					columns++;
+					allLayers.put(layer, features);
+					layerMaps.put(layerMaps.size()+1, layer);
+					return;
+				}
 				while (layerTk.hasMoreTokens()) {
 					String ft = layerTk.nextToken().trim();
 					columns++;

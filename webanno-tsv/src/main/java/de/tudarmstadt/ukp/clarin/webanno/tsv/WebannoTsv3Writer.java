@@ -176,8 +176,13 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 						}
 					} // No annotation of this type in this layer
 					else {
-						for (String feature : featurePerLayer.get(type)) {
+						// if type do not have a feature, 
+						if (featurePerLayer.get(type).size() == 0) {
 							IOUtils.write("_" + TAB, docOS, encoding);
+						} else {
+							for (String feature : featurePerLayer.get(type)) {
+								IOUtils.write("_" + TAB, docOS, encoding);
+							}
 						}
 					}
 				}
@@ -575,6 +580,10 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			}
 		}
 		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
+		// If the layer do not have a feature at all, add dummy * as a place holder
+		if (annoPerFeatures.size() == 0){
+		    setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, "*");
+		}
 		annotationsPertype.get(unit).add(annoPerFeatures);
 	}
 
@@ -657,6 +666,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			annoPerFeatures.add(annotation);
 		}
 		aAnnotationsPertype.putIfAbsent(aUnit, new ArrayList<>());
+		if (annoPerFeatures.size() == 0)
+			annoPerFeatures.add("*");
 		aAnnotationsPertype.get(aUnit).add(annoPerFeatures);
 	}
 
@@ -689,6 +700,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		featurePerLayer.get(type.getName()).add(BT + aDepType.getName());
 		// the column for the dependent unit address
 		annotationsPertype.putIfAbsent(depUnit, new ArrayList<>());
+		if (annoPerFeatures.size() == 0)
+			annoPerFeatures.add("*");
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
 	}
 
