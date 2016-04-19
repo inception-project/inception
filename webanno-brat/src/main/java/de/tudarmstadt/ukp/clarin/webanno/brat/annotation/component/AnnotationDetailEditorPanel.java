@@ -268,6 +268,19 @@ public class AnnotationDetailEditorPanel
 
             forwardAnnotationCheck.setOutputMarkupId(true);
 
+            add(new Label("noAnnotationWarning", "No Annotation selected!"){
+
+                private static final long serialVersionUID = -6046409838139863541L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(!bModel.getSelection().getAnnotation().isSet());
+                }
+                 
+            });
+
             add(deleteButton = new AjaxButton("delete")
             {
                 private static final long serialVersionUID = 1L;
