@@ -300,7 +300,7 @@ public class WebAnnoTsv3ReaderWriterTest
         
         for (Token t : select(jcas, Token.class)) {
             NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
-            ne.setValue("#*'\"`´\t:{}|[ ]()\\§$%?=&_\n");
+            ne.setValue("#*'\"`´\t:;{}|[ ]()\\§$%?=&_\n");
             ne.addToIndexes();
         }
         

@@ -2,20 +2,3 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency as DE
 DEPENDENCY {
   Governor.pos.PosValue = "NN" & Dependent.pos.PosValue = "DET" -> DependencyType = "det";
 }
-
-/*
-
-SCOPE {
-  x = "dkjf"
-  x.y = "dkzkj";
-  @Z.@Z.text() = "sdf"
-}
-
-var gov = new Object();
-gov.pos = new Object();
-gov.pos.value = "juhu";
-
-
-
-
-*/
