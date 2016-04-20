@@ -151,7 +151,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				throw new IOException(fileName + " This is not a valid TSV File. check this line: " + line);
 			}
 			
-			String regex = "(?<!\\\\)" + Pattern.quote(TAB);
+			String regex = "(?<!\\\\)*" + Pattern.quote(TAB);
 			String[] lines = line.split(regex);
 			
 			int begin = Integer.parseInt(lines[1].split("-")[0]);

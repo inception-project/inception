@@ -705,10 +705,12 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
 	}
 
-	private String replaceEscapeChars(String annotation) {
-		return annotation.replace("[", "\\[").replace("]", "\\]").replace("|", "\\|").replace("_", "\\_")
-			.replace("->", "\\->");
-	}
+    private String replaceEscapeChars(String annotation)
+    {
+        return annotation.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]").replace("|", "\\|")
+                .replace("_", "\\_").replace("->", "\\->").replace(";", "\\;")
+                .replace("\t", "\\t").replace("\n", "\\n").replace("*", "\\*");
+    }
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
 			String annotation) {
