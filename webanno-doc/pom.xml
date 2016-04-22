@@ -25,6 +25,9 @@
   <artifactId>webanno-doc</artifactId>
   <packaging>jar</packaging>
   <name>WebAnno - Documentation</name>
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>  
   <!-- 
   This module has a slight complex setup to allow making it work in a command line build as well as
   in an m2e build.
