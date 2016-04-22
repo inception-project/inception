@@ -173,6 +173,10 @@ public class ValuesGenerator
              */
             Feature feature = aContext.getType().getFeatureByBaseName(
                     aPath.substring(0, aPath.indexOf(".")));
+            if (feature == null) {
+                throw new IllegalStateException("Feature [" + aPath + "] does not exist on type ["
+                        + aContext.getType().getName() + "]");
+            }
             return getValue(aContext.getFeatureValue(feature),
                     aPath.substring(aPath.indexOf(".") + 1));
 
