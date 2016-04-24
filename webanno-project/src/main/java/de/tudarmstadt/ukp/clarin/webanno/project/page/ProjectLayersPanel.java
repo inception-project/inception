@@ -1048,6 +1048,12 @@ public class ProjectLayersPanel
                 {
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
                     String name = feature.getUiName();
+                    //Check if feature name is not from the restricted names list
+                    if(WebAnnoConst.RESTRICTED_FEATURE_NAMES.contains(feature.getUiName())){
+                        error("'" + feature.getUiName().toLowerCase()
+                                + "' is a restricted keyword for a feature name. Please use a different name for the feature.");
+                        return;
+                    }
                     name = name.replaceAll("\\W", "");
                     if (layerDetailForm.getModelObject().getType().equals(RELATION_TYPE)
                             && (name.equals(WebAnnoConst.FEAT_REL_SOURCE)

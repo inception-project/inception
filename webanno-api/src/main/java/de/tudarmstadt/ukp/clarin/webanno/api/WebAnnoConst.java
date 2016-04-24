@@ -17,6 +17,9 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Constants for annotation types
@@ -50,4 +53,27 @@ public class WebAnnoConst
     public static final String CURATION_USER = "CURATION_USER";
     public static final String CORRECTION_USER = "CORRECTION_USER";
     public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
+    
+    public static final List<String> RESTRICTED_FEATURE_NAMES = new ArrayList<String>(Arrays.asList(
+            "address", "begin", "end", "coveredText", "booleanValue", "doubleValue", "byteValue",
+            "CAS", "CASImpl", "class", "featureValue", "floatValue", "longValue", "lowLevelCas",
+            "printRefs", "sofa", "stringValue", "type", "typeIndexId", "view"))
+    {
+
+        private static final long serialVersionUID = -8547798549706734147L;
+        //Implement case-insensitive string comparison
+        @Override
+        public boolean contains(Object o)
+        {
+
+            String inputString = (String) o;
+            for (String s : this) {
+                if (inputString.equalsIgnoreCase(s)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+
 }
