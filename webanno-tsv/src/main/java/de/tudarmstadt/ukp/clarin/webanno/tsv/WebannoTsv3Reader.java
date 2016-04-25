@@ -526,8 +526,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	}
 
 	private AnnotationUnit createTokens(JCas aJCas, String[] lines, int begin, int end) {
-
-		if (!lines[0].startsWith("-")) {
+	    // subtokens should not be consider as tokens. example 1-2.1 ==> subtoken under token 2
+		if (!lines[0].contains(".")) {
 			Token token = new Token(aJCas, begin, end);
 			AnnotationUnit unit = new AnnotationUnit(begin, end, false, "");
 			units.add(unit);
