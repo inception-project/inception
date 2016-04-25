@@ -168,7 +168,7 @@ image::annotation_lemma.jpg[align="center"]
 link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
 
 image::annotation_pos.jpg[align="center"]
-To improve the speed of POS-annotation, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to tags starting with *$*. Once a POS-tag has been selected, pushing *space* automatically assignes the POS-tag to the token in focus and the next token can be annotated as described.
+To improve the speed of POS-annotation, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to the first tag in the tagset. Once a POS-tag has been selected, pushing *space* and *Enter* keys automatically assigns the POS-tag to the token in focus and the next token can be annotated as described. Note that the *Enter* key will not work for the *Safari* browser. Also the *Forward annotation* works only for span annotations with 1)*tagset* and 2) a layer with only one *feature*.
 
 image::key_binding_POS.png[align="center"]
 
