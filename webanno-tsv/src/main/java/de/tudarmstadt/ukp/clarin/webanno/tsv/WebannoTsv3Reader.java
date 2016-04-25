@@ -127,6 +127,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 		// getting header information
 		LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
+		int sentBegin = -1, sentEnd = 0;
+		String sentLine = "";
 		while (lineIterator.hasNext()) {
 			String line = lineIterator.next().trim();
 			if (line.startsWith("#T_")) {
@@ -135,15 +137,19 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			}
 
 			if (line.startsWith("#Text=")) {
-				createSentence(aJCas, line);
-				continue;
+			    sentLine = line;
+                continue;
 			}
 			if (line.startsWith("#FORMAT=")) {
 				continue;
 			}
-			if (line.trim().isEmpty()) {
-				continue;
-			}
+            if (line.trim().isEmpty()) {
+                if (!sentLine.isEmpty()) {
+                    createSentence(aJCas, sentLine, sentBegin, sentEnd);
+                    sentBegin = -1;// reset for next sentence begin
+                }
+                continue;
+            }
 			
 			int count = StringUtils.countMatches(line, "\t");
 
@@ -156,13 +162,22 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			
 			int begin = Integer.parseInt(lines[1].split("-")[0]);
 			int end = Integer.parseInt(lines[1].split("-")[1]);
-
+			if(sentBegin == -1){
+			    sentBegin = begin;
+			}
+			sentEnd = end;
+			
 			AnnotationUnit unit = createTokens(aJCas, lines, begin, end);
 
 			int ind = 3;
 
 			setAnnosPerTypePerUnit(lines, unit, ind);
 		}
+		
+		// the last sentence
+        if (!sentLine.isEmpty()) {
+            createSentence(aJCas, sentLine, sentBegin, sentEnd);
+        }
 
 		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
 		setAnnosPerUnit(aJCas, annosPerTypePerUnit);
@@ -543,16 +558,10 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 	}
 
-	private void createSentence(JCas aJCas, String line) {
-		String text = line.substring(6);
-		String beginEnd = text.substring(0, text.indexOf("#"));
-		text = text.substring(text.indexOf("#") + 1);
-
-		int begin = Integer.parseInt(beginEnd.split("-")[0]);
-		int end = Integer.parseInt(beginEnd.split("-")[1]);
-
+	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd) {
+		String text =  aLine.substring(aLine.indexOf("=") + 1);
 		coveredText.append(text + LF);
-		Sentence sentence = new Sentence(aJCas, begin, end);
+		Sentence sentence = new Sentence(aJCas, aBegin, aEnd);
 		sentence.addToIndexes();
 	}
 

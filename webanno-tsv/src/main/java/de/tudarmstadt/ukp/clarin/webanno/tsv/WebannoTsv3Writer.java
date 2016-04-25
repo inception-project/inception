@@ -119,7 +119,6 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	private Map<String, Set<String>> featurePerLayer = new LinkedHashMap<>();
 	private Map<AnnotationUnit, String> unitsLineNumber = new HashMap<>();
 	private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
-	private Map<AnnotationUnit, String> sentenceBeginEnd = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsPerPostion = new HashMap<>();
 	private Map<Feature, Type> slotFeatureTypes = new HashMap<>();
 	private Map<Integer, Integer> annotaionRef = new HashMap<>();
@@ -143,8 +142,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
 					// TODO: This removes any in-line line breaks
-					IOUtils.write(LF + "#Text=" + sentenceBeginEnd.get(unit) + "#"
-							+ sentenceUnits.get(unit).replace(LF, "") + LF, docOS, encoding);
+					IOUtils.write(LF + "#Text=" + sentenceUnits.get(unit).replace(LF, "") + LF, docOS, encoding);
 				}
 				if (unit.isSubtoken) {
 					IOUtils.write(
@@ -777,7 +775,6 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				units.add(unit);
 				if (lineNumber == 1) {
 					sentenceUnits.put(unit, sentence.getCoveredText());
-					sentenceBeginEnd.put(unit, sentence.getBegin() + "-" + sentence.getEnd());
 				}
 				unitsLineNumber.put(unit, sentNMumber + "-" + lineNumber);
 				lineNumber++;
