@@ -1580,11 +1580,20 @@ public class AnnotationDetailEditorPanel
                 //Only show indicator if this feature can be affected by Constraint rules!
                 indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
                         restrictionFeaturePath, model.getConstraints()));
-                List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                        featureStructure, restrictionFeaturePath, model.getConstraints());
-
-                LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                        + restrictionFeaturePath + "]: " + possibleValues);
+                
+                List<PossibleValue> possibleValues;
+                try {
+                    possibleValues = evaluator.generatePossibleValues(
+                            featureStructure, restrictionFeaturePath, model.getConstraints());
+    
+                    LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
+                            + restrictionFeaturePath + "]: " + possibleValues);
+                }
+                catch (Exception e) {
+                    error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error("Unable to evaluate constraints: " + e.getMessage(), e);
+                    possibleValues = new ArrayList<>();
+                }
 
                 // only adds tags which are suggested by rules and exist in tagset.
                 List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, indicator);
@@ -1594,7 +1603,7 @@ public class AnnotationDetailEditorPanel
                 return tagset;
             }
             catch (IOException | ClassNotFoundException | UIMAException e) {
-                error(ExceptionUtils.getRootCause(e));
+                error(ExceptionUtils.getRootCauseMessage(e));
                 LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
             }
             return valuesFromTagset;
@@ -1982,11 +1991,20 @@ public class AnnotationDetailEditorPanel
                 //Only show indicator if this feature can be affected by Constraint rules!
                 indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
                         restrictionFeaturePath, model.getConstraints()));
-                List<PossibleValue> possibleValues = evaluator.generatePossibleValues(
-                        featureStructure, restrictionFeaturePath, model.getConstraints());
-
-                LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                        + restrictionFeaturePath + "]: " + possibleValues);
+                
+                List<PossibleValue> possibleValues;
+                try {
+                    possibleValues = evaluator.generatePossibleValues(
+                            featureStructure, restrictionFeaturePath, model.getConstraints());
+    
+                    LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
+                            + restrictionFeaturePath + "]: " + possibleValues);
+                }
+                catch (Exception e) {
+                    error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e), e);
+                    possibleValues = new ArrayList<>();
+                }
 
                 // Only adds tags which are suggested by rules and exist in tagset.
                 List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, indicator);
@@ -2000,7 +2018,7 @@ public class AnnotationDetailEditorPanel
                 return tagset;
             }
             catch (ClassNotFoundException | UIMAException | IOException e) {
-                error(ExceptionUtils.getRootCause(e));
+                error(ExceptionUtils.getRootCauseMessage(e));
                 LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
             }
 
