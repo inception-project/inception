@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
+import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 
 public class CasDiff2Test
 {
@@ -365,6 +366,64 @@ public class CasDiff2Test
         assertEquals(1, agreement.getIrrelevantSets().size());
         assertEquals(0, agreement.getRelevantSetCount());
     }
+
+    @Test
+    public void twoWithoutLabelTest()
+        throws Exception
+    {
+        JCas user1 = JCasFactory.createJCas();
+        user1.setDocumentText("test");
+        new POS(user1, 0, 1).addToIndexes();
+        new POS(user1, 1, 2).addToIndexes();
+        POS p1 = new POS(user1, 3, 4);
+        p1.setPosValue("A");
+        p1.addToIndexes();
+
+        JCas user2 = JCasFactory.createJCas();
+        user2.setDocumentText("test");
+        new POS(user2, 0, 1).addToIndexes();
+        new POS(user2, 2, 3).addToIndexes();
+        POS p2 = new POS(user2, 3, 4);
+        p2.setPosValue("B");
+        p2.addToIndexes();
+        
+        
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1));
+        casByUser.put("user2", asList(user2));
+        
+        List<String> entryTypes = asList(POS.class.getName());
+
+        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS);
+
+        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+
+        result.print(System.out);
+        
+        AgreementResult agreement = AgreementUtils.getAgreement(
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
+                entryTypes.get(0), "PosValue", casByUser);
+        
+        assertEquals(4, agreement.getTotalSetCount());
+        assertEquals(0, agreement.getIrrelevantSets().size());
+        // the following two counts are zero because the incomplete sets are not excluded!
+        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertEquals(0, agreement.getIncompleteSetsByLabel().size());
+        assertEquals(3, agreement.getSetsWithDifferences().size());
+        assertEquals(4, agreement.getRelevantSetCount());
+        assertEquals(0.4, agreement.getAgreement(), 0.01);
+        ICodingAnnotationItem item1 = agreement.getStudy().getItem(0);
+        ICodingAnnotationItem item2 = agreement.getStudy().getItem(1);
+        ICodingAnnotationItem item3 = agreement.getStudy().getItem(2);
+        assertEquals("", item1.getUnit(0).getCategory());
+        assertEquals("", item1.getUnit(1).getCategory());
+        assertEquals("", item2.getUnit(0).getCategory());
+        assertEquals(null, item2.getUnit(1).getCategory());
+        assertEquals(null, item3.getUnit(0).getCategory());
+        assertEquals("", item3.getUnit(1).getCategory());
+    }
+
     @Test
     public void someDifferencesTest()
         throws Exception

@@ -154,7 +154,7 @@ public class AgreementUtils
             
             if (agreementResult.study.getItemCount() > 0) {
                 agreementResult.setAgreement(agreement.calculateAgreement());
-           }
+            }
             else {
                 agreementResult.setAgreement(Double.NaN);
             }
@@ -171,7 +171,8 @@ public class AgreementUtils
     private static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
             boolean aExcludeIncomplete, Map<String, List<JCas>> aCasMap)
     {
-        return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, aCasMap);
+        return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, true,
+                aCasMap);
     }
     
     private static JCas findSomeCas(Map<String, List<JCas>> aCasMap)
@@ -190,7 +191,7 @@ public class AgreementUtils
     }
     
     private static AgreementResult makeStudy(DiffResult aDiff, Collection<String> aUsers,
-            String aType, String aFeature, boolean aExcludeIncomplete,
+            String aType, String aFeature, boolean aExcludeIncomplete, boolean aNullLabelsAsEmpty,
             Map<String, List<JCas>> aCasMap)
     {
         List<String> users = new ArrayList<>(aUsers);
@@ -351,6 +352,12 @@ public class AgreementUtils
                                     .isPrimitive() + "; subpos: " + isSubPosition);
                 }
 
+                // Consider empty/null feature values to be the same and do not exclude them from
+                // agreement calculation. The empty label is still a valid label.
+                if (aNullLabelsAsEmpty && values[i] == null) {
+                    values[i] = "";
+                }
+                
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
                 if (aExcludeIncomplete && values[i] == null) {
                     incompleteSetsByLabel.add(cfgSet);
