@@ -182,6 +182,33 @@ public class WebAnnoTsv3ReaderWriterTest
     }
 
     @Test
+    public void testZeroLengthStackedSpansWithoutFeatures() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        
+        CAS cas = jcas.getCas();
+        
+        Type simpleSpanType = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        
+        // Two at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(simpleSpanType, 0, 0);
+        cas.addFsToIndexes(fs1);
+        AnnotationFS fs2 = cas.createAnnotation(simpleSpanType, 0, 0);
+        cas.addFsToIndexes(fs2);
+
+        // Two at the end
+        AnnotationFS fs3 = cas.createAnnotation(simpleSpanType, jcas.getDocumentText().length(),
+                jcas.getDocumentText().length());
+        cas.addFsToIndexes(fs3);
+        AnnotationFS fs4 = cas.createAnnotation(simpleSpanType, jcas.getDocumentText().length(),
+                jcas.getDocumentText().length());
+        cas.addFsToIndexes(fs4);
+
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
+    }
+
+    @Test
     public void testTokenBoundedSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
