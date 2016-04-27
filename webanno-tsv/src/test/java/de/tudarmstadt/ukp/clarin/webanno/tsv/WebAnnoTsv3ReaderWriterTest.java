@@ -294,6 +294,23 @@ public class WebAnnoTsv3ReaderWriterTest
     }
 
     @Test
+    public void testTokenBoundedStackedLookAlike() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        
+        int n = 0;
+        for (Token t : select(jcas, Token.class)) {
+            NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
+            ne.setValue("NOTSTACKED[" + n + "]");
+            ne.addToIndexes();
+            n++;
+        }
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
+
+    @Test
     public void testTokenBoundedSpanWithSpecialSymbolsValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
