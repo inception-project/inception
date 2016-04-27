@@ -41,6 +41,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -432,6 +433,141 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
+    
+    @Test
+    public void testSingleTokenRelationWithoutFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token gov = tokens.get(0);
+        Token dep = tokens.get(tokens.size()-1);
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+    }
+
+    @Test
+    public void testSingleNonTokenRelationWithoutFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(tokens.size()-1);
+        
+        
+        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        gov.addToIndexes();
+        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        dep.addToIndexes();
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+    }
+
+    @Test
+    public void testSingleNonMultiTokenRelationWithoutFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        Token t4 = tokens.get(3);
+        
+        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        gov.addToIndexes();
+        NamedEntity dep =  new NamedEntity(jcas, t3.getBegin(), t4.getEnd());
+        dep.addToIndexes();
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+    }
+
+    @Test
+    public void testSingleMixedRelationWithoutFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token gov = tokens.get(0);
+        
+        Token t2 = tokens.get(tokens.size()-1);
+        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        dep.addToIndexes();
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+    }
+
+    @Test
+    public void testSingleTokenRelationWithFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token gov = tokens.get(0);
+        Token dep = tokens.get(tokens.size()-1);
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        FSUtil.setFeature(fs1, "value", "nsubj");
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
