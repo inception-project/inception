@@ -467,7 +467,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	 * @param aEnd
 	 * @return
 	 */
-	private boolean isMultipleToken(int aBegin, int aEnd) {
+	private boolean isMultipleTokenAnnotation(int aBegin, int aEnd) {
 		for (AnnotationUnit unit : units) {
 			if (unit.begin > aBegin && unit.begin < aEnd && !unit.isSubtoken) {
 				return true;
@@ -751,9 +751,13 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	 */
 	private int getRefId(Type type, AnnotationFS fs, AnnotationUnit unit) {
 		if (annotaionRef.get(((FeatureStructureImpl) fs).getAddress()) == null) {
-			int i = isMultipleToken(fs.getBegin(), fs.getEnd()) ? 1 : 0;
+			int i = isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? 1 : 0;
 			unitRef.putIfAbsent(type.getName(), new HashMap<>());
-			unitRef.get(type.getName()).put(unit, unitRef.get(type.getName()).getOrDefault(unit, 0) + i);
+			
+			if(unitRef.get(type.getName()).containsKey(unit)){
+			    i = i + unitRef.get(type.getName()).get(unit) + 1;
+			}
+			unitRef.get(type.getName()).put(unit, i);
 			annotaionRef.put(((FeatureStructureImpl) fs).getAddress(), unitRef.get(type.getName()).get(unit));
 		} else {
 			unitRef.get(type.getName()).put(unit, annotaionRef.get(((FeatureStructureImpl) fs).getAddress()));
