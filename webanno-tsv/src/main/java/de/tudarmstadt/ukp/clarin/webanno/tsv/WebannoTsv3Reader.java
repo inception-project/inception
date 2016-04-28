@@ -249,9 +249,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 						// (Target1<--role1--Base--role2-->Target2)
 						int slot = 0;
 						boolean targetAdd = false;
-						String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+						String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
 						for (String mAnnos : anno.split(stackedAnnoRegex)) {
-							String multipleAnnoRegex =  "(?<!\\\\)" + Pattern.quote("|");
+							String multipleAnnoRegex =  "(?<!\\\\)" + Pattern.quote(";");
 							for (String mAnno : mAnnos.split(multipleAnnoRegex)) {
 								int ref = 1;
 								String depRef = "";

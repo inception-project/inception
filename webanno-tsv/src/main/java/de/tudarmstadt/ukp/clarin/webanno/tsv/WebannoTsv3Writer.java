@@ -164,7 +164,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 						} else {
 
 							for (int i = 0; i < annofs.size(); i++) {
-								merged.set(i, merged.get(i) + "||" + annofs.get(i));
+								merged.set(i, merged.get(i) + "|" + annofs.get(i));
 							}
 						}
 					}
@@ -536,8 +536,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 									unitsLineNumber.get(firstUnit) + (targetTypeNumber ==0 ? "" : "-" + targetTypeNumber)
 											+ (ref > 0 ? "[" + ref + "]" : ""));
 						} else {
-							sbRole.append("|");
-							sbTarget.append("|");
+							sbRole.append(";");
+							sbTarget.append(";");
 							sbRole.append(role);
 							int targetTypeNumber = 0;
 							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
