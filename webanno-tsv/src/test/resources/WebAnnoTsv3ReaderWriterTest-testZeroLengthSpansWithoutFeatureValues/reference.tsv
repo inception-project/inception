@@ -2,7 +2,7 @@
 #T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
 
 
-#Text=0-16#This is a test .
+#Text=This is a test .
 1-1	0-4	This	_	
 1-1.1	0-0		*	
 1-2	5-7	is	_	
