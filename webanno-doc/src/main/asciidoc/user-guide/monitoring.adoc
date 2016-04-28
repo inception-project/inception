@@ -108,6 +108,57 @@ Agreement is calculated in two steps:
 The lower part of the agreement matrix displays how many configuration sets were used to calculate
 agreement and how many were found in total. The upper part of the agreement matrix displays the
 pairwise Cohen's kappa scores.
+
+The agreement calculations considers an unset feature (with a `null` value) to be equivalent to a
+feature with the value of an empty string. Empty strings are considered valid labels and are not
+excluded from agreement calculation.
+
+Annotations for a given position are considered complete when both annotators have made an
+annotation. Unless the agreement measure supports `null` values (i.e. missing annotations),
+incomplete annotations are implicitly excluded from the agreement calculation. If the agreement
+measure does support incomplete annotations, then excluding them or not is the users' choice.
+
+.Possible combinations for agreement
+|====
+| Feature value annotator 1 | Feature value annotator 2 | Agreement | Complete
+
+| `X`           
+| `X`
+| yes
+| yes
+
+| `X`           
+| `Y`
+| no
+| yes
+
+| *no annotation*           
+| `Y`
+| no
+| no
+
+| *empty*           
+| `Y`
+| no
+| yes
+
+| *empty*           
+| *empty*
+| yes
+| yes
+
+| *null*
+| *empty*
+| yes
+| yes
+
+| *empty*           
+| *no annotation*
+| no
+| no
+
+|====
+
   
 CAUTION: Multiple interpretations in the form of stacked annotations are not supported in the agreement 
       calculation!
