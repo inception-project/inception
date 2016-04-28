@@ -375,10 +375,6 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
 				AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
 				AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
-				if (type.getName().equals(Dependency.class.getName())) {
-					depFs = ((Token) depFs).getPos();
-					govFs = ((Token) govFs).getPos();
-				}
 
 				AnnotationUnit govUnit = getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText());
 				AnnotationUnit depUnit = getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
