@@ -376,8 +376,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
 				AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
 
-				AnnotationUnit govUnit = getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText());
-				AnnotationUnit depUnit = getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
+				AnnotationUnit govUnit = getFirstUnit(getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
+				AnnotationUnit depUnit = getFirstUnit(getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
 				// sometimes there are POS annotation attached to the token  but
 				// not in the POS type
 				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress()) == null
@@ -732,6 +732,23 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		}
 		return firstUnit;
 	}
+
+	// for relation annotation drawn on multiple span annotation, we put the info only to the first
+	// unit
+    private AnnotationUnit getFirstUnit(AnnotationUnit aUnit)
+    {
+        SubTokenAnno sta = new SubTokenAnno();
+        sta.setBegin(aUnit.begin);
+        sta.setEnd(aUnit.end);
+        sta.setText(aUnit.token);
+        Set<AnnotationUnit> sus = new LinkedHashSet<>();
+        AnnotationUnit firstUnit = null;
+        for (AnnotationUnit u : getSubUnits(sta, sus)) {
+            firstUnit = u;
+            break;
+        }
+        return firstUnit;
+    }
 
 	/**
 	 * Annotations of same type those: <br>
