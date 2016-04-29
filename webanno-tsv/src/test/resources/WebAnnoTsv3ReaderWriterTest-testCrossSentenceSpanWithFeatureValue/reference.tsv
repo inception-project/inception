@@ -1,5 +1,5 @@
 #FORMAT=WebAnno TSV 3
-#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value[BIO]
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
 
 
 #Text=He loves her .
