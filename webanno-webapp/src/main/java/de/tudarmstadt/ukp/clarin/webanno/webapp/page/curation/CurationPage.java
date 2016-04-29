@@ -606,8 +606,8 @@ public class CurationPage
         add(finishCurationModal = new ModalWindow("finishCurationModal"));
         finishCurationModal.setOutputMarkupId(true);
 
-        finishCurationModal.setInitialWidth(700);
-        finishCurationModal.setInitialHeight(50);
+        finishCurationModal.setInitialWidth(650);
+        finishCurationModal.setInitialHeight(40);
         finishCurationModal.setResizable(true);
         finishCurationModal.setWidthUnit("px");
         finishCurationModal.setHeightUnit("px");
@@ -625,9 +625,14 @@ public class CurationPage
                                 .equals(SourceDocumentState.CURATION_FINISHED)) {
                     finishCurationModal
                             .setTitle("Curation was finished. Are you sure you want to re-open document for curation?");
+                    //Change size if you change text here
+                    finishCurationModal.setInitialWidth(650);
                 }
                 else {
                     finishCurationModal.setTitle("Are you sure you want to finish curating?");
+                    //Change size if you change text here
+                    finishCurationModal.setInitialWidth(370);
+                    
                 }
                 finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal
                         .getContentId(), bModel, finishCurationModal, Mode.CURATION));
@@ -653,14 +658,14 @@ public class CurationPage
         final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
         reCreateMergeCas.setOutputMarkupId(true);
-
-        reCreateMergeCas.setInitialWidth(400);
-        reCreateMergeCas.setInitialHeight(50);
+        //Change size if you change text here
+        reCreateMergeCas.setInitialWidth(580);
+        reCreateMergeCas.setInitialHeight(40);
         reCreateMergeCas.setResizable(true);
         reCreateMergeCas.setWidthUnit("px");
         reCreateMergeCas.setHeightUnit("px");
         reCreateMergeCas
-                .setTitle("are you sure? all curation annotations for this document will be lost");
+                .setTitle("Are you sure? All curation annotations for this document will be lost.");
 
         add(showreCreateMergeCasModal = new AjaxLink<Void>("showreCreateMergeCasModal")
         {
@@ -694,7 +699,7 @@ public class CurationPage
                                         bModel.getUser().getUsername());
                                 loadDocumentAction(aTarget);
 
-                                aTarget.appendJavaScript("alert('remerege finished!')");
+                                aTarget.appendJavaScript("alert('Re-merge finished!')");
                             }
                             catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
                                 aTarget.add(getFeedbackPanel());
@@ -785,7 +790,7 @@ public class CurationPage
                             updatePanel(curationContainer, aTarget);
                         }
                         else {
-                            aTarget.appendJavaScript("alert('This is First Page!')");
+                            aTarget.appendJavaScript("alert('This is first page!')");
                         }
                     }
                     catch (UIMAException e) {
@@ -880,7 +885,7 @@ public class CurationPage
                             updatePanel(curationContainer, aTarget);
                         }
                         else {
-                            aTarget.appendJavaScript("alert('This is last Page!')");
+                            aTarget.appendJavaScript("alert('This is last page!')");
                         }
                     }
                     catch (UIMAException e) {
