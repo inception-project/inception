@@ -161,5 +161,5 @@ measure does support incomplete annotations, then excluding them or not is the u
 
   
 CAUTION: Multiple interpretations in the form of stacked annotations are not supported in the agreement 
-      calculation!
+      calculation! This also includes relations for which source or targets spans are stacked.
 

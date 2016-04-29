@@ -36,8 +36,12 @@ import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ArcPosition;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffResult;
@@ -301,8 +305,36 @@ public class AgreementUtils
                     pluralitySets.add(cfgSet);
                     continue nextPosition;
                 }
-
+                
                 Configuration cfg = cfgs.get(0);
+                
+                // Check if source and/or targets of a relation are stacked
+                if (cfg.getPosition() instanceof ArcPosition) {
+                    ArcPosition pos = (ArcPosition) cfg.getPosition();
+                    FeatureStructure arc = cfg.getFs(user, pos.getCasId(), aCasMap);
+
+                    ArcDiffAdapter adapter = (ArcDiffAdapter) aDiff.getDiffAdapter(pos.getType());
+
+                    // Check if the source of the relation is stacked
+                    AnnotationFS source = FSUtil.getFeature(arc, adapter.getSourceFeature(),
+                            AnnotationFS.class);
+                    List<AnnotationFS> sourceCandidates = CasUtil.selectAt(arc.getCAS(),
+                            source.getType(), source.getBegin(), source.getEnd());
+                    if (sourceCandidates.size() > 1) {
+                        pluralitySets.add(cfgSet);
+                        continue nextPosition;
+                    }
+                    
+                    // Check if the target of the relation is stacked
+                    AnnotationFS target = FSUtil.getFeature(arc, adapter.getTargetFeature(),
+                            AnnotationFS.class);
+                    List<AnnotationFS> targetCandidates = CasUtil.selectAt(arc.getCAS(),
+                            target.getType(), target.getBegin(), target.getEnd());
+                    if (targetCandidates.size() > 1) {
+                        pluralitySets.add(cfgSet);
+                        continue nextPosition;
+                    }
+                }
                 
                 // Only calculate agreement for the given feature
                 FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);

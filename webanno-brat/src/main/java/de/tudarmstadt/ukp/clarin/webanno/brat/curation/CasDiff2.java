@@ -1303,12 +1303,19 @@ public class CasDiff2
         private final Set<String> casGroupIds;
         private final Map<ConfigurationSet, Boolean> completenessCache = new HashMap<>();
         private final boolean cachedHasDifferences;
+        private final Map<String, DiffAdapter> typeDiffAdapters;
         
         private DiffResult(CasDiff2 aDiff)
         {
             data = Collections.unmodifiableMap(aDiff.configSets);
             casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
             cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
+            typeDiffAdapters = aDiff.typeAdapters;
+        }
+        
+        public DiffAdapter getDiffAdapter(String aType)
+        {
+            return typeDiffAdapters.get(aType);
         }
         
         public boolean hasDifferences()
@@ -1699,6 +1706,16 @@ public class CasDiff2
             super(aType, aLabelFeatures);
             sourceFeature = aSourceFeature;
             targetFeature = aTargetFeature;
+        }
+        
+        public String getSourceFeature()
+        {
+            return sourceFeature;
+        }
+        
+        public String getTargetFeature()
+        {
+            return targetFeature;
         }
         
         @Override
