@@ -62,8 +62,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -541,26 +539,7 @@ public class ProjectPage
                             repository.createProjectPermission(permission);
                         }
 
-                        annotationService.initializeTypesForProject(project, user, new String[] {},
-                                new String[] {}, new String[] {}, new String[] {}, new String[] {},
-                                new String[] {}, new String[] {}, new String[] {});
-                        // import the tagsets for the Penn Treebank POS and Stanford Dependencies
-                        // relations
-                        try {
-                            Resource resource = new ClassPathResource("/tagsets/penntb.json");
-                            // The POS tags
-                            InputStream tagInputStream =resource.getInputStream();
-                            ImportUtil.importTagSetFromJson(project, user, tagInputStream,
-                                    annotationService);
-                            // The dependency relation tags
-                            resource = new ClassPathResource("/tagsets/sd.json");
-                            tagInputStream = resource.getInputStream();
-                            ImportUtil.importTagSetFromJson(project, user, tagInputStream,
-                                    annotationService);
-                        }
-                        catch (IOException e) {
-                            error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
-                        }
+                        annotationService.initializeTypesForProject(project, user);
                         projectDetailForm.setVisible(true);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.project = project;

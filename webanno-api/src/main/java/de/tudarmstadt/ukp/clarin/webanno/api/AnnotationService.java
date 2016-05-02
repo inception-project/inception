@@ -224,6 +224,7 @@ public interface AnnotationService
     boolean existsType(String name, String type);
 
     /**
+     * This method only exists to support importing projects previous to WebAnno version 2.0.
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project. For older projects, this method is used to import old tagsets
      * and convert to the new scheme.
@@ -257,6 +258,20 @@ public interface AnnotationService
             String[] corefRelTags)
         throws IOException;
 
+    /**
+     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
+     * s. This is done per Project.
+     * 
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */ 
+    void initializeTypesForProject(Project aProject, User aUser)
+            throws IOException;
+    
     /**
      * list all {@link AnnotationLayer} in the system
      *
@@ -379,4 +394,8 @@ public interface AnnotationService
      * @param type the type.
      */
     void removeAnnotationLayer(AnnotationLayer type);
+
+    TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
+            String[] aTagDescription, Project aProject, User aUser)
+                throws IOException;
 }

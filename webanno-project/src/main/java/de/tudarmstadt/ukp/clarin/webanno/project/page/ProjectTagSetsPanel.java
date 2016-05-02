@@ -63,6 +63,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -270,11 +271,12 @@ public class ProjectTagSetsPanel
                             try {
                                 tagInputStream = tagFile.getInputStream();
                                 if(overwriteTagsetFlag.getModelObject()){
-                                	ImportUtil.importTagSetFromJsonWithOverwrite(project, user, tagInputStream, 
-                                			annotationService);
-                                }else{
-                                	ImportUtil.importTagSetFromJson(project, user, tagInputStream,
-                                			annotationService);
+                                    JsonImportUtil.importTagSetFromJsonWithOverwrite(project, user,
+                                            tagInputStream, annotationService);
+                                }
+                                else {
+                                    JsonImportUtil.importTagSetFromJson(project, user,
+                                            tagInputStream, annotationService);
                                 }
                                 		                                        
 
@@ -322,7 +324,8 @@ public class ProjectTagSetsPanel
 												annotationService.removeAllTags(tagSet);
 											} else {
 												tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-												tagSet.setName(ImportUtil.copyTagSetName(annotationService, tagSetName, project));
+                                                tagSet.setName(JsonImportUtil.copyTagSetName(
+                                                        annotationService, tagSetName, project));
 											}
 
 										}

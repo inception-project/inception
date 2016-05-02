@@ -119,9 +119,7 @@ public class RemoteApiController
 
             // Create the project and initialize tags
             projectRepository.createProject(project, user);
-            annotationService.initializeTypesForProject(project, user, new String[] {},
-                    new String[] {}, new String[] {}, new String[] {}, new String[] {},
-                    new String[] {}, new String[] {}, new String[] {});
+            annotationService.initializeTypesForProject(project, user);
             // Create permission for this user
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(PermissionLevel.ADMIN);
