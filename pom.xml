@@ -61,10 +61,6 @@
           -->
         <wicket.version>6.21.0</wicket.version>
         <wicketstuff.version>${wicket.version}</wicketstuff.version>
-        <!-- 
-            Cannot upgrade to higher than 6.20.1 due to 
-            - https://github.com/webanno/webanno/issues/132
-          -->
         <wicket-jquery-ui.version>6.21.2</wicket-jquery-ui.version>
         <hibernate.version>4.1.4.Final</hibernate.version>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
