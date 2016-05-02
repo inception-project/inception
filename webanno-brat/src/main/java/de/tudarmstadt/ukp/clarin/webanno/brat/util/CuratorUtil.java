@@ -226,7 +226,7 @@ public class CuratorUtil
 
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                .getJsonFactory().createJsonGenerator(out);
+                .getFactory().createGenerator(out);
         jsonGenerator.writeObject(response);
         return out.toString();
     }
@@ -241,7 +241,7 @@ public class CuratorUtil
 
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                .getJsonFactory().createJsonGenerator(out);
+                .getFactory().createGenerator(out);
         jsonGenerator.writeObject(info);
         return out.toString();
     }

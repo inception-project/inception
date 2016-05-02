@@ -630,8 +630,8 @@ public class BratAnnotator
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = null;
         try {
-            jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getJsonFactory()
-                    .createJsonGenerator(out);
+            jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getFactory()
+                    .createGenerator(out);
             jsonGenerator.writeObject(result);
         }
         catch (IOException e) {

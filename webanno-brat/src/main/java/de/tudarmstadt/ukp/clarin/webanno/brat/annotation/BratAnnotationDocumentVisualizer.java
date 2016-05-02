@@ -164,7 +164,7 @@ public class BratAnnotationDocumentVisualizer
         try {
             StringWriter out = new StringWriter();
             JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                    .getJsonFactory().createJsonGenerator(out);
+                    .getFactory().createGenerator(out);
             jsonGenerator.writeObject(response);
             docData = out.toString();
         }
