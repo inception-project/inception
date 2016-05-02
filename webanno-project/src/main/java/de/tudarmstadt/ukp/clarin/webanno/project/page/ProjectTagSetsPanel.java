@@ -60,9 +60,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -273,10 +270,10 @@ public class ProjectTagSetsPanel
                             try {
                                 tagInputStream = tagFile.getInputStream();
                                 if(overwriteTagsetFlag.getModelObject()){
-                                	importTagSetFromJsonWithOverwrite(project, user, tagInputStream, 
+                                	ImportUtil.importTagSetFromJsonWithOverwrite(project, user, tagInputStream, 
                                 			annotationService);
                                 }else{
-                                	importTagSetFromJson(project, user, tagInputStream,
+                                	ImportUtil.importTagSetFromJson(project, user, tagInputStream,
                                 			annotationService);
                                 }
                                 		                                        
@@ -325,7 +322,7 @@ public class ProjectTagSetsPanel
 												annotationService.removeAllTags(tagSet);
 											} else {
 												tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-												tagSet.setName(copyTagSetName(annotationService, tagSetName, project));
+												tagSet.setName(ImportUtil.copyTagSetName(annotationService, tagSetName, project));
 											}
 
 										}
@@ -361,109 +358,6 @@ public class ProjectTagSetsPanel
                     tagDetailForm.setVisible(false);
                 }
             });
-        }
-    }
-
-    public static void importTagSetFromJson(Project project, User user,
-            InputStream tagInputStream, AnnotationService aAnnotationService)
-        throws IOException, JsonParseException, JsonMappingException
-    {
-        String text = IOUtils.toString(tagInputStream, "UTF-8");
-
-        TagSet importedTagSet = JSONUtil.getJsonConverter().getObjectMapper()
-                .readValue(text, TagSet.class);
-        createTagSet(project, user, importedTagSet, aAnnotationService);
-    }
-    
-	/*
-	 * Works for scenarios with overwrite enabled Checks if tagset already
-	 * exists, then overwrites otherwise works normally
-	 */
-	public static void importTagSetFromJsonWithOverwrite(Project project, User user, InputStream tagInputStream,
-			AnnotationService aAnnotationService) throws IOException, JsonParseException, JsonMappingException {
-		String text = IOUtils.toString(tagInputStream, "UTF-8");
-
-		TagSet importedTagSet = JSONUtil.getJsonConverter().getObjectMapper().readValue(text, TagSet.class);
-		
-		if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
-			// A tagset exists so we'll have to replace it
-			replaceTagSet(project, user, importedTagSet, aAnnotationService);
-		} else {
-			// Proceed normally
-			createTagSet(project, user, importedTagSet, aAnnotationService);
-		}
-	}
-	
-	private static void replaceTagSet(Project project, User user, TagSet importedTagSet,
-            AnnotationService aAnnotationService)
-        throws IOException
-    {
-        String importedTagSetName = importedTagSet.getName();
-        de.tudarmstadt.ukp.clarin.webanno.model.TagSet tagsetInUse = aAnnotationService.getTagSet(importedTagSetName, project);
-        //Remove all tags associated with Tagset
-        aAnnotationService.removeAllTags(tagsetInUse);
-        //Copy and update TagSet Information from imported tagset
-        tagsetInUse.setDescription(importedTagSet.getDescription());
-        tagsetInUse.setName(importedTagSetName);
-        tagsetInUse.setLanguage(importedTagSet.getLanguage());
-        tagsetInUse.setProject(project);
-        aAnnotationService.createTagSet(tagsetInUse, user);
-        //Add all tags from imported tagset
-        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
-            Tag newTag = new Tag();
-            newTag.setDescription(tag.getDescription());
-            newTag.setName(tag.getName());
-            newTag.setTagSet(tagsetInUse);
-            aAnnotationService.createTag(newTag, user);
-        }
-    }
-
-    private static void createTagSet(Project project, User user, TagSet importedTagSet,
-            AnnotationService aAnnotationService)
-        throws IOException
-    {
-        String importedTagSetName = importedTagSet.getName();
-        if (aAnnotationService.existsTagSet(importedTagSetName, project)) {           
-//            aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
-//                    project));
-            //Rename Imported TagSet instead of deleting the old one.
-            importedTagSetName = copyTagSetName(aAnnotationService, importedTagSetName, project);
-        }
-
-        de.tudarmstadt.ukp.clarin.webanno.model.TagSet newTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-        newTagSet.setDescription(importedTagSet.getDescription());
-        newTagSet.setName(importedTagSetName);
-        newTagSet.setLanguage(importedTagSet.getLanguage());
-        newTagSet.setProject(project);
-        aAnnotationService.createTagSet(newTagSet, user);
-        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
-            Tag newTag = new Tag();
-            newTag.setDescription(tag.getDescription());
-            newTag.setName(tag.getName());
-            newTag.setTagSet(newTagSet);
-            aAnnotationService.createTag(newTag, user);
-        }
-    }
-    /**
-     * Provides a new name if TagSet already exists.
-     * @param aAnnotationService
-     * @param importedTagSetName
-     * @return
-     */
-    private static String copyTagSetName(AnnotationService aAnnotationService,
-            String importedTagSetName, Project project)
-    {
-        String betterTagSetName = "copy_of_" + importedTagSetName;
-        int i = 1;
-        while (true) {
-            if (aAnnotationService.existsTagSet(betterTagSetName, project)) {
-                betterTagSetName = "copy_of_" + importedTagSetName + "(" + i + ")";
-                i++;
-            }
-            else {
-                return betterTagSetName;
-            }
-
         }
     }
 
@@ -687,7 +581,7 @@ public class ProjectTagSetsPanel
                             exTagSet.setTags(exportedTags);
 
                             try {
-                                JSONUtil.generateJson(exTagSet, exportFile);
+                                JSONUtil.generatePrettyJson(exTagSet, exportFile);
                             }
                             catch (IOException e) {
                                 error("File Path not found or No permision to save the file!");

@@ -877,7 +877,7 @@ public class ProjectLayersPanel
                     }
 
                     try {
-                        JSONUtil.generateJson(exLayer, exportFile);
+                        JSONUtil.generatePrettyJson(exLayer, exportFile);
                     }
                     catch (IOException e) {
                         error("File Path not found or No permision to save the file!");

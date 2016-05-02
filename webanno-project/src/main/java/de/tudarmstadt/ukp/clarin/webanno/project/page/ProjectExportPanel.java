@@ -731,7 +731,7 @@ public class ProjectExportPanel extends Panel {
             exProjekt.setMiraTemplates(exTemplates);
 
             try {
-                JSONUtil.generateJson(exProjekt, aProjectSettings);
+                JSONUtil.generatePrettyJson(exProjekt, aProjectSettings);
                 FileUtils.copyFileToDirectory(aProjectSettings, aExportTempDir);
             }
             catch (IOException e) {

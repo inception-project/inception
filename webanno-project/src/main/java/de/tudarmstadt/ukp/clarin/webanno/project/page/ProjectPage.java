@@ -547,18 +547,16 @@ public class ProjectPage
                         // import the tagsets for the Penn Treebank POS and Stanford Dependencies
                         // relations
                         try {
-
                             Resource resource = new ClassPathResource("/tagsets/penntb.json");
                             // The POS tags
                             InputStream tagInputStream =resource.getInputStream();
-                            ProjectTagSetsPanel.importTagSetFromJson(project, user, tagInputStream,
+                            ImportUtil.importTagSetFromJson(project, user, tagInputStream,
                                     annotationService);
                             // The dependency relation tags
                             resource = new ClassPathResource("/tagsets/sd.json");
                             tagInputStream = resource.getInputStream();
-                            ProjectTagSetsPanel.importTagSetFromJson(project, user, tagInputStream,
+                            ImportUtil.importTagSetFromJson(project, user, tagInputStream,
                                     annotationService);
-
                         }
                         catch (IOException e) {
                             error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));

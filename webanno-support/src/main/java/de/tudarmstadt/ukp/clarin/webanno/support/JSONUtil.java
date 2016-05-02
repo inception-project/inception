@@ -40,36 +40,37 @@ public class JSONUtil
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public static void generateJson(MappingJackson2HttpMessageConverter jsonConverter,
+    public static void generatePrettyJson(MappingJackson2HttpMessageConverter jsonConverter,
             Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toJsonString(jsonConverter, aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(jsonConverter, aObject));
     }
 
-    public static void generateJson(Object aObject, File aFile)
+    public static void generatePrettyJson(Object aObject, File aFile)
         throws IOException
     {
-        FileUtils.writeStringToFile(aFile, toJsonString(aObject));
+        FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject));
     }
 
-    public static String toJsonString(MappingJackson2HttpMessageConverter jsonConverter,
+    public static String toPrettyJsonString(MappingJackson2HttpMessageConverter jsonConverter,
             Object aObject)
         throws IOException
     {
         StringWriter out = new StringWriter();
 
-        JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getJsonFactory()
-                .createJsonGenerator(out);
+        JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getFactory()
+                .createGenerator(out);
+        jsonGenerator.useDefaultPrettyPrinter();
 
         jsonGenerator.writeObject(aObject);
         return out.toString();
     }
 
-    public static String toJsonString(Object aObject)
+    public static String toPrettyJsonString(Object aObject)
         throws IOException
     {
-        return toJsonString(getJsonConverter(), aObject);
+        return toPrettyJsonString(getJsonConverter(), aObject);
     }
     
     public static MappingJackson2HttpMessageConverter getJsonConverter()

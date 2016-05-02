@@ -130,7 +130,7 @@ public class CasToBratJsonTest
         tagSetNames
                 .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        JSONUtil.generateJson(jsonConverter, collectionInformation, new File(jsonFilePath));
+        JSONUtil.generatePrettyJson(jsonConverter, collectionInformation, new File(jsonFilePath));
 
         String reference = FileUtils.readFileToString(new File(
                 "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
@@ -209,7 +209,7 @@ public class CasToBratJsonTest
                     bratannotatorModel);
         }*/
 
-        JSONUtil.generateJson(jsonConverter, response, new File(jsonFilePath));
+        JSONUtil.generatePrettyJson(jsonConverter, response, new File(jsonFilePath));
 
         String reference = FileUtils.readFileToString(new File(
                 "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");
