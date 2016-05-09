@@ -121,10 +121,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
 	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsPerPostion = new HashMap<>();
 	private Map<Feature, Type> slotFeatureTypes = new HashMap<>();
-	private Map<Integer, Integer> annotaionRef = new HashMap<>();
-	private Map<String, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
+	private Map<Type,Map<FeatureStructure, Integer>> annotaionRefPerType = new HashMap<>();
+	private Map<Type, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
 	private Map<String, String> slotLinkTypes = new HashMap<>();
-	
 	private Map<Type, Integer> layerMaps = new LinkedHashMap<>();
 
 	@Override
@@ -372,24 +371,26 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 					governorFeature = feature;
 				}
 			}
-			for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
-				AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-				AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+            for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
+                AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
 
-				AnnotationUnit govUnit = getFirstUnit(getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
-				AnnotationUnit depUnit = getFirstUnit(getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
-				// sometimes there are POS annotation attached to the token  but
-				// not in the POS type
-				int govRef = annotaionRef.get(((FeatureStructureImpl) govFs).getAddress()) == null
-						? getRefId(govFs.getType(), govFs, govUnit)
-						: annotaionRef.get(((FeatureStructureImpl) govFs).getAddress());
-				int depRef = annotaionRef.get(((FeatureStructureImpl) depFs).getAddress()) == null
-						? getRefId(depFs.getType(), depFs, govUnit)
-						: annotaionRef.get(((FeatureStructureImpl) depFs).getAddress());
-				setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef, depRef,
-						govFs.getType());
+                AnnotationUnit govUnit = getFirstUnit(
+                        getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
+                AnnotationUnit depUnit = getFirstUnit(
+                        getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
+                // sometimes there are POS annotation attached to the token but
+                // not in the POS type
+                int govRef = annotaionRefPerType.get(depFs.getType()).get(govFs) == null
+                        ? getRefId(govFs.getType(), govFs, govUnit)
+                        : annotaionRefPerType.get(depFs.getType()).get(govFs);
+                int depRef = annotaionRefPerType.get(depFs.getType()).get(depFs) == null
+                        ? getRefId(depFs.getType(), depFs, govUnit)
+                        : annotaionRefPerType.get(depFs.getType()).get(depFs);
+                setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef,
+                        depRef, govFs.getType());
 
-			}
+            }
 			if (annotationsPertype.keySet().size() > 0) {
 				annotationsPerPostion.put(l, annotationsPertype);
 			}
@@ -755,8 +756,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	 * 1) crosses multiple sentences AND <br>
 	 * 2) repeated on the same unit (even if different value) <br>
 	 * Will be referenced by a number so that re-importing or processing outside
-	 * WebAnno can be easily distinguish same sets of annotations. This much
-	 * Meaningful for relation/slot and chain annotations
+	 * WebAnno can be easily distinguish same sets of annotations. This is much
+	 * Meaningful for relation/slot and chain annotations. Reference numbers are incremental 
 	 * 
 	 * @param type
 	 *            The annotation type
@@ -767,20 +768,42 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	 * @return the reference number to be attached on this annotation value
 	 */
 	private int getRefId(Type type, AnnotationFS fs, AnnotationUnit unit) {
-		if (annotaionRef.get(((FeatureStructureImpl) fs).getAddress()) == null) {
-			int i = isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? 1 : 0;
-			unitRef.putIfAbsent(type.getName(), new HashMap<>());
-			
-			if(unitRef.get(type.getName()).containsKey(unit)){
-			    i = i + unitRef.get(type.getName()).get(unit) + 1;
-			}
-			unitRef.get(type.getName()).put(unit, i);
-			annotaionRef.put(((FeatureStructureImpl) fs).getAddress(), unitRef.get(type.getName()).get(unit));
-		} else {
-			unitRef.get(type.getName()).put(unit, annotaionRef.get(((FeatureStructureImpl) fs).getAddress()));
-		}
-		return unitRef.get(type.getName()).get(unit);
-	}
+	     
+        // first time
+        if (annotaionRefPerType.get(type) == null) {
+
+            Map<FeatureStructure, Integer> annoRefs = new HashMap<>();
+            annoRefs.put(fs, isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? 2 : 1);
+            annotaionRefPerType.put(type, annoRefs);
+
+            unitRef.putIfAbsent(type, new HashMap<>());
+            int ref = annotaionRefPerType.get(type).get(fs); // just 1 here
+            unitRef.get(type).put(unit, ref);
+            return isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+        }
+        else {
+            // This is a multiple token annotation, re-USE reference id
+            if (annotaionRefPerType.get(type).get(fs) != null) {
+                int ref = annotaionRefPerType.get(type).get(fs);
+                unitRef.get(type).put(unit, ref);
+                return ref;
+            }
+            Map<FeatureStructure, Integer> annoRefs = annotaionRefPerType.get(type);
+            int max = Collections.max(annoRefs.values()); // the last reference number so far.
+            annoRefs.put(fs, max + 1);
+            annotaionRefPerType.put(type, annoRefs);
+            int ref = annotaionRefPerType.get(type).get(fs);
+            if (unitRef.get(type).get(unit) == null) {
+                unitRef.get(type).put(unit, ref);
+                return isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+            }
+            // this is for sure a stacked annotation
+            else {
+                unitRef.get(type).put(unit, ref);
+                return ref;
+            }
+        }
+    }
 
 	private void setTokenSentenceAddress(JCas aJCas) {
 		int sentNMumber = 1;

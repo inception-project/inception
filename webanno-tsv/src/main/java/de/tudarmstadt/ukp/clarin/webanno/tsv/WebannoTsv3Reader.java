@@ -251,8 +251,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 						boolean targetAdd = false;
 						String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
 						for (String mAnnos : anno.split(stackedAnnoRegex)) {
-							String multipleAnnoRegex =  "(?<!\\\\)" + Pattern.quote(";");
-							for (String mAnno : mAnnos.split(multipleAnnoRegex)) {
+							String multipleSlotAnno =  "(?<!\\\\)" + Pattern.quote(";");
+							for (String mAnno : mAnnos.split(multipleSlotAnno)) {
 								int ref = 1;
 								String depRef = "";
 								if (mAnno.endsWith("]")) {
@@ -411,10 +411,10 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
         String anno = annotationsPerPostion.get(aType).get(aUnit).get(0);
         if (!anno.equals("_")) {
             int i = 0;
-            String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+            String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
             for (String mAnnos : anno.split(stackedAnnoRegex)) {
-                String multipleAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
-                for (String mAnno : mAnnos.split(multipleAnnoRegex)) {
+                String multipleSlotAnno = "(?<!\\\\)" + Pattern.quote(";");
+                for (String mAnno : mAnnos.split(multipleSlotAnno)) {
                     int ref = 1;
                     String depRef = "";
                     if (mAnno.endsWith("]")) {
@@ -518,7 +518,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				// if there are multiple annos
 				int multAnnos = 1;
 				for (String anno : annotationsPerPostion.get(type).get(unit)) {
-					String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("||");
+					String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
 					if (anno.split(stackedAnnoRegex).length > multAnnos) {
 						multAnnos = anno.split(stackedAnnoRegex).length;
 					}
