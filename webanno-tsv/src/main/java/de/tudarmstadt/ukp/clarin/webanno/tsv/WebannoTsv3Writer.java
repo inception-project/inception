@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -35,7 +34,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.impl.FeatureStructureImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
@@ -43,11 +41,9 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Export annotations in TAB separated format. Header includes information about
@@ -122,7 +118,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsPerPostion = new HashMap<>();
 	private Map<Feature, Type> slotFeatureTypes = new HashMap<>();
 	private Map<Type,Map<FeatureStructure, Integer>> annotaionRefPerType = new HashMap<>();
-	private Map<Type, Map<AnnotationUnit, Integer>> unitRef = new HashMap<>();
+	private Map<Type, Map<AnnotationUnit, Map<FeatureStructure, Integer>>> multiAnnosPerUnit = new HashMap<>();
 	private Map<String, String> slotLinkTypes = new HashMap<>();
 	private Map<Type, Integer> layerMaps = new LinkedHashMap<>();
 
@@ -379,14 +375,19 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
                         getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
                 AnnotationUnit depUnit = getFirstUnit(
                         getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
-                // sometimes there are POS annotation attached to the token but
-                // not in the POS type
-                int govRef = annotaionRefPerType.get(depFs.getType()).get(govFs) == null
-                        ? getRefId(govFs.getType(), govFs, govUnit)
-                        : annotaionRefPerType.get(depFs.getType()).get(govFs);
-                int depRef = annotaionRefPerType.get(depFs.getType()).get(depFs) == null
-                        ? getRefId(depFs.getType(), depFs, govUnit)
-                        : annotaionRefPerType.get(depFs.getType()).get(depFs);
+                int govRef = 0;
+                if (multiAnnosPerUnit.get(govFs.getType()).get(govUnit) !=null) {
+                    
+                    // Zero means no reference is added to the gov annotation
+                    govRef = multiAnnosPerUnit.get(govFs.getType()).get(govUnit).getOrDefault(govFs,0);
+                }
+
+                int depRef = 0;
+
+                if ( multiAnnosPerUnit.get(depFs.getType()).get(depUnit) !=null) {
+                    depRef = multiAnnosPerUnit.get(depFs.getType()).get(depUnit).getOrDefault(depFs, 0);
+                }
+                        
                 setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef,
                         depRef, govFs.getType());
 
@@ -577,7 +578,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
 		// If the layer do not have a feature at all, add dummy * as a place holder
 		if (annoPerFeatures.size() == 0){
-		    setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, "*");
+		    setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, "*"+ (ref > 0 ? "[" + ref + "]" : ""));
 		}
 		annotationsPertype.get(unit).add(annoPerFeatures);
 	}
@@ -647,22 +648,20 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
 			if (feature.getShortName().equals(REF_REL)) {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
-			} else if (aMultiUnit) {
-				if (aFirst) {
-					annotation =  annotation + "[" + achainNo + "]";
-				} else {
-					annotation =  annotation + "[" + achainNo + "]";
-				}
-			} else {
-				annotation = annotation + "[" + achainNo + "]";
-			}
+            }
+            else if (aMultiUnit) {
+                annotation = annotation + "[" + achainNo + "]";
+            }
+            else {
+                annotation = annotation + "[" + achainNo + "]";
+            }
 			featurePerLayer.get(aType.getName()).add(feature.getShortName());
 
 			annoPerFeatures.add(annotation);
 		}
 		aAnnotationsPertype.putIfAbsent(aUnit, new ArrayList<>());
 		if (annoPerFeatures.size() == 0)
-			annoPerFeatures.add("*");
+			annoPerFeatures.add("*"+"[" + achainNo + "]");
 		aAnnotationsPertype.get(aUnit).add(annoPerFeatures);
 	}
 
@@ -689,9 +688,10 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			featurePerLayer.get(type.getName()).add(feature.getShortName());
 		}
 		// add the governor and dependent unit addresses (separated by _
-		String govRef = unitsLineNumber.get(govUnit)
-				+ ((aDepRef > 0 || aGovRef > 0) ? "[" + aGovRef + "_" + aDepRef + "]" : "");
-		annoPerFeatures.add(govRef);
+        String govRef = unitsLineNumber.get(govUnit) + ((aDepRef > 0 || aGovRef > 0)
+                ? "[" + (aGovRef == 0 ? "" : aGovRef) + "_" + (aDepRef == 0 ? "" : aDepRef) + "]"
+                : "");
+    	annoPerFeatures.add(govRef);
 		featurePerLayer.get(type.getName()).add(BT + aDepType.getName());
 		// the column for the dependent unit address
 		annotationsPertype.putIfAbsent(depUnit, new ArrayList<>());
@@ -775,31 +775,38 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
             Map<FeatureStructure, Integer> annoRefs = new HashMap<>();
             annoRefs.put(fs, isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? 2 : 1);
             annotaionRefPerType.put(type, annoRefs);
+            multiAnnosPerUnit.putIfAbsent(type, new HashMap<>());
 
-            unitRef.putIfAbsent(type, new HashMap<>());
-            int ref = annotaionRefPerType.get(type).get(fs); // just 1 here
-            unitRef.get(type).put(unit, ref);
-            return isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+            int ref = annotaionRefPerType.get(type).get(fs);
+            Map<FeatureStructure, Integer> multiAnooRefs = new HashMap<>();
+            ref = isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+            multiAnooRefs.put(fs, ref);
+            multiAnnosPerUnit.get(type).put(unit, multiAnooRefs);
+            return isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ?ref : 0;
         }
         else {
             // This is a multiple token annotation, re-USE reference id
-            if (annotaionRefPerType.get(type).get(fs) != null) {
-                int ref = annotaionRefPerType.get(type).get(fs);
-                unitRef.get(type).put(unit, ref);
-                return ref;
+            if (annotaionRefPerType.get(type).get(fs) != null) {                          
+                return annotaionRefPerType.get(type).get(fs);
             }
+            
             Map<FeatureStructure, Integer> annoRefs = annotaionRefPerType.get(type);
             int max = Collections.max(annoRefs.values()); // the last reference number so far.
             annoRefs.put(fs, max + 1);
             annotaionRefPerType.put(type, annoRefs);
             int ref = annotaionRefPerType.get(type).get(fs);
-            if (unitRef.get(type).get(unit) == null) {
-                unitRef.get(type).put(unit, ref);
-                return isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+            Map<FeatureStructure, Integer> multiAnooRefs = multiAnnosPerUnit.get(type).get(unit);
+            if (multiAnooRefs == null) {
+                multiAnooRefs = new HashMap<>();
+                ref = isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd()) ? ref : 0;
+                multiAnooRefs.put(fs, ref);
+                multiAnnosPerUnit.get(type).put(unit, multiAnooRefs);
+                return ref;
             }
             // this is for sure a stacked annotation
             else {
-                unitRef.get(type).put(unit, ref);
+                multiAnooRefs.put(fs,ref);
+                multiAnnosPerUnit.get(type).put(unit, multiAnooRefs);
                 return ref;
             }
         }
