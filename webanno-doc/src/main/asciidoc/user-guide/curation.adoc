@@ -51,5 +51,5 @@ The annotations which were not chosen to be in the merged file are marked dark b
 | chosen annotation
 
 | Red (in lower frame)
-| Wrong annotation (same span, other type).
+| wrong annotation (same span, other type).
 |===

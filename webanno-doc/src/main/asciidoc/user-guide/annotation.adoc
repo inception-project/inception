@@ -25,7 +25,7 @@ NOTE: This functionality is only available to *annotators*, *project managers*, 
 
 When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
 a document within the project. If you want to open a different project or document later, click on 
-*Open* button to open the dialog.
+*Open* to open the dialog.
 
 image::version3_annotation1.png[align="center"]
 
@@ -36,17 +36,17 @@ that the document has already been marked as *done*.
 
 === Settings
 
-Once the document is opened, a default of 10 sentences is loaded on the annotation  page.  The  
+Once the document is opened, a default of 5 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
 image::annotation_settings.png[align="center"]
 
-Next to *Annotation layers*, you to select the annotation layer which are displayed during annotation.
+Next to *Annotation layers*, you to select the annotation layer which is displayed during annotation.
 This is useful to reduce clutter if there are many annotation layers. Mind that hiding a layer which
 has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
 no dependency relations will be visible anymore.
 
-The *Brush mode* controls if the annotation layer selected in the *Actions* box, will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+The *Brush mode* controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
 
 The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
 actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
@@ -58,7 +58,7 @@ sentences are visible, the slower WebAnno will react.
 The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
 last annotation was made. This can be useful to avoid manual navigation.
 
-If *Use the same color for all tags in a layer*, annotations are colored per layer. If this option
+If *Use the same color for all tags in a layer* is chosen, annotations are colored per layer. If this option
 is off, then annotations are colored by their labels (all annotations with the same label also have
 the same color). Mind that there is a limited number of colors such that eventually colors will
 be reused.
@@ -104,7 +104,7 @@ Annotation of spans works by selecting the span, or double-clicking on a word. T
 
 image::annotation_edit_version3.png[align="center"]
 
-To change or delete an annotation, double-click on the annotation (span or link annotations).
+To change or delete an annotation, double-click on the annotation (span or link annotations). The *Actions*-box is now activated. Changes and Deletions are possible via the respective buttons. 
 
 Link annotations (between POS tags) are created by selecting the starting POS-tag, then dragging the arrow to connect it to its target POS tag. All possible targets are highlighted. 
 
@@ -147,8 +147,6 @@ by default. To create a zero-length annotation, hold *SHIFT* and click on the po
 wish to create the annotation.
 
 NOTE: The *lock to token* behavior cancels the ability to create zero-length annotations.
-
-To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 
 Depending on the layer behavior configuration, spans annotations can have any length, can overlap,
 can stack, can nest, and can cross sentence boundaries. 

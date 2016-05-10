@@ -27,7 +27,7 @@ You can either select one of the existing projects for editing, or click *Create
 
 Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>> and <<sect_correction>>.
 
-Only superadmins are allowed to create projects.	
+Only admins are allowed to create projects.	
 Click on *Create Project* to create a new project. 
 
 image::project1.jpg[align="center"]
@@ -244,7 +244,7 @@ NOTE: It is currently not possible to create relations between spans in differen
 |====
 | Behavior | Description
 
-| Readonly
+| Read-only
 | The layer may be viewed but not edited.
 
 | Lock to token offsets
@@ -345,7 +345,7 @@ To administer one of the existing tagsets, select it by a click. Then, the tagse
 
 image::project8.jpg[align="center"]
 
-In the Frame *Tagset details*, you can change them,  export a tagset, save the changes you made on it or delete it by clicking on *Delete tagSet*.
+In the Frame *Tagset details*, you can change them,  export a tagset, save the changes you made on it or delete it by clicking on *Delete tagset*.
 To change an individual tag, you select one in the list displayed in the frame *Tags*. You can then change its description or name or delete it by clicking *Delete tag* in *Tag details*.  Please do not forget to save your changes by clicking on *Save tag*.
 To add a new tag, you have to click on *Create tag* in *Tag details*. Then you add the name and the description, which is optional. Again, do not forget to click *Save tag* or the new tag will not be created.
 
