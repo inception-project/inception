@@ -17,7 +17,7 @@
 [[sect_automation]]
 == Automation
 
-NOTE: This functionality is only available to *annotators*, *project managers*, and 
+NOTE: This functionality is only available to *project managers* and 
       *administrators*. Annotators and project managers only see projects in which
       they hold the respective roles. 
 
