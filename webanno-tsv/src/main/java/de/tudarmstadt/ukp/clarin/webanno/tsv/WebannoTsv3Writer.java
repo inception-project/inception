@@ -649,9 +649,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
 			} else if (aMultiUnit) {
 				if (aFirst) {
-					annotation = "B-" + annotation + "[" + achainNo + "]";
+					annotation =  annotation + "[" + achainNo + "]";
 				} else {
-					annotation = "I-" + annotation + "[" + achainNo + "]";
+					annotation =  annotation + "[" + achainNo + "]";
 				}
 			} else {
 				annotation = annotation + "[" + achainNo + "]";
@@ -711,9 +711,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			String annotation) {
 		if (aIsMultiToken) {
 			if (aIsFirst) {
-				aAnnoPerFeatures.add("B-" + annotation);
+				aAnnoPerFeatures.add(annotation);
 			} else {
-				aAnnoPerFeatures.add("I-" + annotation);
+				aAnnoPerFeatures.add(annotation);
 			}
 		} else {
 			aAnnoPerFeatures.add(annotation);

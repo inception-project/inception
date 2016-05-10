@@ -94,6 +94,10 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	private StringBuilder coveredText = new StringBuilder();
 	// for each type, for each unit, annotations per position
 	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
+	
+	// For multiple span annotations and stacked annotations
+	private Map<Type, Map<Integer, String>> annotationsPerTyep = new LinkedHashMap<>();
+	
 	private Map<Type, Map<Integer, Map<Integer, AnnotationFS>>> chainAnnosPerTyep = new HashMap<>();
 	private List<AnnotationUnit> units = new ArrayList<>();
 	private Map<String, AnnotationUnit> token2Units = new HashMap<>();
@@ -262,23 +266,21 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 													mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
 									mAnno = mAnno.substring(0, mAnno.indexOf("["));
 								}
-								if (mAnno.startsWith("B-")) {
+                                if (multiTokUnits.containsKey(ref)) {
 
-									multiTokUnits.put(ref, annos.get(i));
-									mAnno = mAnno.substring(2);
-								}
-								if (mAnno.startsWith("I-")) {
+                                    Feature endF = type
+                                            .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+                                    multiTokUnits.get(ref).setIntValue(endF, end);
+                                    mAnno = getEscapeChars(mAnno);
+                                    multiTokUnits.get(ref).setFeatureValueFromString(feat, mAnno);
+                                    if (feat.getShortName().equals(REF_LINK)) {
+                                        // since REF_REL do not start with BIO,
+                                        // update it it...
+                                        annos.set(i, multiTokUnits.get(ref));
+                                    }
+                                    setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
 
-									Feature endF = type.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-									multiTokUnits.get(ref).setIntValue(endF, end);
-									if (feat.getShortName().equals(REF_LINK)) {
-										// since REF_REL do not start with BIO,
-										// update it it...
-										annos.set(i, multiTokUnits.get(ref));
-									}
-									setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(ref));
-
-								} else {
+                                } else {
 									if (mAnno.equals("*")) {
                                         mAnno = null;
                                     }
@@ -377,7 +379,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 									} else {
 										
 										mAnno = getEscapeChars(mAnno);
-										
+										multiTokUnits.put(ref, annos.get(i));
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
@@ -424,11 +426,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                                         mAnno.length() - 1));
                         mAnno = mAnno.substring(0, mAnno.indexOf("["));
                     }
-                    if (mAnno.startsWith("B-")) {
-
-                        aMultiTokUnits.put(ref, aAnnos.get(i));
-                    }
-                    if (mAnno.startsWith("I-")) {
+                    if (aMultiTokUnits.containsKey(ref)) {
 
                         Feature endF = aType.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
                         aMultiTokUnits.get(ref).setIntValue(endF, aEnd);
@@ -437,6 +435,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                     }
                     else {
                         
+                        aMultiTokUnits.put(ref, aAnnos.get(i));
                         aJCas.addFsToIndexes(aAnnos.get(i));
                         setAnnoRefPerUnit(aUnit, aType, ref, aAnnos.get(i));
                     }
