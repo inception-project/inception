@@ -33,6 +33,10 @@ public enum Role
 
     public static Set<Role> getRoles()
     {
-        return new HashSet<Role>(Arrays.asList(values()));
+        Set<Role> roles = new HashSet<Role>(Arrays.asList(values()));
+        if (!"true".equals(System.getProperty("webanno.remote-api.enable"))) {
+            roles.remove(ROLE_REMOTE);
+        }
+        return roles;
     }
 }
