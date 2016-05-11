@@ -519,6 +519,39 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
+
+    @Test
+    public void testSingleStackedNonTokenOverlappingRelationWithoutFeatureValue() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(tokens.size()-1);
+        
+        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
+        gov.addToIndexes();
+        new NamedEntity(jcas, t1.getBegin(), t2.getEnd()).addToIndexes();
+
+        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        dep.addToIndexes();
+        new NamedEntity(jcas, t2.getBegin(), t2.getEnd()).addToIndexes();
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        // One at the beginning
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class),
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
+    }
+
     @Test
     public void testSingleNonTokenRelationWithoutFeature() throws Exception
     {
