@@ -41,9 +41,11 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Export annotations in TAB separated format. Header includes information about
@@ -361,6 +363,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
 			for (Feature feature : type.getFeatures()) {
 				if (feature.getShortName().equals(DEPENDENT)) {
+				    
+				    // check if the dependent is 
 					dependentFeature = feature;
 				}
 				if (feature.getShortName().equals(GOVERNOR)) {
@@ -370,26 +374,41 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
             for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
                 AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
                 AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+                
+                if(type.getName().equals(Dependency.class.getName())){
+                    
+                }
 
                 AnnotationUnit govUnit = getFirstUnit(
                         getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
                 AnnotationUnit depUnit = getFirstUnit(
                         getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
                 int govRef = 0;
-                if (multiAnnosPerUnit.get(govFs.getType()).get(govUnit) !=null) {
-                    
+                // Since de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency is over
+                // Over POS anno which itself attached to Token, we need the POS type here
+                Type govType = govFs.getType();
+                if (type.getName().equals(Dependency.class.getName())){
+                    govType = aJCas.getCas().getTypeSystem().getType(POS.class.getName());
+                }
+                
+                if (multiAnnosPerUnit.get(govType) != null
+                        && multiAnnosPerUnit.get(govType).get(govUnit) != null
+                        && multiAnnosPerUnit.get(govType).get(govUnit).size() > 1) {
+
                     // Zero means no reference is added to the gov annotation
-                    govRef = multiAnnosPerUnit.get(govFs.getType()).get(govUnit).getOrDefault(govFs,0);
+                    govRef = multiAnnosPerUnit.get(govType).get(govUnit).getOrDefault(govFs, 0);
                 }
 
                 int depRef = 0;
 
-                if ( multiAnnosPerUnit.get(depFs.getType()).get(depUnit) !=null) {
-                    depRef = multiAnnosPerUnit.get(depFs.getType()).get(depUnit).getOrDefault(depFs, 0);
+                if (multiAnnosPerUnit.get(govType) != null
+                        && multiAnnosPerUnit.get(govType).get(depUnit) != null
+                        && multiAnnosPerUnit.get(govType).get(depUnit).size() > 1) {
+                    depRef = multiAnnosPerUnit.get(govType).get(depUnit).getOrDefault(depFs, 0);
                 }
                         
                 setRelationAnnoPerFeature(annotationsPertype, type, fs, depUnit, govUnit, govRef,
-                        depRef, govFs.getType());
+                        depRef, govType);
 
             }
 			if (annotationsPertype.keySet().size() > 0) {
@@ -689,7 +708,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		}
 		// add the governor and dependent unit addresses (separated by _
         String govRef = unitsLineNumber.get(govUnit) + ((aDepRef > 0 || aGovRef > 0)
-                ? "[" + (aGovRef == 0 ? "" : aGovRef) + "_" + (aDepRef == 0 ? "" : aDepRef) + "]"
+                ? "[" + aGovRef + "_" + aDepRef + "]"
                 : "");
     	annoPerFeatures.add(govRef);
 		featurePerLayer.get(type.getName()).add(BT + aDepType.getName());
