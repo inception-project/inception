@@ -860,10 +860,18 @@ public class AnnotationDetailEditorPanel
                         getAddr(sentence), bModel.getPreferences().getWindowSize()))
                                 .getEnd();
         if (adapter instanceof ArcAdapter) {
-            for (FeatureModel fm : featureModels) {
+            if(featureModels.size()==0){
+                //If no features, still create arc #256
                 AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, start, end,
+                        null, null);
+                    aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
+            }
+            else{
+                for (FeatureModel fm : featureModels) {
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, start, end,
                         fm.feature, fm.value);
-                aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
+                    aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
+                }
             }
         }
         else {
