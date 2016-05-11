@@ -87,7 +87,19 @@ public abstract class ApplicationPageBase
     @SuppressWarnings({ "serial" })
     private void commonInit()
     {
-//        getSession().setLocale(Locale.ENGLISH);
+        Properties settings = SettingsUtil.getSettings();
+        
+        // Override locale to be used by application
+        String locale = settings.getProperty("locale", "en");
+        switch (locale) {
+        case "auto":
+            // Do nothing - locale is picked up from browser
+            break;
+        default:
+            // Override the locale in the session
+            getSession().setLocale(Locale.forLanguageTag(locale));
+            break;
+        }
 
         logoutPanel = new LogoutPanel("logoutPanel");
         feedbackPanel = new FeedbackPanel("feedbackPanel");
@@ -135,7 +147,6 @@ public abstract class ApplicationPageBase
         }
 
         // Override warning about embedded database.
-        Properties settings = SettingsUtil.getSettings();
         if ("false".equalsIgnoreCase(settings.getProperty("warnings.embeddedDatabase"))) {
             embeddedDbWarning.setVisible(false);
         }
