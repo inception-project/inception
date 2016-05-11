@@ -122,7 +122,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -1247,10 +1246,11 @@ public class AnnotationDetailEditorPanel
 			if (bModel.isForwardAnnotation()) {
 				forwardAnnotationText.add(new DefaultFocusBehavior2());
 			} else {
+//			    Disabled for Github Issue #243
 				// Put focus on first feature
-				if (item.getIndex() == item.size() - 1) {
-					frag.getFocusComponent().add(new DefaultFocusBehavior());
-				}
+//				if (item.getIndex() == item.size() - 1) {
+//					frag.getFocusComponent().add(new DefaultFocusBehavior());
+//				}
 			}
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
