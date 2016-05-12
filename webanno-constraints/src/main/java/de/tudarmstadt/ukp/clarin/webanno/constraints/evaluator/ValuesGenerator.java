@@ -101,12 +101,18 @@ public class ValuesGenerator
     private boolean ruleTriggers(FeatureStructure aContext, Rule aRule)
         throws UIMAException
     {
+        boolean doAllConditionsMatch = false;
         for (Condition condition : aRule.getConditions()) {
             if (conditionMatches(aContext, condition)) {
-                return true;
+                doAllConditionsMatch = true;
+            }
+            else {
+                doAllConditionsMatch = false;
+                break;
             }
         }
-        return false;
+        return doAllConditionsMatch;
+
     }
 
     private boolean conditionMatches(FeatureStructure aContext, Condition aCondition)
