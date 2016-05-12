@@ -23,12 +23,14 @@ import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -104,7 +106,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
 	private Map<Integer, Type> layerMaps = new LinkedHashMap<>(); 
-	private  Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = new HashMap<>();
+	private  Map<Type,  Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = new HashMap<>();
 	private Map<Type, Feature> depFeatures = new HashMap<>();
 	private Map<Type, Type> depTypess = new HashMap<>();
 
@@ -232,8 +234,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 		for (Type type : annotationsPerPostion.keySet()) {
 			Map<AnnotationUnit, Map<Integer, AnnotationFS>> multiTokUnits = new HashMap<>();
+            int ref = 1;
 			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
-
 				int end = unit.end;
 				List<AnnotationFS> annos = aAnnosPerTypePerUnit.get(type).get(unit);
 				int j = 0;
@@ -258,33 +260,45 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 						for (String mAnnos : anno.split(stackedAnnoRegex)) {
 							String multipleSlotAnno =  "(?<!\\\\)" + Pattern.quote(";");
 							for (String mAnno : mAnnos.split(multipleSlotAnno)) {
-								int ref = 0;
 								String depRef = "";
-								if (mAnno.endsWith("]")) {
+								String multSpliter =  "(?<!\\\\)" + Pattern.quote("[");
+								if (mAnno.split(multSpliter).length>1) {
 									depRef = mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1);
-									ref = depRef.contains("_") ? 0
+									ref = depRef.contains("_") ? ref
 											: Integer.valueOf(
 													mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1));
 									mAnno = mAnno.substring(0, mAnno.indexOf("["));
-								}
-                                if (multiTokUnits.containsKey(ref)) {
+								} 
+                                if (mAnno.equals("*")) {
+                                    mAnno = null;
+                                }
+                                boolean isMultitoken = false;
+                                AnnotationFS multiAnnoFs = null;
 
+                                if (!multiTokUnits.isEmpty())
+                                    for (AnnotationUnit u : multiTokUnits.keySet()) {
+                                        for (Integer r : multiTokUnits.get(u).keySet()) {
+                                            if (ref == r) {
+                                                isMultitoken = true;
+                                                multiAnnoFs = multiTokUnits.get(u).get(r);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-                                    multiTokUnits.get(unit).get(ref).setIntValue(endF, end);
+                                    multiAnnoFs.setIntValue(endF, end);
                                     mAnno = getEscapeChars(mAnno);
-                                    multiTokUnits.get(unit).get(ref).setFeatureValueFromString(feat, mAnno);
+                                    multiAnnoFs.setFeatureValueFromString(feat, mAnno);
                                     if (feat.getShortName().equals(REF_LINK)) {
                                         // since REF_REL do not start with BIO,
                                         // update it it...
-                                        annos.set(i, multiTokUnits.get(unit).get(ref));
+                                        annos.set(i, multiAnnoFs);
                                     }
-                                    setAnnoRefPerUnit(unit, type, ref, multiTokUnits.get(unit).get(ref));
+                                    setAnnoRefPerUnit(unit, type, ref, multiAnnoFs);
 
                                 } else {
-									if (mAnno.equals("*")) {
-                                        mAnno = null;
-                                    }
 									if (roleLinks.containsKey(feat)) {
 										linkeF = feat;
 										FeatureStructure link = aJCas.getCas().createFS(slotLinkTypes.get(feat));
@@ -354,17 +368,35 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 										int d = depRef.isEmpty() ? 0 : Integer.valueOf(depRef.split("_")[1]);
 										Type depType = depTypess.get(type);
 										AnnotationUnit govUnit = token2Units.get(mAnno);
+										int l = annotationsPerPostion.get(type).get(unit).size(); 
+                                        String thisUnit =  annotationsPerPostion.get(type).get(unit).get(l-1);
+                                        AnnotationUnit depUnit = token2Units.get(thisUnit);
 										AnnotationFS govFs;
 										AnnotationFS depFs;
-
+										
 										if (depType.getName().equals(POS.class.getName())) {
 											depType = aJCas.getCas().getTypeSystem().getType(Token.class.getName());
 											govFs = units2Tokens.get(govUnit);
 											depFs = units2Tokens.get(unit);
 
-										} else {
-											govFs = annosPerRef.get(depType).get(govUnit).get(g);
-											depFs = annosPerRef.get(depType).get(unit).get(d);
+										} 
+										// to pass the test case, which have relation on Token which not the case
+										// in WebAnno world :)(!
+										else if (depType.getName().equals(Token.class.getName())){
+										    govFs = units2Tokens.get(govUnit);
+                                            depFs = units2Tokens.get(unit);
+										}
+										else if(g==0 && d == 0 ) {
+											govFs = annosPerRef.get(depType).get(govUnit).entrySet().iterator().next().getValue();
+											depFs = annosPerRef.get(depType).get(depUnit).entrySet().iterator().next().getValue();
+										}
+										else if(g==0){
+										    govFs = annosPerRef.get(depType).get(govUnit).entrySet().iterator().next().getValue();
+                                            depFs = annosPerRef.get(depType).get(depUnit).get(d);
+										}
+										else {
+										    govFs = annosPerRef.get(depType).get(govUnit).get(g);
+                                            depFs = annosPerRef.get(depType).get(depUnit).entrySet().iterator().next().getValue();
 										}
 
 										annos.get(i).setFeatureValue(feat, depFs);
@@ -378,18 +410,17 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 										}
 										aJCas.addFsToIndexes(annos.get(i));
 
-									} else {
-										
+									} else {									
 										mAnno = getEscapeChars(mAnno);
-										Map<Integer, AnnotationFS> annosPerUnit = multiTokUnits.getOrDefault(unit, new HashMap<>());
-										annosPerUnit.put(ref, annos.get(i));
-										multiTokUnits.put(unit, annosPerUnit);
+										multiTokUnits.putIfAbsent(unit, new HashMap<>());
+										multiTokUnits.get(unit).put(ref, annos.get(i));
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
 									}
 
 								}
+                                ref++;
 							}
 							if (type.getName().equals(POS.class.getName())) {
 								units2Tokens.get(unit).setPos((POS) annos.get(i));
@@ -416,13 +447,13 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
             List<AnnotationFS> aAnnos, Map<AnnotationUnit, Map<Integer, AnnotationFS>>  aMultiTokUnits, int aEnd)
     {
         String anno = annotationsPerPostion.get(aType).get(aUnit).get(0);
+        int ref = 1;
         if (!anno.equals("_")) {
             int i = 0;
             String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
             for (String mAnnos : anno.split(stackedAnnoRegex)) {
                 String multipleSlotAnno = "(?<!\\\\)" + Pattern.quote(";");
                 for (String mAnno : mAnnos.split(multipleSlotAnno)) {
-                    int ref = 0;
                     String depRef = "";
                     if (mAnno.endsWith("]")) {
                         depRef = mAnno.substring(mAnno.indexOf("[") + 1, mAnno.length() - 1);
@@ -431,20 +462,34 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                                         mAnno.length() - 1));
                         mAnno = mAnno.substring(0, mAnno.indexOf("["));
                     }
-                    if (aMultiTokUnits.containsKey(ref)) {
+                    
+                    boolean isMultitoken = false;
+                    AnnotationFS multiAnnoFs = null;
+
+                    if (!aMultiTokUnits.isEmpty())
+                        for (AnnotationUnit u : aMultiTokUnits.keySet()) {
+                            for (Integer r : aMultiTokUnits.get(u).keySet()) {
+                                if (ref == r) {
+                                    isMultitoken = true;
+                                    multiAnnoFs = aMultiTokUnits.get(u).get(r);
+                                    break;
+                                }
+                            }
+                        }
+                    
+                    if (isMultitoken) {
 
                         Feature endF = aType.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-                        aMultiTokUnits.get(aUnit).get(ref).setIntValue(endF, aEnd);
-                        setAnnoRefPerUnit(aUnit, aType, ref, aMultiTokUnits.get(aUnit).get(ref));
+                        multiAnnoFs.setIntValue(endF, aEnd);
+                        setAnnoRefPerUnit(aUnit, aType, ref, multiAnnoFs);
 
                     }
                     else {
-                        Map<Integer, AnnotationFS> annosPerUnit =aMultiTokUnits.getOrDefault(aUnit, new HashMap<>());
-                        annosPerUnit.put(ref, aAnnos.get(i));
-                        aMultiTokUnits.put(aUnit, annosPerUnit);
+                        aMultiTokUnits.getOrDefault(aUnit, new HashMap<>()).put(ref, aAnnos.get(i));
                         aJCas.addFsToIndexes(aAnnos.get(i));
                         setAnnoRefPerUnit(aUnit, aType, ref, aAnnos.get(i));
                     }
+                    ref++;
                 }
                 i++;
             }
@@ -509,6 +554,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				annotationsPerPostion.get(type).get(unit).add(lines[ind]);
 				ind++;
 			}
+            // Add at the last position the line number
+            // It will be used to get Annotation unit
+            annotationsPerPostion.get(type).get(unit).add(lines[0]);
 		}
 	}
 
