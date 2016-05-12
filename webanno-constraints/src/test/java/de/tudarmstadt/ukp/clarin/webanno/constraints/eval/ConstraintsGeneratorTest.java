@@ -17,14 +17,26 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
+import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -35,7 +47,10 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -116,5 +131,66 @@ public class ConstraintsGeneratorTest
         expectedOutput.add(new PossibleValue("det", false));
 
         assertEquals(expectedOutput, possibleValues);
+    }
+
+    @Test
+    public void testTwoConditions()
+        throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(tokens.size()-1);
+
+        NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
+        gov.setValue("Animal");
+        gov.addToIndexes();
+        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        dep.setValue("NotWeight");
+        dep.addToIndexes();
+
+        Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
+        
+        AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
+        FSUtil.setFeature(fs1, "Governor", gov);
+        FSUtil.setFeature(fs1, "Dependent", dep);
+        cas.addFsToIndexes(fs1);
+        
+        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
+                "src/test/resources/rules/twoConditions.rules"));
+        Parse p = parser.Parse();
+        ParsedConstraints constraints = p.accept(new ParserVisitor());
+
+        Evaluator constraintsEvaluator = new ValuesGenerator();
+        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
+                fs1, "label", constraints);
+        
+        System.out.println(possibleValues);
+        
+        // "Weight" != "NotWeight", so the rule should not match
+        assertEquals(0, possibleValues.size());
+    }
+
+    private JCas makeJCasOneSentence() throws UIMAException
+    {
+        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        TypeSystemDescription local = TypeSystemDescriptionFactory
+                .createTypeSystemDescriptionFromPath(
+                        "src/test/resources/desc/types/webannoTestTypes.xml");
+       
+        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        
+        JCas jcas = JCasFactory.createJCas(merged);
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+                Sentence.class);
+        tb.buildTokens(jcas, "This is a test .");
+        
+        return jcas;
     }
 }

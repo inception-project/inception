@@ -1,0 +1,5 @@
+import webanno.custom.Relation as RELATIONS;
+
+RELATIONS {
+    Governor.value = "Animal" & Dependent.value = "Weight" -> label = "hasWeight";
+}
