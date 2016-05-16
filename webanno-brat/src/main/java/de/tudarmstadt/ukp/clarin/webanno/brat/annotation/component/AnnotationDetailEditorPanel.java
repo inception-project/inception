@@ -561,17 +561,6 @@ public class AnnotationDetailEditorPanel
             if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
                 String value = (String) featureModels.get(i).value;
             	
-                if (value!=null && value.equals("WEBANNOBAR")){
-            	    aTarget.addChildren(getPage(), FeedbackPanel.class);
-            		error("WEBANNOBAR is a reserved word.");
-            		return;
-            	}
-            	if (value!=null &&  value.equals("WEBANNOUNDERSCORE")){
-            	    aTarget.addChildren(getPage(), FeedbackPanel.class);
-            		error("WEBANNOBAR is a reserved word.");
-            		return;
-            	}
-            	
                 // Check if tag is necessary, set, and correct
                 if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
                         && !annotationService.existsTag(value, feature.getTagset())) {
