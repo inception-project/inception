@@ -1771,11 +1771,14 @@ Util.profileStart('chunks');
               });
 */
 // WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
-              chunkFrom = Math.min(bx - markedSpanSize, chunkFrom);
-              chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
-              fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
             }
-// WEBANNO EXTENSION END           
+// BEGIN WEBANNO EXTENSION - Issue #273 - Layout doesn't space out labels sufficiently 
+            // Nicely spread out labels/text and leave space for mark highlight such that adding
+            // the mark doesn't change the overall layout
+            chunkFrom = Math.min(bx - markedSpanSize, chunkFrom);
+            chunkTo = Math.max(bx + bw + markedSpanSize, chunkTo);
+            fragmentHeight = Math.max(bh + 2 * markedSpanSize, fragmentHeight);
+// WEBANNO EXTENSION END - Issue #273 - Layout doesn't space out labels sufficiently 
             // .match() removes unconfigured shadows, which were
             // always showing up as black.
             // TODO: don't hard-code configured shadowclasses.
