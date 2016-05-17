@@ -54,12 +54,7 @@
         <spring.security.version>4.0.4.RELEASE</spring.security.version>
         <slf4j.version>1.6.4</slf4j.version>
         <log4j.version>1.2.16</log4j.version>
-        <!-- 
-            Cannot upgrade to 6.22.0 due to 
-            - https://issues.apache.org/jira/browse/WICKET-6108
-            - https://github.com/jquery/jquery/issues/2963 
-          -->
-        <wicket.version>6.21.0</wicket.version>
+        <wicket.version>6.23.0</wicket.version>
         <wicketstuff.version>${wicket.version}</wicketstuff.version>
         <wicket-jquery-ui.version>6.21.2</wicket-jquery-ui.version>
         <hibernate.version>4.1.4.Final</hibernate.version>
