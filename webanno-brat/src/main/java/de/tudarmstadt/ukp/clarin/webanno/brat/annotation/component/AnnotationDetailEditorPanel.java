@@ -562,10 +562,14 @@ public class AnnotationDetailEditorPanel
                 String value = (String) featureModels.get(i).value;
             	
                 // Check if tag is necessary, set, and correct
-                if (feature.getTagset() != null && !feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, feature.getTagset())) {
+                if (
+                    value != null &&
+                    feature.getTagset() != null && 
+                    !feature.getTagset().isCreateTag() && 
+                    !annotationService.existsTag(value, feature.getTagset())
+                ) {
                     error("[" + value
-                            + "] is not in the tag list. Please choose form the existing tags");
+                            + "] is not in the tag list. Please choose from the existing tags");
                     return;
                 }
             }
@@ -644,15 +648,16 @@ public class AnnotationDetailEditorPanel
             if (CAS.TYPE_NAME_STRING.equals(fm.feature.getType())) {
                 String value = (String) fm.value;
 
-                if (fm.feature.getTagset() != null && fm.feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, fm.feature.getTagset())) {
-                    // Persist only if the feature value is actually set
-                    if (value != null) {
-                        Tag selectedTag = new Tag();
-                        selectedTag.setName(value);
-                        selectedTag.setTagSet(fm.feature.getTagset());
-                        annotationService.createTag(selectedTag, aBModel.getUser());
-                    }
+                if (
+                    value != null &&
+                    fm.feature.getTagset() != null && 
+                    fm.feature.getTagset().isCreateTag() && 
+                    !annotationService.existsTag(value, fm.feature.getTagset())
+                ) {
+                    Tag selectedTag = new Tag();
+                    selectedTag.setName(value);
+                    selectedTag.setTagSet(fm.feature.getTagset());
+                    annotationService.createTag(selectedTag, aBModel.getUser());
                 }
             }
             adapter.updateFeature(jCas, fm.feature, aBModel.getSelection().getAnnotation().getId(),
