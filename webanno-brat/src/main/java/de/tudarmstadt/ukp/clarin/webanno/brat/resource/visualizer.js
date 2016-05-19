@@ -1303,15 +1303,41 @@ var Visualizer = (function($, window, undefined) {
               firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
               lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
 
-              var startPos, endPos;
-              if (firstChar < fragment.chunk.text.length) {
-                startPos = text.getStartPositionOfChar(firstChar).x;
-              } else {
-                startPos = text.getComputedTextLength();
+// BEGIN WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks 
+              var charWidths = [];
+              for (idx = 0; idx < fragment.chunk.text.length; idx++) {
+//            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] begin:" + text.getStartPositionOfChar(idx).x + " end:" + text.getEndPositionOfChar(idx).x+ " width:"+Math.abs(text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x));
+            	  charWidths.push(Math.abs(text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x));
               }
-              endPos = (lastChar < firstChar)
-                ? startPos
-                : text.getEndPositionOfChar(lastChar).x;
+
+//          	  console.log("range: " + firstChar + "-" + lastChar);
+//          	  console.log("widht " + text.getComputedTextLength());
+              
+              var startPos, endPos;
+              startPos = 0;
+              for (i = 0; i < firstChar; i++) {
+            	  startPos += charWidths[i];
+              }
+//        	  console.log("startPos: " + startPos);
+
+              endPos = startPos;
+              for (i = firstChar; i <= lastChar; i++) {
+            	  endPos += charWidths[i];
+              }
+//        	  console.log("endPos: " + endPos);
+
+              // This is the old measurement code which doesn't work properly because browsers
+              // treat the x coordinate very differently. Our width-based measurement is more
+              // reliable.
+//              if (firstChar < fragment.chunk.text.length) {
+//            	startPos = text.getStartPositionOfChar(firstChar).x;
+//              } else {
+//                startPos = text.getComputedTextLength();
+//              }
+//              endPos = (lastChar < firstChar)
+//                ? startPos
+//                : text.getEndPositionOfChar(lastChar).x;
+// END WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks 
               
 // WEBANNO EXTENSION BEGIN - RTL support - Curlies coordinates
               // In RTL mode, positions are negative (left to right)
@@ -1320,7 +1346,7 @@ var Visualizer = (function($, window, undefined) {
             	endPos = -endPos;
               }
               
-              // Make sure that starpos and endpos are properly ordered on the X axis
+              // Make sure that startpos and endpos are properly ordered on the X axis
               fragment.curly = {
                   from: Math.min(startPos, endPos),
                   to: Math.max(startPos, endPos)
