@@ -1303,40 +1303,92 @@ var Visualizer = (function($, window, undefined) {
               firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
               lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
 
-// BEGIN WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks 
-              var charWidths = [];
-              for (idx = 0; idx < fragment.chunk.text.length; idx++) {
-//            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] begin:" + text.getStartPositionOfChar(idx).x + " end:" + text.getEndPositionOfChar(idx).x+ " width:"+Math.abs(text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x));
-            	  charWidths.push(Math.abs(text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x));
+// BEGIN WEBANNO EXTENSION - RTL support 
+// - #265 rendering with quotation marks 
+// - #278 Sub-token annotation of LTR text in RTL mode  
+              if (rtlmode) {
+            	  // This rendering is much slower than the "old" version that brat uses, but it
+            	  // is more reliable in RTL mode.
+	              var charOrder = [];
+	              var charWidths = [];
+	              var charDirection = [];
+	              for (var idx = 0; idx < fragment.chunk.text.length; idx++) {
+	            	  var cw = text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x;
+	            	  charOrder.push(idx);
+	            	  charWidths.push(Math.abs(cw));
+	            	  charDirection.push(isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr");
+	//            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+	//            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
+	//            	  		" end:" + text.getEndPositionOfChar(idx).x + 
+	//            	  		" width:" + Math.abs(cw) + 
+	//            	  		" dir:" + charDirection[charDirection.length-1]);
+	              }
+	              
+	              // Re-order widths if necessary
+	              if (charWidths.length > 1) {
+	            	  var buf = charWidths.slice();
+	            	  var idx = 0;
+	            	  var blockBegin = idx;
+	            	  var blockEnd = idx;
+	            	  
+	            	  // Figure out next block
+	            	  while (blockEnd < charWidths.length) {
+		            	  while (charDirection[blockBegin] == charDirection[blockEnd]) {
+		            		  blockEnd++;
+		            	  }
+		            	  
+		            	  if (charDirection[blockBegin] == (rtlmode ? "ltr" : "rtl")) {
+		            		  charOrder = charOrder.slice(0,blockBegin)
+		            		  	.concat(charOrder.slice(blockBegin, blockEnd).reverse())
+		            		  	.concat(charOrder.slice(blockEnd));
+		            		  charWidths = charWidths.slice(0,blockBegin)
+		            		  	.concat(charWidths.slice(blockBegin, blockEnd).reverse())
+		            		  	.concat(charWidths.slice(blockEnd));
+		            	  }
+		            	  
+		            	  blockBegin = blockEnd;
+	            	  }
+	              }
+	
+	//          	  console.log("order: " + charOrder);
+	              
+	              var startPos, endPos;
+	              startPos = 0;
+	              for (var i = 0; charOrder[i] != firstChar && i < charOrder.length; i++) {
+	            	  startPos += charWidths[i];
+	//            	  console.log("startPos["+i+"]: " + startPos);
+	              }
+	        	  if (rtlmode) {
+	        		  startPos += charWidths[firstChar];
+	        	  }
+	//        	  console.log("startPos: " + startPos);
+	
+	              endPos = 0;
+	              for (var i = 0; charOrder[i] != lastChar && i < charOrder.length; i++) {
+	            	  endPos += charWidths[i];
+	//            	  console.log("endPos["+i+"]: " + endPos);
+	              }
+	        	  if (!rtlmode) {
+	        		  endPos += charWidths[lastChar];
+	        	  }
+	//        	  console.log("endPos: " + endPos);
               }
-
-//          	  console.log("range: " + firstChar + "-" + lastChar);
-//          	  console.log("widht " + text.getComputedTextLength());
-              
-              var startPos, endPos;
-              startPos = 0;
-              for (i = 0; i < firstChar; i++) {
-            	  startPos += charWidths[i];
+              else {
+            	  // Using the old faster method in LTR mode. YES, this means that subtoken 
+            	  // annotations of RTL tokens in LTR mode will render incorrectly. If somebody
+            	  // needs that, we should do a smarter selection of the rendering mode.
+            	  // This is the old measurement code which doesn't work properly because browsers
+            	  // treat the x coordinate very differently. Our width-based measurement is more
+            	  // reliable.
+	              if (firstChar < fragment.chunk.text.length) {
+	            	startPos = text.getStartPositionOfChar(firstChar).x;
+	              } else {
+	                startPos = text.getComputedTextLength();
+	              }
+	              endPos = (lastChar < firstChar)
+	                ? startPos
+	                : text.getEndPositionOfChar(lastChar).x;
               }
-//        	  console.log("startPos: " + startPos);
-
-              endPos = startPos;
-              for (i = firstChar; i <= lastChar; i++) {
-            	  endPos += charWidths[i];
-              }
-//        	  console.log("endPos: " + endPos);
-
-              // This is the old measurement code which doesn't work properly because browsers
-              // treat the x coordinate very differently. Our width-based measurement is more
-              // reliable.
-//              if (firstChar < fragment.chunk.text.length) {
-//            	startPos = text.getStartPositionOfChar(firstChar).x;
-//              } else {
-//                startPos = text.getComputedTextLength();
-//              }
-//              endPos = (lastChar < firstChar)
-//                ? startPos
-//                : text.getEndPositionOfChar(lastChar).x;
 // END WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks 
               
 // WEBANNO EXTENSION BEGIN - RTL support - Curlies coordinates
@@ -3867,6 +3919,17 @@ Util.profileStart('before render');
       Dispatcher.post('triggerRender');
     };
 
+// BEGIN WEBANNO EXTENSION - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
+    var isRTL = function isRTL(charCode) {           
+    	var t1 = (0x0591 <= charCode && charCode <= 0x07FF);
+    	var t2 = (charCode == 0x200F);
+    	var t3 = (charCode == 0x202E);
+    	var t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
+    	var t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
+    	return t1 || t2 || t3 || t4 || t5;
+    };    
+// WEBANNO EXTENSION END - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
+    
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
 // http://24ways.org/2010/calculating-color-contrast/
 // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
