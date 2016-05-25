@@ -538,6 +538,11 @@ public class CasDiff2
             return linkTargetEnd;
         }
         
+        public String getLinkTargetText()
+        {
+            return linkTargetText;
+        }
+        
         @Override
         public String getCollectionId()
         {
@@ -719,6 +724,22 @@ public class CasDiff2
         {
             StringBuilder builder = new StringBuilder();
             builder.append(begin).append('-').append(end).append(" [").append(text).append(']');
+            LinkCompareBehavior linkCompareBehavior = getLinkCompareBehavior();
+            if (linkCompareBehavior != null) {
+                switch (linkCompareBehavior) {
+                case LINK_TARGET_AS_LABEL:
+                    builder.append(" role: [").append(getRole()).append(']');
+                    break;
+                case LINK_ROLE_AS_LABEL:
+                    builder.append(" -> [").append(getLinkTargetBegin()).append('-')
+                            .append(getLinkTargetEnd()).append(" [").append(getLinkTargetText())
+                            .append(']');
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown link target comparison mode ["
+                            + linkCompareBehavior + "]");
+                }
+            }
             return builder.toString();
         }
     }
