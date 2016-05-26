@@ -1317,11 +1317,11 @@ var Visualizer = (function($, window, undefined) {
 	            	  charOrder.push(idx);
 	            	  charWidths.push(Math.abs(cw));
 	            	  charDirection.push(isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr");
-	//            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-	//            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
-	//            	  		" end:" + text.getEndPositionOfChar(idx).x + 
-	//            	  		" width:" + Math.abs(cw) + 
-	//            	  		" dir:" + charDirection[charDirection.length-1]);
+//	            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+//	            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
+//	            	  		" end:" + text.getEndPositionOfChar(idx).x + 
+//	            	  		" width:" + Math.abs(cw) + 
+//	            	  		" dir:" + charDirection[charDirection.length-1]);
 	              }
 	              
 	              // Re-order widths if necessary
@@ -1349,29 +1349,48 @@ var Visualizer = (function($, window, undefined) {
 		            	  blockBegin = blockEnd;
 	            	  }
 	              }
-	
-	//          	  console.log("order: " + charOrder);
+//	          	  console.log("order: " + charOrder);
 	              
-	              var startPos, endPos;
-	              startPos = 0;
+	              // The actual character width on screen is not necessarily the width that can be
+	              // obtained by substrating start from end position. In particular Arabic connects
+	              // characters quite a bit such that the width on screen may be less. Here we
+	              // try to compensate for this using a correction factor.
+	              var widthsSum = 0;
+	              for (var idx = 0; idx < charWidths.length; idx++) {
+	            	  widthsSum += charWidths[idx];
+	              }
+	              var corrFactor = text.getComputedTextLength() / widthsSum;
+//	          	  console.log("width sums: " + widthsSum);
+//	          	  console.log("computed length: " + text.getComputedTextLength());
+//	          	  console.log("corrFactor: " + corrFactor);
+
+	              //startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+	              var startPos = 0;
+//	           	  console.log("startPos[initial]: " + startPos);
 	              for (var i = 0; charOrder[i] != firstChar && i < charOrder.length; i++) {
 	            	  startPos += charWidths[i];
-	//            	  console.log("startPos["+i+"]: " + startPos);
+//	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
 	              }
-	        	  if (rtlmode) {
-	        		  startPos += charWidths[firstChar];
+	        	  if (charDirection[i] == (rtlmode ? "ltr" : "rtl")) {
+	        		  startPos += charWidths[i];
+//	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
 	        	  }
-	//        	  console.log("startPos: " + startPos);
+	        	  startPos = startPos * corrFactor;
+//	        	  console.log("startPos: " + startPos);
 	
-	              endPos = 0;
+	              //endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+	              var endPos = 0;
+//	           	  console.log("endPos[initial]: " + endPos);
 	              for (var i = 0; charOrder[i] != lastChar && i < charOrder.length; i++) {
 	            	  endPos += charWidths[i];
-	//            	  console.log("endPos["+i+"]: " + endPos);
+//	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
 	              }
-	        	  if (!rtlmode) {
-	        		  endPos += charWidths[lastChar];
+	        	  if (charDirection[i] == (rtlmode ? "rtl" : "ltr")) {
+//	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
+	        		  endPos += charWidths[i];
 	        	  }
-	//        	  console.log("endPos: " + endPos);
+	        	  endPos = endPos * corrFactor;
+//	        	  console.log("endPos: " + endPos);
               }
               else {
             	  // Using the old faster method in LTR mode. YES, this means that subtoken 
