@@ -362,14 +362,14 @@ To import a constraint, go to *Project* and click on the particular project name
 A *constraint set* consists of two components:
 
 * import statement
-
 * scopes
+* Import statements* are composed in the following way:
 
-*Import statements* are composed in the following way:
-
-====
+[source,text]
+----
 import <fully_qualified_name_of_feature> as <shortName>;
-====
+----
+
 It is highly recommended to use short names for all fully qualified names while writing a constraint rule. Also, short names should not have any dots or special characters. They should solely consist of english characters. 
 
 NOTE: If you are not sure what the fully qualified name of a layer is, you can look it up going to *Layers* in *Project settings*. Click on a particular layer and you can view the fully qualified name under *Technical Properties*.
@@ -380,64 +380,100 @@ Conditions consist of a *path* and a *value*, separated by an equal sign (*=*). 
 
 Typically a rule’s syntax is 
 
-====
+[source,text]
+----
 <condition_set> -> <restriction_set>;
-====
+----
+
 This leads to the following structure:
 
-
-====
-<scopeName>{
-
-<rule_1>;
-
-...
-
-<rule_n>;
-
+[source,text]
+----
+<scopeName> {
+  <rule_1>;
+  ...
+  <rule_n>;
 }  
-====
+----
 
 Both conditions and restrictions are composed of a *path* and a *value*. The latter is always enclosed in double quotes.
 
-====
+[source,text]
+----
 <path> = <value>
-====
+----
 
 A *condition* is a way of defining whether a particular situation in webanno is based on annotation layers and features in it.
 
 A *condition set* consists of one or more conditions. They are connected with logical AND as follows. 
 
-====
+[source,text]
+----
 <condition> & <condition>
-====
+----
 
 In contrast to conditions, *restrictions* may contain a *flag* such as “(!)” at the end which marks the importance of the restriction. A typical restriction looks like 
 
-====
+[source,text]
+----
 <path> = <value> (!)
-====
+----
 
 A *restriction set* defines a set of restrictions which can be applied if a particular condition set is evaluated to true. As multiple restrictions inside one rule are interpreted as conjunctions, they are separated by the “|”-operator”.
 
-====
+[source,text]
+----
 <Restriction> | <Restriction>
-====
+----
 
 A *path* is composed of one or more steps, separated by a dot. A *step* consists of a *feature selector* and a *type selector*.
 *Type selectors* are only applicable while writing the condition part of a rule. They comprise a *type operator* “@” followed by the type (Lemma, POS, etc).
-*Feature selectors* consist of a feature name.
-====
-E.g.: pos.PosValue
-====
+*Feature selectors* consist of a feature name, e.g.
+
+[source,text]
+----
+pos.PosValue
+----
 
 *Navigation across layers* is possible via 
 
-====
+[source,text]
+----
 @<Type>
-====
+----
 
 Hereby all annotations of type <Type> at the same position as the current context are found.
+
+==== Constraints language grammar
+
+[source,text]
+.Constraints language grammar
+----
+// Basic structure ---------------------------------------
+<file>            ::= <import>* | <scope>*
+<scope>           ::= <shortLayerName> "{" <ruleset> "}"
+<ruleset>         ::= <rule>*
+<import>          ::= "import" <qualifiedLayerName> 
+                      "as" <shortLayerName> 
+<rule>            ::= <conds> "->" <actions> ";"
+
+// Conditions --------------------------------------------
+<conds>           ::= <cond> | <cond> "&" <conds>
+<cond>            ::= <path> "=" <value>
+<path>            ::= <featureName> | <step> "." <path>
+<step>            ::= <featureName> | <layerSelector>
+<layerSelector>   ::= <layerOperator>? <shortLayerName>
+<layerOperator>   ::= "@" // select annotation in layer X
+
+// Restrictions ------------------------------------------
+<actions>         ::= <action> | 
+                      <action> "|" <actions>
+<action>          ::= <actionPath> "=" <value> 
+                      ( "(" <flags> ")" )
+<actionPath>      ::= <featureName> | 
+                      <actionPath> "." <featureName>
+<flags>           ::= "!" // core role
+----
 
 === Guidelines
 
