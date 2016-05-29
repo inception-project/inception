@@ -1,5 +1,5 @@
 {
-  "name" : "NER_WebAnno",
+  "name" : "Named Entity tags",
   "typeUiName" : null,
   "description" : "Named Entity annotation",
   "language" : "de",

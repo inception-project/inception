@@ -1,5 +1,5 @@
 {
-  "name" : "BART",
+  "name" : "Coreference mentions",
   "typeUiName" : null,
   "description" : "coreference type annotation",
   "language" : "de",

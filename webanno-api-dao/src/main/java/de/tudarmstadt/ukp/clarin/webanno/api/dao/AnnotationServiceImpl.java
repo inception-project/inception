@@ -476,11 +476,11 @@ public class AnnotationServiceImpl
         createTokenLayer(aProject, aUser);
 
         TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
-                new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(), this);
+                new ClassPathResource("/tagsets/mul-pos-ud.json").getInputStream(), this);
         createPOSLayer(aProject, aUser, posTagSet);
 
         TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
-                new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(), this);
+                new ClassPathResource("/tagsets/mul-dep-ud.json").getInputStream(), this);
         createDepLayer(aProject, aUser, depTagSet);
 
         TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
@@ -499,9 +499,15 @@ public class AnnotationServiceImpl
         
         // Extra tagsets
         JsonImportUtil.importTagSetFromJson(aProject, aUser,
+                new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(), this);
+        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+                new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(), this);
+        JsonImportUtil.importTagSetFromJson(aProject, aUser,
                 new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(), this);
         JsonImportUtil.importTagSetFromJson(aProject, aUser,
-                new ClassPathResource("/tagsets/en-pos-ptb.json").getInputStream(), this);
+                new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(), this);
+        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+                new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(), this);
     }    
     
     private void createLemmaLayer(Project aProject, User aUser)
