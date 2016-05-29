@@ -37,6 +37,8 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -81,6 +83,8 @@ public class ProjectTagSetsPanel
     extends Panel
 {
     private static final long serialVersionUID = 7004037105647505760L;
+
+    private static final Log LOG = LogFactory.getLog(ProjectTagSetsPanel.class);
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -329,8 +333,10 @@ public class ProjectTagSetsPanel
 											}
 
 										}
-//                                        tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
-//                                        tagSet.setName(tagSetName);
+										else {
+	                                        tagSet = new de.tudarmstadt.ukp.clarin.webanno.model.TagSet();
+	                                        tagSet.setName(tagSetName);
+										}
                                         tagSet.setDescription(tagSetDescription
                                                 .replace("\\n", "\n"));
                                         tagSet.setLanguage(tagsetLanguage);
@@ -351,8 +357,9 @@ public class ProjectTagSetsPanel
                                 }
                             }
                             catch (Exception e) {
-                                error("Error Importing tabbed TagSet."
+                                error("Error importing tag set: "
                                         + ExceptionUtils.getRootCauseMessage(e));
+                                LOG.error("Error importing tag set", e);
                             }
                         }
                     }
