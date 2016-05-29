@@ -1,7 +1,7 @@
 {
-  "name" : "SD",
+  "name" : "Stanford Dependencies",
   "typeUiName" : null,
-  "description" : "Stanford Dependencies\r\nhttp://nlp.stanford.edu/software/dependencies_manual.pdf",
+  "description" : "Stanford Dependencies for English\r\n\r\nThe English version of the Stanford dependencies has been developed by Marie-Catherine de Marneffe, Bill MacCartney, and Christopher Manning. All details about the English dependencies can be found in the manual:\r\n\r\n  Marie-Catherine de Marneffe and Christopher D. Manning. 2008. Stanford Dependencies manual.\r\n\r\nSee also: \r\n* http://nlp.stanford.edu/software/stanford-dependencies.shtml\r\n* http://nlp.stanford.edu/software/dependencies_manual.pdf",
   "language" : "en",
   "type" : null,
   "type_name" : null,

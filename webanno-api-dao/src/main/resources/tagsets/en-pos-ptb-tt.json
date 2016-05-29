@@ -1,7 +1,7 @@
 {
-  "name" : "PennTB",
+  "name" : "TreeTagger English POS tags",
   "typeUiName" : null,
-  "description" : "Penn Treebank tag set \nhttp://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/data/Penn-Treebank-Tagset.pdf",
+  "description" : "An extended version of the part-of-speech tagset used in the Penn Treebank. This version is used by the English model for TreeTagger.\r\n\r\nSee also:\r\n* https://catalog.ldc.upenn.edu/docs/LDC99T42/tagguid1.pdf\r\n* http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/data/Penn-Treebank-Tagset.pdf",
   "language" : "en",
   "type" : null,
   "type_name" : null,
