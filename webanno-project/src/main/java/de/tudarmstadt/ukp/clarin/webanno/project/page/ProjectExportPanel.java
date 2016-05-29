@@ -321,6 +321,20 @@ public class ProjectExportPanel extends Panel {
                     }
 					
 				}
+            },new LoadableDetachableModel<String>(){
+                private static final long serialVersionUID = 2591915908792854707L;
+//                Provide meaningful name to curated documents zip
+                @Override
+                protected String load()
+                {
+                    StringBuffer _fileName = new StringBuffer();
+                    _fileName.append(ProjectExportForm.this.getModelObject().project.getName());
+                    _fileName.append("_curated_documents_");
+                    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
+                    _fileName.append(fmt.format(new Date()));
+                    _fileName.append(".zip");
+                    return _fileName.toString();
+                }
             }) {
                 private static final long serialVersionUID = 5630612543039605914L;
 
