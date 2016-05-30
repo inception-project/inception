@@ -3410,8 +3410,18 @@ Util.profileStart('finish');
 
         // resize the SVG
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
-        if (width > canvasWidth) canvasWidth = width;
-
+// WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
+// Add scrolling box
+        if (width > canvasWidth) {
+	        $svgDiv.width(canvasWidth);
+	        $svgDiv.css("overflow-x", "auto");
+        	canvasWidth = width;
+        	// Allow some extra space for arcs
+        	canvasWidth += 32;
+        }
+//        if (width > canvasWidth) {canvasWidth = width;
+// WEBANNO EXTENSION END        
+        
         $svg.width(canvasWidth);
         $svg.height(y);
         $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
@@ -3420,7 +3430,11 @@ Util.profileStart('finish');
           $svg.attr("direction", "rtl");
         }
 // WEBANNO EXTENSION END        
+// WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
+// Allow some extra space for arcs
+        $svgDiv.css("padding-bottom", "16px");
         $svgDiv.height(y);
+// WEBANNO EXTENSION END        
 
 Util.profileEnd('finish');
 Util.profileEnd('render');
