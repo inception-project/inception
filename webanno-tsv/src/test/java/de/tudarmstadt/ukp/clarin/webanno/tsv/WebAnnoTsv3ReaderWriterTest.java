@@ -33,6 +33,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
@@ -41,6 +42,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.pipeline.SimplePipeline;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
+import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -664,6 +666,37 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @Test
+    public void testSimpleSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t2.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t3.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
+
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
@@ -728,6 +761,28 @@ public class WebAnnoTsv3ReaderWriterTest
         assertEquals(2, select(jcas, Sentence.class).size());
         
         return jcas;
+    }
+
+    public static AnnotationFS makeLinkHostFS(JCas aJCas, int aBegin, int aEnd,
+            FeatureStructure... aLinks)
+    {
+        Type hostType = aJCas.getTypeSystem().getType("webanno.custom.SimpleLinkHost");
+        AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
+                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+        aJCas.getCas().addFsToIndexes(hostA1);
+        return hostA1;
+    }
+
+    public static FeatureStructure makeLinkFS(JCas aJCas, String aSlotLabel, AnnotationFS aTarget)
+    {
+        Type linkType = aJCas.getTypeSystem().getType("webanno.custom.LinkType");
+        FeatureStructure linkA1 = aJCas.getCas().createFS(linkType);
+        linkA1.setStringValue(linkType.getFeatureByBaseName("role"), aSlotLabel);
+        linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), aTarget);
+        aJCas.getCas().addFsToIndexes(linkA1);
+
+        return linkA1;
     }
 
     @Rule
