@@ -73,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -199,6 +200,7 @@ public class CuratorUtil
         throws IOException
     {
         GetDocumentResponse response = new GetDocumentResponse();
+        response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
         SpanAdapter.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);

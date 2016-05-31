@@ -92,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
@@ -1069,6 +1070,36 @@ public class CorrectionPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
+        add(new AjaxLink<Void>("toggleScriptDirection")
+        {
+            private static final long serialVersionUID = -4332566542278611728L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
+                    bModel.setScriptDirection(ScriptDirection.RTL);
+                }
+                else {
+                    bModel.setScriptDirection(ScriptDirection.LTR);
+                }
+
+                try {
+                    curationContainer.setBratAnnotatorModel(bModel);
+                    CuratorUtil.updatePanel(aTarget, automateView, curationContainer, annotator,
+                            repository, annotationSelectionByUsernameAndAddress, curationSegment,
+                            annotationService, userRepository);
+                }
+                catch (UIMAException | ClassNotFoundException | IOException
+                        | BratAnnotationException e) {
+                    error(e);
+                    LOG.error(e);
+                }
+
+                annotator.bratRenderLater(aTarget);
+            }
+        });
+        
         add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(
                 bModel)));
     }

@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
@@ -78,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -106,6 +109,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class CurationPage
     extends ApplicationPageBase
 {
+    private final static Log LOG = LogFactory.getLog(CurationPage.class);
+
     private static final long serialVersionUID = 1378872465851908515L;
 
     @SpringBean(name = "documentRepository")
@@ -906,6 +911,30 @@ public class CurationPage
                 }
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+        
+        add(new AjaxLink<Void>("toggleScriptDirection")
+        {
+            private static final long serialVersionUID = -4332566542278611728L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
+                    bModel.setScriptDirection(ScriptDirection.RTL);
+                }
+                else {
+                    bModel.setScriptDirection(ScriptDirection.LTR);
+                }
+                try {
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                }
+                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                    error(e.getMessage());
+                    LOG.error(e);
+                }
+            }
+        });
     }
 
     // Update the curation panel.
@@ -916,14 +945,9 @@ public class CurationPage
         try {
             mergeJCas = repository.readCurationCas(bModel.getDocument());
         }
-        catch (UIMAException e) {
+        catch (IOException | ClassNotFoundException | UIMAException e) {
             error(e.getMessage());
-        }
-        catch (ClassNotFoundException e) {
-            error(e.getMessage());
-        }
-        catch (IOException e) {
-            error(e.getMessage());
+            LOG.error(e);
         }
         gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
                 bModel.getSentenceAddress()) + 1);
