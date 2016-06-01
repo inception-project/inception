@@ -3416,7 +3416,8 @@ Util.profileStart('finish');
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Add scrolling box
-        if (width > canvasWidth) {
+        var oversized = width > canvasWidth;
+        if (oversized) {
 	        $svgDiv.width(canvasWidth);
 	        $svgDiv.css("overflow-x", "auto");
         	canvasWidth = width;
@@ -3436,8 +3437,10 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION END        
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
-        $svgDiv.css("padding-bottom", "16px");
-        $svgDiv.height(y);
+        if (oversized) {
+	        $svgDiv.css("padding-bottom", "16px");
+	        $svgDiv.height(y+16); // Need to take the padding into account here
+        }
 // WEBANNO EXTENSION END        
 
 Util.profileEnd('finish');
