@@ -349,6 +349,19 @@ public class ProjectExportPanel extends Panel {
                     return enabled;
 
                 }
+                
+                @Override
+                public void onClick()
+                {
+                    try{
+                        super.onClick();
+                    }catch(IllegalStateException e)
+                    {
+                        LOG.error(e);
+                        error("Unable to export curated documents because of exception while processing.");
+                    }
+                   
+                }
             }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
             final AJAXDownload exportProject = new AJAXDownload() {
