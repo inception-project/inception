@@ -1561,6 +1561,10 @@ Util.profileStart('init');
 
         // establish the width according to the enclosing element
         canvasWidth = that.forceWidth || $svgDiv.width();
+// WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 
+        // Take hairline border of SVG into account
+        canvasWidth -= 2;
+// WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered 
 
         var defs = addHeaderAndDefs();
 
