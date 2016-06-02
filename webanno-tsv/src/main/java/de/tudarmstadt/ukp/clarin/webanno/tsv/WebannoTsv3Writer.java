@@ -468,8 +468,25 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	}
 
 	private Set<AnnotationUnit> getSubUnits(SubTokenAnno aSTA, Set<AnnotationUnit> aSubUnits) {
+		AnnotationUnit prevUnit = null;
 		List<AnnotationUnit> tmpUnits = new ArrayList<>(units);
+		if(aSTA.getBegin() == aSTA.getEnd()){
+			
+			AnnotationUnit newUnit = new AnnotationUnit(aSTA.getBegin(), aSTA.getEnd(), false, "");
+			for(AnnotationUnit unit: units){
+				if(unit.begin>=newUnit.begin && unit.end>=newUnit.end){
+					updateUnitLists(tmpUnits, unit, newUnit);
+					aSubUnits.add(newUnit);
+					units = new ArrayList<>(tmpUnits);
+					return aSubUnits;
+				}
+			}		
+		}
+		
 		for (AnnotationUnit unit : units) {
+			 if (unit.end > aSTA.end) {
+				break;
+			}
 			// this is a sub-token annotation
 			if (unit.begin <= aSTA.getBegin() && aSTA.getBegin() <= unit.end && aSTA.getEnd() <= unit.end) {
 				AnnotationUnit newUnit = new AnnotationUnit(aSTA.getBegin(), aSTA.getEnd(), false, aSTA.getText());
@@ -479,7 +496,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				aSubUnits.add(newUnit);
 			}
 			// if sub-token annotation crosses multiple tokens
-			else if (unit.begin <= aSTA.getBegin() && aSTA.getBegin() < unit.end && aSTA.getEnd() > unit.end) {
+			else if ((unit.begin <= aSTA.getBegin() && aSTA.getBegin() < unit.end && aSTA.getEnd() > unit.end)) {
+			
 				int thisSubTextLen = unit.end - aSTA.begin;
 
 				AnnotationUnit newUnit = new AnnotationUnit(aSTA.getBegin(), unit.end, false,
@@ -492,8 +510,24 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				
 				aSTA.setText(aSTA.getText().trim().substring(thisSubTextLen));
 				getSubUnits(aSTA, aSubUnits);
-			} else if (unit.end > aSTA.end) {
-				break;
+			} 
+			// empty annotation between tokens
+			else if(aSTA.getBegin()<=unit.begin && 			prevUnit !=null && prevUnit.end<unit.begin){
+				int thisSubTextLen = unit.begin - aSTA.begin;
+
+				AnnotationUnit newUnit = new AnnotationUnit(aSTA.getBegin(), unit.begin, false,
+						aSTA.getText().substring(0, thisSubTextLen));
+				aSubUnits.add(newUnit);
+
+				updateUnitLists(tmpUnits, prevUnit, newUnit);
+
+				aSTA.setBegin(unit.begin);
+				
+				aSTA.setText(aSTA.getText().trim().substring(thisSubTextLen));
+				getSubUnits(aSTA, aSubUnits);
+			}
+			else{
+				prevUnit = unit;
 			}
 		}
 		units = new ArrayList<>(tmpUnits);
