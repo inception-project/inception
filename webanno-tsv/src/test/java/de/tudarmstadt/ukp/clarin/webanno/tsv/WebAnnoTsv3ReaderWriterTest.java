@@ -838,7 +838,7 @@ public class WebAnnoTsv3ReaderWriterTest
         Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
         AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
         cas.addFsToIndexes(s2);
-        AnnotationFS s3 = cas.createAnnotation(type, t2.getEnd(), t3.getEnd());
+        AnnotationFS s3 = cas.createAnnotation(type, t3.getEnd(), t3.getEnd());
         cas.addFsToIndexes(s3);
 
         FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
