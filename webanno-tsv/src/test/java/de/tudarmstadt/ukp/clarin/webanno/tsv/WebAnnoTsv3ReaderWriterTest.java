@@ -697,6 +697,163 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @Test
+    public void testSimpleCrossSenenceSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasTwoSentences();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(6);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t2.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t3.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
+    
+    @Test
+    public void testMultiTokenSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        Token t4 = tokens.get(3);
+        Token t5 = tokens.get(4);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t4.getBegin(), t5.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
+    
+    @Test
+    public void testMultiTokenStackedSlotFeature() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }
+
+    @Test
+    public void testZeroLengthSlotFeature1() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getBegin(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }    
+    
+    @Test
+    public void testZeroLengthSlotFeature2() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type type = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        AnnotationFS s2 = cas.createAnnotation(type, t2.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(s2);
+        AnnotationFS s3 = cas.createAnnotation(type, t2.getEnd(), t3.getEnd());
+        cas.addFsToIndexes(s3);
+
+        FeatureStructure link1 = makeLinkFS(jcas, "p1", s2);
+        FeatureStructure link2 = makeLinkFS(jcas, "p2", s3);
+        
+        makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
+        
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
+    }    
+    
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
