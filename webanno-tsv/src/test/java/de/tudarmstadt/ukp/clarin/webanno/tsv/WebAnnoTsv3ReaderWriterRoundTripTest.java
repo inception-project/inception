@@ -81,9 +81,13 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                 merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true,
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class,"webanno.custom.SimpleSpan"), 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class,"webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"), 
+                WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.SimpleRelation",
                         "webanno.custom.Relation"));
+        
         
         SimplePipeline.runPipeline(reader, writer);
         

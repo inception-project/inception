@@ -136,6 +136,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			setSlotLinkTypes();
 			setLinkMaps(aJCas);
 			setTokenSentenceAddress(aJCas);
+			setAmbiguity(aJCas);
 			setSpanAnnotation(aJCas);
 			setChainAnnotation(aJCas);
 			setRelationAnnotation(aJCas);
@@ -160,11 +161,6 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 							.getOrDefault(unit, new ArrayList<>());
 					List<String> merged = null;
 					for (List<String> annofs : annos) {
-					    // do not add ref number if annotation is not ambiguous
-					    if(ambigUnits.get(type)!=null && ambigUnits.get(type).get(unit).equals(false)
-					            && !relationLayers.contains(type)){
-					        annofs.set(0, annofs.get(0).substring(0,annofs.get(0).lastIndexOf("["))) ;
-					    }
 						if (merged == null) {
 							merged = annofs;
 						} else {
@@ -257,6 +253,37 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		IOUtils.write(LF, docOS, encoding);
 	}
 
+	private void setAmbiguity(JCas aJCas) {
+		List<String> spanAndTokenLayers = spanLayers;
+		spanAndTokenLayers.add(Token.class.getName());
+		for (String l : spanAndTokenLayers) {
+			Type type = getType(aJCas.getCas(), l);
+			ambigUnits.putIfAbsent(type.getName(), new HashMap<>());
+			for (AnnotationFS fs : CasUtil.select(aJCas.getCas(), type)) {
+				AnnotationUnit unit = getFirstUnit(fs);
+				// multiple token anno
+				if (isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd())) {
+					SubTokenAnno sta = new SubTokenAnno();
+					sta.setBegin(fs.getBegin());
+					sta.setEnd(fs.getEnd());
+					sta.setText(fs.getCoveredText());
+					Set<AnnotationUnit> sus = new LinkedHashSet<>();
+					for (AnnotationUnit newUnit : getSubUnits(sta, sus)) {
+						ambigUnits.get(type.getName()).put(newUnit, true);
+					}
+				} 
+				// stacked anno
+				else if (ambigUnits.get(type.getName()).get(unit) != null) {
+					ambigUnits.get(type.getName()).put(unit, true);
+				}
+				//single or first occurrence of stacked anno
+				else {
+					ambigUnits.get(type.getName()).put(unit, false);
+				}
+			}
+
+		}
+	}
 	private void setSpanAnnotation(JCas aJCas) {
 		int i = 0;
 		// store slot targets for each slot features
@@ -514,12 +541,16 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		}
 	}
 
-	private void setSpanAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> annotationsPertype, Type type,
-			AnnotationFS fs, AnnotationUnit unit, boolean aIsMultiToken, boolean aIsFirst) {
+	private void setSpanAnnoPerFeature(Map<AnnotationUnit, List<List<String>>> aAnnotationsPertype, Type aType,
+			AnnotationFS aFs, AnnotationUnit aUnit, boolean aIsMultiToken, boolean aIsFirst) {
 		List<String> annoPerFeatures = new ArrayList<>();
-		featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
-		int ref = getRefId(type, fs, unit);
-		for (Feature feature : type.getFeatures()) {
+		featurePerLayer.putIfAbsent(aType.getName(), new LinkedHashSet<>());
+		int ref = getRefId(aType, aFs, aUnit);
+		
+		if(ambigUnits.get(aType.getName()).get(getFirstUnit(aUnit)).equals(false)){
+			ref = 0;
+		}
+		for (Feature feature : aType.getFeatures()) {
 			if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
 					|| feature.toString().equals("uima.tcas.Annotation:begin")
 					|| feature.toString().equals("uima.tcas.Annotation:end") || feature.getShortName().equals(GOVERNOR)
@@ -530,8 +561,8 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
 			// if slot feature
 			if (slotFeatures != null && slotFeatures.contains(feature.getName())) {
-				if (fs.getFeatureValue(feature) != null) {
-					ArrayFS array = (ArrayFS) fs.getFeatureValue(feature);
+				if (aFs.getFeatureValue(feature) != null) {
+					ArrayFS array = (ArrayFS) aFs.getFeatureValue(feature);
 					StringBuffer sbRole = new StringBuffer();
 					StringBuffer sbTarget = new StringBuffer();
 					for (FeatureStructure linkFS : array.toArray()) {
@@ -542,7 +573,10 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
 						AnnotationUnit firstUnit = getFirstUnit(targetFs);
 						ref = getRefId(tType, targetFs, firstUnit);
-
+						// Check if the target is ambiguous or not
+						if(ambigUnits.get(tType.getName()).get(firstUnit).equals(false)){
+							ref = 0;
+						}
 						if (role == null) {
 							role = "*";
 						} else {
@@ -580,11 +614,11 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 					annoPerFeatures.add("_");
 					annoPerFeatures.add("_");
 				}
-				featurePerLayer.get(type.getName())
+				featurePerLayer.get(aType.getName())
 						.add(ROLE + feature.getName() + "_" + slotLinkTypes.get(feature.getName()));
-				featurePerLayer.get(type.getName()).add(slotFeatureTypes.get(feature).getName());
+				featurePerLayer.get(aType.getName()).add(slotFeatureTypes.get(feature).getName());
 			} else {
-				String annotation = fs.getFeatureValueAsString(feature);
+				String annotation = aFs.getFeatureValueAsString(feature);
 				if (annotation == null) {
 					annotation = "*";
 				} else {
@@ -595,15 +629,15 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				// only add BIO markers to multiple annotations
 				setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, annotation);
 
-				featurePerLayer.get(type.getName()).add(feature.getShortName());
+				featurePerLayer.get(aType.getName()).add(feature.getShortName());
 			}
 		}
-		annotationsPertype.putIfAbsent(unit, new ArrayList<>());
+		aAnnotationsPertype.putIfAbsent(aUnit, new ArrayList<>());
 		// If the layer do not have a feature at all, add dummy * as a place holder
 		if (annoPerFeatures.size() == 0){
 		    setAnnoFeature(aIsMultiToken, aIsFirst, annoPerFeatures, "*"+ (ref > 0 ? "[" + ref + "]" : ""));
 		}
-		annotationsPertype.get(unit).add(annoPerFeatures);
+		aAnnotationsPertype.get(aUnit).add(annoPerFeatures);
 	}
 
 	/**
@@ -801,35 +835,16 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
             Map<FeatureStructure, Integer> annoRefs = new HashMap<>();
             annoRefs.put(fs, 1);
-            annotaionRefPerType.put(type, annoRefs);
-            
-     /*       Map<Integer, FeatureStructure> refsAnnos = new HashMap<>();
-            refsAnnos.put(1, fs);
-            refAnnotaionperType.put(type, refsAnnos);*/
+            annotaionRefPerType.put(type, annoRefs);          
             
             multiAnnosPerUnit.putIfAbsent(type, new HashMap<>());
             Map<FeatureStructure, Integer> multiAnooRefs = new HashMap<>();
             multiAnooRefs.put(fs, 1);
             multiAnnosPerUnit.get(type).put(unit, multiAnooRefs);
-            ambigUnits.putIfAbsent(type.getName(), new HashMap<>());
-            if (isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd())) {
-                ambigUnits.get(type.getName()).put(unit, true);
-            }
-            else {
-                ambigUnits.get(type.getName()).put(unit, false);
-            }
             return 1;
         }
         else {
 
-            // is this ambiguous? ( stacked or Multiple token anno are ambiguous
-            if (isMultipleTokenAnnotation(fs.getBegin(), fs.getEnd())
-                    || ambigUnits.get(type.getName()).containsKey(unit)) {
-                ambigUnits.get(type.getName()).put(unit, true);
-            }
-            else {
-                ambigUnits.get(type.getName()).put(unit, false);
-            }
             // This is a multiple token annotation, re-USE reference id
             if (annotaionRefPerType.get(type).get(fs) != null) {
                 return annotaionRefPerType.get(type).get(fs);
