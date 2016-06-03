@@ -885,6 +885,37 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }    
     
+    @Test
+    public void testSimpleChain() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence();
+        CAS cas = jcas.getCas();
+        
+        List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
+        
+        Token t1 = tokens.get(0);
+        Token t2 = tokens.get(1);
+        Token t3 = tokens.get(2);
+        
+        Type head = cas.getTypeSystem().getType("webanno.custom.SimpleChain");
+        Type link = cas.getTypeSystem().getType("webanno.custom.SimpleLink");
+        AnnotationFS l3 = cas.createAnnotation(link, t3.getBegin(), t3.getEnd());
+        cas.addFsToIndexes(l3);
+        AnnotationFS l2 = cas.createAnnotation(link, t2.getBegin(), t2.getEnd());
+        FSUtil.setFeature(l2, "next", l3);
+        cas.addFsToIndexes(l2);
+        AnnotationFS l1 = cas.createAnnotation(link, t1.getBegin(), t1.getEnd());
+        FSUtil.setFeature(l1, "next", l2);
+        cas.addFsToIndexes(l1);
+        FeatureStructure h = cas.createFS(head);
+        FSUtil.setFeature(h, "first", l1);
+        cas.addFsToIndexes(h);
+
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList("webanno.custom.Simple"));
+    }
+
+    
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
