@@ -530,7 +530,7 @@ public class AnnotationDetailEditorPanel
     {
 		if (isAnnotationFinished()) {
 			throw new BratAnnotationException(
-					"This document is already closed. Please ask your project manager to re-open it via the Montoring page");
+					"This document is already closed. Please ask your project manager to re-open it via the Monitoring page");
 		}
         // If there is no annotation yet, create one. During creation, the adapter
         // may notice that it would create a duplicate and return the address of
