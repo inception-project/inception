@@ -99,13 +99,13 @@ public final class TypeUtil
             }
 
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-
-            if (bratLabelText.length() > 0) {
+            String label = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
+            
+            if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
 
-            bratLabelText.append(StringUtils.defaultString(aFs
-                    .getFeatureValueAsString(labelFeature)));
+            bratLabelText.append(label);
         }
 
         if (bratLabelText.length() > 0) {
