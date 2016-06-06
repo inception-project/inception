@@ -358,7 +358,10 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 										String refRel = mAnno.split("->")[0];
 
 										refRel = getEscapeChars(refRel);
-										
+										if (refRel.equals("*")) {
+											refRel = null;
+										}
+
 										annos.get(i).setFeatureValueFromString(feat, refRel);
 										chainAnnosPerTyep.putIfAbsent(type, new TreeMap<>());
 										chainAnnosPerTyep.get(type).putIfAbsent(chainNo, new TreeMap<>());
