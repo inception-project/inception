@@ -616,8 +616,10 @@ public class AnnotationDetailEditorPanel
 						}
 					}
 				}
-				selection.setAnnotation(new VID(
-						((SpanAdapter) adapter).add(jCas, selection.getBegin(), selection.getEnd(), null, null)));
+				Integer annoId = ((SpanAdapter) adapter).add(jCas, selection.getBegin(), selection.getEnd(), null, null);
+				selection.setAnnotation(new VID(annoId));
+				AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, annoId);
+				selection.set(jCas, annoFs.getBegin(), annoFs.getEnd());
 			} else {
 
 				for (FeatureModel fm : featureModels) {
