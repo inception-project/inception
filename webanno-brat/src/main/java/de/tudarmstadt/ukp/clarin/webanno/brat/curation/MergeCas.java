@@ -34,6 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -42,6 +44,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -156,8 +159,29 @@ public class MergeCas
 
         // remove annotations that do not agree or are a stacked ones
         for (FeatureStructure fs : annotationsToDelete) {
+        	
             if (!slotFeaturesToReset.contains(fs)) {
-                aJCases.get(CurationPanel.CURATION_USER).removeFsFromIndexes(fs);
+            	JCas megerCas = aJCases.get(CurationPanel.CURATION_USER);
+            	// Check if this difference is on POS, STEM and LEMMA (so remove from the token too)
+            	Type type = fs.getType();
+        		int fsBegin  = ((AnnotationFS)fs).getBegin();
+        		int fsEnd = ((AnnotationFS)fs).getEnd();
+            	if(type.getName().equals(POS.class.getName())){
+            		megerCas.removeFsFromIndexes(fs);
+            		Token t = JCasUtil.selectCovered(megerCas, Token.class, fsBegin, fsEnd).get(0);
+            		t.setPos(null);
+            	}	
+               	if(type.getName().equals(Stem.class.getName())){
+            		megerCas.removeFsFromIndexes(fs);
+            		Token t = JCasUtil.selectCovered(megerCas, Token.class, fsBegin, fsEnd).get(0);
+            		t.setStem(null);
+            	}
+               	if(type.getName().equals(Lemma.class.getName())){
+            		megerCas.removeFsFromIndexes(fs);
+            		Token t = JCasUtil.selectCovered(megerCas, Token.class, fsBegin, fsEnd).get(0);
+            		t.setLemma(null);
+            	}
+            	megerCas.removeFsFromIndexes(fs);
             }
         }
         // if slot bearing annotation, clean
