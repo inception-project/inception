@@ -20,13 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeatureFS;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeatureFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -63,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
@@ -441,18 +438,6 @@ public class ArcAdapter
         newAnnotation.setFeatureValue(dependentFeature, dependentFs);
         newAnnotation.setFeatureValue(governorFeature, governorFs);
         setFeature(newAnnotation, aFeature, aValue);
-
-        // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-        // If the dependency type is set to "ROOT" the create a loop arc
-        if (aFeature != null) {
-            if (Dependency.class.getName().equals(layer.getName())
-                    && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
-                FeatureStructure source = getFeatureFS(newAnnotation, sourceFeatureName);
-                setFeatureFS(newAnnotation, targetFeatureName, source);
-            }
-        }
-        // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-
         aJCas.addFsToIndexes(newAnnotation);
         return newAnnotation;
     }
@@ -609,15 +594,6 @@ public class ArcAdapter
     {
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
         setFeature(fs, aFeature, aValue);
-
-        // BEGIN HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
-        // If the dependency type is set to "ROOT" the create a loop arc
-        if (Dependency.class.getName().equals(layer.getName())
-                && "DependencyType".equals(aFeature.getName()) && "ROOT".equals(aValue)) {
-            FeatureStructure source = getFeatureFS(fs, sourceFeatureName);
-            setFeatureFS(fs, targetFeatureName, source);
-        }
-        // END HACK - ISSUE 953 - Special treatment for ROOT in DKPro Core dependency layer
     }
 
     @Override

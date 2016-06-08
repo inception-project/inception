@@ -336,7 +336,10 @@ var AnnotatorUI = (function($, window, undefined) {
               }
             });
             // $(targetClasses.join(',')).not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
-            $targets.not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
+// WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
+            $targets.addClass('reselectTarget');
+            //$targets.not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
+// WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
           }
           clearSelection();
           var mx = evt.pageX - svgPosition.left;
@@ -1635,7 +1638,10 @@ var AnnotatorUI = (function($, window, undefined) {
           var origin = arcDragOrigin;
           var targetValid = target.hasClass('reselectTarget');
           stopArcDrag(target);
-          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
+// WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
+          if ((id = target.attr('data-span-id')) && targetValid) {
+//          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
+// WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
             var originSpan = data.spans[origin];
             var targetSpan = data.spans[id];
             if (arcOptions && arcOptions.old_target) {
