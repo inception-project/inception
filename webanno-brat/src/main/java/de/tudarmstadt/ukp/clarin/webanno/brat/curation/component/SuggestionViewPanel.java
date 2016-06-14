@@ -305,17 +305,25 @@ public class SuggestionViewPanel
         BratAnnotatorModel bModel = aCurationUserSegment.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
 
+        JCas clickedJCas = null;
+        
+        // for correction and automation, the lower panel is the clickedJcase, from the suggestions
+        if (!aCurationUserSegment.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
+        	clickedJCas = repository.readCorrectionCas(sourceDocument);
+        }
+        else{
         AnnotationDocument clickedAnnotationDocument = repository
                 .listAnnotationDocuments(sourceDocument).stream()
                 .filter(an -> an.getUser().equals(username)).findFirst().get();
 
-        JCas clickedJCas = null;
+
         try {
             clickedJCas = getJCas(bModel, clickedAnnotationDocument);
         }
         catch (IOException e1) {
             throw new IOException();
         }
+       }
 
         long layerId = TypeUtil.getLayerId(arcType);
 
