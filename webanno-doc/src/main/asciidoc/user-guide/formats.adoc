@@ -22,12 +22,6 @@
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| Binary
-| yes
-| yes
-| yes
-| Binary UIMA CAS
-
 | link:http://www.cnts.ua.ac.be/conll2000/chunking/[CoNLL 2000]
 | yes
 | yes
@@ -44,13 +38,19 @@
 | yes
 | yes
 | no
-| Lemma, POS, dependencies
+| Lemma, POS, dependencies (basic)
 
 | link:http://ufal.mff.cuni.cz/conll2009-st/task-description.html[CoNLL 2009]
 | yes
 | yes
 | no
-| Lemma, POS, dependencies
+| Lemma, POS, dependencies (basic)
+
+| link:http://universaldependencies.org/format.html[CoNLL-U]
+| yes
+| yes
+| no
+| Lemma, POS, dependencies (basic & enhanced), surface form
 
 | Plain text
 | yes
@@ -62,7 +62,7 @@
 | yes
 | no
 | no
-| Lemma, POS, dependencies, coreference, named entities
+| Lemma, POS, dependencies (basic), coreference, named entities
 
 | TEI CPH dialect
 | yes
@@ -78,13 +78,25 @@
 
 | WebAnno TSV 2
 | yes
-| yes
+| no
 | yes
 | token, multiple token, and arc annotations supported. No chain annotation is supported. no sub-token annotation is supported
 
-| XMI
+| WebAnno TSV 3
 | yes
 | yes
 | yes
-| UIMA XMI
+| 
+
+| link:https://uima.apache.org/d/uimaj-2.8.1/references.html#ugr.ref.compress:[Binary]
+| yes
+| yes
+| yes
+| UIMA Binary CAS
+
+| link:https://uima.apache.org/d/uimaj-2.8.1/references.html#ugr.ref.xmi[XMI]
+| yes
+| yes
+| yes
+| UIMA XMI CAS
 |====
