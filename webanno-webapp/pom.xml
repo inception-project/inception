@@ -289,6 +289,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-tcf</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-conllu</artifactId>
+        </dependency>
 		
 		<!-- DATABASE / HIBERNATE -->
 

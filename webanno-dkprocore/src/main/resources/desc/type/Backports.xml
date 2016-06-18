@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+    <name>DKPro Core Backports</name>
+    <description>Backported "Dependency" type from DKPro Core 1.8.0 for the "flavor" feature / for CoNLL-U (no JCas class generated to avoid conflict with DKPro Core 1.7.0)!
+
+Backported "SurfaceForm" type from DKPro Core 1.9.0 for CoNLL-U.</description>
+    <version>1.0</version>
+    <vendor>Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt</vendor>
+    <imports>
+      <import name="desc.type.LexicalUnits"/>
+    </imports>
+    <types>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency</name>
+      <description>A dependency relation between two tokens. The dependency annotation begin and end offsets correspond to those of the dependent.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>Governor</name>
+          <description>The governor word</description>
+          <rangeTypeName>de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Dependent</name>
+          <description>The dependent word</description>
+          <rangeTypeName>de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>DependencyType</name>
+          <description>The dependency type</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      <featureDescription>
+          <name>flavor</name>
+          <description>Flavor of the dependency relation (basic, collapsed, enhanced, etc...)</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm</name>
+      <description>This annotation can be used to indicate an alternate surface form. E.g. some corpora consider a normalized form of the text with resolved contractions as the canonical form and only maintain the original surface form as a secondary information. One example is the Conll-U format.</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>value</name>
+          <description>Alternate surface form.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>

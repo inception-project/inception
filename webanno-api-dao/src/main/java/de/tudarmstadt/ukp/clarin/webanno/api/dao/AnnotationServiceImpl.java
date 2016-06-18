@@ -53,9 +53,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
 
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
@@ -496,7 +498,9 @@ public class AnnotationServiceImpl
         createLemmaLayer(aProject, aUser);
 
         createChunkLayer(aProject, aUser);
-        
+
+        createSurfaceFormLayer(aProject, aUser);
+
         // Extra tagsets
         JsonImportUtil.importTagSetFromJson(aProject, aUser,
                 new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(), this);
@@ -596,13 +600,31 @@ public class AnnotationServiceImpl
         createFeature(chunkValueFeature);
     }
 
+    private void createSurfaceFormLayer(Project aProject, User aUser)
+        throws IOException
+    {
+        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
+                "Surface form", SPAN_TYPE, aProject, true);
+        surfaceFormLayer.setAllowStacking(false);
+        // The surface form must be locked to tokens for CoNLL-U writer to work properly
+        surfaceFormLayer.setLockToTokenOffset(false);
+        surfaceFormLayer.setMultipleTokens(true);
+        createLayer(surfaceFormLayer, aUser);
+
+        AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
+        surfaceFormValueFeature.setDescription("Original surface text");
+        surfaceFormValueFeature.setName("value");
+        surfaceFormValueFeature.setType(CAS.TYPE_NAME_STRING);
+        surfaceFormValueFeature.setProject(aProject);
+        surfaceFormValueFeature.setUiName("Form");
+        surfaceFormValueFeature.setLayer(surfaceFormLayer);
+        createFeature(surfaceFormValueFeature);
+    }
+
     private void createDepLayer(Project aProject, User aUser, TagSet aTagset)
         throws IOException
     {
         // Dependency Layer
-        AnnotationFeature deFeature = createFeature("DependencyType", "DependencyType",
-                "Dependency relation", CAS.TYPE_NAME_STRING, aTagset, aProject, aUser);
-
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
                 RELATION_TYPE, aProject, true);
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
@@ -619,7 +641,17 @@ public class AnnotationServiceImpl
 
         createLayer(depLayer, aUser);
 
-        deFeature.setLayer(depLayer);
+        AnnotationFeature featRel = createFeature("DependencyType", "Relation",
+                "Dependency relation", CAS.TYPE_NAME_STRING, aTagset, aProject, aUser);
+        featRel.setLayer(depLayer);
+        
+        String[] flavors = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
+        String[] flavorDesc = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
+        TagSet flavorsTagset = createTagSet("Dependency flavors", "Dependency flavors", "mul",
+                flavors, flavorDesc, aProject, aUser);
+        AnnotationFeature featFlavor = createFeature("flavor", "Flavor",
+                "Dependency relation", CAS.TYPE_NAME_STRING, flavorsTagset, aProject, aUser);
+        featFlavor.setLayer(depLayer);
     }
 
     private void createPOSLayer(Project aProject, User aUser, TagSet aPosTagset)

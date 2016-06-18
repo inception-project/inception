@@ -87,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -578,7 +579,12 @@ public class ProjectLayersPanel
                     // Makes no sense for relation layers or layers that attach to tokens
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
                             && layer.getAttachFeature() == null);
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()));
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
             add(lockToTokenOffset = new CheckBox("lockToTokenOffset")
@@ -597,7 +603,12 @@ public class ProjectLayersPanel
                     // Makes no sense for relation layers or layers that attach to tokens
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
                             && layer.getAttachFeature() == null);
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()));
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()));
                 }
             });
 
@@ -615,9 +626,15 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that have an attach feature (basically Dependency)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) && 
+                            // Not configurable for layers that attach to tokens (currently that is the
+                            // only layer on which we use the attach feature)
+                            layer.getAttachFeature() == null);
                 }
             });
             add(allowStacking = new CheckBox("allowStacking")
@@ -634,10 +651,15 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that attach to tokens (currently that is the
-                    // only layer on which we use the attach feature)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) && 
+                            // Not configurable for layers that attach to tokens (currently that is the
+                            // only layer on which we use the attach feature)
+                            layer.getAttachFeature() == null);
                 }
             });
 
@@ -656,10 +678,15 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that attach to tokens (currently that is the
-                    // only layer on which we use the attach feature)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) 
+                            // Not configurable for layers that attach to tokens (currently that
+                            // is the only layer on which we use the attach feature)
+                            && layer.getAttachFeature() == null);
                 }
             });
             add(crossSentence = new CheckBox("crossSentence")
@@ -676,10 +703,15 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that attach to tokens (currently that is the
-                    // only layer on which we use the attach feature)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) 
+                            // Not configurable for layers that attach to tokens (currently that
+                            // is the only layer on which we use the attach feature)
+                            && layer.getAttachFeature() == null);
                 }
             });
 
@@ -698,10 +730,15 @@ public class ProjectLayersPanel
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     // Makes no sense for relations
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that attach to tokens (currently that is the
-                    // only layer on which we use the attach feature)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) 
+                            // Not configurable for layers that attach to tokens (currently that
+                            // is the only layer on which we use the attach feature)
+                            && layer.getAttachFeature() == null);
                 }
             });
             add(multipleTokens = new CheckBox("multipleTokens")
@@ -719,10 +756,15 @@ public class ProjectLayersPanel
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     // Makes no sense for relations
                     setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
-                    // Not configurable for chains
-                    // Not configurable for layers that attach to tokens (currently that is the
-                    // only layer on which we use the attach feature)
-                    setEnabled(!CHAIN_TYPE.equals(layer.getType()) && layer.getAttachFeature() == null);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Not configurable for chains
+                            !CHAIN_TYPE.equals(layer.getType()) 
+                            // Not configurable for layers that attach to tokens (currently that
+                            // is the only layer on which we use the attach feature)
+                            && layer.getAttachFeature() == null);
                 }
             });
 
