@@ -128,6 +128,16 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-conllu</artifactId>
+                <version>3.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-dkprocore</artifactId>
+                <version>3.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
                 <artifactId>webanno-model</artifactId>
                 <version>3.0.0-SNAPSHOT</version>
             </dependency>
@@ -405,11 +415,13 @@
         <module>webanno-tcf</module>
         <module>webanno-tei</module>
         <module>webanno-tsv</module>
+        <module>webanno-conllu</module>
         <!-- Core -->
         <module>webanno-model</module>
         <module>webanno-api</module>
         <module>webanno-api-dao</module>
         <module>webanno-support</module>
+        <module>webanno-dkprocore</module>
         <!-- UI -->
         <module>webanno-brat</module>
         <module>webanno-webapp-home</module>

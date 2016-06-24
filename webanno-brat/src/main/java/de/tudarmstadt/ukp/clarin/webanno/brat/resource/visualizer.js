@@ -3416,13 +3416,14 @@ Util.profileStart('finish');
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Add scrolling box
-        var oversized = width > canvasWidth;
-        if (oversized) {
+        var oversized = Math.max(width - canvasWidth, 0);
+        if (oversized > 0) {
 	        $svgDiv.width(canvasWidth);
 	        $svgDiv.css("overflow-x", "auto");
         	canvasWidth = width;
         	// Allow some extra space for arcs
         	canvasWidth += 32;
+        	oversized += 32;
         }
 //        if (width > canvasWidth) {canvasWidth = width;
 // WEBANNO EXTENSION END        
@@ -3433,11 +3434,24 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
         if (rtlmode) {
           $svg.attr("direction", "rtl");
+// WEBANNO EXTENSION BEGIN - #300 - RTL, line breaks and Scrollbars          
+          if (oversized > 0) {
+              $.each(rows, function( index, row ) {
+                translate(row, oversized, row.translation.y);
+              });
+              $(backgroundGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+              $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+              $(highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+              $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+              $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+	          $svgDiv.scrollLeft(oversized+4);
+          }
+// WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars          
         }
 // WEBANNO EXTENSION END        
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
-        if (oversized) {
+        if (oversized > 0) {
 	        $svgDiv.css("padding-bottom", "16px");
 	        $svgDiv.height(y+16); // Need to take the padding into account here
         }
