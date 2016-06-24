@@ -581,6 +581,11 @@ public class AnnotationDetailEditorPanel
 			if (bModel.getSelection().isRelationAnno()) {
 				AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
 				AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+				if (adapter instanceof SpanAdapter) {
+					error("Layer do not support arc annotation.");
+		            aTarget.addChildren(getPage(), FeedbackPanel.class);
+		            return;
+				}
 				if (adapter instanceof ArcAdapter) {
 					Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
 							bModel.getSentenceEndOffset());
