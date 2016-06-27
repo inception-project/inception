@@ -122,6 +122,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -148,7 +149,7 @@ public class AnnotationDetailEditorPanel
     private AnnotationFeatureForm annotationFeatureForm;
     private Label selectedTextLabel;
     private CheckBox forwardAnnotationCheck;
-    RefreshingView<FeatureModel> featureValues;
+    private RefreshingView<FeatureModel> featureValues;
 
     private AjaxButton deleteButton;
     private AjaxButton reverseButton;
@@ -574,7 +575,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-        aTarget.add(annotationFeatureForm);
+        //aTarget.add(annotationFeatureForm); -- THIS CAUSES THE FOCUS TO BE ALWAYS TO THE FIRST ITEM #243
 		TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 		Selection selection = aBModel.getSelection();
 		if (selection.getAnnotation().isNotSet()) {
@@ -1244,7 +1245,7 @@ public class AnnotationDetailEditorPanel
             }
             item.add(frag);
 
-			if (bModel.isForwardAnnotation()) {
+/*			if (bModel.isForwardAnnotation()) {
 				forwardAnnotationText.add(new DefaultFocusBehavior2());
 			} else {
 //			    Disabled for Github Issue #243
@@ -1252,7 +1253,7 @@ public class AnnotationDetailEditorPanel
 //				if (item.getIndex() == item.size() - 1) {
 //					frag.getFocusComponent().add(new DefaultFocusBehavior());
 //				}
-			}
+			}*/
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
@@ -1277,10 +1278,11 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
-                /*
-                 * if (item.getIndex() == 0) { // Put focus on first feature
-                 * frag.getFocusComponent().add(new DefaultFocusBehavior()); }
-                 */
+            	if (bModel.isForwardAnnotation()) {
+    				forwardAnnotationText.add(new DefaultFocusBehavior2());
+    			} else if (item.getIndex() == 0) { // Put focus on first feature
+                  frag.getFocusComponent().add(new DefaultFocusBehavior()); }
+                 
 
                 // Add tooltip on label
                 StringBuilder tooltipTitle = new StringBuilder();
