@@ -186,6 +186,19 @@ public class BratAnnotatorModel
 
     // enable automatic forward annotations
     private boolean forwardAnnotation;
+    
+    //User action while annotating on document
+    private String userAction;
+
+    public String getUserAction()
+    {
+        return userAction;
+    }
+
+    public void setUserAction(String userAction)
+    {
+        this.userAction = userAction;
+    }
 
     private final Selection selection = new Selection();
 

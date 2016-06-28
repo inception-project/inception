@@ -186,7 +186,7 @@ public class BratAnnotator
 
                 // Get action
                 String action = request.getParameterValue(PARAM_ACTION).toString();
-
+                getModelObject().setUserAction(action);
                 // Load the CAS if necessary
                 boolean requiresCasLoading = action.equals(SpanAnnotationResponse.COMMAND)
                         || action.equals(ArcAnnotationResponse.COMMAND)
