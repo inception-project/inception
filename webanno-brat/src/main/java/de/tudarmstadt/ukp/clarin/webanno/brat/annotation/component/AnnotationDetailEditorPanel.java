@@ -109,6 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -1254,6 +1255,29 @@ public class AnnotationDetailEditorPanel
 //					frag.getFocusComponent().add(new DefaultFocusBehavior());
 //				}
 			}*/
+            if (bModel.getUserAction().equals(SpanAnnotationResponse.COMMAND) ) 
+            {
+                final String featureValuesPath = "sidebarCell:annotationDetailEditorPanel:annotationFeatureForm:featureEditorsContainer:featureValues";
+                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                if (bModel.getSelection().getAnnotation().isNotSet()) {
+                    Component featureValuesComponent = target.getPage().get(featureValuesPath);
+                    WebMarkupContainer featureValuesContainer = (WebMarkupContainer) featureValuesComponent;
+                    Iterator<? extends Component> iteratorOnFV = featureValuesContainer.iterator();
+                    if (iteratorOnFV.hasNext()) {
+                        WebMarkupContainer firstElement = (WebMarkupContainer) iteratorOnFV.next();
+                        Iterator<? extends Component> innerIterator = firstElement.iterator();
+                        while (innerIterator.hasNext()) {
+                            Component featureEditorComponent = innerIterator.next();
+                            if (featureEditorComponent instanceof TextFeatureEditor) {
+                                target.focusComponent(
+                                        ((TextFeatureEditor) featureEditorComponent).getFocusComponent());
+                                break;
+                            }
+                        }
+                    } 
+                } 
+            }
+            
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
