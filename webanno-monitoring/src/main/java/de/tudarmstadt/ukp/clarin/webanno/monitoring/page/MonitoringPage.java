@@ -64,7 +64,9 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -176,7 +178,8 @@ public class MonitoringPage
     private  TrainingResultForm trainingResultForm;
 
     private Label overview;
-    private DefaultDataTable<?,?> annotationDocumentStatusTable;
+    private Panel annotationDocumentStatusTable;
+//    private DefaultDataTable<?,?> annotationDocumentStatusTable;
     private final Label projectName;
     private final AgreementForm agreementForm;
 
@@ -212,7 +215,11 @@ public class MonitoringPage
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public MonitoringPage()
         throws UIMAException, IOException, ClassNotFoundException
-    {
+    {   
+//        if(repository.listProjects().isEmpty()){
+//            error("No project exist in your instance of WebAnno. Please create/import project using Projects page.");
+//            return;
+//        }
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
@@ -243,44 +250,51 @@ public class MonitoringPage
         add(projectSelectionForm);
         projectName = new Label("projectName", "");
 
-        Project project = repository.listProjects().get(0);
-
-        List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
-        List<SourceDocument> dc = repository.listSourceDocuments(project);
-        List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
-        for (SourceDocument sdc : dc) {
-            if (sdc.isTrainingDocument()) {
-                trainingDoc.add(sdc);
+        if (!repository.listProjects().isEmpty()) {
+            Project project = repository.listProjects().get(0);
+            List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
+            List<SourceDocument> dc = repository.listSourceDocuments(project);
+            List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
+            for (SourceDocument sdc : dc) {
+                if (sdc.isTrainingDocument()) {
+                    trainingDoc.add(sdc);
+                }
             }
-        }
-        dc.removeAll(trainingDoc);
-        for (int j = 0; j < repository.listProjectUsersWithPermissions(project).size(); j++) {
-            List<String> userAnnotationDocument = new ArrayList<String>();
-            userAnnotationDocument.add("");
-            for (int i = 0; i < dc.size(); i++) {
+            dc.removeAll(trainingDoc);
+            for (int j = 0; j < repository.listProjectUsersWithPermissions(project).size(); j++) {
+                List<String> userAnnotationDocument = new ArrayList<String>();
                 userAnnotationDocument.add("");
+                for (int i = 0; i < dc.size(); i++) {
+                    userAnnotationDocument.add("");
+                }
+                userAnnotationDocumentLists.add(userAnnotationDocument);
             }
-            userAnnotationDocumentLists.add(userAnnotationDocument);
+            List<String> documentListAsColumnHeader = new ArrayList<String>();
+            documentListAsColumnHeader.add("Users");
+            for (SourceDocument d : dc) {
+                documentListAsColumnHeader.add(d.getName());
+            }
+            TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
+                    userAnnotationDocumentLists);
+            List<IColumn<?, ?>> cols = new ArrayList<IColumn<?, ?>>();
+            for (int i = 0; i < prov.getColumnCount(); i++) {
+                cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), repository));
+            }
+            annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
+            monitoringDetailForm.setVisible(false);
+            add(monitoringDetailForm.add(annotatorsProgressImage)
+                    .add(annotatorsProgressPercentageImage).add(projectName)
+                    .add(annotationDocumentStatusTable));
+            annotationDocumentStatusTable.setVisible(false);
+        }else{
+            annotationDocumentStatusTable = new EmptyPanel("rsTable");
+            monitoringDetailForm.setVisible(false);
+            add(monitoringDetailForm);
+            annotationDocumentStatusTable.setVisible(false);
+            annotatorsProgressImage.setVisible(false);
+            annotatorsProgressPercentageImage.setVisible(false);
+            info("No project exists in your instance of WebAnno. Please create/import project using Projects page.");
         }
-        List<String> documentListAsColumnHeader = new ArrayList<String>();
-        documentListAsColumnHeader.add("Users");
-        for (SourceDocument d : dc) {
-            documentListAsColumnHeader.add(d.getName());
-        }
-        TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
-                userAnnotationDocumentLists);
-
-        List<IColumn<?,?>> cols = new ArrayList<IColumn<?,?>>();
-
-        for (int i = 0; i < prov.getColumnCount(); i++) {
-            cols.add(new DocumentStatusColumnMetaData(prov, i, new Project(), repository));
-        }
-        annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
-        monitoringDetailForm.setVisible(false);
-        add(monitoringDetailForm.add(annotatorsProgressImage)
-                .add(annotatorsProgressPercentageImage).add(projectName)
-                .add(annotationDocumentStatusTable));
-        annotationDocumentStatusTable.setVisible(false);
 
     }
 
