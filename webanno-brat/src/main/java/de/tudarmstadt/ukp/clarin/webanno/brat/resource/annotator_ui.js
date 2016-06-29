@@ -1604,7 +1604,12 @@ var AnnotatorUI = (function($, window, undefined) {
             target.parent().removeClass('highlight');
           }
           if (arcDragArc) {
-            svg.remove(arcDragArc);
+        	try {
+              svg.remove(arcDragArc);
+        	}
+        	catch (err) {
+        	  // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
+        	}
             arcDrag = null;
           }
           arcDragOrigin = null;
