@@ -41,6 +41,8 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -159,6 +161,8 @@ public class BratAnnotator
         {
             private static final long serialVersionUID = 1L;
 
+            
+            
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
@@ -187,6 +191,17 @@ public class BratAnnotator
                 // Get action
                 String action = request.getParameterValue(PARAM_ACTION).toString();
                 getModelObject().setUserAction(action);
+                RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
+                    @Override
+                    public void onEndRequest(RequestCycle aCycle)
+                    {
+                        // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
+                        // calls that do not go through this AjaxBehavior do not see an active user action.
+                        System.out.println("Clearning user action");
+                        BratAnnotator.this.getModelObject().clearUserAction();
+                    }
+                });
+                
                 // Load the CAS if necessary
                 boolean requiresCasLoading = action.equals(SpanAnnotationResponse.COMMAND)
                         || action.equals(ArcAnnotationResponse.COMMAND)

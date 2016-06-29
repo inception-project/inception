@@ -195,9 +195,14 @@ public class BratAnnotatorModel
         return userAction;
     }
 
-    public void setUserAction(String userAction)
+    public void setUserAction(String aUserAction)
     {
-        this.userAction = userAction;
+        userAction = aUserAction;
+    }
+
+    public void clearUserAction()
+    {
+        userAction = null;
     }
 
     private final Selection selection = new Selection();

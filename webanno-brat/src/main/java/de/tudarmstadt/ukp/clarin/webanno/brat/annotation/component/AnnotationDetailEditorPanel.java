@@ -56,12 +56,12 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.attributes.IAjaxCallListener;
+import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -87,6 +87,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.time.Duration;
 import org.codehaus.plexus.util.StringUtils;
 
 import com.googlecode.wicket.jquery.core.Options;
@@ -466,7 +467,10 @@ public class AnnotationDetailEditorPanel
 		            }
 					selectedTag = (forwardAnnotationText.getModelObject() == null ? ""
 							: forwardAnnotationText.getModelObject().charAt(0)) + selectedTag;
-					featureModels.get(0).value = getKeyBindValue(selectedTag, getBindTags());
+					Map<String, String> bindTags = getBindTags();
+					if (!bindTags.isEmpty()) {
+					    featureModels.get(0).value = getKeyBindValue(selectedTag, bindTags);
+					}
 					aTarget.add(forwardAnnotationText);
 					aTarget.add(featureValues.get(0));
 
@@ -576,7 +580,16 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-        //aTarget.add(annotationFeatureForm); -- THIS CAUSES THE FOCUS TO BE ALWAYS TO THE FIRST ITEM #243
+        
+        if (bModel.getConstraints() != null) {
+            // Make sure we update the feature editor panel because due to
+            // constraints the contents may have to be re-rendered
+            aTarget.add(annotationFeatureForm);
+            
+            // Refreshing the form here causes the focus to be lost when tabbing/entering through
+            // the editor fields. Thus we have a implemented a case to preserve/restore the focus
+            // in such a case. This happens while populating the sidebar with the feature editors.
+        }
 		TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 		Selection selection = aBModel.getSelection();
 		if (selection.getAnnotation().isNotSet()) {
@@ -1244,40 +1257,11 @@ public class AnnotationDetailEditorPanel
                         + fm.feature.getMultiValueMode() + "] on feature [" + fm.feature.getName()
                         + "]");
             }
+            // We need to enable the markup ID here because we use it during the AJAX behavior that
+            // automatically saves feature editors on change/blur. Check addAnnotateActionBehavior.
+            frag.setOutputMarkupId(true);
             item.add(frag);
 
-/*			if (bModel.isForwardAnnotation()) {
-				forwardAnnotationText.add(new DefaultFocusBehavior2());
-			} else {
-//			    Disabled for Github Issue #243
-				// Put focus on first feature
-//				if (item.getIndex() == item.size() - 1) {
-//					frag.getFocusComponent().add(new DefaultFocusBehavior());
-//				}
-			}*/
-            if (bModel.getUserAction().equals(SpanAnnotationResponse.COMMAND) ) 
-            {
-                final String featureValuesPath = "sidebarCell:annotationDetailEditorPanel:annotationFeatureForm:featureEditorsContainer:featureValues";
-                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                if (bModel.getSelection().getAnnotation().isNotSet()) {
-                    Component featureValuesComponent = target.getPage().get(featureValuesPath);
-                    WebMarkupContainer featureValuesContainer = (WebMarkupContainer) featureValuesComponent;
-                    Iterator<? extends Component> iteratorOnFV = featureValuesContainer.iterator();
-                    if (iteratorOnFV.hasNext()) {
-                        WebMarkupContainer firstElement = (WebMarkupContainer) iteratorOnFV.next();
-                        Iterator<? extends Component> innerIterator = firstElement.iterator();
-                        while (innerIterator.hasNext()) {
-                            Component featureEditorComponent = innerIterator.next();
-                            if (featureEditorComponent instanceof TextFeatureEditor) {
-                                target.focusComponent(
-                                        ((TextFeatureEditor) featureEditorComponent).getFocusComponent());
-                                break;
-                            }
-                        }
-                    } 
-                } 
-            }
-            
             if (!fm.feature.getLayer().isReadonly()) {
                 // whenever it is updating an annotation, it updates automatically when a component
                 // for the feature lost focus - but updating is for every component edited
@@ -1302,11 +1286,27 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
+                System.out.println(bModel.getUserAction());
+                // Put focus on hidden input field if we are in forward-mode
             	if (bModel.isForwardAnnotation()) {
     				forwardAnnotationText.add(new DefaultFocusBehavior2());
-    			} else if (item.getIndex() == 0) { // Put focus on first feature
-                  frag.getFocusComponent().add(new DefaultFocusBehavior()); }
-                 
+    			} 
+            	// Put focus on first component if we select an existing annotation or create a
+            	// new one
+            	else if (
+    			        item.getIndex() == 0 && 
+    			        SpanAnnotationResponse.COMMAND.equals(bModel.getUserAction())
+		        ) { 
+    			    frag.getFocusComponent().add(new DefaultFocusBehavior()); 
+                }
+            	// Restore/preserve focus when tabbing through the feature editors
+            	else if (bModel.getUserAction() == null) {
+            	    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                    if (target != null && frag.getFocusComponent().getMarkupId()
+                            .equals(target.getLastFocusedElementId())) {
+                        target.focusComponent(frag.getFocusComponent());
+                    }
+            	}
 
                 // Add tooltip on label
                 StringBuilder tooltipTitle = new StringBuilder();
@@ -1347,6 +1347,38 @@ public class AnnotationDetailEditorPanel
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 
+                @Override
+                protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+                {
+                    super.updateAjaxAttributes(aAttributes);
+                    // When focus is on a feature editor and the user selects a new annotation,
+                    // there is a race condition between the saving the value of the feature editor
+                    // and the loading of the new annotation. Delay the feature editor save to give
+                    // preference to loading the new annotation.
+                    aAttributes.setThrottlingSettings(
+                            new ThrottlingSettings(getMarkupId(), Duration.milliseconds(250), true));
+                    aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
+                    {
+                        private static final long serialVersionUID = 1L;
+
+                        @Override
+                        public CharSequence getPrecondition(Component aComponent)
+                        {
+                            // If the panel refreshes because the user selects
+                            // a new annotation, the annotation editor panel is updated for the
+                            // new annotation first (before saving values) because of the delay
+                            // set above. When the delay is over, we can no longer save the value
+                            // because the old component is no longer there. We use the markup id
+                            // of the editor fragments to check if the old component is still there
+                            // (i.e. if the user has just tabbed to a new field) or if the old
+                            // component is gone (i.e. the user selected/created another annotation).
+                            // If the old component is no longer there, we abort the delayed save
+                            // action.
+                            return "return $('#"+aFrag.getMarkupId()+"').length > 0;";
+                        }
+                    });
+                }
+                
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
@@ -1391,7 +1423,7 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = -7275181609671919722L;
 
-        public FeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+        public FeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aMarkupProvider,
                 IModel<?> aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, aModel);
@@ -1414,17 +1446,16 @@ public class AnnotationDetailEditorPanel
         @SuppressWarnings("rawtypes")
         private final NumberTextField field;
 
-        public NumberFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+        public NumberFeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aItem,
                 FeatureModel aModel)
         {
-            super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
+            super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureModel>(aModel));
 
             add(new Label("feature", aModel.feature.getUiName()));
 
             switch (aModel.feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
                 field = new NumberTextField<Integer>("value", Integer.class);
-                add(field);
                 break;
             }
             case CAS.TYPE_NAME_FLOAT: {
@@ -1436,6 +1467,13 @@ public class AnnotationDetailEditorPanel
                 throw new IllegalArgumentException("Type [" + aModel.feature.getType()
                         + "] cannot be rendered as a numeric input field");
             }
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshs of the feature editor panel. This is required to restore the focus.
+            field.setOutputMarkupId(true);
+            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            
+            add(field);
         }
 
         @SuppressWarnings("rawtypes")
@@ -1458,14 +1496,20 @@ public class AnnotationDetailEditorPanel
         private static final long serialVersionUID = 5104979547245171152L;
         private final CheckBox field;
 
-        public BooleanFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+        public BooleanFeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aItem,
                 FeatureModel aModel)
         {
-            super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
+            super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureModel>(aModel));
 
             add(new Label("feature", aModel.feature.getUiName()));
 
             field = new CheckBox("value");
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshs of the feature editor panel. This is required to restore the focus.
+            field.setOutputMarkupId(true);
+            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            
             add(field);
         }
 
@@ -1508,10 +1552,10 @@ public class AnnotationDetailEditorPanel
 			
 		}
 
-		public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+		public TextFeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aItem,
                 FeatureModel aModel)
         {
-            super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
+            super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureModel>(aModel));
             //Checks whether hide un-constraint feature is enabled or not
             hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
             
@@ -1533,7 +1577,6 @@ public class AnnotationDetailEditorPanel
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
                 field = new StyledComboBox<Tag>("value", tagset);
-                field.setOutputMarkupId(true);
 
                 // Must add behavior to editor, not to combobox to ensure proper order of the
                 // initializing JS header items: first combo box, then tooltip.
@@ -1546,6 +1589,13 @@ public class AnnotationDetailEditorPanel
             else {
                 field = new TextField<String>("value");
             }
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshs of the feature editor panel. This is required to restore the focus.
+            field.setOutputMarkupId(true);
+            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            
+            add(field);
             
             //Shows whether constraints are triggered or not
             //also shows state of constraints use.
@@ -1578,8 +1628,6 @@ public class AnnotationDetailEditorPanel
                 }
             }));
             add(constraintsInUseIndicator);
-
-            add(field);
         }
 
         /**
@@ -1687,10 +1735,10 @@ public class AnnotationDetailEditorPanel
 		}
         
         @SuppressWarnings("unchecked")
-        public LinkFeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
+        public LinkFeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aItem,
                 final FeatureModel aModel)
         {
-            super(aId, aMarkupId, aMarkupProvider, new CompoundPropertyModel<FeatureModel>(aModel));
+            super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureModel>(aModel));
             //Checks whether hide un-constraint feature is enabled or not
             hideUnconstraintFeature = aModel.feature.isHideUnconstraintFeature();
             add(new Label("feature", aModel.feature.getUiName()));
@@ -1819,7 +1867,12 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 };
+                
+                // Ensure that markup IDs of feature editor focus components remain constant across
+                // refreshs of the feature editor panel. This is required to restore the focus.
                 newRole.setOutputMarkupId(true);
+                newRole.setMarkupId("featureEditorHead-" + aItem.getIndex());
+                
                 content.add(newRole);
                 
                 isDrop = true;
