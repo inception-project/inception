@@ -1312,7 +1312,9 @@ var Visualizer = (function($, window, undefined) {
 	              var charOrder = [];
 	              var charWidths = [];
 	              var charDirection = [];
-	              for (var idx = 0; idx < fragment.chunk.text.length; idx++) {
+	              // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
+	              // characters do not count. Using text.getNumberOfChars() instead.
+	              for (var idx = 0; idx < text.getNumberOfChars(); idx++) {
 	            	  var cw = text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x;
 	            	  charOrder.push(idx);
 	            	  charWidths.push(Math.abs(cw));
@@ -1399,7 +1401,9 @@ var Visualizer = (function($, window, undefined) {
             	  // This is the old measurement code which doesn't work properly because browsers
             	  // treat the x coordinate very differently. Our width-based measurement is more
             	  // reliable.
-	              if (firstChar < fragment.chunk.text.length) {
+	              // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
+	              // characters do not count. Using text.getNumberOfChars() instead.
+	              if (firstChar < text.getNumberOfChars()) {
 	            	startPos = text.getStartPositionOfChar(firstChar).x;
 	              } else {
 	                startPos = text.getComputedTextLength();
