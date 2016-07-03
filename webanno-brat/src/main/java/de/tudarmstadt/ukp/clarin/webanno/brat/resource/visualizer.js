@@ -3443,7 +3443,6 @@ Util.profileStart('finish');
               $.each(rows, function( index, row ) {
                 translate(row, oversized, row.translation.y);
               });
-              $(backgroundGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
@@ -3456,6 +3455,10 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
         if (oversized > 0) {
+            $(backgroundGroup).attr('width', canvasWidth);
+            $(backgroundGroup).children().each(function(index,element) {
+          	  $(element).attr('width', canvasWidth);
+            })
 	        $svgDiv.css("padding-bottom", "16px");
 	        $svgDiv.height(y+16); // Need to take the padding into account here
         }
