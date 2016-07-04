@@ -1286,7 +1286,6 @@ public class AnnotationDetailEditorPanel
                     }
                 }
 
-                System.out.println(bModel.getUserAction());
                 // Put focus on hidden input field if we are in forward-mode
             	if (bModel.isForwardAnnotation()) {
     				forwardAnnotationText.add(new DefaultFocusBehavior2());
