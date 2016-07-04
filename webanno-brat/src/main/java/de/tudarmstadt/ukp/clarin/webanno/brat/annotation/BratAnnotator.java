@@ -197,7 +197,6 @@ public class BratAnnotator
                     {
                         // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
                         // calls that do not go through this AjaxBehavior do not see an active user action.
-                        System.out.println("Clearning user action");
                         BratAnnotator.this.getModelObject().clearUserAction();
                     }
                 });
