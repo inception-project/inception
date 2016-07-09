@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.project.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -184,15 +185,19 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
+                        aEditor.reloadLayer(aTarget);
                     }
                     catch (FileNotFoundException e) {
                         error("Preference file not found");
                     }
                     catch (IOException e) {
                         error("Preference file not found");
-                    }
-                    modalWindow.close(aTarget);
+                    } catch (BratAnnotationException e) {
+                    	error("Preference file not found");
+					}
+                    modalWindow.close(aTarget);                   
                     aTarget.add(aEditor);
+                    
 
                 }
 
