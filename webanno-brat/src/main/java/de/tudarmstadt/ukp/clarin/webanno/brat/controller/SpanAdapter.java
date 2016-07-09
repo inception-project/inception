@@ -316,7 +316,7 @@ public class SpanAdapter
                     - aFirstSentenceOffset);
         }
         aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset,
-                lastSentenceInPage.getEnd()));
+                lastSentenceInPage.getEnd()).replace("\n", " "));
 
         // Render Sentence
         for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
