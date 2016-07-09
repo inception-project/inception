@@ -286,15 +286,6 @@ public class CurationPage
                         }
                         if(bModel.getDocument()!=null){
                             User user = userRepository.get(username);
-                            // Update source document state to
-                            // CURRATION_INPROGRESS, if it was not
-                            // ANNOTATION_FINISHED
-                            if (!bModel.getDocument().getState()
-                                    .equals(SourceDocumentState.CURATION_FINISHED)) {
-
-                                bModel.getDocument()
-                                        .setState(SourceDocumentState.CURATION_IN_PROGRESS);
-                            }
 
                             try {
                                 repository.createSourceDocument(bModel.getDocument(), user);
@@ -995,6 +986,14 @@ public class CurationPage
 
     private void loadDocumentAction(AjaxRequestTarget aTarget) throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
+			// Update source document state to
+			// CURRATION_INPROGRESS, if it was not
+			// ANNOTATION_FINISHED
+			if (!bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+	
+				bModel.getDocument().setState(SourceDocumentState.CURATION_IN_PROGRESS);
+			}
+
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                     .getAuthentication().getName());
