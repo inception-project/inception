@@ -1090,18 +1090,26 @@ public class ProjectLayersPanel
                 {
                     AnnotationFeature feature = FeatureDetailForm.this.getModelObject();
                     String name = feature.getUiName();
-                    //Check if feature name is not from the restricted names list
-                    if(WebAnnoConst.RESTRICTED_FEATURE_NAMES.contains(feature.getUiName())){
-                        error("'" + feature.getUiName().toLowerCase()
+                    name = name.replaceAll("\\W", "");
+                    // Check if feature name is not from the restricted names list
+                    if (WebAnnoConst.RESTRICTED_FEATURE_NAMES.contains(name)) {
+                        error("'" + feature.getUiName().toLowerCase() + " (" + name + ")"
                                 + "' is a restricted keyword for a feature name. Please use a different name for the feature.");
                         return;
                     }
-                    name = name.replaceAll("\\W", "");
                     if (layerDetailForm.getModelObject().getType().equals(RELATION_TYPE)
                             && (name.equals(WebAnnoConst.FEAT_REL_SOURCE)
                                     || name.equals(WebAnnoConst.FEAT_REL_TARGET)
                                     || name.equals(FIRST) || name.equals(NEXT))) {
                         error("layer " + name + " is not allowed as a feature name");
+                        return;
+                    }
+                    // Checking if feature name doesn't start with a number or underscore
+                    // And only uses alphanumeric characters
+                    if (StringUtils.isNumeric(name.substring(0, 1))
+                            || name.substring(0, 1).equals("_")
+                            || !StringUtils.isAlphanumeric(name.replace("_", ""))) {
+                        error("Feature names must start with a letter and consist only of letters, digits, or underscores.");
                         return;
                     }
                     if (feature.getId() == 0) {
