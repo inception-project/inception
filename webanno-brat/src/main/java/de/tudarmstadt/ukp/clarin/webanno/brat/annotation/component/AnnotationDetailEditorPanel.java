@@ -581,15 +581,9 @@ public class AnnotationDetailEditorPanel
             }
         }
         
-        if (bModel.getConstraints() != null) {
-            // Make sure we update the feature editor panel because due to
-            // constraints the contents may have to be re-rendered
-            aTarget.add(annotationFeatureForm);
-            
-            // Refreshing the form here causes the focus to be lost when tabbing/entering through
-            // the editor fields. Thus we have a implemented a case to preserve/restore the focus
-            // in such a case. This happens while populating the sidebar with the feature editors.
-        }
+        // #186 - After filling a slot, the annotation detail panel is not updated 
+        aTarget.add(annotationFeatureForm);
+        
 		TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
 		Selection selection = aBModel.getSelection();
 		if (selection.getAnnotation().isNotSet()) {
