@@ -93,7 +93,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
 	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
-	private StringBuilder coveredText = new StringBuilder();
+	private StringBuilder coveredText =new StringBuilder();
 	// for each type, for each unit, annotations per position
 	private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
 	
@@ -135,6 +135,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		// getting header information
 		LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
 		int sentBegin = -1, sentEnd = 0;
+		int prevSentEnd = 0;
 		String sentLine = "";
 		while (lineIterator.hasNext()) {
 			String line = lineIterator.next().trim();
@@ -152,7 +153,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			}
             if (line.trim().isEmpty()) {
                 if (!sentLine.isEmpty()) {
-                    createSentence(aJCas, sentLine, sentBegin, sentEnd);
+                    createSentence(aJCas, sentLine, sentBegin, sentEnd, prevSentEnd);
+                    prevSentEnd = sentEnd;
                     sentBegin = -1;// reset for next sentence begin
                 }
                 continue;
@@ -183,7 +185,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		
 		// the last sentence
         if (!sentLine.isEmpty()) {
-            createSentence(aJCas, sentLine, sentBegin, sentEnd);
+            createSentence(aJCas, sentLine, sentBegin, sentEnd, prevSentEnd);
         }
 
 		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
@@ -627,9 +629,17 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 	}
 
-	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd) {
-		String text =  aLine.substring(aLine.indexOf("=") + 1);
-		coveredText.append(text + LF);
+	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd, int aPrevEnd) {
+		String text =  aLine.substring(aLine.indexOf("=") + 1);		
+		if (aPrevEnd + 1 < aBegin) {
+			String pad = ""; // if there is plenty of spaces between sentences
+			for (int i = aPrevEnd + 1; i < aBegin; i++) {
+				pad = pad + " ";
+			}
+			coveredText.append(pad + text + LF);
+		} else {
+			coveredText.append(text + LF);
+		}
 		Sentence sentence = new Sentence(aJCas, aBegin, aEnd);
 		sentence.addToIndexes();
 	}
