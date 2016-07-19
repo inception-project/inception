@@ -46,7 +46,7 @@ This is useful to reduce clutter if there are many annotation layers. Mind that 
 has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
 no dependency relations will be visible anymore.
 
-The *Brush mode* controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+The *Remember layer* controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
 
 The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
 actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
