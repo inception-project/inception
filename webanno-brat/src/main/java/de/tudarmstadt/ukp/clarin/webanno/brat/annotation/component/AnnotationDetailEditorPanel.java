@@ -495,7 +495,7 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(bModel.getPreferences().isBrushMode());
+                    setVisible(bModel.getPreferences().isRememberLayer());
                 }
                 
             });
@@ -510,7 +510,7 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(bModel.getPreferences().isBrushMode());
+                    setVisible(bModel.getPreferences().isRememberLayer());
                 }
 
             };
@@ -1010,7 +1010,7 @@ public class AnnotationDetailEditorPanel
         if (aBModel.getSelection().isRelationAnno()) {
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
-            if (aBModel.getPreferences().isBrushMode()
+            if (aBModel.getPreferences().isRememberLayer()
                     && !aBModel.getDefaultAnnotationLayer().equals(spanLayer)) {
                 throw new BratAnnotationException("No relation annotation allowed on the "
                         + "selected span layer");
@@ -1146,7 +1146,7 @@ public class AnnotationDetailEditorPanel
             }
         }
         populateFeatures(null);
-        updateBrushMode();
+        updateRememberLayer();
     }
 
     private void setInitSpanLayers(BratAnnotatorModel aBModel)
@@ -2550,7 +2550,7 @@ public class AnnotationDetailEditorPanel
                 populateFeatures(null);
             }
 
-            updateBrushMode();
+            updateRememberLayer();
             aTarget.add(annotationFeatureForm);
         }
         catch (UIMAException | ClassNotFoundException | IOException e) {
@@ -2558,9 +2558,9 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void updateBrushMode()
+    private void updateRememberLayer()
     {
-		if (bModel.getPreferences().isBrushMode()) {
+		if (bModel.getPreferences().isRememberLayer()) {
 			if (bModel.getDefaultAnnotationLayer() == null) {
 				bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
 			}

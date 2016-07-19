@@ -41,7 +41,7 @@ public class AnnotationPreference
     private boolean scrollPage = true;
     
     // if a default layer is to be set
-    private boolean brushMode;
+    private boolean rememberLayer;
     
     // determine if static color for annotations will be used or we shall
     // dynamically generate one
@@ -109,14 +109,14 @@ public class AnnotationPreference
         scrollPage = aScrollPage;
     }
 
-    public boolean isBrushMode()
+    public boolean isRememberLayer()
     {
-        return brushMode;
+        return rememberLayer;
     }
 
-    public void setBrushMode(boolean aBrushMode)
+    public void setRememberLayer(boolean aRememberLayer)
     {
-        brushMode = aBrushMode;
+        rememberLayer = aRememberLayer;
     }
 
     public boolean isStaticColor()
