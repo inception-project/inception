@@ -788,8 +788,13 @@ public class ProjectExportPanel extends Panel {
 					i++;
 				} catch (FileNotFoundException e) {
 //					error(e.getMessage());
-				    LOG.error("Source file(s) related to project couldn't be located");
+				    StringBuffer errorMessage = new StringBuffer();
+				    errorMessage.append("Source file '");
+				    errorMessage.append(sourceDocument.getName());
+				    errorMessage.append("' related to project couldn't be located in repository");
+				    LOG.error(errorMessage.toString());
 					LOG.error(ExceptionUtils.getRootCause(e));
+					messages.add(errorMessage.toString());
 					throw new ProjectExportException("Couldn't find some source file(s) related to project");
 //					continue;
 					
