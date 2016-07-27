@@ -3987,7 +3987,7 @@ Util.profileStart('before render');
     	var t3 = (charCode == 0x202E);
     	var t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
     	var t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
-    	return t1 || t2 || t3 || t4 || t5;
+    	return t1 || t2 || t3 || t4 || t5;
     };    
 // WEBANNO EXTENSION END - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
     

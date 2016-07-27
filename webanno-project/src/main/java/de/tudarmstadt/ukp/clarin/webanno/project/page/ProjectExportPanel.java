@@ -516,7 +516,7 @@ public class ProjectExportPanel extends Panel {
                 canceled = false;
             }
             catch (FileNotFoundException e) {
-                LOG.error("Unable to find some project file during project export", e);
+                LOG.error("Unable to find some project file(s) during project export", e);
                 messages.add("Unable to find file during project export: " + ExceptionUtils.getRootCauseMessage(e));
             }
             catch (Throwable e){
@@ -569,6 +569,7 @@ public class ProjectExportPanel extends Panel {
 				exportCuratedDocuments(aModel, exportTempDir);
 			} catch (ProjectExportException e) {
 				//cancel export operation here
+			    error(e.getMessage());
 				if (thread != null) {
                     progress = 100;
                     thread.interrupt();
@@ -770,7 +771,7 @@ public class ProjectExportPanel extends Panel {
          * Copy source documents from the file system of this project to the export folder
          */
         private void exportSourceDocuments(Project aProject, File aCopyDir)
-            throws IOException
+            throws IOException, ProjectExportException
         {
             File sourceDocumentDir = new File(aCopyDir + SOURCE_FOLDER);
             FileUtils.forceMkdir(sourceDocumentDir);
@@ -787,8 +788,15 @@ public class ProjectExportPanel extends Panel {
 					i++;
 				} catch (FileNotFoundException e) {
 //					error(e.getMessage());
+				    StringBuffer errorMessage = new StringBuffer();
+				    errorMessage.append("Source file '");
+				    errorMessage.append(sourceDocument.getName());
+				    errorMessage.append("' related to project couldn't be located in repository");
+				    LOG.error(errorMessage.toString());
 					LOG.error(ExceptionUtils.getRootCause(e));
-					continue;
+					messages.add(errorMessage.toString());
+					throw new ProjectExportException("Couldn't find some source file(s) related to project");
+//					continue;
 					
 				}
             }

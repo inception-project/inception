@@ -93,7 +93,7 @@ public class AnnotationPreferenceModalPanel
             getModelObject().sidebarSize = bModel.getPreferences().getSidebarSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
-            getModelObject().brushMode = bModel.getPreferences().isBrushMode();
+            getModelObject().rememberLayer = bModel.getPreferences().isRememberLayer();
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
@@ -162,7 +162,7 @@ public class AnnotationPreferenceModalPanel
             // Add a Checkbox to enable/disable automatic page navigations while annotating
             add(new CheckBox("scrollPage"));
             
-            add(new CheckBox("brushMode"));
+            add(new CheckBox("rememberLayer"));
 
             add(new CheckBox("staticColor"));
 
@@ -176,7 +176,7 @@ public class AnnotationPreferenceModalPanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
-                    bModel.getPreferences().setBrushMode(getModelObject().brushMode);
+                    bModel.getPreferences().setRememberLayer(getModelObject().rememberLayer);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
                     bModel.getPreferences().setSidebarSize(getModelObject().sidebarSize);
@@ -237,7 +237,7 @@ public class AnnotationPreferenceModalPanel
         public int sidebarSize;
         public int curationWindowSize;
         public boolean scrollPage;
-        public boolean brushMode;
+        public boolean rememberLayer;
         public boolean staticColor;
         public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
     }

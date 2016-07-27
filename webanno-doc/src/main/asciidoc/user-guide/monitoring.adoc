@@ -45,7 +45,7 @@ image::monitoring3.png[align="center"]
 
 Above the *Measure* dropbdown menu, the *Feature* box allows the selection of layers for which an agreement shall be computed. Doubleclicking on a layer starts the computation of the agreement and an outline is shown to the left side of the box:
 
-image::monitoring4.PNG[align="center"]
+image::monitoring4.png[align="center"]
 
 === Document Status ===
 
