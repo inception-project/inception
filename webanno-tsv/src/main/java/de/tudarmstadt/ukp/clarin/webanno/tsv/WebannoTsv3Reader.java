@@ -136,30 +136,39 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
 		int sentBegin = -1, sentEnd = 0;
 		int prevSentEnd = 0;
-		String sentLine = "";
+		StringBuilder sentLineSb = new StringBuilder();
+		String lastSent = "";
 		while (lineIterator.hasNext()) {
-			String line = lineIterator.next().trim();
+			String line = lineIterator.next();
 			if (line.startsWith("#T_")) {
 				setLayerAndFeature(aJCas, line);
 				continue;
 			}
 
 			if (line.startsWith("#Text=")) {
-			    sentLine = line;
-                continue;
+				if (sentLineSb.toString().isEmpty()) {
+					sentLineSb.append(line.substring(line.indexOf("=") + 1));
+				} else {
+					sentLineSb.append(LF + line.substring(line.indexOf("=") + 1));
+				}
+				lastSent = sentLineSb.toString();
+				continue;
 			}
 			if (line.startsWith("#FORMAT=")) {
 				continue;
 			}
             if (line.trim().isEmpty()) {
-                if (!sentLine.isEmpty()) {
-                    createSentence(aJCas, sentLine, sentBegin, sentEnd, prevSentEnd);
+                if (!sentLineSb.toString().isEmpty()) {
+                    createSentence(aJCas, sentLineSb.toString(), sentBegin, sentEnd, prevSentEnd);
                     prevSentEnd = sentEnd;
                     sentBegin = -1;// reset for next sentence begin
+                    sentLineSb  = new StringBuilder();
                 }
+                
                 continue;
             }
 			
+            line = line.trim();
 			int count = StringUtils.countMatches(line, "\t");
 
 			if (columns != count) {
@@ -184,8 +193,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 		
 		// the last sentence
-        if (!sentLine.isEmpty()) {
-            createSentence(aJCas, sentLine, sentBegin, sentEnd, prevSentEnd);
+        if (!lastSent.isEmpty()) {
+            createSentence(aJCas, lastSent, sentBegin, sentEnd, prevSentEnd);
         }
 
 		Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> annosPerTypePerUnit = new HashMap<>();
@@ -629,16 +638,15 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 	}
 
-	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd, int aPrevEnd) {
-		String text =  aLine.substring(aLine.indexOf("=") + 1);		
+	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd, int aPrevEnd) {		
 		if (aPrevEnd + 1 < aBegin) {
 			String pad = ""; // if there is plenty of spaces between sentences
 			for (int i = aPrevEnd + 1; i < aBegin; i++) {
 				pad = pad + " ";
 			}
-			coveredText.append(pad + text + LF);
+			coveredText.append(pad + aLine + LF);
 		} else {
-			coveredText.append(text + LF);
+			coveredText.append(aLine + LF);
 		}
 		Sentence sentence = new Sentence(aJCas, aBegin, aEnd);
 		sentence.addToIndexes();
