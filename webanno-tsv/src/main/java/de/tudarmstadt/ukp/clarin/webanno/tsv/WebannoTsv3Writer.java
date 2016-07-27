@@ -149,7 +149,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 					// GITHUB ISSUE 318: New line in sentence should be exported as is
 					if(sentWithNl.length >1){
 						for(int i=0;i<sentWithNl.length-1;i++){
-							IOUtils.write("#TextSUbSent=" +sentWithNl[i+1] + LF, docOS, encoding);
+							IOUtils.write("#Text=" +sentWithNl[i+1] + LF, docOS, encoding);
 						}
 					}
 				}
