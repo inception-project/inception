@@ -143,8 +143,15 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			writeHeader(docOS);
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
-					// TODO: This removes any in-line line breaks
-					IOUtils.write(LF + "#Text=" + sentenceUnits.get(unit).replace(LF, "") + LF, docOS, encoding);
+					String [] sentWithNl = sentenceUnits.get(unit).split("\n");
+					IOUtils.write(LF + "#Text=" +sentWithNl[0] + LF, docOS, encoding);
+					// if sentence contains new line character
+					// GITHUB ISSUE 318: New line in sentence should be exported as is
+					if(sentWithNl.length >1){
+						for(int i=0;i<sentWithNl.length-1;i++){
+							IOUtils.write("#TextSUbSent=" +sentWithNl[i+1] + LF, docOS, encoding);
+						}
+					}
 				}
 				if (unit.isSubtoken) {
 					IOUtils.write(
