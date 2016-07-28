@@ -248,7 +248,6 @@ public class RemoteApiController
      * 
      * @param aName
      *            The name of the project
-     * @return success in ResponseBody if project is deleted
      * @throws Exception
      *             if there was en error.
      */
@@ -410,6 +409,14 @@ public class RemoteApiController
         }
     }
 
+    @RequestMapping(value = "/project/download/annotationdocument", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public @ResponseStatus(HttpStatus.NO_CONTENT) void downloadAnnotationFile(
+            @RequestParam("file") MultipartFile aFile, @RequestParam("name") String aName,
+            @RequestParam("filetype") String aFileType)
+                throws Exception
+    {
+        
+    }
     private void uploadSourceDocumentFile(File file, Project project, User user, String aFileType)
             throws IOException, UIMAException {
 
