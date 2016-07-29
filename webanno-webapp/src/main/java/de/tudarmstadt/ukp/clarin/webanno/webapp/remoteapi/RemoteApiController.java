@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -86,11 +85,10 @@ public class RemoteApiController
     /**
      * Create a new project.
      *
-     * To test, use the Linux "curl" command.
+     * To test when running in Eclipse, use the Linux "curl" command.
      *
      * curl -v -F 'file=@test.zip' -F 'name=Test' -F 'filetype=tcf'
-     * 'http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.webanno.webapp/api/project
-     * '
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project'
      *
      * @param aName
      *            the name of the project to create.
@@ -194,11 +192,10 @@ public class RemoteApiController
     /**
      * List all the projects for a given user with their roles
      * 
-     * Test: Open your browser, paste following URL with appropriate values for username and
-     * password:
+     * Test when running in Eclipse: Open your browser, paste following URL with appropriate values
+     * for username and password:
      * 
-     * http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.webanno
-     * .webapp/api/project/list
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/list
      * 
      * @return JSON string of project where user has access to and respective roles in the project
      * @throws Exception
@@ -238,13 +235,12 @@ public class RemoteApiController
     }
 
     /**
-     * Delete a project where user has an admin role
+     * Delete a project where user has a project admin role
      * 
-     * To test, use the Linux "curl" command.
+     * To test when running in Eclipse, use the Linux "curl" command.
      * 
      * curl -v -F 'name=PROJECTNAME'
-     * 'http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.
-     * webanno.webapp/api/project/delete'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/delete'
      * 
      * @param aName
      *            The name of the project
@@ -289,11 +285,10 @@ public class RemoteApiController
     /**
      * Delete the source document in project if user has ADMIN permissions
      * 
-     * To test, use the Linux "curl" command.
+     * To test when running in Eclipse, use the Linux "curl" command.
      * 
      * curl -v -F 'projectname=PROJECTNAME' -F 'documentname=DOCUMENTNAME'
-     * 'http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.
-     * webanno.webapp/api/project/delete/sourcedocument'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/delete/sourcedocument'
      * 
      * @param aName
      *            Project Name
@@ -349,9 +344,8 @@ public class RemoteApiController
     /**
      * Upload a source document into project where user has "ADMIN" role
      * 
-     * Test: curl -v -F 'file=@test.txt' -F 'name=Test' -F 'filetype=txt'
-     * 'http://USERNAME:PASSWORD@localhost:8080/de.tudarmstadt.ukp.clarin.
-     * webanno.webapp/api/project/upload/sourcedocument'
+     * Test when running in Eclipse: curl -v -F 'file=@test.txt' -F 'name=Test' -F 'filetype=txt'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/upload/sourcedocument'
      * 
      * 
      * @param aFile
@@ -396,8 +390,9 @@ public class RemoteApiController
             // Check if file already present or not
             boolean isDocumentPresent = projectRepository.existsSourceDocument(project,
                     aFile.getOriginalFilename());
-            if (!isDocumentPresent)
+            if (!isDocumentPresent) {
                 uploadSourceDocumentFile(uploadDocumentFile, project, user, aFileType);
+            }
             else {
                 throw new IOException("The source document with name ["
                         + aFile.getOriginalFilename() + "] exists");
