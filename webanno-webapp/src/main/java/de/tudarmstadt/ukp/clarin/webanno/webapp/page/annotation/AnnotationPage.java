@@ -423,16 +423,16 @@ public class AnnotationPage
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 User user = userRepository.get(username);
 
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
+                List<SourceDocument> sourceDocumentsinIgnoreState = new ArrayList<SourceDocument>();
                 for (SourceDocument sourceDocument : listOfSourceDocuements) {
                     if (repository.existsAnnotationDocument(sourceDocument, user)
                             && repository.getAnnotationDocument(sourceDocument, user).getState()
                                     .equals(AnnotationDocumentState.IGNORE)) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
+                        sourceDocumentsinIgnoreState.add(sourceDocument);
                     }
                 }
 
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+                listOfSourceDocuements.removeAll(sourceDocumentsinIgnoreState);
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
