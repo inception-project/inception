@@ -196,7 +196,7 @@ public class ProjectConstraintsPanel
                     }
                 }
             }; 
-            add(new DownloadLink("export", exportFileModel, exportFilenameModel));
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel).setDeleteAfterDownload(true));
             
             Button deleteButton = new Button("delete", new ResourceModel("label")) {
 
