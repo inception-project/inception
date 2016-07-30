@@ -646,7 +646,7 @@ public class ProjectTagSetsPanel
                     }
                     return exportFile;
                 }
-            }).setOutputMarkupId(true));
+            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
 
         }
     }

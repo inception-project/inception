@@ -928,7 +928,7 @@ public class ProjectLayersPanel
 
                     return exportFile;
                 }
-            }).setOutputMarkupId(true));
+            }).setDeleteAfterDownload(true).setOutputMarkupId(true));
             add(new Button("cancel", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
