@@ -17,22 +17,26 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.InvalidFileNameException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tools.ant.ProjectHelperRepository;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -41,6 +45,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,11 +58,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
+import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2012Writer;
+import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -88,7 +101,7 @@ public class RemoteApiController
      * To test when running in Eclipse, use the Linux "curl" command.
      *
      * curl -v -F 'file=@test.zip' -F 'name=Test' -F 'filetype=tcf'
-     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects'
      *
      * @param aName
      *            the name of the project to create.
@@ -97,9 +110,9 @@ public class RemoteApiController
      *            in the formats.properties configuration file of WebAnno.
      * @param aFile
      *            a ZIP file containing the project data.
-     * @throws Exception if there was en error.
+     * @throws Exception if there was an error.
      */
-    @RequestMapping(value = "/project", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequestMapping(value = "/projects", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public @ResponseStatus(HttpStatus.NO_CONTENT)
     void createProject(@RequestParam("file") MultipartFile aFile,
             @RequestParam("name") String aName, @RequestParam("filetype") String aFileType)
@@ -195,13 +208,13 @@ public class RemoteApiController
      * Test when running in Eclipse: Open your browser, paste following URL with appropriate values
      * for username and password:
      * 
-     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/list
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects
      * 
-     * @return JSON string of project where user has access to and respective roles in the project
+     * @return JSON string of project where user has access to and respective roles in the project.
      * @throws Exception
-     *             if there was en error.
+     *             if there was an error.
      */
-    @RequestMapping(value = "/project/list", method = RequestMethod.GET)
+    @RequestMapping(value = "/projects", method = RequestMethod.GET)
     public @ResponseBody String listProject()
         throws Exception
     {
@@ -235,37 +248,29 @@ public class RemoteApiController
     }
 
     /**
-     * Delete a project where user has a project admin role
+     * Delete a project where user has a ADMIN role
      * 
      * To test when running in Eclipse, use the Linux "curl" command.
      * 
-     * curl -v -F 'name=PROJECTNAME'
-     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/delete'
+     * curl -v -X DELETE
+     * 'http://USERNAME:PASSOWRD@localhost:8080/webanno-webapp/api/projects/{aProjectId}'
      * 
-     * @param aName
-     *            The name of the project
+     * @param aProjectId
+     *            The id of the project.
      * @throws Exception
-     *             if there was en error.
+     *             if there was an error.
      */
-    @RequestMapping(value = "/project/delete", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteProject(
-            @RequestParam("name") String aName)
-                throws Exception
+    @RequestMapping(value = "/projects/{aProjectId}", method = RequestMethod.DELETE)
+    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteProject(@PathVariable long aProjectId)
+        throws Exception
     {
-        LOG.info("Deleting project [" + aName + "]");
+        LOG.info("Deleting project [" + aProjectId + "]");
 
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = null;
+        Project project = projectRepository.getProject(aProjectId);
 
-        if (projectRepository.existsProject(aName)) {
-            // Get project
-            project = projectRepository.getProject(aName);
-        }
-        else {
-            throw new IOException("The project with name [" + aName + "] does not exists");
-        }
         // Check for the access
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
@@ -273,111 +278,126 @@ public class RemoteApiController
         if (hasAccess) {
             // remove project is user has admin access
             projectRepository.removeProject(project, user);
-            LOG.info("Successfully deleted project [" + aName + "]");
+            LOG.info("Successfully deleted project [" + aProjectId + "]");
         }
         else {
             throw new PermissionDeniedDataAccessException(
-                    "Not enough permission on [" + aName + "]", new Throwable("user:" + username));
+                    "Not enough permission on project : [" + aProjectId + "]",
+                    new Throwable("user:" + username));
         }
 
     }
 
     /**
-     * Delete the source document in project if user has ADMIN permissions
+     * Show source documents in given project where user has ADMIN access
+     * 
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs
+     * 
+     * @param aProjectId
+     * @return JSON with {@link SourceDocument} : id
+     * @throws Exception
+     */
+
+    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs", method = RequestMethod.GET)
+    @ResponseBody
+    public String showSourceDocuments(@PathVariable long aProjectId)
+        throws Exception
+    {
+        JSONObject sourceDocumentJSON = new JSONObject();
+        Project project = projectRepository.getProject(aProjectId);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+
+        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.ADMIN);
+        if (hasAccess) {
+            List<SourceDocument> srcDocumentList = projectRepository.listSourceDocuments(project);
+            for (SourceDocument s : srcDocumentList) {
+                sourceDocumentJSON.put(s.getName(), s.getId());
+            }
+        }
+        else {
+            throw new PermissionDeniedDataAccessException(
+                    "Not enough permission on project : [" + aProjectId + "]",
+                    new Throwable("user:" + username));
+        }
+        return sourceDocumentJSON.toString();
+    }
+
+    /**
+     * Delete the source document in project if user has an ADMIN permission
      * 
      * To test when running in Eclipse, use the Linux "curl" command.
      * 
-     * curl -v -F 'projectname=PROJECTNAME' -F 'documentname=DOCUMENTNAME'
-     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/delete/sourcedocument'
+     * curl -v -X DELETE
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs/
+     * {aSourceDocumentId}'
      * 
-     * @param aName
-     *            Project Name
-     * @param docName
-     *            Source Document name
+     * @param aProjectId
+     *            {@link Project} ID.
+     * @param aSourceDocumentId
+     *            {@link SourceDocument} ID.
      * @throws Exception
-     *             if there was en error.
+     *             if there was an error.
      */
-    @RequestMapping(value = "/project/delete/sourcedocument", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteDocument(
-            @RequestParam("projectname") String aName, @RequestParam("documentname") String docName)
+    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}", method = RequestMethod.DELETE)
+    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteDocument(@PathVariable long aProjectId,
+            @PathVariable long aSourceDocumentId)
                 throws Exception
     {
-        LOG.info("Deleting document [" + aName + "]");
-        // Get current user
+        Project project = projectRepository.getProject(aProjectId);
+        SourceDocument sourceDocument = projectRepository.getSourceDocument(aProjectId,
+                aSourceDocumentId);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = null;
-
-        if (projectRepository.existsProject(aName)) {
-            // Get project
-            project = projectRepository.getProject(aName);
-        }
-        else {
-            throw new IOException("The project with name [" + aName + "] does not exists");
-        }
-
-        // Check for the access
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
+        LOG.info("Deleting document [" + project.getName() + "]");
 
-        // Check if document with the name is present or not
-        boolean isDocumentPresent = projectRepository.existsSourceDocument(project, docName);
-
-        // remove document if hasAccess and document is present
-        if (hasAccess && isDocumentPresent) {
-            SourceDocument document = projectRepository.getSourceDocument(project, docName);
-            projectRepository.removeSourceDocument(document);
-            LOG.info("Successfully deleted project [" + aName + "]");
+        // remove document if hasAccess
+        if (hasAccess) {
+            projectRepository.removeSourceDocument(sourceDocument);
+            LOG.info("Successfully deleted project : [" + aProjectId + "]");
         }
         else {
-            if (!hasAccess) {
-                throw new PermissionDeniedDataAccessException(
-                        "Not enough permission on [" + aName + "]",
-                        new Throwable("user:" + username));
-            }
-            else {
-                throw new IOException("Document with name [" + docName + "] not present");
-            }
+
+            throw new PermissionDeniedDataAccessException(
+                    "Not enough permission on project : [" + aProjectId + "]",
+                    new Throwable("user:" + username));
         }
     }
 
     /**
      * Upload a source document into project where user has "ADMIN" role
      * 
-     * Test when running in Eclipse: curl -v -F 'file=@test.txt' -F 'name=Test' -F 'filetype=txt'
-     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/project/upload/sourcedocument'
+     * Test when running in Eclipse, use the Linux "curl" command.
      * 
+     * curl -v -F 'file=@test.txt' -F 'filetype=text'
+     * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs/
+     * '
      * 
      * @param aFile
-     *            File
-     * @param aName
-     *            Project Name
+     *            File for {@link SourceDocument}.
+     * @param aProjectId
+     *            {@link Project} id.
      * @param aFileType
-     *            Extension of the file
+     *            Extension of the file.
+     * @return returns JSON string with id to the created source document.
      * @throws Exception
-     *             if there was en error.
+     *             if there was an error.
      */
-    @RequestMapping(value = "/project/upload/sourcedocument", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void uploadDocumentFile(
-            @RequestParam("file") MultipartFile aFile, @RequestParam("name") String aName,
-            @RequestParam("filetype") String aFileType)
+    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public @ResponseBody String uploadDocumentFile(@RequestParam("file") MultipartFile aFile,
+            @RequestParam("filetype") String aFileType, @PathVariable long aProjectId)
                 throws Exception
     {
 
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-
+        JSONObject returnJSON = new JSONObject();
         // Get project
-        Project project = null;
-
-        if (projectRepository.existsProject(aName)) {
-            // Get project
-            project = projectRepository.getProject(aName);
-        }
-        else {
-            throw new IOException("The project with name [" + aName + "] does not exists");
-        }
+        Project project = projectRepository.getProject(aProjectId);
 
         // Check for the access
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
@@ -392,6 +412,9 @@ public class RemoteApiController
                     aFile.getOriginalFilename());
             if (!isDocumentPresent) {
                 uploadSourceDocumentFile(uploadDocumentFile, project, user, aFileType);
+                // add id of added source document in return json string
+                returnJSON.put("id", projectRepository
+                        .getSourceDocument(project, aFile.getOriginalFilename()).getId());
             }
             else {
                 throw new IOException("The source document with name ["
@@ -399,28 +422,179 @@ public class RemoteApiController
             }
         }
         else {
-            throw new PermissionDeniedDataAccessException("Not ADMIN permission on [" + aName + "]",
+            throw new PermissionDeniedDataAccessException(
+                    "Not ADMIN permission on project : [" + aProjectId + "]",
                     new Throwable("user:" + username));
+        }
+        return returnJSON.toString();
+    }
+
+    /**
+     * List annotation documents for a source document in a projects where user is ADMIN
+     * 
+     * Test when running in Eclipse: Open your browser, paste following URL with appropriate values:
+     * 
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs/{
+     * aSourceDocumentId}/annos
+     * 
+     * @param aProjectId
+     *            {@link Project} ID
+     * @param aSourceDocumentId
+     *            {@link SourceDocument} ID
+     * @return JSON string of all the annotation documents with their projects.
+     * @throws Exception
+     *             if there was an error.
+     */
+    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}/annos", method = RequestMethod.GET)
+    public @ResponseBody String listAnnotationDocument(@PathVariable long aProjectId,
+            @PathVariable long aSourceDocumentId)
+                throws Exception
+    {
+        // Get current user
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        JSONObject returnJSON = new JSONObject();
+        // Get project
+        Project project = projectRepository.getProject(aProjectId);
+        SourceDocument srcDocument = projectRepository.getSourceDocument(aProjectId,
+                aSourceDocumentId);
+
+        // Check for the access
+        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.ADMIN);
+
+        if (hasAccess) {
+            List<AnnotationDocument> annList = projectRepository
+                    .listAllAnnotationDocuments(srcDocument);
+            for (AnnotationDocument annDoc : annList) {
+                returnJSON.put(annDoc.getName(), annDoc.getUser());
+            }
+        }
+        else {
+            throw new PermissionDeniedDataAccessException(
+                    "Not ADMIN permission on project : [" + aProjectId + "]",
+                    new Throwable("user:" + username));
+        }
+        return returnJSON.toString();
+    }
+
+    /**
+     * Download annotation document with requested parameters
+     * 
+     * Test when running in Eclipse: Open your browser, paste following URL with appropriate values:
+     *
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs/{
+     * aSourceDocumentId}/annos/{annotatorName}?format="text"
+     *
+     * @param response
+     *            HttpServletResponse.
+     * @param aProjectId
+     *            {@link Project} ID.
+     * @param aSourceDocumentId
+     *            {@link SourceDocument} ID.
+     * @param annotatorName
+     *            {@link User} name.
+     * @param format
+     *            Export format.
+     * @throws Exception
+     *             if there was an error.
+     */
+    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}/annos/{annotatorName}", method = RequestMethod.GET)
+    public void getAnnotationDocument(HttpServletResponse response, @PathVariable long aProjectId,
+            @PathVariable Long aSourceDocumentId, @PathVariable String annotatorName,
+            @RequestParam(value = "format", required = false) String format)
+                throws Exception
+    {
+
+        // Get current user
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        Project project = projectRepository.getProject(aProjectId);
+
+        // Check for the access
+        boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.ADMIN);
+
+        // if hasAccess and annotator exist
+        if (hasAdminAccess && userRepository.exists(annotatorName)) {
+
+            User annotator = userRepository.get(annotatorName);
+            // Get source document
+            SourceDocument srcDoc = projectRepository.getSourceDocument(aProjectId,
+                    aSourceDocumentId);
+
+            // Class writerClassValue = Class.forName(format);
+
+            AnnotationDocument annDoc = projectRepository.getAnnotationDocument(srcDoc, annotator);
+
+            String formatId;
+            if (format == null) {
+                formatId = srcDoc.getFormat();
+            }
+            else {
+                formatId = format;
+            }
+            Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+            if (writer == null) {
+                String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
+                        + "] - exporting as WebAnno TSV instead.";
+                LOG.info(msg);
+                writer = WebannoTsv3Writer.class;
+            }
+
+            // Temporary file of annotation document
+            File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
+                    annotatorName, writer, annDoc.getName(), Mode.ANNOTATION);
+
+            try {
+
+                // Set mime type
+                String mimeType = URLConnection
+                        .guessContentTypeFromName(downloadableFile.getName());
+                if (mimeType == null) {
+                    LOG.info("mimetype is not detectable, will take default");
+                    mimeType = "application/octet-stream";
+                }
+
+                // Set response
+                response.setContentType(mimeType);
+                response.setContentType("application/force-download");
+                response.setHeader("Content-Disposition",
+                        String.format("inline; filename=\"" + downloadableFile.getName() + "\""));
+                response.setContentLength((int) downloadableFile.length());
+                InputStream inputStream = new BufferedInputStream(
+                        new FileInputStream(downloadableFile));
+                FileCopyUtils.copy(inputStream, response.getOutputStream());
+            }
+            catch (Exception e) {
+                LOG.info("Exception occured" + e.getMessage());
+            }
+            finally {
+                if (downloadableFile.exists()) {
+                    downloadableFile.delete();
+                }
+            }
+
+        }
+        else {
+            throw new PermissionDeniedDataAccessException(
+                    "Not enough permission on project : [" + aProjectId
+                            + "] or no user defined as [" + annotatorName + "]",
+                    new Throwable("user:" + user));
         }
     }
 
-    @RequestMapping(value = "/project/download/annotationdocument", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void downloadAnnotationFile(
-            @RequestParam("file") MultipartFile aFile, @RequestParam("name") String aName,
-            @RequestParam("filetype") String aFileType)
-                throws Exception
-    {
-        
-    }
     private void uploadSourceDocumentFile(File file, Project project, User user, String aFileType)
-            throws IOException, UIMAException {
+        throws IOException, UIMAException
+    {
 
         FileInputStream fs = new FileInputStream(file);
 
         // Check if it is a property file
         if (file.getName().equals("source-meta-data.properties")) {
             projectRepository.savePropertiesFile(project, fs, file.getName());
-        } else {
+        }
+        else {
             SourceDocument document = new SourceDocument();
             document.setName(file.getName());
             document.setProject(project);

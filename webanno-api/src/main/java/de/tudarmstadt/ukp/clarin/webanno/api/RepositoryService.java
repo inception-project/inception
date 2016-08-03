@@ -208,6 +208,18 @@ public interface RepositoryService
     SourceDocument getSourceDocument(Project project, String documentName);
 
     /**
+     * Get meta data information about {@link SourceDocument} from the database.
+     * 
+     * @param projectId
+     *              the id for the {@link Project}
+     * @param documentId
+     *              the id for the {@link SourceDocument}
+     * @return  the source document
+     */
+    SourceDocument getSourceDocument(long projectId, long documentId);
+    
+    
+    /**
      * Return the Master TCF file Directory path. For the first time, all available TCF layers will
      * be read and converted to CAS object. subsequent accesses will be to the annotated document
      * unless and otherwise the document is removed from the project.

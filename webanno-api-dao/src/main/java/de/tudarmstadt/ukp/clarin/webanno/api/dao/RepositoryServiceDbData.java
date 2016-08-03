@@ -1040,6 +1040,15 @@ public class RepositoryServiceDbData
                         SourceDocument.class).setParameter("name", aDocumentName)
                 .setParameter("project", aProject).getSingleResult();
     }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public SourceDocument getSourceDocument(long aProjectId, long aSourceDocId)
+    {              
+        return entityManager.createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid", SourceDocument.class)
+                .setParameter("docid", aSourceDocId)
+                .setParameter("pid", aProjectId).getSingleResult();
+    }
 
     @Override
     @Transactional
