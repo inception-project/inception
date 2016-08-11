@@ -306,6 +306,15 @@ public class WebAnnoTsv3ReaderWriterTest
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
     }
+    
+    @Test
+    public void testSingleTokenWithoutFeatureValue() throws Exception{
+        JCas jCas = makeJCasOneSentence();
+        NamedEntity neToken = new NamedEntity(jCas, 0, 4);
+        neToken.addToIndexes();
+        
+        writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
 
     @Test
     public void testTokenBoundedBioLookAlike() throws Exception
