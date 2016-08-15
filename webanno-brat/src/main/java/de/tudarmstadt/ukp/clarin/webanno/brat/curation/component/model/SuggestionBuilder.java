@@ -18,12 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -38,12 +36,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -52,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
@@ -64,9 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.curation.MergeCas;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
