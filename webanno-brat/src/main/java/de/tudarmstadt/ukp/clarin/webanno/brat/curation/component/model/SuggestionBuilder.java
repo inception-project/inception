@@ -175,17 +175,39 @@ public class SuggestionBuilder
                     entryTypes, LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, begin, end);
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
-            curationSegment.setEnd(end);
-            if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
-                curationSegment.setSentenceState(SentenceState.DISAGREE);
-            }
-            else {
-                curationSegment.setSentenceState(SentenceState.AGREE);
-            }
-            curationSegment.setSentenceNumber(segmentNumber.get(begin));
+			curationSegment.setEnd(end);
+			if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
+				// Is this confSet a diff due to stacked annotations (with same configuration)?
+				boolean stackedDiff = false;
 
-            for (String username : segmentAdress.keySet()) {
-                curationSegment.getSentenceAddress().put(username,
+				stackedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets().values()) {
+					for (Configuration c : d.getConfigurations()) {
+						if (c.getCasGroupIds().size() != d.getCasGroupIds().size()) {
+							stackedDiff = true;
+							break stackedDiffSet;
+						}
+					}
+				}
+
+				if (!diff.getIncompleteConfigurationSets().isEmpty()) {
+				}
+
+				if (stackedDiff) {
+					curationSegment.setSentenceState(SentenceState.DISAGREE);
+				}
+
+				else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
+					curationSegment.setSentenceState(SentenceState.DISAGREE);
+				} else {
+					curationSegment.setSentenceState(SentenceState.AGREE);
+				}
+			} else {
+				curationSegment.setSentenceState(SentenceState.AGREE);
+			}
+			curationSegment.setSentenceNumber(segmentNumber.get(begin));
+
+			for (String username : segmentAdress.keySet()) {
+				curationSegment.getSentenceAddress().put(username,
                         segmentAdress.get(username).get(begin));
             }
             curationContainer.getCurationViewByBegin().put(begin, curationSegment);
