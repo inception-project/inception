@@ -180,9 +180,6 @@ public class SuggestionBuilder
 					}
 				}
 
-				if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-				}
-
 				if (stackedDiff) {
 					curationSegment.setSentenceState(SentenceState.DISAGREE);
 				}
