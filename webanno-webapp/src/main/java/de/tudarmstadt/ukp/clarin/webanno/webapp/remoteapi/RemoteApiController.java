@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -112,9 +113,8 @@ public class RemoteApiController
      *            a ZIP file containing the project data.
      * @throws Exception if there was an error.
      */
-    @RequestMapping(value = "/projects", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT)
-    void createProject(@RequestParam("file") MultipartFile aFile,
+    @RequestMapping(value = "/projects", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)    
+    @ResponseBody String  createProject(@RequestParam("file") MultipartFile aFile,
             @RequestParam("name") String aName, @RequestParam("filetype") String aFileType)
         throws Exception
     {
@@ -197,9 +197,14 @@ public class RemoteApiController
             }
 
         }
-
-        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
-
+                
+        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");        
+        
+        JSONObject projectJSON = new JSONObject();
+        long pId = projectRepository.getProject(aName).getId();        
+        projectJSON.append(aName, pId);
+        return projectJSON.toString();
+        
     }
 
     /**
@@ -404,18 +409,16 @@ public class RemoteApiController
                 PermissionLevel.ADMIN);
 
         if (hasAccess) {
-            File uploadDocumentFile = new File(aFile.getOriginalFilename());
-            aFile.transferTo(uploadDocumentFile);
-
             // Check if file already present or not
             boolean isDocumentPresent = projectRepository.existsSourceDocument(project,
                     aFile.getOriginalFilename());
             if (!isDocumentPresent) {
-                uploadSourceDocumentFile(uploadDocumentFile, project, user, aFileType);
+                InputStream is = aFile.getInputStream();
+                uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, user, aFileType);
                 // add id of added source document in return json string
-                returnJSON.put("id", projectRepository
-                        .getSourceDocument(project, aFile.getOriginalFilename()).getId());
-            }
+                returnJSON.put("id", projectRepository.getSourceDocument(project, aFile.getOriginalFilename()).getId());
+                is.close();                
+            }         
             else {
                 throw new IOException("The source document with name ["
                         + aFile.getOriginalFilename() + "] exists");
@@ -467,7 +470,7 @@ public class RemoteApiController
             List<AnnotationDocument> annList = projectRepository
                     .listAllAnnotationDocuments(srcDocument);
             for (AnnotationDocument annDoc : annList) {
-                returnJSON.put(annDoc.getName(), annDoc.getUser());
+                returnJSON.put(annDoc.getUser(),annDoc.getName() );
             }
         }
         else {
@@ -584,25 +587,22 @@ public class RemoteApiController
         }
     }
 
-    private void uploadSourceDocumentFile(File file, Project project, User user, String aFileType)
+    private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user, String aFileType)
         throws IOException, UIMAException
-    {
-
-        FileInputStream fs = new FileInputStream(file);
-
+    {     
         // Check if it is a property file
-        if (file.getName().equals("source-meta-data.properties")) {
-            projectRepository.savePropertiesFile(project, fs, file.getName());
+        if (name.equals("source-meta-data.properties")) {
+            projectRepository.savePropertiesFile(project, is, name);
         }
         else {
             SourceDocument document = new SourceDocument();
-            document.setName(file.getName());
+            document.setName(name);
             document.setProject(project);
             document.setFormat(aFileType);
             // Meta data entry to the database
             projectRepository.createSourceDocument(document, user);
             // Import source document to the project repository folder
-            projectRepository.uploadSourceDocument(fs, document);
+            projectRepository.uploadSourceDocument(is, document);
         }
 
     }
