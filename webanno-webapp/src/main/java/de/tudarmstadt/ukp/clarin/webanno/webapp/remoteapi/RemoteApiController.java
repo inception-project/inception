@@ -462,8 +462,12 @@ public class RemoteApiController
         // Check for the access
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
+        
+        // Check for curator access
+        boolean curatorAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.CURATOR);
 
-        if (hasAccess) {
+        if (hasAccess || curatorAccess) {
             List<AnnotationDocument> annList = projectRepository
                     .listAllAnnotationDocuments(srcDocument);
             List<String> arrayAnnList = new ArrayList<String>();
@@ -517,9 +521,13 @@ public class RemoteApiController
         // Check for the access
         boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
+        
+        // Check for curator access
+        boolean curatorAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.CURATOR);
 
         // if hasAccess and annotator exist
-        if (hasAdminAccess && userRepository.exists(annotatorName)) {
+        if ((hasAdminAccess || curatorAccess)&& userRepository.exists(annotatorName)) {
 
             User annotator = userRepository.get(annotatorName);
             // Get source document
