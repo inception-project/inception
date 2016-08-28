@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -464,8 +466,11 @@ public class RemoteApiController
         if (hasAccess) {
             List<AnnotationDocument> annList = projectRepository
                     .listAllAnnotationDocuments(srcDocument);
+            List<String> arrayAnnList = new ArrayList<String>();
             for (AnnotationDocument annDoc : annList) {
-                returnJSON.put(annDoc.getUser(),annDoc.getName() );
+                if(annDoc.getState().equals(AnnotationDocumentState.FINISHED))
+                    arrayAnnList.add(annDoc.getUser());                
+                returnJSON.put(annDoc.getName(),arrayAnnList.isEmpty()?"":StringUtils.join(arrayAnnList, ','));
             }
         }
         else {
