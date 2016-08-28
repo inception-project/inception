@@ -268,12 +268,9 @@ public interface RepositoryService
      * @throws IOException
      *             if an I/O error occurs.
      * @throws UIMAException
-     *             if a conversion error occurs.
-     * @deprecated Use {@link #uploadSourceDocument(File, SourceDocument)} with a temporary file
-     *             instead.
+     *             if a conversion error occurs.     
      */
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    @Deprecated
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")    
     void uploadSourceDocument(InputStream file, SourceDocument document)
         throws IOException, UIMAException;
 
