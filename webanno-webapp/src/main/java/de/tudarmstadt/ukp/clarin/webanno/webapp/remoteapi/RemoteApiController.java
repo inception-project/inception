@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -462,12 +461,8 @@ public class RemoteApiController
         // Check for the access
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
-        
-        // Check for curator access
-        boolean curatorAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.CURATOR);
 
-        if (hasAccess || curatorAccess) {
+        if (hasAccess) {
             List<AnnotationDocument> annList = projectRepository
                     .listAllAnnotationDocuments(srcDocument);
             List<String> arrayAnnList = new ArrayList<String>();
@@ -521,13 +516,9 @@ public class RemoteApiController
         // Check for the access
         boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
-        
-        // Check for curator access
-        boolean curatorAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.CURATOR);
 
         // if hasAccess and annotator exist
-        if ((hasAdminAccess || curatorAccess)&& userRepository.exists(annotatorName)) {
+        if (hasAdminAccess && userRepository.exists(annotatorName)) {
 
             User annotator = userRepository.get(annotatorName);
             // Get source document
@@ -594,6 +585,7 @@ public class RemoteApiController
                     new Throwable("user:" + user));
         }
     }
+
 
     private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user, String aFileType)
         throws IOException, UIMAException
