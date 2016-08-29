@@ -303,18 +303,22 @@ public class RemoteApiController
     @ResponseBody
     public String showSourceDocuments(@PathVariable long aProjectId)
         throws Exception
-    {
-        JSONObject sourceDocumentJSON = new JSONObject();
+    {               
         Project project = projectRepository.getProject(aProjectId);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-
+        JSONArray sourceDocumentJSONArr = new JSONArray();
+        
         boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
                 PermissionLevel.ADMIN);
         if (hasAccess) {
             List<SourceDocument> srcDocumentList = projectRepository.listSourceDocuments(project);
-            for (SourceDocument s : srcDocumentList) {
-                sourceDocumentJSON.put(s.getName(), s.getId());
+            for (SourceDocument s : srcDocumentList) { 
+                JSONObject sourceDocumentJSONObj = new JSONObject();                 
+                sourceDocumentJSONObj.put("id", s.getId());
+                sourceDocumentJSONObj.put("name", s.getName());
+                sourceDocumentJSONObj.put("state", s.getState());
+                sourceDocumentJSONArr.put(sourceDocumentJSONObj);                                 
             }
         }
         else {
@@ -322,7 +326,7 @@ public class RemoteApiController
                     "Not enough permission on project : [" + aProjectId + "]",
                     new Throwable("user:" + username));
         }
-        return sourceDocumentJSON.toString();
+        return sourceDocumentJSONArr.toString();
     }
 
     /**
