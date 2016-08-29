@@ -57,6 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -65,8 +66,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
+import javassist.NotFoundException;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -590,7 +593,108 @@ public class RemoteApiController
         }
     }
 
+    /**
+     * Download curated document with requested parameters
+     * 
+     * Test when running in Eclipse: Open your browser, paste following URL with appropriate values:
+     *
+     * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/curationdoc/
+     * { aSourceDocumentId}?format=xmi
+     * 
+     * @param response
+     *            HttpServletResponse.
+     * @param aProjectId
+     *            {@link Project} ID.
+     * @param aSourceDocumentId
+     *            {@link SourceDocument} ID.
+     * @param format
+     *            Export format.
+     * @throws Exception
+     *             if there was an error.
+     */
+    @RequestMapping(value = "/projects/{aProjectId}/curationdoc/{aSourceDocumentId}/", method = RequestMethod.GET)
+    public void getCurationDocument(HttpServletResponse response, @PathVariable long aProjectId,
+            @PathVariable Long aSourceDocumentId,
+            @RequestParam(value = "format", required = false) String format)
+                throws Exception
+    {
+        // Get current user
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        Project project = projectRepository.getProject(aProjectId);
 
+        // Check for the access
+        boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
+                PermissionLevel.ADMIN);
+
+        // if hasAccess
+        if (hasAdminAccess) {
+
+            // Get source document
+            SourceDocument srcDoc = projectRepository.getSourceDocument(aProjectId,
+                    aSourceDocumentId);
+
+            // If curation is complete
+            boolean isCurationFinished = srcDoc.getState()
+                    .equals(SourceDocumentState.CURATION_FINISHED);
+
+            if (isCurationFinished) {
+                String formatId;
+                if (format == null) {
+                    formatId = srcDoc.getFormat();
+                }
+                else {
+                    formatId = format;
+                }
+                Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+                if (writer == null) {
+                    String msg = "[" + srcDoc.getName() + "] No writer found for format ["
+                            + formatId + "] - exporting as WebAnno TSV instead.";
+                    LOG.info(msg);
+                    writer = WebannoTsv3Writer.class;
+                }
+
+                // Temporary file of annotation document
+                File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
+                        WebAnnoConst.CURATION_USER, writer, srcDoc.getName(), Mode.CURATION);
+
+                try {
+
+                    // Set mime type
+                    String mimeType = URLConnection
+                            .guessContentTypeFromName(downloadableFile.getName());
+                    if (mimeType == null) {
+                        LOG.info("mimetype is not detectable, will take default");
+                        mimeType = "application/octet-stream";
+                    }
+
+                    // Set response
+                    response.setContentType(mimeType);
+                    response.setContentType("application/force-download");
+                    response.setHeader("Content-Disposition", String
+                            .format("inline; filename=\"" + downloadableFile.getName() + "\""));
+                    response.setContentLength((int) downloadableFile.length());
+                    InputStream inputStream = new BufferedInputStream(
+                            new FileInputStream(downloadableFile));
+                    FileCopyUtils.copy(inputStream, response.getOutputStream());
+                }
+                catch (Exception e) {
+                    LOG.info("Exception occured" + e.getMessage());
+                }
+                finally {
+                    if (downloadableFile.exists()) {
+                        downloadableFile.delete();
+                    }
+                }
+
+            }
+            else {
+                throw new IllegalStateException(
+                        "Curation is not finished for the source document");
+            }
+        }
+
+    }
     private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user, String aFileType)
         throws IOException, UIMAException
     {     
