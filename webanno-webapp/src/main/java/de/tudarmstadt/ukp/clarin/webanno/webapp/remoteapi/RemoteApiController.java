@@ -484,7 +484,7 @@ public class RemoteApiController
                     sdf.setTimeZone(TimeZone.getTimeZone("CET"));           
                     JSONObject annDocObj = new JSONObject();
                     annDocObj.put("user", annDoc.getUser());
-                    annDocObj.put("state", annDoc.getState());                    
+                    annDocObj.put("state", annDoc.getState().getId());                    
                     annDocObj.put("timestamp", sdf.format(annDoc.getTimestamp()));
                     annDocArr.put(annDocObj);
                 }                
