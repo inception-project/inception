@@ -23,9 +23,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -472,12 +476,20 @@ public class RemoteApiController
         if (hasAccess) {
             List<AnnotationDocument> annList = projectRepository
                     .listAllAnnotationDocuments(srcDocument);
-            List<String> arrayAnnList = new ArrayList<String>();
+            JSONArray annDocArr = new JSONArray();
             for (AnnotationDocument annDoc : annList) {
-                if(annDoc.getState().equals(AnnotationDocumentState.FINISHED))
-                    arrayAnnList.add(annDoc.getUser());                
-                returnJSON.put(annDoc.getName(),arrayAnnList.isEmpty()?"":StringUtils.join(arrayAnnList, ','));
+                if(annDoc.getState().equals(AnnotationDocumentState.FINISHED) || annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
+                {
+                    SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'hh:mm:ssZ");
+                    sdf.setTimeZone(TimeZone.getTimeZone("CET"));           
+                    JSONObject annDocObj = new JSONObject();
+                    annDocObj.put("user", annDoc.getUser());
+                    annDocObj.put("state", annDoc.getState());                    
+                    annDocObj.put("timestamp", sdf.format(annDoc.getTimestamp()));
+                    annDocArr.put(annDocObj);
+                }                
             }
+            returnJSON.put(srcDocument.getName(),annDocArr);
         }
         else {
             throw new PermissionDeniedDataAccessException(
