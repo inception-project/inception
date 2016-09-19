@@ -612,6 +612,10 @@
                                         <exclude>licenses/**/*</exclude>
                                         <!-- generated JCas wrappers -->
                                         <exclude>src/main/java/**/type/**/*</exclude>
+                                        <!-- externally licensed files -->
+                                        <exclude>**/src/main/webapp/static/css/fontawesome-webfont.svg</exclude>
+                                        <exclude>**/src/main/webapp/static/css/font-awesome.css</exclude>
+                                        <exclude>**/src/main/webapp/static/css/font-awesome.min.css</exclude>
                                     </excludes>
                                 </configuration>
                             </execution>
