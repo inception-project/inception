@@ -47,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 
 /**
@@ -124,7 +123,6 @@ public class BratSuggestionVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 
         // BRAT helpers
         aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));

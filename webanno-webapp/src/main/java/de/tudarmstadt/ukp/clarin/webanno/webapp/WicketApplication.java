@@ -74,12 +74,6 @@ public class WicketApplication
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-vis.css"));
             mountResource("/style-ui.css",
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
-            mountResource("/static/fonts/PT_Sans-Caption-Web-Regular.ttf",
-                    new PackageResourceReference(WebAnnoResources.class, "fonts/PT_Sans-Caption-Web-Regular.ttf"));
-            // For an unknown reason, this file doesn't load from the package... so still keeping
-            // it in static under the webapp
-//            mountResource("/static/fonts/Liberation_Sans-Regular.ttf",
-//                    new PackageResourceReference(WebAnnoResources.class, "fonts/Liberation_Sans-Regular.ttf"));
 
             Properties settings = SettingsUtil.getSettings();
             String logoValue = settings.getProperty("style.logo");

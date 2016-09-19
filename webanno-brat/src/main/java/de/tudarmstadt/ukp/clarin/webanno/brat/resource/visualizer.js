@@ -24,7 +24,11 @@
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 
 var Visualizer = (function($, window, undefined) {
+// WEBANNO EXTENSION BEGIN - #337 Remove font loading code since we do not use it 
+/*
     var fontLoadTimeout = 5000; // 5 seconds
+*/
+// WEBANNO EXTENSION END - #337 Remove font loading code since we do not use it  
   
 	// WEBANNO EXTENSION BEGIN - RTL support - DEV mode switch
 	var rtlmode = false;
@@ -3909,7 +3913,9 @@ Util.profileStart('before render');
         // do not reload while the user is in the dialog
         return !drawing;
       };
-
+      
+// BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it   
+/*
       // If we are yet to load our fonts, dispatch them
       if (!Visualizer.areFontsLoaded) {
         var webFontConfig = {
@@ -3922,8 +3928,8 @@ Util.profileStart('before render');
               //        'Ubuntu',
               'Liberation Sans'
             ],
-            /* For some cases, in particular for embedding, we need to
-              allow for fonts being hosted elsewhere */
+            // For some cases, in particular for embedding, we need to
+            // allow for fonts being hosted elsewhere
             urls: webFontURLs !== undefined ? webFontURLs : [
 // WEBANNO EXTENSION BEGIN - No need for this font - it was used for the brat logo
               //'static/fonts/Astloch-Bold.ttf',
@@ -3952,6 +3958,8 @@ Util.profileStart('before render');
           }
         }, fontLoadTimeout);
       }
+*/
+// WEBANNO EXTENSION END - #337 Remove font loading code since we do not use it  
 
       dispatcher.
           on('collectionChanged', collectionChanged).
@@ -3971,14 +3979,19 @@ Util.profileStart('before render');
           on('mouseout', onMouseOut);
     };
 
-    Visualizer.areFontsLoaded = false;
-
+// BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it   
+    // Visualizer.areFontsLoaded = false;
+    Visualizer.areFontsLoaded = true;
+    
+/*
     var proceedWithFonts = function() {
       Visualizer.areFontsLoaded = true;
       // Note: Enable for font debugging
       //console.log("fonts done");
       Dispatcher.post('triggerRender');
     };
+*/
+// WEBANNO EXTENSION END - #337 Remove font loading code since we do not use it  
 
 // BEGIN WEBANNO EXTENSION - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
     var isRTL = function isRTL(charCode) {           

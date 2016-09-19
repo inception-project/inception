@@ -17,11 +17,6 @@ statistics.png
 user_go.png
 text_width.png
 
-The following fonts are under SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007 (SIL.txt)
-
-Liberation_Sans-Regular.ttf
-PT_Sans-Caption-Web-Regular.ttf
-
 The following files are under the Creative Commons Attribution 2.5 licnse (licences/CC_BY_2_5.txt)
 
 src/main/webapp/js/css_browser_selector.js

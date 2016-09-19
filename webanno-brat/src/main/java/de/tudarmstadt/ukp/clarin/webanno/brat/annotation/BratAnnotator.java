@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.WebfontResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -435,7 +434,6 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(WebfontResourceReference.get()));
 
         // BRAT helpers
         aResponse
@@ -560,15 +558,16 @@ public class BratAnnotator
     {
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
-/**
- * Display an annotation on the next token if auto forwarding is enabled
- * @param aTarget
- * @param aJCas
- * @throws BratAnnotationException 
- * @throws IOException 
- * @throws ClassNotFoundException 
- * @throws UIMAException 
- */
+    
+    /**
+     * Display an annotation on the next token if auto forwarding is enabled
+     * @param aTarget
+     * @param aJCas
+     * @throws BratAnnotationException 
+     * @throws IOException 
+     * @throws ClassNotFoundException 
+     * @throws UIMAException 
+     */
     public void autoForward(AjaxRequestTarget aTarget, JCas aJCas) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         LOG.info("BEGIN auto-forward annotation");

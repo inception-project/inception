@@ -35,7 +35,12 @@ text {
   margin-right: auto;
   width: 30em;
   font-size: 12px;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'Liberation Sans', Verdana, Arial, Helvetica, sans-serif;
+*/
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+/* END WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 }
 .center_wrapper > div > div h1 {
   text-align: center;
@@ -59,7 +64,12 @@ svg.reselect {
 /* "basic" font */
 text {
   font-size: 13px;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'Liberation Sans', Verdana, Arial, Helvetica, sans-serif;
+*/
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+/* END WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 }
 
 @-webkit-keyframes pulse {
@@ -77,23 +87,43 @@ path {
   /*  font-size: 10.5px; */
   font-size: 10px;
   text-anchor: middle;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'PT Sans Caption', sans-serif;
+*/
+  font-family: sans-serif;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
   pointer-events: none;
 }
 
 /* this should likely match span font */
 .span_type_label {
   font-size: 11px;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'PT Sans Caption', sans-serif;
+*/
+  font-family: sans-serif;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 }
 /* this should likely match arc font */
 .arc_type_label {
   font-size: 11px;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'PT Sans Caption', sans-serif;
+*/
+  font-family: sans-serif;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 }
 .attribute_type_label .ui-button-text {
   font-size: 11px;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'PT Sans Caption', sans-serif;
+*/
+  font-family: sans-serif;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 }
 
 .span rect {
@@ -287,7 +317,12 @@ WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
 .arcs text {
   font-size: 9px;
   text-anchor: middle;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'PT Sans Caption', sans-serif;
+*/
+  font-family: sans-serif;
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
   /* dominant-baseline: central; */
   cursor: default;
 }
@@ -390,7 +425,12 @@ fieldset legend {
 }
 
 #commentpopup {
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
   font-family: 'Liberation Sans', Verdana, Arial, Helvetica, sans-serif;
+*/
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+/* END WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
   position: fixed;
   top: 0;
   left: 0;
@@ -491,6 +531,9 @@ fieldset legend {
    user-select: none;
    cursor: default;
 }
+
+/* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
+/*
 @font-face {
   font-family: 'Liberation Sans';
   font-style: normal;
@@ -503,6 +546,8 @@ fieldset legend {
   font-weight: normal;
   src: local('PT Sans Caption'), local('PTSans-Caption'), url('static/fonts/PT_Sans-Caption-Web-Regular.ttf') format('truetype');
 }
+*/
+/* END WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 
 /* Apple iPad, iPhone, iPod */
 
