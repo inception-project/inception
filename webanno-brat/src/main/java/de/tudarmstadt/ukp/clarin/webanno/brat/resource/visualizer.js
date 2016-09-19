@@ -3426,6 +3426,7 @@ Util.profileStart('finish');
 // Add scrolling box
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
+	        $svgDiv.width(canvasWidth);
 	        $svgDiv.css("overflow-x", "auto");
         	canvasWidth = width;
         	// Allow some extra space for arcs
