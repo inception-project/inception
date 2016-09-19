@@ -56,6 +56,7 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -296,7 +297,7 @@ public class CurationPage
                                 curationPanel.reloadEditorLayer(target);
 
                             }
-                            catch (IOException | UIMAException | ClassNotFoundException
+                            catch (DataRetrievalFailureException | IOException | UIMAException | ClassNotFoundException
                                     | BratAnnotationException e) {
                                 target.add(getFeedbackPanel());
                                 error(e.getCause().getMessage());
@@ -984,7 +985,7 @@ public class CurationPage
         bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget) throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
 			// Update source document state to
 			// CURRATION_INPROGRESS, if it was not
