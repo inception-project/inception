@@ -270,7 +270,7 @@ public class AutomationPage
                     return;
                 }
 
-                annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
             }

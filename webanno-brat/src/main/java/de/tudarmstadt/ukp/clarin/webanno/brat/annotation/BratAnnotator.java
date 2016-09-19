@@ -296,7 +296,7 @@ public class BratAnnotator
 
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                            bratRenderHighlight(aTarget, selection.getAnnotation());
+                            bratSetHighlight(aTarget, selection.getAnnotation());
                             editor.reloadLayer(aTarget);
                             
                             if (selection.getAnnotation().isNotSet()) {
@@ -326,7 +326,7 @@ public class BratAnnotator
                         selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
                                 .toInteger());
                         
-                        bratRenderHighlight(aTarget, getModelObject().getSelection()
+                        bratSetHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
                         editor.reloadLayer(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
@@ -606,7 +606,7 @@ public class BratAnnotator
      * @param aAnnotationId
      *            the annotation ID to highlight.
      */
-    public void bratRenderHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
+    public void bratSetHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
     {
         if (!aAnnotationId.isSet()) {
             aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()

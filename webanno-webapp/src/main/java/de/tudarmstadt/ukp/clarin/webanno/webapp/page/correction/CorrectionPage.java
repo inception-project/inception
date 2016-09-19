@@ -254,7 +254,7 @@ public class CorrectionPage
                     return;
                 }
 
-                annotator.bratRenderHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
 
                 annotator.onChange(aTarget, aBModel);
 

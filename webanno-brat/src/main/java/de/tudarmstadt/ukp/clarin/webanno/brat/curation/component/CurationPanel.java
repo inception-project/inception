@@ -567,7 +567,7 @@ public class CurationPanel
         aTarget.add(suggestionViewPanel);
         if (annotate) {
             annotator.bratRender(aTarget, editor.getCas(bModel));
-            annotator.bratRenderHighlight(aTarget, bModel.getSelection().getAnnotation());
+            annotator.bratSetHighlight(aTarget, bModel.getSelection().getAnnotation());
 
         }
         else {
