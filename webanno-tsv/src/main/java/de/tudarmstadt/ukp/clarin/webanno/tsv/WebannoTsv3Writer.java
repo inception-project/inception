@@ -418,15 +418,22 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
                 AnnotationFS depFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
                 AnnotationFS govFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
                 
-
+                Type govType = govFs.getType();
+                
                 AnnotationUnit govUnit = getFirstUnit(
                         getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText()));
+                if(ambigUnits.get(govType.getName()).get(govUnit)==null){
+                	govUnit =  getUnit(govFs.getBegin(), govFs.getEnd(), govFs.getCoveredText());
+                }
+                
                 AnnotationUnit depUnit = getFirstUnit(
                         getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText()));
-                
+                if(ambigUnits.get(govType.getName()).get(depUnit)==null){
+                	depUnit =  getUnit(depFs.getBegin(), depFs.getEnd(), depFs.getCoveredText());
+                }
                 // Since de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency is over
                 // Over POS anno which itself attached to Token, we need the POS type here
-                Type govType = govFs.getType();
+
                 if (type.getName().equals(Dependency.class.getName())){
                     govType = aJCas.getCas().getTypeSystem().getType(POS.class.getName());
                 }
@@ -492,6 +499,12 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		
 		for (AnnotationUnit unit : units) {
 			 if (unit.end > aSTA.end) {
+				 if(unit.begin==aSTA.begin){
+					 AnnotationUnit newUnit = new AnnotationUnit(aSTA.getBegin(), aSTA.getEnd(), false, aSTA.getText());
+					 updateUnitLists(tmpUnits, unit, newUnit);
+
+						aSubUnits.add(newUnit);
+				 }
 				break;
 			}
 			// this is a sub-token annotation
@@ -588,7 +601,13 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		featurePerLayer.putIfAbsent(aType.getName(), new LinkedHashSet<>());
 		int ref = getRefId(aType, aFs, aUnit);
 		
-		if(ambigUnits.get(aType.getName()).get(getFirstUnit(aUnit)).equals(false)){
+		if(ambigUnits.get(aType.getName()).get(getFirstUnit(aUnit))!=null && 
+				ambigUnits.get(aType.getName()).get(getFirstUnit(aUnit)).equals(false)){
+			ref = 0;
+		}
+		
+		if(ambigUnits.get(aType.getName()).get(getFirstUnit(aUnit))== null && 
+				ambigUnits.get(aType.getName()).get(aUnit).equals(false)){
 			ref = 0;
 		}
 		for (Feature feature : aType.getFeatures()) {
