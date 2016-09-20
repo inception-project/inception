@@ -55,3 +55,36 @@ Example:
 Here, the relation type `de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency` has a feature `DependencyType` and the relation is between a base type of `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`.
 
 == Annotations Section
+
+In this section we discuss the different representations of texts and annotation in WebAnno TSV3format
+
+=== Sentence Representation
+
+Sentence annotations are presented following the text marker `#Text=`, before the token annotations.
+Example
+
+`#Text=Bell , based in Los Angeles , makes and distributes electronic , computer and building products .`
+
+The sentence annotation do not include offsets and mainly presented as additional information. Re-importing the WebAnno TSV file construct sentences from the token annotations.
+
+=== Token and Sub-token Annotations
+
+Token annotation starts with a `sentence-token` number marker followed by the begin-end offsets and the token itself, separated by a TAB characters. 
+
+Example
+
+`1-2	4-8	Haag`
+
+Here `1` indicates the sentence number, `2` indicates the token number (here, the second token in the first sentence) and `4` is the begin offset of the token and `8` is the end offset of the toke while `Haag` is the token.
+
+Sub-token representations are affixed with a `.` and a number starts from 1 to N. 
+
+Exampel
+
+`1-3	9-14	plays`
+
+`1-3.1	9-13	play`
+
+`1-3.2	13-14	s`
+
+Here, the sub-token `play` is indicated by sentence-token number `1-3.1` and the sub-token `s` is indicated by `1-3.2`. 
