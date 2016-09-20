@@ -15,4 +15,43 @@
 // limitations under the License.
 
 [[sect_webannotsv]]
-== WebAnno TSV File format
+= WebAnno TSV File format
+
+In this section, we will discuss the TSV (Tab Separated Value) WebAnno file format. The format is similar to the CoNNL file formats with specialized additions to the header and column representations. The file format inhabits a header and a body section. The *header* section present information about the different types of annotation layers and features used in the file. While importing the WebAnno TSV file, the specified headers should be first created in to the running WebAnno project. Otherwise, the importing of the file will not be possible.
+
+The *body* section of the TSV file presents the document and all the associated annotations including sentence and token annotations.
+
+== Header Section
+
+Layers are marked by the *#* character followed by *T_SP=*for `span types` (including `slot features`), *T_CH=*for `chain layers`, and *T_RL=*for `relation layers`. 
+Every layer is written in new line, followed by the features in the layer
+
+If all layer type exists, first, all the span layers will be written and then the chain layer and finally the relation layers.
+
+Features are separated by the *|* character and only the short name of the feature is provided.
+
+Example: `#T_SP=webanno.custom.Pred|bestSense|lemmaMapped|senseId|senseMapped`
+ 
+Here the layer name is `webanno.custom.Pred` and the features are named `bestSense`, `lemmaMapped`, `senseId`, `senseMapped`.
+Slot features start with a prefix `ROLE_`followed by the name of the role and the link. The role feature name and the link feature name are separated by the *_* character.
+
+The target of the slot feature always follows the role/link name
+
+Example: `#T_SP=webanno.custom.SemPred|ROLE_webanno.custom.SemPred:RoleSet_webanno.custom.SemPredRoleSetLink|uima.tcas.Annotation|aFrame`
+
+
+Here the name of the role is  `webanno.custom.SemPred:RoleSet` and the name of the role link is `webanno.custom.SemPredRoleSetLink` and the target type is `uima.tcas.Annotation`
+
+Chain layers will have always two features, `referenceType` and `referenceRelation`
+
+Example: 
+`#T_CH=de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink|referenceType|referenceRelation`
+
+Relation layers will come at last in the list and the very last entry in the features will be the type of the base (governor or dependent) annotations with a prefix `BT_`.
+
+Example: 
+`#T_RL=de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency|DependencyType|BT_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`
+
+Here, the relation type `de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency` has a feature `DependencyType` and the relation is between a base type of `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`.
+
+== Annotations Section
