@@ -169,3 +169,31 @@ Here, for example, at token `2-2`, we have three slot annotations for feature `R
 Special characters are escaped with the *\* character. Special characters includes the following characters.
 
 `\,[,],|,_,->,;,\t,\n,*`
+
+=== Chain Annotations
+
+In the Chain annotation, two columns (TAB separated) are used to represent the `referenceType` and the `referenceRelation`. A chain number is attached to the `referenceType` to distinguish to which of the coreference chains the annotation belongs. The `referenceRelation` of the chain is represented by the relation value followed by `->` and followed by the `CH-LINK` number where `CH` is the chain number and `LINK` is the link number (the order the chain).
+
+Example
+
+Layer
+
+`#T_CH=de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink|referenceType|referenceRelation`
+
+Annotations
+
+`1-1	0-2	He	pr[1]	coref->1-1`
+
+`1-2	3-7	shot	_	_`
+
+`1-3	8-15	himself		pr[1]	coref->1-2`
+
+`1-4	16-20	with	_	_`
+
+`1-5	21-24	his		pr[1]	*->1-3`	
+
+`1-6	25-33	revolver	_	_`
+
+`1-7	33-34	.	_	_`
+
+In this example, token `1-3` is marked as `pr[1]` which explains that the `referenceType` is `pr` and it is part of coreference chain `1`. The coreference relation value is `coref` and with the `CH-LINK` number `1-2` which means that it belongs to chain `1` and this is the second link in the coreference chain.
