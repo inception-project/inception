@@ -3459,13 +3459,19 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
         if (oversized > 0) {
-            $(backgroundGroup).attr('width', canvasWidth);
-            $(backgroundGroup).children().each(function(index,element) {
-          	  $(element).attr('width', canvasWidth);
-            })
-	        $svgDiv.css("padding-bottom", "16px");
-	        $svgDiv.height(y+16); // Need to take the padding into account here
+	        $(backgroundGroup).attr('width', canvasWidth);
+	        $(backgroundGroup).children().each(function(index,element) {
+	      	  $(element).attr('width', canvasWidth);
+	        })
         }
+        
+        // WEBANNO BEGIN #331 - Interface jumps to the top
+        // Originally, this code was within the oversized > 0 block above, but we moved it here
+        // to prevent erratic jumping
+        $svgDiv.css("padding-bottom", "16px");
+        $svgDiv.height(y+16); // Need to take the padding into account here
+        // WEBANNO END #331 - Interface jumps to the top
+        
 // WEBANNO EXTENSION END        
 
 Util.profileEnd('finish');

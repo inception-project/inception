@@ -601,9 +601,11 @@
                                         <exclude>src/filter/**/*</exclude>
                                         <!-- release generated artifact -->
                                         <exclude>release.properties</exclude>
+                                        <exclude>CONTRIBUTORS.txt</exclude>
                                         <exclude>CHANGES.txt</exclude>
                                         <exclude>NOTICE.txt</exclude>
                                         <exclude>README.txt</exclude>
+                                        <exclude>README.md</exclude>
                                         <exclude>src/main/resources/**/*</exclude>
                                         <exclude>src/test/resources/**/*</exclude>
                                         <exclude>src/main/filter/**/*</exclude>

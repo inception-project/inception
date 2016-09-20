@@ -454,25 +454,13 @@
 									<goal>check</goal>
 								</goals>
 								<configuration>
-									<excludes>
-										<exclude>.gitignore</exclude>
-										<!-- maven config files -->
-										<exclude>src/filter/**/*</exclude>
-										<!-- release generated artifact -->
-										<exclude>release.properties</exclude>
-										<exclude>CHANGES.txt</exclude>
-										<exclude>NOTICE.txt</exclude>
-										<exclude>README.txt</exclude>
-										<exclude>src/main/resources/**/*</exclude>
-										<exclude>src/test/resources/**/*</exclude>
-										<exclude>src/main/filter/**/*</exclude>
-										<exclude>**/*.example</exclude>
-										<exclude>doc/*.json</exclude>
-										<exclude>licenses/**/*</exclude>
-										<!-- generated JCas wrappers -->
-										<exclude>src/main/java/**/type/**/*</exclude>
+									<excludes combine.children="append">
 										<!-- otherwise license files mentioned in NOTICE.txt -->
 										<exclude>src/main/webapp/js/css_browser_selector.js</exclude>
+                                        <exclude>**/src/main/webapp/static/css/fontawesome-webfont.svg</exclude>
+                                        <exclude>**/src/main/webapp/static/css/font-awesome.css</exclude>
+                                        <exclude>**/src/main/webapp/static/css/font-awesome.min.css</exclude>
+                                        <exclude>**/src/main/webapp/static/fonts/fontawesome-webfont.svg</exclude>
 									</excludes>
 								</configuration>
 							</execution>
