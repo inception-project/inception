@@ -23,6 +23,10 @@ The *body* section of the TSV file presents the document and all the associated 
 
 == Header Section
 
+WebAnno 3.0 TSV file starts with the following header marker
+
+`#FORMAT=WebAnno TSV 3`
+
 Layers are marked by the *#* character followed by *T_SP=*for `span types` (including `slot features`), *T_CH=*for `chain layers`, and *T_RL=*for `relation layers`. 
 Every layer is written in new line, followed by the features in the layer
 
@@ -88,3 +92,80 @@ Exampel
 `1-3.2	13-14	s`
 
 Here, the sub-token `play` is indicated by sentence-token number `1-3.1` and the sub-token `s` is indicated by `1-3.2`. 
+
+=== Span Annotations
+
+For every features of a span Annotation, annotation value will be presented in the same row as the token/sub-token annotation, separated by a TAB character. If there is no annotation for the given span layer, a `_` character is placed in the column. If the feature has no/null annotation or if the span layer do not have a feature at all, a `*` character represents the annotation.
+
+Example:
+
+Layers:
+
+`#T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue`
+`#T_SP=webanno.custom.Sentiment|Category|Opinion`
+
+Annotations
+
+`1-9	36-43	unhappy		JJ		abstract	negative`
+
+Here, the first annotation at column 4, `JJ` is avalue for a feature `PosValue` of the layer `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`. For the two features of the layer `webanno.custom.Sentiment` (`Category` and `Opinion`), the values `abstract` and `negative` are presented at column 5 and 6 resp.
+
+=== Multiple Span Annotation or Stacked Annotations
+
+Multiple span annotation or stacked annotations on a token/sub-token will have a numbered reference enclosed by brackets as [N] where N refers to the nth annotation on the layer. Stacked annotations are separated by *|* character.
+
+Example:
+
+Layer:
+
+`#T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue`
+
+`#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value`
+
+Annotation:
+
+`1-1	0-3	Ms.		NNP		PER[1]|PERpart[2]`
+
+`1-2	4-8	Haag	NNP		PER[1]`
+
+Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multiple token annotations) while `PERpart[2]` is the second (stacked) annotation on token  `1-1` separated by *|* character.
+
+=== Slot features
+
+Slot features and the target annotations are separated by TAB character (first the feature column then the target column follows). In the target column, the `sentence-token` id is recorded where the feature is drawn.
+
+Unlike other span layer features (which are separated by *|* character), multiple annotations for a slot feature are separated by the *;* character.
+
+Example
+
+Layers:
+
+`#T_SP=webanno.custom.Frame|FE|ROLE_webanno.custom.Frame:Roles_webanno.custom.FrameRolesLink|webanno.custom.Lu`
+
+`#T_SP=webanno.custom.Lu|luvalue`
+
+
+Annotations:
+
+
+`2-1	27-30	Bob	_	_	_	bob`
+
+`2-2	31-40	auctioned	transaction	seller;goods;buyer	2-1;2-3[4];2-6		_`
+
+`2-3	41-44	the	_	_	_	clock[4]`
+
+`2-4	45-50	clock	_	_	_	clock[4]`
+
+`2-5	52-54	to	_	_	_	_`
+
+`2-6	55-59	John	_	_	_	john`
+
+`2-7	59-60	.	_	_	_	_`
+
+Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `,`2-3[4]`, and `2-6` resp. which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
+
+=== special Character Annotations
+
+Special characters are escaped with the *\* character. Special characters includes the following characters.
+
+`\,[,],|,_,->,;,\t,\n,*`
