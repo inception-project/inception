@@ -115,34 +115,23 @@ public class SecurityUtil
     public static boolean isProjectAdmin(Project aProject, RepositoryService aProjectRepository,
             User aUser)
     {
-        boolean roleAdmin = false;
-        for (String role : getRoles(aProjectRepository, aUser)) {
-            if (Role.ROLE_ADMIN.name().equals(role)) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
         boolean projectAdmin = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.ADMIN.getName())) {
-                        projectAdmin = true;
-                        break;
-                    }
+        try {
+            List<ProjectPermission> permissionLevels = aProjectRepository
+                    .listProjectPermisionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.ADMIN.getName())) {
+                    projectAdmin = true;
+                    break;
                 }
             }
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
+        }
+        catch (NoResultException ex) {
+            LOG.info("No permision is given to this user " + ex);
         }
 
-        return (projectAdmin || roleAdmin);
+        return projectAdmin;
     }
 
     /**
@@ -156,75 +145,53 @@ public class SecurityUtil
     public static boolean isCurator(Project aProject, RepositoryService aProjectRepository,
             User aUser)
     {
-        boolean roleAdmin = false;
-        for (String role : getRoles(aProjectRepository, aUser)) {
-            if (Role.ROLE_ADMIN.name().equals(role)) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
         boolean curator = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.CURATOR.getName())) {
-                        curator = true;
-                        break;
-                    }
+        try {
+            List<ProjectPermission> permissionLevels = aProjectRepository
+                    .listProjectPermisionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.CURATOR.getName())) {
+                    curator = true;
+                    break;
                 }
             }
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
+        }
+        catch (NoResultException ex) {
+            LOG.info("No permision is given to this user " + ex);
         }
 
-        return (curator || roleAdmin);
+        return curator;
     }
 
     /**
      * Determine if the User is member of a project
      *
      * @param aProject the project.
-     * @param aProjectRepository the respository service.
+     * @param aProjectRepository the repository service.
      * @param aUser the user.
      * @return if the user is a member.
      */
     public static boolean isMember(Project aProject, RepositoryService aProjectRepository,
             User aUser)
     {
-        boolean roleAdmin = false;
-        for (String role : getRoles(aProjectRepository, aUser)) {
-            if (Role.ROLE_ADMIN.name().equals(role)) {
-                roleAdmin = true;
-                break;
-            }
-        }
-
         boolean user = false;
-        if (!roleAdmin) {
-
-            try {
-                List<ProjectPermission> permissionLevels = aProjectRepository
-                        .listProjectPermisionLevel(aUser, aProject);
-                for (ProjectPermission permissionLevel : permissionLevels) {
-                    if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                            PermissionLevel.USER.getName())) {
-                        user = true;
-                        break;
-                    }
+        try {
+            List<ProjectPermission> permissionLevels = aProjectRepository
+                    .listProjectPermisionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.USER.getName())) {
+                    user = true;
+                    break;
                 }
             }
-
-            catch (NoResultException ex) {
-                LOG.info("No permision is given to this user " + ex);
-            }
         }
 
-        return (user || roleAdmin);
+        catch (NoResultException ex) {
+            LOG.info("No permision is given to this user " + ex);
+        }
+
+        return user;
     }
 }

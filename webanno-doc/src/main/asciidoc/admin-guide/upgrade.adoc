@@ -89,3 +89,6 @@ $ service webanno start
   
 NOTE: If you have made additional changes to the Tomcat 6 configuration files, e.g. changed
       `conf/server.xml`, please make sure to redo them in the new Tomcat 7 instance.
+
+include::../common/migration.adoc[]
+      

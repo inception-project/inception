@@ -54,6 +54,18 @@ public class ProjectPermission
     @JoinColumn(name = "project")
     private Project project;
 
+    public ProjectPermission()
+    {
+        // Required for JPA
+    }
+    
+    public ProjectPermission(Project aProject, String aUser, PermissionLevel aLevel)
+    {
+        project = aProject;
+        user = aUser;
+        level = aLevel;
+    }
+
     public long getId()
     {
         return id;

@@ -68,7 +68,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.project.ProjectMiraTemplatePanel;
@@ -529,15 +528,12 @@ public class ProjectPage
                         User user = userRepository.get(username);
                         repository.createProject(project, user);
 
-                        // If the project was created by a user (not a global admin), then add this
-                        // user as a project admin so that the user can see and edit the project.
-                        if (SecurityUtil.isProjectCreator(repository, user)) {
-                            ProjectPermission permission = new ProjectPermission();
-                            permission.setLevel(PermissionLevel.ADMIN);
-                            permission.setProject(project);
-                            permission.setUser(username);
-                            repository.createProjectPermission(permission);
-                        }
+                        repository.createProjectPermission(new ProjectPermission(project,
+                                username, PermissionLevel.ADMIN));
+                        repository.createProjectPermission(new ProjectPermission(project,
+                                username, PermissionLevel.CURATOR));
+                        repository.createProjectPermission(
+                                new ProjectPermission(project, username, PermissionLevel.USER));
 
                         annotationService.initializeTypesForProject(project, user);
                         projectDetailForm.setVisible(true);

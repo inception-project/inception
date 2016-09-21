@@ -326,13 +326,6 @@ public class MonitoringPage
                             User user = userRepository.get(username);
 
                             List<Project> allProjects = repository.listProjects();
-
-                            // if global admin, show all projects
-                            if (SecurityUtil.isSuperAdmin(repository, user)) {
-                                return allProjects;
-                            }
-
-                            // else only projects she is admin of
                             for (Project project : allProjects) {
                                 if (SecurityUtil.isProjectAdmin(project, repository, user)
                                         || SecurityUtil.isCurator(project, repository, user)) {
@@ -1291,7 +1284,7 @@ public class MonitoringPage
                         SourceDocumentState state = document.getState();
                         if (state.toString().equals(
                                 SourceDocumentState.CURATION_FINISHED.toString())) {
-                            try {
+                        try {
                                 changeSourceDocumentState(document, user,
                                         CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }

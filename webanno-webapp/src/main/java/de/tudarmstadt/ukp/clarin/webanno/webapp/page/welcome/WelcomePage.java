@@ -237,10 +237,6 @@ public class WelcomePage
 
     private boolean curationEnabeled(User user)
     {
-        if (SecurityUtil.isSuperAdmin(repository, user)) {
-            return true;
-        }
-        
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isCurator(project, repository, user)) {
                 return true;
@@ -252,10 +248,6 @@ public class WelcomePage
 
     private boolean annotationEnabeled(User user, Mode mode)
     {
-        if (SecurityUtil.isSuperAdmin(repository, user)) {
-            return true;
-        }
-        
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isMember(project, repository, user)
                     && mode.equals(project.getMode())) {
@@ -268,10 +260,6 @@ public class WelcomePage
     
     private boolean monitoringEnabeled(User user)
     {
-        if (SecurityUtil.isSuperAdmin(repository, user)) {
-            return true;
-        }
-        
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isCurator(project, repository, user)
                     || SecurityUtil.isProjectAdmin(project, repository, user)) {
