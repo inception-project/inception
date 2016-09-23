@@ -319,7 +319,7 @@ var AnnotatorUI = (function($, window, undefined) {
             var span = data.spans[arcDragOrigin] || {};
             var spanDesc = spanTypes[span.type] || {};
 
-            // separate out possible numeric suffix from type for highight
+            // separate out possible numeric suffix from type for highlight
             // (instead of e.g. "Theme3", need to look for "Theme")
             var noNumArcType = stripNumericSuffix(arcOptions && arcOptions.type);
             // var targetClasses = [];
@@ -336,9 +336,13 @@ var AnnotatorUI = (function($, window, undefined) {
               }
             });
             // $(targetClasses.join(',')).not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
-// WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
-            $targets.addClass('reselectTarget');
-            //$targets.not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
+// WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers
+            if (evt.shiftKey) {
+            	$targets.addClass('reselectTarget');
+            }
+            else {
+            	$targets.not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
+            }
 // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
           }
           clearSelection();
@@ -1644,7 +1648,7 @@ var AnnotatorUI = (function($, window, undefined) {
           var targetValid = target.hasClass('reselectTarget');
           stopArcDrag(target);
 // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
-          if ((id = target.attr('data-span-id')) && targetValid) {
+          if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
 //          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
 // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
             var originSpan = data.spans[origin];

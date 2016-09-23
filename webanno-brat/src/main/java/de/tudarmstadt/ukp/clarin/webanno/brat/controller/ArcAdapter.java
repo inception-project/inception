@@ -51,7 +51,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
@@ -397,13 +396,11 @@ public class ArcAdapter
                 continue;
             }
 
-            if (isDuplicate( governorFs, aOriginFs,  dependentFs,
-                    aTargetFs) && (aValue == null || !aValue.equals(WebAnnoConst.ROOT))) {
-
-                if (!allowStacking) {
-                    setFeature(fs, aFeature, aValue);
-                    return fs;
-                }
+            // If stacking is not allowed and we would be creating a duplicate arc, then instead
+            // update the label of the existing arc
+            if (!allowStacking && isDuplicate(governorFs, aOriginFs, dependentFs, aTargetFs)) {
+                setFeature(fs, aFeature, aValue);
+                return fs;
             }
         }
 

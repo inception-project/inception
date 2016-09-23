@@ -23,7 +23,6 @@ import java.util.List;
 
 /**
  * Constants for annotation types
- *
  */
 public class WebAnnoConst
 {
@@ -37,8 +36,6 @@ public class WebAnnoConst
     
     public static final String FEAT_REL_TARGET = "Dependent";
     public static final String FEAT_REL_SOURCE = "Governor";
-
-    public static final String ROOT = "ROOT";
 
     public static final String SPAN_TYPE = "span";
     public static final String RELATION_TYPE = "relation";
