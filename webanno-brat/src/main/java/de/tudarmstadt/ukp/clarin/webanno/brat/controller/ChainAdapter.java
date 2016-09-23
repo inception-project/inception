@@ -465,6 +465,9 @@ public class ChainAdapter
 
             // Cut off from old chain
             setNextLink(prevLinkFs, null);
+            
+            // Delete middle link
+            aJCas.removeFsFromIndexes(linkToDelete);
         }
         else {
             throw new IllegalStateException(
