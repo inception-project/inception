@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface Check
 {
-    boolean check(CAS aCas, List<LogMessage> aMessages);
+    boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages);
 }

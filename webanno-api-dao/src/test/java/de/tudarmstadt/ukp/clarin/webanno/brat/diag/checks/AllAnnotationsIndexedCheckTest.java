@@ -69,7 +69,8 @@ public class AllAnnotationsIndexedCheckTest
         
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
-        boolean result = cd.analyze(cas, messages);
+        // A project is not required for this check
+        boolean result = cd.analyze(null, cas, messages);
         
         messages.forEach(s -> System.out.println(s));
         
@@ -107,7 +108,8 @@ public class AllAnnotationsIndexedCheckTest
         
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
-        boolean result = cd.analyze(cas, messages);
+        // A project is not required for this check
+        boolean result = cd.analyze(null, cas, messages);
         
         messages.forEach(s -> System.out.println(s));
         

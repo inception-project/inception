@@ -836,7 +836,7 @@ public class RepositoryServiceDbData
                             getReadableFormats().get(aDocument.getFormat()), aDocument);
 
                     try {
-                        casDoctor.repair(jcas.getCas());
+                        casDoctor.repair(aDocument.getProject(), jcas.getCas());
                     }
                     catch (Exception e) {
                         throw new DataRetrievalFailureException("Error repairing CAS of user ["
@@ -847,7 +847,7 @@ public class RepositoryServiceDbData
                     }
                     
                     try {
-                        casDoctor.analyze(jcas.getCas());
+                        casDoctor.analyze(aDocument.getProject(), jcas.getCas());
                     }
                     catch (Exception e) {
                         throw new DataRetrievalFailureException("Error analyzing CAS of user ["
@@ -868,7 +868,7 @@ public class RepositoryServiceDbData
                     readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                     
                     try {
-                        casDoctor.repair(jcas.getCas());
+                        casDoctor.repair(aDocument.getProject(), jcas.getCas());
                     }
                     catch (Exception e) {
                         throw new DataRetrievalFailureException("Error repairing CAS of user ["
@@ -1727,7 +1727,7 @@ public class RepositoryServiceDbData
         // DebugUtils.smallStack();
 
         try {
-            casDoctor.analyze(aJcas.getCas());
+            casDoctor.analyze(aDocument.getProject(), aJcas.getCas());
         }
         catch (Exception e) {
             throw new DataRetrievalFailureException("Error analyzing CAS of user ["
@@ -1916,7 +1916,7 @@ public class RepositoryServiceDbData
                 readSerializedCas(cas.getJCas(), serializedCasFile);
 
                 try {
-                    casDoctor.repair(cas);
+                    casDoctor.repair(aDocument.getProject(), cas);
                 }
                 catch (Exception e) {
                     throw new DataRetrievalFailureException("Error repairing CAS of user ["
@@ -2145,7 +2145,7 @@ public class RepositoryServiceDbData
         }
 
         try {
-            casDoctor.repair(cas);
+            casDoctor.repair(aDocument.getProject(), cas);
         }
         catch (Exception e) {
             throw new DataRetrievalFailureException(

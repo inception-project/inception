@@ -28,48 +28,30 @@ import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class AllAnnotationsIndexedCheck
     implements Check
 {
-//    @Override
-//    public boolean check(CAS aCas, List<LogMessage> aMessages)
-//    {
-//        Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
-//
-//        if (!nonIndexed.isEmpty()) {
-//            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
-//                    nonIndexed.size()));
-//
-//            for (FeatureStructure fs : nonIndexed) {
-//                aMessages.add(new LogMessage(this, LogLevel.ERROR, "%s", fs));
-//            }
-//        }
-//        // else {
-//        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
-//        // }
-//
-//        return nonIndexed.isEmpty();
-//    }
-    
-        @Override
-        public boolean check(CAS aCas, List<LogMessage> aMessages)
-        {
-            Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
+    @Override
+    public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    {
+        Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
-            if (!nonIndexed.isEmpty()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
-                        nonIndexed.size()));
+        if (!nonIndexed.isEmpty()) {
+            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
+                    nonIndexed.size()));
 
-                for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Non-index annotation [%s] reachable through [%s]", e
-                        .getKey(), e.getValue()));
-                }
+            for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                        "Non-indexed annotation [%s] reachable through [%s]", e.getKey(),
+                        e.getValue()));
             }
-            // else {
-            // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
-            // }
-
-            return nonIndexed.isEmpty();
         }
+        // else {
+        // aMessages.add(String.format("[%s] OK", getClass().getSimpleName()));
+        // }
+
+        return nonIndexed.isEmpty();
+    }
 }

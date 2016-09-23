@@ -32,12 +32,13 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class RemoveDanglingRelationsRepair
     implements Repair
 {
     @Override
-    public void repair(CAS aCas, List<LogMessage> aMessages)
+    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
         

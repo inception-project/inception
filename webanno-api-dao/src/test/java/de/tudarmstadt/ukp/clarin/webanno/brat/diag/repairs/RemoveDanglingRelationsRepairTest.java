@@ -55,8 +55,10 @@ public class RemoveDanglingRelationsRepairTest
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(RemoveDanglingRelationsRepair.class,
                 AllAnnotationsIndexedCheck.class);
-        boolean result = cd.analyze(jcas.getCas(), messages);
-        cd.repair(jcas.getCas(), messages);
+        // A project is not required for this check
+        boolean result = cd.analyze(null, jcas.getCas(), messages);
+        // A project is not required for this repair
+        cd.repair(null, jcas.getCas(), messages);
         
         assertFalse(result);
         

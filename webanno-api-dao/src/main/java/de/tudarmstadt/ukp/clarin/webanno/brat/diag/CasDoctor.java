@@ -25,14 +25,18 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CasDoctor
-    implements InitializingBean
+    implements InitializingBean, ApplicationContextAware
 {
     private Log log = LogFactory.getLog(getClass());
 
@@ -45,6 +49,8 @@ public class CasDoctor
     @Value(value = "${debug.casDoctor.repairs}")
     private String activeRepairs;
 
+    private ApplicationContext context;
+    
     private List<Class<? extends Check>> checkClasses = new ArrayList<>();
     private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
 
@@ -99,22 +105,23 @@ public class CasDoctor
         return fatalChecks;
     }
 
-    public void repair(CAS aCas)
+    public void repair(Project aProject, CAS aCas)
     {
         List<LogMessage> messages = new ArrayList<>();
-        repair(aCas, messages);
+        repair(aProject, aCas, messages);
         if (log.isWarnEnabled() && !messages.isEmpty()) {
             messages.forEach(s -> log.warn(s));
         }
     }
     
-    public void repair(CAS aCas, List<LogMessage> aMessages)
+    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         boolean exception = false;
         for (Class<? extends Repair> repairClass : repairClasses) {
             try {
                 Repair repair = repairClass.newInstance();
-                repair.repair(aCas, aMessages);
+                context.getAutowireCapableBeanFactory().autowireBean(repair);
+                repair.repair(aProject, aCas, aMessages);
             }
             catch (Exception e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
@@ -124,35 +131,37 @@ public class CasDoctor
             }
         }
         
-        if (!repairClasses.isEmpty() && (exception || !analyze(aCas, aMessages, false))) {
+        if (!repairClasses.isEmpty() && (exception || !analyze(aProject, aCas, aMessages, false))) {
             aMessages.forEach(s -> log.error(s));
             throw new IllegalStateException("Repair attempt failed - ask system administrator "
                     + "for details.");
         }
     }
     
-    public boolean analyze(CAS aCas)
+    public boolean analyze(Project aProject, CAS aCas)
     {
         List<LogMessage> messages = new ArrayList<>();
-        boolean result = analyze(aCas, messages);
+        boolean result = analyze(aProject, aCas, messages);
         if (log.isDebugEnabled()) {
             messages.forEach(s -> log.debug(s));
         }
         return result;
     }
 
-    public boolean analyze(CAS aCas, List<LogMessage> aMessages)
+    public boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        return analyze(aCas, aMessages, isFatalChecks());
+        return analyze(aProject, aCas, aMessages, isFatalChecks());
     }
 
-    private boolean analyze(CAS aCas, List<LogMessage> aMessages, boolean aFatalChecks)
+    private boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages,
+            boolean aFatalChecks)
     {
         boolean ok = true;
         for (Class<? extends Check> checkClass : checkClasses) {
             try {
                 Check check = checkClass.newInstance();
-                ok &= check.check(aCas, aMessages);
+                context.getAutowireCapableBeanFactory().autowireBean(check);
+                ok &= check.check(aProject, aCas, aMessages);
             }
             catch (InstantiationException | IllegalAccessException e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
@@ -238,5 +247,12 @@ public class CasDoctor
             return String.format("[%s] %s", source != null ? source.getSimpleName() : "<unknown>",
                     message);
         }
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext aContext)
+        throws BeansException
+    {
+        context = aContext;
     }
 }

@@ -22,8 +22,9 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface Repair
 {
-    void repair(CAS aCas, List<LogMessage> aMessages);
+    void repair(Project aProject, CAS aCas, List<LogMessage> aMessages);
 }
