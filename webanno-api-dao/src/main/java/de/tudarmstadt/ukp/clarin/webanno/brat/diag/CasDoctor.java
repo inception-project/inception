@@ -120,13 +120,15 @@ public class CasDoctor
         for (Class<? extends Repair> repairClass : repairClasses) {
             try {
                 Repair repair = repairClass.newInstance();
-                context.getAutowireCapableBeanFactory().autowireBean(repair);
+                if (context != null) {
+                    context.getAutowireCapableBeanFactory().autowireBean(repair);
+                }
                 repair.repair(aProject, aCas, aMessages);
             }
             catch (Exception e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
                         repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                log.error(e);
+                log.error("Error running repair", e);
                 exception = true;
             }
         }
@@ -160,13 +162,15 @@ public class CasDoctor
         for (Class<? extends Check> checkClass : checkClasses) {
             try {
                 Check check = checkClass.newInstance();
-                context.getAutowireCapableBeanFactory().autowireBean(check);
+                if (context != null) {
+                    context.getAutowireCapableBeanFactory().autowireBean(check);
+                }
                 ok &= check.check(aProject, aCas, aMessages);
             }
             catch (InstantiationException | IllegalAccessException e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
                         checkClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                log.error(e);
+                log.error("Error running check", e);
             }
         }
 
