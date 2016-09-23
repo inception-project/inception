@@ -463,7 +463,7 @@ public class ArcAdapter
             AnnotationFS aAnnotationFSNewTarget)
  {
 		return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
-				&& isSame(aAnnotationFSNewOrigin, aAnnotationFSNewTarget);
+				&& isSame(aAnnotationFSOldTarget, aAnnotationFSNewTarget);
     }
 
     @Override
