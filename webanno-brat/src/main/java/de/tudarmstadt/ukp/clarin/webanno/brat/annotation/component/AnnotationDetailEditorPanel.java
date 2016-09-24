@@ -302,7 +302,6 @@ public class AnnotationDetailEditorPanel
                 public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
                 {
                     try {
-
                         JCas jCas = getCas(bModel);
                         AnnotationFS fs = selectByAddr(jCas, bModel.getSelection().getAnnotation().getId());
 
@@ -317,13 +316,12 @@ public class AnnotationDetailEditorPanel
                             deleteModal.show(aTarget);
                         }
                         else {
-
                             actionDelete(aTarget, bModel);
                         }
                     }
                     catch (UIMAException | ClassNotFoundException | IOException
                             | CASRuntimeException | BratAnnotationException e) {
-                     error(e.getMessage());
+                        error(e.getMessage());
                     }
                 }
             });
@@ -646,8 +644,8 @@ public class AnnotationDetailEditorPanel
 									.map(Map.Entry::getKey).findFirst().orElse(null);
 						} else {
 							actionClear(aTarget, bModel);
-							throw new BratAnnotationException("Cannot create another annotation of layer [" + ""
-									+ bModel.getSelectedAnnotationLayer().getUiName() + " ] at this"
+							throw new BratAnnotationException("Cannot create another annotation of layer ["
+									+ bModel.getSelectedAnnotationLayer().getUiName() + "] at this"
 									+ " location - stacking is not enabled for this layer.");
 						}
 					}
@@ -1043,40 +1041,40 @@ public class AnnotationDetailEditorPanel
                         + "selected span layer");
             }
 
-            // If we drag an arc between POS annotations, then the relation must be a dependency
-            // relation.
-            // FIXME - Actually this case should be covered by the last case - the database lookup!
+                // If we drag an arc between POS annotations, then the relation must be a dependency
+                // relation.
+                // FIXME - Actually this case should be covered by the last case - the database lookup!
             if (spanLayer.isBuiltIn() && spanLayer.getName().equals(POS.class.getName())) {
-                AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
-                        aBModel.getProject());
-                if (aBModel.getAnnotationLayers().contains(depLayer)) {
-                    aBModel.setSelectedAnnotationLayer(depLayer);
-                }
-                else {
-                    aBModel.setSelectedAnnotationLayer(null);
-                }
-            }
-            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
-            // Chain layers consist of arcs and spans
-            else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                // one layer both for the span and arc annotation
-                aBModel.setSelectedAnnotationLayer(spanLayer);
-            }
-            // Otherwise, look up the possible relation layer(s) in the database.
-            else {
-                for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel
-                        .getProject())) {
-                    if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
-                        if (aBModel.getAnnotationLayers().contains(layer)) {
-                            aBModel.setSelectedAnnotationLayer(layer);
-                        }
-                        else {
-                            aBModel.setSelectedAnnotationLayer(null);
-                        }
-                        break;
+                    AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
+                            aBModel.getProject());
+                    if (aBModel.getAnnotationLayers().contains(depLayer)) {
+                        aBModel.setSelectedAnnotationLayer(depLayer);
+                    }
+                    else {
+                        aBModel.setSelectedAnnotationLayer(null);
                     }
                 }
-            }
+                // If we drag an arc in a chain layer, then the arc is of the same layer as the span
+                // Chain layers consist of arcs and spans
+                else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                    // one layer both for the span and arc annotation
+                    aBModel.setSelectedAnnotationLayer(spanLayer);
+                }
+                // Otherwise, look up the possible relation layer(s) in the database.
+                else {
+                    for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel
+                            .getProject())) {
+                        if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
+                            if (aBModel.getAnnotationLayers().contains(layer)) {
+                                aBModel.setSelectedAnnotationLayer(layer);
+                            }
+                            else {
+                                aBModel.setSelectedAnnotationLayer(null);
+                            }
+                            break;
+                        }
+                    }
+                }
 
             // populate feature value
             if (aBModel.getSelection().getAnnotation().isSet()) {
