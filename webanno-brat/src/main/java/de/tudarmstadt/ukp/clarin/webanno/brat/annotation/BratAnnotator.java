@@ -372,7 +372,7 @@ public class BratAnnotator
                     error("Invalid reader: " + e.getMessage());
                 }
                 catch (Exception e) {
-                    error("Unexpected error: " + e.getMessage());
+                    error("Error: " + e.getMessage());
                     LOG.error(ExceptionUtils.getRootCauseMessage(e));
                 }
 
@@ -389,6 +389,7 @@ public class BratAnnotator
                             + json + ";");
                 }
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
+                
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     editor.setAnnotationLayers(getModelObject());
                 }
