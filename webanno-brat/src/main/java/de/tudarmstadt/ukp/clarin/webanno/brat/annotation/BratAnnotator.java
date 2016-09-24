@@ -326,11 +326,6 @@ public class BratAnnotator
                         selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
                                 .toInteger());
                         
-                        AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-                        AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-                        selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-                                targetFs.getCoveredText() + "]");
-                        
                         bratSetHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
                         editor.reloadLayer(aTarget);
@@ -339,6 +334,11 @@ public class BratAnnotator
                             editor.actionAnnotate(aTarget, getModelObject(), false);
                         }
                         else {
+                            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+                            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+                            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                                    targetFs.getCoveredText() + "]");
+                            
                             selection.setAnnotate(false);
                             bratRender(aTarget, jCas);
                             result = new ArcAnnotationResponse();

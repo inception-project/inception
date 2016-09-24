@@ -613,13 +613,24 @@ public class AnnotationDetailEditorPanel
 
 					AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end, null, null);
 					selection.setAnnotation(new VID(getAddr(arc)));
+                    if (selection.getAnnotation().isSet()) {
+                        selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                                targetFs.getCoveredText() + "]");
+                    }
+                    else {
+                        selection.setText("");
+                    }
 				} else {
 					selection.setAnnotation(
 							new VID(((ChainAdapter) adapter).addArc(jCas, originFs, targetFs, null, null)));
+					if (selection.getAnnotation().isSet()) {
+					    selection.setText(originFs.getCoveredText());
+					}
+					else {
+					    selection.setText("");
+					}
 				}
 				selection.setBegin(originFs.getBegin());
-				selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-				        targetFs.getCoveredText() + "]");
 			} else if (adapter instanceof SpanAdapter) {
 				
 				for (FeatureModel fm : featureModels) {
@@ -661,8 +672,10 @@ public class AnnotationDetailEditorPanel
 						} 
 					}
 				}
-				selection.setAnnotation(new VID(
-						((ChainAdapter) adapter).addSpan(jCas, selection.getBegin(), selection.getEnd(), null, null)));
+				selection.setAnnotation(new VID(((ChainAdapter) adapter).addSpan(
+				        jCas, selection.getBegin(), selection.getEnd(), null, null)));
+                selection.setText(jCas.getDocumentText().substring(
+                        selection.getBegin(), selection.getEnd()));
 			}
 		}
 
