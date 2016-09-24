@@ -73,7 +73,7 @@
 		    </fieldset>		
 		    <fieldset>
 			<legend>Annotation</legend>
-			  <label wicket:id="noAnnotationWarning"></label>
+			  <span wicket:id="noAnnotationWarning"></span>
 			  <div wicket:id="featureEditorsContainer">
                 <div style="width: 1px; height: 1px; overflow: hidden;">
                     <input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
@@ -96,6 +96,9 @@
 					<tr>
 					   <td colspan="3"><hr></hr></td>
 					</tr>
+                    <tr>
+                       <td colspan="3"><span wicket:id="noFeaturesWarning"></span></td>
+                    </tr>
 					<tr wicket:id="featureValues" id="featureValues">
 						<td wicket:id="editor"></td>
 						<wicket:fragment wicket:id="textFeatureEditor">

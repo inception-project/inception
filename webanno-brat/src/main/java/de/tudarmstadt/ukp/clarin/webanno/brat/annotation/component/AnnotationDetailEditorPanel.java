@@ -270,7 +270,7 @@ public class AnnotationDetailEditorPanel
 
             forwardAnnotationCheck.setOutputMarkupId(true);
 
-            add(new Label("noAnnotationWarning", "No Annotation selected!"){
+            add(new Label("noAnnotationWarning", "No annotation selected!"){
 
                 private static final long serialVersionUID = -6046409838139863541L;
 
@@ -411,15 +411,24 @@ public class AnnotationDetailEditorPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-
-                    setVisible(!featureModels.isEmpty()
-                            && bModel.getSelection().getAnnotation().isSet());
+                    setVisible(bModel.getSelection().getAnnotation().isSet());
                 }
             };
             // Add placeholder since wmc might start out invisible. Without the placeholder we
             // cannot make it visible in an AJAX call
             featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
             featureEditorsContainer.setOutputMarkupId(true);
+            
+            featureEditorsContainer.add(new Label("noFeaturesWarning", "No features available!") {
+                private static final long serialVersionUID = 4398704672665066763L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(featureModels.isEmpty());
+                }
+            });
             
 			forwardAnnotationText = new TextField<String>("forwardAnno");
 			forwardAnnotationText.setOutputMarkupId(true);
@@ -483,7 +492,7 @@ public class AnnotationDetailEditorPanel
             
             featureEditorsContainer.add(featureValues);
             
-            // the selected text for annotationa
+            // the selected text for annotation
             selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
                     "selection.text"));
             selectedTextLabel.setOutputMarkupId(true);
