@@ -1031,15 +1031,14 @@ public class AnnotationDetailEditorPanel
     private void setLayerAndFeatureModels(AjaxRequestTarget aTarget, JCas aJCas,
             final BratAnnotatorModel aBModel) throws BratAnnotationException
     {
-        if (aBModel.getSelection().getAnnotation().isNotSet()) {
-            return;
-        }
-        
         if (aBModel.getSelection().isRelationAnno()) {
+            // FIXME REC I think this whole section which meddles around with the selected annotation
+            // layer should be moved out of there to the place where we originally set the annotation
+            // layer...!
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
             if (aBModel.getPreferences().isRememberLayer()
-                    && !aBModel.getDefaultAnnotationLayer().equals(spanLayer)) {
+                    && !spanLayer.equals(aBModel.getDefaultAnnotationLayer())) {
                 throw new BratAnnotationException("No relation annotation allowed on the "
                         + "selected span layer");
             }
