@@ -17,6 +17,7 @@
  ******************************************************************************/
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
@@ -334,6 +335,12 @@ public class BratAnnotator
                         }
                         else {
                             selection.setAnnotate(false);
+                            
+                            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+                            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+                            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                                    targetFs.getCoveredText() + "]");
+                            
                             bratRender(aTarget, jCas);
                             result = new ArcAnnotationResponse();
                         }

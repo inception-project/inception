@@ -609,6 +609,8 @@ public class AnnotationDetailEditorPanel
 							new VID(((ChainAdapter) adapter).addArc(jCas, originFs, targetFs, null, null)));
 				}
 				selection.setBegin(originFs.getBegin());
+				selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+				        targetFs.getCoveredText() + "]");
 			} else if (adapter instanceof SpanAdapter) {
 				
 				for (FeatureModel fm : featureModels) {
