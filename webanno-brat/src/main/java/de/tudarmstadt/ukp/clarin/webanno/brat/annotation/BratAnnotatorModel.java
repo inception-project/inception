@@ -481,6 +481,9 @@ public class BratAnnotatorModel
 
     public void initForDocument(JCas aJCas, RepositoryService aRepository)
     {
+        getSelection().clear();
+        clearArmedSlot();
+        
         // (Re)initialize brat model after potential creating / upgrading CAS
         setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         setFirstSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
