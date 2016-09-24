@@ -72,23 +72,30 @@
 				</table>
 		    </fieldset>		
 		    <fieldset>
-			<legend>Features</legend>
+			<legend>Annotation</legend>
 			  <label wicket:id="noAnnotationWarning"></label>
 			  <div wicket:id="featureEditorsContainer">
-				<table>
+                <div style="width: 1px; height: 1px; overflow: hidden;">
+                    <input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
+                </div>
+				<table class="hfill">
 					<tr>
-						<td><label wicket:id="layerName"></label></td>
-						<td><label wicket:id="selectedAnnotationLayer"></label></td>
+						<td colspan="2"><label wicket:id="layerName"></label></td>
+                        <td class="hfill"><div class="hfill k-textbox"
+                                style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
+                                wicket:id="selectedAnnotationLayer"></div></td>
 					</tr>
 					<tr>
-						<td>Selected text</td>
-						<td><span wicket:id="selectedText" style="color: red"></span></td>
+						<td colspan="2" style="white-space: nowrap;">Text</td>
+						<td class="hfill"><div class="hfill k-textbox"
+	                            style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
+	                            wicket:id="selectedText"></div></td>
 					</tr>
 				</table>
-				<div style="width: 0;overflow: hidden;">
-					<input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
-				</div>
-				<table class="hfill">
+                <table class="hfill">
+					<tr>
+					   <td colspan="3"><hr></hr></td>
+					</tr>
 					<tr wicket:id="featureValues" id="featureValues">
 						<td wicket:id="editor"></td>
 						<wicket:fragment wicket:id="textFeatureEditor">
