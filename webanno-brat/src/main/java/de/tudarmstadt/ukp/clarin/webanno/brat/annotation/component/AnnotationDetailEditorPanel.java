@@ -1009,6 +1009,10 @@ public class AnnotationDetailEditorPanel
     private void setLayerAndFeatureModels(AjaxRequestTarget aTarget, JCas aJCas,
             final BratAnnotatorModel aBModel) throws BratAnnotationException
     {
+        if (aBModel.getSelection().getAnnotation().isNotSet()) {
+            return;
+        }
+        
         if (aBModel.getSelection().isRelationAnno()) {
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
@@ -1067,7 +1071,7 @@ public class AnnotationDetailEditorPanel
             }
             aBModel.setDefaultAnnotationLayer(spanLayer);
         }
-    else if (aBModel.getSelection().getAnnotation().isSet()) {
+        else  {
             AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
                     .getId());
             String type = annoFs.getType().getName();
