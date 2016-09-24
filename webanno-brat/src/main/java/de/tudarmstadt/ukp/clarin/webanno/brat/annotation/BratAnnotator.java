@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdap
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Locale;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -33,6 +34,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -435,6 +437,17 @@ public class BratAnnotator
     {
         super.renderHead(aResponse);
 
+        double textFontSize = getModelObject().getPreferences().getFontSize();
+        double spanFontSize = 10 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
+        double arcFontSize = 9 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
+        
+        aResponse.render(CssContentHeaderItem.forCSS(String.format(Locale.US,
+                ".span text { font-size: %.1fpx; }\n" +
+                ".arcs text { font-size: %.1fpx; }\n" +
+                "text { font-size: %.1fpx; }\n", 
+                spanFontSize, arcFontSize, textFontSize), 
+                "brat-font"));
+        
         // Libraries
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));

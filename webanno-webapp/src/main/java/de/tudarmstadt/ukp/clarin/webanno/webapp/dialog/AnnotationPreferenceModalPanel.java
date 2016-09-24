@@ -41,6 +41,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
@@ -72,6 +73,7 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> windowSizeField;
     private NumberTextField<Integer> curationWindowSizeField;
     private NumberTextField<Integer> sidebarSizeField;
+    private NumberTextField<Integer> fontSizeField;
 
     private final BratAnnotatorModel bModel;
 
@@ -91,6 +93,7 @@ public class AnnotationPreferenceModalPanel
                     : bModel.getPreferences().getWindowSize();
             getModelObject().curationWindowSize = bModel.getPreferences().getCurationWindowSize();
             getModelObject().sidebarSize = bModel.getPreferences().getSidebarSize();
+            getModelObject().fontSize = bModel.getPreferences().getFontSize();
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
             getModelObject().rememberLayer = bModel.getPreferences().isRememberLayer();
@@ -104,9 +107,15 @@ public class AnnotationPreferenceModalPanel
 
             sidebarSizeField = new NumberTextField<Integer>("sidebarSize");
             sidebarSizeField.setType(Integer.class);
-            sidebarSizeField.setMinimum(10);
-            sidebarSizeField.setMaximum(50);
+            sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
+            sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
             add(sidebarSizeField);
+
+            fontSizeField = new NumberTextField<Integer>("fontSize");
+            fontSizeField.setType(Integer.class);
+            fontSizeField.setMinimum(AnnotationPreference.FONT_SIZE_MIN);
+            fontSizeField.setMaximum(AnnotationPreference.FONT_SIZE_MAX);
+            add(fontSizeField);
 
             curationWindowSizeField = new NumberTextField<Integer>("curationWindowSize");
             curationWindowSizeField.setType(Integer.class);
@@ -180,6 +189,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
                     bModel.getPreferences().setSidebarSize(getModelObject().sidebarSize);
+                    bModel.getPreferences().setFontSize(getModelObject().fontSize);
                   /*  bModel.getPreferences().setCurationWindowSize(
                             getModelObject().curationWindowSize);*/
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
@@ -235,6 +245,7 @@ public class AnnotationPreferenceModalPanel
         public SourceDocument document;
         public int windowSize;
         public int sidebarSize;
+        public int fontSize;
         public int curationWindowSize;
         public boolean scrollPage;
         public boolean rememberLayer;

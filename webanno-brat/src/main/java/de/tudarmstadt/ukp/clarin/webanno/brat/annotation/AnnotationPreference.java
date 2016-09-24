@@ -31,6 +31,14 @@ public class AnnotationPreference
 {
     private static final long serialVersionUID = 2202236699782758271L;
 
+    public static final int FONT_SIZE_MIN = 10;
+    public static final int FONT_SIZE_MAX = 17;
+    public static final int FONT_SIZE_DEFAULT = 13;
+    
+    public static final int SIDEBAR_SIZE_MIN = 10;
+    public static final int SIDEBAR_SIZE_MAX = 50;
+    public static final int SIDEBAR_SIZE_DEFAULT = 20;
+    
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private List<Long> annotationLayers;
 
@@ -48,6 +56,7 @@ public class AnnotationPreference
     private boolean staticColor = true;
     
     private int sidebarSize;
+    private int fontSize;
 
     public List<Long> getAnnotationLayers()
     {
@@ -131,8 +140,8 @@ public class AnnotationPreference
 
     public int getSidebarSize()
     {
-        if (sidebarSize < 10 || sidebarSize > 50) {
-            return 20;
+        if (sidebarSize < SIDEBAR_SIZE_MIN || sidebarSize > SIDEBAR_SIZE_MAX) {
+            return SIDEBAR_SIZE_DEFAULT;
         }
         else {
             return sidebarSize;
@@ -141,14 +150,38 @@ public class AnnotationPreference
 
     public void setSidebarSize(int aSidebarSize)
     {
-        if (aSidebarSize > 50) {
-            sidebarSize = 50;
+        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
+            sidebarSize = SIDEBAR_SIZE_MAX;
         }
-        else if (aSidebarSize < 10) {
-            sidebarSize = 10;
+        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+            sidebarSize = SIDEBAR_SIZE_MIN;
         }
         else {
             sidebarSize = aSidebarSize;
+        }
+    }
+    
+    public int getFontSize()
+    {
+        if (fontSize < FONT_SIZE_MIN || fontSize > FONT_SIZE_MAX) {
+            return FONT_SIZE_DEFAULT;
+        }
+        else {
+            return fontSize;
+        }
+    }
+
+
+    public void setFontSize(int aFontSize)
+    {
+        if (aFontSize > FONT_SIZE_MAX) {
+            fontSize = FONT_SIZE_MAX;
+        }
+        else if (aFontSize < FONT_SIZE_MIN) {
+            fontSize = FONT_SIZE_MIN;
+        }
+        else {
+            fontSize = aFontSize;
         }
     }
 }
