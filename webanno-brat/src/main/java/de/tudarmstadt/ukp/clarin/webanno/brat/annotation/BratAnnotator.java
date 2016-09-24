@@ -325,12 +325,12 @@ public class BratAnnotator
                                 .toString());
                         selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
                                 .toInteger());
+                        selection.setAnnotate(getModelObject().getSelection().getAnnotation().isNotSet());
                         
                         bratSetHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
                         editor.reloadLayer(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                            selection.setAnnotate(true);
                             editor.actionAnnotate(aTarget, getModelObject(), false);
                         }
                         else {
@@ -339,7 +339,6 @@ public class BratAnnotator
                             selection.setText("[" + originFs.getCoveredText() + "] - [" + 
                                     targetFs.getCoveredText() + "]");
                             
-                            selection.setAnnotate(false);
                             bratRender(aTarget, jCas);
                             result = new ArcAnnotationResponse();
                         }

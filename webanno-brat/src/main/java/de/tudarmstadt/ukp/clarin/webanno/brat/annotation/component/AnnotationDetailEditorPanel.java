@@ -1035,16 +1035,26 @@ public class AnnotationDetailEditorPanel
             // layer...!
             long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
             AnnotationLayer spanLayer = annotationService.getLayer(layerId);
-            if (aBModel.getPreferences().isRememberLayer()
-                    && !spanLayer.equals(aBModel.getDefaultAnnotationLayer())) {
+            if (
+                    aBModel.getPreferences().isRememberLayer() && 
+                    aBModel.getSelection().isAnnotate() && 
+                    !spanLayer.equals(aBModel.getDefaultAnnotationLayer())) 
+            {
                 throw new BratAnnotationException("No relation annotation allowed on the "
                         + "selected span layer");
             }
 
+            if (
+                    aBModel.getPreferences().isRememberLayer() && 
+                    aBModel.getSelection().isAnnotate()) 
+            {
                 // If we drag an arc between POS annotations, then the relation must be a dependency
                 // relation.
                 // FIXME - Actually this case should be covered by the last case - the database lookup!
-            if (spanLayer.isBuiltIn() && spanLayer.getName().equals(POS.class.getName())) {
+                if (
+                        spanLayer.isBuiltIn() && 
+                        spanLayer.getName().equals(POS.class.getName())) 
+                {
                     AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
                             aBModel.getProject());
                     if (aBModel.getAnnotationLayers().contains(depLayer)) {
@@ -1075,6 +1085,7 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                 }
+            }
 
             // populate feature value
             if (aBModel.getSelection().getAnnotation().isSet()) {
@@ -1090,7 +1101,7 @@ public class AnnotationDetailEditorPanel
             }
             aBModel.setDefaultAnnotationLayer(spanLayer);
         }
-        else  {
+        else if (aBModel.getSelection().getAnnotation().isSet()) {
             AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
                     .getId());
             String type = annoFs.getType().getName();
@@ -1158,7 +1169,7 @@ public class AnnotationDetailEditorPanel
 
     public void setAnnotationLayers(BratAnnotatorModel aBModel)
     {
-        setInitSpanLayers(aBModel);
+        updateLayersDropdown(aBModel);
         if (annotationLayers.size() == 0) {
             aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
         }
@@ -1174,7 +1185,7 @@ public class AnnotationDetailEditorPanel
         updateRememberLayer();
     }
 
-    private void setInitSpanLayers(BratAnnotatorModel aBModel)
+    private void updateLayersDropdown(BratAnnotatorModel aBModel)
     {
         annotationLayers.clear();
         AnnotationLayer l = null;
@@ -2214,9 +2225,11 @@ public class AnnotationDetailEditorPanel
         featureModels = new ArrayList<>();
 
         if (aFS != null) {
+            // Try obtaining the layer from the feature structure
+            AnnotationLayer layer = TypeUtil.getLayer(annotationService, bModel.getProject(), aFS);
+            
             // Populate from feature structure
-            for (AnnotationFeature feature : annotationService
-                    .listAnnotationFeature(bModel.getSelectedAnnotationLayer())) {
+            for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
                 if (!feature.isEnabled()) {
                     continue;
                 }
@@ -2354,8 +2367,17 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    if (!bModel.getSelectedAnnotationLayer().equals(getModelObject())
-                            && bModel.getSelection().getAnnotation().isSet()) {
+                    // If "remember layer" is set, the we really just update the selected layer...
+                    // we do not touch the selected annotation not the annotation detail panel
+                    if (bModel.getPreferences().isRememberLayer()) {
+                        bModel.setSelectedAnnotationLayer(getModelObject());
+                    }
+                    // If "remember layer" is not set, then changing the layer means that we want
+                    // to change the type of the currently selected annotation
+                    else if (
+                            !bModel.getSelectedAnnotationLayer().equals(getModelObject()) && 
+                            bModel.getSelection().getAnnotation().isSet()) 
+                    {
                         if (bModel.getSelection().isRelationAnno()) {
                             try {
                                 actionClear(aTarget, bModel);
@@ -2385,6 +2407,8 @@ public class AnnotationDetailEditorPanel
                             deleteModal.show(aTarget);
                         }
                     }
+                    // If no annotation is selected, then prime the annotation detail panel for the
+                    // new type
                     else {
                         bModel.setSelectedAnnotationLayer(getModelObject());
                         selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
@@ -2565,7 +2589,7 @@ public class AnnotationDetailEditorPanel
         try {
             featureModels = new ArrayList<>();
             if (!bModel.getSelection().isRelationAnno()) {
-                setInitSpanLayers(bModel);
+                updateLayersDropdown(bModel);
             }
             setLayerAndFeatureModels(aTarget, getCas(bModel), bModel);
             if (featureModels.size() == 0) {
