@@ -285,6 +285,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-tsv</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-text</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-tcf</artifactId>

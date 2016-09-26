@@ -123,6 +123,11 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-text</artifactId>
+                <version>3.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
                 <artifactId>webanno-tsv</artifactId>
                 <version>3.0.0-SNAPSHOT</version>
             </dependency>
@@ -414,6 +419,7 @@
         <!-- IO -->
         <module>webanno-tcf</module>
         <module>webanno-tei</module>
+        <module>webanno-text</module>
         <module>webanno-tsv</module>
         <module>webanno-conllu</module>
         <!-- Core -->
