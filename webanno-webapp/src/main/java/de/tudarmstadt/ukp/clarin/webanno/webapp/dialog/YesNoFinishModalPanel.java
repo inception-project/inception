@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -112,12 +113,12 @@ public class YesNoFinishModalPanel
                     else {
                         if (bModel.getDocument().getState()
                                 .equals(SourceDocumentState.CURATION_FINISHED)) {
-                            bModel.getDocument().setState(
-                                    SourceDocumentState.CURATION_IN_PROGRESS);
+                            bModel.getDocument().setState(SourceDocumentStateTransition.transition(
+                                    SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
                         }
                         else {
-                            bModel.getDocument().setState(
-                                    SourceDocumentState.CURATION_FINISHED);
+                            bModel.getDocument().setState(SourceDocumentStateTransition.transition(
+                                    SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
                             bModel.getDocument().setProcessed(false);
                         }
                         try {

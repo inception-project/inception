@@ -94,6 +94,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
@@ -1138,15 +1140,21 @@ public class CorrectionPage
     private void loadDocumentAction(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
-        User logedInUser = userRepository.get(SecurityContextHolder.getContext()
+        User loggedInUser = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
-        bModel.setUser(logedInUser);
+        bModel.setUser(loggedInUser);
 
+        if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
+            bModel.getDocument().setState(SourceDocumentStateTransition.transition(
+                    SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+            repository.createSourceDocument(bModel.getDocument(), loggedInUser);
+        }
+        
         JCas jCas = null;
         try {
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
-                    bModel.getDocument(), logedInUser);
+                    bModel.getDocument(), loggedInUser);
             jCas = repository.readAnnotationCas(annotationDocument);
             
             // upgrade also the correction cas
@@ -1171,15 +1179,15 @@ public class CorrectionPage
                 // if annotation Document created out side of correction project (such as
                 // Monitoring)
                 if (repository.existsAnnotationDocument(bModel.getDocument(),
-                        logedInUser)) {
+                        loggedInUser)) {
                     annotationDocument = repository.getAnnotationDocument(
-                            bModel.getDocument(), logedInUser);
+                            bModel.getDocument(), loggedInUser);
                 }
                 else {
                     annotationDocument = new AnnotationDocument();
                     annotationDocument.setDocument(bModel.getDocument());
                     annotationDocument.setName(bModel.getDocument().getName());
-                    annotationDocument.setUser(logedInUser.getUsername());
+                    annotationDocument.setUser(loggedInUser.getUsername());
                     annotationDocument.setProject(bModel.getProject());
                 }
                 
@@ -1187,19 +1195,19 @@ public class CorrectionPage
                 repository.upgradeCas(jCas.getCas(), annotationDocument);
                 
                 jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
-                        bModel.getDocument(), logedInUser, repository);
+                        bModel.getDocument(), loggedInUser, repository);
             }
             else {
-                jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+                jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
                 // upgrade this cas
-                repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
-                repository.writeAnnotationCas(jCas, bModel.getDocument(), logedInUser);
+                repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
+                repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
                 
                 // This is the auto annotation, save it under CURATION_USER
-                repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
                 jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
-                        bModel.getDocument(), logedInUser, repository);
+                        bModel.getDocument(), loggedInUser, repository);
             }
         }
         catch (NoResultException e) {
@@ -1214,15 +1222,15 @@ public class CorrectionPage
                 // if annotation Document created out side of correction project (such as
                 // Monitoring)
                 if (repository.existsAnnotationDocument(bModel.getDocument(),
-                        logedInUser)) {
+                        loggedInUser)) {
                     annotationDocument = repository.getAnnotationDocument(
-                            bModel.getDocument(), logedInUser);
+                            bModel.getDocument(), loggedInUser);
                 }
                 else {
                     annotationDocument = new AnnotationDocument();
                     annotationDocument.setDocument(bModel.getDocument());
                     annotationDocument.setName(bModel.getDocument().getName());
-                    annotationDocument.setUser(logedInUser.getUsername());
+                    annotationDocument.setUser(loggedInUser.getUsername());
                     annotationDocument.setProject(bModel.getProject());
                     repository.createAnnotationDocument(annotationDocument);
                 }
@@ -1231,25 +1239,25 @@ public class CorrectionPage
                 repository.upgradeCas(jCas.getCas(), annotationDocument);
                 
                 jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
-                        bModel.getDocument(), logedInUser, repository);
+                        bModel.getDocument(), loggedInUser, repository);
             }
             else {
-                jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
+                jCas = repository.readAnnotationCas(repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
                 // upgrade this cas
-                repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), logedInUser));
-                repository.writeAnnotationCas(jCas, bModel.getDocument(), logedInUser);
+                repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
+                repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
                 // This is the auto annotation, save it under CURATION_USER
-                repository.writeCorrectionCas(jCas, bModel.getDocument(), logedInUser);
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
                 jCas = BratAnnotatorUtility.clearJcasAnnotations(jCas,
-                        bModel.getDocument(), logedInUser, repository);
+                        bModel.getDocument(), loggedInUser, repository);
             }
         }
         // (Re)initialize brat model after potential creating / upgrading CAS
         bModel.initForDocument(jCas, repository);
 
         // Load user preferences
-        PreferencesUtil.setAnnotationPreference(logedInUser.getUsername(), repository,
+        PreferencesUtil.setAnnotationPreference(loggedInUser.getUsername(), repository,
                 annotationService, bModel, Mode.CORRECTION);
         // Re-render whole page as sidebar size preference may have changed
         aTarget.add(CorrectionPage.this);

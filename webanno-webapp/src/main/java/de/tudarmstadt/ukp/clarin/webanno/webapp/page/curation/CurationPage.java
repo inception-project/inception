@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.ReCreateMergeCASModalPanel;
@@ -987,72 +988,71 @@ public class CurationPage
 
     private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
-			// Update source document state to
-			// CURRATION_INPROGRESS, if it was not
-			// ANNOTATION_FINISHED
-			if (!bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-	
-				bModel.getDocument().setState(SourceDocumentState.CURATION_IN_PROGRESS);
-			}
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
+                .getAuthentication().getName());
+        
+        // Update source document state to CURRATION_INPROGRESS, if it was not ANNOTATION_FINISHED
+        if (!bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+            bModel.getDocument().setState(SourceDocumentStateTransition.transition(
+                    SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
+            repository.createSourceDocument(bModel.getDocument(), userLoggedIn);
+        }
 
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
-                    .getAuthentication().getName());
+        bModel.setUser(userLoggedIn);
+        // Load user preferences
+        PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
+                bModel, Mode.CURATION);
+        // Re-render whole page as sidebar size preference may have changed
+        aTarget.add(CurationPage.this);
 
-            bModel.setUser(userLoggedIn);
-            // Load user preferences
-            PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
-                    bModel, Mode.CURATION);
-            // Re-render whole page as sidebar size preference may have changed
-            aTarget.add(CurationPage.this);
+        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
-            List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
-
-            for (AnnotationDocument annotationDocument : repository.listAnnotationDocuments(bModel
-                    .getDocument())) {
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                    finishedAnnotationDocuments.add(annotationDocument);
-                }
+        for (AnnotationDocument annotationDocument : repository.listAnnotationDocuments(bModel
+                .getDocument())) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                finishedAnnotationDocuments.add(annotationDocument);
             }
+        }
 
-            SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService,
-                    userRepository);
-            AnnotationDocument randomAnnotationDocument = null;
-            if (finishedAnnotationDocuments.size() > 0) {
-                randomAnnotationDocument = finishedAnnotationDocuments.get(0);
-            }
+        SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService,
+                userRepository);
+        AnnotationDocument randomAnnotationDocument = null;
+        if (finishedAnnotationDocuments.size() > 0) {
+            randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+        }
 
-            // upgrade CASes for each user, what if new type is added once the user finished
-            // annotation
-            for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                repository.upgradeCasAndSave(ad.getDocument(), Mode.CURATION, ad.getUser());
-            }
-            Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
-                    randomAnnotationDocument, Mode.CURATION);
-            JCas mergeJCas = cb.getMergeCas(bModel, bModel.getDocument(), jCases,
-                    randomAnnotationDocument);
+        // upgrade CASes for each user, what if new type is added once the user finished
+        // annotation
+        for (AnnotationDocument ad : finishedAnnotationDocuments) {
+            repository.upgradeCasAndSave(ad.getDocument(), Mode.CURATION, ad.getUser());
+        }
+        Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
+                randomAnnotationDocument, Mode.CURATION);
+        JCas mergeJCas = cb.getMergeCas(bModel, bModel.getDocument(), jCases,
+                randomAnnotationDocument);
 
-            // (Re)initialize brat model after potential creating / upgrading CAS
-            bModel.initForDocument(mergeJCas, repository);
-            bModel.getPreferences().setCurationWindowSize(
-                    BratAjaxCasUtil.getSentenceSize(mergeJCas));
+        // (Re)initialize brat model after potential creating / upgrading CAS
+        bModel.initForDocument(mergeJCas, repository);
+        bModel.getPreferences().setCurationWindowSize(
+                BratAjaxCasUtil.getSentenceSize(mergeJCas));
 
-            // if project is changed, reset some project specific settings
-            if (currentprojectId != bModel.getProject().getId()) {
-                bModel.initForProject();
-            }
+        // if project is changed, reset some project specific settings
+        if (currentprojectId != bModel.getProject().getId()) {
+            bModel.initForProject();
+        }
 
-            currentprojectId = bModel.getProject().getId();
+        currentprojectId = bModel.getProject().getId();
 
-            SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
-                    userRepository);
-            curationContainer = builder.buildCurationContainer(bModel);
-            curationContainer.setBratAnnotatorModel(bModel);
-            curationPanel.updatePanel(aTarget, curationContainer);
-            updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
-         // Load constraints
-            bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
+        SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+                userRepository);
+        curationContainer = builder.buildCurationContainer(bModel);
+        curationContainer.setBratAnnotatorModel(bModel);
+        curationPanel.updatePanel(aTarget, curationContainer);
+        updatePanel(curationContainer, aTarget);
+        updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+        // Load constraints
+        bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
 
         aTarget.add(finish);
         aTarget.add(numberOfPages);

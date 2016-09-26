@@ -19,42 +19,53 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
  * Variables for the different states of a {@link SourceDocument} workflow.
- *
- *
  */
-public enum SourceDocumentState implements PersistentEnum
+public enum SourceDocumentState
+    implements PersistentEnum
 {
-
     /**
-     * no annotation document has been created for this document
+     * No annotation document has been created for this document
      */
     NEW("NEW"),
+    
     /**
-     * at least one annotation document has been created for the document
+     * At least one annotation document has been created for the document
      */
     ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS"),
+    
     /**
-     * all annotations have marked their annotation document as finished
+     * All annotations have marked their annotation document as finished
+     * 
+     * @deprecated This is not used and should not be used. Will be removed in future versions. If
+     *             you want to tell whether all annotators have marked a document as finished, you
+     *             have to manually check if all annotators assigned to annotate this document have
+     *             marked their annotation documents as done. This is nothing we can record
+     *             statically in the source document.
      */
     ANNOTATION_FINISHED("ANNOTATION_FINISHED"),
+    
     /**
      * curator claims to have curated all annotations
      */
     CURATION_FINISHED("CURATION_FINISHED"),
+    
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
     CURATION_IN_PROGRESS("CURATION_INPROGRESS");
+
     public String getName()
     {
         return getId();
     }
+
     @Override
     public String toString()
     {
         return getId();
     }
+
     SourceDocumentState(String aId)
     {
         this.id = aId;
@@ -67,5 +78,4 @@ public enum SourceDocumentState implements PersistentEnum
     {
         return id;
     }
-
 }

@@ -23,7 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTra
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.*;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.*;
 import static java.util.Arrays.asList;
 
 import java.awt.Color;
@@ -198,11 +199,13 @@ public class MonitoringPage
     
     static {
         Map<Object, ResourceReference> icons = new HashMap<>();
-        icons.put(SourceDocumentState.ANNOTATION_FINISHED, ICON_FINISHED);
-        icons.put(SourceDocumentState.CURATION_FINISHED, ICON_FINISHED);
-        icons.put(SourceDocumentState.CURATION_IN_PROGRESS, ICON_INPROGRESS);
-        icons.put(SourceDocumentState.ANNOTATION_IN_PROGRESS, ICON_INPROGRESS);
-        icons.put(SourceDocumentState.NEW, ICON_NEW);
+        icons.put(ANNOTATION_FINISHED, ICON_FINISHED);
+        icons.put(CURATION_FINISHED, ICON_FINISHED);
+        icons.put(CURATION_IN_PROGRESS, ICON_INPROGRESS);
+        // We only show these icons in the curation column and if the annotation is still in
+        // progress, then this counts as the curation not having stated yet (NEW)
+        icons.put(ANNOTATION_IN_PROGRESS, ICON_NEW);  
+        icons.put(NEW, ICON_NEW);
         
         icons.put(AnnotationDocumentState.FINISHED, ICON_FINISHED);
         icons.put(AnnotationDocumentState.IGNORE, ICON_IGNORE);
@@ -1279,31 +1282,30 @@ public class MonitoringPage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        SourceDocument document = repository.getSourceDocument(project,
-                                value.substring(value.indexOf(":") + 1));
-                        SourceDocumentState state = document.getState();
-                        if (state.toString().equals(
-                                SourceDocumentState.CURATION_FINISHED.toString())) {
+                        if (!SecurityUtil.isCurator(project, repository, user)) {
+                            aTarget.appendJavaScript(
+                                    "alert('the state can only be changed explicitly by the curator')");
+                            return;
+                        }
+                        
                         try {
-                                changeSourceDocumentState(document, user,
+                            SourceDocument doc = repository.getSourceDocument(project,
+                                    value.substring(value.indexOf(":") + 1));
+                            if (doc.getState().equals(CURATION_FINISHED)) {
+                                changeSourceDocumentState(doc, user,
                                         CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }
-                            catch (IOException e) {
-                                LOG.info(e.getMessage());
-                            }
-                        }
-                        else if (state.toString().equals(
-                                SourceDocumentState.CURATION_IN_PROGRESS.toString())) {
-                            try {
-                                changeSourceDocumentState(document, user,
+                            else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
+                                changeSourceDocumentState(doc, user,
                                         CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
                             }
-                            catch (IOException e) {
-                                LOG.info(e.getMessage());
+                            else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
+                                changeSourceDocumentState(doc, user,
+                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                             }
                         }
-                        else {
-                            aTarget.appendJavaScript("alert('the state can only be changed explicitly by the curator')");
+                        catch (IOException e) {
+                            LOG.info(e.getMessage(), e);
                         }
 
                         updateAgreementTable(aTarget, true);

@@ -78,6 +78,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
@@ -827,14 +829,14 @@ public class AnnotationPage
     private void loadDocumentAction(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
-
+        
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        
         // Update dynamic elements in action bar
         aTarget.add(finish);
         aTarget.add(numberOfPages);
         aTarget.add(documentNamePanel);
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
 
         bModel.setUser(userRepository.get(username));
 
@@ -889,6 +891,13 @@ public class AnnotationPage
             // brat-level initialization and rendering of document
             annotator.bratInit(aTarget);
             annotator.bratRender(aTarget, jcas);
+            
+            // Update document state
+            if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
+                bModel.getDocument().setState(SourceDocumentStateTransition.transition(
+                        SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+                repository.createSourceDocument(bModel.getDocument(), user);
+            }
         }
         catch (DataRetrievalFailureException e) {
             LOG.error("Error", e);

@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
  * Variables for the different transitions states of a {@link SourceDocument} workflow.
- *
- *
  */
 public enum SourceDocumentStateTransition
 {
@@ -28,24 +26,47 @@ public enum SourceDocumentStateTransition
      * Implicit based on annotation document states (new when the document uploaded to the project)
      */
     NEW_TO_ANNOTATION_IN_PROGRESS,
+
     /**
      * Implicit based on annotation document states
+     * 
+     * @deprecated This is not used and should not be used. Will be removed in future versions. If
+     *             you want to tell whether all annotators have marked a document as finished, you
+     *             have to manually check if all annotators assigned to annotate this document have
+     *             marked their annotation documents as done. This is nothing we can record
+     *             statically in the source document.
      */
     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
+    
     /**
      * Explicit curator action
      */
     ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS,
+    
+    /**
+     * Explicit curator action - can be used to transition a document into curation state even if
+     * it has never been opened in the curation editor.
+     */
+    ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS,
+    
     /**
      * Explicit curator action
      */
     CURATION_IN_PROGRESS_TO_CURATION_FINISHED,
+    
     /**
      * Admin re-open curation document
      */
     CURATION_FINISHED_TO_CURATION_IN_PROGRESS,
+    
     /**
      * Implicit when admin re-open at least one annotation document
+     * 
+     * @deprecated This is not used and should not be used. Will be removed in future versions. If
+     *             you want to tell whether all annotators have marked a document as finished, you
+     *             have to manually check if all annotators assigned to annotate this document have
+     *             marked their annotation documents as done. This is nothing we can record
+     *             statically in the source document.
      */
     ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 
@@ -56,6 +77,9 @@ public enum SourceDocumentStateTransition
         }
         else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED)) {
             return SourceDocumentState.ANNOTATION_FINISHED;
+        }
+        else if (aTransition.equals(ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS)) {
+            return SourceDocumentState.CURATION_IN_PROGRESS;
         }
         else if (aTransition.equals(ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS)) {
             return SourceDocumentState.CURATION_IN_PROGRESS;
@@ -70,7 +94,8 @@ public enum SourceDocumentStateTransition
             return SourceDocumentState.CURATION_IN_PROGRESS;
         }
         else {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(
+                    "Cannot apply source document transition [" + aTransition + "]");
         }
     }
 }
