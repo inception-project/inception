@@ -312,17 +312,11 @@ public class AnnotationPage
                         }
 
                         loadDocumentAction(target);
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-                        editor.setEnabled(!FinishImage.isFinished(
-                                new Model<BratAnnotatorModel>(bModel), user, repository));
                         try {
 							editor.reloadLayer(target);
 						} catch (BratAnnotationException e) {
 							error("Error loading layers"+e.getMessage());
 						}
-
                     }
                 });
                 // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
