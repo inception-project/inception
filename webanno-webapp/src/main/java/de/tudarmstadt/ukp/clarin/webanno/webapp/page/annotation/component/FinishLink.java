@@ -90,6 +90,7 @@ public class FinishLink
                         public void onClose(AjaxRequestTarget target)
                         {
                             target.add(finishImag.setOutputMarkupId(true));
+                            FinishLink.this.onClose(target);
                         }
                     });
                     FinishModal.show(target);
@@ -100,4 +101,7 @@ public class FinishLink
         showYesNoModal.add(finishImag);
     }
 
+    public void onClose(AjaxRequestTarget target) {
+        // Do nothing by default
+    }
 }

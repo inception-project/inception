@@ -651,6 +651,13 @@ public class CorrectionPage
                 new Model<BratAnnotatorModel>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
+            
+            @Override
+            public void onClose(AjaxRequestTarget aTarget)
+            {
+                super.onClose(aTarget);
+                aTarget.add(editor);
+            }
         });
 
         // Show the previous document, if exist
