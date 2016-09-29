@@ -116,14 +116,18 @@ public class CasDoctor
     
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
+        long tStart = System.currentTimeMillis();
         boolean exception = false;
         for (Class<? extends Repair> repairClass : repairClasses) {
             try {
+                long tStartTask = System.currentTimeMillis();
                 Repair repair = repairClass.newInstance();
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(repair);
                 }
                 repair.repair(aProject, aCas, aMessages);
+                log.info("CasDoctor repair [" + repairClass.getSimpleName() + "] completed in "
+                        + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (Exception e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
@@ -138,6 +142,8 @@ public class CasDoctor
             throw new IllegalStateException("Repair attempt failed - ask system administrator "
                     + "for details.");
         }
+        
+        log.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart) + "ms");
     }
     
     public boolean analyze(Project aProject, CAS aCas)
@@ -158,14 +164,19 @@ public class CasDoctor
     private boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages,
             boolean aFatalChecks)
     {
+        long tStart = System.currentTimeMillis();
+        
         boolean ok = true;
         for (Class<? extends Check> checkClass : checkClasses) {
             try {
+                long tStartTask = System.currentTimeMillis();
                 Check check = checkClass.newInstance();
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(check);
                 }
                 ok &= check.check(aProject, aCas, aMessages);
+                log.info("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
+                        + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (InstantiationException | IllegalAccessException e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
@@ -178,6 +189,8 @@ public class CasDoctor
             aMessages.forEach(s -> log.error(s));
             throw new IllegalStateException("CasDoctor has detected problems and checks are fatal.");
         }
+
+        log.info("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
 
         return ok;
     }
