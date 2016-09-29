@@ -15,13 +15,13 @@
 // limitations under the License.
 
 [[sect_webannotsv]]
-= WebAnno TSV File format
+== WebAnno TSV 3 File format
 
 In this section, we will discuss the TSV (Tab Separated Value) WebAnno file format. The format is similar to the CoNNL file formats with specialized additions to the header and column representations. The file format inhabits a header and a body section. The *header* section present information about the different types of annotation layers and features used in the file. While importing the WebAnno TSV file, the specified headers should be first created in to the running WebAnno project. Otherwise, the importing of the file will not be possible.
 
 The *body* section of the TSV file presents the document and all the associated annotations including sentence and token annotations.
 
-== Header Section
+=== Header Section
 
 WebAnno 3.0 TSV file starts with the following header marker
 
@@ -58,11 +58,11 @@ Example:
 
 Here, the relation type `de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency` has a feature `DependencyType` and the relation is between a base type of `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`.
 
-== Annotations Section
+=== Annotations Section
 
 In this section we discuss the different representations of texts and annotation in WebAnno TSV3format
 
-=== Sentence Representation
+==== Sentence Representation
 
 Sentence annotations are presented following the text marker `#Text=`, before the token annotations.
 Example
@@ -71,7 +71,7 @@ Example
 
 The sentence annotation do not include offsets and mainly presented as additional information. Re-importing the WebAnno TSV file construct sentences from the token annotations.
 
-=== Token and Sub-token Annotations
+==== Token and Sub-token Annotations
 
 Token annotation starts with a `sentence-token` number marker followed by the begin-end offsets and the token itself, separated by a TAB characters. 
 
@@ -93,7 +93,7 @@ Exampel
 
 Here, the sub-token `play` is indicated by sentence-token number `1-3.1` and the sub-token `s` is indicated by `1-3.2`. 
 
-=== Span Annotations
+==== Span Annotations
 
 For every features of a span Annotation, annotation value will be presented in the same row as the token/sub-token annotation, separated by a TAB character. If there is no annotation for the given span layer, a `_` character is placed in the column. If the feature has no/null annotation or if the span layer do not have a feature at all, a `*` character represents the annotation.
 
@@ -110,7 +110,7 @@ Annotations
 
 Here, the first annotation at column 4, `JJ` is avalue for a feature `PosValue` of the layer `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`. For the two features of the layer `webanno.custom.Sentiment` (`Category` and `Opinion`), the values `abstract` and `negative` are presented at column 5 and 6 resp.
 
-=== Multiple Span Annotation or Stacked Annotations
+==== Multiple Span Annotation or Stacked Annotations
 
 Multiple span annotation or stacked annotations on a token/sub-token will have a numbered reference enclosed by brackets as [N] where N refers to the nth annotation on the layer. Stacked annotations are separated by *|* character.
 
@@ -130,7 +130,7 @@ Annotation:
 
 Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multiple token annotations) while `PERpart[2]` is the second (stacked) annotation on token  `1-1` separated by *|* character.
 
-=== Slot features
+==== Slot features
 
 Slot features and the target annotations are separated by TAB character (first the feature column then the target column follows). In the target column, the `sentence-token` id is recorded where the feature is drawn.
 
@@ -164,13 +164,13 @@ Annotations:
 
 Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `,`2-3[4]`, and `2-6` resp. which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
 
-=== special Character Annotations
+==== special Character Annotations
 
 Special characters are escaped with the *\* character. Special characters includes the following characters.
 
 `\,[,],|,_,->,;,\t,\n,*`
 
-=== Chain Annotations
+==== Chain Annotations
 
 In the Chain annotation, two columns (TAB separated) are used to represent the `referenceType` and the `referenceRelation`. A chain number is attached to the `referenceType` to distinguish to which of the coreference chains the annotation belongs. The `referenceRelation` of the chain is represented by the relation value followed by `->` and followed by the `CH-LINK` number where `CH` is the chain number and `LINK` is the link number (the order the chain).
 
@@ -198,7 +198,7 @@ Annotations
 
 In this example, token `1-3` is marked as `pr[1]` which explains that the `referenceType` is `pr` and it is part of coreference chain `1`. The coreference relation value is `coref` and with the `CH-LINK` number `1-2` which means that it belongs to chain `1` and this is the second link in the coreference chain.
 
-=== Relation Annotations
+==== Relation Annotations
 
 Relation annotations comes to the last columns of the TSV file format. Just like the span annotations, every feature of the relation layers are represented in a separate TAB. Besides, one extra column (after all feature values) is used to write the token id from which token/sub-token this arc of a relation annotation is drawn.
 

@@ -82,7 +82,7 @@
 | yes
 | token, multiple token, and arc annotations supported. No chain annotation is supported. no sub-token annotation is supported
 
-| WebAnno TSV 3 <<sect_webannotsv>>
+| <<sect_webannotsv,WebAnno TSV 3>>
 | yes
 | yes
 | yes
