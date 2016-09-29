@@ -21,14 +21,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -265,7 +261,7 @@ public class AgreementTable
                                     
                                     switch (settings.getObject().exportFormat) {
                                     case CSV:
-                                        return generateCsvReport(result);
+                                        return AgreementUtils.generateCsvReport(result);
                                     case DEBUG:
                                         return generateDebugReport(result);
                                     default:
@@ -296,18 +292,6 @@ public class AgreementTable
         };      
     }
 
-    private InputStream generateCsvReport(AgreementResult aResult)
-        throws UnsupportedEncodingException, IOException
-    {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
-                CSVFormat.RFC4180)) {
-            AgreementUtils.toCSV(printer, aResult);
-        }
-
-        return new ByteArrayInputStream(buf.toByteArray());
-    }
-    
     private InputStream generateDebugReport(AgreementResult aResult)
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();

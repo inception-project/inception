@@ -29,6 +29,7 @@ import static java.util.Arrays.asList;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -50,6 +51,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.DataGridView;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
@@ -77,6 +79,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.AbstractResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -101,6 +106,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementReportExportFormat;
+import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.brat.curation.CasDiff2.DiffAdapter;
@@ -124,6 +130,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -616,6 +623,8 @@ public class MonitoringPage
 
         private DropDownChoice<AgreementReportExportFormat> exportFormat;
 
+        private AjaxButton exportAll;
+
         private CheckBox excludeIncomplete;
         
         public AgreementForm(String id)
@@ -758,6 +767,87 @@ public class MonitoringPage
                             feature.getName(), casMap);
                 }
             }));
+            
+            exportAll = new AjaxButton("exportAll") {
+                private static final long serialVersionUID = 3908727116180563330L;
+
+                private AJAXDownload download;
+                
+                {
+                    download = new AJAXDownload() {
+                        private static final long serialVersionUID = 1L;
+                        
+                        @Override
+                        protected IResourceStream getResourceStream()
+                        {
+                            return new AbstractResourceStream() {
+                                private static final long serialVersionUID = 1L;
+
+                                @Override
+                                public InputStream getInputStream()
+                                    throws ResourceStreamNotFoundException
+                                {
+                                    AnnotationFeature feature = featureList.getModelObject();
+                                    
+                                    // Do not do any agreement if no feature has been selected yet.
+                                    if (feature == null) {
+                                        return null;
+                                    }
+                                    
+                                    Map<String, List<JCas>> casMap = getJCases();
+                                    
+                                    Project project = projectSelectionForm.getModelObject().project;
+                                    List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
+                                            project);
+
+                                    AgreementFormModel pref = AgreementForm.this.getModelObject();
+                                    
+                                    DiffResult diff = CasDiff2.doDiff(asList(feature.getLayer().getName()),
+                                            adapters, pref.linkCompareBehavior, casMap);
+
+                                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
+                                            feature.getLayer().getName(), feature.getName(),
+                                            pref.excludeIncomplete, casMap);
+                                    try {
+                                        return AgreementUtils.generateCsvReport(agreementResult);
+                                    }
+                                    catch (Exception e) {
+                                        // FIXME Is there some better error handling here?
+                                        LOG.error("Unable to generate report", e);
+                                        throw new ResourceStreamNotFoundException(e);
+                                    }
+                                }
+
+                                @Override
+                                public void close()
+                                    throws IOException
+                                {
+                                    // Nothing to do
+                                }
+                            };
+                        }
+                    };
+                    add(download);
+                    setOutputMarkupId(true);
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    
+                    setVisible(featureList.getModelObject() != null);
+                }
+                
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                {
+                    download.initiate(aTarget, "agreement"
+                            + AgreementForm.this.getModelObject().exportFormat.getExtension());
+                }
+            };
+            add(exportAll);
         }
         
         @Override

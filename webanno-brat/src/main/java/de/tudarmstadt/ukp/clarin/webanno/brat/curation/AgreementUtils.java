@@ -18,9 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
+import static java.util.Arrays.asList;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -172,7 +179,7 @@ public class AgreementUtils
         }
     }
     
-    private static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
+    public static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
             boolean aExcludeIncomplete, Map<String, List<JCas>> aCasMap)
     {
         return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, true,
@@ -486,8 +493,10 @@ public class AgreementUtils
             AgreementResult aAgreement, List<ConfigurationSet> aSets)
         throws IOException
     {
-        aOut.printRecord("Type", "Collection", "Document", "Layer", "Feature", "Position",
-                aAgreement.getCasGroupIds().get(0), aAgreement.getCasGroupIds().get(1));
+        List<String> headers = new ArrayList<>(
+                asList("Type", "Collection", "Document", "Layer", "Feature", "Position"));
+        headers.addAll(aAgreement.getCasGroupIds());
+        aOut.printRecord(headers);
         
         int i = 0;
         for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
@@ -759,5 +768,17 @@ public class AgreementUtils
                     + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount()
                     + ", agreement=" + agreement + "]";
         }
+    }
+    
+    public static InputStream generateCsvReport(AgreementResult aResult)
+        throws UnsupportedEncodingException, IOException
+    {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
+                CSVFormat.RFC4180)) {
+            AgreementUtils.toCSV(printer, aResult);
+        }
+
+        return new ByteArrayInputStream(buf.toByteArray());
     }
 }
