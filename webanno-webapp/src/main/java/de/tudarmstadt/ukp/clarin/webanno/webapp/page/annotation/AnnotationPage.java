@@ -366,22 +366,7 @@ public class AnnotationPage
             {
                 editor.reset(aTarget);
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (repository.existsAnnotationDocument(sourceDocument, user)
-                            && repository.getAnnotationDocument(sourceDocument, user).getState()
-                                    .equals(AnnotationDocumentState.IGNORE)) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -413,22 +398,7 @@ public class AnnotationPage
             {
                 editor.reset(aTarget);
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                List<SourceDocument> sourceDocumentsinIgnoreState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (repository.existsAnnotationDocument(sourceDocument, user)
-                            && repository.getAnnotationDocument(sourceDocument, user).getState()
-                                    .equals(AnnotationDocumentState.IGNORE)) {
-                        sourceDocumentsinIgnoreState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnoreState);
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -740,6 +710,23 @@ public class AnnotationPage
             }
         });
     }
+    
+	private List<SourceDocument> getListOfDocs() {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepository.get(username);
+		// List of all Source Documents in the project
+		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
+		List<SourceDocument> sourceDocumentsinIgnoreState = new ArrayList<SourceDocument>();
+		for (SourceDocument sourceDocument : listOfSourceDocuements) {
+			if (repository.existsAnnotationDocument(sourceDocument, user) && repository
+					.getAnnotationDocument(sourceDocument, user).getState().equals(AnnotationDocumentState.IGNORE)) {
+				sourceDocumentsinIgnoreState.add(sourceDocument);
+			}
+		}
+
+		listOfSourceDocuements.removeAll(sourceDocumentsinIgnoreState);
+		return listOfSourceDocuements;
+	}
 
     private void updateSentenceAddress(JCas aJCas, AjaxRequestTarget aTarget)
         throws UIMAException, IOException, ClassNotFoundException
@@ -749,6 +736,11 @@ public class AnnotationPage
 
         String labelText = "";
         if (bModel.getDocument() != null) {
+        	
+        	List<SourceDocument> listofDoc = getListOfDocs();
+        	
+        	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
+        	
             totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(aJCas);
 
             // If only one page, start displaying from sentence 1
@@ -768,7 +760,8 @@ public class AnnotationPage
             }
 
             labelText = "showing " + firstSentenceNumber + "-" + lastSentenceNumber + " of "
-                    + totalNumberOfSentence + " sentences";
+                    + totalNumberOfSentence + " sentences [document "
+            		+ docIndex +" of "+ listofDoc.size()+"]";
 
         }
         else {
