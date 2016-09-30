@@ -28,8 +28,7 @@ WEBANNO_PORT="18080"
 WEBANNO_USER="www-data"
 CATALINA_BASE="/opt/webanno"
 AUTHBIND=""
-
-export JAVA_OPTS="-Djava.awt.headless=true -Xmx750m -XX:+UseConcMarkSweepGC -Dwebanno.home=$WEBANNO_HOME"
+JAVA_OPTS="-Djava.awt.headless=true -Xmx750m -XX:+UseConcMarkSweepGC -Dwebanno.home=$WEBANNO_HOME"
 
 setup_authbind() {
   # log_action_msg "Setting up authbind configuration for $DESC on port $WEBANNO_PORT"
@@ -49,7 +48,7 @@ do_start_cmd_override() {
     setup_authbind
   fi
 
-  su - www-data -s "/bin/bash" -c "$AUTHBIND $CATALINA_BASE/bin/startup.sh" > /dev/null 2>&1
+  su - www-data -s "/bin/bash" -c "JAVA_OPTS=\"$JAVA_OPTS\" $AUTHBIND $CATALINA_BASE/bin/startup.sh" > /dev/null 2>&1
 }
 
 do_stop_cmd_override() {
