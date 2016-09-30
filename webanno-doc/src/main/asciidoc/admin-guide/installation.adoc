@@ -95,8 +95,6 @@ $ chown -R www-data /opt/webanno
 NOTE: If WebAnno is the only application you install on your server, then you can also have WebAnno running on port 80 or port 443. In that case, substitute all instances of port `18080` in these
 guidelines with the respective port. Mind that running via SSL on port 443 requires additional steps that we have not yet documented. Ports lower than 1024 are privileged and the WebAnno init script will automatically use a tool called *authbind* to allow WebAnno to operate on these ports as the unprivileged www-data user.
 
-Now we have a dedicated Apache Tomcat instance for WebAnno installed at `/opt/webanno/`. Put the `webanno.war` file in the `/opt/webanno/webapps` folder. If you get the war file in different name, such as `webanno-webapp-3.0.war`, *PLEASE RE-NAME IT TO* `webanno.war`
-
 * Configure the startup script. Edit `/etc/init.d/webanno` and add the following contents or just download the file from link:admin-guide/scripts/webanno[here] and place it in `/etc/init.d`.
 +
 [source,bash]
@@ -111,14 +109,18 @@ $ chmod +x /etc/init.d/webanno
 $ update-rc.d webanno defaults
 ----
 
+Now we have a dedicated Apache Tomcat instance for WebAnno installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
+
 === Deploy WAR file
 
 * Place the WebAnno WAR into the Tomcat `webapps` folder:
 +
-[source,bash]
+[source,bash,subs="+attributes"]
 ----
-$ cp webanno.war /opt/webanno/webapps/webanno.war
+$ cp webanno-webapp-{revnumber}.war /opt/webanno/webapps/webanno.war
 ----
++
+NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that WebAnno is accessible at the URL noted later in the present guidelines.
 * Create WebAnno home folder. This is the directory where webanno settings files and projects (Serialized Cases, Source documents...) are stored
 +
 [source,bash]
