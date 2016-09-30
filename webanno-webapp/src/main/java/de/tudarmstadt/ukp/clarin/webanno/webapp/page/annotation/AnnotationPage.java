@@ -716,15 +716,15 @@ public class AnnotationPage
 		User user = userRepository.get(username);
 		// List of all Source Documents in the project
 		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
-		List<SourceDocument> sourceDocumentsinIgnoreState = new ArrayList<SourceDocument>();
+		List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
 		for (SourceDocument sourceDocument : listOfSourceDocuements) {
 			if (repository.existsAnnotationDocument(sourceDocument, user) && repository
 					.getAnnotationDocument(sourceDocument, user).getState().equals(AnnotationDocumentState.IGNORE)) {
-				sourceDocumentsinIgnoreState.add(sourceDocument);
+				sourceDocumentsInIgnoreState.add(sourceDocument);
 			}
 		}
 
-		listOfSourceDocuements.removeAll(sourceDocumentsinIgnoreState);
+		listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
 		return listOfSourceDocuements;
 	}
 

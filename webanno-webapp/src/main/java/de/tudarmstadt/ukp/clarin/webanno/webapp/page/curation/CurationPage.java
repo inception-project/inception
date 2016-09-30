@@ -225,9 +225,14 @@ public class CurationPage
                                 else {
                                     lastSentenceNumber = totalNumberOfSentence;
                                 }
-
-                                return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
-                                        + " of " + totalNumberOfSentence + " sentences";
+                                
+                                List<SourceDocument> listofDoc = getListOfDocs();
+                            	
+                            	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
+                               
+                            	return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
+                                        + " of " + totalNumberOfSentence + " sentences [document "
+                                        + docIndex +" of "+ listofDoc.size()+"]";
                             }
                             catch (UIMAException e) {
                                 return "";
@@ -361,18 +366,7 @@ public class CurationPage
             {
                 curationPanel.resetEditor(aTarget);
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (!repository
-                            .existFinishedDocument(sourceDocument, bModel.getProject())) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -412,22 +406,8 @@ public class CurationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 curationPanel.resetEditor(aTarget);
-                // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (!repository
-                            .existFinishedDocument(sourceDocument, bModel.getProject())) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+             // List of all Source Documents in the project
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -929,6 +909,21 @@ public class CurationPage
             }
         });
     }
+    
+	private List<SourceDocument> getListOfDocs() {
+		// List of all Source Documents in the project
+		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
+        List<SourceDocument> sourceDocumentsNotFinished = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : listOfSourceDocuements) {
+            if (!repository
+                    .existFinishedDocument(sourceDocument, bModel.getProject())) {
+                sourceDocumentsNotFinished.add(sourceDocument);
+            }
+        }
+
+		listOfSourceDocuements.removeAll(sourceDocumentsNotFinished);
+		return listOfSourceDocuements;
+	}
 
     // Update the curation panel.
 

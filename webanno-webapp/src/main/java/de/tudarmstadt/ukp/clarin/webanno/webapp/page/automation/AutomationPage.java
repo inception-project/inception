@@ -478,6 +478,10 @@ public class AutomationPage
                                  * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
                                  * .getFirstSentenceAddress()); }
                                  */
+                                List<SourceDocument> listofDoc = getListOfDocs();
+                            	
+                            	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
+                            	
                                 int address = getAddr(selectSentenceAt(mergeJCas,
                                         bModel.getSentenceBeginOffset(),
                                         bModel.getSentenceEndOffset()));
@@ -494,7 +498,8 @@ public class AutomationPage
                                 }
 
                                 return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
-                                        + " of " + totalNumberOfSentence + " sentences";
+                                        + " of " + totalNumberOfSentence + " sentences [document "
+                                        + docIndex +" of "+ listofDoc.size()+"]";
                             }
                             catch (UIMAException e) {
                                 return "";
@@ -792,25 +797,7 @@ public class AutomationPage
                 editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (repository.existsAnnotationDocument(sourceDocument, user)
-                            && repository.getAnnotationDocument(sourceDocument, user).getState()
-                                    .equals(AnnotationDocumentState.IGNORE)) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                    else if (sourceDocument.isTrainingDocument()) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -870,25 +857,7 @@ public class AutomationPage
                 editor.reset(aTarget);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel
-                        .getProject());
-
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                List<SourceDocument> sourceDocumentsinIgnorState = new ArrayList<SourceDocument>();
-                for (SourceDocument sourceDocument : listOfSourceDocuements) {
-                    if (repository.existsAnnotationDocument(sourceDocument, user)
-                            && repository.getAnnotationDocument(sourceDocument, user).getState()
-                                    .equals(AnnotationDocumentState.IGNORE)) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                    else if (sourceDocument.isTrainingDocument()) {
-                        sourceDocumentsinIgnorState.add(sourceDocument);
-                    }
-                }
-
-                listOfSourceDocuements.removeAll(sourceDocumentsinIgnorState);
+                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list
                 int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
@@ -1177,6 +1146,23 @@ public class AutomationPage
         add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(bModel)));
     }
 
+    
+	private List<SourceDocument> getListOfDocs() {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepository.get(username);
+		// List of all Source Documents in the project
+		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
+		List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
+		for (SourceDocument sourceDocument : listOfSourceDocuements) {
+			if (repository.existsAnnotationDocument(sourceDocument, user) && repository
+					.getAnnotationDocument(sourceDocument, user).getState().equals(AnnotationDocumentState.IGNORE)) {
+				sourceDocumentsInIgnoreState.add(sourceDocument);
+			}
+		}
+
+		listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
+		return listOfSourceDocuements;
+	}
     /**
      * for the first time the page is accessed, open the <b>open document dialog</b>
      */
