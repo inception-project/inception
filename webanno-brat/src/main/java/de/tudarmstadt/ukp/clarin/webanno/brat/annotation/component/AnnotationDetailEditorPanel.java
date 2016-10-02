@@ -1102,6 +1102,9 @@ public class AnnotationDetailEditorPanel
                     && aBModel.getSelectedAnnotationLayer().isReadonly()) {
                 aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
             }
+            else {
+                populateFeatures(null);
+            }
             aBModel.setDefaultAnnotationLayer(spanLayer);
         }
         else if (aBModel.getSelection().getAnnotation().isSet()) {
@@ -1146,6 +1149,13 @@ public class AnnotationDetailEditorPanel
                                 (Serializable) BratAjaxCasUtil.getFeature(annoFs, feature)));
                     }
                 }
+            }
+            
+            if (featureModels.size() == 0) {
+                populateFeatures(null);
+            }
+            else if (isFeatureModelChanged(bModel.getSelectedAnnotationLayer())) {
+                populateFeatures(null);
             }
         }
     }
@@ -2590,17 +2600,11 @@ public class AnnotationDetailEditorPanel
     public void reloadLayer(AjaxRequestTarget aTarget) throws BratAnnotationException
     {
         try {
-            featureModels = new ArrayList<>();
             if (!bModel.getSelection().isRelationAnno()) {
                 updateLayersDropdown(bModel);
             }
+            
             setLayerAndFeatureModels(aTarget, getCas(bModel), bModel);
-            if (featureModels.size() == 0) {
-                populateFeatures(null);
-            }
-            else if (isFeatureModelChanged(bModel.getSelectedAnnotationLayer())) {
-                populateFeatures(null);
-            }
 
             updateRememberLayer();
             aTarget.add(annotationFeatureForm);
