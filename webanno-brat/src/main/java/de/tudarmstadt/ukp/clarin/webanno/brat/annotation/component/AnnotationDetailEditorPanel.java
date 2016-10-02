@@ -1044,9 +1044,12 @@ public class AnnotationDetailEditorPanel
                         + "selected span layer");
             }
 
-            if (
-                    aBModel.getPreferences().isRememberLayer() && 
-                    aBModel.getSelection().isAnnotate()) 
+            // If we are creating a relation annotation, we have to set the current layer depending
+            // on the type of relation that is permitted between the source/target span. This is
+            // necessary because we have no separate UI control to set the relation annotation type.
+            // It is possible because currently only a single relation layer is allowed to attach to
+            // any given span layer.
+            if (aBModel.getSelection().isAnnotate()) 
             {
                 // If we drag an arc between POS annotations, then the relation must be a dependency
                 // relation.
