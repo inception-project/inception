@@ -3357,6 +3357,12 @@ Util.profileStart('chunkFinish');
                   h: sizes.texts.height - 2*yShrink - yStartTweak,
               };
 // WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - #361 Avoid rendering exception with zero-width spans               
+              // Avoid exception because width < 0 is not allowed
+              if (fragment.highlightPos.w <= 0) {
+            	  fragment.highlightPos.w = 1;
+              }              
+// WEBANNO EXTENSION END - #361 Avoid rendering exception with zero-width spans
               // Render highlight              
               svg.rect(highlightGroup,
                   fragment.highlightPos.x, fragment.highlightPos.y,
