@@ -182,7 +182,7 @@ public class OpenModalWindowPanel
                     documentSelection.setModelObject(selectedDocument);
                     aTarget.add(documentSelection);
                 }
-            }).add(new AjaxEventBehavior("ondblclick")
+            }).add(new AjaxEventBehavior("dblclick")
             {
 
                 private static final long serialVersionUID = 1L;
@@ -313,7 +313,7 @@ public class OpenModalWindowPanel
                 {
                     selectedDocument = getModelObject().documentSelection;
                 }
-            }).add(new AjaxEventBehavior("ondblclick")
+            }).add(new AjaxEventBehavior("dblclick")
             {
 
                 private static final long serialVersionUID = 1L;

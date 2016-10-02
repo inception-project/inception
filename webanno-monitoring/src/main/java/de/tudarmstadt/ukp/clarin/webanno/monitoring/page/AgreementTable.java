@@ -235,7 +235,7 @@ public class AgreementTable
 
     private Behavior makeDownloadBehavior(final String aKey1, final String aKey2)
     {
-        return new AjaxEventBehavior("onclick")
+        return new AjaxEventBehavior("click")
         {
             private static final long serialVersionUID = 1L;
 

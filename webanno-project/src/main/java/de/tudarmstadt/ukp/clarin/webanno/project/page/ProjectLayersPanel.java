@@ -434,7 +434,7 @@ public class ProjectLayersPanel
 
             final Project project = selectedProjectModel.getObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
-            uiName.add(new AjaxFormComponentUpdatingBehavior("onkeyup")
+            uiName.add(new AjaxFormComponentUpdatingBehavior("keyup")
             {
                 private static final long serialVersionUID = -1756244972577094229L;
 
@@ -471,7 +471,7 @@ public class ProjectLayersPanel
                     return LayerDetailForm.this.getModelObject().getId() == 0;
                 }
             }.setRequired(true));
-            layerTypes.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 6790949494089940303L;
 
@@ -801,7 +801,7 @@ public class ProjectLayersPanel
                     setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
                 }
             });
-            linkedListBehavior.add(new AjaxFormComponentUpdatingBehavior("onChange")
+            linkedListBehavior.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
 
@@ -1021,7 +1021,7 @@ public class ProjectLayersPanel
                     setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
                 };
             });
-            featureType.add(new AjaxFormComponentUpdatingBehavior("onChange")
+            featureType.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = -2904306846882446294L;
 

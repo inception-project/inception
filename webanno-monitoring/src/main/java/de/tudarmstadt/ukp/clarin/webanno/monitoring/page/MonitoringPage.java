@@ -1365,7 +1365,7 @@ public class MonitoringPage
                     aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
-                aCellItem.add(new AjaxEventBehavior("onclick")
+                aCellItem.add(new AjaxEventBehavior("click")
                 {
                     private static final long serialVersionUID = -4213621740511947285L;
 
@@ -1459,7 +1459,7 @@ public class MonitoringPage
                     aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
-                aCellItem.add(new AjaxEventBehavior("onclick")
+                aCellItem.add(new AjaxEventBehavior("click")
                 {
                     private static final long serialVersionUID = -5089819284917455111L;
 

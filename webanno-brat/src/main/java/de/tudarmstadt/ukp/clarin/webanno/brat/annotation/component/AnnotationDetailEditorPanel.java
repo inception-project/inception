@@ -199,7 +199,7 @@ public class AnnotationDetailEditorPanel
         };
 
         annotationFeatureForm.setOutputMarkupId(true);
-        annotationFeatureForm.add(new AjaxFormValidatingBehavior("onsubmit") { 
+        annotationFeatureForm.add(new AjaxFormValidatingBehavior("submit") { 
 			private static final long serialVersionUID = -5642108496844056023L;
 
 			@Override 
@@ -253,7 +253,7 @@ public class AnnotationDetailEditorPanel
 
                 }
             });
-            forwardAnnotationCheck.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            forwardAnnotationCheck.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 
@@ -431,7 +431,7 @@ public class AnnotationDetailEditorPanel
             
 			forwardAnnotationText = new TextField<String>("forwardAnno");
 			forwardAnnotationText.setOutputMarkupId(true);
-			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("onkeyup") {
+			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("keyup") {
 				private static final long serialVersionUID = 4554834769861958396L;
 				
 				   @Override
@@ -1313,18 +1313,18 @@ public class AnnotationDetailEditorPanel
                 if (bModel.getSelection().getAnnotation().isSet()
                         && !(frag instanceof LinkFeatureEditor)) {
                     if (frag.isDropOrchoice()) {
-                        addAnnotateActionBehavior(frag, "onchange");
+                        addAnnotateActionBehavior(frag, "change");
                     }
                     else {
-                        addAnnotateActionBehavior(frag, "onblur");
+                        addAnnotateActionBehavior(frag, "blur");
                     }
                 }
                 else if (!(frag instanceof LinkFeatureEditor)) {
                     if (frag.isDropOrchoice()) {
-                        storeFeatureValue(frag, "onchange");
+                        storeFeatureValue(frag, "change");
                     }
                     else {
-                        storeFeatureValue(frag, "onblur");
+                        storeFeatureValue(frag, "blur");
                     }
                 }
 
@@ -2407,7 +2407,7 @@ public class AnnotationDetailEditorPanel
             super(aId, aChoices);
             setOutputMarkupId(true);
             setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
-            add(new AjaxFormComponentUpdatingBehavior("onchange")
+            add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 

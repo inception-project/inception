@@ -91,7 +91,7 @@ public class ExportModalWindowPanel
             }
             add(writeableFormatsChoice = new DropDownChoice<String>("writeableFormats", new Model(
                     selectedFormat), writeableFormats));
-            writeableFormatsChoice.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            writeableFormatsChoice.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 226379059594234950L;
 
@@ -122,7 +122,7 @@ public class ExportModalWindowPanel
 
             });
             documentChoice.setModelObject(SELECTEXPORT.ANNOTATED.toString());
-            documentChoice.add(new AjaxFormComponentUpdatingBehavior("onchange")
+            documentChoice.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = -3853194405966729661L;
 

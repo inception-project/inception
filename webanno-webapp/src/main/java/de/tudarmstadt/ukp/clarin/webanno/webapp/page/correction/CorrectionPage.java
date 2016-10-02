@@ -516,7 +516,7 @@ public class CorrectionPage
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "onsubmit")
+        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "submit")
         {
             private static final long serialVersionUID = -4549805321484461545L;
 
@@ -566,7 +566,7 @@ public class CorrectionPage
         gotoPageTextField.setMinimum(1);
         gotoPageTextField.setDefaultModelObject(1);
         add(gotoPageTextFieldForm.add(gotoPageTextField));
-        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("onchange")
+        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -3853194405966729661L;
 

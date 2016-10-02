@@ -1313,7 +1313,7 @@ public class CrowdSourcePage
                 aCellItem.add(new EmbeddableImage(componentId, new ContextRelativeResource(
                         "/images_small/page_edit.png")));
                 aCellItem.add(AttributeModifier.append("class", "centering"));
-                aCellItem.add(new AjaxEventBehavior("onclick")
+                aCellItem.add(new AjaxEventBehavior("click")
                 {
                     private static final long serialVersionUID = -4213621740511947285L;
 
