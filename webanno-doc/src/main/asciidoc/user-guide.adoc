@@ -100,11 +100,15 @@ include::{include-dir}automation.adoc[]
 
 <<<
 
+include::{include-dir}monitoring.adoc[]
+
+<<<
+
 include::{include-dir}projects.adoc[]
 
 <<<
 
-include::{include-dir}monitoring.adoc[]
+include::{include-dir}constraints.adoc[]
 
 <<<
 
