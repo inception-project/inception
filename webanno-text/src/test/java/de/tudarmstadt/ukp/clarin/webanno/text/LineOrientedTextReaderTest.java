@@ -42,7 +42,7 @@ public class LineOrientedTextReaderTest
 
         reader.getNext(doc.getCas());
         
-        select(doc, Sentence.class).forEach(s -> System.out.println(s.getCoveredText()));
+        // select(doc, Sentence.class).forEach(s -> System.out.println(s.getCoveredText()));
         
         assertEquals(169, select(doc, Sentence.class).size());
         assertEquals(0, select(doc, Token.class).size());
