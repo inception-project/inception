@@ -130,6 +130,7 @@ public class AnnotationPreferenceModalPanel
                 private static final long serialVersionUID = 1L;
 
                 {
+                    setSuffix("<br>");
                     setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
                         private static final long serialVersionUID = 1L;

@@ -726,7 +726,7 @@ public class ProjectPage
                 // create project constraint
                 ImportUtil.createProjectConstraint(zip, importedProject, repository);
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
             }
         }

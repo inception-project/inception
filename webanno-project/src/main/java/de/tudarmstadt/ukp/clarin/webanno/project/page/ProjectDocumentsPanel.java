@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.uima.UIMAException;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -152,14 +151,9 @@ public class ProjectDocumentsPanel
                         error(e.getMessage());
                         LOG.error(e.getMessage(), e);
                     }
-                    catch (IOException e) {
-                        error("IO Error while uploading document " + fileName + ": "
-                    + ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error(fileName + ": " + e.getMessage(), e);
-                    }
-                    catch (UIMAException e) {
-                        error("UIMA Error uploading document " + fileName + ": " 
-                    + ExceptionUtils.getRootCauseMessage(e));
+                    catch (Exception e) {
+                        error("Error while uploading document " + fileName + ": "
+                            + ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(fileName + ": " + e.getMessage(), e);
                     }
                 }

@@ -257,6 +257,7 @@ public class ProjectUsersPanel
                 private static final long serialVersionUID = 1L;
 
                 {
+                    setSuffix("<br>");
                     setChoices(new LoadableDetachableModel<List<PermissionLevel>>()
                     {
                         private static final long serialVersionUID = 1L;

@@ -101,7 +101,7 @@ public class AnnotationGuideLinePanel
                                 .getName();
                         projectRepository.createGuideline(project, tempFile, fileName, username);
                     }
-                    catch (IOException e) {
+                    catch (Exception e) {
                         error("Unable to write guideline file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }

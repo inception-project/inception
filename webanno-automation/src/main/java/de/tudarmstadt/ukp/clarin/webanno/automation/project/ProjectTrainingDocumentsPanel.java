@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
@@ -197,13 +196,10 @@ public class ProjectTrainingDocumentsPanel
                         repository.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
                     catch (IOException e) {
                         error("Error uploading document " + e.getMessage());
                     }
-                    catch (UIMAException e) {
+                    catch (Exception e) {
                         error("Error uploading document " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }

@@ -1076,6 +1076,7 @@ public class CrowdSourcePage
                 private static final long serialVersionUID = 1L;
 
                 {
+                    setSuffix("<br>");
                     setChoices(new LoadableDetachableModel<List<SourceDocument>>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -1179,6 +1180,7 @@ public class CrowdSourcePage
                 private static final long serialVersionUID = 1L;
 
                 {
+                    setSuffix("<br>");
                     setChoices(new LoadableDetachableModel<List<SourceDocument>>()
                     {
                         private static final long serialVersionUID = -6821990375210752730L;

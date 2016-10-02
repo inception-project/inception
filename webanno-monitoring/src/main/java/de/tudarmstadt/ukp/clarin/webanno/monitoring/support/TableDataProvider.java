@@ -32,12 +32,12 @@ import org.apache.wicket.model.Model;
  *
  */
 public class TableDataProvider
-    extends SortableDataProvider<List<? extends String>, Object>
+    extends SortableDataProvider<List<String>, Object>
 {
 
     private static final long serialVersionUID = 1L;
 
-    private IModel<List<List<? extends String>>> dataModel;
+    private IModel<List<List<String>>> dataModel;
     private long size = 0;
     private List<String> colNames;
 
@@ -52,15 +52,15 @@ public class TableDataProvider
     public TableDataProvider(final List<String> aTableHeaders,
             final List<List<String>> aCellContents)
     {
-        dataModel = new LoadableDetachableModel<List<List<? extends String>>>()
+        dataModel = new LoadableDetachableModel<List<List<String>>>()
         {
 
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected List<List<? extends String>> load()
+            protected List<List<String>> load()
             {
-                ArrayList<List<? extends String>> resultList = new ArrayList<List<? extends String>>();
+                ArrayList<List<String>> resultList = new ArrayList<List<String>>();
 
                 colNames = new ArrayList<String>();
                 for (String document : aTableHeaders) {
@@ -82,7 +82,8 @@ public class TableDataProvider
         };
     }
 
-    public Iterator<List<? extends String>> iterator(long first, long count)
+    @Override
+    public Iterator<List<String>> iterator(long first, long count)
     {
 
         long boundsSafeCount = count;
@@ -97,14 +98,16 @@ public class TableDataProvider
         return dataModel.getObject().subList((int) first, (int) (first + boundsSafeCount)).iterator();
     }
 
+    @Override
     public long size()
     {
         return size;
     }
 
-    public IModel<List<? extends String>> model(List<? extends String> object)
+    @Override
+    public IModel<List<String>> model(List<String> object)
     {
-        return Model.<String> ofList(object);
+        return Model.<String>ofList(object);
     }
 
     @Override

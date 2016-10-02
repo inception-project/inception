@@ -166,10 +166,11 @@ public class AnnotationDetailEditorPanel
     private List<FeatureModel> featureModels;
     private BratAnnotatorModel bModel;
     private String selectedTag = "";
+    
     /**
-     *Function to return tooltip using jquery
-     *Docs for the JQuery tooltip widget that we configure below:
-     *https://api.jqueryui.com/tooltip/
+     * Function to return tooltip using jquery
+     * Docs for the JQuery tooltip widget that we configure below:
+     * https://api.jqueryui.com/tooltip/
      */
     private final String functionForTooltip = "function() { return "
             + "'<div class=\"tooltip-title\">'+($(this).text() "
@@ -198,17 +199,16 @@ public class AnnotationDetailEditorPanel
         };
 
         annotationFeatureForm.setOutputMarkupId(true);
-        annotationFeatureForm.add(new AjaxFormValidatingBehavior(annotationFeatureForm, "onsubmit") { 
-
+        annotationFeatureForm.add(new AjaxFormValidatingBehavior("onsubmit") { 
 			private static final long serialVersionUID = -5642108496844056023L;
 
 			@Override 
             protected void onSubmit(AjaxRequestTarget aTarget) { 
                try {
-				actionAnnotate(aTarget, bModel, false);
-			} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
-				error(e.getMessage());
-			}
+                   actionAnnotate(aTarget, bModel, false);
+    			} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+    				error(e.getMessage());
+    			}
             } 
 
         }); 
@@ -399,8 +399,6 @@ public class AnnotationDetailEditorPanel
 
             add(layer = new LayerSelector("defaultAnnotationLayer", annotationLayers));
 
-            featureValues = new FeatureEditorPanelContent(
-                    "featureValues");
             featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
@@ -1466,6 +1464,8 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = -7275181609671919722L;
 
+        protected static final String ID_PREFIX = "featureEditorHead";
+        
         public FeatureEditor(String aId, String aMarkupId, Item<FeatureModel> aMarkupProvider,
                 IModel<?> aModel)
         {
@@ -1514,7 +1514,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aItem.getIndex());
             
             add(field);
         }
@@ -1551,7 +1551,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aItem.getIndex());
             
             add(field);
         }
@@ -1606,7 +1606,6 @@ public class AnnotationDetailEditorPanel
 
             indicator.reset(); //reset the indicator
             if (aModel.feature.getTagset() != null) {
-
                 List<Tag> tagset = null;
                 BratAnnotatorModel model = bModel;
                 // verification to check whether constraints exist for this project or NOT
@@ -1619,13 +1618,34 @@ public class AnnotationDetailEditorPanel
                     // Earlier behavior,
                     tagset = annotationService.listTags(aModel.feature.getTagset());
                 }
-                field = new StyledComboBox<Tag>("value", tagset);
+                field = new StyledComboBox<Tag>("value", tagset) {
+                    private static final long serialVersionUID = -1735694425658462932L;
 
-                // Must add behavior to editor, not to combobox to ensure proper order of the
-                // initializing JS header items: first combo box, then tooltip.
-                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                options.set("content", functionForTooltip);
-                add(new TooltipBehavior("#"+field.getMarkupId()+"_listbox *[title]", options));
+                    @Override
+                    protected void onInitialize()
+                    {
+                        // Ensure proper order of the initializing JS header items: first combo box
+                        // behavior (in super.onInitialize()), then tooltip.
+                        Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                        options.set("content", functionForTooltip);
+                        add(new TooltipBehavior("#"+field.getMarkupId()+"_listbox *[title]", options) {
+                            private static final long serialVersionUID = 1854141593969780149L;
+
+                            @Override
+                            protected String $()
+                            {
+                                // REC: It takes a moment for the KendoDatasource to load the data and
+                                // for the Combobox to render the hidden dropdown. I did not find
+                                // a way to hook into this process and to get notified when the
+                                // data is available in the dropdown, so trying to handle this
+                                // with a slight delay hopeing that all is set up after 1 second.
+                                return "try {setTimeout(function () { " + super.$() + " }, 1000); } catch (err) {}; ";
+                            }
+                        });
+                        
+                        super.onInitialize();
+                    }
+                };
                 
                 isDrop = true;
             }
@@ -1636,7 +1656,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId("featureEditorHead-" + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aItem.getIndex());
             
             add(field);
             
@@ -1893,7 +1913,20 @@ public class AnnotationDetailEditorPanel
                         // behavior (in super.onInitialize()), then tooltip.
                         Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                         options.set("content", functionForTooltip);
-                        add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options));
+                        add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options) {
+                            private static final long serialVersionUID = -7207021885475073279L;
+
+                            @Override
+                            protected String $()
+                            {
+                                // REC: It takes a moment for the KendoDatasource to load the data and
+                                // for the Combobox to render the hidden dropdown. I did not find
+                                // a way to hook into this process and to get notified when the
+                                // data is available in the dropdown, so trying to handle this
+                                // with a slight delay hopeing that all is set up after 1 second.
+                                return "try {setTimeout(function () { " + super.$() + " }, 1000); } catch (err) {}; ";
+                            }
+                        });
                     }
                     
                     @Override
@@ -1914,7 +1947,7 @@ public class AnnotationDetailEditorPanel
                 // Ensure that markup IDs of feature editor focus components remain constant across
                 // refreshs of the feature editor panel. This is required to restore the focus.
                 newRole.setOutputMarkupId(true);
-                newRole.setMarkupId("featureEditorHead-" + aItem.getIndex());
+                newRole.setMarkupId(ID_PREFIX + aItem.getIndex());
                 
                 content.add(newRole);
                 
