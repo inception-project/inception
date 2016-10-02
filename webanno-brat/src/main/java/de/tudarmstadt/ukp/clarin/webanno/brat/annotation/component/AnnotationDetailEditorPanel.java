@@ -428,6 +428,9 @@ public class AnnotationDetailEditorPanel
                 }
             });
             
+            featureValues = new FeatureEditorPanelContent("featureValues");
+            featureEditorsContainer.add(featureValues);
+            
 			forwardAnnotationText = new TextField<String>("forwardAnno");
 			forwardAnnotationText.setOutputMarkupId(true);
 			forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("onkeyup") {
@@ -486,9 +489,7 @@ public class AnnotationDetailEditorPanel
             forwardAnnotationText.setOutputMarkupId(true);
             forwardAnnotationText.add(new AttributeAppender("style", "opacity:0", ";"));
            // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
-            featureEditorsContainer.add(forwardAnnotationText);
-            
-            featureEditorsContainer.add(featureValues);
+            add(forwardAnnotationText);
             
             // the selected text for annotation
             selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
