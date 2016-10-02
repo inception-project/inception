@@ -11,9 +11,11 @@
     
 Aakash Sharma <aakash.y.sharma@gmail.com>
 Andreas Straninger
+Anshul Tak
 Benjamin Milde
 Darina Benikova
 Erik-Lân Do Dinh
 Richard Eckart de Castilho <richard.eckart@gmail.com>
+Sarah Holschneider
 Seid Muhie Yimam
 Sushil Jain
