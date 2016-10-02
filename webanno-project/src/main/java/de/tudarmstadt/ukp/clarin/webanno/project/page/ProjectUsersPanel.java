@@ -377,7 +377,8 @@ public class ProjectUsersPanel
                             return allUSers;
                         }
                     }, new ChoiceRenderer<User>("username", "username")));
-
+            users.setSuffix("<br>");
+            
             add(new Button("add")
             {
                 private static final long serialVersionUID = 1L;
