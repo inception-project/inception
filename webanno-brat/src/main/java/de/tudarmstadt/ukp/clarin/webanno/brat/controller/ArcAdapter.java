@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
@@ -198,17 +198,24 @@ public class ArcAdapter
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
+            String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
+            String bratTypeName = TypeUtil.getBratTypeName(this);
+            String color = aColoringStrategy.getColor(fs, bratLabelText);
+            
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
-                        + "] has loose ends - cannot render.");
+                        + "] has loose ends - cannot render");
+                if (attachFeatureName != null) {
+                    log.warn("Relation [" + layer.getName() + "] attached to feature ["
+                            + attachFeatureName + "]");
+                }
+                log.warn("Dependent: " + dependentFs);
+                log.warn("Governor: " + governorFs);
+                
                 continue;
             }
 
             List<Argument> argumentList = getArgument(governorFs, dependentFs);
-
-            String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
-            String bratTypeName = TypeUtil.getBratTypeName(this);
-            String color = aColoringStrategy.getColor(fs, bratLabelText);
 
             aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
                     bratLabelText, color));
@@ -352,7 +359,7 @@ public class ArcAdapter
     {
           if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            return updateCas(aJCas, aStart, aEnd, aOriginFs, aTargetFs, aLabelValue,
+            return interalAddToCas(aJCas, aStart, aEnd, aOriginFs, aTargetFs, aLabelValue,
                     aFeature);
         }
         else {
@@ -364,8 +371,9 @@ public class ArcAdapter
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
      */
-    private AnnotationFS updateCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature)
+    private AnnotationFS interalAddToCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature) 
+                throws BratAnnotationException
     {
         Type type = getType(aJCas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
@@ -416,6 +424,11 @@ public class ArcAdapter
                     governorFs.getEnd()).get(0);
         }
 
+        if (dependentFs == null || governorFs == null) {
+            throw new BratAnnotationException("Relation must have a source and a target!");
+        }
+
+        
         // if span A has (start,end)= (20, 26) and B has (start,end)= (30, 36)
         // arc drawn from A to B, dependency will have (start, end) = (20, 36)
         // arc drawn from B to A, still dependency will have (start, end) = (20, 36)
