@@ -34,6 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
+/**
+ * Removes relations that were not properly cleaned up after deleting a source/target span. Such
+ * relations still point to the respective span even through the span is not indexed anymore.
+ */
 public class RemoveDanglingRelationsRepair
     implements Repair
 {
