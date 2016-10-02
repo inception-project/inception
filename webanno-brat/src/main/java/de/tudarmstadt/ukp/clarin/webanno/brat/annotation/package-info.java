@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 /**
  * Provides a wicket component for the BRAT specific implementations. The {@link de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator} wicket panel
  * encapsulates a response that will be rendered to the Brat annotation SVG tag as well as other

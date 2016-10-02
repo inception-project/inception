@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2014
  * FG Language Technology and Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
+ */
 package de.tudarmstadt.ukp.clarin.webanno.automation.util;
 
 import java.io.Serializable;
