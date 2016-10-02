@@ -1,0 +1,5 @@
+de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload:
+  Source: https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow
+  License: according to source, same as Wicket, so assuming Apache License 2.0
+  
+  
