@@ -59,8 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
  * and associated documents
- *
- *
  */
 public class OpenModalWindowPanel
     extends Panel
@@ -92,7 +90,6 @@ public class OpenModalWindowPanel
     private final Mode mode;
     private final BratAnnotatorModel bModel;
 
-    private List<Project> allowedProject = new ArrayList<Project>();
     private List<Project> projectesWithFinishedAnnos;
     private Map<Project, String> projectColors = new HashMap<Project, String>();
 

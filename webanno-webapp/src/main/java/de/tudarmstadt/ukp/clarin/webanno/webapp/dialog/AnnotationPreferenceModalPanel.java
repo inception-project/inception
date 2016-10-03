@@ -54,8 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Modal Window to configure layers, window size, etc.
- *
- *
  */
 public class AnnotationPreferenceModalPanel
     extends Panel
@@ -82,7 +80,6 @@ public class AnnotationPreferenceModalPanel
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        @SuppressWarnings({})
         public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow, AnnotationDetailEditorPanel aEditor)
         {
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
@@ -208,8 +205,6 @@ public class AnnotationPreferenceModalPanel
 					}
                     modalWindow.close(aTarget);                   
                     aTarget.add(aEditor);
-                    
-
                 }
 
                 @Override
@@ -262,5 +257,4 @@ public class AnnotationPreferenceModalPanel
         tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow, aEditor);
         add(tagSelectionForm);
     }
-
 }

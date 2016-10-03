@@ -34,8 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 /**
  * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
  * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
- *
- *
  */
 public class AnnotationLayersModalPanel
     extends Panel
@@ -56,8 +54,7 @@ public class AnnotationLayersModalPanel
         annotationLayerSelectionModal.setResizable(true);
         annotationLayerSelectionModal.setWidthUnit("px");
         annotationLayerSelectionModal.setHeightUnit("px");
-        annotationLayerSelectionModal
-                .setTitle("Annotation Layer and window size configuration Window");
+        annotationLayerSelectionModal.setTitle("Settings");
         annotationLayerSelectionModal.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
         {
             private static final long serialVersionUID = -5423095433535634321L;
@@ -88,7 +85,6 @@ public class AnnotationLayersModalPanel
                                     annotationLayerSelectionModal.getContentId(),
                                     annotationLayerSelectionModal, aBModel.getObject(), aEditor)
                             {
-
                                 private static final long serialVersionUID = -3434069761864809703L;
 
                                 @Override
@@ -113,15 +109,12 @@ public class AnnotationLayersModalPanel
                             });
                     annotationLayerSelectionModal.show(target);
                 }
-
             }
         });
-
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
     {
-
     }
 
     public boolean isCloseButtonClicked()
@@ -133,5 +126,4 @@ public class AnnotationLayersModalPanel
     {
         this.closeButtonClicked = closeButtonClicked;
     }
-
 }
