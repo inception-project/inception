@@ -246,6 +246,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		for (Type type : annotationsPerPostion.keySet()) {
 			Map<AnnotationUnit, Map<Integer, AnnotationFS>> multiTokUnits = new HashMap<>();
             int ref = 1;
+            AnnotationFS prevAnnoFs = null; // to see if it is on multiple token
 			for (AnnotationUnit unit : annotationsPerPostion.get(type).keySet()) {
 				int end = unit.end;
 				List<AnnotationFS> annos = aAnnosPerTypePerUnit.get(type).get(unit);
@@ -268,7 +269,8 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 						int slot = 0;
 						boolean targetAdd = false;
 						String stackedAnnoRegex = "(?<!\\\\)" + Pattern.quote("|");
-						for (String mAnnos : anno.split(stackedAnnoRegex)) {
+						String[] stackedAnnos = anno.split(stackedAnnoRegex);
+						for (String mAnnos : stackedAnnos) {
 							String multipleSlotAnno =  "(?<!\\\\)" + Pattern.quote(";");
 							for (String mAnno : mAnnos.split(multipleSlotAnno)) {
 								String depRef = "";
@@ -287,30 +289,29 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                                     mAnno = null;
                                 }
                                 boolean isMultitoken = false;
-                                AnnotationFS multiAnnoFs = null;
 
-                                if (!multiTokUnits.isEmpty())
-                                    for (AnnotationUnit u : multiTokUnits.keySet()) {
+                                if (!multiTokUnits.isEmpty() && prevAnnoFs !=null && prevAnnoFs.getBegin()!=unit.begin )
+                                  contAnno:  for (AnnotationUnit u : multiTokUnits.keySet()) {
                                         for (Integer r : multiTokUnits.get(u).keySet()) {
                                             if (ref == r) {
                                                 isMultitoken = true;
-                                                multiAnnoFs = multiTokUnits.get(u).get(r);
-                                                break;
+                                                prevAnnoFs = multiTokUnits.get(u).get(r);
+                                                break contAnno;
                                             }
                                         }
                                     }
                                 if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-                                    multiAnnoFs.setIntValue(endF, end);
+                                    prevAnnoFs.setIntValue(endF, end);
                                     mAnno = getEscapeChars(mAnno);
-                                    multiAnnoFs.setFeatureValueFromString(feat, mAnno);
+                                    prevAnnoFs.setFeatureValueFromString(feat, mAnno);
                                     if (feat.getShortName().equals(REF_LINK)) {
                                         // since REF_REL do not start with BIO,
                                         // update it it...
-                                        annos.set(i, multiAnnoFs);
+                                        annos.set(i, prevAnnoFs);
                                     }
-                                    setAnnoRefPerUnit(unit, type, ref, multiAnnoFs);
+                                    setAnnoRefPerUnit(unit, type, ref, prevAnnoFs);
 
                                 } else {
 									if (roleLinks.containsKey(feat)) {
@@ -439,12 +440,14 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 										mAnno = getEscapeChars(mAnno);
 										multiTokUnits.putIfAbsent(unit, new HashMap<>());
 										multiTokUnits.get(unit).put(ref, annos.get(i));
+										prevAnnoFs = annos.get(i);
 										annos.get(i).setFeatureValueFromString(feat, mAnno);
 										aJCas.addFsToIndexes(annos.get(i));
 										setAnnoRefPerUnit(unit, type, ref, annos.get(i));
 									}
 
 								}
+                                if(stackedAnnos.length>1)
                                 ref++;
 							}
 							if (type.getName().equals(POS.class.getName())) {
@@ -460,7 +463,13 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 							linkFSesPerSlotAnno = new HashMap<>();
 						}
 					}
+					else {
+						prevAnnoFs = null;
+					}
 					j++;
+				}
+				if(prevAnnoFs !=null){
+					ref++;
 				}
 			}
 			annosPerRef.put(type, multiTokUnits);
