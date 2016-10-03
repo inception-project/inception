@@ -49,7 +49,6 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -826,11 +825,6 @@ public class AnnotationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         
-        // Update dynamic elements in action bar
-        aTarget.add(finish);
-        aTarget.add(numberOfPages);
-        aTarget.add(documentNamePanel);
-
         bModel.setUser(userRepository.get(username));
 
         try {
@@ -858,9 +852,7 @@ public class AnnotationPage
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
                     bModel, Mode.ANNOTATION);
-            // Resize areas according to preferences
-            aTarget.add(sidebarCell);
-            aTarget.add(annotationViewCell);
+            
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != bModel.getProject().getId()) {
@@ -877,13 +869,22 @@ public class AnnotationPage
 
             updateSentenceAddress(jcas, aTarget);
 
-            // Wicket-level rendering of annotator because it becomes visible
-            // after selecting a document
-            aTarget.add(annotator);
-
-            // brat-level initialization and rendering of document
-            annotator.bratInit(aTarget);
-            annotator.bratRender(aTarget, jcas);
+//            // Update dynamic elements in action bar
+//            aTarget.add(finish);
+//            aTarget.add(numberOfPages);
+//            aTarget.add(documentNamePanel);
+//            // Wicket-level rendering of annotator because it becomes visible
+//            // after selecting a document
+//            aTarget.add(annotator);
+//            // Resize areas according to preferences
+//            aTarget.add(sidebarCell);
+//            aTarget.add(annotationViewCell);
+//            // brat-level initialization and rendering of document
+//            annotator.bratInit(aTarget);
+//            annotator.bratRender(aTarget, jcas);
+            
+            // Re-render the whole page because the font size
+            aTarget.add(AnnotationPage.this);
             
             // Update document state
             if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
@@ -892,22 +893,12 @@ public class AnnotationPage
                 repository.createSourceDocument(bModel.getDocument(), user);
             }
         }
-        catch (DataRetrievalFailureException e) {
-            LOG.error("Error", e);
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            error(e.getMessage());
-        }
-        catch (IOException e) {
-            LOG.error("Error", e);
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            error(e.getMessage());
-        }
         catch (UIMAException e) {
             LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(ExceptionUtils.getRootCauseMessage(e));
         }
-        catch (ClassNotFoundException e) {
+        catch (Exception e) {
             LOG.error("Error", e);
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
