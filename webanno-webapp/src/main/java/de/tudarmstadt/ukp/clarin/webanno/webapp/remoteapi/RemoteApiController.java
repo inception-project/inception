@@ -23,10 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.TimeZone;
@@ -34,9 +31,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
+import javax.persistence.NoResultException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.InvalidFileNameException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -44,9 +41,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
-import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -54,14 +51,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -73,20 +69,29 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
-import javassist.NotFoundException;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
- *
  */
 @Controller
 public class RemoteApiController
 {
-    public static final String MIME_TYPE_XML = "application/xml";
-    public static final String PRODUCES_JSON = "application/json";
-    public static final String PRODUCES_XML = "application/xml";
-    public static final String CONSUMES_URLENCODED = "application/x-www-form-urlencoded";
-    public static final String META_INF = "META-INF/";
+    private static final String META_INF = "META-INF/";
+
+    private static final String PROJECTS = "projects";
+    private static final String DOCUMENTS = "sourcedocs";
+    private static final String ANNOTATIONS = "annos";
+    private static final String CURATION = "curationdoc";
+
+    private static final String PARAM_PROJECT_ID = "projectId";
+    private static final String PARAM_DOCUMENT_ID = "documentId";
+    private static final String PARAM_USERNAME = "username";
+    private static final String PARAM_FILE = "file";
+    private static final String PARAM_FILETYPE = "filetype";
+    private static final String PARAM_NAME = "name";
+    private static final String PARAM_FORMAT = "format";
+
+    private final Log LOG = LogFactory.getLog(getClass());
 
     @Resource(name = "documentRepository")
     private RepositoryService projectRepository;
@@ -96,8 +101,6 @@ public class RemoteApiController
 
     @Resource(name = "userRepository")
     private UserDao userRepository;
-
-    private final Log LOG = LogFactory.getLog(getClass());
 
     /**
      * Create a new project.
@@ -116,60 +119,72 @@ public class RemoteApiController
      *            a ZIP file containing the project data.
      * @throws Exception if there was an error.
      */
-    @RequestMapping(value = "/projects", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)    
-    @ResponseBody String  createProject(@RequestParam("file") MultipartFile aFile,
-            @RequestParam("name") String aName, @RequestParam("filetype") String aFileType)
+    @RequestMapping(
+            value = ("/" + PROJECTS), 
+            method = RequestMethod.POST, 
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)    
+    public ResponseEntity<String> projectCreate(
+            @RequestParam(PARAM_FILE) MultipartFile aFile,
+            @RequestParam(PARAM_NAME) String aName, 
+            @RequestParam(PARAM_FILETYPE) String aFileType)
         throws Exception
     {
-        LOG.info("Creating project [" + aName + "]");
-
-        if (!ZipUtils.isZipStream(aFile.getInputStream())) {
-            throw new InvalidFileNameException("", "is an invalid Zip file");
-        }
-
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = null;
-
-        // Configure project
-        if (!projectRepository.existsProject(aName)) {
-            project = new Project();
-            project.setName(aName);
-
-            // Create the project and initialize tags
-            projectRepository.createProject(project, user);
-            annotationService.initializeTypesForProject(project, user);
-            // Create permission for this user
-            ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(PermissionLevel.ADMIN);
-            permission.setProject(project);
-            permission.setUser(username);
-            projectRepository.createProjectPermission(permission);
-
-            permission = new ProjectPermission();
-            permission.setLevel(PermissionLevel.USER);
-            permission.setProject(project);
-            permission.setUser(username);
-            projectRepository.createProjectPermission(permission);
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
         }
+
+        // Check for the access
+        boolean hasAccess = 
+                SecurityUtil.isProjectCreator(projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User [" + username + "] is not allowed to create projects");
+        }
+
         // Existing project
-        else {
-            throw new IOException("The project with name [" + aName + "] exists");
+        if (projectRepository.existsProject(aName)) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("A project with name [" + aName + "] already exists");
         }
+
+        // Check archive
+        if (!ZipUtils.isZipStream(aFile.getInputStream())) {
+            return ResponseEntity.badRequest().body("Invalid ZIP file");
+        }
+
+        // Create the project and initialize tags
+        LOG.info("Creating project [" + aName + "]");
+        Project project = new Project();
+        project.setName(aName);
+        projectRepository.createProject(project, user);
+        annotationService.initializeTypesForProject(project, user);
+        
+        // Create permission for the project creator
+        projectRepository.createProjectPermission(
+                new ProjectPermission(project, username, PermissionLevel.ADMIN));
+        projectRepository.createProjectPermission(
+                new ProjectPermission(project, username, PermissionLevel.CURATOR));
+        projectRepository.createProjectPermission(
+                new ProjectPermission(project, username, PermissionLevel.USER));
 
         // Iterate through all the files in the ZIP
 
         // If the current filename does not start with "." and is in the root folder of the ZIP,
         // import it as a source document
-        File zimpFile = File.createTempFile(aFile.getOriginalFilename(), ".zip");
-        aFile.transferTo(zimpFile);
-        ZipFile zip = new ZipFile(zimpFile);
+        File zipFile = File.createTempFile(aFile.getOriginalFilename(), ".zip");
+        aFile.transferTo(zipFile);
+        ZipFile zip = new ZipFile(zipFile);
 
         for (Enumeration<?> zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            //
             // Get ZipEntry which is a file or a directory
-            //
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // If it is the zip name, ignore it
@@ -177,8 +192,7 @@ public class RemoteApiController
                     .toString())) {
                 continue;
             }
-            // IF the current filename is META-INF/webanno/source-meta-data.properties store it
-            // as
+            // IF the current filename is META-INF/webanno/source-meta-data.properties store it as
             // project meta data
             else if (entry.toString().replace("/", "")
                     .equals((META_INF + "webanno/source-meta-data.properties").replace("/", ""))) {
@@ -198,7 +212,6 @@ public class RemoteApiController
 
                 uploadSourceDocument(zip, entry, project, user, aFileType);
             }
-
         }
                 
         LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");        
@@ -206,8 +219,7 @@ public class RemoteApiController
         JSONObject projectJSON = new JSONObject();
         long pId = projectRepository.getProject(aName).getId();        
         projectJSON.append(aName, pId);
-        return projectJSON.toString();
-        
+        return ResponseEntity.ok(projectJSON.toString());
     }
 
     /**
@@ -222,23 +234,26 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects", method = RequestMethod.GET)
-    public @ResponseBody String listProject()
+    @RequestMapping(
+            value = ("/" + PROJECTS), 
+            method = RequestMethod.GET)
+    public ResponseEntity<String> projectList()
         throws Exception
     {
-        List<Project> accessibleProjects;
-        JSONObject returnJSONObj = new JSONObject();
-
-        // Get username
+        // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        LOG.info("Fetch project list for [" + username + "]");
         User user = userRepository.get(username);
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
 
         // Get projects with permission
-        accessibleProjects = projectRepository.listAccessibleProjects();
+        List<Project> accessibleProjects = projectRepository.listAccessibleProjects();
 
-        // Add permissions for each project into JSON array and store in json
-        // object
+        // Add permissions for each project into JSON array and store in JSON object
+        JSONObject returnJSONObj = new JSONObject();
         for (Project project : accessibleProjects) {
             String projectId = Long.toString(project.getId());
             List<ProjectPermission> projectPermissions = projectRepository
@@ -252,7 +267,7 @@ public class RemoteApiController
             projectJSON.put(project.getName(), permissionArr);
             returnJSONObj.put(projectId, projectJSON);
         }
-        return returnJSONObj.toString();
+        return ResponseEntity.ok(returnJSONObj.toString());
     }
 
     /**
@@ -268,32 +283,48 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}", method = RequestMethod.DELETE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteProject(@PathVariable long aProjectId)
+    @RequestMapping(
+            value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"), 
+            method = RequestMethod.DELETE)
+    public ResponseEntity<String> projectDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
-        LOG.info("Deleting project [" + aProjectId + "]");
-
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = projectRepository.getProject(aProjectId);
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
+        
+        // Get project
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Project" + aProjectId + "] not found.");
+        }
 
         // Check for the access
-        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
-
-        if (hasAccess) {
-            // remove project is user has admin access
-            projectRepository.removeProject(project, user);
-            LOG.info("Successfully deleted project [" + aProjectId + "]");
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
         }
-        else {
-            throw new PermissionDeniedDataAccessException(
-                    "Not enough permission on project : [" + aProjectId + "]",
-                    new Throwable("user:" + username));
-        }
-
+        
+        // remove project is user has admin access
+        LOG.info("Deleting project [" + aProjectId + "]");
+        projectRepository.removeProject(project, user);
+        LOG.info("Successfully deleted project [" + aProjectId + "]");
+        return ResponseEntity.ok("Project [" + aProjectId + "] deleted.");
     }
 
     /**
@@ -301,39 +332,57 @@ public class RemoteApiController
      * 
      * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/sourcedocs
      * 
-     * @param aProjectId
+     * @param aProjectId the project ID
      * @return JSON with {@link SourceDocument} : id
-     * @throws Exception
      */
-
-    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs", method = RequestMethod.GET)
-    @ResponseBody
-    public String showSourceDocuments(@PathVariable long aProjectId)
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
+            method = RequestMethod.GET)
+    public ResponseEntity<String> sourceDocumentList(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {               
-        Project project = projectRepository.getProject(aProjectId);
+        // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        JSONArray sourceDocumentJSONArr = new JSONArray();
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
         
-        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
-        if (hasAccess) {
-            List<SourceDocument> srcDocumentList = projectRepository.listSourceDocuments(project);
-            for (SourceDocument s : srcDocumentList) { 
-                JSONObject sourceDocumentJSONObj = new JSONObject();                 
-                sourceDocumentJSONObj.put("id", s.getId());
-                sourceDocumentJSONObj.put("name", s.getName());
-                sourceDocumentJSONObj.put("state", s.getState());
-                sourceDocumentJSONArr.put(sourceDocumentJSONObj);                                 
-            }
+        // Get project
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
         }
-        else {
-            throw new PermissionDeniedDataAccessException(
-                    "Not enough permission on project : [" + aProjectId + "]",
-                    new Throwable("user:" + username));
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Project" + aProjectId + "] not found.");
         }
-        return sourceDocumentJSONArr.toString();
+        
+        // Check for the access
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+        }
+            
+        List<SourceDocument> srcDocumentList = projectRepository.listSourceDocuments(project);
+        JSONArray sourceDocumentJSONArr = new JSONArray();
+        for (SourceDocument s : srcDocumentList) { 
+            JSONObject sourceDocumentJSONObj = new JSONObject();                 
+            sourceDocumentJSONObj.put("id", s.getId());
+            sourceDocumentJSONObj.put("name", s.getName());
+            sourceDocumentJSONObj.put("state", s.getState());
+            sourceDocumentJSONArr.put(sourceDocumentJSONObj);                                 
+        }
+        
+        return ResponseEntity.ok(sourceDocumentJSONArr.toString());
     }
 
     /**
@@ -352,31 +401,65 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}", method = RequestMethod.DELETE)
-    public @ResponseStatus(HttpStatus.NO_CONTENT) void deleteDocument(@PathVariable long aProjectId,
-            @PathVariable long aSourceDocumentId)
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{"+PARAM_PROJECT_ID+"}/" + DOCUMENTS + "/{"+PARAM_DOCUMENT_ID+"}", 
+            method = RequestMethod.DELETE)
+    public ResponseEntity<String> sourceDocumentDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
                 throws Exception
     {
-        Project project = projectRepository.getProject(aProjectId);
-        SourceDocument sourceDocument = projectRepository.getSourceDocument(aProjectId,
-                aSourceDocumentId);
+        // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
+        
+        // Get project
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Project" + aProjectId + "] not found.");
+        }
+
+        // Check for the access
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+        }
+        
         LOG.info("Deleting document [" + project.getName() + "]");
-
-        // remove document if hasAccess
-        if (hasAccess) {
-            projectRepository.removeSourceDocument(sourceDocument);
-            LOG.info("Successfully deleted project : [" + aProjectId + "]");
+        
+        // Get source document
+        SourceDocument srcDocument;
+        try {
+            srcDocument = projectRepository.getSourceDocument(aProjectId,
+                    aSourceDocumentId);
         }
-        else {
-
-            throw new PermissionDeniedDataAccessException(
-                    "Not enough permission on project : [" + aProjectId + "]",
-                    new Throwable("user:" + username));
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Source document [" + aSourceDocumentId + "] not found in project [" + 
+                            aProjectId + "] not found.");
         }
+
+        projectRepository.removeSourceDocument(srcDocument);
+        
+        LOG.info("Successfully deleted project : [" + aProjectId + "]");
+        
+        return ResponseEntity.ok("Source document [" + aSourceDocumentId + "] in project ["
+                + aProjectId + "] deleted.");
     }
 
     /**
@@ -398,45 +481,61 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public @ResponseBody String uploadDocumentFile(@RequestParam("file") MultipartFile aFile,
-            @RequestParam("filetype") String aFileType, @PathVariable long aProjectId)
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{"+PARAM_PROJECT_ID+"}/" + DOCUMENTS, 
+            method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> sourceDocumentCreate(
+            @RequestParam(PARAM_FILE) MultipartFile aFile,
+            @RequestParam(PARAM_FILETYPE) String aFileType, 
+            @PathVariable long aProjectId)
                 throws Exception
     {
-
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        JSONObject returnJSON = new JSONObject();
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
+
         // Get project
-        Project project = projectRepository.getProject(aProjectId);
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Project" + aProjectId + "] not found.");
+        }
 
         // Check for the access
-        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
-
-        if (hasAccess) {
-            // Check if file already present or not
-            boolean isDocumentPresent = projectRepository.existsSourceDocument(project,
-                    aFile.getOriginalFilename());
-            if (!isDocumentPresent) {
-                InputStream is = aFile.getInputStream();
-                uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, user, aFileType);
-                // add id of added source document in return json string
-                returnJSON.put("id", projectRepository.getSourceDocument(project, aFile.getOriginalFilename()).getId());
-                is.close();                
-            }         
-            else {
-                throw new IOException("The source document with name ["
-                        + aFile.getOriginalFilename() + "] exists");
-            }
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
         }
-        else {
-            throw new PermissionDeniedDataAccessException(
-                    "Not ADMIN permission on project : [" + aProjectId + "]",
-                    new Throwable("user:" + username));
+        
+        // Existing project
+        if (projectRepository.existsSourceDocument(project, aFile.getOriginalFilename())) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("A document with name [" + aFile.getOriginalFilename() + "] already exists");
         }
-        return returnJSON.toString();
+        
+        // Check if file already present or not
+        try (InputStream is = aFile.getInputStream()) {
+            uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, user, aFileType);
+        }
+        
+        // add id of added source document in return json string
+        JSONObject returnJSON = new JSONObject();
+        returnJSON.put("id", projectRepository.getSourceDocument(project, aFile.getOriginalFilename()).getId());
+        return ResponseEntity.ok(returnJSON.toString());
     }
 
     /**
@@ -455,48 +554,78 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}/annos", method = RequestMethod.GET)
-    public @ResponseBody String listAnnotationDocument(@PathVariable long aProjectId,
-            @PathVariable long aSourceDocumentId)
+    @RequestMapping(
+            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+DOCUMENTS+"/{"+PARAM_DOCUMENT_ID+"}/"+ANNOTATIONS, 
+            method = RequestMethod.GET)
+    public ResponseEntity<String> annotationDocumentList(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
                 throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        JSONObject returnJSON = new JSONObject();
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("User [" + username + "] not found.");
+        }
+        
         // Get project
-        Project project = projectRepository.getProject(aProjectId);
-        SourceDocument srcDocument = projectRepository.getSourceDocument(aProjectId,
-                aSourceDocumentId);
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Project" + aProjectId + "] not found.");
+        }
 
         // Check for the access
-        boolean hasAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+        }
 
-        if (hasAccess) {
-            List<AnnotationDocument> annList = projectRepository
-                    .listAllAnnotationDocuments(srcDocument);
-            JSONArray annDocArr = new JSONArray();
-            for (AnnotationDocument annDoc : annList) {
-                if(annDoc.getState().equals(AnnotationDocumentState.FINISHED) || annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
-                {
-                    SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'hh:mm:ssZ");
-                    sdf.setTimeZone(TimeZone.getTimeZone("CET"));           
-                    JSONObject annDocObj = new JSONObject();
-                    annDocObj.put("user", annDoc.getUser());
-                    annDocObj.put("state", annDoc.getState().getId());                    
-                    annDocObj.put("timestamp", sdf.format(annDoc.getTimestamp()));
-                    annDocArr.put(annDocObj);
-                }                
-            }
-            returnJSON.put(srcDocument.getName(),annDocArr);
+        // Get source document
+        SourceDocument srcDocument;
+        try {
+            srcDocument = projectRepository.getSourceDocument(aProjectId,
+                    aSourceDocumentId);
         }
-        else {
-            throw new PermissionDeniedDataAccessException(
-                    "Not ADMIN permission on project : [" + aProjectId + "]",
-                    new Throwable("user:" + username));
+        catch (NoResultException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Source document [" + aSourceDocumentId + "] not found in project [" + 
+                            aProjectId + "] not found.");
         }
-        return returnJSON.toString();
+
+        List<AnnotationDocument> annList = projectRepository
+                .listAllAnnotationDocuments(srcDocument);
+        JSONArray annDocArr = new JSONArray();
+        for (AnnotationDocument annDoc : annList) {
+            if(
+                    annDoc.getState().equals(AnnotationDocumentState.FINISHED) || 
+                    annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-DD'T'hh:mm:ssZ");
+                sdf.setTimeZone(TimeZone.getTimeZone("CET"));           
+                JSONObject annDocObj = new JSONObject();
+                annDocObj.put("user", annDoc.getUser());
+                annDocObj.put("state", annDoc.getState().getId());                    
+                annDocObj.put("timestamp", sdf.format(annDoc.getTimestamp()));
+                annDocArr.put(annDocObj);
+            }                
+        }
+        
+        JSONObject returnJSON = new JSONObject();
+        returnJSON.put(srcDocument.getName(),annDocArr);
+        return ResponseEntity.ok(returnJSON.toString());
     }
 
     /**
@@ -520,88 +649,123 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}/sourcedocs/{aSourceDocumentId}/annos/{annotatorName}", method = RequestMethod.GET)
-    public void getAnnotationDocument(HttpServletResponse response, @PathVariable long aProjectId,
-            @PathVariable Long aSourceDocumentId, @PathVariable String annotatorName,
-            @RequestParam(value = "format", required = false) String format)
+    @RequestMapping(
+            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+DOCUMENTS+"/{"+PARAM_DOCUMENT_ID+"}/"+ANNOTATIONS+"/{"+PARAM_USERNAME+"}", 
+            method = RequestMethod.GET)
+    public void annotationDocumentRead(HttpServletResponse response, 
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId, 
+            @PathVariable(PARAM_USERNAME) String annotatorName,
+            @RequestParam(value = PARAM_FORMAT, required = false) String format)
                 throws Exception
     {
-
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = projectRepository.getProject(aProjectId);
+        if (user == null) {
+            response.sendError(HttpStatus.BAD_REQUEST.value(), 
+                    "User [" + username + "] not found.");
+            return;
+        }
+        
+        // Get project
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            response.sendError(HttpStatus.NOT_FOUND.value(), 
+                    "Project" + aProjectId + "] not found.");
+            return;
+        }
 
         // Check for the access
-        boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            response.sendError(HttpStatus.FORBIDDEN.value(), 
+                    "User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return;
+        }
 
-        // if hasAccess and annotator exist
-        if (hasAdminAccess && userRepository.exists(annotatorName)) {
+        // Get annotator user
+        User annotator = userRepository.get(annotatorName);
+        if (annotator == null) {
+            response.sendError(HttpStatus.BAD_REQUEST.value(), 
+                    "Annotator user [" + username + "] not found.");
+            return;
+        }
+        
+        // Get source document
+        SourceDocument srcDoc;
+        try {
+            srcDoc = projectRepository.getSourceDocument(aProjectId, aSourceDocumentId);
+        }
+        catch (NoResultException e) {
+            response.sendError(HttpStatus.NOT_FOUND.value(),
+                    "Document [" + aSourceDocumentId + "] not found in project [" + aProjectId + "].");
+            return;
+        }
+        
+        // Get annotation document
+        AnnotationDocument annDoc;
+        try {
+            annDoc = projectRepository.getAnnotationDocument(srcDoc, annotator);
+        }
+        catch (NoResultException e) {
+            response.sendError(HttpStatus.NOT_FOUND.value(),
+                    "Annotations for user [" + annotatorName + "] not found on document ["
+                            + aSourceDocumentId + "] in project [" + aProjectId + "].");
+            return;
+        }
 
-            User annotator = userRepository.get(annotatorName);
-            // Get source document
-            SourceDocument srcDoc = projectRepository.getSourceDocument(aProjectId,
-                    aSourceDocumentId);
-
-            // Class writerClassValue = Class.forName(format);
-
-            AnnotationDocument annDoc = projectRepository.getAnnotationDocument(srcDoc, annotator);
-
-            String formatId;
-            if (format == null) {
-                formatId = srcDoc.getFormat();
-            }
-            else {
-                formatId = format;
-            }
-            Class<?> writer = projectRepository.getWritableFormats().get(formatId);
-            if (writer == null) {
-                String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
-                        + "] - exporting as WebAnno TSV instead.";
-                LOG.info(msg);
-                writer = WebannoTsv3Writer.class;
-            }
-
-            // Temporary file of annotation document
-            File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
-                    annotatorName, writer, annDoc.getName(), Mode.ANNOTATION);
-
-            try {
-
-                // Set mime type
-                String mimeType = URLConnection
-                        .guessContentTypeFromName(downloadableFile.getName());
-                if (mimeType == null) {
-                    LOG.info("mimetype is not detectable, will take default");
-                    mimeType = "application/octet-stream";
-                }
-
-                // Set response
-                response.setContentType(mimeType);
-                response.setContentType("application/force-download");
-                response.setHeader("Content-Disposition",
-                        String.format("inline; filename=\"" + downloadableFile.getName() + "\""));
-                response.setContentLength((int) downloadableFile.length());
-                InputStream inputStream = new BufferedInputStream(
-                        new FileInputStream(downloadableFile));
-                FileCopyUtils.copy(inputStream, response.getOutputStream());
-            }
-            catch (Exception e) {
-                LOG.info("Exception occured" + e.getMessage());
-            }
-            finally {
-                if (downloadableFile.exists()) {
-                    downloadableFile.delete();
-                }
-            }
-
+        String formatId;
+        if (format == null) {
+            formatId = srcDoc.getFormat();
         }
         else {
-            throw new PermissionDeniedDataAccessException(
-                    "Not enough permission on project : [" + aProjectId
-                            + "] or no user defined as [" + annotatorName + "]",
-                    new Throwable("user:" + user));
+            formatId = format;
+        }
+        
+        Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+        if (writer == null) {
+            String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
+                    + "] - exporting as WebAnno TSV instead.";
+            LOG.info(msg);
+            writer = WebannoTsv3Writer.class;
+        }
+
+        // Temporary file of annotation document
+        File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
+                annotatorName, writer, annDoc.getName(), Mode.ANNOTATION);
+
+        try {
+            // Set mime type
+            String mimeType = URLConnection
+                    .guessContentTypeFromName(downloadableFile.getName());
+            if (mimeType == null) {
+                LOG.info("mimetype is not detectable, will take default");
+                mimeType = "application/octet-stream";
+            }
+
+            // Set response
+            response.setContentType(mimeType);
+            response.setContentType("application/force-download");
+            response.setHeader("Content-Disposition",
+                    String.format("inline; filename=\"" + downloadableFile.getName() + "\""));
+            response.setContentLength((int) downloadableFile.length());
+            InputStream inputStream = new BufferedInputStream(
+                    new FileInputStream(downloadableFile));
+            FileCopyUtils.copy(inputStream, response.getOutputStream());
+        }
+        catch (Exception e) {
+            LOG.info("Exception occured" + e.getMessage());
+        }
+        finally {
+            if (downloadableFile.exists()) {
+                downloadableFile.delete();
+            }
         }
     }
 
@@ -624,92 +788,123 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(value = "/projects/{aProjectId}/curationdoc/{aSourceDocumentId}/", method = RequestMethod.GET)
-    public void getCurationDocument(HttpServletResponse response, @PathVariable long aProjectId,
-            @PathVariable Long aSourceDocumentId,
-            @RequestParam(value = "format", required = false) String format)
+    @RequestMapping(
+            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+CURATION+"/{"+PARAM_DOCUMENT_ID+"}/", 
+            method = RequestMethod.GET)
+    public void curationDocumentRead(HttpServletResponse response, 
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId,
+            @RequestParam(value = PARAM_FORMAT, required = false) String format)
                 throws Exception
     {
         // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        Project project = projectRepository.getProject(aProjectId);
-
-        // Check for the access
-        boolean hasAdminAccess = projectRepository.existsProjectPermissionLevel(user, project,
-                PermissionLevel.ADMIN);
-
-        // if hasAccess
-        if (hasAdminAccess) {
-
-            // Get source document
-            SourceDocument srcDoc = projectRepository.getSourceDocument(aProjectId,
-                    aSourceDocumentId);
-
-            // If curation is complete
-            boolean isCurationFinished = srcDoc.getState()
-                    .equals(SourceDocumentState.CURATION_FINISHED);
-
-            if (isCurationFinished) {
-                String formatId;
-                if (format == null) {
-                    formatId = srcDoc.getFormat();
-                }
-                else {
-                    formatId = format;
-                }
-                Class<?> writer = projectRepository.getWritableFormats().get(formatId);
-                if (writer == null) {
-                    String msg = "[" + srcDoc.getName() + "] No writer found for format ["
-                            + formatId + "] - exporting as WebAnno TSV instead.";
-                    LOG.info(msg);
-                    writer = WebannoTsv3Writer.class;
-                }
-
-                // Temporary file of annotation document
-                File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
-                        WebAnnoConst.CURATION_USER, writer, srcDoc.getName(), Mode.CURATION);
-
-                try {
-
-                    // Set mime type
-                    String mimeType = URLConnection
-                            .guessContentTypeFromName(downloadableFile.getName());
-                    if (mimeType == null) {
-                        LOG.info("mimetype is not detectable, will take default");
-                        mimeType = "application/octet-stream";
-                    }
-
-                    // Set response
-                    response.setContentType(mimeType);
-                    response.setContentType("application/force-download");
-                    response.setHeader("Content-Disposition", String
-                            .format("inline; filename=\"" + downloadableFile.getName() + "\""));
-                    response.setContentLength((int) downloadableFile.length());
-                    InputStream inputStream = new BufferedInputStream(
-                            new FileInputStream(downloadableFile));
-                    FileCopyUtils.copy(inputStream, response.getOutputStream());
-                }
-                catch (Exception e) {
-                    LOG.info("Exception occured" + e.getMessage());
-                }
-                finally {
-                    if (downloadableFile.exists()) {
-                        downloadableFile.delete();
-                    }
-                }
-
-            }
-            else {
-                throw new IllegalStateException(
-                        "Curation is not finished for the source document");
-            }
+        if (user == null) {
+            response.sendError(
+                    HttpStatus.BAD_REQUEST.value(), 
+                    "User [" + username + "] not found.");
+            return;
+        }
+        
+        // Get project
+        Project project;
+        try {
+            project = projectRepository.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            response.sendError(
+                    HttpStatus.NOT_FOUND.value(), 
+                    "Project" + aProjectId + "] not found.");
+            return;
         }
 
+        // Check for the access
+        boolean hasAccess = 
+                SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
+                SecurityUtil.isSuperAdmin(projectRepository, user);
+        if (!hasAccess) {
+            response.sendError(
+                    HttpStatus.FORBIDDEN.value(), 
+                    "User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return;
+        }
+        
+        
+        // Get source document
+        SourceDocument srcDocument;
+        try {
+            srcDocument = projectRepository.getSourceDocument(aProjectId,
+                    aSourceDocumentId);
+        }
+        catch (NoResultException e) {
+            response.sendError(
+                    HttpStatus.NOT_FOUND.value(), 
+                    "Source document [" + aSourceDocumentId + "] not found in project [" + 
+                            aProjectId + "] not found.");
+            return;
+        }
+
+        // Check if curation is complete
+        if (!SourceDocumentState.CURATION_FINISHED.equals(srcDocument.getState())) {
+            response.sendError(
+                    HttpStatus.NOT_FOUND.value(), 
+                    "Curation of source document [" + aSourceDocumentId + "] not yet complete.");
+            return;
+        }
+        
+        String formatId;
+        if (format == null) {
+            formatId = srcDocument.getFormat();
+        }
+        else {
+            formatId = format;
+        }
+        
+        Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+        if (writer == null) {
+            LOG.info("[" + srcDocument.getName() + "] No writer found for format ["
+                    + formatId + "] - exporting as WebAnno TSV instead.");
+            writer = WebannoTsv3Writer.class;
+        }
+
+        // Temporary file of annotation document
+        File downloadableFile = projectRepository.exportAnnotationDocument(srcDocument,
+                WebAnnoConst.CURATION_USER, writer, srcDocument.getName(), Mode.CURATION);
+
+        try {
+            // Set mime type
+            String mimeType = URLConnection
+                    .guessContentTypeFromName(downloadableFile.getName());
+            if (mimeType == null) {
+                LOG.info("mimetype is not detectable, will take default");
+                mimeType = "application/octet-stream";
+            }
+
+            // Set response
+            response.setContentType(mimeType);
+            response.setContentType("application/force-download");
+            response.setHeader("Content-Disposition", String
+                    .format("inline; filename=\"" + downloadableFile.getName() + "\""));
+            response.setContentLength((int) downloadableFile.length());
+            InputStream inputStream = new BufferedInputStream(
+                    new FileInputStream(downloadableFile));
+            FileCopyUtils.copy(inputStream, response.getOutputStream());
+        }
+        catch (Exception e) {
+            LOG.info("Exception occured" + e.getMessage());
+        }
+        finally {
+            if (downloadableFile.exists()) {
+                downloadableFile.delete();
+            }
+        }
     }
-    private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user, String aFileType)
+    
+    private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user,
+            String aFileType)
         throws IOException, UIMAException
-    {     
+    {
         // Check if it is a property file
         if (name.equals("source-meta-data.properties")) {
             projectRepository.savePropertiesFile(project, is, name);
@@ -724,8 +919,8 @@ public class RemoteApiController
             // Import source document to the project repository folder
             projectRepository.uploadSourceDocument(is, document);
         }
-
     }
+    
     private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
             String aFileType)
         throws IOException, UIMAException
