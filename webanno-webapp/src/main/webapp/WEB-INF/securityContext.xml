@@ -48,6 +48,8 @@
 			access="permitAll" />
 		<security:intercept-url pattern="/images/**"
             access="permitAll" />
+        <security:intercept-url pattern="/js/css_browser_selector.js"
+            access="permitAll" />
         <security:intercept-url pattern="/static/css/**/*.css"
             access="permitAll" />
         <security:intercept-url pattern="/static/fonts/**/*"
