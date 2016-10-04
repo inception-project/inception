@@ -110,12 +110,14 @@ $(document)
 
 			document.getElementsByTagName('body')[0].onclick = clickFunc;
 			hideBusysign();
-			Wicket.Event.subscribe('/ajax/call/beforeSend', function(
-					attributes, jqXHR, settings) {
-				showBusysign()
-			});
-			Wicket.Event.subscribe('/ajax/call/complete', function(
-					attributes, jqXHR, textStatus) {
-				hideBusysign()
-			});
+			if (typeof Wicket != 'undefined') {
+				Wicket.Event.subscribe('/ajax/call/beforeSend', function(
+						attributes, jqXHR, settings) {
+					showBusysign()
+				});
+				Wicket.Event.subscribe('/ajax/call/complete', function(
+						attributes, jqXHR, textStatus) {
+					hideBusysign()
+				});
+			}
 		});

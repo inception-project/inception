@@ -48,6 +48,12 @@
 			access="permitAll" />
 		<security:intercept-url pattern="/images/**"
             access="permitAll" />
+        <security:intercept-url pattern="/static/css/**/*.css"
+            access="permitAll" />
+        <security:intercept-url pattern="/static/fonts/**/*"
+            access="permitAll" />
+        <security:intercept-url pattern="/static/img/**/*"
+            access="permitAll" />
         <security:intercept-url pattern="/wicket/resource/**/*.css"
             access="permitAll" />
         <security:intercept-url pattern="/wicket/resource/**/*.js"
