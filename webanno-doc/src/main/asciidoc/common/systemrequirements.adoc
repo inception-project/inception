@@ -37,7 +37,7 @@
 | version 8 or higher
 
 | Apache Tomcat
-| version 7 or higher
+| version 6 or higher (Servlet API 2.5)
 
 | MySQL Server
 | version 5 or higher

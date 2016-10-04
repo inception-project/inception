@@ -107,7 +107,7 @@ public class TableDataProvider
     @Override
     public IModel<List<String>> model(List<String> object)
     {
-        return Model.<String>ofList(object);
+        return (IModel<List<String>>) (IModel) Model.<String>ofList(object);
     }
 
     @Override

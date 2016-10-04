@@ -199,7 +199,7 @@ public class AnnotationDetailEditorPanel
         };
 
         annotationFeatureForm.setOutputMarkupId(true);
-        annotationFeatureForm.add(new AjaxFormValidatingBehavior("submit") { 
+        annotationFeatureForm.add(new AjaxFormValidatingBehavior(annotationFeatureForm, "submit") { 
 			private static final long serialVersionUID = -5642108496844056023L;
 
 			@Override 
