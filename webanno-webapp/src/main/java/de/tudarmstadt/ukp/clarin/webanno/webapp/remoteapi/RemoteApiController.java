@@ -693,7 +693,7 @@ public class RemoteApiController
         User annotator = userRepository.get(annotatorName);
         if (annotator == null) {
             response.sendError(HttpStatus.BAD_REQUEST.value(), 
-                    "Annotator user [" + username + "] not found.");
+                    "Annotator user [" + annotatorName + "] not found.");
             return;
         }
         
