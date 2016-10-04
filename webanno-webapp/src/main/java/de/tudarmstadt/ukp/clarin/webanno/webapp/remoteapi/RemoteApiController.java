@@ -306,7 +306,7 @@ public class RemoteApiController
         catch (NoResultException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Project" + aProjectId + "] not found.");
+                    .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
@@ -358,7 +358,7 @@ public class RemoteApiController
         catch (NoResultException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Project" + aProjectId + "] not found.");
+                    .body("Project [" + aProjectId + "] not found.");
         }
         
         // Check for the access
@@ -425,7 +425,7 @@ public class RemoteApiController
         catch (NoResultException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Project" + aProjectId + "] not found.");
+                    .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
@@ -506,7 +506,7 @@ public class RemoteApiController
         catch (NoResultException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Project" + aProjectId + "] not found.");
+                    .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
@@ -578,7 +578,7 @@ public class RemoteApiController
         catch (NoResultException e) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body("Project" + aProjectId + "] not found.");
+                    .body("Project [" + aProjectId + "] not found.");
         }
 
         // Check for the access
