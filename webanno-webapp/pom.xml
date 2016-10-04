@@ -349,7 +349,7 @@
 			<artifactId>spring-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+    </dependencies>
 	<build>
 		<resources>
 			<resource>
@@ -377,67 +377,104 @@
 				</excludes>
 			</resource>
 		</resources>
-		<plugins>
-			<plugin>
-				<groupId>net.sf.alchim</groupId>
-				<artifactId>winstone-maven-plugin</artifactId>
-				<version>1.2</version>
-				<configuration>
-					<filename>webanno-standalone-${project.version}.jar</filename>
-					<cmdLineOptions>
-						<property>
-							<name>ajp13Port</name>
-							<value>-1</value>
-						</property>
-					</cmdLineOptions>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>embed</goal>
-						</goals>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>net.sourceforge.winstone</groupId>
-						<artifactId>winstone</artifactId>
-						<version>0.9.10</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.mortbay.jetty</groupId>
-				<artifactId>maven-jetty-plugin</artifactId>
-				<version>6.1.26</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<argLine>-Xmx1g</argLine>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>aspectj-maven-plugin</artifactId>
-				<version>1.4</version>
-				<configuration>
-					<!-- Required as the plugin does not resolve this by default -->
-					<source>1.6</source>
-					<target>1.6</target>
-					<aspectLibraries>
-						<aspectLibrary>
-							<groupId>org.springframework</groupId>
-							<artifactId>spring-aspects</artifactId>
-						</aspectLibrary>
-					</aspectLibraries>
-				</configuration>
-			</plugin>
-		</plugins>
 	</build>
 	<profiles>
+        <profile>
+            <id>tomcat7-standalone</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.tomcat.maven</groupId>
+                        <artifactId>tomcat7-maven-plugin</artifactId>
+                        <version>2.1</version>
+                        <executions>
+                            <execution>
+                                <id>tomcat-run</id>
+                                <goals>
+                                    <goal>exec-war-only</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <path>/webanno</path>
+                                    <enableNaming>false</enableNaming>
+                                    <finalName>webanno-standalone-${project.version}.jar</finalName>
+                                    <charset>utf-8</charset>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>winstone-standalone</id>
+            <activation>
+                <property>
+                    <name>!disable-winstone-standalone</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>net.sf.alchim</groupId>
+                        <artifactId>winstone-maven-plugin</artifactId>
+                        <version>1.2</version>
+                        <configuration>
+                            <filename>webanno-standalone-${project.version}.jar</filename>
+                            <cmdLineOptions>
+                                <property>
+                                    <name>ajp13Port</name>
+                                    <value>-1</value>
+                                </property>
+                            </cmdLineOptions>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>embed</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>net.sourceforge.winstone</groupId>
+                                <artifactId>winstone</artifactId>
+                                <version>0.9.10</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>maven-jetty-plugin</artifactId>
+                        <version>6.1.26</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>-Xmx1g</argLine>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>aspectj-maven-plugin</artifactId>
+                        <version>1.4</version>
+                        <configuration>
+                            <!-- Required as the plugin does not resolve this by default -->
+                            <source>1.6</source>
+                            <target>1.6</target>
+                            <aspectLibraries>
+                                <aspectLibrary>
+                                    <groupId>org.springframework</groupId>
+                                    <artifactId>spring-aspects</artifactId>
+                                </aspectLibrary>
+                            </aspectLibraries>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>            
+        </profile>
 		<profile>
 			<id>rat-check</id>
 			<activation>
