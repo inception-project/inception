@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanWrapper;
@@ -79,8 +80,8 @@ public class PreferencesUtil
         BeanWrapper wrapper = new BeanWrapperImpl(preference);
         // get annotation preference from file system
         try {
-            for (Entry<Object, Object> entry : aRepositoryService.loadUserSettings(aUsername,
-                    aBModel.getProject()).entrySet()) {
+            Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
+            for (Entry<Object, Object> entry : props.entrySet()) {
                 String property = entry.getKey().toString();
                 int index = property.lastIndexOf(".");
                 String propertyName = property.substring(index + 1);
