@@ -1238,7 +1238,7 @@ public class AnnotationDetailEditorPanel
             // Feature editors that allow multiple values may want to update themselves,
             // e.g. to add another slot.
             item.setOutputMarkupId(true);
-
+            
             final FeatureModel fm = item.getModelObject();
 
             final FeatureEditor frag;
@@ -1502,7 +1502,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId(ID_PREFIX + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aModel.feature.getId());
             
             add(field);
         }
@@ -1539,7 +1539,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId(ID_PREFIX + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aModel.feature.getId());
             
             add(field);
         }
@@ -1644,7 +1644,7 @@ public class AnnotationDetailEditorPanel
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshs of the feature editor panel. This is required to restore the focus.
             field.setOutputMarkupId(true);
-            field.setMarkupId(ID_PREFIX + aItem.getIndex());
+            field.setMarkupId(ID_PREFIX + aModel.feature.getId());
             
             add(field);
             
@@ -1935,7 +1935,7 @@ public class AnnotationDetailEditorPanel
                 // Ensure that markup IDs of feature editor focus components remain constant across
                 // refreshs of the feature editor panel. This is required to restore the focus.
                 newRole.setOutputMarkupId(true);
-                newRole.setMarkupId(ID_PREFIX + aItem.getIndex());
+                newRole.setMarkupId(ID_PREFIX + aModel.feature.getId());
                 
                 content.add(newRole);
                 
