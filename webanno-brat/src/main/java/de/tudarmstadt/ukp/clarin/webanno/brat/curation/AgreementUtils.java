@@ -291,9 +291,9 @@ public class AgreementUtils
                 // Set has to include all users, otherwise we cannot calculate the agreement for
                 // this configuration set.
                 if (!cfgSet.getCasGroupIds().contains(user)) {
+                    incompleteSetsByPosition.add(cfgSet);
                     if (aExcludeIncomplete) {
                         // Record as incomplete
-                        incompleteSetsByPosition.add(cfgSet);
                         continue nextPosition;
                     }
                     else {
@@ -398,9 +398,11 @@ public class AgreementUtils
                 }
                 
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
-                if (aExcludeIncomplete && values[i] == null) {
+                if (values[i] == null) {
                     incompleteSetsByLabel.add(cfgSet);
-                    continue nextPosition;
+                    if (aExcludeIncomplete) {
+                        continue nextPosition;
+                    }
                 }
 
                 i++;

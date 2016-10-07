@@ -420,7 +420,7 @@ public class CasDiff2Test
         assertEquals(4, agreement.getTotalSetCount());
         assertEquals(0, agreement.getIrrelevantSets().size());
         // the following two counts are zero because the incomplete sets are not excluded!
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        assertEquals(2, agreement.getIncompleteSetsByPosition().size());
         assertEquals(0, agreement.getIncompleteSetsByLabel().size());
         assertEquals(3, agreement.getSetsWithDifferences().size());
         assertEquals(4, agreement.getRelevantSetCount());

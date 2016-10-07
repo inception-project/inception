@@ -141,6 +141,8 @@ public class AgreementTable
 
                             boolean noDataRater0 = result.isAllNull(result.getCasGroupIds().get(0));
                             boolean noDataRater1 = result.isAllNull(result.getCasGroupIds().get(1));
+                            int incPos = result.getIncompleteSetsByPosition().size();
+                            int incLabel = result.getIncompleteSetsByLabel().size();
                             
                             String label;
                             if (result.getStudy().getItemCount() == 0) {
@@ -154,6 +156,15 @@ public class AgreementTable
                             }
                             else if (noDataRater1) {
                                 label = "no labels from " + result.getCasGroupIds().get(1);
+                            }
+                            else if (incPos == result.getRelevantSetCount()) {
+                                label = "positions disjunct";
+                            }
+                            else if (incLabel == result.getRelevantSetCount()) {
+                                label = "labels disjunct";
+                            }
+                            else if ((incLabel + incPos) == result.getRelevantSetCount()) {
+                                label = "labels/positions disjunct";
                             }
                             else {
                                 label = String.format("%.2f", result.getAgreement());
