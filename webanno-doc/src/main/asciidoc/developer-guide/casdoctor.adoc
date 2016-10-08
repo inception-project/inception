@@ -63,12 +63,12 @@ and saving inconsistent documents.
 | debug.casDoctor.checks
 | Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
 | _unset_
-| see <<sect_checks>>
+| comma-separated list of <<sect_checks,checks>>
 
 | debug.casDoctor.repairs
 | Repairs to be performed when a CAS is loaded
 | _unset_
-| see <<sect_repairs>>
+| comma-separated list of <<sect_repairs,repairs>>
 |===
 
 [[sect_checks]]
