@@ -134,21 +134,6 @@
 | false
 | true
 
-| debug.casDoctor.checks
-| Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
-| _unset_
-| AllAnnotationsIndexedCheck, LinksReachableThroughChainsCheck, FeatureAttachedSpanAnnotationsTruelyAttachedCheck
-
-| debug.casDoctor.fatal
-| If the extra checks trigger an exception
-| true
-| false
-
-| debug.casDoctor.repairs
-| Repairs to be performed when a CAS is loaded
-| _unset_
-| RemoveDanglingRelationsRepair, RemoveDanglingChainLinksRepair, ReattachFeatureAttachedSpanAnnotationsRepair
-
 | login.message
 | Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
 | _unset_
