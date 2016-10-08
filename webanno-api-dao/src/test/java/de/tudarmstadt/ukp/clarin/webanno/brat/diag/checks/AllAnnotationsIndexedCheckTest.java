@@ -68,7 +68,7 @@ public class AllAnnotationsIndexedCheckTest
         cas.addFsToIndexes(anno3);
         
         List<LogMessage> messages = new ArrayList<>();
-        CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
+        CasDoctor cd = new CasDoctor(AllFeatureStructuresIndexedCheck.class);
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
         
@@ -107,7 +107,7 @@ public class AllAnnotationsIndexedCheckTest
         cas.addFsToIndexes(anno3);
         
         List<LogMessage> messages = new ArrayList<>();
-        CasDoctor cd = new CasDoctor(AllAnnotationsIndexedCheck.class);
+        CasDoctor cd = new CasDoctor(AllFeatureStructuresIndexedCheck.class);
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
         

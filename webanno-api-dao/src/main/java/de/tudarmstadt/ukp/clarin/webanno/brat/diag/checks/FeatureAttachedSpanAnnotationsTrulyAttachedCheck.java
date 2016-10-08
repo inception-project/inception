@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class FeatureAttachedSpanAnnotationsTruelyAttachedCheck
+public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     implements Check
 {
     @Resource(name = "annotationService")

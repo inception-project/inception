@@ -433,6 +433,7 @@ public class SpanAdapter
      */
     private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             Object aValue)
+        throws BratAnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
@@ -449,6 +450,7 @@ public class SpanAdapter
 
     private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, Object aValue, Type aType)
+        throws BratAnnotationException
     {
         AnnotationFS newAnnotation = aCas.createAnnotation(aType, aBegin, aEnd);
         setFeature(newAnnotation, aFeature, aValue);
@@ -456,12 +458,9 @@ public class SpanAdapter
         if (getAttachFeatureName() != null) {
             Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
-            // if the attache type feature structure is not in place
-            // (for custom annotation), create it
-            if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).size() == 0) {
-                AnnotationFS attachTypeAnnotation = aCas.createAnnotation(theType, aBegin, aEnd);
-                aCas.addFsToIndexes(attachTypeAnnotation);
-
+            if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
+                throw new BratAnnotationException("No annotation of type [" + getAttachTypeName()
+                        + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
             }
             CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
                     .setFeatureValue(attachFeature, newAnnotation);
@@ -475,7 +474,8 @@ public class SpanAdapter
      * @throws BratAnnotationException 
      */
     public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot) throws BratAnnotationException
+            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)
+        throws BratAnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = null;

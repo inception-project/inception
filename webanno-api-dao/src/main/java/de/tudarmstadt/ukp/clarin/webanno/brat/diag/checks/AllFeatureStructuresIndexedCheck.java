@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class AllAnnotationsIndexedCheck
+public class AllFeatureStructuresIndexedCheck
     implements Check
 {
     @Override
@@ -39,12 +39,12 @@ public class AllAnnotationsIndexedCheck
         Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
         if (!nonIndexed.isEmpty()) {
-            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed annotations: %d",
+            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed feature structure: %d",
                     nonIndexed.size()));
 
             for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                        "Non-indexed annotation [%s] reachable through [%s]", e.getKey(),
+                        "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
                         e.getValue()));
             }
         }

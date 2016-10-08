@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks.AllAnnotationsIndexedCheck;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -54,7 +54,7 @@ public class RemoveDanglingRelationsRepairTest
         
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(RemoveDanglingRelationsRepair.class,
-                AllAnnotationsIndexedCheck.class);
+                AllFeatureStructuresIndexedCheck.class);
         // A project is not required for this check
         boolean result = cd.analyze(null, jcas.getCas(), messages);
         // A project is not required for this repair
