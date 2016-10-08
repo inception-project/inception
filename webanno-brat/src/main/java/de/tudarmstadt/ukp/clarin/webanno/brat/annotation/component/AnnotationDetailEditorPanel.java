@@ -66,7 +66,11 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -181,11 +185,13 @@ public class AnnotationDetailEditorPanel
     public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
+        
         bModel = aModel.getObject();
+        featureModels = new ArrayList<>();          
+
         annotationFeatureForm = new AnnotationFeatureForm("annotationFeatureForm",
                 aModel.getObject())
         {
-
             private static final long serialVersionUID = 8081614428845920047L;
 
             @Override
@@ -236,8 +242,6 @@ public class AnnotationDetailEditorPanel
         public AnnotationFeatureForm(String id, BratAnnotatorModel aBModel)
         {
             super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
-
-            featureModels = new ArrayList<>();          
 
             add(forwardAnnotationCheck = new CheckBox("forwardAnnotation")
             {
@@ -933,7 +937,7 @@ public class AnnotationDetailEditorPanel
     public  void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
-        aBModel.getSelection().clear();
+        reset(aTarget);
         aTarget.add(annotationFeatureForm);
         onChange(aTarget, aBModel);
     }
@@ -1183,7 +1187,7 @@ public class AnnotationDetailEditorPanel
                 aBModel.setSelectedAnnotationLayer(aBModel.getRememberedSpanLayer());
             }
         }
-        featureModels = new ArrayList<>();
+        clearFeatures(null);
         updateRememberLayer();
     }
 
@@ -2767,6 +2771,8 @@ public class AnnotationDetailEditorPanel
     class StyledComboBox<T>
         extends ComboBox<T>
     {
+        private static final long serialVersionUID = 1L;
+        
         public StyledComboBox(String id, IModel<String> model, List<T> choices)
         {
             super(id, model, choices);            
@@ -2777,8 +2783,37 @@ public class AnnotationDetailEditorPanel
             super(string, choices);
         }
 
-        private static final long serialVersionUID = 1L;
-
+        @Override
+        protected void onInitialize()
+        {
+            super.onInitialize();
+            
+            add(new Behavior() {
+                private static final long serialVersionUID = -5674186692106167407L;
+                
+                @Override
+                public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                {
+                    super.renderHead(aComponent, aResponse);
+                    
+                    // Force-remove KendoDataSource header item if there already is one. This allows
+                    // Wicket to re-declare the datasource for the callback URL of the new instance
+                    // of this feature editor.
+                    // This causes all the choices to be transferred again, but at least tags added
+                    // to open tagsets appear immediately in the dropdown list and constraints
+                    // apply (hopefully).
+                    // Note: this must be done here instead of before the call to super such that
+                    // first the old datasource declarations are removed and then the new one is
+                    // added and remains in the HTML. Here we rely on the fact that the feature
+                    // editors have a fixed markup ID (which we also rely on for restoring focus).
+                    aResponse.render(new PriorityHeaderItem(JavaScriptHeaderItem.forScript(
+                            "$('head script[id=kendo-datasource_" +
+                            StyledComboBox.this.getMarkupId() + "]').remove();", 
+                            null)));
+                }
+            });
+        }
+        
         @Override
         protected IJQueryTemplate newTemplate()
         {
