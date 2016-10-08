@@ -449,7 +449,7 @@ public class CorrectionPage
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
-    						editor.reloadLayer(target);
+    						editor.refresh(target);
                         }
                         catch (UIMAException e) {
                             target.appendJavaScript("alert('" + e.getMessage() + "')");

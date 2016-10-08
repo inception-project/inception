@@ -314,7 +314,7 @@ public class AnnotationPage
 
                         loadDocumentAction(target);
                         try {
-							editor.reloadLayer(target);
+							editor.refresh(target);
 						} catch (BratAnnotationException e) {
 							error("Error loading layers"+e.getMessage());
 						}

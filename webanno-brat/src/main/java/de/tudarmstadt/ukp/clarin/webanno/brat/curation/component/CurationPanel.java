@@ -586,7 +586,7 @@ public class CurationPanel
     public void reloadEditorLayer(AjaxRequestTarget aTarget)
     {
         try {
-			editor.reloadLayer(aTarget);
+			editor.refresh(aTarget);
 		} catch (BratAnnotationException e) {
 			// DO NOTHING
 		}

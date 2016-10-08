@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
-import java.io.IOException;
-
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASRuntimeException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -28,7 +26,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -41,6 +38,7 @@ public class DeleteOrReplaceAnnotationModalPanel
     extends Panel
 {
     private static final long serialVersionUID = 9059154802785333743L;
+    private final Log log = LogFactory.getLog(getClass());
 
     public DeleteOrReplaceAnnotationModalPanel(String aId, BratAnnotatorModel aBModel,
             ModalWindow aModalWindow, AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer,
@@ -68,7 +66,6 @@ public class DeleteOrReplaceAnnotationModalPanel
                 @Override
                 public void onClick(AjaxRequestTarget aTarget)
                 {
-
                     try {
                         if (aIsReplace) {
                             aEditor.actionDelete(aTarget, aBModel);
@@ -78,7 +75,7 @@ public class DeleteOrReplaceAnnotationModalPanel
                             aBModel.setDefaultAnnotationLayer(aLayer);
                             aEditor.getSelectedAnnotationLayer()
                                     .setDefaultModelObject(aLayer.getUiName());
-                            aEditor.reset(aTarget);
+                            aEditor.refresh(aTarget);
                             aEditor.actionAnnotate(aTarget, aBModel, false);
                             aTarget.add(aEditor.getAnnotationFeatureForm());
                         }
@@ -86,12 +83,11 @@ public class DeleteOrReplaceAnnotationModalPanel
                             aEditor.actionDelete(aTarget, aBModel);
                         }
                     }
-                    catch (CASRuntimeException | UIMAException | ClassNotFoundException
-                            | IOException | BratAnnotationException e) {
-                        error(e.getMessage() + "')");
+                    catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                        error(e.getMessage());
                     }
                     modalWindow.close(aTarget);
-
                 }
             });
 

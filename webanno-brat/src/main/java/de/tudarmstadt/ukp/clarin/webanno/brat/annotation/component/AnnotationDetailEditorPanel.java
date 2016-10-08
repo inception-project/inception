@@ -738,7 +738,7 @@ public class AnnotationDetailEditorPanel
 		forwardAnnotationText.setModelObject(null);
 		onChange(aTarget, aBModel);
 		if (aBModel.isForwardAnnotation() && featureModels.get(0).value != null) {
-			reload(aTarget);
+			aTarget.add(annotationFeatureForm);
 		}
 	}
     
@@ -937,6 +937,7 @@ public class AnnotationDetailEditorPanel
         aTarget.add(annotationFeatureForm);
         onChange(aTarget, aBModel);
     }
+    
     public JCas getCas(BratAnnotatorModel aBModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
@@ -994,6 +995,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
         aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
+    
     @SuppressWarnings("unchecked")
     public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final BratAnnotatorModel aBModel,
             int aAnnotationId)
@@ -1024,127 +1026,127 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void setLayerAndFeatureModels(AjaxRequestTarget aTarget, JCas aJCas,
-            final BratAnnotatorModel aBModel) throws BratAnnotationException
+    private void arcSelected(AjaxRequestTarget aTarget, JCas aJCas) 
+        throws BratAnnotationException
     {
-        if (aBModel.getSelection().isRelationAnno()) {
-            // FIXME REC I think this whole section which meddles around with the selected annotation
-            // layer should be moved out of there to the place where we originally set the annotation
-            // layer...!
-            long layerId = TypeUtil.getLayerId(aBModel.getSelection().getOriginType());
-            AnnotationLayer spanLayer = annotationService.getLayer(layerId);
+        // FIXME REC I think this whole section which meddles around with the selected annotation
+        // layer should be moved out of there to the place where we originally set the annotation
+        // layer...!
+        long layerId = TypeUtil.getLayerId(bModel.getSelection().getOriginType());
+        AnnotationLayer spanLayer = annotationService.getLayer(layerId);
+        if (
+                bModel.getPreferences().isRememberLayer() && 
+                bModel.getSelection().isAnnotate() && 
+                !spanLayer.equals(bModel.getDefaultAnnotationLayer())) 
+        {
+            throw new BratAnnotationException("No relation annotation allowed on the "
+                    + "selected span layer");
+        }
+
+        // If we are creating a relation annotation, we have to set the current layer depending
+        // on the type of relation that is permitted between the source/target span. This is
+        // necessary because we have no separate UI control to set the relation annotation type.
+        // It is possible because currently only a single relation layer is allowed to attach to
+        // any given span layer.
+        if (bModel.getSelection().isAnnotate()) 
+        {
+            // If we drag an arc between POS annotations, then the relation must be a dependency
+            // relation.
+            // FIXME - Actually this case should be covered by the last case - the database lookup!
             if (
-                    aBModel.getPreferences().isRememberLayer() && 
-                    aBModel.getSelection().isAnnotate() && 
-                    !spanLayer.equals(aBModel.getDefaultAnnotationLayer())) 
+                    spanLayer.isBuiltIn() && 
+                    spanLayer.getName().equals(POS.class.getName())) 
             {
-                throw new BratAnnotationException("No relation annotation allowed on the "
-                        + "selected span layer");
-            }
-
-            // If we are creating a relation annotation, we have to set the current layer depending
-            // on the type of relation that is permitted between the source/target span. This is
-            // necessary because we have no separate UI control to set the relation annotation type.
-            // It is possible because currently only a single relation layer is allowed to attach to
-            // any given span layer.
-            if (aBModel.getSelection().isAnnotate()) 
-            {
-                // If we drag an arc between POS annotations, then the relation must be a dependency
-                // relation.
-                // FIXME - Actually this case should be covered by the last case - the database lookup!
-                if (
-                        spanLayer.isBuiltIn() && 
-                        spanLayer.getName().equals(POS.class.getName())) 
-                {
-                    AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
-                            aBModel.getProject());
-                    if (aBModel.getAnnotationLayers().contains(depLayer)) {
-                        aBModel.setSelectedAnnotationLayer(depLayer);
-                    }
-                    else {
-                        aBModel.setSelectedAnnotationLayer(null);
-                    }
+                AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
+                        bModel.getProject());
+                if (bModel.getAnnotationLayers().contains(depLayer)) {
+                    bModel.setSelectedAnnotationLayer(depLayer);
                 }
-                // If we drag an arc in a chain layer, then the arc is of the same layer as the span
-                // Chain layers consist of arcs and spans
-                else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                    // one layer both for the span and arc annotation
-                    aBModel.setSelectedAnnotationLayer(spanLayer);
-                }
-                // Otherwise, look up the possible relation layer(s) in the database.
                 else {
-                    for (AnnotationLayer layer : annotationService.listAnnotationLayer(aBModel
-                            .getProject())) {
-                        if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
-                            if (aBModel.getAnnotationLayers().contains(layer)) {
-                                aBModel.setSelectedAnnotationLayer(layer);
-                            }
-                            else {
-                                aBModel.setSelectedAnnotationLayer(null);
-                            }
-                            break;
+                    bModel.setSelectedAnnotationLayer(null);
+                }
+            }
+            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
+            // Chain layers consist of arcs and spans
+            else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                // one layer both for the span and arc annotation
+                bModel.setSelectedAnnotationLayer(spanLayer);
+            }
+            // Otherwise, look up the possible relation layer(s) in the database.
+            else {
+                for (AnnotationLayer layer : annotationService.listAnnotationLayer(bModel
+                        .getProject())) {
+                    if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
+                        if (bModel.getAnnotationLayers().contains(layer)) {
+                            bModel.setSelectedAnnotationLayer(layer);
                         }
+                        else {
+                            bModel.setSelectedAnnotationLayer(null);
+                        }
+                        break;
                     }
                 }
             }
+        }
 
-            // Populate feature value from existing annotation
-            if (aBModel.getSelection().getAnnotation().isSet()) {
-                AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
-                        .getId());
+        // Populate feature value from existing annotation
+        if (bModel.getSelection().getAnnotation().isSet()) {
+            AnnotationFS annoFs = selectByAddr(aJCas, bModel.getSelection().getAnnotation()
+                    .getId());
 
-                // Try obtaining the layer from the feature structure
-                AnnotationLayer layer;
-                try {
-                    layer = TypeUtil.getLayer(annotationService, bModel.getProject(), annoFs);
-                }
-                catch (NoResultException e) {
-                    reset(aTarget);
-                    throw new IllegalStateException("Unknown layer [" + annoFs.getType().getName() + "]", e);
-                }
-                
-                populateFeatures(layer, annoFs, null);
+            // Try obtaining the layer from the feature structure
+            AnnotationLayer layer;
+            try {
+                layer = TypeUtil.getLayer(annotationService, bModel.getProject(), annoFs);
             }
-            // Avoid creation of arcs on locked layers
-            else if (aBModel.getSelectedAnnotationLayer() != null
-                    && aBModel.getSelectedAnnotationLayer().isReadonly()) {
-                aBModel.setSelectedAnnotationLayer(new AnnotationLayer());
-            }
-            else {
-                populateFeatures(bModel.getSelectedAnnotationLayer(), null, 
-                        bModel.getRememberedArcFeatures());
+            catch (NoResultException e) {
+                clearFeatures(aTarget);
+                throw new IllegalStateException("Unknown layer [" + annoFs.getType().getName() + "]", e);
             }
             
-            aBModel.setDefaultAnnotationLayer(spanLayer);
+            populateFeatures(layer, annoFs, null);
         }
-        else { 
-            // Selecting an existing span annotation
-            if (aBModel.getSelection().getAnnotation().isSet()) {
-                AnnotationFS annoFs = selectByAddr(aJCas, aBModel.getSelection().getAnnotation()
-                        .getId());
-                // Try obtaining the layer from the feature structure
-                AnnotationLayer layer;
-                try {
-                    layer = TypeUtil.getLayer(annotationService, bModel.getProject(), annoFs);
-                }
-                catch (NoResultException e) {
-                    reset(aTarget);
-                    throw new IllegalStateException("Unknown layer [" + annoFs.getType().getName() + "]", e);
-                }
+        // Avoid creation of arcs on locked layers
+        else if (bModel.getSelectedAnnotationLayer() != null
+                && bModel.getSelectedAnnotationLayer().isReadonly()) {
+            bModel.setSelectedAnnotationLayer(new AnnotationLayer());
+        }
+        else {
+            populateFeatures(bModel.getSelectedAnnotationLayer(), null, 
+                    bModel.getRememberedArcFeatures());
+        }
+        
+        bModel.setDefaultAnnotationLayer(spanLayer);
+    }
+    
+    private void spanSelected(AjaxRequestTarget aTarget, JCas aJCas)
+    {
+        // Selecting an existing span annotation
+        if (bModel.getSelection().getAnnotation().isSet()) {
+            AnnotationFS annoFs = selectByAddr(aJCas, bModel.getSelection().getAnnotation()
+                    .getId());
+            // Try obtaining the layer from the feature structure
+            AnnotationLayer layer;
+            try {
+                layer = TypeUtil.getLayer(annotationService, bModel.getProject(), annoFs);
+            }
+            catch (NoResultException e) {
+                clearFeatures(aTarget);
+                throw new IllegalStateException("Unknown layer [" + annoFs.getType().getName() + "]", e);
+            }
 
-                // If remember layer is off, then the current layer follows the selected annotations
-                if (!aBModel.getPreferences().isRememberLayer()) {
-                    bModel.setSelectedAnnotationLayer(layer);
-                }
-                
-                // populate feature value
-                populateFeatures(layer, annoFs, null);
+            // If remember layer is off, then the current layer follows the selected annotations
+            if (!bModel.getPreferences().isRememberLayer()) {
+                bModel.setSelectedAnnotationLayer(layer);
             }
-            else {
-                populateFeatures(bModel.getSelectedAnnotationLayer(), null, 
-                        bModel.getRememberedSpanFeatures());
-            }
+            
+            // populate feature value
+            populateFeatures(layer, annoFs, null);
         }
+        else {
+            populateFeatures(bModel.getSelectedAnnotationLayer(), null, 
+                    bModel.getRememberedSpanFeatures());
+        }        
     }
 
     protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
@@ -1157,17 +1159,17 @@ public class AnnotationDetailEditorPanel
         // Overriden in BratAnnotator
     }
 
-    public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel)
+    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel)
     {
         // Overriden in AutomationPage
     }
 
-    public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, AnnotationFS aFs)
+    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, AnnotationFS aFs)
     {
         // Overriden in AutomationPage
     }
 
-    public void setAnnotationLayers(BratAnnotatorModel aBModel)
+    public void refreshAnnotationLayers(BratAnnotatorModel aBModel)
     {
         updateLayersDropdown(aBModel);
         if (annotationLayers.size() == 0) {
@@ -2255,11 +2257,19 @@ public class AnnotationDetailEditorPanel
         }
     };
 
+    public void clearFeatures(AjaxRequestTarget aTarget)
+    {
+        featureModels = new ArrayList<>();
+        if (aTarget != null) {
+            aTarget.add(annotationFeatureForm);
+        }
+    }
+    
     private void populateFeatures(AnnotationLayer aLayer, FeatureStructure aFS, 
             Map<AnnotationFeature, Serializable> aRemembered)
     {
-        featureModels = new ArrayList<>();
-
+        clearFeatures(null);
+        
         // Populate from feature structure
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
             if (!feature.isEnabled()) {
@@ -2409,8 +2419,7 @@ public class AnnotationDetailEditorPanel
                         bModel.setSelectedAnnotationLayer(getModelObject());
                         selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
                         aTarget.add(selectedAnnotationLayer);
-                        reset(aTarget);
-                        aTarget.add(annotationFeatureForm);
+                        clearFeatures(aTarget);
                     }
                 }
             });
@@ -2565,35 +2574,40 @@ public class AnnotationDetailEditorPanel
 		return aBindTags.get(aBindTags.keySet().iterator().next());
 	}
 
-    public void reload(AjaxRequestTarget aTarget)
-    {
-        aTarget.add(annotationFeatureForm);
-
-    }
-
     public void reset(AjaxRequestTarget aTarget)
     {
         bModel.getSelection().clear();
         bModel.getSelection().setBegin(0);
         bModel.getSelection().setEnd(0);
-        featureModels = new ArrayList<>();
-        aTarget.add(annotationFeatureForm);
+        clearFeatures(aTarget);
     }
 
-    public void reloadLayer(AjaxRequestTarget aTarget) throws BratAnnotationException
+    public void refresh(AjaxRequestTarget aTarget) 
+        throws BratAnnotationException
     {
         try {
             if (!bModel.getSelection().isRelationAnno()) {
                 updateLayersDropdown(bModel);
             }
             
-            setLayerAndFeatureModels(aTarget, getCas(bModel), bModel);
+            JCas aJCas = getCas(bModel);
+            
+            if (bModel.getSelection().isRelationAnno()) {
+                arcSelected(aTarget, aJCas);
+            }
+            else { 
+                spanSelected(aTarget, aJCas);
+            }
 
             updateRememberLayer();
+            
             aTarget.add(annotationFeatureForm);
         }
-        catch (UIMAException | ClassNotFoundException | IOException e) {
-            error(e.getMessage());
+        catch (BratAnnotationException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new BratAnnotationException(e);
         }
     }
 
@@ -2603,12 +2617,15 @@ public class AnnotationDetailEditorPanel
 			if (bModel.getDefaultAnnotationLayer() == null) {
 				bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
 			}
-		} else if (!bModel.getSelection().isRelationAnno()) {
+		} 
+		else if (!bModel.getSelection().isRelationAnno()) {
 			bModel.setDefaultAnnotationLayer(bModel.getSelectedAnnotationLayer());
 		}
+		
 		// if no layer is selected in Settings
 		if (bModel.getSelectedAnnotationLayer() != null) {
-			selectedAnnotationLayer.setDefaultModelObject(bModel.getSelectedAnnotationLayer().getUiName());
+			selectedAnnotationLayer.setDefaultModelObject(
+			        bModel.getSelectedAnnotationLayer().getUiName());
 		} 
 	}
 

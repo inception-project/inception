@@ -299,7 +299,7 @@ public class BratAnnotator
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             bratSetHighlight(aTarget, selection.getAnnotation());
-                            editor.reloadLayer(aTarget);
+                            editor.refresh(aTarget);
                             
                             if (selection.getAnnotation().isNotSet()) {
                                 selection.setAnnotate(true);
@@ -331,7 +331,7 @@ public class BratAnnotator
                         
                         bratSetHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
-                        editor.reloadLayer(aTarget);
+                        editor.refresh(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                             editor.actionAnnotate(aTarget, getModelObject(), false);
                         }
@@ -393,7 +393,7 @@ public class BratAnnotator
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                    editor.setAnnotationLayers(getModelObject());
+                    editor.refreshAnnotationLayers(getModelObject());
                 }
             }
         };

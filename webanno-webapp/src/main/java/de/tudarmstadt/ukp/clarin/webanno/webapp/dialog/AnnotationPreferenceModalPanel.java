@@ -193,7 +193,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
-                        aEditor.reloadLayer(aTarget);
+                        aEditor.refresh(aTarget);
                     }
                     catch (FileNotFoundException e) {
                         error("Preference file not found");

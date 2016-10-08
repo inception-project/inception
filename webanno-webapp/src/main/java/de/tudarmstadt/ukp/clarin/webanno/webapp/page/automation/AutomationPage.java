@@ -572,7 +572,7 @@ public class AutomationPage
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
-    						editor.reloadLayer(target);
+    						editor.refresh(target);
     		
                         }
                         catch (UIMAException e) {
