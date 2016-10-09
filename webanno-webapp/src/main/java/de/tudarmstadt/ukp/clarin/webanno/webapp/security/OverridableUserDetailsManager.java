@@ -27,7 +27,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 
 public class OverridableUserDetailsManager
     extends JdbcUserDetailsManager

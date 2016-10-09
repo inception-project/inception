@@ -120,6 +120,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -849,9 +850,21 @@ public class RepositoryServiceDbData
                     try {
                         casDoctor.analyze(aDocument.getProject(), jcas.getCas());
                     }
+                    catch (CasDoctorException e) {
+                        StringBuilder detailMsg = new StringBuilder();
+                        detailMsg.append("CAS Doctor found problems for user ["
+                                + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                                + aDocument.getId() + ") in project["
+                                + aDocument.getProject().getName() + "] ("
+                                + aDocument.getProject().getId() + ")\n");
+                        e.getDetails().forEach(m -> detailMsg.append(
+                                String.format("- [%s] %s%n", m.level, m.message)));
+                        
+                        throw new DataRetrievalFailureException(detailMsg.toString());
+                    }
                     catch (Exception e) {
                         throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                                + INITIAL_CAS_PSEUDO_USER + "] for source document [" + aDocument.getName() + "] ("
+                                + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
                                 + aDocument.getId() + ") in project["
                                 + aDocument.getProject().getName() + "] ("
                                 + aDocument.getProject().getId() + ")", e);
@@ -1729,10 +1742,22 @@ public class RepositoryServiceDbData
         try {
             casDoctor.analyze(aDocument.getProject(), aJcas.getCas());
         }
+        catch (CasDoctorException e) {
+            StringBuilder detailMsg = new StringBuilder();
+            detailMsg.append("CAS Doctor found problems for user ["
+                    + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") in project["
+                    + aDocument.getProject().getName() + "] ("
+                    + aDocument.getProject().getId() + ")\n");
+            e.getDetails().forEach(m -> detailMsg.append(
+                    String.format("- [%s] %s%n", m.level, m.message)));
+            
+            throw new DataRetrievalFailureException(detailMsg.toString());
+        }
         catch (Exception e) {
             throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                    + aUserName + "] for source document [" + aDocument.getName() + "] ("
-                    + aDocument.getId() + ") in project["
+                    + aUserName + "] in source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") in project ["
                     + aDocument.getProject().getName() + "] ("
                     + aDocument.getProject().getId() + ")", e);
         }

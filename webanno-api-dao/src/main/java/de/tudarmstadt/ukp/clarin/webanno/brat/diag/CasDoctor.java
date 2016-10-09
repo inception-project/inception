@@ -17,20 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.diag;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
+import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.brat.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -147,6 +151,7 @@ public class CasDoctor
     }
     
     public boolean analyze(Project aProject, CAS aCas)
+        throws CasDoctorException
     {
         List<LogMessage> messages = new ArrayList<>();
         boolean result = analyze(aProject, aCas, messages);
@@ -157,12 +162,14 @@ public class CasDoctor
     }
 
     public boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages)
+        throws CasDoctorException
     {
         return analyze(aProject, aCas, aMessages, isFatalChecks());
     }
 
-    private boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages,
+    public boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages,
             boolean aFatalChecks)
+        throws CasDoctorException
     {
         long tStart = System.currentTimeMillis();
         
@@ -185,9 +192,12 @@ public class CasDoctor
             }
         }
 
-        if (!ok && aFatalChecks) {
+        if (!ok) {
             aMessages.forEach(s -> log.error(s));
-            throw new IllegalStateException("CasDoctor has detected problems and checks are fatal.");
+        }
+        
+        if (!ok && aFatalChecks) {
+            throw new CasDoctorException(aMessages);
         }
 
         log.info("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
@@ -209,6 +219,16 @@ public class CasDoctor
     @Override
     public void afterPropertiesSet()
     {
+        // If WebAnno is in under development, automatically enable all checks.
+        String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
+        if ("unknown".equals(version) || version.contains("SNAPSHOT")) {
+            Reflections reflections = new Reflections(Check.class.getPackage().getName());
+            checkClasses.addAll(reflections.getSubTypesOf(Check.class).stream()
+                    .filter(c -> !Modifier.isAbstract(c.getModifiers()))
+                    .collect(Collectors.toList()));
+            log.info("Detected SNAPSHOT version - automatically enabled all checks");
+        }
+        
         if (StringUtils.isNotBlank(activeChecks)) {
             for (String check : activeChecks.split(",")) {
                 try {
@@ -221,6 +241,10 @@ public class CasDoctor
             }
         }
         
+        for (Class<? extends Check> c : checkClasses) {
+            log.info("Check activated: " + c.getSimpleName());
+        }
+        
         if (StringUtils.isNotBlank(activeRepairs)) {
             for (String check : activeRepairs.split(",")) {
                 try {
@@ -231,6 +255,10 @@ public class CasDoctor
                     throw new IllegalStateException(e);
                 }
             }
+        }
+        
+        for (Class<? extends Repair> c : repairClasses) {
+            log.info("Repair activated: " + c.getSimpleName());
         }
     }
 

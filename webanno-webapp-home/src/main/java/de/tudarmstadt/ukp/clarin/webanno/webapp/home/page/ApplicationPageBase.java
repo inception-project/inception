@@ -54,6 +54,7 @@ import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.security.LogoutPanel;
 
 public abstract class ApplicationPageBase

@@ -33,9 +33,9 @@ import org.apache.wicket.settings.IExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
