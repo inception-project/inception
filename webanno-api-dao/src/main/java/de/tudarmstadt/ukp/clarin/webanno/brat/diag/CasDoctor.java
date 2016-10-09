@@ -58,6 +58,8 @@ public class CasDoctor
     private List<Class<? extends Check>> checkClasses = new ArrayList<>();
     private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
 
+    private boolean disableAutoScan = false;
+    
     public CasDoctor()
     {
         // Bean operation
@@ -95,6 +97,10 @@ public class CasDoctor
         fatalChecks = false;
         
         activeRepairs = repairs.toString();
+        
+        // This constructor is only used for tests. In tests we want to control which checks are
+        // used and do not want to auto-scan.
+        disableAutoScan = true;
         
         afterPropertiesSet();
     }
@@ -221,7 +227,7 @@ public class CasDoctor
     {
         // If WebAnno is in under development, automatically enable all checks.
         String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
-        if ("unknown".equals(version) || version.contains("SNAPSHOT")) {
+        if (!disableAutoScan && ("unknown".equals(version) || version.contains("SNAPSHOT"))) {
             Reflections reflections = new Reflections(Check.class.getPackage().getName());
             checkClasses.addAll(reflections.getSubTypesOf(Check.class).stream()
                     .filter(c -> !Modifier.isAbstract(c.getModifiers()))
