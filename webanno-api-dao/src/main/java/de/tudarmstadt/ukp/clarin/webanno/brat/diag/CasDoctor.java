@@ -227,7 +227,11 @@ public class CasDoctor
     {
         // If WebAnno is in under development, automatically enable all checks.
         String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
-        if (!disableAutoScan && ("unknown".equals(version) || version.contains("SNAPSHOT"))) {
+        if (!disableAutoScan && (
+                "unknown".equals(version) || 
+                version.contains("-SNAPSHOT") || 
+                version.contains("-beta-"))
+        ) {
             Reflections reflections = new Reflections(Check.class.getPackage().getName());
             checkClasses.addAll(reflections.getSubTypesOf(Check.class).stream()
                     .filter(c -> !Modifier.isAbstract(c.getModifiers()))
