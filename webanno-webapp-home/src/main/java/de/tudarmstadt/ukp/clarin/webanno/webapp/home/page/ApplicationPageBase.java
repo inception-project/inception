@@ -200,7 +200,6 @@ public abstract class ApplicationPageBase
     protected void onConfigure()
     {
         super.onConfigure();
-        logoutPanel.setVisible(AuthenticatedWebSession.get().isSignedIn());
         
         // Do not cache pages in development mode - allows us to make changes to the HMTL without
         // having to reload the application
