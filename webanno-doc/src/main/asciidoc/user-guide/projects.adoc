@@ -186,7 +186,8 @@ image::layer1.jpg[align="center"]
 | Whether the layer is enabled or not. Layers can currently not be deleted, but they can be disabled.
 |====
 
-NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because WebAnno derives an internal UIMA type name from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated.
+NOTE: When a layer is first created, only ASCII characters are allowed for the layer name because WebAnno derives an internal UIMA type name from the initial layer name. After the layer has been created, the name can be changed arbitrarily. The internal UIMA type name will not be updated. The internal UIMA name is
+e.g. used when exporting data or in constraint rules.
 
 image::layer2.jpg[align="center"]
 
@@ -199,6 +200,9 @@ In the frame *Technical Properties*, the user may select the type of annation th
 [cols="1v,2", options="header"]
 |====
 | Property | Description
+
+| Internal name
+| Internal UIMA type name
 
 | Type
 | The type of the layer (obligatory, see below)
@@ -275,10 +279,16 @@ image::layer3.jpg[align="center"]
 
 In this section, features and their properties can be configured. 
 
+NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because WebAnno derives an internal UIMA name from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
+e.g. used when exporting data or in constraint rules.
+
 .Feature properties
 [cols="1v,2", options="header"]
 |====
 | Property | Description
+
+| Internal name
+| Internal UIMA feature name
 
 | Type
 | The type of the feature (obligatory, see below)
