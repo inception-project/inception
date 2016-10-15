@@ -79,6 +79,7 @@
 						<legend>Technical Properties (<a target="_blank" wicket:message="href:properties.help.link"><wicket:message key="help.label"/></a>)</legend>
 						<table class="hfill">
                             <tr>
+                                <td style="color: gray; font-style: italic;">Internal name:</td>
 								<td colspan="2"><span class="hfill"
 									style="color: gray; font-style: italic;" wicket:id="name"></span></td>
 							</tr>
@@ -151,13 +152,18 @@
 					<fieldset class="ui-widget-content ui-corner-all labels-left">
 						<legend>Feature details (<a target="_blank" wicket:message="href:features.help.link"><wicket:message key="help.label"/></a>)</legend>
 						<table class="hfill">
+                            <tr>
+                                <td style="color: gray; font-style: italic;">Internal name:</td>
+                                <td><span class="hfill"
+                                    style="color: gray; font-style: italic;" wicket:id="name"></span></td>
+                            </tr>
+                            <tr>
+                                <td style="color:red" >Feature name:</td>
+                                <td><input class="hfill" type="text" wicket:id="uiName"></input></td>
+                            </tr>
 							<tr>
 								<td style="color:red" >Type:</td>
 								<td><select wicket:id="type"></select></td>
-							</tr>
-							<tr>
-								<td style="color:red" >Feature name:</td>
-								<td><input class="hfill" type="text" wicket:id="uiName"></input></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;">Description:</td>

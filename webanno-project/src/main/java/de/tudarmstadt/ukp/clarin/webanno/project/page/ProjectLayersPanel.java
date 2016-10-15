@@ -974,6 +974,17 @@ public class ProjectLayersPanel
             super(id, new CompoundPropertyModel<AnnotationFeature>(
                     new EntityModel<AnnotationFeature>(new AnnotationFeature())));
 
+            add(new Label("name")
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setVisible(StringUtils.isNotBlank(FeatureDetailForm.this.getModelObject()
+                            .getName()));
+                };
+            });
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
