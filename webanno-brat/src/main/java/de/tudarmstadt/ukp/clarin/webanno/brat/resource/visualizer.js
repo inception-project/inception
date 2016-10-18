@@ -419,7 +419,7 @@ var Visualizer = (function($, window, undefined) {
       var highlightGroup;
       var collapseArcs = false;
       var collapseArcSpace = false;
-
+      
       // var commentPrioLevels = ['Unconfirmed', 'Incomplete', 'Warning', 'Error', 'AnnotatorNotes'];
       // XXX Might need to be tweaked - inserted diff levels
       var commentPrioLevels = [
@@ -1313,72 +1313,103 @@ var Visualizer = (function($, window, undefined) {
               if (rtlmode) {
             	  // This rendering is much slower than the "old" version that brat uses, but it
             	  // is more reliable in RTL mode.
-	              var charOrder = [];
-	              var charWidths = [];
-	              var charDirection = [];
-	              // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
-	              // characters do not count. Using text.getNumberOfChars() instead.
-	              for (var idx = 0; idx < text.getNumberOfChars(); idx++) {
-	            	  var cw = text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x;
-	            	  charOrder.push(idx);
-	            	  charWidths.push(Math.abs(cw));
-	            	  charDirection.push(isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr");
-//	            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-//	            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
-//	            	  		" end:" + text.getEndPositionOfChar(idx).x + 
-//	            	  		" width:" + Math.abs(cw) + 
-//	            	  		" dir:" + charDirection[charDirection.length-1]);
-	              }
-	              
-	              // Re-order widths if necessary
-	              if (charWidths.length > 1) {
-	            	  var buf = charWidths.slice();
-	            	  var idx = 0;
-	            	  var blockBegin = idx;
-	            	  var blockEnd = idx;
-	            	  
-	            	  // Figure out next block
-	            	  while (blockEnd < charWidths.length) {
-		            	  while (charDirection[blockBegin] == charDirection[blockEnd]) {
-		            		  blockEnd++;
-		            	  }
-		            	  
-		            	  if (charDirection[blockBegin] == (rtlmode ? "ltr" : "rtl")) {
-		            		  charOrder = charOrder.slice(0,blockBegin)
-		            		  	.concat(charOrder.slice(blockBegin, blockEnd).reverse())
-		            		  	.concat(charOrder.slice(blockEnd));
-		            		  charWidths = charWidths.slice(0,blockBegin)
-		            		  	.concat(charWidths.slice(blockBegin, blockEnd).reverse())
-		            		  	.concat(charWidths.slice(blockEnd));
-		            	  }
-		            	  
-		            	  blockBegin = blockEnd;
-	            	  }
-	              }
-//	          	  console.log("order: " + charOrder);
-	              
-	              // The actual character width on screen is not necessarily the width that can be
-	              // obtained by substrating start from end position. In particular Arabic connects
-	              // characters quite a bit such that the width on screen may be less. Here we
-	              // try to compensate for this using a correction factor.
-	              var widthsSum = 0;
-	              for (var idx = 0; idx < charWidths.length; idx++) {
-	            	  widthsSum += charWidths[idx];
-	              }
-	              var corrFactor = text.getComputedTextLength() / widthsSum;
-//	          	  console.log("width sums: " + widthsSum);
-//	          	  console.log("computed length: " + text.getComputedTextLength());
-//	          	  console.log("corrFactor: " + corrFactor);
+		          var charDirection = null;
+		          var charAttrs = null;
+		          var corrFactor = 1;
 
+            	  if ('rtlsizes' in fragment.chunk) {
+            		  // Use cached metrics
+            		  charDirection = fragment.chunk.rtlsizes.charDirection;
+    				  charAttrs = fragment.chunk.rtlsizes.charAttrs;
+    				  corrFactor = fragment.chunk.rtlsizes.corrFactor;
+            	  }
+            	  else {
+            		  // Calculate metrics
+            		  var start = new Date();
+            	  
+            		  charDirection = [];
+    				  charAttrs = [];
+            		  
+			          // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
+			          // characters do not count. Using text.getNumberOfChars() instead.
+            		  //var step1Start = new Date();
+		              for (var idx = 0; idx < text.getNumberOfChars(); idx++) {
+		            	  var cw = text.getEndPositionOfChar(idx).x-text.getStartPositionOfChar(idx).x;
+		            	  var dir = isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr";
+		            	  charAttrs.push({ 
+	            			  order: idx, 
+	            			  width: Math.abs(cw), 
+	            			  direction: dir
+		            	  });
+		            	  charDirection.push(dir);
+//		            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+//		            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
+//		            	  		" end:" + text.getEndPositionOfChar(idx).x + 
+//		            	  		" width:" + Math.abs(cw) + 
+//		            	  		" dir:" + charDirection[charDirection.length-1]);
+		              }
+		          	  //console.log("Collected widths in " + (new Date() - step1Start));
+		              
+		              // Re-order widths if necessary
+            		  //var step2Start = new Date();
+		              if (charAttrs.length > 1) {
+		            	  var idx = 0;
+		            	  var blockBegin = idx;
+		            	  var blockEnd = idx;
+		            	  
+		            	  // Figure out next block
+		            	  while (blockEnd < charAttrs.length) {
+			            	  while (charDirection[blockBegin] == charDirection[blockEnd]) {
+			            		  blockEnd++;
+			            	  }
+			            	  
+			            	  if (charDirection[blockBegin] == (rtlmode ? "ltr" : "rtl")) {
+			            		  charAttrs = charAttrs.slice(0,blockBegin)
+			            		  	.concat(charAttrs.slice(blockBegin, blockEnd).reverse())
+			            		  	.concat(charAttrs.slice(blockEnd));
+			            	  }
+			            	  
+			            	  blockBegin = blockEnd;
+		            	  }
+		              }
+		//	          console.log("order: " + charOrder);
+		          	  //console.log("Established character order in " + (new Date() - step2Start));
+			              
+            		  //var step3Start = new Date();
+		              // The actual character width on screen is not necessarily the width that can be
+			          // obtained by subtracting start from end position. In particular Arabic connects
+		              // characters quite a bit such that the width on screen may be less. Here we
+		              // try to compensate for this using a correction factor.
+		              var widthsSum = 0;
+		              for (var idx = 0; idx < charAttrs.length; idx++) {
+		            	  widthsSum += charAttrs[idx].width;
+			          }
+		              corrFactor = text.getComputedTextLength() / widthsSum;
+		          	  //console.log("Final calculations in " + (new Date() - step3Start));
+		              
+		//	          	  console.log("width sums: " + widthsSum);
+		//	          	  console.log("computed length: " + text.getComputedTextLength());
+		//	          	  console.log("corrFactor: " + corrFactor);
+		              
+            		  fragment.chunk.rtlsizes = {
+        				  charDirection: charDirection,
+        				  charAttrs: charAttrs,
+        				  corrFactor: corrFactor
+            		  };
+    				  
+		          	  console.log("Completed calculating static RTL metrics in " + (new Date() - 
+		          			  start) + " for " + text.getNumberOfChars() + " characters.");
+				  }
+		              
 	              //startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
 	              var startPos = 0;
 //	           	  console.log("startPos[initial]: " + startPos);
-	              for (var i = 0; charOrder[i] != firstChar && i < charOrder.length; i++) {
-	            	  startPos += charWidths[i];
+	              for (var i = 0; charAttrs[i].order != firstChar && i < charAttrs.length; i++) {
+	            	  startPos += charAttrs[i].width;
 //	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
-	              }
+            	  }
 	        	  if (charDirection[i] == (rtlmode ? "ltr" : "rtl")) {
-	        		  startPos += charWidths[i];
+	        		  startPos += charAttrs[i].width;
 //	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
 	        	  }
 	        	  startPos = startPos * corrFactor;
@@ -1387,13 +1418,13 @@ var Visualizer = (function($, window, undefined) {
 	              //endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
 	              var endPos = 0;
 //	           	  console.log("endPos[initial]: " + endPos);
-	              for (var i = 0; charOrder[i] != lastChar && i < charOrder.length; i++) {
-	            	  endPos += charWidths[i];
+	              for (var i = 0; charAttrs[i].order != lastChar && i < charAttrs.length; i++) {
+	            	  endPos += charAttrs[i].width;
 //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
 	              }
 	        	  if (charDirection[i] == (rtlmode ? "rtl" : "ltr")) {
 //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
-	        		  endPos += charWidths[i];
+	        		  endPos += charAttrs[i].width;
 	        	  }
 	        	  endPos = endPos * corrFactor;
 //	        	  console.log("endPos: " + endPos);
@@ -1586,7 +1617,7 @@ Util.profileStart('measures');
 
         var sizes = getTextAndSpanTextMeasurements();
         data.sizes = sizes;
-
+        
         adjustTowerAnnotationSizes();
         var maxTextWidth = 0;
         for (var text in sizes.texts.widths) {
