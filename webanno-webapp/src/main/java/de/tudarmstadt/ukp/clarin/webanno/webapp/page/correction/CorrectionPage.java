@@ -43,6 +43,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -1148,8 +1149,13 @@ public class CorrectionPage
                     bModel.getDocument(), loggedInUser);
             jCas = repository.readAnnotationCas(annotationDocument);
             
+            // upgrade this cas
+            repository.upgradeCas(jCas.getCas(), repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
             // upgrade also the correction cas
-            repository.upgradeCorrectionCas(repository.readCorrectionCas(bModel.getDocument()).getCas(),  bModel.getDocument());
+            CAS correctionCas = repository.readCorrectionCas(bModel.getDocument()).getCas();
+            repository.upgradeCorrectionCas(correctionCas,  bModel.getDocument());
+            repository.writeCorrectionCas(correctionCas.getJCas(), bModel.getDocument(), loggedInUser);
 
         }
         catch (IOException e) {
@@ -1163,7 +1169,7 @@ public class CorrectionPage
                 
                 // upgrade this correction cas
                 repository.upgradeCorrectionCas(jCas.getCas(), bModel.getDocument());
-                
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
 
                 AnnotationDocument annotationDocument;
@@ -1207,6 +1213,7 @@ public class CorrectionPage
                 
                 // upgrade this correction cas
                 repository.upgradeCorrectionCas(jCas.getCas(), bModel.getDocument());
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
                 // remove all annotation so that the user can correct from the auto annotation
 
                 AnnotationDocument annotationDocument;
