@@ -26,6 +26,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -49,8 +50,22 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
                 continue;
             }
 
-            for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
-                for (AnnotationFS attach : selectCovered(getType(aCas, layer.getAttachType().getName()), anno)) {
+            Type layerType;
+            Type attachType;
+
+            try {
+                layerType = getType(aCas, layer.getName());
+                attachType = getType(aCas, layer.getAttachType().getName());
+            }
+            catch (IllegalArgumentException e) {
+                // This happens if the types do not (yet) exist in the CAS because the types are
+                // new and the CAS has not been upgraded yet. In this case, we can just ignore the
+                // check
+                continue;
+            }
+
+            for (AnnotationFS anno : select(aCas, layerType)) {
+                for (AnnotationFS attach : selectCovered(attachType, anno)) {
                     AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
                     if (candidate != anno) {
                         aMessages.add(new LogMessage(this, LogLevel.ERROR,

@@ -28,6 +28,7 @@ import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 
@@ -53,11 +54,22 @@ public class LinksReachableThroughChainsCheck
                 continue;
             }
             
-            List<FeatureStructure> chains = new ArrayList<>(
-                    selectFS(aCas, getType(aCas, layer.getName() + "Chain")));
-
-            List<AnnotationFS> links = new ArrayList<>(
-                    select(aCas, getType(aCas, layer.getName() + "Link")));
+            Type chainType;
+            Type linkType;
+            
+            try {
+                chainType = getType(aCas, layer.getName() + "Chain");
+                linkType = getType(aCas, layer.getName() + "Link");
+            }
+            catch (IllegalArgumentException e) {
+                // This happens if the types do not (yet) exist in the CAS because the types are
+                // new and the CAS has not been upgraded yet. In this case, we can just ignore the
+                // check
+                continue;
+            }
+            
+            List<FeatureStructure> chains = new ArrayList<>(selectFS(aCas, chainType));
+            List<AnnotationFS> links = new ArrayList<>(select(aCas, linkType));
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);

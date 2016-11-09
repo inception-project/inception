@@ -236,7 +236,7 @@ public class CasDoctor
             checkClasses.addAll(reflections.getSubTypesOf(Check.class).stream()
                     .filter(c -> !Modifier.isAbstract(c.getModifiers()))
                     .collect(Collectors.toList()));
-            log.info("Detected SNAPSHOT version - automatically enabled all checks");
+            log.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
         }
         
         if (StringUtils.isNotBlank(activeChecks)) {
