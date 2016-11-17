@@ -73,7 +73,6 @@ public class LogoutPanel
     protected void onConfigure()
     {
         super.onConfigure();
-        System.out.println(AuthenticatedWebSession.get().isSignedIn());
         setVisible(AuthenticatedWebSession.get().isSignedIn());
     }
     
