@@ -65,9 +65,11 @@ public class CasDoctor
         // Bean operation
     }
 
+    /**
+     * This constructor must only be used for unit tests.
+     */
     public CasDoctor(Class<?>... aChecksRepairs)
     {
-        // For testing
         StringBuilder checks = new StringBuilder();
         StringBuilder repairs = new StringBuilder();
         for (Class<?> clazz : aChecksRepairs) {
@@ -124,10 +126,25 @@ public class CasDoctor
         }
     }
     
+    public boolean isRepairsActive()
+    {
+        return !repairClasses.isEmpty();
+    }
+    
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
+        // If there are no active repairs, don't do anything
+        if (repairClasses.isEmpty()) {
+            return;
+        }
+        
+        // PRE-CONDITION: CAS must be consistent
+        // First ensure that the CAS is consistent - when repairs are active, this analysis is
+        // fatal! We don't want a repair to break an already broken CAS any more
+        analyze(aProject, aCas, aMessages, true);
+        
+        // APPLY REPAIRS
         long tStart = System.currentTimeMillis();
-        boolean exception = false;
         for (Class<? extends Repair> repairClass : repairClasses) {
             try {
                 long tStartTask = System.currentTimeMillis();
@@ -140,20 +157,19 @@ public class CasDoctor
                         + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (Exception e) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
-                        repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                log.error("Error running repair", e);
-                exception = true;
+//                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
+//                        repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
+                log.error("Cannot perform repair [" + repairClass.getSimpleName() + "]", e);
+                throw new IllegalStateException("Repair attempt failed - ask system administrator "
+                        + "for details.");
             }
         }
         
-        if (!repairClasses.isEmpty() && (exception || !analyze(aProject, aCas, aMessages, false))) {
-            aMessages.forEach(s -> log.error(s));
-            throw new IllegalStateException("Repair attempt failed - ask system administrator "
-                    + "for details.");
-        }
-        
         log.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart) + "ms");
+        
+        // POST-CONDITION: CAS must be consistent
+        // Ensure that the repairs did not break the CAS
+        analyze(aProject, aCas, aMessages, true);
     }
     
     public boolean analyze(Project aProject, CAS aCas)

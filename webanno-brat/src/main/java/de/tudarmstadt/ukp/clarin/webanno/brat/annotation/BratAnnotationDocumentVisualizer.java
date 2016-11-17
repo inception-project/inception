@@ -30,6 +30,8 @@ import java.util.Queue;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -58,6 +60,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratAnnotationDocumentVisualizer
     extends BratVisualizer
 {
+    private final static Log LOG = LogFactory.getLog(BratAnnotationDocumentVisualizer.class);
+
     private static final long serialVersionUID = -5898873898138122798L;
 
     private boolean dirty = true;
@@ -126,11 +130,9 @@ public class BratAnnotationDocumentVisualizer
         try {
             jCas = repository.readAnnotationCas(getModelObject());
         }
-        catch (DataRetrievalFailureException e) {
-            error(e.getCause().getMessage());
-        }
-        catch (IOException e) {
-            error("Unable to read annotation document " + ExceptionUtils.getRootCauseMessage(e));
+        catch (IOException | DataRetrievalFailureException e) {
+            LOG.error("Unable to read annotation document", e);
+            error("Unable to read annotation document: " + ExceptionUtils.getRootCauseMessage(e));
         }
         // Generate BRAT object model from CAS
         GetDocumentResponse response = new GetDocumentResponse();

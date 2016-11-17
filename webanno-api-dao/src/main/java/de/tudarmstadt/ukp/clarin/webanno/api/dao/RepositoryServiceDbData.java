@@ -836,39 +836,7 @@ public class RepositoryServiceDbData
                     jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
                             getReadableFormats().get(aDocument.getFormat()), aDocument);
 
-                    try {
-                        casDoctor.repair(aDocument.getProject(), jcas.getCas());
-                    }
-                    catch (Exception e) {
-                        throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                                + INITIAL_CAS_PSEUDO_USER + "] for source document ["
-                                + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
-                                + aDocument.getProject().getName() + "] ("
-                                + aDocument.getProject().getId() + ")", e);
-                    }
-                    
-                    try {
-                        casDoctor.analyze(aDocument.getProject(), jcas.getCas());
-                    }
-                    catch (CasDoctorException e) {
-                        StringBuilder detailMsg = new StringBuilder();
-                        detailMsg.append("CAS Doctor found problems for user ["
-                                + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
-                                + aDocument.getId() + ") in project["
-                                + aDocument.getProject().getName() + "] ("
-                                + aDocument.getProject().getId() + ")\n");
-                        e.getDetails().forEach(m -> detailMsg.append(
-                                String.format("- [%s] %s%n", m.level, m.message)));
-                        
-                        throw new DataRetrievalFailureException(detailMsg.toString());
-                    }
-                    catch (Exception e) {
-                        throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                                + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
-                                + aDocument.getId() + ") in project["
-                                + aDocument.getProject().getName() + "] ("
-                                + aDocument.getProject().getId() + ")", e);
-                    }
+                    analyzeAndRepair(aDocument, jcas.getCas());
                     
                     writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                 }
@@ -880,29 +848,18 @@ public class RepositoryServiceDbData
                             .getJCas();
                     readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
                     
-                    try {
-                        casDoctor.repair(aDocument.getProject(), jcas.getCas());
-                    }
-                    catch (Exception e) {
-                        throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                                + INITIAL_CAS_PSEUDO_USER + "] for source document ["
-                                + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
-                                + aDocument.getProject().getName() + "] ("
-                                + aDocument.getProject().getId() + ")", e);
-                    }
+                    analyzeAndRepair(aDocument, jcas.getCas());
                 }
             }
-            catch (UIMAException e) {
-                throw new IOException(e);
-            }
             catch (ClassNotFoundException e) {
-                throw new IOException(e);
+                throw new IOException("There is no reader for format [" + aDocument.getFormat()
+                        + "]: " + e.getMessage());
             }
             catch (Exception e) {
-                throw new IOException(e.getMessage() != null ? e.getMessage()
-                        : "This is an invalid file. The reader for the document "
-                                + aDocument.getName() + " can't read this " + aDocument.getFormat()
-                                + " file type");
+                log.error("The reader for format [" + aDocument.getFormat()
+                        + "] is unable to digest data", e);
+                throw new IOException("The reader for format [" + aDocument.getFormat()
+                        + "] is unable to digest data" + e.getMessage());
             }
             writeCas(aDocument, jcas, user);
         }
@@ -914,6 +871,49 @@ public class RepositoryServiceDbData
         }
 
         return jcas;
+    }
+    
+    private void analyzeAndRepair(SourceDocument aDocument, CAS aCas)
+    {
+        // Check if repairs are active - if this is the case, we only need to run the reparis
+        // because the repairs do an analysis as a pre- and post-condition. 
+        if (casDoctor.isRepairsActive()) {
+            try {
+                casDoctor.repair(aDocument.getProject(), aCas);
+            }
+            catch (Exception e) {
+                throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                        + INITIAL_CAS_PSEUDO_USER + "] for source document ["
+                        + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
+                        + aDocument.getProject().getName() + "] ("
+                        + aDocument.getProject().getId() + ")", e);
+            }
+        }
+        // If the repairs are not active, then we run the analysis explicitly
+        else {
+            try {
+                casDoctor.analyze(aDocument.getProject(), aCas);
+            }
+            catch (CasDoctorException e) {
+                StringBuilder detailMsg = new StringBuilder();
+                detailMsg.append("CAS Doctor found problems for user ["
+                        + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                        + aDocument.getId() + ") in project["
+                        + aDocument.getProject().getName() + "] ("
+                        + aDocument.getProject().getId() + ")\n");
+                e.getDetails().forEach(m -> detailMsg.append(
+                        String.format("- [%s] %s%n", m.level, m.message)));
+                
+                throw new DataRetrievalFailureException(detailMsg.toString());
+            }
+            catch (Exception e) {
+                throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                        + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                        + aDocument.getId() + ") in project["
+                        + aDocument.getProject().getName() + "] ("
+                        + aDocument.getProject().getId() + ")", e);
+            }    
+        }
     }
 
     @Override
@@ -1940,16 +1940,7 @@ public class RepositoryServiceDbData
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
 
-                try {
-                    casDoctor.repair(aDocument.getProject(), cas);
-                }
-                catch (Exception e) {
-                    throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                            + aUsername + "] for source document [" + aDocument.getName() + "] ("
-                            + aDocument.getId() + ") in project["
-                            + aDocument.getProject().getName() + "] ("
-                            + aDocument.getProject().getId() + ")", e);
-                }
+                analyzeAndRepair(aDocument, cas);
 
                 return cas.getJCas();
             }
@@ -2169,16 +2160,7 @@ public class RepositoryServiceDbData
             pipeline.process(cas.getJCas());
         }
 
-        try {
-            casDoctor.repair(aDocument.getProject(), cas);
-        }
-        catch (Exception e) {
-            throw new DataRetrievalFailureException(
-                    "Error repairing CAS on import for source document [" + aDocument.getName()
-                            + "] (" + aDocument.getId() + ") in project["
-                            + aDocument.getProject().getName() + "] ("
-                            + aDocument.getProject().getId() + ")", e);
-        }
+        analyzeAndRepair(aDocument, cas);
         
         return jCas;
     }

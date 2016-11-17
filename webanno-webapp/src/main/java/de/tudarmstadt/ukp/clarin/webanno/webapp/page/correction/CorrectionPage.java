@@ -452,21 +452,9 @@ public class CorrectionPage
                                     new Model<BratAnnotatorModel>(bModel), user, repository));
     						editor.refresh(target);
                         }
-                        catch (UIMAException e) {
-                            target.appendJavaScript("alert('" + e.getMessage() + "')");
-                            setResponsePage(WelcomePage.class);
-                        }
-                        catch (ClassNotFoundException e) {
-                            target.appendJavaScript("alert('" + e.getMessage() + "')");
-                            setResponsePage(WelcomePage.class);
-                        }
-                        catch (IOException e) {
-                            target.appendJavaScript("alert('" + e.getMessage() + "')");
-                            setResponsePage(WelcomePage.class);
-                        }
-                        catch (BratAnnotationException e) {
-                            target.appendJavaScript("alert('" + e.getMessage() + "')");
-                            setResponsePage(WelcomePage.class);
+                        catch (Exception e) {
+                            LOG.error("Unable to load data", e);
+                            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                         }
                         finish.setModelObject(bModel);
                         target.add(finish.setOutputMarkupId(true));

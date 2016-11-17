@@ -166,14 +166,10 @@ public class CurationPage
                 try {
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                 }
-                catch (UIMAException e) {
-                    error(e.getMessage());
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 aTarget.add(numberOfPages);
                 gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
@@ -194,7 +190,6 @@ public class CurationPage
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
                 {
-
                     private static final long serialVersionUID = 1L;
 
                     @Override
@@ -234,16 +229,9 @@ public class CurationPage
                                         + " of " + totalNumberOfSentence + " sentences [document "
                                         + docIndex +" of "+ listofDoc.size()+"]";
                             }
-                            catch (UIMAException e) {
+                            catch (Exception e) {
                                 return "";
                             }
-                            catch (ClassNotFoundException e) {
-                                return "";
-                            }
-                            catch (IOException e) {
-                                return "";
-                            }
-
                         }
                         else {
                             return "";// no document yet selected
@@ -303,10 +291,9 @@ public class CurationPage
                                 curationPanel.reloadEditorLayer(target);
 
                             }
-                            catch (DataRetrievalFailureException | IOException | UIMAException | ClassNotFoundException
-                                    | BratAnnotationException e) {
-                                target.add(getFeedbackPanel());
-                                error(e.getCause().getMessage());
+                            catch (Exception e) {
+                                LOG.error("Unable to load data", e);
+                                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                             }
                         }
                     }
@@ -326,7 +313,6 @@ public class CurationPage
                 // Re-render the whole page because the width of the sidebar may have changed
                 aTarget.add(CurationPage.this);
                 
-                aTarget.add(getFeedbackPanel());
                 aTarget.add(numberOfPages);
                 JCas mergeJCas = null;
                 try {
@@ -336,19 +322,11 @@ public class CurationPage
                     updatePanel(curationContainer, aTarget);
                     updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
                 }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
-                }
-
             }
         });
 
@@ -385,9 +363,10 @@ public class CurationPage
 
                         loadDocumentAction(aTarget);
                     }
-                    catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
+                    catch (Exception e) {
                         aTarget.add(getFeedbackPanel());
-                        error(e.getCause().getMessage());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
             }
@@ -428,9 +407,10 @@ public class CurationPage
 
                         loadDocumentAction(aTarget);
                     }
-                    catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
+                    catch (Exception e) {
                         aTarget.add(getFeedbackPanel());
-                        error(e.getCause().getMessage());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
             }
@@ -464,14 +444,10 @@ public class CurationPage
                         updatePanel(curationContainer, aTarget);
                     }
                 }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
         });
@@ -495,16 +471,11 @@ public class CurationPage
                             gotoPageTextField.getModelObject());
 
                 }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-
             }
         });
 
@@ -537,17 +508,10 @@ public class CurationPage
                         curationPanel.updatePanel(aTarget, curationContainer);
                     }
                 }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (BratAnnotationException e) {
-                    error(e.getMessage());
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
         });
@@ -679,9 +643,10 @@ public class CurationPage
 
                                 aTarget.appendJavaScript("alert('Re-merge finished!')");
                             }
-                            catch (IOException | UIMAException | ClassNotFoundException | BratAnnotationException e) {
+                            catch (Exception e) {
                                 aTarget.add(getFeedbackPanel());
-                                error(e.getCause().getMessage());
+                                LOG.error("Unable to load data", e);
+                                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                             }
                         }
                     }
@@ -722,17 +687,10 @@ public class CurationPage
                             aTarget.appendJavaScript("alert('This is last page!')");
                         }
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                    catch (Exception e) {
+                        aTarget.add(getFeedbackPanel());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
                 else {
@@ -771,17 +729,10 @@ public class CurationPage
                             aTarget.appendJavaScript("alert('This is first page!')");
                         }
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                    catch (Exception e) {
+                        aTarget.add(getFeedbackPanel());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
                 else {
@@ -819,17 +770,10 @@ public class CurationPage
                             aTarget.appendJavaScript("alert('This is first page!')");
                         }
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                    catch (Exception e) {
+                        aTarget.add(getFeedbackPanel());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
                 else {
@@ -866,17 +810,10 @@ public class CurationPage
                             aTarget.appendJavaScript("alert('This is last page!')");
                         }
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (BratAnnotationException e) {
-                        error(e.getMessage());
+                    catch (Exception e) {
+                        aTarget.add(getFeedbackPanel());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
                 else {
@@ -902,9 +839,10 @@ public class CurationPage
                     curationPanel.updatePanel(aTarget, curationContainer);
                     updatePanel(curationContainer, aTarget);
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
-                    error(e.getMessage());
-                    LOG.error(e);
+                catch (Exception e) {
+                    aTarget.add(getFeedbackPanel());
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
         });
@@ -933,9 +871,10 @@ public class CurationPage
         try {
             mergeJCas = repository.readCurationCas(bModel.getDocument());
         }
-        catch (IOException | ClassNotFoundException | UIMAException e) {
-            error(e.getMessage());
-            LOG.error(e);
+        catch (Exception e) {
+            aTarget.add(getFeedbackPanel());
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
         gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
                 bModel.getSentenceAddress()) + 1);
@@ -1110,9 +1049,9 @@ public class CurationPage
                 }
             }
             catch (ParseException e) {
-//                LOG.error("Error", e);
+                LOG.error("Error loading constraints", e);
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                error(e.getMessage());
+                error("Error loading constraints: " + e.getMessage());
             }
         }
 

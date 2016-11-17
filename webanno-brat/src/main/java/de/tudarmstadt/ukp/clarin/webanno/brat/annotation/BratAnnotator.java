@@ -213,14 +213,11 @@ public class BratAnnotator
                     try {
                         jCas = getCas(getModelObject());
                     }
-                    catch (ClassNotFoundException e) {
-                        error("Invalid reader: " + e.getMessage());
-                    }
-                    catch (IOException e) {
-                        error(e.getMessage());
-                    }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCauseMessage(e));
+                    catch (Exception e) {
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                        return;
                     }
                 }
 

@@ -76,6 +76,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -94,7 +95,6 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.util.UnitType;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -384,7 +384,7 @@ public class MonitoringPage
 
                     // Clear the cached CASes. When we switch to another project, we'll have to
                     // reload them.
-                    updateAgreementTable(null, true);
+                    updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
 
                     // Annotator's Progress
                     if (projectSelectionModel.project != null) {
@@ -867,6 +867,10 @@ public class MonitoringPage
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
+                    // We may get errors when loading the JCases but at that time we can no longer
+                    // add the feedback panel to the cycle, so let's do it here.
+                    aTarget.add(getFeedbackPanel());
+                    
                     updateAgreementTable(aTarget, false);
 //                    // Adding this as well because when choosing a different measure, it may affect
 //                    // the ability to exclude incomplete configurations.
@@ -1201,14 +1205,9 @@ public class MonitoringPage
                             documentMetadata.setDocumentId(annotationDocument.getDocument().getName());
                             documentMetadata.setCollectionId(annotationDocument.getProject().getName());
                         }
-                        catch (DataRetrievalFailureException e) {
-                            error(e.getCause().getMessage());
-                        }
-                        catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
-                        }
-                        catch (IOException e) {
-                            error(ExceptionUtils.getRootCause(e));
+                        catch (Exception e) {
+                            LOG.error("Unable to load data", e);
+                            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                         }
                     }
                 }
@@ -1236,7 +1235,8 @@ public class MonitoringPage
             }
         }
         catch (Throwable e) {
-            error(ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error updating agreement table", e);
+            error("Error updating agreement table: " + ExceptionUtils.getRootCauseMessage(e));
             if (aTarget != null) {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
             }
