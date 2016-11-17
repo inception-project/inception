@@ -708,7 +708,7 @@ public class RepositoryServiceDbData
         runPipeline(cas, writer);
 
         createLog(project).info(
-                " Exported annotation file [" + aDocument.getName() + "] with ID ["
+                "Exported annotation file [" + aDocument.getName() + "] with ID ["
                         + aDocument.getId() + "] for user [" + aUser + "] from project ["
                         + project.getId() + "]");
         createLog(project).removeAllAppenders();
