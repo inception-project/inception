@@ -59,6 +59,8 @@ public class CasDoctor
     private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
 
     private boolean disableAutoScan = false;
+
+    private boolean skipPreRepairAnalysis;
     
     public CasDoctor()
     {
@@ -103,6 +105,7 @@ public class CasDoctor
         // This constructor is only used for tests. In tests we want to control which checks are
         // used and do not want to auto-scan.
         disableAutoScan = true;
+        skipPreRepairAnalysis = true;
         
         afterPropertiesSet();
     }
@@ -141,7 +144,11 @@ public class CasDoctor
         // PRE-CONDITION: CAS must be consistent
         // First ensure that the CAS is consistent - when repairs are active, this analysis is
         // fatal! We don't want a repair to break an already broken CAS any more
-        analyze(aProject, aCas, aMessages, true);
+        // We only skip this for unit tests were we actually start with an inconsistent CAS in order
+        // to test the repair action
+        if (!skipPreRepairAnalysis) {
+            analyze(aProject, aCas, aMessages, true);
+        }
         
         // APPLY REPAIRS
         long tStart = System.currentTimeMillis();
