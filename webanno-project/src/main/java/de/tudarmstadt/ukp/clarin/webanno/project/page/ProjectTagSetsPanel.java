@@ -63,7 +63,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -88,9 +87,6 @@ public class ProjectTagSetsPanel
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
-
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
