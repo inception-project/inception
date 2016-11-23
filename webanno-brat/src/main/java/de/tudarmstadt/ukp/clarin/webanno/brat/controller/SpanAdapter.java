@@ -198,27 +198,41 @@ public class SpanAdapter
         Type type = getType(aJcas.getCas(), getAnnotationTypeName());
         int aFirstSentenceOffset = firstSentence.getBegin();
 
+        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class,
+                firstSentence.getBegin(), lastSentenceInPage.getEnd());
+        
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
                 lastSentenceInPage.getEnd())) {
             String bratTypeName = TypeUtil.getBratTypeName(this);
             String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
 
-            Sentence beginSent = null, endSent = null;
-            // check if annotation spans multiple sentence
-            for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
-                    lastSentenceInPage.getEnd())) {
-                if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() <= sentence.getEnd()) {
-                    beginSent = sentence;
+            Sentence beginSent = null;
+            Sentence endSent = null;
+            
+            // check if annotation extends beyond viewable window - if yes, then constrain it to 
+            // the visible window
+            for (Sentence sentence : visibleSentences) {
+                if (beginSent == null) {
+                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
+                        beginSent = sentence;
+                    }
+                }
+                
+                if (endSent == null) {
+                    if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
+                        endSent = sentence;
+                    }
+                }
+                
+                if (beginSent != null && endSent != null) {
                     break;
                 }
             }
-            for (Sentence sentence : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
-                    lastSentenceInPage.getEnd())) {
-                if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
-                    endSent = sentence;
-                    break;
-                }
+            
+            if (beginSent == null || endSent == null) {
+                throw new IllegalStateException(
+                        "Unable to determine sentences in which the annotation starts/ends: " + fs);
             }
 
             List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
@@ -226,7 +240,7 @@ public class SpanAdapter
             List<Offsets> offsets = new ArrayList<Offsets>();
             if (sentences.size() > 1) {
                 for (Sentence sentence : sentences) {
-                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() <= sentence.getEnd()) {
+                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
                         offsets.add(new Offsets(fs.getBegin() - aFirstSentenceOffset, sentence
                                 .getEnd() - aFirstSentenceOffset));
                     }
