@@ -372,7 +372,7 @@ public class BratAnnotator
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
-                    LOG.error(ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error(e);
                 }
 
                 // Serialize updated document to JSON
