@@ -244,8 +244,8 @@ public class CurationPage
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
 
-        openDocumentsModal.setInitialWidth(500);
-        openDocumentsModal.setInitialHeight(300);
+        openDocumentsModal.setInitialWidth(620);
+        openDocumentsModal.setInitialHeight(440);
         openDocumentsModal.setResizable(true);
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");

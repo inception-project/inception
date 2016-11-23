@@ -18,16 +18,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-	<table align="left">
-		<tr style="color: blue; font-weight: bold;">
+	<table align="left" class="hfill">
+        <col width="50%">
+        <col width="50%">
+  		<tr style="color: blue; font-weight: bold;">
 			<td>Projects:</td>
 			<td>Documents:</td>
 		</tr>
 		<tr VALIGN=TOP>
 			<td>
 				<form wicket:id="projectSelectionForm">
-					<select wicket:id="projectSelection" size="10"
-						style="background-color: white; width: 150px; height: 230px; overflow:auto">
+					<select wicket:id="projectSelection" size="25" class="hfill"
+						style="background-color: white; overflow:auto">
 						<span wicket:id="projects">
 							<option wicket:id="project"></option>
 					</span>
@@ -36,8 +38,8 @@
 			</td>
 			<td>
 				<form wicket:id="documentSelectionForm">
-					<select wicket:id="documentSelection" size="10"
-						style="width: 300px; height: 230px; overflow: auto">
+					<select wicket:id="documentSelection" size="25" class="hfill"
+						style="overflow: auto">
 						<span wicket:id="documents">
 							<option wicket:id="document"></option>
 					</span>
@@ -45,15 +47,12 @@
 				</form>
 			</td>
 		</tr>
-		<tr>
-			<td></td>
-			<td>
-				<form wicket:id="buttonsForm">
-					<button wicket:id="openButton">Open</button>
-					<button wicket:id="cancelButton">Cancel</button>
-				</form>
-			</td>
-		</tr>
 	</table>
+    <div class="buttons">
+	    <form wicket:id="buttonsForm">
+	        <button wicket:id="openButton">Open</button>
+	        <button wicket:id="cancelButton">Cancel</button>
+	    </form>
+    </div>
 </wicket:panel>
 </html>
