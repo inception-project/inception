@@ -470,6 +470,8 @@ public interface RepositoryService
      */
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
+    List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
+
     /**
      * Number of expected annotation documents in this project (numUser X document - Ignored)
      *
@@ -1099,6 +1101,8 @@ public interface RepositoryService
 
     boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
 
+    List<SourceDocument> listCuratableSourceDocuments(Project aProject);
+
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
         throws IOException;
 
@@ -1119,12 +1123,14 @@ public interface RepositoryService
      * @param aSet
      */
     void createConstraintSet(ConstraintSet aSet);
+    
     /**
      * Returns list of ConstraintSets in a project
      * @param aProject The project 
      * @return List of Constraints in a project
      */
     List<ConstraintSet> listConstraintSets(Project aProject);
+    
     /**
      * Remove a constraint
      * @param aSet
@@ -1136,6 +1142,7 @@ public interface RepositoryService
 
     void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException;
+    
     /**
      * Returns Constraint as a file
      * @param aSet The Constraint Set
@@ -1143,6 +1150,7 @@ public interface RepositoryService
      * @throws IOException
      */
     File exportConstraintAsFile(ConstraintSet aSet) throws IOException; 
+    
     /**
      * Checks if there's a constraint set already with the name
      * @param constraintSetName The name of constraint set

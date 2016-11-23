@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -339,55 +340,63 @@ public class OpenModalWindowPanel
         if (selectedProject == null) {
             return new ArrayList<SourceDocument>();
         }
-        List<SourceDocument> allDocuments = repository.listSourceDocuments(selectedProject);
+        
+        List<SourceDocument> allSourceDocuments = new ArrayList<>();
 
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
         // finished for curation dialog
-
-        List<SourceDocument> excludeDocuments = new ArrayList<SourceDocument>();
-        for (SourceDocument sourceDocument : allDocuments) {
-            switch (mode) {
-            case ANNOTATION:
-            case AUTOMATION:
-            case CORRECTION:
+        switch (mode) {
+        case ANNOTATION:
+        case AUTOMATION:
+        case CORRECTION: {
+            allSourceDocuments = repository.listSourceDocuments(selectedProject);
+            List<SourceDocument> sourceDocumentsToExclude = new ArrayList<>();
+            for (SourceDocument sourceDocument : allSourceDocuments) {
                 if (sourceDocument.isTrainingDocument()) {
-                    excludeDocuments.add(sourceDocument);
+                    sourceDocumentsToExclude.add(sourceDocument);
                     continue;
                 }
-                if (repository.existsAnnotationDocument(sourceDocument, user)) {
-                    AnnotationDocument anno = repository
-                            .getAnnotationDocument(sourceDocument, user);
-                    if (anno.getState().equals(AnnotationDocumentState.IGNORE)) {
-                        excludeDocuments.add(sourceDocument);
+                List<AnnotationDocument> allAnnotationDocuments = repository
+                        .listAnnotationDocuments(selectedProject, user);
+                Optional<AnnotationDocument> annotationDocument = allAnnotationDocuments.stream()
+                        .filter(a -> a.getDocument().getId() == sourceDocument.getId()).findFirst();
+
+                if (annotationDocument.isPresent()) {
+                    if (AnnotationDocumentState.IGNORE.equals(annotationDocument.get().getState())) {
+                        sourceDocumentsToExclude.add(sourceDocument);
                     }
-                    else if (anno.getState().equals(AnnotationDocumentState.FINISHED)) {
+                    else if (AnnotationDocumentState.FINISHED.equals(annotationDocument.get().getState())) {
                         states.put(sourceDocument, "red");
                     }
-                    else if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
+                    else if (AnnotationDocumentState.IN_PROGRESS.equals(annotationDocument.get().getState())) {
                         states.put(sourceDocument, "blue");
                     }
                 }
-                break;
-            case CURATION:
-                if (!repository.existFinishedDocument(sourceDocument, selectedProject)) {
-                    excludeDocuments.add(sourceDocument);
-                }
-                else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+            }
+            allSourceDocuments.removeAll(sourceDocumentsToExclude);
+            break;
+        }
+        case CURATION: {
+            allSourceDocuments = repository
+                    .listCuratableSourceDocuments(selectedProject);
+            
+            for (SourceDocument sourceDocument : allSourceDocuments) {
+                if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
                     states.put(sourceDocument, "red");
                 }
-                else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
+                else if (SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) {
                     states.put(sourceDocument, "blue");
                 }
-
-                break;
-            default:
-                break;
             }
 
+            break;
         }
-        allDocuments.removeAll(excludeDocuments);
-        return allDocuments;
+        default:
+            break;
+        }
+        
+        return allSourceDocuments;
     }
 
     private class ButtonsForm

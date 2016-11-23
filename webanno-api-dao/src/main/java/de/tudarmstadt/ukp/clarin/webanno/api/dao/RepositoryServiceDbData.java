@@ -148,8 +148,6 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 /**
  * Implementation of methods defined in the {@link RepositoryService} interface
- *
- *
  */
 public class RepositoryServiceDbData
     implements RepositoryService, InitializingBean
@@ -1172,6 +1170,16 @@ public class RepositoryServiceDbData
                                 + "AND user in (:users)", AnnotationDocument.class)
                 .setParameter("project", aDocument.getProject()).setParameter("users", users)
                 .setParameter("document", aDocument).getResultList();
+    }
+    
+    @Override
+    public List<AnnotationDocument> listAnnotationDocuments(Project aProject, User aUser)
+    {
+        return entityManager
+                .createQuery("FROM AnnotationDocument WHERE project = :project AND user = :user",
+                        AnnotationDocument.class)
+                .setParameter("project", aProject).setParameter("user", aUser.getUsername())
+                .getResultList();
     }
 
     @Override
@@ -2387,7 +2395,8 @@ public class RepositoryServiceDbData
     @Override
     public boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject)
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(aSourceDocument);
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(
+                aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
         for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
@@ -2396,6 +2405,18 @@ public class RepositoryServiceDbData
             }
         }
         return finishedAnnotationDocumentExist;
+    }
+    
+    @Override
+    public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
+    {
+        return entityManager
+                .createQuery(
+                        "SELECT adoc.document FROM AnnotationDocument AS adoc "
+                        + "WHERE adoc.project = :project AND adoc.state = (:state)",
+                        SourceDocument.class)
+                .setParameter("project", aProject)
+                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
     }
 
     private static void writeSerializedCas(JCas aJCas, File aFile)
