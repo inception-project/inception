@@ -68,6 +68,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
@@ -499,8 +500,18 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(
-                bModel)));
+        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
+
+			private static final long serialVersionUID = -468896211970839443L;
+
+			@Override
+             public boolean isEnabled()
+             {
+                 return bModel.getProject()!=null &&
+                		 (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
+                		 || bModel.getProject().isEnableExport());
+             }
+        });
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));

@@ -194,4 +194,35 @@ public class SecurityUtil
 
         return user;
     }
+    
+    /**
+     * Determine if the User is an admin of a project
+     *
+     * @param aProject the project.
+     * @param aProjectRepository the repository service.
+     * @param aUser the user.
+     * @return if the user is an admin.
+     */
+    public static boolean isAdmin(Project aProject, RepositoryService aProjectRepository,
+            User aUser)
+    {
+        boolean user = false;
+        try {
+            List<ProjectPermission> permissionLevels = aProjectRepository
+                    .listProjectPermisionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.ADMIN.getName())) {
+                    user = true;
+                    break;
+                }
+            }
+        }
+
+        catch (NoResultException ex) {
+            LOG.info("No permision is given to this user " + ex);
+        }
+
+        return user;
+    }
 }
