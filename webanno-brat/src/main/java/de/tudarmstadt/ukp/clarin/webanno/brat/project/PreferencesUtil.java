@@ -42,8 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * This class contains Utility methods that can be used in Project settings
- *
- *
  */
 public class PreferencesUtil
 {
@@ -87,7 +85,6 @@ public class PreferencesUtil
                 String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
-
                     if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
                         List<String> value = Arrays.asList(StringUtils.replaceChars(
                                 entry.getValue().toString(), "[]", "").split(","));
@@ -109,29 +106,16 @@ public class PreferencesUtil
                     aBModel.getAnnotationLayers().add(aAnnotationService.getLayer(id));
                 }
             }
+            else {
+                // If no layer preferences are defined, then just assume all layers are enabled
+                List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
+                        .getProject());
+                aBModel.setAnnotationLayers(layers);
+            }
         }
         // no preference found
         catch (Exception e) {
-
-            /*
-             * // disable corefernce annotation for correction/curation pages for 0.4.0 release
-             * List<TagSet> tagSets = aAnnotationService.listTagSets(aBModel.getProject());
-             * List<TagSet> corefTagSets = new ArrayList<TagSet>(); List<TagSet> noFeatureTagSet =
-             * new ArrayList<TagSet>(); for (TagSet tagSet : tagSets) { if (tagSet.getLayer() ==
-             * null || tagSet.getFeature() == null) { noFeatureTagSet.add(tagSet); } else if
-             * (tagSet.getLayer().getType().equals(ChainAdapter.CHAIN)) { corefTagSets.add(tagSet);
-             * } }
-             *
-             * if (aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.AUTOMATION) ||
-             * aMode.equals(Mode.CURATION)) { tagSets.removeAll(corefTagSets); }
-             * tagSets.remove(noFeatureTagSet); aBModel.setAnnotationLayers(new
-             * HashSet<TagSet>(tagSets));
-             */
-            /*
-             * abAnnotatorModel.setAnnotationLayers(new HashSet<TagSet>(aAnnotationService
-             * .listTagSets(abAnnotatorModel.getProject())));
-             */
-
+            // If no layer preferences are defined, then just assume all layers are enabled
             List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
                     .getProject());
             aBModel.setAnnotationLayers(layers);
