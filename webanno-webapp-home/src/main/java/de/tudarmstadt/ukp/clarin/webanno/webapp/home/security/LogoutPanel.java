@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.home.security;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -67,6 +68,16 @@ public class LogoutPanel
                 setResponsePage(getApplication().getHomePage());
             }
         });
+        
+        add(new MarkupContainer("logoutTimer")
+        {
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(getAutoLogoutTime() > 0);
+            }
+        });
     }
     
     @Override
@@ -83,15 +94,29 @@ public class LogoutPanel
 
         aResponse.render(new PriorityHeaderItem(JavaScriptHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference())));
+        
+        int timeout = getAutoLogoutTime();
+        if (timeout > 0) {
+            aResponse.render(JavaScriptHeaderItem.forScript(
+                    "$(document).ready(function() { new LogoutTimer("+timeout+"); });", 
+                    "webAnnoAutoLogout"));
+        }
+    }
+    
+    /**
+     * Checks if auto-logout is enabled. For Winstone, we get a max session length of 0, so here it
+     * is disabled.
+     */
+    private int getAutoLogoutTime()
+    {
+        int duration = 0;
         Request request = RequestCycle.get().getRequest();
         if (request instanceof ServletWebRequest) {
             HttpSession session = ((ServletWebRequest) request).getContainerRequest().getSession();
             if (session != null) {
-                int timeout = session.getMaxInactiveInterval();
-                aResponse.render(JavaScriptHeaderItem.forScript(
-                        "$(document).ready(function() { new LogoutTimer("+timeout+"); });", 
-                        "webAnnoAutoLogout"));
+                duration = session.getMaxInactiveInterval();
             }
         }        
+        return duration;
     }
 }
