@@ -422,6 +422,7 @@ public class ImportUtil
         project.setName(projectName);
         project.setDescription(aProject.getDescription());
         project.setMode(aProject.getMode());
+        project.setDisableExport(aProject.isDisableExport());
         
         // Set default to LTR on import from old WebAnno versions
         if (aProject.getScriptDirection() == null) {

@@ -600,6 +600,7 @@ public class ProjectExportPanel extends Panel {
             exProjekt.setMode(aProject.getMode());
             exProjekt.setScriptDirection(aProject.getScriptDirection());
             exProjekt.setVersion(aProject.getVersion());
+            exProjekt.setDisableExport(aProject.isDisableExport());
 
             List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> exLayers = new ArrayList<>();
             // Store map of layer and its equivalent exLayer so that the attach type

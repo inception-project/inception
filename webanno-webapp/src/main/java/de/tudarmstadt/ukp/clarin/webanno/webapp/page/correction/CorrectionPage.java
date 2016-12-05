@@ -509,7 +509,7 @@ public class CorrectionPage
              {
                  return bModel.getProject()!=null &&
                 		 (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
-                		 || bModel.getProject().isEnableExport());
+                		 || !bModel.getProject().isDisableExport());
              }
         });
 

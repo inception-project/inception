@@ -57,8 +57,8 @@ public class Project
     // version of the project
     private int version = 1;
     
-    // allow users to export annotation documents
-    private boolean enableExport = true;
+    // Disable users from exporting annotation documents
+    private boolean disableExport = false;
     
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
@@ -110,12 +110,12 @@ public class Project
     }
 
     
-    public boolean isEnableExport() {
-		return enableExport;
+    public boolean isDisableExport() {
+		return disableExport;
 	}
 
-	public void setEnableExport(boolean enableExport) {
-		this.enableExport = enableExport;
+	public void setDisableExport(boolean disableExport) {
+		this.disableExport = disableExport;
 	}
 
 	public ScriptDirection getScriptDirection()

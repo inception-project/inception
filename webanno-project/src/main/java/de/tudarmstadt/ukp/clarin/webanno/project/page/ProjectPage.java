@@ -474,7 +474,7 @@ public class ProjectPage
             add(new DropDownChoice<ScriptDirection>("scriptDirection",
                     Arrays.asList(ScriptDirection.values())));
             
-            add(new CheckBox("enableExport"));
+            add(new CheckBox("disableExport"));
 
             add(new Button("save", new ResourceModel("label"))
             {

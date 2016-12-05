@@ -68,6 +68,9 @@ public class Project
 
     @JsonProperty("version")
     private int version;
+    
+    @JsonProperty("disableExport")
+    private boolean disableExport;
 
     @JsonProperty("script_direction")
     private ScriptDirection scriptDirection;
@@ -151,13 +154,22 @@ public class Project
     {
         this.version = version;
     }
-
-    public List<AnnotationLayer> getLayers()
+    
+    
+	public List<AnnotationLayer> getLayers()
     {
         return layers;
     }
 
-    public void setLayers(List<AnnotationLayer> layers)
+    public boolean isDisableExport() {
+		return disableExport;
+	}
+
+	public void setDisableExport(boolean disableExport) {
+		this.disableExport = disableExport;
+	}
+
+	public void setLayers(List<AnnotationLayer> layers)
     {
         this.layers = layers;
     }
