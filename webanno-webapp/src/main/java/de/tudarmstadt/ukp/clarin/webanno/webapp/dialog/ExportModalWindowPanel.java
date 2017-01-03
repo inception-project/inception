@@ -25,7 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
+import org.apache.wicket.NonResettingRestartException;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -50,13 +54,13 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.WebAnnoCssReference;
 
 /**
  * Modal window to Export annotated document
- *
- *
  */
 public class ExportModalWindowPanel
     extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
+
+    private static final Log LOG = LogFactory.getLog(ExportModalWindowPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -157,10 +161,10 @@ public class ExportModalWindowPanel
                                     .toString()) ? "CORRECTION_USER" : SecurityContextHolder
                             .getContext().getAuthentication().getName();
                     if (bratAnnotatorModel.getDocument() == null) {
-                        error("NO Document is opened yet !");
+                        getPage().error("NO Document is opened yet !");
+                        throw new RestartResponseException(getPage());
                     }
                     else {
-
                         try {
                             downloadFile = repository.exportAnnotationDocument(
                                     bratAnnotatorModel.getDocument(),
@@ -171,22 +175,42 @@ public class ExportModalWindowPanel
                                             .getMode());
                         }
                         catch (FileNotFoundException e) {
-                            error("Ubable to find annotation document " + ":"
+                            LOG.error("Export failed", e);
+                            getSession().error("Unable to find annotation document:"
                                     + ExceptionUtils.getRootCauseMessage(e));
+                            // This will cause the open dialog to pop up again, but at least
+                            // the error feedback message will be visible. With the 
+                            // RestartResponseException the feedback message only flashes.
+                            throw new NonResettingRestartException(getPage().getPageClass());
                         }
                         catch (UIMAException e) {
-                            error("There is a proble while processing the CAS object " + ":"
+                            LOG.error("Export failed", e);
+                            getSession().error("There is a problem while processing the CAS object:"
                                     + ExceptionUtils.getRootCauseMessage(e));
+                            // See comment above
+                            throw new NonResettingRestartException(getPage().getPageClass());
                         }
                         catch (IOException e) {
-                            error("Ubable to find annotation document " + ":"
+                            LOG.error("Export failed", e);
+                            getSession().error("Unable to find annotation document " + ":"
                                     + ExceptionUtils.getRootCauseMessage(e));
+                            // See comment above
+                            throw new NonResettingRestartException(getPage().getPageClass());
                         }
                         catch (ClassNotFoundException e) {
-                            error("The Class name in the properties is not found " + ":"
+                            LOG.error("Export failed", e);
+                            getSession().error("The class name in the properties is not found:"
                                     + ExceptionUtils.getRootCauseMessage(e));
+                            // See comment above
+                            throw new NonResettingRestartException(getPage().getPageClass());
                         }
-
+                        catch (Throwable e) {
+                            LOG.error("Export failed", e);
+                            getSession().error("Unexpected exception: "
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                            // See comment above
+                            throw new NonResettingRestartException(getPage().getPageClass());
+                        }
                     }
                     return downloadFile;
                 }
