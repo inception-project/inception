@@ -188,11 +188,16 @@
                 <artifactId>webanno-project</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
-          <dependency>
-    		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    		<artifactId>webanno-constraints</artifactId>
-    		<version>3.1.0-SNAPSHOT</version>
-    	</dependency>
+            <dependency>
+        		<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        		<artifactId>webanno-constraints</artifactId>
+        		<version>3.1.0-SNAPSHOT</version>
+        	</dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-xmi</artifactId>
+                <version>3.1.0-SNAPSHOT</version>
+            </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
                 <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
@@ -424,6 +429,7 @@
         <module>webanno-text</module>
         <module>webanno-tsv</module>
         <module>webanno-conllu</module>
+        <module>webanno-xmi</module>
         <!-- Core -->
         <module>webanno-model</module>
         <module>webanno-api</module>

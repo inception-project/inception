@@ -297,6 +297,10 @@
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
             <artifactId>webanno-conllu</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-xmi</artifactId>
+        </dependency>
 		
 		<!-- DATABASE / HIBERNATE -->
 
