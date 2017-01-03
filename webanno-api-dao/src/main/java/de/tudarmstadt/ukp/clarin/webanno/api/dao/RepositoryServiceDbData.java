@@ -2412,8 +2412,9 @@ public class RepositoryServiceDbData
     {
         return entityManager
                 .createQuery(
-                        "SELECT adoc.document FROM AnnotationDocument AS adoc "
-                        + "WHERE adoc.project = :project AND adoc.state = (:state)",
+                        "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
+                        + "WHERE adoc.project = :project AND adoc.state = (:state) "
+                        + "ORDER BY adoc.document.name ASC",
                         SourceDocument.class)
                 .setParameter("project", aProject)
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
