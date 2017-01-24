@@ -486,7 +486,7 @@ public class RemoteApiController
     public ResponseEntity<String> sourceDocumentCreate(
             @RequestParam(PARAM_FILE) MultipartFile aFile,
             @RequestParam(PARAM_FILETYPE) String aFileType, 
-            @PathVariable long aProjectId)
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
                 throws Exception
     {
         // Get current user
