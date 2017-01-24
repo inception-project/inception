@@ -149,10 +149,7 @@ public class ProjectExportPanel extends Panel {
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
 			// If the curation document is exist (either finished or in progress
-			if (sourceDocument.getState().equals(
-					SourceDocumentState.CURATION_FINISHED)
-					|| sourceDocument.getState().equals(
-							SourceDocumentState.CURATION_IN_PROGRESS)) {
+			if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
 				curationDocumentExist = true;
 				break;
 			}
@@ -200,11 +197,9 @@ public class ProjectExportPanel extends Panel {
             File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
-            // If the curation document is exist (either finished or in progress
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)
-                    || sourceDocument.getState().equals(SourceDocumentState.CURATION_IN_PROGRESS)) {
-                File curationCasFile = repository.getCasFile(sourceDocument,
-                        CURATION_USER);
+            // If the curation document is exist (either finished or in progress)
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                File curationCasFile = repository.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
@@ -218,7 +213,6 @@ public class ProjectExportPanel extends Panel {
 					} catch (Exception e) {
 						error("Unexpected error while exporting project: " + ExceptionUtils.getRootCauseMessage(e) );
 						throw new ProjectExportException("Aborting due to unrecoverable error while exporting!");
-//						throw e;
 					}
                 }
             }
