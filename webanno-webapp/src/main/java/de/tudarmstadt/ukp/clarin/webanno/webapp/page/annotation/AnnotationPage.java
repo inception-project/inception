@@ -81,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage.ProjectDetailForm;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
@@ -353,17 +352,23 @@ public class AnnotationPage
         });
 
         add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
-
-			private static final long serialVersionUID = -468896211970839443L;
-
-			@Override
-             public boolean isEnabled()
-             {
-                 return bModel.getProject()!=null &&
-                		 (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
-                		 || !bModel.getProject().isDisableExport());
-             }
+            private static final long serialVersionUID = -468896211970839443L;
+            
+            {
+                setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(bModel.getProject() != null
+                        && (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
+                                || !bModel.getProject().isDisableExport()));
+            }
         });
+        
         // Show the previous document, if exist
         add(new AjaxLink<Void>("showPreviousDocument")
         {

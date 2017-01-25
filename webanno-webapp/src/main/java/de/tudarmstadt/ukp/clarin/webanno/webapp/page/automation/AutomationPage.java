@@ -635,16 +635,21 @@ public class AutomationPage
         });
 
         add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
-
-			private static final long serialVersionUID = -468896211970839443L;
-
-			@Override
-             public boolean isEnabled()
-             {
-                 return bModel.getProject()!=null &&
-                		 (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
-                		 || !bModel.getProject().isDisableExport());
-             }
+            private static final long serialVersionUID = -468896211970839443L;
+            
+            {
+                setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(bModel.getProject() != null
+                        && (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
+                                || !bModel.getProject().isDisableExport()));
+            }
         });
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",

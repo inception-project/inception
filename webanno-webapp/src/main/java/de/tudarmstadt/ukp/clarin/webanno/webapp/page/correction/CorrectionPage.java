@@ -500,17 +500,23 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel))
+        {
+            private static final long serialVersionUID = -468896211970839443L;
 
-			private static final long serialVersionUID = -468896211970839443L;
+            {
+                setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
+            }
 
-			@Override
-             public boolean isEnabled()
-             {
-                 return bModel.getProject()!=null &&
-                		 (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
-                		 || !bModel.getProject().isDisableExport());
-             }
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(bModel.getProject() != null
+                        && (SecurityUtil.isAdmin(bModel.getProject(), repository, bModel.getUser())
+                                || !bModel.getProject().isDisableExport()));
+            }
         });
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
