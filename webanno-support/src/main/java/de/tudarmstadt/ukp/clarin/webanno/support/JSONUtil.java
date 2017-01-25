@@ -25,6 +25,9 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.SerializableString;
+import com.fasterxml.jackson.core.io.CharacterEscapes;
+import com.fasterxml.jackson.core.io.SerializedString;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 
@@ -77,5 +80,46 @@ public class JSONUtil
     {
         return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
                 MappingJackson2HttpMessageConverter.class);
+    }
+    
+    public static String toInterpretableJsonString(Object aObject)
+        throws IOException
+    {
+        StringWriter out = new StringWriter();
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getFactory()
+                .createGenerator(out);
+        jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
+        jsonGenerator.writeObject(aObject);
+        return out.toString();
+    }
+    
+    private static class JavaScriptCharacterEscapes extends CharacterEscapes {
+        private static final long serialVersionUID = -2189758484099286957L;
+        private final int[] asciiEscapes = standardAsciiEscapesForJSON();
+        
+        public static final JavaScriptCharacterEscapes INSTANCE = new JavaScriptCharacterEscapes();
+        
+        public static JavaScriptCharacterEscapes get() {
+            return INSTANCE;
+        }
+        
+        @Override
+        public SerializableString getEscapeSequence(int aCh)
+        {
+            switch (aCh) {
+                case '\u2028':
+                    return new SerializedString("\\u2028");
+                case '\u2029':
+                    return new SerializedString("\\u2029");
+                default:
+                    return null;
+            }
+        }
+        
+        @Override
+        public int[] getEscapeCodesForAscii()
+        {
+            return asciiEscapes;
+        }
     }
 }

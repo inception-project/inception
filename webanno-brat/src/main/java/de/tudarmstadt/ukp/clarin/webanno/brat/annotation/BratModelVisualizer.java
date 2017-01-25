@@ -18,12 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.IOException;
-import java.io.StringWriter;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.model.IModel;
-
-import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -86,17 +82,13 @@ public class BratModelVisualizer
         GetDocumentResponse response = getModelObject();
 
         // Serialize BRAT object model to JSON
-		try {
-			StringWriter out = new StringWriter();
-            JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                    .getFactory().createGenerator(out);
-	        jsonGenerator.writeObject(response);
-			docData = out.toString();
-		}
-		catch (IOException e) {
-			error(ExceptionUtils.getRootCauseMessage(e));
-		}
-
+        try {
+            docData = JSONUtil.toInterpretableJsonString(response);
+        }
+        catch (IOException e) {
+            error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        
 		return docData;
 	}
 }

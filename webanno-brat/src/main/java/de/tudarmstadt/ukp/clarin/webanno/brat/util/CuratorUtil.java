@@ -226,11 +226,7 @@ public class CuratorUtil
                     aCurationColoringStrategy);
         }
 
-        StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                .getFactory().createGenerator(out);
-        jsonGenerator.writeObject(response);
-        return out.toString();
+        return JSONUtil.toInterpretableJsonString(response);
     }
 
     private static String getCollectionInformation(AnnotationService aAnnotationService,

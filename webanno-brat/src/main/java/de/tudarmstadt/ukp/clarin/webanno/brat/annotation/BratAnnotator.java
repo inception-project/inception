@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Locale;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -48,7 +47,6 @@ import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -654,19 +652,17 @@ public class BratAnnotator
     {
 
     }
+    
     private String toJson(Object result)
     {
-        StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = null;
+        String json = "[]";
         try {
-            jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper().getFactory()
-                    .createGenerator(out);
-            jsonGenerator.writeObject(result);
+            json = JSONUtil.toInterpretableJsonString(result);
         }
         catch (IOException e) {
             error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
         }
-        return out.toString();
+        return json;
     }
 
     private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)

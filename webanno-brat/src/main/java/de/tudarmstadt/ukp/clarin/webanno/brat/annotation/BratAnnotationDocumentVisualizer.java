@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +35,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
-
-import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -164,11 +161,7 @@ public class BratAnnotationDocumentVisualizer
 
         // Serialize BRAT object model to JSON
         try {
-            StringWriter out = new StringWriter();
-            JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
-                    .getFactory().createGenerator(out);
-            jsonGenerator.writeObject(response);
-            docData = out.toString();
+            docData = JSONUtil.toInterpretableJsonString(response);
         }
         catch (IOException e) {
             error(ExceptionUtils.getRootCauseMessage(e));
