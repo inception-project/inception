@@ -56,7 +56,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         s.add(Role.ROLE_USER);
         Properties settings = SettingsUtil.getSettings();
         
-        String extraRoles = settings.getProperty("auth.preauth.newuser.roles");
+        String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
         if (StringUtils.isNotBlank(extraRoles)) {
             for (String role : extraRoles.split(",")) {
                 try {
@@ -84,6 +84,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         userDetailsManager = aUserDetailsManager;
     }
 
+    @Override
     protected Object getPreAuthenticatedPrincipal(HttpServletRequest aRequest)
     {
         String o = (String) super.getPreAuthenticatedPrincipal(aRequest);

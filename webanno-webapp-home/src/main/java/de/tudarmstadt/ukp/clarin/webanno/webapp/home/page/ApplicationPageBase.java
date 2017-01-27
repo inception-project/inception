@@ -28,7 +28,6 @@ import org.apache.wicket.Application;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
-import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.head.CssHeaderItem;
@@ -91,7 +90,7 @@ public abstract class ApplicationPageBase
         Properties settings = SettingsUtil.getSettings();
         
         // Override locale to be used by application
-        String locale = settings.getProperty("locale", "en");
+        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
         switch (locale) {
         case "auto":
             // Do nothing - locale is picked up from browser
@@ -148,7 +147,8 @@ public abstract class ApplicationPageBase
         }
 
         // Override warning about embedded database.
-        if ("false".equalsIgnoreCase(settings.getProperty("warnings.embeddedDatabase"))) {
+        if ("false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE))) {
             embeddedDbWarning.setVisible(false);
         }
         
@@ -170,7 +170,8 @@ public abstract class ApplicationPageBase
                 && !clientProperties.isBrowserChrome());
 
         // Override warning about browser.
-        if ("false".equalsIgnoreCase(settings.getProperty("warnings.unsupportedBrowser"))) {
+        if ("false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER))) {
             browserWarning.setVisible(false);
         }
         

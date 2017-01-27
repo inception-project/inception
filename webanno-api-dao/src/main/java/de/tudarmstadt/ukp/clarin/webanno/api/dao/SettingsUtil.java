@@ -39,6 +39,15 @@ public class SettingsUtil
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String WEBANNO_USER_HOME_SUBDIR = ".webanno";
     
+    public static final String CFG_LOCALE = "locale";
+    public static final String CFG_STYLE_LOGO = "style.logo";
+    public static final String CFG_LOGIN_MESSAGE = "login.message";
+    public static final String CFG_AUTH_MODE = "auth.mode";
+    public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
+    public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
+    public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
+    public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
+    
     private static Properties versionInfo;
     private static Properties settings;
     
