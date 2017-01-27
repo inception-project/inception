@@ -138,6 +138,11 @@
 | Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
 | _unset_
 | `<span style="color:red; font-size: 200%;">Use are your own risk.</span>`
+
+| user.profile.accessible
+| Whether regular users can access their own profile to change their password and other profile information. This setting has no effect if WebAnno is running in pre-authentication mode.
+| false
+| true
 |===
 
 === Internal backups

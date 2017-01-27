@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
+import static java.util.Arrays.asList;
+
+import java.util.List;
+import java.util.Properties;
+
 import javax.persistence.NoResultException;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -30,9 +33,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
@@ -43,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.WebAnnoApplicationContextInitializer;
 
 /**
  * A home page for WebAnno: <br>
@@ -196,8 +202,17 @@ public class WelcomePage
                 setResponsePage(ManageUsersPage.class);
             }
         };
-        MetaDataRoleAuthorizationStrategy.authorize(userManagement, Component.RENDER, "ROLE_ADMIN");
+        // MetaDataRoleAuthorizationStrategy.authorize(userManagement, Component.RENDER, "ROLE_ADMIN");
+        // Global admins may always access the user management - normal users only if WebAnno
+        // is not running in PREAUTH mode
         add(userManagement);
+        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
+                .getEnvironment().getActiveProfiles());
+        Properties settings = SettingsUtil.getSettings();
+        userManagement.setVisible(SecurityUtil.isSuperAdmin(repository, user)
+                || (!activeProfiles.contains(WebAnnoApplicationContextInitializer.PROFILE_PREAUTH)
+                        && "true".equals(
+                                settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS))));
 
         // Add crowdsource link
         // Only project admins can see this link
