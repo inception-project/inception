@@ -48,7 +48,7 @@ public class LoginForm
         add(new RequiredTextField<String>("username"));
         add(new PasswordTextField("password"));
         Properties settings = SettingsUtil.getSettings();
-        String loginMessage = settings.getProperty("login.message");
+        String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
        add(new MultiLineLabel("loginMessage", loginMessage).setEscapeModelStrings(false));
     }
 

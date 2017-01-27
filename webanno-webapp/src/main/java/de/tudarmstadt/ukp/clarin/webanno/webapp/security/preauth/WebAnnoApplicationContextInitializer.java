@@ -34,10 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter;
 public class WebAnnoApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
-    private static final String PROFILE_PREAUTH = "auto-mode-preauth";
-    private static final String PROFILE_DATABASE = "auto-mode-builtin";
+    public static final String PROFILE_PREAUTH = "auto-mode-preauth";
+    public static final String PROFILE_DATABASE = "auto-mode-builtin";
 
-    private static final String PROP_AUTH_MODE = "auth.mode";
     private static final String AUTH_MODE_PREAUTH = "preauth";
 
     private final Log log = LogFactory.getLog(getClass());
@@ -70,7 +69,7 @@ public class WebAnnoApplicationContextInitializer
         }
 
         // Activate bean profile depending on authentication mode
-        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(PROP_AUTH_MODE))) {
+        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(SettingsUtil.CFG_AUTH_MODE))) {
             aEnvironment.setActiveProfiles(PROFILE_PREAUTH);
             log.info("Authentication: pre-auth");
         }

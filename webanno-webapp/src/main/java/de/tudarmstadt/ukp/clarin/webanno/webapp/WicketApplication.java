@@ -75,7 +75,7 @@ public class WicketApplication
                     new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
 
             Properties settings = SettingsUtil.getSettings();
-            String logoValue = settings.getProperty("style.logo");
+            String logoValue = settings.getProperty(SettingsUtil.CFG_STYLE_LOGO);
             if (StringUtils.isNotBlank(logoValue) && new File(logoValue).canRead()) {
                 getSharedResources().add("logo", new FileSystemResource(new File(logoValue)));
                 mountResource("/images/logo.png", new SharedResourceReference("logo"));
