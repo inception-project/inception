@@ -151,6 +151,8 @@ backup.keep.number=10
 
 ui.brat.sentences.number = 5
 ----
++
+NOTE: If you are using MySQL 5.5.45{plus}, 5.6.26{plus} or 5.7.6{plus}, you may have to append `?useSSL=false` to the `database.url` value.
 * Fix permissions in WebAnno home folder
 +
 [source,bash]
