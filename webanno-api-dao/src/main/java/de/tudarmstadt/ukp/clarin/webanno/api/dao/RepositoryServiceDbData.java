@@ -52,6 +52,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2410,14 +2411,21 @@ public class RepositoryServiceDbData
     @Override
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
-        return entityManager
+        List<SourceDocument> docs = entityManager
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
-                        + "WHERE adoc.project = :project AND adoc.state = (:state) "
-                        + "ORDER BY adoc.document.name ASC",
+                        + "WHERE adoc.project = :project AND adoc.state = (:state)",
                         SourceDocument.class)
                 .setParameter("project", aProject)
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
+        docs.sort(new Comparator<SourceDocument>() {
+            @Override
+            public int compare(SourceDocument aO1, SourceDocument aO2)
+            {
+                return aO1.getName().compareTo(aO2.getName());
+            }
+        });
+        return docs;
     }
 
     private static void writeSerializedCas(JCas aJCas, File aFile)
