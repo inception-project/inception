@@ -148,7 +148,7 @@ public class ProjectExportPanel extends Panel {
 
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
-			// If the curation document is exist (either finished or in progress
+			// If the curation document is finished
 			if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
 				curationDocumentExist = true;
 				break;
@@ -197,7 +197,7 @@ public class ProjectExportPanel extends Panel {
             File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
-            // If the curation document is exist (either finished or in progress)
+            // If the curation document is finished
             if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
                 File curationCasFile = repository.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
