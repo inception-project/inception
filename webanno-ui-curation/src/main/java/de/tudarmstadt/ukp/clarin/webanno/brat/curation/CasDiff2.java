@@ -59,8 +59,8 @@ import org.apache.uima.jcas.cas.TOP;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;

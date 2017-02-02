@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -28,7 +29,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -104,15 +104,15 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;

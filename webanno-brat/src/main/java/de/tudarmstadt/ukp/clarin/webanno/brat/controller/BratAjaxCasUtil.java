@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -55,12 +54,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
- *
- *
  */
 public class BratAjaxCasUtil
 {
-
     /**
      * Annotation a and annotation b are the same if they have the same address ( used for
      * {@link CoreferenceChain})

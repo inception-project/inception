@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +39,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
