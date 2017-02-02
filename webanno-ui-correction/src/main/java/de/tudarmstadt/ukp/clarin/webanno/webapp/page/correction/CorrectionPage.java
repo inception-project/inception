@@ -107,7 +107,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Export
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -433,7 +432,7 @@ public class CorrectionPage
                     public void onClose(AjaxRequestTarget target)
                     {
                         if (bModel.getDocument() == null) {
-                            setResponsePage(WelcomePage.class);
+                            setResponsePage(getApplication().getHomePage());
                             return;
                         }
 

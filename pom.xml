@@ -155,6 +155,11 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-ui-correction</artifactId>
+                <version>3.1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
                 <artifactId>webanno-io-tcf</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
@@ -446,6 +451,7 @@
         <module>webanno-webapp-core</module>
         <module>webanno-project</module>
         <module>webanno-ui-curation</module>
+        <module>webanno-ui-correction</module>
         <module>webanno-ui-monitoring</module>
         <module>webanno-ui-annotation</module>
         <module>webanno-ui-automation</module>

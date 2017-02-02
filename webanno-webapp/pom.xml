@@ -87,6 +87,10 @@
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
             <artifactId>webanno-ui-curation</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-ui-correction</artifactId>
+        </dependency>
 
 		<!-- WICKET DEPENDENCIES -->
 		<dependency>
