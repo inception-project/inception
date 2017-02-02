@@ -70,7 +70,7 @@
 	</bean>
 
     <bean id="automationService"
-        class="de.tudarmstadt.ukp.clarin.webanno.automation.MiraAutomationServiceImpl">
+        class="de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.MiraAutomationServiceImpl">
     </bean>
 
 	<bean id="documentRepository"
