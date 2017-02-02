@@ -130,26 +130,6 @@ public class ImportUtil
     }
 
     /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
-     * will conflict with file naming system
-     * 
-     * @param aName a name.
-     * @return if the name is valid.
-     */
-    public static boolean isNameValid(String aName)
-    {
-        if (aName.contains("^") || aName.contains("/") || aName.contains("\\")
-                || aName.contains("&") || aName.contains("*") || aName.contains("?")
-                || aName.contains("+") || aName.contains("$") || aName.contains("!")
-                || aName.contains("[") || aName.contains("]")) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-
-    /**
      * Remove Invalid characters
      * 
      * @param aName a name.

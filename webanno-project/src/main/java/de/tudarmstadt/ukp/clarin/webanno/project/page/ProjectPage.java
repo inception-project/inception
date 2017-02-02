@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.NameUtil;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
@@ -485,7 +486,7 @@ public class ProjectPage
                 @Override
 				public void validate() {
 					super.validate();
-						if (!ImportUtil.isNameValid(projectNameTextField.getInput())) {
+						if (!NameUtil.isNameValid(projectNameTextField.getInput())) {
 							error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
 							LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
 						}
@@ -501,7 +502,7 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
-                    if (!ImportUtil.isNameValid(project.getName())) {
+                    if (!NameUtil.isNameValid(project.getName())) {
 
                         // Maintain already loaded project and selected Users
                         // Hence Illegal Project modification (limited

@@ -50,14 +50,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.project.page.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.NameUtil;
 
 /**
  * Manage Application wide Users.
- *
- *
  */
 @MountPath("/users.html")
 public class ManageUsersPage
@@ -243,8 +240,7 @@ public class ManageUsersPage
                     else if(DetailForm.this.getModelObject().getUsername().contains(" ")){
                         info("User username should not contain SPACE character.");
                     }
-                    else if (ImportUtil
-                            .isNameValid(DetailForm.this.getModelObject().getUsername())) {
+                    else if (NameUtil.isNameValid(DetailForm.this.getModelObject().getUsername())) {
                         actionSave();
                     }
                     else {
@@ -361,7 +357,7 @@ public class ManageUsersPage
             detailForm.setVisible(false);
         }
         else {
-            setResponsePage(WelcomePage.class);
+            setResponsePage(getApplication().getHomePage());
         }
     }
 
