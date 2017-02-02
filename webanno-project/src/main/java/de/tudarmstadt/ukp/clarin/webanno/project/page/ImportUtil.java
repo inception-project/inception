@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.project.page;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -40,9 +39,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -60,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate;
 
 /**
@@ -516,45 +511,6 @@ public class ImportUtil
                 template.setOtherFeatures(otherFeatures);
             }
             aRepository.createTemplate(template);
-        }
-    }
-
-    public static void createCrowdJob(
-            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            RepositoryService aRepository, Project aImportedProject)
-        throws IOException
-    {
-        for (CrowdJob exCrowdJob : aImportedProjectSetting.getCrowdJobs()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob crowdJob = new de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob();
-            crowdJob.setApiKey(exCrowdJob.getApiKey());
-            crowdJob.setLink(exCrowdJob.getLink());
-            crowdJob.setName(exCrowdJob.getName());
-            crowdJob.setProject(aImportedProject);
-            crowdJob.setStatus(exCrowdJob.getStatus());
-            crowdJob.setTask1Id(exCrowdJob.getTask1Id());
-            crowdJob.setTask2Id(exCrowdJob.getTask2Id());
-            crowdJob.setUseGoldSents(exCrowdJob.getUseGoldSents());
-            crowdJob.setUseSents(exCrowdJob.getUseSents());
-
-            Set<SourceDocument> documents = new HashSet<SourceDocument>();
-
-            for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument exDocument : exCrowdJob
-                    .getDocuments()) {
-                documents
-                        .add(aRepository.getSourceDocument(aImportedProject, exDocument.getName()));
-            }
-            crowdJob.setDocuments(documents);
-
-            Set<SourceDocument> goldDocuments = new HashSet<SourceDocument>();
-
-            for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument exDocument : exCrowdJob
-                    .getGoldDocuments()) {
-                goldDocuments.add(aRepository.getSourceDocument(aImportedProject,
-                        exDocument.getName()));
-            }
-            crowdJob.setGoldDocuments(goldDocuments);
-
-            aRepository.createCrowdJob(crowdJob);
         }
     }
 

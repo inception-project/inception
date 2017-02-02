@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.crowdsource.CrowdSourcePage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
@@ -76,7 +75,6 @@ public class WelcomePage
     private AjaxLink<Void> annotation;
     private AjaxLink<Void> monitoring;
     private AjaxLink<Void> userManagement;
-    private AjaxLink<Void> crowdSource;
     private AjaxLink<Void> correction;
     private AjaxLink<Void> automation;
 
@@ -213,22 +211,6 @@ public class WelcomePage
                 || (!activeProfiles.contains(WebAnnoApplicationContextInitializer.PROFILE_PREAUTH)
                         && "true".equals(
                                 settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS))));
-
-        // Add crowdsource link
-        // Only project admins can see this link
-        crowdSource = new AjaxLink<Void>("crowdSource")
-        {
-            private static final long serialVersionUID = -3083016378064313844L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                setResponsePage(CrowdSourcePage.class);
-            }
-        };
-        add(crowdSource);
-        crowdSource.setVisible(projectSettingsEnabeled(user)
-                && repository.isCrowdSourceEnabled() != 0);
     }
 
     private boolean projectSettingsEnabeled(User user)

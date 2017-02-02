@@ -702,8 +702,6 @@ public class ProjectPage
                         repository, userRepository, featuresMap);
                 ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
                         featuresMap);
-                ImportUtil.createCrowdJob(importedProjectSetting, repository, importedProject);
-
                 ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
                         repository);
                 ImportUtil.createProjectPermission(importedProjectSetting, importedProject,

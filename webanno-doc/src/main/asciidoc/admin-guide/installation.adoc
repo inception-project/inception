@@ -131,7 +131,7 @@ $ mkdir /srv/webanno
 // FIXME How to reference to sample data?
 * *Optional* If you want to test WebAnno with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
 ////
-* Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties and enable/disable crowd sourcing component:
+* Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties:
 +
 [source,text]
 ----

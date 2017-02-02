@@ -109,11 +109,6 @@
 | 5
 | 
 
-| crowdsource.enabled
-| Enable crowdsourcing
-| 0
-| 1
-
 | style.logo
 | Logo image displayed in the upper-right corner
 | _unset_

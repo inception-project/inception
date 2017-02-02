@@ -53,10 +53,6 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-crowdflower</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-model</artifactId>
 		</dependency>
         <dependency>

@@ -60,8 +60,6 @@ public class ProjectUsersPanel
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private static final String CROWD_USER = "crowd_user";
-
     private class UserSelectionForm
         extends Form<SelectionModel>
     {
@@ -362,18 +360,6 @@ public class ProjectUsersPanel
                             List<User> allUSers = userRepository.list();
                             allUSers.removeAll(projectRepository
                                     .listProjectUsersWithPermissions(selectedProject.getObject()));
-                            // add this User in the List that can be used as virtual user for
-                            // crowdsource
-
-                            if (userRepository.get(CROWD_USER) == null) {
-                                User crowdUser = new User();
-                                crowdUser.setUsername(CROWD_USER);
-                                crowdUser.setPassword("");
-                                crowdUser.setEnabled(false);
-                                userRepository.create(crowdUser);
-                                allUSers.add(crowdUser);
-                            }
-
                             return allUSers;
                         }
                     }, new ChoiceRenderer<User>("username", "username")));

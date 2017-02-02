@@ -63,9 +63,6 @@ public class Project
     @JsonProperty("mira_templates")
     private List<MiraTemplate> miraTemplates = new ArrayList<MiraTemplate>();
 
-    @JsonProperty("crowd_jobs")
-    private List<CrowdJob> crowdJobs = new ArrayList<CrowdJob>();
-
     @JsonProperty("version")
     private int version;
     
@@ -183,14 +180,6 @@ public class Project
     {
         this.miraTemplates = miraTemplates;
     }
-
-	public List<CrowdJob> getCrowdJobs() {
-		return crowdJobs;
-	}
-
-	public void setCrowdJobs(List<CrowdJob> crowdJobs) {
-		this.crowdJobs = crowdJobs;
-	}
 
     public ScriptDirection getScriptDirection()
     {

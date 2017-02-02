@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -829,72 +828,6 @@ public interface RepositoryService
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
-    // Methods related to CrowdJobs
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Create a crowd Project which contains some source document. A crowd project contains source
-     * documents from {@link Project}(s), a {@link SourceDocument} belongs at most to one
-     * {@link CrowdJob}.
-     *
-     * @param crowdProject
-     *            the job.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void createCrowdJob(CrowdJob crowdProject)
-        throws IOException;
-
-    /**
-     * Check if a crowd job already exist or not with its name
-     *
-     * @param name
-     *            the name.
-     * @return if the job exists.
-     */
-    boolean existsCrowdJob(String name);
-
-    /**
-     * Get a {@link CrowdJob} by its name in a {@link Project}
-     *
-     * @param name
-     *            the name.
-     * @param project
-     *            the project.
-     * @return the job.
-     */
-    CrowdJob getCrowdJob(String name, Project project);
-
-    /**
-     * Get a crowdFlower Template from the WebAnno root directory
-     *
-     * @param fileName
-     *            the name.
-     * @return the template.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    File getTemplate(String fileName)
-        throws IOException;
-
-    /**
-     * List {@link CrowdJob}s/Crowd Tasks in the system
-     *
-     * @return the jobs.
-     */
-    List<CrowdJob> listCrowdJobs();
-
-    List<CrowdJob> listCrowdJobs(Project project);
-
-    /**
-     * remove a crowd project
-     *
-     * @param crowdProject
-     *            the job.
-     */
-    void removeCrowdJob(CrowdJob crowdProject);
-
-    // --------------------------------------------------------------------------------------------
     // Methods related to import/export data formats
     // --------------------------------------------------------------------------------------------
 
@@ -1072,14 +1005,6 @@ public interface RepositoryService
      * @return the driver name.
      */
     String getDatabaseDriverName();
-
-    /**
-     * For 1.0.0 release, the settings.properties file contains a key that is indicates if
-     * crowdsourcing is enabled or not (0 disabled, 1 enabled)
-     *
-     * @return if crowdsourcing is enabled.
-     */
-    int isCrowdSourceEnabled();
 
     void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
         throws UIMAException, IOException;

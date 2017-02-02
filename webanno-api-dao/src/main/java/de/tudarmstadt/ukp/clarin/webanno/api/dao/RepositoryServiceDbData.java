@@ -128,7 +128,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.CrowdJob;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -184,9 +183,6 @@ public class RepositoryServiceDbData
     @Value(value = "${backup.keep.time}")
     private long backupKeepTime;
 
-    @Value(value = "${crowdsource.enabled}")
-    private int crowdsourceEnabled;
-
     @Value(value = "${backup.interval}")
     private long backupInterval;
 
@@ -212,8 +208,6 @@ public class RepositoryServiceDbData
     private static final String ANNOTATION = "/annotation";
     private static final String SETTINGS = "/settings/";
     private static final String META_INF = "/META-INF/";
-
-    private static final String TEMPLATE = "/crowdtemplates/";
 
     private static final String HELP_FILE = "/help.properties";
 
@@ -327,24 +321,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createCrowdJob(CrowdJob aCrowdJob)
-        throws IOException
-    {
-        if (aCrowdJob.getId() == 0) {
-            entityManager.persist(aCrowdJob);
-        }
-        else {
-            entityManager.merge(aCrowdJob);
-        }
-
-        createLog(aCrowdJob.getProject()).info(
-                " Created  crowd job from project [" + aCrowdJob.getProject() + "] with ID ["
-                        + aCrowdJob.getId() + "]");
-        createLog(aCrowdJob.getProject()).removeAllAppenders();
-    }
-
-    @Override
-    @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
         throws IOException
     {
@@ -448,20 +424,6 @@ public class RepositoryServiceDbData
             return false;
         }
 
-    }
-
-    @Override
-    @Transactional
-    public boolean existsCrowdJob(String aName)
-    {
-        try {
-            entityManager.createQuery("FROM CrowdJob WHERE name = :name", CrowdJob.class)
-                    .setParameter("name", aName).getSingleResult();
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
     }
 
     @Override
@@ -937,14 +899,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public File getTemplate(String fileName)
-        throws IOException
-    {
-        FileUtils.forceMkdir(new File(dir.getAbsolutePath() + TEMPLATE));
-        return new File(dir.getAbsolutePath() + TEMPLATE, fileName);
-    }
-
-    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> listProjectPermisionLevel(User aUser, Project aProject)
     {
@@ -999,16 +953,6 @@ public class RepositoryServiceDbData
     {
         return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
                 .setParameter("name", aName).getSingleResult();
-    }
-
-    @Override
-    @Transactional
-    public CrowdJob getCrowdJob(String aName, Project aProjec)
-    {
-        return entityManager
-                .createQuery("FROM CrowdJob WHERE name = :name AND project = :project",
-                        CrowdJob.class).setParameter("name", aName)
-                .setParameter("project", aProjec).getSingleResult();
     }
 
     @Override
@@ -1268,21 +1212,6 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    @Transactional
-    public List<CrowdJob> listCrowdJobs()
-    {
-        return entityManager.createQuery("FROM CrowdJob", CrowdJob.class).getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<CrowdJob> listCrowdJobs(Project aProject)
-    {
-        return entityManager.createQuery("FROM CrowdJob where project =:project", CrowdJob.class)
-                .setParameter("project", aProject).getResultList();
-    }
-
-    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
@@ -1315,11 +1244,6 @@ public class RepositoryServiceDbData
     public void removeProject(Project aProject, User aUser)
         throws IOException
     {
-
-        // remove, if exists, a crowdsource job created from this project
-        for (CrowdJob crowdJob : listCrowdJobs(aProject)) {
-            removeCrowdJob(crowdJob);
-        }
         for (SourceDocument document : listSourceDocuments(aProject)) {
             removeSourceDocument(document);
         }
@@ -1362,13 +1286,6 @@ public class RepositoryServiceDbData
                 " Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
         createLog(aProject).removeAllAppenders();
 
-    }
-
-    @Override
-    @Transactional
-    public void removeCrowdJob(CrowdJob crowdProject)
-    {
-        entityManager.remove(entityManager.merge(crowdProject));
     }
 
     @Override
@@ -1418,18 +1335,10 @@ public class RepositoryServiceDbData
     public void removeSourceDocument(SourceDocument aDocument)
         throws IOException
     {
-
         for (AnnotationDocument annotationDocument : listAllAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
-        // remove it from the crowd job, if it belongs already
-        for (CrowdJob crowdJob : listCrowdJobs(aDocument.getProject())) {
-            if (crowdJob.getDocuments().contains(aDocument)) {
-                crowdJob.getDocuments().remove(aDocument);
-                entityManager.persist(crowdJob);
-            }
-        }
-
+        
         entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
@@ -2207,12 +2116,6 @@ public class RepositoryServiceDbData
         });
 
         return sb.toString();
-    }
-
-    @Override
-    public int isCrowdSourceEnabled()
-    {
-        return crowdsourceEnabled;
     }
 
     private List<TypeSystemDescription> getProjectTypes(Project aProject)
