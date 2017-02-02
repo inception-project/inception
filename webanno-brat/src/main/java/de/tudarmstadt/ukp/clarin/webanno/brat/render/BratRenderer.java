@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
@@ -152,7 +152,7 @@ public class BratRenderer
      * @throws ClassNotFoundException
      *             if a DKPro Core reader/writer cannotbe loaded.
      */
-    public GetDocumentResponse getDocumentResponse(BratAnnotatorModel aBratAnnotatorModel,
+    public GetDocumentResponse getDocumentResponse(ActionContext aBratAnnotatorModel,
             int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
             AnnotationService aAnnotationService)
         throws UIMAException, IOException, ClassNotFoundException
@@ -179,7 +179,7 @@ public class BratRenderer
      *            hum?
      */
     public static void render(GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
+            ActionContext aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
             boolean aIsGetDocument, AnnotationService aAnnotationService)
     {
         // Maybe this section should be moved elsewehere and the aIsGetDocument parameter should
@@ -207,7 +207,7 @@ public class BratRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, BratAnnotatorModel aBModel,
+    public static void render(GetDocumentResponse aResponse, ActionContext aBModel,
             JCas aJCas, AnnotationService aAnnotationService)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getScriptDirection()));

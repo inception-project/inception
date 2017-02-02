@@ -50,7 +50,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.MultipleSentenceCoveredException;
@@ -183,7 +183,7 @@ public class SpanAdapter
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
+            GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
         // The first sentence address in the display window!
@@ -303,7 +303,7 @@ public class SpanAdapter
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel)
+            ActionContext aBratAnnotatorModel)
     {
         // The first sentence address in the display window!
         Sentence firstSentence = selectSentenceAt(aJcas,

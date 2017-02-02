@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
@@ -126,7 +126,7 @@ public class CurationPage
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
-    private BratAnnotatorModel bModel;
+    private ActionContext bModel;
 
     private int gotoPageAddress;
     private int sentenceNumber = 1;
@@ -147,7 +147,7 @@ public class CurationPage
     @SuppressWarnings("deprecation")
     public CurationPage()
     {
-        bModel = new BratAnnotatorModel();
+        bModel = new ActionContext();
         bModel.setMode(Mode.CURATION);
         reMerge = new ReMergeCasModel();
 
@@ -184,7 +184,7 @@ public class CurationPage
         add(curationPanel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<BratAnnotatorModel>(bModel)));
+                new Model<ActionContext>(bModel)));
         documentNamePanel.setOutputMarkupId(true);
 
         add(numberOfPages = (Label) new Label("numberOfPages",
@@ -303,7 +303,7 @@ public class CurationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel), curationPanel.editor)
+                new Model<ActionContext>(bModel), curationPanel.editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -416,7 +416,7 @@ public class CurationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel))
+        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel))
         {
             private static final long serialVersionUID = -468896211970839443L;
 
@@ -612,7 +612,7 @@ public class CurationPage
 
         showFinishCurationModal.add(finish);
 
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
 
         final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));

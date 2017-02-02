@@ -24,7 +24,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
@@ -63,7 +63,7 @@ public interface TypeAdapter
      *            the  coloring strategy to render this layer
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            BratAnnotatorModel aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
+            ActionContext aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
 
     /**
      * The ID of the type.

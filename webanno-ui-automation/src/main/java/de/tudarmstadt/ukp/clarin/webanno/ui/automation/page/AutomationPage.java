@@ -76,7 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
@@ -149,7 +149,7 @@ public class AutomationPage
     private UserDao userRepository;
 
     private CurationContainer curationContainer;
-    private BratAnnotatorModel bModel;
+    private ActionContext bModel;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -178,7 +178,7 @@ public class AutomationPage
 
     public AutomationPage()
     {
-        bModel = new BratAnnotatorModel();
+        bModel = new ActionContext();
         bModel.setMode(Mode.AUTOMATION);
 
         WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
@@ -253,12 +253,12 @@ public class AutomationPage
         annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
+                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -277,7 +277,7 @@ public class AutomationPage
             }
             
             @Override
-            public void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            public void onAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
             	if(aBModel.isForwardAnnotation()){
             		return;
@@ -345,7 +345,7 @@ public class AutomationPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
@@ -359,7 +359,7 @@ public class AutomationPage
             }
             
             @Override
-            public void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel,
+            public void onDelete(AjaxRequestTarget aTarget, ActionContext aBModel,
                     AnnotationFS aFS)
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
@@ -403,13 +403,13 @@ public class AutomationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<ActionContext>(bModel),
                 editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -452,7 +452,7 @@ public class AutomationPage
         curationContainer.setBratAnnotatorModel(bModel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<BratAnnotatorModel>(bModel)));
+                new Model<ActionContext>(bModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -570,7 +570,7 @@ public class AutomationPage
                             update(target);
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
-                                    new Model<BratAnnotatorModel>(bModel), user, repository));
+                                    new Model<ActionContext>(bModel), user, repository));
     						editor.refresh(target);
     		
                         }
@@ -601,7 +601,7 @@ public class AutomationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel), editor)
+                new Model<ActionContext>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -632,7 +632,7 @@ public class AutomationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -774,18 +774,18 @@ public class AutomationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<BratAnnotatorModel>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<ActionContext>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected BratAnnotatorModel load()
+            protected ActionContext load()
             {
                 return bModel;
             }
         });
 
-        add(new FinishLink("showYesNoModalPanel", new Model<BratAnnotatorModel>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", new Model<ActionContext>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -1158,7 +1158,7 @@ public class AutomationPage
             }
         });
         
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
     }
 
     

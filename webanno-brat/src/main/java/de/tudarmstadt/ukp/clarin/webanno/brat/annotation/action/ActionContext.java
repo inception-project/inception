@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -33,7 +33,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
@@ -54,7 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  *
  *
  */
-public class BratAnnotatorModel
+public class ActionContext
     implements Serializable
 {
     private static final long serialVersionUID = 1078613192789450714L;

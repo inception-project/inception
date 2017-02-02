@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
@@ -100,7 +100,7 @@ public class CurationPanel
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer corssSentAnnoView;
 
-    private BratAnnotatorModel bModel;
+    private ActionContext bModel;
 
     private int fSn = 0;
     private int lSn = 0;
@@ -256,12 +256,12 @@ public class CurationPanel
         annotationViewCell.add(suggestionViewPanel);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
+                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
@@ -270,7 +270,7 @@ public class CurationPanel
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
@@ -296,14 +296,14 @@ public class CurationPanel
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<BratAnnotatorModel>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<ActionContext>(bModel),
                 editor)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel bratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, ActionContext bratAnnotatorModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {

@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
@@ -133,7 +133,7 @@ public class AnnotationPage
     private int totalNumberOfSentence;
 
     private boolean closeButtonClicked;
-    private BratAnnotatorModel bModel = new BratAnnotatorModel();
+    private ActionContext bModel = new ActionContext();
 
     private WebMarkupContainer sidebarCell;
     private WebMarkupContainer annotationViewCell;
@@ -167,12 +167,12 @@ public class AnnotationPage
         add(annotationViewCell);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<BratAnnotatorModel>(bModel))
+                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -191,7 +191,7 @@ public class AnnotationPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
@@ -206,13 +206,13 @@ public class AnnotationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
         
-        annotator = new BratAnnotator("embedder1", new Model<BratAnnotatorModel>(bModel),
+        annotator = new BratAnnotator("embedder1", new Model<ActionContext>(bModel),
                 editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
             {
                 bModel = aBratAnnotatorModel;
                 aTarget.add(numberOfPages);
@@ -243,7 +243,7 @@ public class AnnotationPage
         bModel.setMode(Mode.ANNOTATION);
 
         add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
-                new Model<BratAnnotatorModel>(bModel)).setOutputMarkupId(true));
+                new Model<ActionContext>(bModel)).setOutputMarkupId(true));
 
         numberOfPages = new Label("numberOfPages", new Model<String>());
         numberOfPages.setOutputMarkupId(true);
@@ -325,7 +325,7 @@ public class AnnotationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<BratAnnotatorModel>(bModel), editor)
+                new Model<ActionContext>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -349,7 +349,7 @@ public class AnnotationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<BratAnnotatorModel>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -617,7 +617,7 @@ public class AnnotationPage
                 annotator.bratRenderLater(aTarget);
             }
         });
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<BratAnnotatorModel>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
@@ -710,10 +710,10 @@ public class AnnotationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new Model<BratAnnotatorModel>(bModel));
+        finish = new FinishImage("finishImage", new Model<ActionContext>(bModel));
         finish.setOutputMarkupId(true);
 
-        add(new FinishLink("showYesNoModalPanel", new Model<BratAnnotatorModel>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", new Model<ActionContext>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             

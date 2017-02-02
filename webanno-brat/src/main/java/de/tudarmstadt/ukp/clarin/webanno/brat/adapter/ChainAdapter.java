@@ -40,7 +40,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
@@ -125,7 +125,7 @@ public class ChainAdapter
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, BratAnnotatorModel aBratAnnotatorModel,
+            GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
         // Get begin and end offsets of window content

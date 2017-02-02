@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -233,7 +233,7 @@ public class SuggestionViewPanel
                 clickedAnnotationDocument, address);
     }
 
-    private void createSpan(String spanType, BratAnnotatorModel aBModel, JCas aMergeJCas,
+    private void createSpan(String spanType, ActionContext aBModel, JCas aMergeJCas,
             AnnotationDocument aAnnotationDocument, int aAddress)
             throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
@@ -294,7 +294,7 @@ public class SuggestionViewPanel
         String fsArcaddress = aRequest.getParameterValue("arcId").toString();
 
         String username = aCurationUserSegment.getUsername();
-        BratAnnotatorModel bModel = aCurationUserSegment.getBratAnnotatorModel();
+        ActionContext bModel = aCurationUserSegment.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
 
         JCas clickedJCas = null;
@@ -361,7 +361,7 @@ public class SuggestionViewPanel
     }
 
 
-    private JCas getJCas(BratAnnotatorModel aModel, AnnotationDocument aDocument)
+    private JCas getJCas(ActionContext aModel, AnnotationDocument aDocument)
             throws IOException
     {
         try {

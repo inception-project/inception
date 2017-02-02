@@ -26,7 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -49,28 +49,28 @@ public class FinishImage
 
     WebMarkupContainer finish;
 
-    public void setModel(IModel<BratAnnotatorModel> aModel)
+    public void setModel(IModel<ActionContext> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(BratAnnotatorModel aModel)
+    public void setModelObject(ActionContext aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<BratAnnotatorModel> getModel()
+    public IModel<ActionContext> getModel()
     {
-        return (IModel<BratAnnotatorModel>) getDefaultModel();
+        return (IModel<ActionContext>) getDefaultModel();
     }
 
-    public BratAnnotatorModel getModelObject()
+    public ActionContext getModelObject()
     {
-        return (BratAnnotatorModel) getDefaultModelObject();
+        return (ActionContext) getDefaultModelObject();
     }
 
-    public FinishImage(String id, final IModel<BratAnnotatorModel> aModel)
+    public FinishImage(String id, final IModel<ActionContext> aModel)
     {
         super(id, aModel);
 
@@ -101,7 +101,7 @@ public class FinishImage
         }));
     }
 
-    public static boolean isFinished(final IModel<BratAnnotatorModel> aModel, User user,
+    public static boolean isFinished(final IModel<ActionContext> aModel, User user,
             RepositoryService aRepository)
     {
         return aRepository.existsAnnotationDocument(aModel.getObject().getDocument(), user)

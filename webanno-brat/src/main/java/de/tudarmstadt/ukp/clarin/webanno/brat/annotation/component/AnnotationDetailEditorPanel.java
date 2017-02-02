@@ -109,8 +109,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
@@ -168,7 +168,7 @@ public class AnnotationDetailEditorPanel
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
     private List<FeatureModel> featureModels;
-    private BratAnnotatorModel bModel;
+    private ActionContext bModel;
     private String selectedTag = "";
     
     /**
@@ -182,7 +182,7 @@ public class AnnotationDetailEditorPanel
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
 
-    public AnnotationDetailEditorPanel(String id, IModel<BratAnnotatorModel> aModel)
+    public AnnotationDetailEditorPanel(String id, IModel<ActionContext> aModel)
     {
         super(id, aModel);
         
@@ -234,14 +234,14 @@ public class AnnotationDetailEditorPanel
     }
 
     private class AnnotationFeatureForm
-        extends Form<BratAnnotatorModel>
+        extends Form<ActionContext>
     {
         private static final long serialVersionUID = 3635145598405490893L;
         private WebMarkupContainer featureEditorsContainer;
 
-        public AnnotationFeatureForm(String id, BratAnnotatorModel aBModel)
+        public AnnotationFeatureForm(String id, ActionContext aBModel)
         {
-            super(id, new CompoundPropertyModel<BratAnnotatorModel>(aBModel));
+            super(id, new CompoundPropertyModel<ActionContext>(aBModel));
 
             add(forwardAnnotationCheck = new CheckBox("forwardAnnotation")
             {
@@ -540,7 +540,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, boolean aIsForwarded)
+    public void actionAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
 		if (isAnnotationFinished()) {
@@ -555,7 +555,7 @@ public class AnnotationDetailEditorPanel
         actionAnnotate(aTarget, aBModel, jCas, aIsForwarded);
     }
 
-    public void actionAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel, JCas jCas, boolean aIsForwarded)
+    public void actionAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel, JCas jCas, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         if (aBModel.getSelectedAnnotationLayer() == null) {
@@ -746,7 +746,7 @@ public class AnnotationDetailEditorPanel
 		}
 	}
     
-    public void actionDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public void actionDelete(AjaxRequestTarget aTarget, ActionContext aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         BratAnnotationException
     {
@@ -871,7 +871,7 @@ public class AnnotationDetailEditorPanel
         onDelete(aTarget, aBModel, fs);
     }
 
-    private void actionReverse(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    private void actionReverse(AjaxRequestTarget aTarget, ActionContext aBModel)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         JCas jCas;
@@ -934,7 +934,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
-    public  void actionClear(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    public  void actionClear(AjaxRequestTarget aTarget, ActionContext aBModel)
         throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
     {
         reset(aTarget);
@@ -942,7 +942,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
     
-    public JCas getCas(BratAnnotatorModel aBModel)
+    public JCas getCas(ActionContext aBModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
 
@@ -957,7 +957,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void autoScroll(JCas jCas, BratAnnotatorModel aBModel)
+    private void autoScroll(JCas jCas, ActionContext aBModel)
     {
         int address = getAddr(selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
                 aBModel.getSentenceEndOffset()));
@@ -980,7 +980,7 @@ public class AnnotationDetailEditorPanel
         aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
-    private void autoForwardScroll(JCas jCas, BratAnnotatorModel aBModel)
+    private void autoForwardScroll(JCas jCas, ActionContext aBModel)
     {
         int address = getNextSentenceAddress(jCas, selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress()));
         aBModel.setSentenceAddress(address);
@@ -1001,7 +1001,7 @@ public class AnnotationDetailEditorPanel
     }
     
     @SuppressWarnings("unchecked")
-    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final BratAnnotatorModel aBModel,
+    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final ActionContext aBModel,
             int aAnnotationId)
     {
         // Set an armed slot
@@ -1153,27 +1153,27 @@ public class AnnotationDetailEditorPanel
         }        
     }
 
-    protected void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
     {
         // Overriden in BratAnnotator
     }
 
-    protected void onAutoForward(AjaxRequestTarget aTarget, BratAnnotatorModel aBModel)
+    protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
     {
         // Overriden in BratAnnotator
     }
 
-    protected void onAnnotate(AjaxRequestTarget aTarget, BratAnnotatorModel aModel)
+    protected void onAnnotate(AjaxRequestTarget aTarget, ActionContext aModel)
     {
         // Overriden in AutomationPage
     }
 
-    protected void onDelete(AjaxRequestTarget aTarget, BratAnnotatorModel aModel, AnnotationFS aFs)
+    protected void onDelete(AjaxRequestTarget aTarget, ActionContext aModel, AnnotationFS aFs)
     {
         // Overriden in AutomationPage
     }
 
-    public void refreshAnnotationLayers(BratAnnotatorModel aBModel)
+    public void refreshAnnotationLayers(ActionContext aBModel)
     {
         updateLayersDropdown(aBModel);
         if (annotationLayers.size() == 0) {
@@ -1191,7 +1191,7 @@ public class AnnotationDetailEditorPanel
         updateRememberLayer();
     }
 
-    private void updateLayersDropdown(BratAnnotatorModel aBModel)
+    private void updateLayersDropdown(ActionContext aBModel)
     {
         annotationLayers.clear();
         AnnotationLayer l = null;
@@ -1601,7 +1601,7 @@ public class AnnotationDetailEditorPanel
             indicator.reset(); //reset the indicator
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
-                BratAnnotatorModel model = bModel;
+                ActionContext model = bModel;
                 // verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
 //                    indicator.setRulesExist(true);
@@ -1690,7 +1690,7 @@ public class AnnotationDetailEditorPanel
         /**
          * Adds and sorts tags based on Constraints rules
          */
-        private List<Tag> populateTagsBasedOnRules(BratAnnotatorModel model, FeatureModel aModel)
+        private List<Tag> populateTagsBasedOnRules(ActionContext model, FeatureModel aModel)
         {
             // Add values from rules
             String restrictionFeaturePath;
@@ -1868,7 +1868,7 @@ public class AnnotationDetailEditorPanel
                         @Override
                         public String getObject()
                         {
-                            BratAnnotatorModel model = bModel;
+                            ActionContext model = bModel;
                             if (model.isArmedSlot(aModel.feature, aItem.getIndex())) {
                                 return "; background: orange";
                             }
@@ -2006,7 +2006,7 @@ public class AnnotationDetailEditorPanel
                 
                 @Override
                 protected void onConfigure(){
-                    BratAnnotatorModel model = bModel;
+                    ActionContext model = bModel;
                     setVisible(!(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature())));
 //                    setEnabled(!(model.isSlotArmed()
@@ -2043,7 +2043,7 @@ public class AnnotationDetailEditorPanel
 
                 @Override
                 protected void onConfigure(){
-                    BratAnnotatorModel model = bModel;
+                    ActionContext model = bModel;
                     setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
 //                    setEnabled(model.isSlotArmed()
@@ -2055,7 +2055,7 @@ public class AnnotationDetailEditorPanel
                 {
                     List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                             .getModelObject().value;
-                    BratAnnotatorModel model = bModel;
+                    ActionContext model = bModel;
                     
                     //Update the slot
                     LinkWithRoleModel m = new LinkWithRoleModel();
@@ -2089,7 +2089,7 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onConfigure()
                 {
-                    BratAnnotatorModel model = bModel;
+                    ActionContext model = bModel;
                     setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
 //                    setEnabled(model.isSlotArmed()
@@ -2102,7 +2102,7 @@ public class AnnotationDetailEditorPanel
                     List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                             .getModelObject().value;
 
-                    BratAnnotatorModel model = bModel;
+                    ActionContext model = bModel;
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
 
@@ -2132,7 +2132,7 @@ public class AnnotationDetailEditorPanel
          * @return List containing tags which exist in tagset and also suggested by rules, followed
          *         by the remaining tags in tagset.
          */
-        private List<Tag> addTagsBasedOnRules(BratAnnotatorModel model, final FeatureModel aModel)
+        private List<Tag> addTagsBasedOnRules(ActionContext model, final FeatureModel aModel)
         {
             String restrictionFeaturePath = aModel.feature.getName() + "."
                     + aModel.feature.getLinkTypeRoleFeatureName();
@@ -2503,7 +2503,7 @@ public class AnnotationDetailEditorPanel
 
     }
 
-	private void updateForwardAnnotation(BratAnnotatorModel aBModel) {
+	private void updateForwardAnnotation(ActionContext aBModel) {
 		if (aBModel.getSelectedAnnotationLayer() != null
 				&& !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
 			aBModel.setForwardAnnotation(false);// no forwarding for

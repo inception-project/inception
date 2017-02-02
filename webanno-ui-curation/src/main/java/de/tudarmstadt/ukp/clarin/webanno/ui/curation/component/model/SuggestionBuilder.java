@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -96,7 +96,7 @@ public class SuggestionBuilder
         userRepository = aUserDao;
     }
 
-    public CurationContainer buildCurationContainer(BratAnnotatorModel aBModel)
+    public CurationContainer buildCurationContainer(ActionContext aBModel)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
@@ -313,7 +313,7 @@ public class SuggestionBuilder
      * @throws BratAnnotationException
      *             hum?
      */
-    public JCas getMergeCas(BratAnnotatorModel aBratAnnotatorModel, SourceDocument aDocument,
+    public JCas getMergeCas(ActionContext aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
@@ -363,7 +363,7 @@ public class SuggestionBuilder
      * @throws ClassNotFoundException
      * @throws UIMAException
      */
-    private void updateSegment(BratAnnotatorModel aBratAnnotatorModel,
+    private void updateSegment(ActionContext aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
             int aWinSize)
@@ -447,7 +447,7 @@ public class SuggestionBuilder
         return mergeJCas;
     }
     
-    private JCas createCorrectionCas(JCas mergeJCas, BratAnnotatorModel aBratAnnotatorModel,
+    private JCas createCorrectionCas(JCas mergeJCas, ActionContext aBratAnnotatorModel,
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {

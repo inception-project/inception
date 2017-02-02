@@ -71,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.AutomationTypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -97,7 +97,7 @@ public class AutomationUtil
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateSpanAnnotation(BratAnnotatorModel aBModel,
+    public static void repeateSpanAnnotation(ActionContext aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
@@ -137,7 +137,7 @@ public class AutomationUtil
         }
     }
 
-    public static void repeateRelationAnnotation(BratAnnotatorModel aBModel,
+    public static void repeateRelationAnnotation(ActionContext aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
@@ -316,7 +316,7 @@ public class AutomationUtil
         }
     }
 
-    public static void deleteSpanAnnotation(BratAnnotatorModel aBModel,
+    public static void deleteSpanAnnotation(ActionContext aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
@@ -361,7 +361,7 @@ public class AutomationUtil
     /**
      * 
      */
-    public static void deleteRelationAnnotation(BratAnnotatorModel aBModel,
+    public static void deleteRelationAnnotation(ActionContext aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException

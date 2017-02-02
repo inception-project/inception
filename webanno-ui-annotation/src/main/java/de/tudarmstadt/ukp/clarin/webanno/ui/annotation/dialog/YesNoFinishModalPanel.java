@@ -31,7 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -58,9 +58,9 @@ public class YesNoFinishModalPanel
 
     private YesNoButtonsForm yesNoButtonsForm;
 
-    private BratAnnotatorModel bModel;
+    private ActionContext bModel;
 
-    public YesNoFinishModalPanel(String aId, BratAnnotatorModel aBModel,
+    public YesNoFinishModalPanel(String aId, ActionContext aBModel,
             ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);

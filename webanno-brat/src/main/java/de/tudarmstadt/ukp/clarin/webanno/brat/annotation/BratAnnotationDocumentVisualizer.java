@@ -39,6 +39,7 @@ import org.springframework.dao.DataRetrievalFailureException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -135,7 +136,7 @@ public class BratAnnotationDocumentVisualizer
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        BratAnnotatorModel bratAnnotatorModel = new BratAnnotatorModel();
+        ActionContext bratAnnotatorModel = new ActionContext();
         SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
 
         Map<String[], Queue<String>> colorQueues = new HashMap<>();

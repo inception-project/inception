@@ -24,7 +24,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferenceModalPanel;
@@ -40,7 +40,7 @@ public class AnnotationLayersModalPanel
 
     private boolean closeButtonClicked;
 
-    public AnnotationLayersModalPanel(String id, final IModel<BratAnnotatorModel> aBModel, AnnotationDetailEditorPanel aEditor)
+    public AnnotationLayersModalPanel(String id, final IModel<ActionContext> aBModel, AnnotationDetailEditorPanel aEditor)
     {
         super(id, aBModel);
         // dialog window to select annotation layer preferences

@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -73,7 +73,7 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> sidebarSizeField;
     private NumberTextField<Integer> fontSizeField;
 
-    private final BratAnnotatorModel bModel;
+    private final ActionContext bModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
@@ -250,7 +250,7 @@ public class AnnotationPreferenceModalPanel
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            BratAnnotatorModel aBModel, AnnotationDetailEditorPanel aEditor)
+            ActionContext aBModel, AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
         this.bModel = aBModel;

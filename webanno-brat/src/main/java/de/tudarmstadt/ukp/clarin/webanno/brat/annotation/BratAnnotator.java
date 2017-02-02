@@ -52,7 +52,8 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -118,27 +119,27 @@ public class BratAnnotator
      * @param aModel
      *            the model.
      */
-    public void setModel(IModel<BratAnnotatorModel> aModel)
+    public void setModel(IModel<ActionContext> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(BratAnnotatorModel aModel)
+    public void setModelObject(ActionContext aModel)
     {
         setDefaultModelObject(aModel);
     }
 
-    public IModel<BratAnnotatorModel> getModel()
+    public IModel<ActionContext> getModel()
     {
-        return (IModel<BratAnnotatorModel>) getDefaultModel();
+        return (IModel<ActionContext>) getDefaultModel();
     }
 
-    public BratAnnotatorModel getModelObject()
+    public ActionContext getModelObject()
     {
-        return (BratAnnotatorModel) getDefaultModelObject();
+        return (ActionContext) getDefaultModelObject();
     }
 
-    public BratAnnotator(String id, IModel<BratAnnotatorModel> aModel,
+    public BratAnnotator(String id, IModel<ActionContext> aModel,
             final AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
@@ -648,7 +649,7 @@ public class BratAnnotator
         this.collection = collection;
     }
 
-    public void onChange(AjaxRequestTarget aTarget, BratAnnotatorModel aBratAnnotatorModel)
+    public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
     {
 
     }
@@ -665,7 +666,7 @@ public class BratAnnotator
         return json;
     }
 
-    private JCas getCas(BratAnnotatorModel aBratAnnotatorModel)
+    private JCas getCas(ActionContext aBratAnnotatorModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
 
