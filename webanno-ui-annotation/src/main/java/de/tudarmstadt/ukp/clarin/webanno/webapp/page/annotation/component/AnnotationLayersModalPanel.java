@@ -28,11 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.AnnotationPreferenceModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 
 /**
- * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
+ * A panel used by {@link AnnotationPage} {@code CurationPage} and {code CorrectionPage} consisting
  * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
  */
 public class AnnotationLayersModalPanel

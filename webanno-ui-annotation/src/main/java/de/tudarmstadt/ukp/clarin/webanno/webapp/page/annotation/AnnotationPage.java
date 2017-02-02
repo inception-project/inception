@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Export
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -305,7 +304,7 @@ public class AnnotationPage
                         // selected window will be "blind down". Something in the brat js causes
                         // this!
                         if (bModel.getProject() == null || bModel.getDocument() == null) {
-                            setResponsePage(WelcomePage.class);
+                            setResponsePage(getApplication().getHomePage());
                         }
 
                         // Dialog was cancelled rather that a document was selected.

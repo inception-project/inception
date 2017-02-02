@@ -22,7 +22,7 @@
         <artifactId>webanno</artifactId>
 		<version>3.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>webanno-automation</artifactId>
+	<artifactId>webanno-ui-automation</artifactId>
     <name>WebAnno - UI - Automation</name>
 	<packaging>jar</packaging>
 	<dependencies>
@@ -31,6 +31,10 @@
 			<artifactId>commons-logging-api</artifactId>
 		</dependency>
 	
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-webapp-core</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-model</artifactId>
@@ -47,6 +51,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-api</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-ui-annotation</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
@@ -140,6 +148,10 @@
 		  <groupId>com.googlecode.wicket-jquery-ui</groupId>
 			<artifactId>wicket-jquery-ui-core</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.wicketstuff</groupId>
+            <artifactId>wicketstuff-annotation</artifactId>
+        </dependency>
 
 		<!-- JUNIT DEPENDENCY FOR TESTING -->
 		<dependency>

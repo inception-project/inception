@@ -26,14 +26,10 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.curation.CurationPage;
 
 /**
- * A panel used by {@link AnnotationPage} {@link CurationPage} and {@link CorrectionPage} consisting
+ * A panel used by {@link AnnotationPage} {@code CurationPage} and {@code CorrectionPage} consisting
  * of a link to open  annotation guideline
- *
- *
  */
 public class GuidelineModalPanel
     extends Panel

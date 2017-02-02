@@ -118,7 +118,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Export
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -128,7 +127,6 @@ import wicket.contrib.input.events.key.KeyType;
  * This is the main class for the Automation page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
- *
  */
 @MountPath("/automation.html")
 public class AutomationPage
@@ -555,7 +553,7 @@ public class AutomationPage
                     public void onClose(AjaxRequestTarget target)
                     {
                         if (bModel.getDocument() == null) {
-                            setResponsePage(WelcomePage.class);
+                            setResponsePage(getApplication().getHomePage());
                             return;
                         }
 
