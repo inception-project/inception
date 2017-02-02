@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,24 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-package de.tudarmstadt.ukp.clarin.webanno.brat.util;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
-
-/**
- * Throw an exception if either a target or orgin span annotation is not merged before the arc
- * annotation merging is attempted
- *
- */
-public class NoOriginOrTargetAnnotationSelectedException
-    extends BratAnnotationException
+public class BratCssUiReference
+    extends CssResourceReference
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = 1L;
 
-    public NoOriginOrTargetAnnotationSelectedException(String message)
+    private static final BratCssUiReference INSTANCE = new BratCssUiReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static BratCssUiReference get()
     {
-        super(message);
+        return INSTANCE;
     }
 
+    /**
+     * Private constructor
+     */
+    private BratCssUiReference()
+    {
+        super(BratCssUiReference.class, "style-ui.css");
+    }
 }

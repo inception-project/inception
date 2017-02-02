@@ -1,5 +1,5 @@
 /*
- * Copyright 2013
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,33 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
+package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-/**
- * throw an exception if the a span annotation is not in the same sentence
- */
-public class BratAnnotationException
-    extends Exception
+import org.apache.wicket.request.resource.CssResourceReference;
+
+public class BratCssVisReference
+    extends CssResourceReference
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = 1L;
 
-    public BratAnnotationException(String message)
+    private static final BratCssVisReference INSTANCE = new BratCssVisReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static BratCssVisReference get()
     {
-        super(message);
+        return INSTANCE;
     }
 
-    public BratAnnotationException()
+    /**
+     * Private constructor
+     */
+    private BratCssVisReference()
     {
-        super();
-    }
-
-    public BratAnnotationException(String aMessage, Throwable aCause)
-    {
-        super(aMessage, aCause);
-    }
-
-    public BratAnnotationException(Throwable aCause)
-    {
-        super(aCause);
+        super(BratCssVisReference.class, "style-vis.css");
     }
 }

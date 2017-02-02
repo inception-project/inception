@@ -15,18 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
+package de.tudarmstadt.ukp.clarin.webanno.brat.exception;
 
 /**
- * Throw an exception if the arc annotation is not in the same sentence
+ * throw an exception if the a span annotation is not in the same sentence
  */
-public class ArcCrossedMultipleSentenceException
-    extends BratAnnotationException
+public class BratAnnotationException
+    extends Exception
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public ArcCrossedMultipleSentenceException(String message)
+    public BratAnnotationException(String message)
     {
         super(message);
+    }
+
+    public BratAnnotationException()
+    {
+        super();
+    }
+
+    public BratAnnotationException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public BratAnnotationException(Throwable aCause)
+    {
+        super(aCause);
     }
 }

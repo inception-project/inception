@@ -1,5 +1,5 @@
 /*
- * Copyright 2013
+ * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,36 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+package de.tudarmstadt.ukp.clarin.webanno.brat.exception;
 
 /**
- * throw an exception if there is a problem during cas diff computation
+ * Throw an exception if either a target or orgin span annotation is not merged before the arc
+ * annotation merging is attempted
+ *
  */
-public class CasDiffException
+public class NoOriginOrTargetAnnotationSelectedException
     extends BratAnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public CasDiffException(String message)
+    public NoOriginOrTargetAnnotationSelectedException(String message)
     {
         super(message);
     }
 
-    public CasDiffException()
-    {
-        super();
-    }
-
-    public CasDiffException(String aMessage, Throwable aCause)
-    {
-        super(aMessage, aCause);
-    }
-
-    public CasDiffException(Throwable aCause)
-    {
-        super(aCause);
-    }
-    
 }

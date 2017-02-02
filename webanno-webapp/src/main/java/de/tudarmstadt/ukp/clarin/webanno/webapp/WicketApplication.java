@@ -26,7 +26,6 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
-import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.settings.IExceptionSettings;
@@ -34,7 +33,8 @@ import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.WebAnnoResources;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
@@ -69,10 +69,8 @@ public class WicketApplication
             new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp.clarin.webanno").mount(this);
 
             // FIXME Handling brat font/css resources should be moved to brat module
-            mountResource("/style-vis.css",
-                    new CssResourceReference(WebAnnoResources.class, "client/css/style-vis.css"));
-            mountResource("/style-ui.css",
-                    new CssResourceReference(WebAnnoResources.class, "client/css/style-ui.css"));
+            mountResource("/style-vis.css", BratCssVisReference.get());
+            mountResource("/style-ui.css", BratCssUiReference.get());
 
             Properties settings = SettingsUtil.getSettings();
             String logoValue = settings.getProperty(SettingsUtil.CFG_STYLE_LOGO);
