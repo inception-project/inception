@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.home.page;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.core.app;
 
 import org.apache.wicket.request.resource.CssResourceReference;
 

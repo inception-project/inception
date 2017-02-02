@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.home.security;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.core.security;
 
 import javax.servlet.http.HttpSession;
 

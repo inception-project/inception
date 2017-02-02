@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.home.page;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.core.app;
 
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -54,7 +54,7 @@ import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.security.LogoutPanel;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.security.LogoutPanel;
 
 public abstract class ApplicationPageBase
     extends WebPage

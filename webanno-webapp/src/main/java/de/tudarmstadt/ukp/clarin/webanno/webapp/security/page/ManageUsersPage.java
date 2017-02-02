@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 
 /**

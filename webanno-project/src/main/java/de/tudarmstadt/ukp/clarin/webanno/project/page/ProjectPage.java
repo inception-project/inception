@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The

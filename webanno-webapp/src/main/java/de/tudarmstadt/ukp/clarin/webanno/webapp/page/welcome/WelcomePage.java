@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.project.page.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.home.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.automation.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction.CorrectionPage;
