@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -24,45 +24,50 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.GuidelineModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportModalWindowPanel;
 
 /**
- * A panel used by {@link AnnotationPage} {@code CurationPage} and {@code CorrectionPage} consisting
- * of a link to open  annotation guideline
+ * A panel used for {@link AnnotationPage} {@code CurationPage} and {@code CorrectionPage}
+ * consisting of a link to export annotated data
  */
-public class GuidelineModalPanel
+public class ExportModalPanel
     extends Panel
 {
     private static final long serialVersionUID = 671214149298791793L;
 
-    public GuidelineModalPanel(String id, final IModel<BratAnnotatorModel> aModel)
+    public ExportModalPanel(String id, final IModel<BratAnnotatorModel> aModel)
     {
         super(id, aModel);
-        final ModalWindow guidelineModal;
-        add(guidelineModal = new ModalWindow("guidelineModal"));
 
-        guidelineModal.setInitialWidth(550);
-        guidelineModal.setInitialHeight(450);
-        guidelineModal.setResizable(true);
-        guidelineModal.setWidthUnit("px");
-        guidelineModal.setHeightUnit("px");
-        guidelineModal.setTitle("Open Annotation Guideline, in separate window");
-       
-        add(new AjaxLink<Void>("showGuidelineModal")
+        final ModalWindow exportModal;
+        add(exportModal = new ModalWindow("exportModal"));
+
+        exportModal.setCookieName("modal-1");
+        exportModal.setInitialWidth(550);
+        exportModal.setInitialHeight(450);
+        exportModal.setResizable(true);
+        exportModal.setWidthUnit("px");
+        exportModal.setHeightUnit("px");
+        exportModal.setTitle("Export Annotated data to a given Format");
+        exportModal.setContent(new ExportModalWindowPanel(exportModal.getContentId(),
+                exportModal, aModel.getObject()));
+
+        
+        add(new AjaxLink<Void>("showExportModal")
         {
             private static final long serialVersionUID = 7496156015186497496L;
 
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                guidelineModal.setContent(new GuidelineModalWindowPanel(guidelineModal.getContentId(),
-                        guidelineModal, aModel));
-
-                guidelineModal.show(target);
-
+                if (aModel.getObject().getDocument() == null) {
+                    target.appendJavaScript("alert('Please open a document first!')");
+                }
+                else {
+                    exportModal.show(target);
+                }
             }
         });
-
     }
 }

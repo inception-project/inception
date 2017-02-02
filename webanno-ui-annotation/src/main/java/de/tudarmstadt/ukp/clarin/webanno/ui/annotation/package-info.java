@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Wicket component used for {@link de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.AnnotationPage}
+ * Provides wicket components for Brat Annotation page
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;

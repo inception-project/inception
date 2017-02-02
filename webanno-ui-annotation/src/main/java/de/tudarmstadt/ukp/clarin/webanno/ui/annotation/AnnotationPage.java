@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
@@ -81,14 +81,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.dialog.OpenModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.AnnotationLayersModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishImage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.FinishLink;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
