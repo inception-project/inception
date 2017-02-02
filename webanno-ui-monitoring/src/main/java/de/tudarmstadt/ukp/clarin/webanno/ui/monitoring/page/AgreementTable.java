@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,13 +44,13 @@ import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.page.MonitoringPage.AgreementFormModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage.AgreementFormModel;
 
 public class AgreementTable
     extends Panel

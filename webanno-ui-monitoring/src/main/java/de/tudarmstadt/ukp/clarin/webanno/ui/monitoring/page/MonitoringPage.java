@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.monitoring.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
@@ -116,9 +116,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.ChartImageResource;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.EmbeddableImage;
-import de.tudarmstadt.ukp.clarin.webanno.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
@@ -132,6 +129,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.Conc
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.ChartImageResource;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
