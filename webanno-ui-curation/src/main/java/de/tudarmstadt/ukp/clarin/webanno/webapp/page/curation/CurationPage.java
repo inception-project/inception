@@ -96,7 +96,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.Annota
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.annotation.component.GuidelineModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -277,7 +276,7 @@ public class CurationPage
                          * Also, surrounded following code into if block to avoid error.
                          */
                         if (bModel.getProject() == null) {
-                            setResponsePage(WelcomePage.class);
+                            setResponsePage(getApplication().getHomePage());
                             return;
                         }
                         if(bModel.getDocument()!=null){

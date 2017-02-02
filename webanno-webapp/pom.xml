@@ -47,6 +47,10 @@
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-ui-automation</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-ui-curation</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
 			<artifactId>webanno-brat</artifactId>
@@ -77,8 +81,12 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-monitoring</artifactId>
+			<artifactId>webanno-ui-monitoring</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-ui-curation</artifactId>
+        </dependency>
 
 		<!-- WICKET DEPENDENCIES -->
 		<dependency>
