@@ -91,6 +91,10 @@
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
             <artifactId>webanno-ui-correction</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+            <artifactId>webanno-remote</artifactId>
+        </dependency>
 
 		<!-- WICKET DEPENDENCIES -->
 		<dependency>
