@@ -40,8 +40,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcDiffAdapter;

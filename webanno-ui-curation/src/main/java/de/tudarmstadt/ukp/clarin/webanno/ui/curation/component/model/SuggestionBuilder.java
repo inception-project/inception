@@ -57,11 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 

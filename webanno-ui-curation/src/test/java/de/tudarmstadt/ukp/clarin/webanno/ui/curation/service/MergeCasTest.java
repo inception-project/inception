@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,9 +42,6 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
