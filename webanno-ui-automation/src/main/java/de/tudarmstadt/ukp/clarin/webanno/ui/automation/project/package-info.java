@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Utility classes for WebAnno Automation componet
+ * Detail sepec of Automation components to be pluged in the project settings page
   */
-package de.tudarmstadt.ukp.clarin.webanno.automation.util;
+package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;

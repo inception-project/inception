@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.automation.project;
+package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
@@ -43,12 +43,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 
 /**
  * A Panel used to add Documents to the selected {@link Project}

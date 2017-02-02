@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.automation.project;
+package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -50,10 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.automation.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationException;
-import de.tudarmstadt.ukp.clarin.webanno.automation.util.AutomationUtil;
-import de.tudarmstadt.ukp.clarin.webanno.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -63,6 +59,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationException;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
