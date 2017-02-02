@@ -1,6 +1,6 @@
 /*
- * Copyright 2014
- * FG Language Technology and Ubiquitous Knowledge Processing (UKP) Lab
+ * Copyright 2013
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package de.tudarmstadt.ukp.clarin.webanno.project.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 /**
- * Exception thrown while exporting the whole project
- *
- *
+ * Throw an exception if the a span annotation is not in the same sentence
  */
-public class ProjectExportException    extends Exception
+public class ZippingException
+    extends Exception
 {
-    private static final long serialVersionUID = -4242850260003049868L;
+    private static final long serialVersionUID = 1280015349963924638L;
 
-    public ProjectExportException(String message)
+    public ZippingException(String message)
     {
         super(message);
     }

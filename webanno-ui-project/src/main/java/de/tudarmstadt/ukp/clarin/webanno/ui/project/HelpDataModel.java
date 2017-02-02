@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.clarin.webanno.project.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 import java.io.Serializable;
 
