@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;

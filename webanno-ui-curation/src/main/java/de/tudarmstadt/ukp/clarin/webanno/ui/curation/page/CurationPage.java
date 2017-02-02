@@ -17,15 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getNumberOfPages;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -65,8 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;

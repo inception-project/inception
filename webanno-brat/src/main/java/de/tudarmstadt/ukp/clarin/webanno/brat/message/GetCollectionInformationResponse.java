@@ -24,7 +24,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 
 /**
  * Response for the {@code getCollectionInformation} command.

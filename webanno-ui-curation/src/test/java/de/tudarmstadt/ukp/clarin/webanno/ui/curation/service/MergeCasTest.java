@@ -40,7 +40,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffAdapter;

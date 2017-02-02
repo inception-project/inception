@@ -26,7 +26,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**

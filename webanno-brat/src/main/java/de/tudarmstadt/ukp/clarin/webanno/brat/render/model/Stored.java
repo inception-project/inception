@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
+package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 /**
  * Used to return name and suffix of annotation document exports. Currently support only TCF format
  *

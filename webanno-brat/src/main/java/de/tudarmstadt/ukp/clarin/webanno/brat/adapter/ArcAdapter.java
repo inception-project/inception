@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectSentenceAt;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSame;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -52,14 +52,14 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;

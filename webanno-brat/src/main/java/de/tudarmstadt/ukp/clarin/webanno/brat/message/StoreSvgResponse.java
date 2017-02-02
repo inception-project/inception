@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Stored;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Stored;
 
 /**
  * Response for the {@code storeSVG} command.

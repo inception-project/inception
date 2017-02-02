@@ -22,10 +22,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Comment;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 
 /**
  * Response for the {@code getDocument} command.

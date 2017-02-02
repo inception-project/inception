@@ -25,9 +25,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 

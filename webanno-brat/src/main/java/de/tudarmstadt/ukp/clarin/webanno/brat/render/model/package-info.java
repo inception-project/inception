@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Provides Classes that compute brat specific operations.
+ * Provides Model classes used to display Brat annotation objects.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
+package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;

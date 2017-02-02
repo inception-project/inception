@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectOverlapping;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -41,15 +41,15 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;

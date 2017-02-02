@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -72,8 +72,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;

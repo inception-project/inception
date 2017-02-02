@@ -25,6 +25,9 @@ import java.io.IOException;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 public class RelationTest

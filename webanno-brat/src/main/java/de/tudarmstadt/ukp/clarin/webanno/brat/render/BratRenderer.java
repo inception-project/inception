@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
+package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
@@ -44,12 +44,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.EntityType;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  *
  *
  */
-public class BratAjaxCasController
+public class BratRenderer
 {
     @Resource(name = "documentRepository")
     private RepositoryService repository;
@@ -81,12 +81,12 @@ public class BratAjaxCasController
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
 
-    public BratAjaxCasController()
+    public BratRenderer()
     {
 
     }
 
-    public BratAjaxCasController(RepositoryService aRepository, AnnotationService aAnnotationService)
+    public BratRenderer(RepositoryService aRepository, AnnotationService aAnnotationService)
     {
         annotationService = aAnnotationService;
         this.repository = aRepository;

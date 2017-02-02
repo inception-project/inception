@@ -50,11 +50,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotatorModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -231,7 +231,7 @@ public class CuratorUtil
         throws IOException
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(BratAjaxCasController.buildEntityTypes(aCurationContainer
+        info.setEntityTypes(BratRenderer.buildEntityTypes(aCurationContainer
                 .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService));
 
         StringWriter out = new StringWriter();

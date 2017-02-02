@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.controller;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSameSentence;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

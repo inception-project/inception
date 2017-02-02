@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -54,11 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.command.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasController;
-import de.tudarmstadt.ukp.clarin.webanno.brat.controller.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -66,6 +61,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
@@ -226,7 +226,7 @@ public class BratAnnotator
                     paramId = new VID(paramId.getId());
                 }
 
-                BratAjaxCasController controller = new BratAjaxCasController(repository,
+                BratRenderer controller = new BratRenderer(repository,
                         annotationService);
 
                 // Doing anything but a span annotation when a slot is armed will unarm it
@@ -496,7 +496,7 @@ public class BratAnnotator
     private String bratInitCommand()
     {
         GetCollectionInformationResponse response = new GetCollectionInformationResponse();
-        response.setEntityTypes(BratAjaxCasController.buildEntityTypes(getModelObject()
+        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
                 .getAnnotationLayers(), annotationService));
         String json = toJson(response);
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
@@ -507,7 +507,7 @@ public class BratAnnotator
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
         LOG.info("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
@@ -603,7 +603,7 @@ public class BratAnnotator
                 editor.actionAnnotate(aTarget, getModelObject(), true);
             }
         }
-        BratAjaxCasController.render(response, getModelObject(), aJCas, annotationService);
+        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
         
         String json = toJson(response);
         LOG.info("auto-forward annotation");

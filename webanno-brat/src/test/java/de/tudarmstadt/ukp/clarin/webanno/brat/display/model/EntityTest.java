@@ -24,6 +24,9 @@ import java.io.IOException;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 public class EntityTest

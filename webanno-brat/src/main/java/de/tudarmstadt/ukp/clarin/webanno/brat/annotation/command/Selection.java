@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.display.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 
 public class Selection
     implements Serializable
