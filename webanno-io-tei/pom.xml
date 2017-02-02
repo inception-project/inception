@@ -1,6 +1,6 @@
 <!--
-	Copyright 2012
-	Ubiquitous Knowledge Processing (UKP) Lab
+	Copyright 2014
+	Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 	Technische Universität Darmstadt
 
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,16 +22,16 @@
 		<artifactId>webanno</artifactId>
 		<version>3.1.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>webanno-tsv</artifactId>
-    <name>WebAnno - IO - TSV</name>
+	<artifactId>webanno-io-tei</artifactId>
+    <name>WebAnno - IO - TEI</name>
 	<dependencies>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.uima</groupId>
@@ -51,23 +51,11 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.syntax-asl</artifactId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
 			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.coref-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -76,14 +64,21 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+			<artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jaxen</groupId>
+			<artifactId>jaxen</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-        	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        	<artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
-            <scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

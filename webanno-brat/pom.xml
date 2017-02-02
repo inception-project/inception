@@ -20,7 +20,7 @@
 
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-tcf</artifactId>
+			<artifactId>webanno-io-tcf</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -211,7 +211,7 @@
         </dependency>
         <dependency>
         	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        	<artifactId>webanno-tsv</artifactId>
+        	<artifactId>webanno-io-tsv</artifactId>
         	<scope>test</scope>
         </dependency>
 	</dependencies>

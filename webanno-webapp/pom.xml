@@ -279,27 +279,27 @@
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-tei</artifactId>
+			<artifactId>webanno-io-tei</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-tsv</artifactId>
+			<artifactId>webanno-io-tsv</artifactId>
 		</dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-            <artifactId>webanno-text</artifactId>
+            <artifactId>webanno-io-text</artifactId>
         </dependency>
 		<dependency>
 			<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-			<artifactId>webanno-tcf</artifactId>
+			<artifactId>webanno-io-tcf</artifactId>
 		</dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-            <artifactId>webanno-conllu</artifactId>
+            <artifactId>webanno-io-conllu</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-            <artifactId>webanno-xmi</artifactId>
+            <artifactId>webanno-io-xmi</artifactId>
         </dependency>
 		
 		<!-- DATABASE / HIBERNATE -->

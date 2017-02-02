@@ -120,17 +120,17 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-text</artifactId>
+                <artifactId>webanno-io-text</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-tsv</artifactId>
+                <artifactId>webanno-io-tsv</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-conllu</artifactId>
+                <artifactId>webanno-io-conllu</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -150,12 +150,12 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-tcf</artifactId>
+                <artifactId>webanno-io-tcf</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-tei</artifactId>
+                <artifactId>webanno-io-tei</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -195,7 +195,7 @@
         	</dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-                <artifactId>webanno-xmi</artifactId>
+                <artifactId>webanno-io-xmi</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -424,12 +424,12 @@
     </dependencyManagement>
     <modules>
         <!-- IO -->
-        <module>webanno-tcf</module>
-        <module>webanno-tei</module>
-        <module>webanno-text</module>
-        <module>webanno-tsv</module>
-        <module>webanno-conllu</module>
-        <module>webanno-xmi</module>
+        <module>webanno-io-tcf</module>
+        <module>webanno-io-tei</module>
+        <module>webanno-io-text</module>
+        <module>webanno-io-tsv</module>
+        <module>webanno-io-conllu</module>
+        <module>webanno-io-xmi</module>
         <!-- Core -->
         <module>webanno-model</module>
         <module>webanno-api</module>
