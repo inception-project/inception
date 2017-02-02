@@ -19,4 +19,4 @@
  * Provides wicket component for Brat Curation page and Classes for applying
  * a diff on annotated documents
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.correction;
+package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
