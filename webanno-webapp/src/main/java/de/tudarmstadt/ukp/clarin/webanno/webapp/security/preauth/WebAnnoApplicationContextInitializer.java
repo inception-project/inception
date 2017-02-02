@@ -28,7 +28,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter;
 
 public class WebAnnoApplicationContextInitializer

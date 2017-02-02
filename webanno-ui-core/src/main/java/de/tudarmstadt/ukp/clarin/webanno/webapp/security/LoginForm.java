@@ -28,7 +28,7 @@ import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 /**
  * A login form.
  *

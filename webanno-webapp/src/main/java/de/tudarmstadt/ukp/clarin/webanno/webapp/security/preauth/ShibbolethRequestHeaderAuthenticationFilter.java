@@ -31,9 +31,9 @@ import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 public class ShibbolethRequestHeaderAuthenticationFilter
     extends RequestHeaderAuthenticationFilter
