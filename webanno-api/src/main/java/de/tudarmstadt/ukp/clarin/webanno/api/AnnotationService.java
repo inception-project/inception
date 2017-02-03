@@ -33,8 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
  * project .
- *
- *
  */
 public interface AnnotationService
 {

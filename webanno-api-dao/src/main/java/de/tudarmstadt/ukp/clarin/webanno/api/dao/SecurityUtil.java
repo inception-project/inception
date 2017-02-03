@@ -118,7 +118,7 @@ public class SecurityUtil
         boolean projectAdmin = false;
         try {
             List<ProjectPermission> permissionLevels = aProjectRepository
-                    .listProjectPermisionLevel(aUser, aProject);
+                    .listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
                         PermissionLevel.ADMIN.getName())) {
@@ -148,7 +148,7 @@ public class SecurityUtil
         boolean curator = false;
         try {
             List<ProjectPermission> permissionLevels = aProjectRepository
-                    .listProjectPermisionLevel(aUser, aProject);
+                    .listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
                         PermissionLevel.CURATOR.getName())) {
@@ -178,7 +178,7 @@ public class SecurityUtil
         boolean user = false;
         try {
             List<ProjectPermission> permissionLevels = aProjectRepository
-                    .listProjectPermisionLevel(aUser, aProject);
+                    .listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
                         PermissionLevel.USER.getName())) {
@@ -209,7 +209,7 @@ public class SecurityUtil
         boolean user = false;
         try {
             List<ProjectPermission> permissionLevels = aProjectRepository
-                    .listProjectPermisionLevel(aUser, aProject);
+                    .listProjectPermissionLevel(aUser, aProject);
             for (ProjectPermission permissionLevel : permissionLevels) {
                 if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
                         PermissionLevel.ADMIN.getName())) {

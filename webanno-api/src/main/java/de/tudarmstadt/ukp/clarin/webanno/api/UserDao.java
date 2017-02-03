@@ -23,11 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * Provide methods for user management such as create, update, list users
- * 
- *
- *
  */
-
 public interface UserDao
 {
     /**

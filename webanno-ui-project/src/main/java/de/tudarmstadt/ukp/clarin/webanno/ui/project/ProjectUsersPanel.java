@@ -97,7 +97,7 @@ public class ProjectUsersPanel
                         public Object getDisplayValue(User aObject)
                         {
                             List<ProjectPermission> projectPermissions = projectRepository
-                                    .listProjectPermisionLevel(aObject, selectedProject.getObject());
+                                    .listProjectPermissionLevel(aObject, selectedProject.getObject());
                             List<String> permissionLevels = new ArrayList<String>();
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
@@ -119,7 +119,7 @@ public class ProjectUsersPanel
                     // Clear old selections
                     permissionLevelDetailForm.setModelObject(null);
                     List<ProjectPermission> projectPermissions = projectRepository
-                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                            .listProjectPermissionLevel(selectedUser, selectedProject.getObject());
                     List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
                     for (ProjectPermission permission : projectPermissions) {
                         levels.add(permission.getLevel());
@@ -168,7 +168,7 @@ public class ProjectUsersPanel
                         return;
                     }
                     List<ProjectPermission> projectPermissions = projectRepository
-                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+                            .listProjectPermissionLevel(selectedUser, selectedProject.getObject());
                     for (ProjectPermission projectPermission : projectPermissions) {
                         try {
                             projectRepository.removeProjectPermission(projectPermission);
@@ -290,7 +290,7 @@ public class ProjectUsersPanel
                 {
                     if (selectedUser != null) {
                         List<ProjectPermission> projectPermissions = projectRepository
-                                .listProjectPermisionLevel(selectedUser,
+                                .listProjectPermissionLevel(selectedUser,
                                         selectedProject.getObject());
 
                         // Remove old permissionLevels

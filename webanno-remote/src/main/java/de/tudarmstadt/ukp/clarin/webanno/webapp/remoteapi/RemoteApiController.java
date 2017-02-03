@@ -256,7 +256,7 @@ public class RemoteApiController
         for (Project project : accessibleProjects) {
             String projectId = Long.toString(project.getId());
             List<ProjectPermission> projectPermissions = projectRepository
-                    .listProjectPermisionLevel(user, project);
+                    .listProjectPermissionLevel(user, project);
             JSONArray permissionArr = new JSONArray();
             JSONObject projectJSON = new JSONObject();
 

@@ -1,0 +1,452 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.api;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import javax.persistence.NoResultException;
+
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.jcas.JCas;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
+
+public interface DocumentService
+{
+    /**
+     * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
+     *
+     * @return the directory.
+     */
+    File getDir();
+
+    /**
+     * Load the CAS for the specified source document and user, upgrade it, and save it again.
+     * Depending on the mode parameter, the automation/correction and curation CASes are also
+     * upgraded.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aMode
+     *            the mode.
+     * @param username
+     *            the username.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
+     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
+     *             {@link #writeAnnotationCas(JCas, SourceDocument, User)}
+     */
+    @Deprecated
+    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
+        throws IOException;
+
+    /**
+     * Save the modified CAS in the file system as Serialized CAS
+     *
+     * @param mode
+     *            the mode.
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @param jCas
+     *            the JCas.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
+        throws IOException;
+
+    // --------------------------------------------------------------------------------------------
+    // Methods related to SourceDocuments
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Creates a {@link SourceDocument} in a database. The source document is created by ROLE_ADMIN
+     * or Project admins. Source documents are created per project and it should have a unique name
+     * in the {@link Project} it belongs. renaming a a source document is not possible, rather the
+     * administrator should delete and re create it.
+     *
+     * @param document
+     *            {@link SourceDocument} to be created
+     * @param user
+     *            The User who perform this operation
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void createSourceDocument(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * Check if a Source document with this same name exist in the project. The caller method then
+     * can decide to override or throw an exception/message to the client
+     *
+     * @param project
+     *            the project.
+     * @param fileName
+     *            the source document name.
+     * @return if the source document exists.
+     */
+    boolean existsSourceDocument(Project project, String fileName);
+
+    /**
+     * Get meta data information about {@link SourceDocument} from the database. This method is
+     * called either for {@link AnnotationDocument} object creation or
+     * {@link RepositoryService#createSourceDocument(SourceDocument, User)}
+     *
+     * @param project
+     *            the {@link Project} where the {@link SourceDocument} belongs
+     * @param documentName
+     *            the name of the {@link SourceDocument}
+     * @return the source document.
+     */
+    SourceDocument getSourceDocument(Project project, String documentName);
+
+    /**
+     * Get meta data information about {@link SourceDocument} from the database.
+     * 
+     * @param projectId
+     *            the id for the {@link Project}
+     * @param documentId
+     *            the id for the {@link SourceDocument}
+     * @return the source document
+     */
+    SourceDocument getSourceDocument(long projectId, long documentId);
+
+    /**
+     * Return the Master TCF file Directory path. For the first time, all available TCF layers will
+     * be read and converted to CAS object. subsequent accesses will be to the annotated document
+     * unless and otherwise the document is removed from the project.
+     *
+     * @param document
+     *            The {@link SourceDocument} to be examined
+     * @return the Directory path of the source document
+     */
+    File getSourceDocumentFile(SourceDocument document);
+
+    /**
+     * List all source documents in a project. The source documents are the original TCF documents
+     * imported.
+     *
+     * @param aProject
+     *            The Project we are looking for source documents
+     * @return list of source documents
+     */
+    List<SourceDocument> listSourceDocuments(Project aProject);
+
+    /**
+     * ROLE_ADMINs or project admins can remove source documents from a project. removing a a source
+     * document also removes an annotation document related to that document
+     *
+     * @param document
+     *            the source document to be deleted
+     * @throws IOException
+     *             If the source document searched for deletion is not available
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
+    void removeSourceDocument(SourceDocument document)
+        throws IOException;
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void uploadSourceDocument(File file, SourceDocument document)
+        throws IOException, UIMAException;
+
+    /**
+     * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
+     * repository directory. This way we don't need to create the file to a temporary folder
+     *
+     * @param file
+     *            the file.
+     * @param document
+     *            the source document.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void uploadSourceDocument(InputStream file, SourceDocument document)
+        throws IOException, UIMAException;
+
+    /**
+     * Get the directory of this {@link SourceDocument} usually to read the content of the document
+     *
+     * @param aDocument
+     *            the source document.
+     * @return the source document folder.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    File getDocumentFolder(SourceDocument aDocument)
+        throws IOException;
+
+    // --------------------------------------------------------------------------------------------
+    // Methods related to AnnotationDocuments
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * creates the {@link AnnotationDocument } object in the database.
+     *
+     * @param annotationDocument
+     *            {@link AnnotationDocument} comprises of the the name of the {@link SourceDocument}
+     *            , id of {@link SourceDocument}, id of the {@link Project}, and id of {@link User}
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createAnnotationDocument(AnnotationDocument annotationDocument)
+        throws IOException;
+
+    /**
+     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
+     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+     * documents are stored per project, user and document
+     *
+     * @param jCas
+     *            the JCas.
+     * @param document
+     *            the source document.
+     * @param user
+     *            The User who perform this operation
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void writeAnnotationCas(JCas jCas, SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * A Method that checks if there is already an annotation document created for the source
+     * document
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return if an annotation document metadata exists for the user.
+     */
+    boolean existsAnnotationDocument(SourceDocument document, User user);
+
+    /**
+     * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project}
+     * exists It is important as {@link AnnotationDocument} entry can be populated as
+     * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the
+     * document for annotation.
+     *
+     * @param sourceDocument
+     *            the source document.
+     * @param username
+     *            the username.
+     * @return if an annotation document file exists.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    boolean existsCas(SourceDocument sourceDocument, String username)
+        throws IOException;
+
+    /**
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     *
+     * @param document
+     *            The {@link SourceDocument} where we get the id which hosts both the source
+     *            Document and the annotated document
+     * @param user
+     *            the {@link User} who annotates the document.
+     * @param writer
+     *            the DKPro Core writer.
+     * @param fileName
+     *            the file name.
+     * @param mode
+     *            the mode.
+     * @return a temporary file.
+     * @throws UIMAException
+     *             if there was a conversion error.
+     * @throws IOException
+     *             if there was an I/O error.
+     * @throws ClassNotFoundException
+     *             if the DKPro Core writer could not be found.
+     */
+    @SuppressWarnings("rawtypes")
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    @SuppressWarnings("rawtypes")
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode, boolean stripExtension)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    /**
+     * Export a Serialized CAS annotation document from the file system
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the username.
+     * @return the serialized CAS file.
+     */
+    File getCasFile(SourceDocument document, String user);
+
+    /**
+     * Get the annotation document.
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return the annotation document.
+     * @throws NoResultException
+     *             if no annotation document exists for the given source/user.
+     */
+    AnnotationDocument getAnnotationDocument(SourceDocument document, User user);
+
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary.
+     *
+     * @param annotationDocument
+     *            the annotation document.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    JCas readAnnotationCas(AnnotationDocument annotationDocument)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary. If necessary, no annotation document exists, one is created. The source document
+     * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return the JCas.
+     * @throws IOException
+     *             if there was an I/O error.
+     * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
+     *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
+     *             document status manually if desired.
+     */
+    @Deprecated
+    JCas readAnnotationCas(SourceDocument document, User user)
+        throws IOException;
+
+    /**
+     * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
+     * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the
+     * {@link Project} that has already annotated the {@link SourceDocument}
+     *
+     * @param document
+     *            the {@link SourceDocument}
+     * @return {@link AnnotationDocument}
+     */
+    List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
+
+    List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
+
+    /**
+     * Number of expected annotation documents in this project (numUser X document - Ignored)
+     *
+     * @param project
+     *            the project.
+     * @return the number of annotation documents.
+     */
+    int numberOfExpectedAnnotationDocuments(Project project);
+
+    /**
+     * List all annotation Documents in a project that are already closed. used to compute overall
+     * project progress
+     *
+     * @param project
+     *            the project.
+     * @return the annotation documents.
+     */
+    List<AnnotationDocument> listFinishedAnnotationDocuments(Project project);
+
+    /**
+     * List all annotation documents for this source document (including in active and delted user
+     * annotation and those created by project admins or super admins for Test purpose. This method
+     * is called when a source document (or Project) is deleted so that associated annotation
+     * documents also get removed.
+     *
+     * @param document
+     *            the source document.
+     * @return the annotation documents.
+     */
+    List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument document);
+
+    /**
+     * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return if the user has finished annotation.
+     */
+    boolean isAnnotationFinished(SourceDocument document, User user);
+
+    /**
+     * Check if at least one annotation document is finished for this {@link SourceDocument} in the
+     * project
+     *
+     * @param document
+     *            the source document.
+     * @return if any finished annotation exists.
+     */
+    boolean existsFinishedAnnotation(SourceDocument document);
+
+    /**
+     * If at least one {@link AnnotationDocument} is finished in this project
+     */
+    boolean existsFinishedAnnotation(Project project);
+
+    /**
+     * Remove an annotation document, for example, when a user is removed from a project
+     *
+     * @param annotationDocument
+     *            the {@link AnnotationDocument} to be removed
+     */
+    void removeAnnotationDocument(AnnotationDocument annotationDocument);
+
+    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
+        throws UIMAException, IOException;
+
+    /**
+     * If any of the users finised one annotation document
+     */
+    boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
+
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
+            throws IOException;
+}

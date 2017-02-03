@@ -154,26 +154,6 @@ public class RepositoryServiceDbData
 {
     private final Log log = LogFactory.getLog(getClass());
 
-    public Logger createLog(Project aProject)
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication != null ? authentication.getName() : "SYSTEM";
-
-        Logger logger = Logger.getLogger(getClass());
-        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        Appender apndr;
-        try {
-            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
-                    true);
-        }
-        catch (IOException e) {
-            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
-        }
-        logger.addAppender(apndr);
-        logger.setLevel(Level.ALL);
-        return logger;
-    }
-
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
 
@@ -900,7 +880,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<ProjectPermission> listProjectPermisionLevel(User aUser, Project aProject)
+    public List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject)
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
@@ -979,7 +959,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<ProjectPermission> getProjectPermisions(Project aProject)
+    public List<ProjectPermission> getProjectPermissions(Project aProject)
     {
         return entityManager
                 .createQuery("FROM ProjectPermission WHERE project =:project",
@@ -1271,7 +1251,7 @@ public class RepositoryServiceDbData
                     "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
         }
 
-        for (ProjectPermission permisions : getProjectPermisions(aProject)) {
+        for (ProjectPermission permisions : getProjectPermissions(aProject)) {
             entityManager.remove(permisions);
         }
         
@@ -2233,7 +2213,7 @@ public class RepositoryServiceDbData
      * @param aTagSetName
      *            the tagset.
      */
-    public static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
+    private static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
     {
         Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
         Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
@@ -2476,9 +2456,30 @@ public class RepositoryServiceDbData
         }
         
     }
+    
     @Override
     public int getNumberOfSentences()
     {
         return numberOfSentences;
+    }
+    
+    private Logger createLog(Project aProject)
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication != null ? authentication.getName() : "SYSTEM";
+
+        Logger logger = Logger.getLogger(getClass());
+        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
+        Appender apndr;
+        try {
+            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
+                    true);
+        }
+        catch (IOException e) {
+            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
+        }
+        logger.addAppender(apndr);
+        logger.setLevel(Level.ALL);
+        return logger;
     }
 }

@@ -689,7 +689,7 @@ public class ProjectExportPanel extends Panel {
             // add project permissions to the project
             for (User user : repository.listProjectUsersWithPermissions(aProject)) {
                 for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : repository
-                        .listProjectPermisionLevel(user, aProject)) {
+                        .listProjectPermissionLevel(user, aProject)) {
                     ProjectPermission permissionToExport = new ProjectPermission();
                     permissionToExport.setLevel(permission.getLevel());
                     permissionToExport.setUser(user.getUsername());
