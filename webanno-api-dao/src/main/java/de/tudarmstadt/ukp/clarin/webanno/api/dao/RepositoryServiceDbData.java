@@ -1848,12 +1848,6 @@ public class RepositoryServiceDbData
         }
     }
 
-    @Override
-    public boolean isRemoteProject(Project project)
-    {
-        return new File(dir, PROJECT + project.getId() + META_INF).exists();
-    }
-
     private List<String> getAllAnnotators(Project aProject)
     {
         // Get all annotators in the project

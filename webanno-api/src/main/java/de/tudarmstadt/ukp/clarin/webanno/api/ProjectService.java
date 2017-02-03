@@ -224,16 +224,6 @@ public interface ProjectService
     Project getProject(long id);
 
     /**
-     * Determine if the project is created using the remote API webanno service or not TODO: For
-     * now, it checks if the project consists of META-INF folder!!
-     *
-     * @param project
-     *            the project.
-     * @return if it was created using the remote API.
-     */
-    boolean isRemoteProject(Project project);
-
-    /**
      * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
      * Otherwise, a user will see projects only he is member of.
      *
