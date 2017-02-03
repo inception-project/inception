@@ -49,10 +49,23 @@ public interface AnnotatorState
     
     // REC: sentenceNumber/sentenceAddress can probably be dropped in favor of
     // firstSentenceNumber/firstSentenceAddress?
+    
+    /**
+     * Get the number of the sentence in focus (curation view)
+     */
     public int getSentenceNumber();
+    
+    /**
+     * Set the number of the sentence in focus (curation view)
+     */
     public void setSentenceNumber(int sentenceNumber);
+    
     public int getSentenceAddress();
     public void setSentenceAddress(int aSentenceAddress);
+    public int getSentenceBeginOffset();
+    public void setSentenceBeginOffset(int sentenceBeginOffset);
+    public int getSentenceEndOffset();
+    public void setSentenceEndOffset(int sentenceEndOffset);
 
     public int getFirstSentenceNumber();
     public void setFirstSentenceNumber(int fSN);
@@ -63,11 +76,6 @@ public interface AnnotatorState
     public void setLastSentenceNumber(int lSN);
     public int getLastSentenceAddress();
     public void setLastSentenceAddress(int aLastSentenceAddress);
-    
-    public int getSentenceBeginOffset();
-    public void setSentenceBeginOffset(int sentenceBeginOffset);
-    public int getSentenceEndOffset();
-    public void setSentenceEndOffset(int sentenceEndOffset);
     
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior

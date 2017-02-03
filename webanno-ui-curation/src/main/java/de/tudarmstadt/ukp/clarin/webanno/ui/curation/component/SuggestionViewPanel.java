@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceBeginAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
@@ -261,7 +261,7 @@ public class SuggestionViewPanel
             int address = getAddr(selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
                     aBModel.getSentenceEndOffset()));
             aBModel.setSentenceAddress(
-                    getSentenceBeginAddress(clickedJCas, address, fsClicked.getBegin(),
+                    findWindowStartCenteringOnSelection(clickedJCas, address, fsClicked.getBegin(),
                             aBModel.getProject(), aBModel.getDocument(),
                             aBModel.getPreferences().getWindowSize()));
 
@@ -341,7 +341,7 @@ public class SuggestionViewPanel
         if (bModel.getPreferences().isScrollPage()) {
             address = getAddr(selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
                     bModel.getSentenceEndOffset()));
-            bModel.setSentenceAddress(getSentenceBeginAddress(aJcas, address, clickedFS.getBegin(),
+            bModel.setSentenceAddress(findWindowStartCenteringOnSelection(aJcas, address, clickedFS.getBegin(),
                     bModel.getProject(), bModel.getDocument(),
                     bModel.getPreferences().getWindowSize()));
             Sentence sentence = selectByAddr(aJcas, Sentence.class, bModel.getSentenceAddress());

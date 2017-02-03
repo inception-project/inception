@@ -419,7 +419,7 @@ public class BratAjaxCasUtil
      *            the window size.
      * @return the ID of the first sentence.
      */
-    public static int getSentenceBeginAddress(JCas aJcas, int aSentenceAddress, int aFocosOffset,
+    public static int findWindowStartCenteringOnSelection(JCas aJcas, int aSentenceAddress, int aFocosOffset,
             Project aProject, SourceDocument aDocument, int aWindowSize)
     {
         FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);

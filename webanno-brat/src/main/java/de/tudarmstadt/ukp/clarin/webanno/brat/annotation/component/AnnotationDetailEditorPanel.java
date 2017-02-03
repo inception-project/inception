@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getA
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceBeginAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectAt;
@@ -732,12 +732,12 @@ public class AnnotationDetailEditorPanel
 
 		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
 			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
-				autoForwardScroll(jCas, aBModel);
+				autoScroll(jCas, aBModel, true);
 			}
 			onAutoForward(aTarget, aBModel);
 
 		} else if (aBModel.getPreferences().isScrollPage()) {
-			autoScroll(jCas, aBModel);
+			autoScroll(jCas, aBModel, false);
 		}
 		forwardAnnotationText.setModelObject(null);
 		onChange(aTarget, aBModel);
@@ -847,7 +847,7 @@ public class AnnotationDetailEditorPanel
 
         // Auto-scroll
         if (aBModel.getPreferences().isScrollPage()) {
-            autoScroll(jCas, aBModel);
+            autoScroll(jCas, aBModel, false);
         }
 
         aBModel.setRememberedSpanLayer(aBModel.getSelectedAnnotationLayer());
@@ -919,7 +919,7 @@ public class AnnotationDetailEditorPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            autoScroll(jCas, aBModel);
+            autoScroll(jCas, aBModel, false);
         }
 
         info("The arc has been reversed");
@@ -957,13 +957,35 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void autoScroll(JCas jCas, ActionContext aBModel)
+    /**
+     * Scroll the window of visible annotations.
+     * 
+     * @param aForward
+     *            instead of centering on the sentence that had the last editor, just scroll down
+     *            one sentence. This is for forward-annotation mode.
+     */
+    private void autoScroll(JCas jCas, ActionContext aBModel, boolean aForward)
     {
-        int address = getAddr(selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                aBModel.getSentenceEndOffset()));
-        aBModel.setSentenceAddress(getSentenceBeginAddress(jCas, address, aBModel.getSelection()
-                .getBegin(), aBModel.getProject(), aBModel.getDocument(), aBModel.getPreferences()
-                .getWindowSize()));
+        if (aForward) {
+            // Get the current first sentence
+            Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
+            // Find the following one
+            int address = getNextSentenceAddress(jCas, sentence);
+            // Move to it
+            aBModel.setSentenceAddress(address);
+        }
+        else {
+            // Fetch the current sentence by offsets
+            Sentence sentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
+                    aBModel.getSentenceEndOffset());
+            // Calculate the first sentence in the window in such a way that the annotation
+            // currently selected is in the center of the window
+            int address = findWindowStartCenteringOnSelection(jCas, getAddr(sentence),
+                    aBModel.getSelection().getBegin(), aBModel.getProject(), aBModel.getDocument(),
+                    aBModel.getPreferences().getWindowSize());
+            // Move to it
+            aBModel.setSentenceAddress(address);
+        }
 
         Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
         aBModel.setSentenceBeginOffset(sentence.getBegin());
@@ -976,30 +998,12 @@ public class AnnotationDetailEditorPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        aBModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        aBModel.setFirstSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLastSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
-    private void autoForwardScroll(JCas jCas, ActionContext aBModel)
-    {
-        int address = getNextSentenceAddress(jCas, selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress()));
-        aBModel.setSentenceAddress(address);
-
-        Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
-        aBModel.setSentenceBeginOffset(sentence.getBegin());
-        aBModel.setSentenceEndOffset(sentence.getEnd());
-
-        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                aBModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence),
-                aBModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
-                lastAddressInPage);
-        aBModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
-    }
-    
     @SuppressWarnings("unchecked")
     public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final ActionContext aBModel,
             int aAnnotationId)

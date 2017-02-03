@@ -486,7 +486,7 @@ public class CurationPanel
     {
         int currentSentAddress = BratAjaxCasUtil.getCurrentSentence(jCas,
                 curationViewItem.getBegin(), curationViewItem.getEnd()).getAddress();
-        bModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(jCas, currentSentAddress,
+        bModel.setSentenceAddress(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas, currentSentAddress,
                 curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(), bModel
                         .getPreferences().getWindowSize()));
 
