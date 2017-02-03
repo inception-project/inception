@@ -706,7 +706,7 @@ public class AnnotationDetailEditorPanel
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
-        aBModel.setSentenceNumber(sentenceNumber);
+        aBModel.setFocusSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
@@ -842,7 +842,7 @@ public class AnnotationDetailEditorPanel
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, aBModel.getSelection().getBegin());
-        aBModel.setSentenceNumber(sentenceNumber);
+        aBModel.setFocusSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         // Auto-scroll
@@ -915,7 +915,7 @@ public class AnnotationDetailEditorPanel
         // persist changes
         repository.writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
-        aBModel.setSentenceNumber(sentenceNumber);
+        aBModel.setFocusSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
@@ -980,7 +980,7 @@ public class AnnotationDetailEditorPanel
                     aBModel.getSentenceEndOffset());
             // Calculate the first sentence in the window in such a way that the annotation
             // currently selected is in the center of the window
-            int address = findWindowStartCenteringOnSelection(jCas, getAddr(sentence),
+            int address = findWindowStartCenteringOnSelection(jCas, sentence,
                     aBModel.getSelection().getBegin(), aBModel.getProject(), aBModel.getDocument(),
                     aBModel.getPreferences().getWindowSize());
             // Move to it
@@ -998,9 +998,9 @@ public class AnnotationDetailEditorPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        aBModel.setFirstSentenceNumber(
+        aBModel.setFirstVisibleSentenceNumber(
                 BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLastSentenceNumber(
+        aBModel.setLastVisibleSentenceNumber(
                 BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 

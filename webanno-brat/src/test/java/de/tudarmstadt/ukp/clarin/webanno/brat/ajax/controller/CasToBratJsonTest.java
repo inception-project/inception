@@ -181,7 +181,7 @@ public class CasToBratJsonTest
         ActionContext bratannotatorModel = new ActionContext();
         bratannotatorModel.getPreferences().setWindowSize(10);
         bratannotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
-        bratannotatorModel.setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
+        bratannotatorModel.setLastSentenceInCasAddress(BratAjaxCasUtil.getLastSentenceAddress(jCas));
 
         Sentence sentence = BratAjaxCasUtil.selectByAddr(jCas, Sentence.class,
                 bratannotatorModel.getSentenceAddress());

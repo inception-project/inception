@@ -1268,10 +1268,10 @@ public class CorrectionPage
         // Load constraints
         bModel.setConstraints(loadConstraints(bModel.getProject()));
 
-        LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser()
-                + "] f:[" + bModel.getFirstSentenceAddress() + "] l:["
-                + bModel.getLastSentenceAddress() + "] s:["
-                + bModel.getSentenceAddress() + "]");
+        LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser() + "] f:["
+                + bModel.getFirstVisibleSentenceNumber() + "] l:["
+                + bModel.getLastVisibleSentenceNumber() + "] s:[" + bModel.getFocusSentenceNumber()
+                + "]");
     }
 
     private void setCurationSegmentBeginEnd()

@@ -81,11 +81,6 @@ public class ActionContext
     private int displayWindowStartSentenceAddress = -1;
 
     /**
-     * The very last sentence address in its UIMA annotation
-     */
-    private int lastSentenceAddress;
-
-    /**
      * The very first sentence address in its UIMA annotation
      */
     private int firstSentenceAddress;
@@ -103,7 +98,7 @@ public class ActionContext
     /**
      * the sentence number where an action occured (selection, modification, clicking)
      */
-    private int sentenceNumber;
+    private int focusSentenceNumber;
     /**
      * The first sentence number in the display window
      */
@@ -279,25 +274,13 @@ public class ActionContext
     }
 
     @Override
-    public int getLastSentenceAddress()
-    {
-        return lastSentenceAddress;
-    }
-
-    @Override
-    public void setLastSentenceAddress(int aLastSentenceAddress)
-    {
-        lastSentenceAddress = aLastSentenceAddress;
-    }
-
-    @Override
-    public int getFirstSentenceAddress()
+    public int getFirstSentenceInCasAddress()
     {
         return firstSentenceAddress;
     }
 
     @Override
-    public void setFirstSentenceAddress(int aFirstSentenceAddress)
+    public void setFirstSentenceInCasAddress(int aFirstSentenceAddress)
     {
         firstSentenceAddress = aFirstSentenceAddress;
     }
@@ -439,37 +422,37 @@ public class ActionContext
     }
 
     @Override
-    public int getSentenceNumber()
+    public int getFocusSentenceNumber()
     {
-        return sentenceNumber;
+        return focusSentenceNumber;
     }
 
     @Override
-    public void setSentenceNumber(int sentenceNumber)
+    public void setFocusSentenceNumber(int aSentenceNumber)
     {
-        this.sentenceNumber = sentenceNumber;
+        focusSentenceNumber = aSentenceNumber;
     }
 
     @Override
-    public int getFirstSentenceNumber()
+    public int getFirstVisibleSentenceNumber()
     {
         return fSN;
     }
 
     @Override
-    public void setFirstSentenceNumber(int fSN)
+    public void setFirstVisibleSentenceNumber(int fSN)
     {
         this.fSN = fSN;
     }
 
     @Override
-    public int getLastSentenceNumber()
+    public int getLastVisibleSentenceNumber()
     {
         return lSN;
     }
 
     @Override
-    public void setLastSentenceNumber(int lSN)
+    public void setLastVisibleSentenceNumber(int lSN)
     {
         this.lSN = lSN;
     }
@@ -527,8 +510,7 @@ public class ActionContext
         
         // (Re)initialize brat model after potential creating / upgrading CAS
         setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
-        setFirstSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
-        setLastSentenceAddress(BratAjaxCasUtil.getLastSentenceAddress(aJCas));
+        setFirstSentenceInCasAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         getPreferences().setWindowSize(aRepository.getNumberOfSentences());
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
@@ -537,13 +519,13 @@ public class ActionContext
 
         Sentence firstSentence = selectSentenceAt(aJCas, getSentenceBeginOffset(),
                 getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+        int lastVisibleSentenceAddress = getLastSentenceAddressInDisplayWindow(aJCas,
                 getAddr(firstSentence), getPreferences().getWindowSize());
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
-                lastAddressInPage);
-        setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+                lastVisibleSentenceAddress);
+        setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
 
         // LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
         // + getFirstSentenceAddress() + "] l:["

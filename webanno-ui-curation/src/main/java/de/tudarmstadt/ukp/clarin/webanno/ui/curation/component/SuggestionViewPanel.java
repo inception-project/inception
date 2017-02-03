@@ -254,14 +254,14 @@ public class SuggestionViewPanel
 
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, fsClicked.getBegin());
-        aBModel.setSentenceNumber(sentenceNumber);
+        aBModel.setFocusSentenceNumber(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            int address = getAddr(selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
-                    aBModel.getSentenceEndOffset()));
+            Sentence s = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
+                    aBModel.getSentenceEndOffset());
             aBModel.setSentenceAddress(
-                    findWindowStartCenteringOnSelection(clickedJCas, address, fsClicked.getBegin(),
+                    findWindowStartCenteringOnSelection(clickedJCas, s, fsClicked.getBegin(),
                             aBModel.getProject(), aBModel.getDocument(),
                             aBModel.getPreferences().getWindowSize()));
 
@@ -277,8 +277,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            aBModel.setFirstSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLastSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            aBModel.setFirstVisibleSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            aBModel.setLastVisibleSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
@@ -333,16 +333,19 @@ public class SuggestionViewPanel
                 layer.getAttachType()!=null, layer.isAllowStacking());
         repository.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
 
-        // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
-        bModel.setSentenceNumber(sentenceNumber);
+        bModel.setFocusSentenceNumber(sentenceNumber);
+        
+        // Update timestamp
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            address = getAddr(selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
-                    bModel.getSentenceEndOffset()));
-            bModel.setSentenceAddress(findWindowStartCenteringOnSelection(aJcas, address, clickedFS.getBegin(),
-                    bModel.getProject(), bModel.getDocument(),
+            Sentence s = selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
+                    bModel.getSentenceEndOffset());
+            // FIXME REC: this looks like a bug... here we set an address from aJCas in bModel and
+            // below we set addresses from clickedJCas...
+            bModel.setSentenceAddress(findWindowStartCenteringOnSelection(aJcas, s,
+                    clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
                     bModel.getPreferences().getWindowSize()));
             Sentence sentence = selectByAddr(aJcas, Sentence.class, bModel.getSentenceAddress());
             bModel.setSentenceBeginOffset(sentence.getBegin());
@@ -355,8 +358,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            bModel.setFirstSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLastSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            bModel.setFirstVisibleSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            bModel.setLastVisibleSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 

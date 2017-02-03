@@ -53,12 +53,12 @@ public interface AnnotatorState
     /**
      * Get the number of the sentence in focus (curation view)
      */
-    public int getSentenceNumber();
+    public int getFocusSentenceNumber();
     
     /**
      * Set the number of the sentence in focus (curation view)
      */
-    public void setSentenceNumber(int sentenceNumber);
+    public void setFocusSentenceNumber(int sentenceNumber);
     
     public int getSentenceAddress();
     public void setSentenceAddress(int aSentenceAddress);
@@ -67,15 +67,13 @@ public interface AnnotatorState
     public int getSentenceEndOffset();
     public void setSentenceEndOffset(int sentenceEndOffset);
 
-    public int getFirstSentenceNumber();
-    public void setFirstSentenceNumber(int fSN);
-    public int getFirstSentenceAddress();
-    public void setFirstSentenceAddress(int aFirstSentenceAddress);
-
-    public int getLastSentenceNumber();
-    public void setLastSentenceNumber(int lSN);
-    public int getLastSentenceAddress();
-    public void setLastSentenceAddress(int aLastSentenceAddress);
+    public int getFirstVisibleSentenceNumber();
+    public void setFirstVisibleSentenceNumber(int fSN);
+    public int getLastVisibleSentenceNumber();
+    public void setLastVisibleSentenceNumber(int lSN);
+    
+    public int getFirstSentenceInCasAddress();
+    public void setFirstSentenceInCasAddress(int aFirstSentenceAddress);
     
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior

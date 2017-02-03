@@ -334,8 +334,8 @@ public class CurationPanel
             @Override
             protected Object load()
             {
-                int fSN = bModel.getFirstSentenceNumber();
-                int lSN = bModel.getLastSentenceNumber();
+                int fSN = bModel.getFirstVisibleSentenceNumber();
+                int lSN = bModel.getLastVisibleSentenceNumber();
 
                 List<String> crossSentAnnos = new ArrayList<>();
                 if (SuggestionBuilder.crossSentenceLists != null) {
@@ -424,7 +424,7 @@ public class CurationPanel
                             JCas jCas = repository.readCurationCas(bModel.getDocument());
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
                             updatePanel(aTarget, cCModel.getObject());
-                            bModel.setSentenceNumber(curationViewItem.getSentenceNumber());
+                            bModel.setFocusSentenceNumber(curationViewItem.getSentenceNumber());
 
                         }
                         catch (UIMAException e) {
@@ -448,7 +448,7 @@ public class CurationPanel
 
                 String cC = curationViewItem.getSentenceState().getValue();
                 // mark current sentence in orange if disagree
-                if (curationViewItem.getSentenceNumber() == bModel.getSentenceNumber()) {
+                if (curationViewItem.getSentenceNumber() == bModel.getFocusSentenceNumber()) {
                     if (cC != null) {
                         item.add(AttributeModifier.append("class", "current-disagree"));
                     }
@@ -484,11 +484,11 @@ public class CurationPanel
     private void updateCurationView(final CurationContainer curationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, JCas jCas)
     {
-        int currentSentAddress = BratAjaxCasUtil.getCurrentSentence(jCas,
-                curationViewItem.getBegin(), curationViewItem.getEnd()).getAddress();
-        bModel.setSentenceAddress(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas, currentSentAddress,
-                curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(), bModel
-                        .getPreferences().getWindowSize()));
+        Sentence currentSent = BratAjaxCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
+                curationViewItem.getEnd());
+        bModel.setSentenceAddress(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas,
+                currentSent, curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(),
+                bModel.getPreferences().getWindowSize()));
 
         Sentence sentence = selectByAddr(jCas, Sentence.class, bModel.getSentenceAddress());
         bModel.setSentenceBeginOffset(sentence.getBegin());
@@ -501,8 +501,8 @@ public class CurationPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        bModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        bModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
 
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);

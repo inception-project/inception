@@ -206,7 +206,7 @@ public class CurationPage
                                 // If only one page, start displaying from
                                 // sentence 1
                                 if (totalNumberOfSentence == 1) {
-                                    bModel.setSentenceAddress(bModel.getFirstSentenceAddress());
+                                    bModel.setSentenceAddress(bModel.getFirstSentenceInCasAddress());
                                 }
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas,
                                         bModel.getSentenceAddress());
@@ -920,7 +920,7 @@ public class CurationPage
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
         bModel.setSentenceBeginOffset(sentence.getBegin());
         bModel.setSentenceEndOffset(sentence.getEnd());
-        bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        bModel.setFocusSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
 
         Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
@@ -929,8 +929,8 @@ public class CurationPage
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
                 lastAddressInPage);
-        bModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException

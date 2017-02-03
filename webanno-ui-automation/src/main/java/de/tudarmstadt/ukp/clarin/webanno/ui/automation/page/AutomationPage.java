@@ -1281,8 +1281,9 @@ public class AutomationPage
         currentDocumentId = bModel.getDocument().getId();
 
         LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser() + "] f:["
-                + bModel.getFirstSentenceAddress() + "] l:[" + bModel.getLastSentenceAddress()
-                + "] s:[" + bModel.getSentenceAddress() + "]");
+                + bModel.getFirstVisibleSentenceNumber() + "] l:["
+                + bModel.getLastVisibleSentenceNumber() + "] s:[" + bModel.getFocusSentenceNumber()
+                + "]");
     }
 
     private void setCurationSegmentBeginEnd()
@@ -1311,7 +1312,7 @@ public class AutomationPage
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
         bModel.setSentenceBeginOffset(sentence.getBegin());
         bModel.setSentenceEndOffset(sentence.getEnd());
-        bModel.setSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        bModel.setFocusSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
 
         Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
@@ -1320,8 +1321,8 @@ public class AutomationPage
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
                 lastAddressInPage);
-        bModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
     private void update(AjaxRequestTarget target)

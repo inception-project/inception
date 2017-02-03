@@ -402,6 +402,25 @@ public class BratAjaxCasUtil
     }
 
     /**
+     * Get an iterator position at the annotation with the specified address.
+     *
+     * @param aJcas
+     *            the CAS object
+     * @param aType
+     *            the expected annotation type
+     * @param aFS
+     *            the annotation to seek for
+     * @return the iterator.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static <T extends Annotation> FSIterator<T> seekByFs(JCas aJcas, Class<T> aType,
+            AnnotationFS aFS)
+    {
+        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+                .getAnnotationType(aJcas, aType));
+        return idx.iterator(aFS);
+    }
+    /**
      * Gets the address of the first sentence visible on screen in such a way that the specified
      * focus offset is centered on screen.
      *
@@ -419,10 +438,10 @@ public class BratAjaxCasUtil
      *            the window size.
      * @return the ID of the first sentence.
      */
-    public static int findWindowStartCenteringOnSelection(JCas aJcas, int aSentenceAddress, int aFocosOffset,
-            Project aProject, SourceDocument aDocument, int aWindowSize)
+    public static int findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
+            int aFocosOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
     {
-        FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aSentenceAddress);
+        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, aSentence);
 
         // no auto-forward for single sentence window
         Sentence s = si.get();
@@ -448,8 +467,8 @@ public class BratAjaxCasUtil
         }
 
         // Center sentence
-        Sentence c = (Sentence) selectByAddr(aJcas.getCas(), aSentenceAddress);
-        Sentence n = (Sentence) selectByAddr(aJcas.getCas(), getAddr(s));
+        Sentence c = (Sentence) aSentence;
+        Sentence n = (Sentence) s;
 
         if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
             return getAddr(s);
