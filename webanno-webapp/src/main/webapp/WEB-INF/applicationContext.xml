@@ -86,7 +86,7 @@
 		lazy-init="false"></bean>
 
     <bean id="casDoctor"
-        class="de.tudarmstadt.ukp.clarin.webanno.brat.diag.CasDoctor"></bean>
+        class="de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor"></bean>
 
     <!-- Poor man's database migration -->
     <bean id="fixCoreferenceMigration"
