@@ -300,4 +300,9 @@ public class GetDocumentResponse
     {
         rtlMode = aRtlMode;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

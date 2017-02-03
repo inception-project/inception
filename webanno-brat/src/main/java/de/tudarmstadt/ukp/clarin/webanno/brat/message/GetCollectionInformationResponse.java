@@ -176,4 +176,9 @@ public class GetCollectionInformationResponse
     {
         entityTypes = aEntityTypes;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

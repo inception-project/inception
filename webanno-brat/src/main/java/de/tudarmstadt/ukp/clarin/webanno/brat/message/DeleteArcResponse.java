@@ -59,4 +59,9 @@ public class DeleteArcResponse
     {
         edited = aEdited;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

@@ -52,4 +52,9 @@ public class GetDocumentTimestampResponse
     {
         mtime = aMtime;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

@@ -59,4 +59,9 @@ public class ReverseArcResponse
     {
         edited = aEdited;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

@@ -41,4 +41,9 @@ public class ImportDocumentResponse
     {
         document = aDocument;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

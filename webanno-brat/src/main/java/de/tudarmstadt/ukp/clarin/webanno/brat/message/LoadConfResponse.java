@@ -41,4 +41,9 @@ public class LoadConfResponse
     {
         config = aConfig;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

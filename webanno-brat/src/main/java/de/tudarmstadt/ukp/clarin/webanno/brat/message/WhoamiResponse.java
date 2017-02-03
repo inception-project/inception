@@ -52,4 +52,9 @@ public class WhoamiResponse
     {
         user = aUser;
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }

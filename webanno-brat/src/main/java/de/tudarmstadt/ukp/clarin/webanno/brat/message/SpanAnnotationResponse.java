@@ -31,4 +31,9 @@ public class SpanAnnotationResponse
     {
         super(COMMAND);
     }
+
+    public static boolean is(String aCommand)
+    {
+        return COMMAND.equals(aCommand);
+    }
 }
