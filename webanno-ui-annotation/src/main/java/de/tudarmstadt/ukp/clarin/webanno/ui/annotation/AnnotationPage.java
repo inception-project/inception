@@ -830,8 +830,8 @@ public class AnnotationPage
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
                 lastAddressInPage);
-        bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)
@@ -872,7 +872,7 @@ public class AnnotationPage
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != bModel.getProject().getId()) {
-                bModel.initForProject();
+                bModel.clearRememberedFeatures();
             }
 
             currentprojectId = bModel.getProject().getId();

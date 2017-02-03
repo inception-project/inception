@@ -188,10 +188,23 @@ public class BratAnnotator
                 else {
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
-
-                // Get action
-                String action = getActionFromRequest(request);
                 
+                // Get action from the request
+                String action = request.getParameterValue(PARAM_ACTION).toString();
+                
+                // Record the action in the action context (which currently is persistent...)
+                getModelObject().setUserAction(action);
+                
+                // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
+                // calls that do not go through this AjaxBehavior do not see an active user action.
+                RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
+                    @Override
+                    public void onEndRequest(RequestCycle aCycle)
+                    {
+                        BratAnnotator.this.getModelObject().clearUserAction();
+                    }
+                });
+
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)

@@ -334,8 +334,8 @@ public class CurationPanel
             @Override
             protected Object load()
             {
-                int fSN = bModel.getFSN();
-                int lSN = bModel.getLSN();
+                int fSN = bModel.getFirstSentenceNumber();
+                int lSN = bModel.getLastSentenceNumber();
 
                 List<String> crossSentAnnos = new ArrayList<>();
                 if (SuggestionBuilder.crossSentenceLists != null) {
@@ -501,8 +501,8 @@ public class CurationPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        bModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        bModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        bModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
 
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);

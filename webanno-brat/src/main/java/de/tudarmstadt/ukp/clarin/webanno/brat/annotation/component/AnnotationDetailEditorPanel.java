@@ -976,8 +976,8 @@ public class AnnotationDetailEditorPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        aBModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
     private void autoForwardScroll(JCas jCas, ActionContext aBModel)
@@ -996,8 +996,8 @@ public class AnnotationDetailEditorPanel
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
                 lastAddressInPage);
-        aBModel.setFSN(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLSN(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        aBModel.setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        aBModel.setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
     
     @SuppressWarnings("unchecked")
@@ -1330,7 +1330,7 @@ public class AnnotationDetailEditorPanel
             	// new one
             	else if (
     			        item.getIndex() == 0 && 
-    			        SpanAnnotationResponse.COMMAND.equals(bModel.getUserAction())
+    			        SpanAnnotationResponse.is(bModel.getUserAction())
 		        ) { 
     			    frag.getFocusComponent().add(new DefaultFocusBehavior()); 
                 }

@@ -1266,7 +1266,7 @@ public class CorrectionPage
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bModel.getProject().getId()) {
-            bModel.initForProject();
+            bModel.clearRememberedFeatures();
         }
 
         currentprojectId = bModel.getProject().getId();

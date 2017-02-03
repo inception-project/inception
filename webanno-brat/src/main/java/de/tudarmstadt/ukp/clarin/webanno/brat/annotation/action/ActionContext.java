@@ -52,11 +52,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Data model for the {@link BratAnnotator}
- *
- *
  */
 public class ActionContext
-    implements Serializable
+    implements Serializable, AnnotatorState, TransientActionContext
 {
     private static final long serialVersionUID = 1078613192789450714L;
 
@@ -422,22 +420,22 @@ public class ActionContext
         this.sentenceNumber = sentenceNumber;
     }
 
-    public int getFSN()
+    public int getFirstSentenceNumber()
     {
         return fSN;
     }
 
-    public void setFSN(int fSN)
+    public void setFirstSentenceNumber(int fSN)
     {
         this.fSN = fSN;
     }
 
-    public int getLSN()
+    public int getLastSentenceNumber()
     {
         return lSN;
     }
 
-    public void setLSN(int lSN)
+    public void setLastSentenceNumber(int lSN)
     {
         this.lSN = lSN;
     }
@@ -472,7 +470,7 @@ public class ActionContext
         this.forwardAnnotation = forwardAnnotation;
     }
 
-    public void initForProject()
+    public void clearRememberedFeatures()
     {
         setRememberedArcFeatures(null);
         setRememberedArcLayer(null);
@@ -502,8 +500,8 @@ public class ActionContext
         // the last sentence address in the display window
         Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
                 lastAddressInPage);
-        setFSN(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        setLSN(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        setFirstSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        setLastSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
 
         // LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
         // + getFirstSentenceAddress() + "] l:["

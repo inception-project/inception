@@ -277,8 +277,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            aBModel.setFSN(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLSN(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            aBModel.setFirstSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            aBModel.setLastSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
@@ -355,8 +355,8 @@ public class SuggestionViewPanel
             // the last sentence address in the display window
             Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
                     FeatureStructure.class, lastAddressInPage);
-            bModel.setFSN(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLSN(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            bModel.setFirstSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            bModel.setLastSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
