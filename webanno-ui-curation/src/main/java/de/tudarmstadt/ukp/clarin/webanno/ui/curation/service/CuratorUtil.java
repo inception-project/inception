@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
@@ -200,7 +200,7 @@ public class CuratorUtil
         response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
-        SpanAdapter.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
+        BratRenderer.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
 
         // Render visible (custom) layers
         for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
@@ -219,7 +219,8 @@ public class CuratorUtil
             }
             features.removeAll(invisibleFeatures);
             TypeAdapter adapter = getAdapter(aAnnotationService, layer);
-            adapter.render(aJcas, features, response, aBratAnnotatorModel,
+            TypeRenderer renderer = BratRenderer.getRenderer(adapter);
+            renderer.render(aJcas, features, response, aBratAnnotatorModel,
                     aCurationColoringStrategy);
         }
 

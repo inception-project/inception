@@ -97,7 +97,6 @@ public final class TypeUtil
             adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
 
             return adapter;
-
         }
         else {
             throw new IllegalArgumentException("No adapter for type with name [" + aLayer.getName()

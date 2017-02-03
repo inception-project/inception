@@ -19,27 +19,18 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,18 +42,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
@@ -141,201 +125,6 @@ public class ArcAdapter
         features = new LinkedHashMap<String, AnnotationFeature>();
         for (AnnotationFeature f : aFeatures) {
             features.put(f.getName(), f);
-        }
-    }
-
-    /**
-     * Add arc annotations from the CAS, which is controlled by the window size, to the brat
-     * response {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer
-     */
-    @Override
-    public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
-            ColoringStrategy aColoringStrategy)
-    {
-        // The first sentence address in the display window!
-        Sentence firstSentence = selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset());
-
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
-                lastAddressInPage);
-
-        Type type = getType(aJcas.getCas(), annotationTypeName);
-        Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
-        Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
-
-        Type spanType = getType(aJcas.getCas(), attachType);
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);
-
-        FeatureStructure dependentFs;
-        FeatureStructure governorFs;
-
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, firstSentence,
-                lastSentenceInPage, type, dependentFeature, governorFeature, arcSpanFeature);
-
-        // if this is a governor for more than one dependent, avoid duplicate yield
-        List<Integer> yieldDeps = new ArrayList<>();
-
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
-            if (attachFeatureName != null) {
-                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-            }
-            else {
-                dependentFs = fs.getFeatureValue(dependentFeature);
-                governorFs = fs.getFeatureValue(governorFeature);
-            }
-
-            String bratLabelText = TypeUtil.getBratLabelText(this, fs, aFeatures);
-            String bratTypeName = TypeUtil.getBratTypeName(this);
-            String color = aColoringStrategy.getColor(fs, bratLabelText);
-            
-            if (dependentFs == null || governorFs == null) {
-                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
-                        + "] has loose ends - cannot render");
-                if (attachFeatureName != null) {
-                    log.warn("Relation [" + layer.getName() + "] attached to feature ["
-                            + attachFeatureName + "]");
-                }
-                log.warn("Dependent: " + dependentFs);
-                log.warn("Governor: " + governorFs);
-                
-                continue;
-            }
-
-            List<Argument> argumentList = getArgument(governorFs, dependentFs);
-
-            aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
-                    bratLabelText, color));
-
-            if (relationLinks.keySet().contains(getAddr(governorFs))
-                    && !yieldDeps.contains(getAddr(governorFs))) {
-                yieldDeps.add(getAddr(governorFs));
-
-                // sort the annotations (begin, end)
-                List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                Collections.sort(sortedDepFs, new Comparator<Integer>()
-                {
-                    @Override
-                    public int compare(Integer arg0, Integer arg1)
-                    {
-                        return selectByAddr(aJcas, arg0).getBegin()
-                                - selectByAddr(aJcas, arg1).getBegin();
-                    }
-                });
-
-                StringBuffer cm = getYieldMessage(aJcas, sortedDepFs);
-                aResponse.addComments(new Comment(getAddr(governorFs), "Yield of relation", cm
-                        .toString()));
-            }
-        }
-    }
-/**
- * The relations yield message
- * @return
- */
-    private StringBuffer getYieldMessage(JCas aJCas, List<Integer> sortedDepFs)
-    {
-        StringBuffer cm = new StringBuffer();
-        int end = -1;
-        for (Integer depFs : sortedDepFs) {
-            if (end == -1) {
-                cm.append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
-            }
-            // if no space between token and punct
-            else if (end==selectByAddr(aJCas, depFs).getBegin()){
-                cm.append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
-            }
-            else if (end + 1 != selectByAddr(aJCas, depFs).getBegin()) {
-                cm.append(" ... " + selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
-            }
-            else {
-                cm.append(" " + selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
-            }
-
-        }
-        return cm;
-    }
-
-    /**
-     * Get relation links to display in relation yield
-     *
-     * @return
-     */
-    private Map<Integer, Set<Integer>> getRelationLinks(JCas aJcas, Sentence firstSentence,
-            Sentence lastSentenceInPage, Type type, Feature dependentFeature,
-            Feature governorFeature, Feature arcSpanFeature)
-    {
-        FeatureStructure dependentFs;
-        FeatureStructure governorFs;
-        Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
-
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
-            if (attachFeatureName != null) {
-                dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
-                governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
-            }
-            else {
-                dependentFs = fs.getFeatureValue(dependentFeature);
-                governorFs = fs.getFeatureValue(governorFeature);
-            }
-            if (dependentFs == null || governorFs == null) {
-                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
-                        + "] has loose ends - cannot render.");
-                continue;
-            }
-            Set<Integer> links = relations.get(getAddr(governorFs));
-            if (links == null) {
-                links = new ConcurrentSkipListSet<>();
-            }
-
-            links.add(getAddr(dependentFs));
-            relations.put(getAddr(governorFs), links);
-        }
-
-        // Update other subsequent links
-        for (int i = 0; i < relations.keySet().size(); i++) {
-            for (Integer fs : relations.keySet()) {
-                updateLinks(relations, fs);
-            }
-        }
-        // to start displaying the text from the governor, include it
-        for (Integer fs : relations.keySet()) {
-            relations.get(fs).add(fs);
-        }
-        return relations;
-    }
-
-    private void updateLinks(Map<Integer, Set<Integer>> aRelLinks, Integer aGov)
-    {
-        for (Integer dep : aRelLinks.get(aGov)) {
-            if (aRelLinks.containsKey(dep) && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
-                aRelLinks.get(aGov).addAll(aRelLinks.get(dep));
-                updateLinks(aRelLinks, dep);
-            }
-            else {
-                continue;
-            }
         }
     }
 
@@ -462,19 +251,11 @@ public class ArcAdapter
         aJCas.removeFsFromIndexes(fs);
     }
 
-    /**
-     * Argument lists for the arc annotation
-     */
-    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
-    {
-        return asList(new Argument("Arg1", getAddr(aGovernorFs)), new Argument("Arg2",
-                getAddr(aDependentFs)));
-    }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
             AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
             AnnotationFS aAnnotationFSNewTarget)
- {
+    {
 		return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
 				&& isSame(aAnnotationFSOldTarget, aAnnotationFSNewTarget);
     }

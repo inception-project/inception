@@ -18,22 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
 import java.util.Collection;
-import java.util.List;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**
  * Type Adapters for span, arc, and chain annotations
- *
  */
 public interface TypeAdapter
 {
@@ -47,23 +41,6 @@ public interface TypeAdapter
      * @param value the value.
      */
     void updateFeature(JCas aJcas, AnnotationFeature feature, int address, Object value);
-
-    /**
-     * Add annotations from the CAS, which is controlled by the window size, to the brat response
-     * {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param features the features.
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the  coloring strategy to render this layer
-     */
-    void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            ActionContext aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
 
     /**
      * The ID of the type.

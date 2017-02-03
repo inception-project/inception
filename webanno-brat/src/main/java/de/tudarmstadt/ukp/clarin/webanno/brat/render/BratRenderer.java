@@ -19,6 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,11 +36,18 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratArcRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratChainRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratSpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -76,7 +89,7 @@ public class BratRenderer
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
-        SpanAdapter.renderTokenAndSentence(aJCas, aResponse, aBModel);
+        renderTokenAndSentence(aJCas, aResponse, aBModel);
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
@@ -102,11 +115,54 @@ public class BratRenderer
                 }
             }
             features.removeAll(invisibleFeatures);
+            
             TypeAdapter adapter = getAdapter(aAnnotationService, layer);
-            adapter.render(aJCas, features, aResponse, aBModel, coloringStrategy);
+            TypeRenderer renderer = getRenderer(adapter);
+            renderer.render(aJCas, features, aResponse, aBModel, coloringStrategy);
         }
     }
 
+    public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
+            ActionContext aBratAnnotatorModel)
+    {
+        // The first sentence address in the display window!
+        Sentence firstSentence = selectSentenceAt(aJcas,
+                aBratAnnotatorModel.getSentenceBeginOffset(),
+                aBratAnnotatorModel.getSentenceEndOffset());
+
+        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
+                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
+
+        // the last sentence address in the display window
+        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
+                lastAddressInPage);
+
+        int sentenceNumber = getFirstSentenceNumber(aJcas, getAddr(firstSentence));
+        aResponse.setSentenceNumberOffset(sentenceNumber);
+
+        int aFirstSentenceOffset = firstSentence.getBegin();
+
+        // Render token + texts
+        for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+            // attache type such as POS adds non existing token element for ellipsis annotation
+            if (fs.getBegin() == fs.getEnd()) {
+                continue;
+            }
+            aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                    - aFirstSentenceOffset);
+        }
+        aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset,
+                lastSentenceInPage.getEnd()).replace("\n", " "));
+
+        // Render Sentence
+        for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
+                lastSentenceInPage.getEnd())) {
+            aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
+                    - aFirstSentenceOffset);
+        }
+    }
+    
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
      *
@@ -251,5 +307,26 @@ public class BratRenderer
             bratTypeName += ChainAdapter.CHAIN;
         }
         return bratTypeName;
+    }
+    
+    /**
+     * Helper method to fetch a renderer for a given type. This is indented to be a temporary
+     * solution. The final solution should be able to return renderers specific to a certain
+     * visualisation - one of which would be brat.
+     */
+    public static TypeRenderer getRenderer(TypeAdapter aTypeAdapter) {
+        if (aTypeAdapter instanceof SpanAdapter) {
+            return new BratSpanRenderer((SpanAdapter) aTypeAdapter);
+        }
+        else if (aTypeAdapter instanceof ArcAdapter) {
+            return new BratArcRenderer((ArcAdapter) aTypeAdapter);
+        }
+        else if (aTypeAdapter instanceof ChainAdapter) {
+            return new BratChainRenderer((ChainAdapter) aTypeAdapter);
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "Unknown adapter type [" + aTypeAdapter.getClass().getName() + "]");
+        }
     }
 }

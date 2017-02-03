@@ -26,8 +26,6 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,11 +39,11 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -54,13 +52,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import junit.framework.TestCase;
 
 /**
  * Test case for generating Brat Json data for getcollection and getcollection actions
- *
- *
  */
-
 public class CasToBratJsonTest
     extends TestCase
 {
@@ -180,8 +176,7 @@ public class CasToBratJsonTest
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
-        tagSetNames
-                .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
         ActionContext bratannotatorModel = new ActionContext();
         bratannotatorModel.getPreferences().setWindowSize(10);
@@ -201,7 +196,7 @@ public class CasToBratJsonTest
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        SpanAdapter.renderTokenAndSentence(jCas, response, bratannotatorModel);
+        BratRenderer.renderTokenAndSentence(jCas, response, bratannotatorModel);
 
   /*      for (AnnotationLayer layer : bratannotatorModel.getAnnotationLayers()) {
             getAdapter(layer, annotationService).render(jCas,

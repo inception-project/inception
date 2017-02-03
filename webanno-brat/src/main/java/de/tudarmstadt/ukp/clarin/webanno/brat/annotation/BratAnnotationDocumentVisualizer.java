@@ -38,9 +38,11 @@ import org.springframework.dao.DataRetrievalFailureException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -137,7 +139,7 @@ public class BratAnnotationDocumentVisualizer
         response.setText(jCas.getDocumentText());
 
         ActionContext bratAnnotatorModel = new ActionContext();
-        SpanAdapter.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
+        BratRenderer.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
 
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : bratAnnotatorModel.getAnnotationLayers()) {
@@ -156,8 +158,9 @@ public class BratAnnotationDocumentVisualizer
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(annotationService,
                     layer, bratAnnotatorModel.getPreferences(), colorQueues);
 
-            getAdapter(annotationService, layer)
-                    .render(jCas, features, response, bratAnnotatorModel, coloringStrategy);
+            TypeAdapter typeAdapter = getAdapter(annotationService, layer);
+            TypeRenderer typeRenderer = BratRenderer.getRenderer(typeAdapter);
+            typeRenderer.render(jCas, features, response, bratAnnotatorModel, coloringStrategy);
         }
 
         // Serialize BRAT object model to JSON
