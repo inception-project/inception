@@ -55,6 +55,7 @@
                 <prop key="debug.casDoctor.checks"></prop>
                 <prop key="debug.casDoctor.repairs"></prop>
                 <prop key="debug.casDoctor.fatal">false</prop>
+                <prop key="debug.casDoctor.forceReleaseBehavior">false</prop>
 			</props>
 		</property>
 		<property name="locations">

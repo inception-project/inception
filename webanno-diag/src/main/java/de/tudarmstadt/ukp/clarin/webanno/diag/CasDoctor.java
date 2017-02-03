@@ -58,6 +58,7 @@ public class CasDoctor
     private List<Class<? extends Check>> checkClasses = new ArrayList<>();
     private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
 
+    @Value(value = "${debug.casDoctor.forceReleaseBehavior}")
     private boolean disableAutoScan = false;
 
     private boolean skipPreRepairAnalysis;
@@ -211,7 +212,7 @@ public class CasDoctor
                     context.getAutowireCapableBeanFactory().autowireBean(check);
                 }
                 ok &= check.check(aProject, aCas, aMessages);
-                log.info("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
+                log.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
                         + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (InstantiationException | IllegalAccessException e) {
@@ -229,7 +230,7 @@ public class CasDoctor
             throw new CasDoctorException(aMessages);
         }
 
-        log.info("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
+        log.debug("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
 
         return ok;
     }

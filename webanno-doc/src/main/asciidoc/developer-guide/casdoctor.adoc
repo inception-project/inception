@@ -69,6 +69,11 @@ and saving inconsistent documents.
 | Repairs to be performed when a CAS is loaded
 | _unset_
 | comma-separated list of <<sect_repairs,repairs>>
+
+| debug.casDoctor.forceReleaseBehavior
+| Behave as like a release version even if it is a beta or snapshot version.
+| false
+| true
 |===
 
 [[sect_checks]]
