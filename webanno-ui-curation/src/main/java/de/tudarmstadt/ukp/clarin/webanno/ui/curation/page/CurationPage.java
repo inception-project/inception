@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -172,7 +171,7 @@ public class CurationPage
                 }
                 aTarget.add(numberOfPages);
                 gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
-                        bModel.getSentenceAddress()) + 1);
+                        bModel.getFirstVisibleSentenceAddress()) + 1);
                 gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
                 aTarget.add(gotoPageTextField);
                 aTarget.add(curationPanel);
@@ -207,10 +206,10 @@ public class CurationPage
                                 if (totalNumberOfSentence == 1) {
                                     int firstSentenceAddress = BratAjaxCasUtil
                                             .getFirstSentenceAddress(mergeJCas);
-                                    bModel.setSentenceAddress(firstSentenceAddress);
+                                    bModel.setFirstVisibleSentenceAddress(firstSentenceAddress);
                                 }
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas,
-                                        bModel.getSentenceAddress());
+                                        bModel.getFirstVisibleSentenceAddress());
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
                                 if (firstSentenceNumber + bModel.getPreferences().getWindowSize()
@@ -321,7 +320,7 @@ public class CurationPage
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     curationPanel.updatePanel(aTarget, curationContainer);
                     updatePanel(curationContainer, aTarget);
-                    updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+                    updateSentenceNumber(mergeJCas, bModel.getFirstVisibleSentenceAddress());
                 }
                 catch (Exception e) {
                     aTarget.add(getFeedbackPanel());
@@ -450,7 +449,7 @@ public class CurationPage
                 try {
                     aTarget.add(getFeedbackPanel());
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
 
                         updateSentenceNumber(mergeJCas, gotoPageAddress);
 
@@ -514,7 +513,7 @@ public class CurationPage
                 try {
                     aTarget.add(getFeedbackPanel());
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
 
                         updateSentenceNumber(mergeJCas, gotoPageAddress);
 
@@ -685,9 +684,9 @@ public class CurationPage
                     try {
                         mergeJCas = repository.readCurationCas(bModel.getDocument());
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
-                                bModel.getSentenceAddress(), bModel.getPreferences()
+                                bModel.getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
-                        if (bModel.getSentenceAddress() != nextSentenceAddress) {
+                        if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
                             aTarget.add(getFeedbackPanel());
 
                             updateSentenceNumber(mergeJCas, nextSentenceAddress);
@@ -729,9 +728,9 @@ public class CurationPage
                         mergeJCas = repository.readCurationCas(bModel.getDocument());
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas, bModel
-                                        .getSentenceAddress(), bModel.getPreferences()
+                                        .getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
-                        if (bModel.getSentenceAddress() != previousSentenceAddress) {
+                        if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
 
                             updateSentenceNumber(mergeJCas, previousSentenceAddress);
 
@@ -811,7 +810,7 @@ public class CurationPage
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
-                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
+                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
 
                             updateSentenceNumber(mergeJCas,
                                     lastDisplayWindowBeginingSentenceAddress);
@@ -891,7 +890,7 @@ public class CurationPage
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
         gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
-                bModel.getSentenceAddress()) + 1);
+                bModel.getFirstVisibleSentenceAddress()) + 1);
         gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
         curationPanel.setOutputMarkupId(true);
         aTarget.add(gotoPageTextField);
@@ -917,20 +916,9 @@ public class CurationPage
 
     private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
-        bModel.setSentenceAddress(aAddress);
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
-        bModel.setSentenceBeginOffset(sentence.getBegin());
-        bModel.setSentenceEndOffset(sentence.getEnd());
+        bModel.setFirstVisibleSentence(sentence);
         bModel.setFocusSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-
-        Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJCas,
-                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-        bModel.setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException
@@ -997,7 +985,7 @@ public class CurationPage
         curationContainer.setBratAnnotatorModel(bModel);
         curationPanel.updatePanel(aTarget, curationContainer);
         updatePanel(curationContainer, aTarget);
-        updateSentenceNumber(mergeJCas, bModel.getSentenceAddress());
+        updateSentenceNumber(mergeJCas, bModel.getFirstVisibleSentenceAddress());
         // Load constraints
         bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
 

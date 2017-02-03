@@ -966,11 +966,11 @@ public class AnnotationDetailEditorPanel
     {
         if (aForward) {
             // Get the current first sentence
-            Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
+            Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getFirstVisibleSentenceAddress());
             // Find the following one
             int address = getNextSentenceAddress(jCas, sentence);
             // Move to it
-            aBModel.setSentenceAddress(address);
+            aBModel.setFirstVisibleSentence(selectByAddr(jCas, Sentence.class, address));
         }
         else {
             // Fetch the current sentence by offsets
@@ -978,25 +978,12 @@ public class AnnotationDetailEditorPanel
                     aBModel.getSentenceEndOffset());
             // Calculate the first sentence in the window in such a way that the annotation
             // currently selected is in the center of the window
-            int address = findWindowStartCenteringOnSelection(jCas, sentence,
+            sentence = findWindowStartCenteringOnSelection(jCas, sentence,
                     aBModel.getSelection().getBegin(), aBModel.getProject(), aBModel.getDocument(),
                     aBModel.getPreferences().getWindowSize());
             // Move to it
-            aBModel.setSentenceAddress(address);
+            aBModel.setFirstVisibleSentence(sentence);
         }
-
-        Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getSentenceAddress());
-        aBModel.setSentenceBeginOffset(sentence.getBegin());
-        aBModel.setSentenceEndOffset(sentence.getEnd());
-
-        Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                aBModel.getSentenceEndOffset());
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(jCas,
-                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
-        aBModel.setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        aBModel.setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
     }
 
     @SuppressWarnings("unchecked")

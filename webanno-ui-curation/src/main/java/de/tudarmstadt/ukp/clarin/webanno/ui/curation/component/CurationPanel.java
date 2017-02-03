@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
@@ -485,23 +484,9 @@ public class CurationPanel
     {
         Sentence currentSent = BratAjaxCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
                 curationViewItem.getEnd());
-        bModel.setSentenceAddress(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas,
+        bModel.setFirstVisibleSentence(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas,
                 currentSent, curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(),
                 bModel.getPreferences().getWindowSize()));
-
-        Sentence sentence = selectByAddr(jCas, Sentence.class, bModel.getSentenceAddress());
-        bModel.setSentenceBeginOffset(sentence.getBegin());
-        bModel.setSentenceEndOffset(sentence.getEnd());
-
-        Sentence firstSentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(jCas,
-                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-        bModel.setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        bModel.setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
-
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);
     }
@@ -533,7 +518,7 @@ public class CurationPanel
 
         final int sentenceAddress = getAddr(selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset()));
-        bModel.setSentenceAddress(sentenceAddress);
+        bModel.setFirstVisibleSentenceAddress(sentenceAddress);
 
         final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel

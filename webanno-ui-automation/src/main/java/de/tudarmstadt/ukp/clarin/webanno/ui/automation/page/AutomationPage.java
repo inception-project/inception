@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -667,7 +666,7 @@ public class AutomationPage
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
 
                         updateSentenceNumber(mergeJCas, gotoPageAddress);
 
@@ -745,7 +744,7 @@ public class AutomationPage
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
 
                         updateSentenceNumber(mergeJCas, gotoPageAddress);
 
@@ -983,9 +982,9 @@ public class AutomationPage
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas, bModel
-                                        .getSentenceAddress(), bModel.getPreferences()
+                                        .getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
-                        if (bModel.getSentenceAddress() != previousSentenceAddress) {
+                        if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
                             updateSentenceNumber(mergeJCas, previousSentenceAddress);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
@@ -1087,7 +1086,7 @@ public class AutomationPage
                         int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
-                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getSentenceAddress()) {
+                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
                             updateSentenceNumber(mergeJCas,
                                     lastDisplayWindowBeginingSentenceAddress);
 
@@ -1307,20 +1306,10 @@ public class AutomationPage
 
     private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
-        bModel.setSentenceAddress(aAddress);
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
-        bModel.setSentenceBeginOffset(sentence.getBegin());
-        bModel.setSentenceEndOffset(sentence.getEnd());
-        bModel.setFocusSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-
-        Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJCas,
-                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-        bModel.setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstVisibleSentence(sentence);
+        bModel.setFocusSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     private void update(AjaxRequestTarget target)
@@ -1347,7 +1336,7 @@ public class AutomationPage
         }
 
         gotoPageTextField
-                .setModelObject(getFirstSentenceNumber(jCas, bModel.getSentenceAddress()) + 1);
+                .setModelObject(getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
         gotoPageAddress = getSentenceAddress(jCas, gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);

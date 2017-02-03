@@ -536,12 +536,9 @@ public class CorrectionPage
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
-                        bModel.setSentenceAddress(gotoPageAddress);
-
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
                         Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-                        bModel.setSentenceBeginOffset(sentence.getBegin());
-                        bModel.setSentenceEndOffset(sentence.getEnd());
+                        bModel.setFirstVisibleSentence(sentence);
 
                         SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
@@ -617,12 +614,9 @@ public class CorrectionPage
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                    if (bModel.getSentenceAddress() != gotoPageAddress) {
-                        bModel.setSentenceAddress(gotoPageAddress);
-
+                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
                         Sentence sentence = selectByAddr(mergeJCas, Sentence.class, gotoPageAddress);
-                        bModel.setSentenceBeginOffset(sentence.getBegin());
-                        bModel.setSentenceEndOffset(sentence.getEnd());
+                        bModel.setFirstVisibleSentence(sentence);
 
                         SuggestionBuilder builder = new SuggestionBuilder(repository,
                                 annotationService, userRepository);
@@ -811,12 +805,9 @@ public class CorrectionPage
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
                                 address, bModel.getPreferences().getWindowSize());
                         if (address != nextSentenceAddress) {
-                            bModel.setSentenceAddress(nextSentenceAddress);
-
                             Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                                     nextSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setFirstVisibleSentence(sentence);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -874,15 +865,12 @@ public class CorrectionPage
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
-                                        bModel.getSentenceAddress(), bModel
+                                        bModel.getFirstVisibleSentenceAddress(), bModel
                                                 .getPreferences().getWindowSize());
-                        if (bModel.getSentenceAddress() != previousSentenceAddress) {
-                            bModel.setSentenceAddress(previousSentenceAddress);
-
+                        if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
                             Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                                     previousSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setFirstVisibleSentence(sentence);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -943,12 +931,9 @@ public class CorrectionPage
                         int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
-                            bModel.setSentenceAddress(firstAddress);
-
                             Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                                     firstAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setFirstVisibleSentence(sentence);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -1005,14 +990,10 @@ public class CorrectionPage
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
                                         bModel.getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel
-                                .getSentenceAddress()) {
-                            bModel
-                                    .setSentenceAddress(lastDisplayWindowBeginingSentenceAddress);
-
+                                .getFirstVisibleSentenceAddress()) {
                             Sentence sentence = selectByAddr(mergeJCas, Sentence.class,
                                     lastDisplayWindowBeginingSentenceAddress);
-                            bModel.setSentenceBeginOffset(sentence.getBegin());
-                            bModel.setSentenceEndOffset(sentence.getEnd());
+                            bModel.setFirstVisibleSentence(sentence);
 
                             SuggestionBuilder builder = new SuggestionBuilder(repository,
                                     annotationService, userRepository);
@@ -1320,7 +1301,7 @@ public class CorrectionPage
         }
 
         gotoPageTextField.setModelObject(getFirstSentenceNumber(jCas,
-                bModel.getSentenceAddress()) + 1);
+                bModel.getFirstVisibleSentenceAddress()) + 1);
         gotoPageAddress = getSentenceAddress(jCas, gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);

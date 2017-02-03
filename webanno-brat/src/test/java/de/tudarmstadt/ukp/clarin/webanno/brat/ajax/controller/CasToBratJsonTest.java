@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import junit.framework.TestCase;
 
 /**
@@ -180,13 +179,7 @@ public class CasToBratJsonTest
 
         ActionContext bratannotatorModel = new ActionContext();
         bratannotatorModel.getPreferences().setWindowSize(10);
-        bratannotatorModel.setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(jCas));
-
-        Sentence sentence = BratAjaxCasUtil.selectByAddr(jCas, Sentence.class,
-                bratannotatorModel.getSentenceAddress());
-
-        bratannotatorModel.setSentenceBeginOffset(sentence.getBegin());
-        bratannotatorModel.setSentenceEndOffset(sentence.getEnd());
+        bratannotatorModel.setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(jCas));
 
         Project project = new Project();
         bratannotatorModel.setProject(project);

@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -165,19 +163,19 @@ public class ActionContext
 
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
-    
+
     // Text field to capture key-bindings for forward annoatations
     private String forwardAnno;
-    // the default annotation layer  
+    // the default annotation layer
     private AnnotationLayer defaultAnnotationLayer;
-    
+
     // the name of the default annotation layer
     private String layerName;
 
     // enable automatic forward annotations
     private boolean forwardAnnotation;
-    
-    //User action while annotating on document
+
+    // User action while annotating on document
     private String userAction;
 
     @Override
@@ -256,13 +254,37 @@ public class ActionContext
     }
 
     @Override
-    public int getSentenceAddress()
+    public void setFirstVisibleSentence(Sentence aSentence)
+    {
+        JCas jcas;
+        try {
+            jcas = aSentence.getCAS().getJCas();
+        }
+        catch (CASException e) {
+            throw new IllegalStateException("Unable to fetch JCas from CAS", e);
+        }
+
+        setFirstVisibleSentenceAddress(aSentence.getAddress());
+        this.sentenceBeginOffset = aSentence.getBegin();
+        this.sentenceEndOffset = aSentence.getEnd();
+
+        Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
+                getPreferences().getWindowSize());
+        setFirstVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin()));
+        setLastVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin()));
+    }
+
+    @Override
+    public int getFirstVisibleSentenceAddress()
     {
         return displayWindowStartSentenceAddress;
     }
 
+    @Deprecated
     @Override
-    public void setSentenceAddress(int aSentenceAddress)
+    public void setFirstVisibleSentenceAddress(int aSentenceAddress)
     {
         displayWindowStartSentenceAddress = aSentenceAddress;
     }
@@ -343,7 +365,7 @@ public class ActionContext
                 if (!fm.feature.isRemember()) {
                     continue;
                 }
-                
+
                 // Do not remember link features.
                 if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
                     continue;
@@ -369,7 +391,7 @@ public class ActionContext
                 if (!fm.feature.isRemember()) {
                     continue;
                 }
-                
+
                 // Do not remember link features.
                 if (!LinkMode.NONE.equals(fm.feature.getLinkMode())) {
                     continue;
@@ -386,21 +408,9 @@ public class ActionContext
     }
 
     @Override
-    public void setSentenceBeginOffset(int sentenceBeginOffset)
-    {
-        this.sentenceBeginOffset = sentenceBeginOffset;
-    }
-
-    @Override
     public int getSentenceEndOffset()
     {
         return sentenceEndOffset;
-    }
-
-    @Override
-    public void setSentenceEndOffset(int sentenceEndOffset)
-    {
-        this.sentenceEndOffset = sentenceEndOffset;
     }
 
     @Override
@@ -421,6 +431,7 @@ public class ActionContext
         return fSN;
     }
 
+    @Deprecated
     @Override
     public void setFirstVisibleSentenceNumber(int fSN)
     {
@@ -433,6 +444,7 @@ public class ActionContext
         return lSN;
     }
 
+    @Deprecated
     @Override
     public void setLastVisibleSentenceNumber(int lSN)
     {
@@ -489,28 +501,10 @@ public class ActionContext
     {
         getSelection().clear();
         clearArmedSlot();
-        
+
         // (Re)initialize brat model after potential creating / upgrading CAS
-        setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
+        setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
         getPreferences().setWindowSize(aRepository.getNumberOfSentences());
-
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
-        setSentenceBeginOffset(sentence.getBegin());
-        setSentenceEndOffset(sentence.getEnd());
-
-        Sentence firstVisibleSentence = selectSentenceAt(aJCas, getSentenceBeginOffset(),
-                getSentenceEndOffset());
-        Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(aJCas,
-                getAddr(firstVisibleSentence), getPreferences().getWindowSize());
-        setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, firstVisibleSentence.getBegin()));
-        setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, lastVisibleSentence.getBegin()));
-
-        // LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
-        // + getFirstSentenceAddress() + "] l:["
-        // + getLastSentenceAddress() + "] s:["
-        // + getSentenceAddress() + "]");
     }
 
     private AnnotationFeature armedFeature;

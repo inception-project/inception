@@ -74,9 +74,9 @@ public class BratChainRenderer
     {
         // Get begin and end offsets of window content
         int windowBegin = BratAjaxCasUtil.selectByAddr(aJcas,
-                Sentence.class, aBratAnnotatorModel.getSentenceAddress()).getBegin();
+                Sentence.class, aBratAnnotatorModel.getFirstVisibleSentenceAddress()).getBegin();
         int windowEnd = BratAjaxCasUtil.getLastSentenceInDisplayWindow(aJcas,
-                aBratAnnotatorModel.getSentenceAddress(),
+                aBratAnnotatorModel.getFirstVisibleSentenceAddress(),
                 aBratAnnotatorModel.getPreferences().getWindowSize()).getEnd();
 
         // Find the features for the arc and span labels - it is possible that we do not find a

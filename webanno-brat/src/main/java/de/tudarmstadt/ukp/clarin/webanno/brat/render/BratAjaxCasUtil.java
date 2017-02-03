@@ -277,6 +277,24 @@ public class BratAjaxCasUtil
     }
 
     /**
+     * Get the internal address of the first sentence annotation from JCAS. This will be used as a
+     * reference for moving forward/backward sentences positions
+     *
+     * @param aJcas
+     *            The CAS object assumed to contains some sentence annotations
+     * @return the sentence number or -1 if aJcas don't have sentence annotation
+     */
+    public static Sentence getFirstSentence(JCas aJcas)
+    {
+        Sentence firstSentence = null;
+        for (Sentence s : select(aJcas, Sentence.class)) {
+            firstSentence = s;
+            break;
+        }
+        return firstSentence;
+    }
+
+    /**
      * Get the current sentence based on the annotation begin/end offset
      *
      * @param aJCas
@@ -428,7 +446,7 @@ public class BratAjaxCasUtil
      *            the window size.
      * @return the ID of the first sentence.
      */
-    public static int findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
+    public static Sentence findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
             int aFocosOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
     {
         FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, aSentence);
@@ -436,7 +454,7 @@ public class BratAjaxCasUtil
         // no auto-forward for single sentence window
         Sentence s = si.get();
         if (aWindowSize == 1) {
-            return getAddr(s);
+            return s;
         }
 
         // Seek the sentence that contains the current focus
@@ -461,7 +479,7 @@ public class BratAjaxCasUtil
         Sentence n = (Sentence) s;
 
         if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
-            return getAddr(s);
+            return s;
         }
 
         int count = 0;
@@ -475,7 +493,7 @@ public class BratAjaxCasUtil
             count++;
         }
 
-        return getAddr(s);
+        return s;
     }
 
 	public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence) {

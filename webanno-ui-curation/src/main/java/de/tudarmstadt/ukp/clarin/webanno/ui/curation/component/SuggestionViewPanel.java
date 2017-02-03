@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
@@ -257,26 +255,12 @@ public class SuggestionViewPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            Sentence s = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
+            Sentence sentence = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
                     aBModel.getSentenceEndOffset());
-            aBModel.setSentenceAddress(
-                    findWindowStartCenteringOnSelection(clickedJCas, s, fsClicked.getBegin(),
-                            aBModel.getProject(), aBModel.getDocument(),
-                            aBModel.getPreferences().getWindowSize()));
-
-            Sentence sentence = selectByAddr(clickedJCas, Sentence.class,
-                    aBModel.getSentenceAddress());
-            aBModel.setSentenceBeginOffset(sentence.getBegin());
-            aBModel.setSentenceEndOffset(sentence.getEnd());
-
-            Sentence firstSentence = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
-                    aBModel.getSentenceEndOffset());
-            Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(clickedJCas,
-                    getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
-            aBModel.setFirstVisibleSentenceNumber(
-                    getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLastVisibleSentenceNumber(
-                    getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            sentence = findWindowStartCenteringOnSelection(clickedJCas, sentence,
+                    fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
+                    aBModel.getPreferences().getWindowSize());
+            aBModel.setFirstVisibleSentence(sentence);
         }
     }
 
@@ -338,25 +322,12 @@ public class SuggestionViewPanel
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            Sentence s = selectSentenceAt(aJcas, bModel.getSentenceBeginOffset(),
+            Sentence sentence = selectSentenceAt(clickedJCas, bModel.getSentenceBeginOffset(),
                     bModel.getSentenceEndOffset());
-            // FIXME REC: this looks like a bug... here we set an address from aJCas in bModel and
-            // below we set addresses from clickedJCas...
-            bModel.setSentenceAddress(findWindowStartCenteringOnSelection(aJcas, s,
+            sentence = findWindowStartCenteringOnSelection(clickedJCas, sentence,
                     clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
-                    bModel.getPreferences().getWindowSize()));
-            Sentence sentence = selectByAddr(aJcas, Sentence.class, bModel.getSentenceAddress());
-            bModel.setSentenceBeginOffset(sentence.getBegin());
-            bModel.setSentenceEndOffset(sentence.getEnd());
-
-            Sentence firstSentence = selectSentenceAt(clickedJCas, bModel.getSentenceBeginOffset(),
-                    bModel.getSentenceEndOffset());
-            Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(clickedJCas,
-                    getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-            bModel.setFirstVisibleSentenceNumber(
-                    getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLastVisibleSentenceNumber(
-                    getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+                    bModel.getPreferences().getWindowSize());
+            bModel.setFirstVisibleSentence(sentence);
         }
     }
 

@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Covers information about the state of the annotation editor component that is relevant across
@@ -60,16 +61,19 @@ public interface AnnotatorState
      */
     public void setFocusSentenceNumber(int sentenceNumber);
     
-    public int getSentenceAddress();
-    public void setSentenceAddress(int aSentenceAddress);
+    public void setFirstVisibleSentence(Sentence aSentence);
+    
+    public int getFirstVisibleSentenceAddress();
+    @Deprecated
+    public void setFirstVisibleSentenceAddress(int aSentenceAddress);
     public int getSentenceBeginOffset();
-    public void setSentenceBeginOffset(int sentenceBeginOffset);
     public int getSentenceEndOffset();
-    public void setSentenceEndOffset(int sentenceEndOffset);
 
     public int getFirstVisibleSentenceNumber();
+    @Deprecated
     public void setFirstVisibleSentenceNumber(int fSN);
     public int getLastVisibleSentenceNumber();
+    @Deprecated
     public void setLastVisibleSentenceNumber(int lSN);
     
     // ---------------------------------------------------------------------------------------------
