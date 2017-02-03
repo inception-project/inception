@@ -167,6 +167,10 @@ public class BratAnnotator
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
+                long timerStart = System.currentTimeMillis();
+                
+                // We always refresh the feedback panel - only doing this in the case were actually
+                // something worth reporting occurs is too much of a hassel...
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
                 final IRequestParameters request = getRequest().getPostParameters();
@@ -249,7 +253,6 @@ public class BratAnnotator
                         result = response;
                     }
 
-                    LOG.info("AJAX-RPC DONE: [" + action + "]");
                 }
                 catch (ClassNotFoundException e) {
                     LOG.error("Invalid reader: " + e.getMessage(), e);
@@ -272,11 +275,13 @@ public class BratAnnotator
                     aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = "
                             + json + ";");
                 }
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     detailPanel.refreshAnnotationLayers(getModelObject());
                 }
+                
+                LOG.info("AJAX-RPC DONE: [" + action + "] completed in "
+                        + (System.currentTimeMillis() - timerStart) + "ms");
             }
         };
 

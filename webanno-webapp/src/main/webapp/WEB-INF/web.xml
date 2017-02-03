@@ -84,8 +84,16 @@
       <filter-class>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter</filter-class>
     </filter>
 
+    <!--
+        3) Log time that requests take
+    -->
+    <filter>
+      <filter-name>performance</filter-name>
+      <filter-class>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoPerformanceFilter</filter-class>
+    </filter>
+
 	<!--
-		3) Handle access to the monitoring URL - after the security check so
+		4) Handle access to the monitoring URL - after the security check so
 		only authenticated users can access this URL.
 	-->
 	<filter>
@@ -94,7 +102,7 @@
 	</filter>
 
 	<!--
-		4) Make sure we have one JPA session/transaction per request. Closes
+		5) Make sure we have one JPA session/transaction per request. Closes
 		session at the end, without this, changed data may not be automatically saved to the DB.
 	-->
 	<filter>
@@ -104,7 +112,7 @@
 
 
 	<!--
-		5) Pass control to Wicket
+		6) Pass control to Wicket
 	-->
 	<filter>
 		<filter-name>wicket.filter</filter-name>
@@ -145,6 +153,11 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
   
+    <filter-mapping>
+        <filter-name>performance</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
 	<filter-mapping>
 		<filter-name>monitoring</filter-name>
 		<url-pattern>/*</url-pattern>
