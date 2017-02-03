@@ -118,11 +118,13 @@ public class ActionContext
      */
     private ParsedConstraints constraints;
 
+    @Override
     public ParsedConstraints getConstraints()
     {
         return constraints;
     }
 
+    @Override
     public void setConstraints(ParsedConstraints aConstraints)
     {
         constraints = aConstraints;
@@ -189,16 +191,19 @@ public class ActionContext
     //User action while annotating on document
     private String userAction;
 
+    @Override
     public String getUserAction()
     {
         return userAction;
     }
 
+    @Override
     public void setUserAction(String aUserAction)
     {
         userAction = aUserAction;
     }
 
+    @Override
     public void clearUserAction()
     {
         userAction = null;
@@ -206,147 +211,164 @@ public class ActionContext
 
     private final Selection selection = new Selection();
 
+    @Override
     public Selection getSelection()
     {
         return selection;
     }
 
+    @Override
     public Project getProject()
     {
         return project;
     }
 
+    @Override
     public void setProject(Project aProject)
     {
         project = aProject;
         setScriptDirection(project.getScriptDirection());
     }
 
+    @Override
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
     }
 
+    @Override
     public void setScriptDirection(ScriptDirection aScriptDirection)
     {
         scriptDirection = aScriptDirection;
     }
 
+    @Override
     public SourceDocument getDocument()
     {
         return document;
     }
 
+    @Override
     public void setDocument(SourceDocument aDocument)
     {
         document = aDocument;
     }
 
+    @Override
     public User getUser()
     {
         return user;
     }
 
+    @Override
     public void setUser(User aUser)
     {
         user = aUser;
     }
 
+    @Override
     public int getSentenceAddress()
     {
         return displayWindowStartSentenceAddress;
     }
 
+    @Override
     public void setSentenceAddress(int aSentenceAddress)
     {
         displayWindowStartSentenceAddress = aSentenceAddress;
     }
 
+    @Override
     public int getLastSentenceAddress()
     {
         return lastSentenceAddress;
     }
 
+    @Override
     public void setLastSentenceAddress(int aLastSentenceAddress)
     {
         lastSentenceAddress = aLastSentenceAddress;
     }
 
+    @Override
     public int getFirstSentenceAddress()
     {
         return firstSentenceAddress;
     }
 
+    @Override
     public void setFirstSentenceAddress(int aFirstSentenceAddress)
     {
         firstSentenceAddress = aFirstSentenceAddress;
     }
 
+    @Override
     public List<AnnotationLayer> getAnnotationLayers()
     {
         return annotationLayers;
     }
 
+    @Override
     public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
     }
 
+    @Override
     public AnnotationPreference getPreferences()
     {
         return preferences;
     }
 
+    @Override
     public void setPreferences(AnnotationPreference aPreferences)
     {
         preferences = aPreferences;
     }
 
-    public String getDocumentName()
-    {
-        return documentName;
-    }
-
-    public void setDocumentName(String documentName)
-    {
-        this.documentName = documentName;
-    }
-
+    @Override
     public Mode getMode()
     {
         return mode;
     }
 
+    @Override
     public void setMode(Mode mode)
     {
         this.mode = mode;
     }
 
+    @Override
     public AnnotationLayer getRememberedSpanLayer()
     {
         return rememberedSpanLayer;
     }
 
+    @Override
     public void setRememberedSpanLayer(AnnotationLayer rememberedSpanLayer)
     {
         this.rememberedSpanLayer = rememberedSpanLayer;
     }
 
+    @Override
     public AnnotationLayer getRememberedArcLayer()
     {
         return rememberedArcLayer;
     }
 
+    @Override
     public void setRememberedArcLayer(AnnotationLayer rememberedArcLayer)
     {
         this.rememberedArcLayer = rememberedArcLayer;
     }
 
+    @Override
     public Map<AnnotationFeature, Serializable> getRememberedSpanFeatures()
     {
         return rememberedSpanFeatures;
     }
 
+    @Override
     public void setRememberedSpanFeatures(List<FeatureModel> aModels)
     {
         rememberedSpanFeatures = new HashMap<>();
@@ -366,11 +388,13 @@ public class ActionContext
         }
     }
 
+    @Override
     public Map<AnnotationFeature, Serializable> getRememberedArcFeatures()
     {
         return rememberedArcFeatures;
     }
 
+    @Override
     public void setRememberedArcFeatures(List<FeatureModel> aModels)
     {
         rememberedArcFeatures = new HashMap<>();
@@ -390,86 +414,103 @@ public class ActionContext
         }
     }
 
+    @Override
     public int getSentenceBeginOffset()
     {
         return sentenceBeginOffset;
     }
 
+    @Override
     public void setSentenceBeginOffset(int sentenceBeginOffset)
     {
         this.sentenceBeginOffset = sentenceBeginOffset;
     }
 
+    @Override
     public int getSentenceEndOffset()
     {
         return sentenceEndOffset;
     }
 
+    @Override
     public void setSentenceEndOffset(int sentenceEndOffset)
     {
         this.sentenceEndOffset = sentenceEndOffset;
     }
 
+    @Override
     public int getSentenceNumber()
     {
         return sentenceNumber;
     }
 
+    @Override
     public void setSentenceNumber(int sentenceNumber)
     {
         this.sentenceNumber = sentenceNumber;
     }
 
+    @Override
     public int getFirstSentenceNumber()
     {
         return fSN;
     }
 
+    @Override
     public void setFirstSentenceNumber(int fSN)
     {
         this.fSN = fSN;
     }
 
+    @Override
     public int getLastSentenceNumber()
     {
         return lSN;
     }
 
+    @Override
     public void setLastSentenceNumber(int lSN)
     {
         this.lSN = lSN;
     }
 
+    @Override
     public AnnotationLayer getSelectedAnnotationLayer()
     {
         return selectedAnnotationLayer;
     }
 
+    @Override
     public void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer)
     {
         this.selectedAnnotationLayer = selectedAnnotationLayer;
     }
 
+    @Override
     public AnnotationLayer getDefaultAnnotationLayer()
     {
         return defaultAnnotationLayer;
     }
 
+    @Override
     public void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer)
     {
         this.defaultAnnotationLayer = defaultAnnotationLayer;
     }
 
+    @Override
     public boolean isForwardAnnotation()
     {
         return forwardAnnotation;
     }
 
+    @Override
     public void setForwardAnnotation(boolean forwardAnnotation)
     {
         this.forwardAnnotation = forwardAnnotation;
     }
 
+    @Override
     public void clearRememberedFeatures()
     {
         setRememberedArcFeatures(null);
@@ -478,6 +519,7 @@ public class ActionContext
         setRememberedSpanLayer(null);
     }
 
+    @Override
     public void initForDocument(JCas aJCas, RepositoryService aRepository)
     {
         getSelection().clear();
@@ -512,33 +554,39 @@ public class ActionContext
     private AnnotationFeature armedFeature;
     private int armedSlot = -1;
 
+    @Override
     public void setArmedSlot(AnnotationFeature aName, int aIndex)
     {
         armedFeature = aName;
         armedSlot = aIndex;
     }
 
+    @Override
     public boolean isArmedSlot(AnnotationFeature aName, int aIndex)
     {
         return ObjectUtils.equals(aName, armedFeature) && aIndex == armedSlot;
     }
 
+    @Override
     public void clearArmedSlot()
     {
         armedFeature = null;
         armedSlot = -1;
     }
 
+    @Override
     public boolean isSlotArmed()
     {
         return armedFeature != null;
     }
 
+    @Override
     public AnnotationFeature getArmedFeature()
     {
         return armedFeature;
     }
 
+    @Override
     public int getArmedSlot()
     {
         return armedSlot;

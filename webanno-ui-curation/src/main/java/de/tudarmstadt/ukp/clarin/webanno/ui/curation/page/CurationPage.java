@@ -354,8 +354,6 @@ public class CurationPage
                     aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
-                    bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
-                            .getName());
                     bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
                     try {
                         repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION, bModel
@@ -396,8 +394,6 @@ public class CurationPage
                     aTarget.appendJavaScript("alert('This is the last document!')");
                 }
                 else {
-                    bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
-                            .getName());
                     bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                     try {

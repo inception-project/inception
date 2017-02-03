@@ -822,8 +822,6 @@ public class AutomationPage
                     aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
-                    bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
-                            .getName());
                     bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
 
                     try {
@@ -882,8 +880,6 @@ public class AutomationPage
                     aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
-                        .getName());
                 bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 try {

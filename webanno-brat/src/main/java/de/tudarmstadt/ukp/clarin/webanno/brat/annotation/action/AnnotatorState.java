@@ -119,17 +119,6 @@ public interface AnnotatorState
     SourceDocument getDocument();
     void setDocument(SourceDocument aDocument);
     
-    // REC: the document name can probably be fetched easily from the document, so I guess this
-    // call can be dropped in favor of getDocument().getName()
-    /**
-     * @deprecated use {@code getDocument().getName()} instead.
-     */
-    @Deprecated
-    String getDocumentName();
-    
-    @Deprecated
-    void setDocumentName(String documentName);
-   
     // ---------------------------------------------------------------------------------------------
     // Project
     // ---------------------------------------------------------------------------------------------

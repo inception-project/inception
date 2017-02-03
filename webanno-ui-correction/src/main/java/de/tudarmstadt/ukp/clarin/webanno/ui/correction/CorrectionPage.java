@@ -698,8 +698,6 @@ public class CorrectionPage
                     aTarget.appendJavaScript("alert('This is the first document!')");
                 }
                 else {
-                    bModel.setDocumentName(listOfSourceDocuements.get(
-                            currentDocumentIndex - 1).getName());
                     bModel.setDocument(listOfSourceDocuements
                             .get(currentDocumentIndex - 1));
 
@@ -757,10 +755,7 @@ public class CorrectionPage
                     aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(
-                        currentDocumentIndex + 1).getName());
-                bModel
-                        .setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
+                bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 try {
                     loadDocumentAction(aTarget);

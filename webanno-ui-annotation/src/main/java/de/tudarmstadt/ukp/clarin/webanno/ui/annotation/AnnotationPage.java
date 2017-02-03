@@ -391,8 +391,6 @@ public class AnnotationPage
                     aTarget.appendJavaScript("alert('This is the first document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex - 1)
-                        .getName());
                 bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
 
                 loadDocumentAction(aTarget);
@@ -423,8 +421,6 @@ public class AnnotationPage
                     aTarget.appendJavaScript("alert('This is the last document!')");
                     return;
                 }
-                bModel.setDocumentName(listOfSourceDocuements.get(currentDocumentIndex + 1)
-                        .getName());
                 bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
                 loadDocumentAction(aTarget);
