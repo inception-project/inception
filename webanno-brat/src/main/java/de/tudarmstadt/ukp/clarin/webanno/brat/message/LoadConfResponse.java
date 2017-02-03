@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
 /**
  * Response for the {@code loadConf} command.
  */
@@ -25,19 +28,19 @@ public class LoadConfResponse
 {
     public static final String COMMAND = "loadConf";
 
-    private String config = "{\"abbrevsOn\":true,\"textBackgrounds\":\"striped\",\"visual\":{\"margin\":{\"x\":2,\"y\":1},\"arcTextMargin\":1,\"boxSpacing\":1,\"curlyHeight\":4,\"arcSpacing\":9,\"arcStartHeight\":19},\"svgWidth\":\"100%\",\"rapidModeOn\":false,\"confirmModeOn\":true,\"autorefreshOn\":false}";
+    private BratConfig config = new BratConfig();
 
     public LoadConfResponse()
     {
         super(COMMAND);
     }
 
-    public String getConfig()
+    public BratConfig getConfig()
     {
         return config;
     }
 
-    public void setConfig(String aConfig)
+    public void setConfig(BratConfig aConfig)
     {
         config = aConfig;
     }
@@ -45,5 +48,33 @@ public class LoadConfResponse
     public static boolean is(String aCommand)
     {
         return COMMAND.equals(aCommand);
+    }
+    
+    @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
+    public static class BratConfig
+    {
+        public boolean abbrevsOn = true;
+        public String textBackgrounds = "striped";
+        public String svgWidth = "100%";
+        public boolean rapidModeOn = false;
+        public boolean confirmModeOn = true;
+        public boolean autorefreshOn = false;
+        public BratVisualConfig visual = new BratVisualConfig();
+    }
+    
+    @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
+    public static class BratVisualConfig {
+        public int arcTextMargin = 1;
+        public int boxSpacing = 1;
+        public int curlyHeight = 4;
+        public int arcSpacing = 9;
+        public int arcStartHeight = 19;
+        public BratVisualMargin margin = new BratVisualMargin();
+    }
+    
+    @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
+    public static class BratVisualMargin {
+        public int x = 2;
+        public int y = 1;
     }
 }

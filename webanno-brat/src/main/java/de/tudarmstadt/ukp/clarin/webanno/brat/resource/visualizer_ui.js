@@ -24,136 +24,246 @@
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 var VisualizerUI = (function($, window, undefined) {
     var VisualizerUI = function(dispatcher, svg) {
-            var that = this;
+      var that = this;
 
-            var messagePostOutFadeDelay = 1000;
-            var messageDefaultFadeDelay = 3000;
-            var defaultFloatFormat = '%.1f/right';
+      var messagePostOutFadeDelay = 1000;
+      var messageDefaultFadeDelay = 3000;
+      var defaultFloatFormat = '%.1f/right';
 
-            var documentListing = null; // always documents of current collection
-            var selectorData = null; // can be search results when available
-            var searchActive = false; // whether search results received and in use
-            var loadedSearchData = null;
+      var documentListing = null; // always documents of current collection
+      var selectorData = null;    // can be search results when available
+      var searchActive = false;   // whether search results received and in use
+      var loadedSearchData = null;
 
-            var currentForm;
-            var spanTypes = null;
-            var relationTypesHash = null;
-            // TODO: confirm unnecessary and remove
-            //       var attributeTypes = null;
-            var data = null;
-            var mtime = null;
-            var searchConfig = null;
-            var coll, doc, args;
-            var collScroll;
-            var docScroll;
-            var user = null;
-            var annotationAvailable = false;
+      var currentForm;
+      var spanTypes = null;
+      var relationTypesHash = null;
+      // TODO: confirm unnecessary and remove
+//       var attributeTypes = null;
+      var data = null;
+      var mtime = null;
+      var searchConfig = null;
+      var coll, doc, args;
+      var collScroll;
+      var docScroll;
+      var user = null;
+      var annotationAvailable = false;
 
-            var svgElement = $(svg._svg);
-            var svgId = svgElement.parent().attr('id');
+      var svgElement = $(svg._svg);
+      var svgId = svgElement.parent().attr('id');
 
-            var maxMessages = 100;
+      var maxMessages = 100;
 
-            var currentDocumentSVGsaved = false;
-            var fileBrowserClosedWithSubmit = false;
-
-            // normalization: server-side DB by norm DB name
-            var normServerDbByNormDbName = {};
-
-            var matchFocus = '';
-            var matches = '';
-
-            /* START "no svg" message - related */
+      var currentDocumentSVGsaved = false;
+      var fileBrowserClosedWithSubmit = false;
 
 
-            var showPullupTrigger = function() {
-                    $('#pulluptrigger').show('puff');
-                }
+      // normalization: server-side DB by norm DB name
+      var normServerDbByNormDbName = {};
 
-            var $messageContainer = $('#messages');
-            var $messagepullup = $('#messagepullup');
-            var pullupTimer = null;
-            var displayMessages = function(msgs) {
-                    var initialMessageNum = $messagepullup.children().length;
+      var matchFocus = '';
+      var matches = '';
 
-                    if (msgs === false) {
-                        $messageContainer.children().each(function(msgElNo, msgEl) {
-                            $(msgEl).remove();
-                        });
-                    } else {
-                        $.each(msgs, function(msgNo, msg) {
-                            var element;
-                            var timer = null;
-                            try {
-                                element = $('<div class="' + msg[1] + '">' + msg[0] + '</div>');
-                            }
-                            catch(x) {
-                                escaped = msg[0].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                                element = $('<div class="error"><b>[ERROR: could not display the following message normally due to malformed XML:]</b><br/>' + escaped + '</div>');
-                            }
-                            var pullupElement = element.clone();
-                            $messageContainer.append(element);
-                            $messagepullup.append(pullupElement.css('display', 'none'));
-                            slideToggle(pullupElement, true, true);
+// WEBANNO EXTENSION BEGIN
+// Not required by WebAnno
+/*
+      // START "no svg" message - related
 
-                            var fader = function() {
-                                    if ($messagepullup.is(':visible')) {
-                                        element.remove();
-                                    } else {
-                                        element.hide('slow', function() {
-                                            element.remove();
-                                        });
-                                    }
-                                };
-                            var delay = (msg[2] === undefined) ? messageDefaultFadeDelay : (msg[2] === -1) ? null : (msg[2] * 1000);
-                            if (delay === null) {
-                                var button = $('<input type="button" value="OK"/>');
-                                element.prepend(button);
-                                button.click(function(evt) {
-                                    timer = setTimeout(fader, 0);
-                                });
-                            } else {
-                                timer = setTimeout(fader, delay);
-                                element.mouseover(function() {
-                                    clearTimeout(timer);
-                                    element.show();
-                                }).mouseout(function() {
-                                    timer = setTimeout(fader, messagePostOutFadeDelay);
-                                });
-                            }
-                            // setTimeout(fader, messageDefaultFadeDelay);
-                        });
+      var noSvgTimer = null;
 
-                        // limited history - delete oldest
-                        var $messages = $messagepullup.children();
-                        for (var i = 0; i < $messages.length - maxMessages; i++) {
-                            $($messages[i]).remove();
-                        }
-                    }
+      // this is necessary for centering
+      $('#no_svg_wrapper').css('display', 'table');
+      // on initial load, hide the "no SVG" message
+      $('#no_svg_wrapper').hide();
 
-                    // if there is change in the number of messages, may need to
-                    // tweak trigger visibility
-                    var messageNum = $messagepullup.children().length;
-                    if (messageNum != initialMessageNum) {
-                        if (messageNum == 0) {
-                            // all gone; nothing to trigger
-                            $('#pulluptrigger').hide('slow');
-                        } else if (initialMessageNum == 0) {
-                            // first messages, show trigger at fade
-                            setTimeout(showPullupTrigger, messageDefaultFadeDelay + 250);
-                        }
-                    }
-                };
+      var hideNoDocMessage = function() {
+        clearTimeout(noSvgTimer);
+        $('#no_svg_wrapper').hide(0);
+        $('#source_files').show();
+      }
+
+      var showNoDocMessage = function() {
+        clearTimeout(noSvgTimer);
+        noSvgTimer = setTimeout(function() {
+          $('#no_svg_wrapper').fadeIn(500);
+        }, 2000);
+        $('#source_files').hide();
+      }
+      
+      // END "no svg" message - related
+*/
+// WEBANNO EXTENSION END
+
+// WEBANNO EXTENSION BEGIN
+// Not required by WebAnno
+/*
+      // START collection browser sorting - related
+
+      var lastGoodCollection = '/';
+      var sortOrder = [2, 1]; // column (0..), sort order (1, -1)
+      var collectionSortOrder; // holds previous sort while search is active
+      var docSortFunction = function(a, b) {
+          // parent at the top
+          if (a[2] === '..') return -1;
+          if (b[2] === '..') return 1;
+
+          // then other collections
+          var aIsColl = a[0] == "c";
+          var bIsColl = b[0] == "c";
+          if (aIsColl !== bIsColl) return aIsColl ? -1 : 1;
+
+          // desired column in the desired order
+          var col = sortOrder[0];
+          var aa = a[col];
+          var bb = b[col];
+          if (selectorData.header[col - 2][1] === 'string-reverse') {
+            aa = aa.split('').reverse().join('');
+            bb = bb.split('').reverse().join('');
+          }
+          if (aa != bb) return (aa < bb) ? -sortOrder[1] : sortOrder[1];
+
+          // prevent random shuffles on columns with duplicate values
+          // (alphabetical order of documents)
+          aa = a[2];
+          bb = b[2];
+          if (aa != bb) return (aa < bb) ? -1 : 1;
+          return 0;
+      };
+
+      var makeSortChangeFunction = function(sort, th, thNo) {
+          $(th).click(function() {
+              // TODO: avoid magic numbers in access to the selector
+              // data (column 0 is type, 1 is args, rest is data)
+              if (sort[0] === thNo + 1) sort[1] = -sort[1];
+              else {
+                var type = selectorData.header[thNo - 1][1];
+                var ascending = type === "string";
+                sort[0] = thNo + 1;
+                sort[1] = ascending ? 1 : -1;
+              }
+              selectorData.items.sort(docSortFunction);
+              docScroll = 0;
+              showFileBrowser(); // resort
+          });
+      }
+
+      // END collection browser sorting - related
+*/
+// WEBANNO EXTENSION END
 
 
-            $('#messagepullup').
-            mouseleave(function(evt) {
-                setTimeout(showPullupTrigger, 500);
-                clearTimeout(pullupTimer);
-                pullupTimer = setTimeout(function() {
-                    slideToggle($messagepullup.stop(), false, true, true);
-                }, 500);
-            });
+      /* START message display - related */
+
+      var showPullupTrigger = function() {
+        $('#pulluptrigger').show('puff');
+      }
+
+      var $messageContainer = $('#messages');
+      var $messagepullup = $('#messagepullup');
+      var pullupTimer = null;
+      var displayMessages = function(msgs) {
+        var initialMessageNum = $messagepullup.children().length;
+
+        if (msgs === false) {
+          $messageContainer.children().each(function(msgElNo, msgEl) {
+              $(msgEl).remove();
+          });
+        } else {
+          $.each(msgs, function(msgNo, msg) {
+            var element;
+            var timer = null;
+            try {
+              element = $('<div class="' + msg[1] + '">' + msg[0] + '</div>');
+            }
+            catch(x) {
+              escaped = msg[0].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+              element = $('<div class="error"><b>[ERROR: could not display the following message normally due to malformed XML:]</b><br/>' + escaped + '</div>');
+            }
+            var pullupElement = element.clone();
+            $messageContainer.append(element);
+            $messagepullup.append(pullupElement.css('display', 'none'));
+            slideToggle(pullupElement, true, true);
+
+            var fader = function() {
+              if ($messagepullup.is(':visible')) {
+                element.remove();
+              } else {
+                element.hide('slow', function() {
+                  element.remove();
+                });
+              }
+            };
+            var delay = (msg[2] === undefined)
+                          ? messageDefaultFadeDelay
+                          : (msg[2] === -1)
+                              ? null
+                              : (msg[2] * 1000);
+            if (delay === null) {
+              var button = $('<input type="button" value="OK"/>');
+              element.prepend(button);
+              button.click(function(evt) {
+                timer = setTimeout(fader, 0);
+              });
+            } else {
+              timer = setTimeout(fader, delay);
+              element.mouseover(function() {
+                  clearTimeout(timer);
+                  element.show();
+              }).mouseout(function() {
+                  timer = setTimeout(fader, messagePostOutFadeDelay);
+              });
+            }
+            // setTimeout(fader, messageDefaultFadeDelay);
+          });
+
+          // limited history - delete oldest
+          var $messages = $messagepullup.children();
+          for (var i = 0; i < $messages.length - maxMessages; i++) {
+            $($messages[i]).remove();
+          }
+        }
+
+        // if there is change in the number of messages, may need to
+        // tweak trigger visibility
+        var messageNum = $messagepullup.children().length;
+        if (messageNum != initialMessageNum) {
+          if (messageNum == 0) {
+            // all gone; nothing to trigger
+            $('#pulluptrigger').hide('slow');
+          } else if (initialMessageNum == 0) {
+            // first messages, show trigger at fade
+            setTimeout(showPullupTrigger, messageDefaultFadeDelay+250);
+          }
+        }
+      };
+
+// WEBANNO EXTENSION BEGIN
+// Not required by WebAnno
+/*
+      // hide pullup trigger by default, show on first message
+      $('#pulluptrigger').hide();
+      $('#pulluptrigger').
+        mouseenter(function(evt) {
+          $('#pulluptrigger').hide('puff');
+          clearTimeout(pullupTimer);
+          slideToggle($messagepullup.stop(), true, true, true);
+        });
+*/
+// WEBANNO EXTENSION END
+      $('#messagepullup').
+        mouseleave(function(evt) {
+          setTimeout(showPullupTrigger, 500);
+          clearTimeout(pullupTimer);
+          pullupTimer = setTimeout(function() {
+            slideToggle($messagepullup.stop(), false, true, true);
+          }, 500);
+        });
+
+
+      /* END message display - related */
+
+
+      /* START comment popup - related */
 
             var adjustToCursor = function(evt, element, offset, top, right) {
                     // get the real width, without wrapping
@@ -631,83 +741,312 @@ var VisualizerUI = (function($, window, undefined) {
 // Sending the whoami and getting the user is mandatory because many things in brat will not work
 // unless it believes that the user has logged in.
 // WEBANNO EXTENSION END
-            var init = function() {
-                    dispatcher.post('initForm', [viewspanForm,
-                    {
-                        width: 760,
-                        no_cancel: true
-                    }]);
-                    dispatcher.post('ajax', [{
-                        action: 'whoami'
-                    }, function(response) {
-                        if (response.user) {
-                            user = response.user;
-              				dispatcher.post('messages', [[['Welcome back, user "' + user + '"', 'comment']]]);
-                            dispatcher.post('user', [user]);
-                        } else {
-                            user = null;
-                            dispatcher.post('user', [null]);
-
-                            // don't show tutorial if there's a specific document (annoyance)
-                        }
-                    }, 
-                    { keep: true }
-                  ]);
-                };
-            var spanAndAttributeTypesLoaded = function(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
-                    spanTypes = _spanTypes;
-                    relationTypesHash = _relationTypesHash;
-                };
-
-            var annotationIsAvailable = function() {
-                    annotationAvailable = true;
-                };
-
-
-            var isReloadOkay = function() {
-                    // do not reload while the user is in the dialog
-                    return currentForm == null;
-                };
-
-            var rememberData = function(_data) {
-                    if (_data && !_data.exception) {
-                        data = _data;
-                    }
-                };
-            dispatcher.
-            on('init', init).
-            on('dataReady', rememberData).
-            on('annotationIsAvailable', annotationIsAvailable).
+      var init = function() {
+        dispatcher.post('initForm', [viewspanForm, {
+            width: 760,
+            no_cancel: true
+          }]);
+        dispatcher.post('ajax', [{
+            action: 'whoami'
+          }, function(response) {
 // WEBANNO EXTENSION BEGIN
 /*
-            on('messages', displayMessages).
+            var auth_button = $('#auth_button');
 */
 // WEBANNO EXTENSION END
-            on('displaySpanComment', displaySpanComment).
-            on('displayArcComment', displayArcComment).
-            on('displaySentComment', displaySentComment).
-            on('hideComment', hideComment).
+            if (response.user) {
+              user = response.user;
+              dispatcher.post('messages', [[['Welcome back, user "' + user + '"', 'comment']]]);
 // WEBANNO EXTENSION BEGIN
 /*
-            on('showForm', showForm).
-            on('hideForm', hideForm).
-            on('initForm', initForm).
+              auth_button.val('Logout ' + user);
 */
 // WEBANNO EXTENSION END
-            on('resize', onResize).
-            on('collectionLoaded', rememberNormDb).
-            on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
-            on('isReloadOkay', isReloadOkay).
-            on('doneRendering', onDoneRendering).
-            on('startedRendering', onStartedRendering).
-            on('keydown', onKeyDown).
-            on('mousemove', onMouseMove);
+              dispatcher.post('user', [user]);
 // WEBANNO EXTENSION BEGIN
 /*
-            on('dblclick', onDblClick);
+              $('.login').show();
 */
 // WEBANNO EXTENSION END
-        };
+            } else {
+              user = null;
+// WEBANNO EXTENSION BEGIN
+/*
+              auth_button.val('Login');
+*/
+// WEBANNO EXTENSION END
+              dispatcher.post('user', [null]);
+// WEBANNO EXTENSION BEGIN
+/*
+              $('.login').hide();
+              // don't show tutorial if there's a specific document (annoyance)
+              if (!doc) {
+                dispatcher.post('showForm', [tutorialForm]);
+                $('#tutorial-ok').focus();
+              }
+*/
+// WEBANNO EXTENSION END
+            }
+          },
+          { keep: true }
+        ]);
+// WEBANNO EXTENSION BEGIN
+// /*
+        dispatcher.post('ajax', [{ action: 'loadConf' }, function(response) {
+          if (response.config != undefined) {
+// WEBANNO EXTENSION BEGIN
+// WebAnno sends the configuration as a proper JSON object - no need to parse it
+            Configuration = response.config;
+/*
+            // TODO: check for exceptions
+            try {
+              Configuration = JSON.parse(response.config);
+            } catch(x) {
+              // XXX Bad config
+              Configuration = {};
+              dispatcher.post('messages', [[['Corrupted configuration; resetting.', 'error']]]);
+              configurationChanged();
+            }
+*/
+// WEBANNO EXTENSION END
+            // TODO: make whole-object assignment work
+            // @amadanmath: help! This code is horrible
+            // Configuration.svgWidth = storedConf.svgWidth;
+            dispatcher.post('svgWidth', [Configuration.svgWidth]);
+            // Configuration.abbrevsOn = storedConf.abbrevsOn == "true";
+            // Configuration.textBackgrounds = storedConf.textBackgrounds;
+            // Configuration.rapidModeOn = storedConf.rapidModeOn == "true";
+            // Configuration.confirmModeOn = storedConf.confirmModeOn == "true";
+            // Configuration.autorefreshOn = storedConf.autorefreshOn == "true";
+            if (Configuration.autorefreshOn) {
+              checkForDocumentChanges();
+            }
+            // Configuration.visual.margin.x = parseInt(storedConf.visual.margin.x);
+            // Configuration.visual.margin.y = parseInt(storedConf.visual.margin.y);
+            // Configuration.visual.boxSpacing = parseInt(storedConf.visual.boxSpacing);
+            // Configuration.visual.curlyHeight = parseInt(storedConf.visual.curlyHeight);
+            // Configuration.visual.arcSpacing = parseInt(storedConf.visual.arcSpacing);
+            // Configuration.visual.arcStartHeight = parseInt(storedConf.visual.arcStartHeight);
+          }
+          dispatcher.post('configurationUpdated');
+        }]);
+// */
+// WEBANNO EXTENSION END
+      };
+// WEBANNO EXTENSION BEGIN
+/*
+      var noFileSpecified = function() {
+        // not (only) an error, so no messaging
+        dispatcher.post('clearSVG');
+        showFileBrowser();
+      }
+
+      var showUnableToReadTextFile = function() {
+        dispatcher.post('messages', [[['Unable to read the text file.', 'error']]]);
+        dispatcher.post('clearSVG');
+        showFileBrowser();
+      };
+
+      var showAnnotationFileNotFound = function() {
+        dispatcher.post('messages', [[['Annotation file not found.', 'error']]]);
+        dispatcher.post('clearSVG');
+        showFileBrowser();
+      };
+
+      var showUnknownError = function(exception) {
+        dispatcher.post('messages', [[['Unknown error: ' + exception, 'error']]]);
+        dispatcher.post('clearSVG');
+        showFileBrowser();
+      };
+
+      var reloadDirectoryWithSlash = function(sourceData) {
+        var collection = sourceData.collection + sourceData.document + '/';
+        dispatcher.post('setCollection', [collection, '', sourceData.arguments]);
+      };
+
+      // TODO: confirm attributeTypes unnecessary and remove
+//       var spanAndAttributeTypesLoaded = function(_spanTypes, _attributeTypes) {
+//         spanTypes = _spanTypes;
+//         attributeTypes = _attributeTypes;
+//       };
+      // TODO: spanAndAttributeTypesLoaded is obviously not descriptive of
+      // the full function. Rename reasonably.
+        
+*/
+// WEBANNO EXTENSION END
+      var spanAndAttributeTypesLoaded = function(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
+        spanTypes = _spanTypes;
+        relationTypesHash = _relationTypesHash;
+      };
+
+      var annotationIsAvailable = function() {
+        annotationAvailable = true;
+      };
+
+
+      var isReloadOkay = function() {
+        // do not reload while the user is in the dialog
+        return currentForm == null;
+      };
+
+      var configurationChanged = function() {
+        // just assume that any config change makes stored
+        // visualizations invalid. This is a bit excessive (not all
+        // options affect visualization) but mostly harmless.
+        invalidateSavedSVG();
+
+        // save configuration changed by user action
+        dispatcher.post('ajax', [{
+                    action: 'saveConf',
+                    config: JSON.stringify(Configuration),
+                }, null]);
+      };
+
+// WEBANNO EXTENSION BEGIN
+/*
+      var updateConfigurationUI = function() {
+        // update UI to reflect non-user config changes (e.g. load)
+        
+        // Annotation mode
+        if (Configuration.confirmModeOn) {
+          $('#annotation_speed1')[0].checked = true;
+        } else if (Configuration.rapidModeOn) {
+          $('#annotation_speed3')[0].checked = true;
+        } else {
+          $('#annotation_speed2')[0].checked = true;
+        }
+        $('#annotation_speed input').button('refresh');
+
+        // Label abbrevs
+        $('#label_abbreviations_on')[0].checked  = Configuration.abbrevsOn;
+        $('#label_abbreviations_off')[0].checked = !Configuration.abbrevsOn; 
+        $('#label_abbreviations input').button('refresh');
+
+        // Text backgrounds        
+        $('#text_backgrounds input[value="'+Configuration.textBackgrounds+'"]')[0].checked = true;
+        $('#text_backgrounds input').button('refresh');
+
+        // SVG width
+        var splitSvgWidth = Configuration.svgWidth.match(/^(.*?)(px|\%)$/);
+        if (!splitSvgWidth) {
+          // TODO: reset to sensible value?
+          dispatcher.post('messages', [[['Error parsing SVG width "'+Configuration.svgWidth+'"', 'error', 2]]]);
+        } else {
+          $('#svg_width_value')[0].value = splitSvgWidth[1];
+          $('#svg_width_unit input[value="'+splitSvgWidth[2]+'"]')[0].checked = true;
+          $('#svg_width_unit input').button('refresh');
+        }
+
+        // Autorefresh
+        $('#autorefresh_mode')[0].checked = Configuration.autorefreshOn;
+        $('#autorefresh_mode').button('refresh');
+
+        // Type Collapse Limit
+        $('#type_collapse_limit')[0].value = Configuration.typeCollapseLimit;
+      }
+
+      $('#prev').button().click(function() {
+        return moveInFileBrowser(-1);
+      });
+      $('#next').button().click(function() {
+        return moveInFileBrowser(+1);
+      });
+      $('#footer').show();
+
+      $('#source_collection_conf_on, #source_collection_conf_off').change(function() {
+        var conf = $('#source_collection_conf_on').is(':checked') ? 1 : 0;
+        var $source_collection_link = $('#source_collection a');
+        var link = $source_collection_link.attr('href').replace(/&include_conf=./, '&include_conf=' + conf);
+        $source_collection_link.attr('href', link);
+      });
+*/
+// WEBANNO EXTENSION END
+
+      var rememberData = function(_data) {
+        if (_data && !_data.exception) {
+          data = _data;
+        }
+      };
+      
+// WEBANNO EXTENSION BEGIN
+/*
+      var onScreamingHalt = function() {
+        $('#waiter').dialog('close');
+        $('#pulldown, #navbuttons, #spinner').remove();
+        dispatcher.post('hideForm');
+      };
+*/
+// WEBANNO EXTENSION END
+
+      dispatcher.
+          on('init', init).
+          on('dataReady', rememberData).
+          on('annotationIsAvailable', annotationIsAvailable).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('messages', displayMessages).
+*/
+// WEBANNO EXTENSION END
+          on('displaySpanComment', displaySpanComment).
+          on('displayArcComment', displayArcComment).
+          on('displaySentComment', displaySentComment).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('docChanged', onDocChanged).
+*/
+// WEBANNO EXTENSION END
+          on('hideComment', hideComment).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('showForm', showForm).
+          on('hideForm', hideForm).
+          on('initForm', initForm).
+*/
+// WEBANNO EXTENSION END
+          on('resize', onResize).
+          on('collectionLoaded', rememberNormDb).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('collectionLoaded', collectionLoaded).
+*/
+// WEBANNO EXTENSION END
+          on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
+          on('isReloadOkay', isReloadOkay).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('current', gotCurrent).
+*/
+// WEBANNO EXTENSION END
+          on('doneRendering', onDoneRendering).
+          on('startedRendering', onStartedRendering).
+// WEBANNO EXTENSION BEGIN
+/*
+          on('newSourceData', onNewSourceData).
+          on('savedSVG', savedSVGreceived).
+          on('renderError:noFileSpecified', noFileSpecified).
+          on('renderError:annotationFileNotFound', showAnnotationFileNotFound).
+          on('renderError:unableToReadTextFile', showUnableToReadTextFile).
+          on('renderError:isDirectoryError', reloadDirectoryWithSlash).
+          on('unknownError', showUnknownError).
+*/
+// WEBANNO EXTENSION END
+          on('keydown', onKeyDown).
+          on('mousemove', onMouseMove);
+// WEBANNO EXTENSION BEGIN
+/*
+          on('dblclick', onDblClick).
+          on('touchstart', onTouchStart).
+          on('touchend', onTouchEnd).
+          on('resize', onResize).
+          on('searchResultsReceived', searchResultsReceived).
+          on('clearSearch', clearSearch).
+          on('clearSVG', showNoDocMessage).
+          on('screamingHalt', onScreamingHalt).
+          on('configurationChanged', configurationChanged).
+          on('configurationUpdated', updateConfigurationUI);
+*/
+// WEBANNO EXTENSION END
+    };
 
     return VisualizerUI;
 })(jQuery, window);
