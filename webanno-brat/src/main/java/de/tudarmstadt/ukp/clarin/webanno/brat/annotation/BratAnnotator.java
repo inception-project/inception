@@ -46,6 +46,7 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
@@ -111,7 +112,7 @@ public class BratAnnotator
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior controller;
     private String collection = "";
-    AnnotationDetailEditorPanel editor;
+    private AnnotationDetailEditorPanel detailPanel;
 
     /**
      * Data models for {@link BratAnnotator}
@@ -143,7 +144,7 @@ public class BratAnnotator
             final AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
-        this.editor = aEditor;
+        this.detailPanel = aEditor;
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -162,13 +163,13 @@ public class BratAnnotator
         {
             private static final long serialVersionUID = 1L;
 
-            
-            
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                final IRequestParameters request = getRequest().getPostParameters();
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                final IRequestParameters request = getRequest().getPostParameters();
+                
                 // Parse annotation ID if present in request
                 VID paramId;
                 if (!request.getParameterValue(PARAM_ID).isEmpty()
@@ -184,30 +185,18 @@ public class BratAnnotator
                 }
 
                 // Get action
-                String action = request.getParameterValue(PARAM_ACTION).toString();
-                getModelObject().setUserAction(action);
-                RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
-                    @Override
-                    public void onEndRequest(RequestCycle aCycle)
-                    {
-                        // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
-                        // calls that do not go through this AjaxBehavior do not see an active user action.
-                        BratAnnotator.this.getModelObject().clearUserAction();
-                    }
-                });
+                String action = getActionFromRequest(request);
                 
                 // Load the CAS if necessary
-                boolean requiresCasLoading = action.equals(SpanAnnotationResponse.COMMAND)
-                        || action.equals(ArcAnnotationResponse.COMMAND)
-                        || action.equals(GetDocumentResponse.COMMAND);
+                // Make sure we load the CAS only once here in case of an annotation action.
+                boolean requiresCasLoading = SpanAnnotationResponse.is(action)
+                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action);
                 JCas jCas = null;
                 if (requiresCasLoading) {
-                    // Make sure we load the CAS only once here in case of an annotation action.
                     try {
                         jCas = getCas(getModelObject());
                     }
                     catch (Exception e) {
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         LOG.error("Unable to load data", e);
                         error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                         return;
@@ -216,17 +205,13 @@ public class BratAnnotator
 
                 // HACK: If an arc was clicked that represents a link feature, then open the
                 // associated span annotation instead.
-                if (paramId.isSlotSet() && action.equals(ArcAnnotationResponse.COMMAND)) {
+                if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
                     action = SpanAnnotationResponse.COMMAND;
                     paramId = new VID(paramId.getId());
                 }
 
-                BratRenderer controller = new BratRenderer(repository,
-                        annotationService);
-
                 // Doing anything but a span annotation when a slot is armed will unarm it
-                if (getModelObject().isSlotArmed()
-                        && !action.equals(SpanAnnotationResponse.COMMAND)) {
+                if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
                     getModelObject().clearArmedSlot();
                 }
 
@@ -234,15 +219,16 @@ public class BratAnnotator
                 try {
                     LOG.info("AJAX-RPC CALLED: [" + action + "]");
 
-                    if (action.equals(WhoamiResponse.COMMAND)) {
-                        result = controller.whoami();
+                    if (WhoamiResponse.is(action)) {
+                        result = new WhoamiResponse(
+                                SecurityContextHolder.getContext().getAuthentication().getName());
                     }
-                    else if (action.equals(SpanAnnotationResponse.COMMAND)) {
+                    else if (SpanAnnotationResponse.is(action)) {
                         assert jCas != null;                        
                         if (getModelObject().isSlotArmed()) {
                             if (paramId.isSet()) {
                                 // Fill slot with existing annotation
-                                editor.setSlot(aTarget, jCas,
+                                detailPanel.setSlot(aTarget, jCas,
                                         getModelObject(), paramId.getId());
                             }
                             else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
@@ -254,12 +240,12 @@ public class BratAnnotator
                                                 .getArmedFeature().getType(), getModelObject()
                                                 .getProject()));
 
-                                Offsets offsets = getSpanOffsets(request, jCas, paramId);
+                                Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
 
                                 try {
                                     int id = adapter.add(jCas, offsets.getBegin(),
                                             offsets.getEnd(), null, null);
-                                    editor.setSlot(aTarget, jCas,
+                                    detailPanel.setSlot(aTarget, jCas,
                                             getModelObject(), id);
                                 }
                                 catch (BratAnnotationException e) {
@@ -277,23 +263,23 @@ public class BratAnnotator
                                 getModelObject().setForwardAnnotation(false);
                             }*/
                             // Doing anything but filling an armed slot will unarm it
-                            editor.clearArmedSlotModel();
+                            detailPanel.clearArmedSlotModel();
                             getModelObject().clearArmedSlot();
 
                             Selection selection = getModelObject().getSelection();
 
                             selection.setRelationAnno(false);
 
-                            Offsets offsets = getSpanOffsets(request, jCas, paramId);
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
 
                             selection.setAnnotation(paramId);
                             selection.set(jCas, offsets.getBegin(), offsets.getEnd());
                             bratSetHighlight(aTarget, selection.getAnnotation());
-                            editor.refresh(aTarget);
+                            detailPanel.refresh(aTarget);
                             
                             if (selection.getAnnotation().isNotSet()) {
                                 selection.setAnnotate(true);
-                                editor.actionAnnotate(aTarget,
+                                detailPanel.actionAnnotate(aTarget,
                                         getModelObject(), false);
                             }
                             else {
@@ -303,7 +289,7 @@ public class BratAnnotator
                             }
                         }
                     }
-                    else if (action.equals(ArcAnnotationResponse.COMMAND)) {
+                    else if (ArcAnnotationResponse.is(action)) {
                         assert jCas != null;
                         Selection selection = getModelObject().getSelection();
 
@@ -321,9 +307,9 @@ public class BratAnnotator
                         
                         bratSetHighlight(aTarget, getModelObject().getSelection()
                                 .getAnnotation());
-                        editor.refresh(aTarget);
+                        detailPanel.refresh(aTarget);
                         if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                            editor.actionAnnotate(aTarget, getModelObject(), false);
+                            detailPanel.actionAnnotate(aTarget, getModelObject(), false);
                         }
                         else {
                             AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
@@ -335,22 +321,25 @@ public class BratAnnotator
                             result = new ArcAnnotationResponse();
                         }
                     }
-                    else if (action.equals(LoadConfResponse.COMMAND)) {
-                        result = controller.loadConf();
+                    else if (LoadConfResponse.is(action)) {
+                        result = new LoadConfResponse();
                     }
-                    else if (action.equals(GetCollectionInformationResponse.COMMAND)) {
+                    else if (GetCollectionInformationResponse.is(action)) {
                         if (getModelObject().getProject() != null) {
-                            result = controller.getCollectionInformation(getModelObject()
-                                    .getAnnotationLayers());
+                            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+                            info.setEntityTypes(BratRenderer.buildEntityTypes(
+                                    getModelObject().getAnnotationLayers(), annotationService));
+                            result = info;
                         }
                         else {
                             result = new GetCollectionInformationResponse();
                         }
                     }
-                    else if (action.equals(GetDocumentResponse.COMMAND)) {
+                    else if (GetDocumentResponse.is(action)) {
                         if (getModelObject().getProject() != null) {
-                            result = controller.getDocumentResponse(getModelObject(), 0, jCas,
-                                    true, annotationService);
+                            GetDocumentResponse response = new GetDocumentResponse();
+                            BratRenderer.render(response, getModelObject(), jCas, annotationService);
+                            result = response;
                         }
                         else {
                             result = new GetDocumentResponse();
@@ -383,7 +372,7 @@ public class BratAnnotator
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                    editor.refreshAnnotationLayers(getModelObject());
+                    detailPanel.refreshAnnotationLayers(getModelObject());
                 }
             }
         };
@@ -392,7 +381,28 @@ public class BratAnnotator
         add(controller);
     }
 
-    private Offsets getSpanOffsets(IRequestParameters request, JCas jCas, VID aVid)
+    private String getActionFromRequest(IRequestParameters aRequest)
+    {
+        String action = aRequest.getParameterValue(PARAM_ACTION).toString();
+        getModelObject().setUserAction(action);
+        RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
+            @Override
+            public void onEndRequest(RequestCycle aCycle)
+            {
+                // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
+                // calls that do not go through this AjaxBehavior do not see an active user action.
+                BratAnnotator.this.getModelObject().clearUserAction();
+            }
+        });
+        return action;
+    }
+    
+    /**
+     * Extract offset information from the current request. These are either offsets of an existing
+     * selected annotations or offsets contained in the request for the creation of a new
+     * annotaiton.
+     */
+    private Offsets getOffsetsFromRequest(IRequestParameters request, JCas jCas, VID aVid)
         throws  IOException
     {
         if (aVid.isNotSet()) {
@@ -577,10 +587,10 @@ public class BratAnnotator
      * @throws ClassNotFoundException 
      * @throws UIMAException 
      */
-    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
         LOG.info("BEGIN auto-forward annotation");
-        GetDocumentResponse response = new GetDocumentResponse();
         Selection selection = getModelObject().getSelection();
 
         AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
@@ -595,11 +605,12 @@ public class BratAnnotator
             if (ls.getEnd() > nextToken.getBegin()) {
                 selection.clear();
                 selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
-                editor.actionAnnotate(aTarget, getModelObject(), true);
+                detailPanel.actionAnnotate(aTarget, getModelObject(), true);
             }
         }
-        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
         
+        GetDocumentResponse response = new GetDocumentResponse();
+        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
         String json = toJson(response);
         LOG.info("auto-forward annotation");
         aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
@@ -663,7 +674,6 @@ public class BratAnnotator
     private JCas getCas(ActionContext aBratAnnotatorModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
-
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
                 || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)

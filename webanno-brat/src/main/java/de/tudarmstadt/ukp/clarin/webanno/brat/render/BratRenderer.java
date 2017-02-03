@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,23 +30,14 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import javax.annotation.Resource;
-
-import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -55,12 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -70,131 +55,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * getDocument, createArc, CreateSpan, deleteSpan, DeleteArc,... are implemented. Besides returning
  * the JSON response to the brat FrontEnd, This controller also manipulates creation of annotation
  * Documents
- *
- *
  */
 public class BratRenderer
 {
-    @Resource(name = "documentRepository")
-    private RepositoryService repository;
-
-    @Resource(name = "annotationService")
-    private AnnotationService annotationService;
-
-    public BratRenderer()
-    {
-
-    }
-
-    public BratRenderer(RepositoryService aRepository, AnnotationService aAnnotationService)
-    {
-        annotationService = aAnnotationService;
-        this.repository = aRepository;
-    }
-
-    /**
-     * a protocol which returns the logged in user
-     *
-     * @return the response.
-     */
-    public WhoamiResponse whoami()
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return new WhoamiResponse(username);
-    }
-
-    /**
-     * some BRAT UI global configurations such as {@code textBackgrounds}
-     *
-     * @return the response.
-     */
-    public LoadConfResponse loadConf()
-    {
-        return new LoadConfResponse();
-    }
-
-    /**
-     * This the the method that send JSON response about annotation project information which
-     * includes List {@link Tag}s and {@link TagSet}s It includes information about span types
-     * {@link POS}, {@link NamedEntity}, and {@link CoreferenceLink#getReferenceType()} and relation
-     * types such as {@link Dependency}, {@link CoreferenceChain}
-     *
-     * @param aAnnotationLayers
-     *            the layers.
-     * @return the response.
-     *
-     * @see <a href="http://brat.nlplab.org/index.html">Brat</a>
-     */
-    public GetCollectionInformationResponse getCollectionInformation(
-            List<AnnotationLayer> aAnnotationLayers)
-    {
-        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(buildEntityTypes(aAnnotationLayers, annotationService));
-        return info;
-    }
-
-    /**
-     * Returns the JSON representation of the document for brat visualizer
-     *
-     * @param aBratAnnotatorModel
-     *            the annotator model.
-     * @param aAnnotationOffsetStart
-     *            the begin offset.
-     * @param aJCas
-     *            the JCas.
-     * @param aIsGetDocument
-     *            hum?
-     * @return the response
-     * @throws UIMAException
-     *             if a conversion error occurs.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannotbe loaded.
-     */
-    public GetDocumentResponse getDocumentResponse(ActionContext aBratAnnotatorModel,
-            int aAnnotationOffsetStart, JCas aJCas, boolean aIsGetDocument,
-            AnnotationService aAnnotationService)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aBratAnnotatorModel, aAnnotationOffsetStart, aJCas, aIsGetDocument,
-                aAnnotationService);
-
-        return response;
-    }
-
-    /**
-     * wrap JSON responses to BRAT visualizer
-     *
-     * @param aResponse
-     *            the response.
-     * @param aBratAnnotatorModel
-     *            the annotator model.
-     * @param aAnnotationOffsetStart
-     *            the begin offset.
-     * @param aJCas
-     *            the JCas.
-     * @param aIsGetDocument
-     *            hum?
-     */
-    public static void render(GetDocumentResponse aResponse,
-            ActionContext aBratAnnotatorModel, int aAnnotationOffsetStart, JCas aJCas,
-            boolean aIsGetDocument, AnnotationService aAnnotationService)
-    {
-        // Maybe this section should be moved elsewehere and the aIsGetDocument parameter should
-        // be removed, so that this method really only renders and does not additionally update
-        // the BratAnnotatorModel state? -- REC
-        if (aBratAnnotatorModel.getPreferences().isScrollPage() && !aIsGetDocument) {
-            aBratAnnotatorModel.setSentenceAddress(BratAjaxCasUtil.getSentenceBeginAddress(aJCas,
-                    aBratAnnotatorModel.getSentenceAddress(), aAnnotationOffsetStart,
-                    aBratAnnotatorModel.getProject(), aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getPreferences().getWindowSize()));
-        }
-
-        render(aResponse, aBratAnnotatorModel, aJCas, aAnnotationService);
-    }
-
     /**
      * wrap JSON responses to BRAT visualizer
      *
