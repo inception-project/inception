@@ -42,9 +42,7 @@ public class VID
     
     public static final Pattern PATTERN_VID = Pattern.compile("(?<ID>\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
     public static final int NONE = -1;
-    public static final int GHOST = -2;
 
-    public static final VID GHOST_ID = new VID(GHOST);
     public static final VID NONE_ID = new VID(NONE);
 
     private final int annotationId;
@@ -83,11 +81,6 @@ public class VID
     public boolean isNotSet()
     {
         return !isSet();
-    }
-
-    public boolean isGhost()
-    {
-        return annotationId == GHOST;
     }
 
     public int getId()

@@ -183,12 +183,6 @@ public class BratAnnotator
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
 
-                // Ignore ghosts
-                if (paramId.isGhost()) {
-                    error("This is a ghost annotation, select layer and feature to annotate.");
-                    return;
-                }
-
                 // Get action
                 String action = request.getParameterValue(PARAM_ACTION).toString();
                 getModelObject().setUserAction(action);
