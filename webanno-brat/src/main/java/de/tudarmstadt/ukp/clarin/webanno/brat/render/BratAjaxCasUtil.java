@@ -276,18 +276,8 @@ public class BratAjaxCasUtil
         return firstSentenceAddress;
     }
 
-    public static int getLastSentenceAddress(JCas aJcas)
-    {
-        int lastSentenceAddress = -1;
-
-        for (Sentence selectedSentence : select(aJcas, Sentence.class)) {
-            lastSentenceAddress = getAddr(selectedSentence);
-        }
-        return lastSentenceAddress;
-    }
-
     /**
-     * Get the current sentence based on the anotation begin/end offset
+     * Get the current sentence based on the annotation begin/end offset
      *
      * @param aJCas
      *            the JCas.
@@ -361,7 +351,7 @@ public class BratAjaxCasUtil
      *            the window size
      * @return The address of the last sentence address in the current display window.
      */
-    public static int getLastSentenceAddressInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
+    public static Sentence getLastSentenceInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
             int aWindowSize)
     {
         int count = 0;
@@ -378,7 +368,7 @@ public class BratAjaxCasUtil
             count++;
         }
 
-        return getAddr(s);
+        return s;
     }
 
     /**

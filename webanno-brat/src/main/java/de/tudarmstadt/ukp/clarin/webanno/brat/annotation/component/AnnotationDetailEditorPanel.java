@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
@@ -608,8 +608,8 @@ public class AnnotationDetailEditorPanel
 					Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
 							bModel.getSentenceEndOffset());
 					int start = sentence.getBegin();
-					int end = selectByAddr(jCas, Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
-							getAddr(sentence), bModel.getPreferences().getWindowSize())).getEnd();
+                    int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
+                            bModel.getPreferences().getWindowSize()).getEnd();
 
 					AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end, null, null);
 					selection.setAnnotation(new VID(getAddr(arc)));
@@ -888,10 +888,8 @@ public class AnnotationDetailEditorPanel
         Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
         int start = sentence.getBegin();
-        int end = selectByAddr(jCas,
-                Sentence.class, getLastSentenceAddressInDisplayWindow(jCas,
-                        getAddr(sentence), bModel.getPreferences().getWindowSize()))
-                                .getEnd();
+        int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
+                bModel.getPreferences().getWindowSize()).getEnd();
         if (adapter instanceof ArcAdapter) {
             if(featureModels.size()==0){
                 //If no features, still create arc #256
@@ -993,11 +991,8 @@ public class AnnotationDetailEditorPanel
 
         Sentence firstSentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
                 aBModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence),
-                aBModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
-                lastAddressInPage);
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(jCas,
+                getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
         aBModel.setFirstVisibleSentenceNumber(
                 BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
         aBModel.setLastVisibleSentenceNumber(

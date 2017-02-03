@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 
@@ -32,7 +32,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -483,6 +482,7 @@ public class AnnotationPage
                     if (bModel.getDocument() != null) {
 
                         JCas jCas = getJCas();
+                        int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(jCas);
 
                         int previousSentenceAddress = BratAjaxCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
@@ -490,13 +490,15 @@ public class AnnotationPage
                                         .getWindowSize());
                         //Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same address 
                         //if there are not much sentences to go back to as defined in windowSize
-                        if(previousSentenceAddress==bModel.getSentenceAddress()
-                        		//Check whether it's not the beginning of document
-                        		&& bModel.getSentenceAddress()!=bModel.getFirstSentenceInCasAddress()){
-                        	previousSentenceAddress = bModel.getFirstSentenceInCasAddress();
+                        if (
+                                previousSentenceAddress == bModel.getSentenceAddress() && 
+                                // Check whether it's not the beginning of document
+                                bModel.getSentenceAddress() != firstSentenceAddress
+                        ) {
+                            previousSentenceAddress = firstSentenceAddress;
                         }
+                        
                         if (bModel.getSentenceAddress() != previousSentenceAddress) {
-
                             updateSentenceNumber(jCas, previousSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -531,10 +533,10 @@ public class AnnotationPage
                     if (bModel.getDocument() != null) {
 
                         JCas jCas = getJCas();
+                        int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(jCas);
 
-                        if (bModel.getFirstSentenceInCasAddress() != bModel.getSentenceAddress()) {
-
-                            updateSentenceNumber(jCas, bModel.getFirstSentenceInCasAddress());
+                        if (firstSentenceAddress != bModel.getSentenceAddress()) {
+                            updateSentenceNumber(jCas, firstSentenceAddress);
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
@@ -756,7 +758,8 @@ public class AnnotationPage
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
-                bModel.setSentenceAddress(bModel.getFirstSentenceInCasAddress());
+                int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(aJCas);
+                bModel.setSentenceAddress(firstSentenceAddress);
             }
             int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(aJCas,
                     bModel.getSentenceAddress());
@@ -821,11 +824,8 @@ public class AnnotationPage
 
         Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJCas,
                 getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
-                lastAddressInPage);
         bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
         bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }

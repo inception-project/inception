@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static java.util.Arrays.asList;
@@ -89,12 +89,9 @@ public class BratArcRenderer
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
 
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
         // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
-                lastAddressInPage);
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
+                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
 
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -38,7 +38,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -206,7 +205,9 @@ public class CurationPage
                                 // If only one page, start displaying from
                                 // sentence 1
                                 if (totalNumberOfSentence == 1) {
-                                    bModel.setSentenceAddress(bModel.getFirstSentenceInCasAddress());
+                                    int firstSentenceAddress = BratAjaxCasUtil
+                                            .getFirstSentenceAddress(mergeJCas);
+                                    bModel.setSentenceAddress(firstSentenceAddress);
                                 }
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas,
                                         bModel.getSentenceAddress());
@@ -924,13 +925,12 @@ public class CurationPage
 
         Sentence firstSentence = selectSentenceAt(aJCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJCas,
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJCas,
                 getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
-                lastAddressInPage);
-        bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        bModel.setFirstVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
+        bModel.setLastVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException

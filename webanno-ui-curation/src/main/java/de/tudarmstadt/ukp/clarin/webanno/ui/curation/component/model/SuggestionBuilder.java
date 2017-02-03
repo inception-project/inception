@@ -20,8 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -372,8 +371,8 @@ public class SuggestionBuilder
         Sentence firstSentence = selectSentenceAt(jCas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
-        Sentence lastSentence = selectByAddr(jCas, Sentence.class,
-                getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence), aWinSize));
+        Sentence lastSentence = getLastSentenceInDisplayWindow(jCas, getAddr(firstSentence),
+                aWinSize);
 
         begin = firstSentence.getBegin();
         end = lastSentence.getEnd();

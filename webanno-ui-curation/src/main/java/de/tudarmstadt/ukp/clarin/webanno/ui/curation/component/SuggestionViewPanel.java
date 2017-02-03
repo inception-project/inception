@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
@@ -272,13 +271,12 @@ public class SuggestionViewPanel
 
             Sentence firstSentence = selectSentenceAt(clickedJCas, aBModel.getSentenceBeginOffset(),
                     aBModel.getSentenceEndOffset());
-            int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
+            Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(clickedJCas,
                     getAddr(firstSentence), aBModel.getPreferences().getWindowSize());
-            // the last sentence address in the display window
-            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
-                    FeatureStructure.class, lastAddressInPage);
-            aBModel.setFirstVisibleSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            aBModel.setLastVisibleSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            aBModel.setFirstVisibleSentenceNumber(
+                    getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            aBModel.setLastVisibleSentenceNumber(
+                    getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 
@@ -353,13 +351,12 @@ public class SuggestionViewPanel
 
             Sentence firstSentence = selectSentenceAt(clickedJCas, bModel.getSentenceBeginOffset(),
                     bModel.getSentenceEndOffset());
-            int lastAddressInPage = getLastSentenceAddressInDisplayWindow(clickedJCas,
+            Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(clickedJCas,
                     getAddr(firstSentence), bModel.getPreferences().getWindowSize());
-            // the last sentence address in the display window
-            Sentence lastSentenceInPage = (Sentence) selectByAddr(clickedJCas,
-                    FeatureStructure.class, lastAddressInPage);
-            bModel.setFirstVisibleSentenceNumber(getSentenceNumber(clickedJCas, firstSentence.getBegin()));
-            bModel.setLastVisibleSentenceNumber(getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
+            bModel.setFirstVisibleSentenceNumber(
+                    getSentenceNumber(clickedJCas, firstSentence.getBegin()));
+            bModel.setLastVisibleSentenceNumber(
+                    getSentenceNumber(clickedJCas, lastSentenceInPage.getBegin()));
         }
     }
 

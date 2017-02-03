@@ -519,9 +519,8 @@ public class BratAnnotator
             // The first sentence address in the display window!
             Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
                     .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
-            int la = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(aJCas,
+            Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(aJCas,
                     firstSentence.getAddress(), getModelObject().getPreferences().getWindowSize());
-            Sentence ls = (Sentence) BratAjaxCasUtil.selectByAddr(aJCas.getCas(), la);
             if (ls.getEnd() > nextToken.getBegin()) {
                 selection.clear();
                 selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());

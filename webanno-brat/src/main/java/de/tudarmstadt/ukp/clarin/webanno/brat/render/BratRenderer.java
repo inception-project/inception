@@ -21,8 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -36,7 +35,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -125,17 +123,13 @@ public class BratRenderer
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
             ActionContext aBratAnnotatorModel)
     {
-        // The first sentence address in the display window!
+        // The first sentence in the display window!
         Sentence firstSentence = selectSentenceAt(aJcas,
                 aBratAnnotatorModel.getSentenceBeginOffset(),
                 aBratAnnotatorModel.getSentenceEndOffset());
 
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(aJcas,
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
                 getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJcas, FeatureStructure.class,
-                lastAddressInPage);
 
         int sentenceNumber = getFirstSentenceNumber(aJcas, getAddr(firstSentence));
         aResponse.setSentenceNumberOffset(sentenceNumber);

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 
@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -79,11 +78,6 @@ public class ActionContext
      * The sentence address where the display window starts with, in its UIMA annotation
      */
     private int displayWindowStartSentenceAddress = -1;
-
-    /**
-     * The very first sentence address in its UIMA annotation
-     */
-    private int firstSentenceAddress;
 
     /**
      * The begin offset of a sentence
@@ -271,18 +265,6 @@ public class ActionContext
     public void setSentenceAddress(int aSentenceAddress)
     {
         displayWindowStartSentenceAddress = aSentenceAddress;
-    }
-
-    @Override
-    public int getFirstSentenceInCasAddress()
-    {
-        return firstSentenceAddress;
-    }
-
-    @Override
-    public void setFirstSentenceInCasAddress(int aFirstSentenceAddress)
-    {
-        firstSentenceAddress = aFirstSentenceAddress;
     }
 
     @Override
@@ -510,22 +492,20 @@ public class ActionContext
         
         // (Re)initialize brat model after potential creating / upgrading CAS
         setSentenceAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
-        setFirstSentenceInCasAddress(BratAjaxCasUtil.getFirstSentenceAddress(aJCas));
         getPreferences().setWindowSize(aRepository.getNumberOfSentences());
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getSentenceAddress());
         setSentenceBeginOffset(sentence.getBegin());
         setSentenceEndOffset(sentence.getEnd());
 
-        Sentence firstSentence = selectSentenceAt(aJCas, getSentenceBeginOffset(),
+        Sentence firstVisibleSentence = selectSentenceAt(aJCas, getSentenceBeginOffset(),
                 getSentenceEndOffset());
-        int lastVisibleSentenceAddress = getLastSentenceAddressInDisplayWindow(aJCas,
-                getAddr(firstSentence), getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(aJCas, FeatureStructure.class,
-                lastVisibleSentenceAddress);
-        setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, firstSentence.getBegin()));
-        setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, lastSentenceInPage.getBegin()));
+        Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(aJCas,
+                getAddr(firstVisibleSentence), getPreferences().getWindowSize());
+        setFirstVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(aJCas, firstVisibleSentence.getBegin()));
+        setLastVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(aJCas, lastVisibleSentence.getBegin()));
 
         // LOG.debug("Configured BratAnnotatorModel for user [" + username + "] f:["
         // + getFirstSentenceAddress() + "] l:["

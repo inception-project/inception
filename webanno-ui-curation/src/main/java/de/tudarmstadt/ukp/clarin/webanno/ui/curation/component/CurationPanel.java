@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
@@ -34,7 +34,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -496,13 +495,12 @@ public class CurationPanel
 
         Sentence firstSentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
-        int lastAddressInPage = getLastSentenceAddressInDisplayWindow(jCas, getAddr(firstSentence),
-                bModel.getPreferences().getWindowSize());
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = (Sentence) selectByAddr(jCas, FeatureStructure.class,
-                lastAddressInPage);
-        bModel.setFirstVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
-        bModel.setLastVisibleSentenceNumber(BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
+        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(jCas,
+                getAddr(firstSentence), bModel.getPreferences().getWindowSize());
+        bModel.setFirstVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jCas, firstSentence.getBegin()));
+        bModel.setLastVisibleSentenceNumber(
+                BratAjaxCasUtil.getSentenceNumber(jCas, lastSentenceInPage.getBegin()));
 
         curationContainer.setBratAnnotatorModel(bModel);
         onChange(aTarget);
@@ -553,8 +551,7 @@ public class CurationPanel
         int ws = bModel.getPreferences().getWindowSize();
         Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
                 bModel.getSentenceEndOffset());
-        int l = BratAjaxCasUtil.getLastSentenceAddressInDisplayWindow(jCas, getAddr(fs), ws);
-        Sentence ls = (Sentence) selectByAddr(jCas, FeatureStructure.class, l);
+        Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
 

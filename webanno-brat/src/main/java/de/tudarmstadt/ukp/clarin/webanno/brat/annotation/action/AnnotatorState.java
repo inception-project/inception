@@ -72,9 +72,6 @@ public interface AnnotatorState
     public int getLastVisibleSentenceNumber();
     public void setLastVisibleSentenceNumber(int lSN);
     
-    public int getFirstSentenceInCasAddress();
-    public void setFirstSentenceInCasAddress(int aFirstSentenceAddress);
-    
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
     //
