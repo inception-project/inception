@@ -110,7 +110,7 @@ public class BratAnnotator
     private AnnotationService annotationService;
 
     private WebMarkupContainer vis;
-    private AbstractAjaxBehavior controller;
+    private AbstractAjaxBehavior requestHandler;
     private String collection = "";
     private AnnotationDetailEditorPanel detailPanel;
 
@@ -158,8 +158,9 @@ public class BratAnnotator
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
+        add(vis);
 
-        controller = new AbstractDefaultAjaxBehavior()
+        requestHandler = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
 
@@ -224,126 +225,28 @@ public class BratAnnotator
                                 SecurityContextHolder.getContext().getAuthentication().getName());
                     }
                     else if (SpanAnnotationResponse.is(action)) {
-                        assert jCas != null;                        
-                        if (getModelObject().isSlotArmed()) {
-                            if (paramId.isSet()) {
-                                // Fill slot with existing annotation
-                                detailPanel.setSlot(aTarget, jCas,
-                                        getModelObject(), paramId.getId());
-                            }
-                            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
-                                    .getArmedFeature().getType())) {
-                                // Fill slot with new annotation (only works if a concrete type is
-                                // set for the link feature!
-                                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
-                                        annotationService.getLayer(getModelObject()
-                                                .getArmedFeature().getType(), getModelObject()
-                                                .getProject()));
-
-                                Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-
-                                try {
-                                    int id = adapter.add(jCas, offsets.getBegin(),
-                                            offsets.getEnd(), null, null);
-                                    detailPanel.setSlot(aTarget, jCas,
-                                            getModelObject(), id);
-                                }
-                                catch (BratAnnotationException e) {
-                                    error(ExceptionUtils.getRootCauseMessage(e));
-                                    LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
-                                }
-                            }
-                            else {
-                              throw new BratAnnotationException("Unable to create annotation of type ["+
-                                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
-                            }
-                        }
-                        else {
-                            /*if (paramId.isSet()) {
-                                getModelObject().setForwardAnnotation(false);
-                            }*/
-                            // Doing anything but filling an armed slot will unarm it
-                            detailPanel.clearArmedSlotModel();
-                            getModelObject().clearArmedSlot();
-
-                            Selection selection = getModelObject().getSelection();
-
-                            selection.setRelationAnno(false);
-
-                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-
-                            selection.setAnnotation(paramId);
-                            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-                            bratSetHighlight(aTarget, selection.getAnnotation());
-                            detailPanel.refresh(aTarget);
-                            
-                            if (selection.getAnnotation().isNotSet()) {
-                                selection.setAnnotate(true);
-                                detailPanel.actionAnnotate(aTarget,
-                                        getModelObject(), false);
-                            }
-                            else {
-                                selection.setAnnotate(false);
-                                bratRender(aTarget, jCas);
-                                result = new SpanAnnotationResponse();
-                            }
-                        }
+                        result = actionSpanAnnotation(aTarget, jCas, request, paramId);
                     }
                     else if (ArcAnnotationResponse.is(action)) {
-                        assert jCas != null;
-                        Selection selection = getModelObject().getSelection();
-
-                        selection.setRelationAnno(true);
-                        selection.setAnnotation(paramId);
-                        selection.setOriginType(request.getParameterValue(PARAM_ORIGIN_TYPE)
-                                .toString());
-                        selection.setOrigin(request.getParameterValue(PARAM_ORIGIN_SPAN_ID)
-                                .toInteger());
-                        selection.setTargetType(request.getParameterValue(PARAM_TARGET_TYPE)
-                                .toString());
-                        selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
-                                .toInteger());
-                        selection.setAnnotate(getModelObject().getSelection().getAnnotation().isNotSet());
-                        
-                        bratSetHighlight(aTarget, getModelObject().getSelection()
-                                .getAnnotation());
-                        detailPanel.refresh(aTarget);
-                        if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                            detailPanel.actionAnnotate(aTarget, getModelObject(), false);
-                        }
-                        else {
-                            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-                            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-                            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-                                    targetFs.getCoveredText() + "]");
-                            
-                            bratRender(aTarget, jCas);
-                            result = new ArcAnnotationResponse();
-                        }
+                        result = actionArcAnnotation(aTarget, jCas, request, paramId);
                     }
                     else if (LoadConfResponse.is(action)) {
                         result = new LoadConfResponse();
                     }
                     else if (GetCollectionInformationResponse.is(action)) {
+                        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
                         if (getModelObject().getProject() != null) {
-                            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
                             info.setEntityTypes(BratRenderer.buildEntityTypes(
                                     getModelObject().getAnnotationLayers(), annotationService));
-                            result = info;
                         }
-                        else {
-                            result = new GetCollectionInformationResponse();
-                        }
+                        result = info;
                     }
                     else if (GetDocumentResponse.is(action)) {
+                        GetDocumentResponse response = new GetDocumentResponse();
                         if (getModelObject().getProject() != null) {
-                            GetDocumentResponse response = new GetDocumentResponse();
                             BratRenderer.render(response, getModelObject(), jCas, annotationService);
-                            result = response;
                         }
-                        else {
-                            result = new GetDocumentResponse();
-                        }
+                        result = response;
                     }
 
                     LOG.info("AJAX-RPC DONE: [" + action + "]");
@@ -377,8 +280,7 @@ public class BratAnnotator
             }
         };
 
-        add(vis);
-        add(controller);
+        add(requestHandler);
     }
 
     private String getActionFromRequest(IRequestParameters aRequest)
@@ -478,7 +380,7 @@ public class BratAnnotator
         script.append("(function() {");
         script.append("var dispatcher = new Dispatcher();");
         // Each visualizer talks to its own Wicket component instance
-        script.append("dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
+        script.append("dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; ");
         // We attach the JSON send back from the server to this HTML element
         // because we cannot directly pass it from Wicket to the caller in ajax.js.
         script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
@@ -686,4 +588,114 @@ public class BratAnnotator
             return repository.readCurationCas(aBratAnnotatorModel.getDocument());
         }
     }
+    
+    private Object actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
+            IRequestParameters request, VID paramId)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+        assert jCas != null;                        
+        if (getModelObject().isSlotArmed()) {
+            if (paramId.isSet()) {
+                // Fill slot with existing annotation
+                detailPanel.setSlot(aTarget, jCas,
+                        getModelObject(), paramId.getId());
+            }
+            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
+                    .getArmedFeature().getType())) {
+                // Fill slot with new annotation (only works if a concrete type is
+                // set for the link feature!
+                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
+                        annotationService.getLayer(getModelObject()
+                                .getArmedFeature().getType(), getModelObject()
+                                .getProject()));
+
+                Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+
+                try {
+                    int id = adapter.add(jCas, offsets.getBegin(),
+                            offsets.getEnd(), null, null);
+                    detailPanel.setSlot(aTarget, jCas,
+                            getModelObject(), id);
+                }
+                catch (BratAnnotationException e) {
+                    error(ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                }
+            }
+            else {
+              throw new BratAnnotationException("Unable to create annotation of type ["+
+                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
+            }
+            return null;
+        }
+        else {
+            /*if (paramId.isSet()) {
+                getModelObject().setForwardAnnotation(false);
+            }*/
+            // Doing anything but filling an armed slot will unarm it
+            detailPanel.clearArmedSlotModel();
+            getModelObject().clearArmedSlot();
+
+            Selection selection = getModelObject().getSelection();
+
+            selection.setRelationAnno(false);
+
+            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+
+            selection.setAnnotation(paramId);
+            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
+            bratSetHighlight(aTarget, selection.getAnnotation());
+            detailPanel.refresh(aTarget);
+            
+            if (selection.getAnnotation().isNotSet()) {
+                selection.setAnnotate(true);
+                detailPanel.actionAnnotate(aTarget,
+                        getModelObject(), false);
+                return null;
+            }
+            else {
+                selection.setAnnotate(false);
+                bratRender(aTarget, jCas);
+                return new SpanAnnotationResponse();
+            }
+        }
+    }
+    
+    private Object actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas,
+            IRequestParameters request, VID paramId)
+        throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
+    {
+        assert jCas != null;
+        Selection selection = getModelObject().getSelection();
+
+        selection.setRelationAnno(true);
+        selection.setAnnotation(paramId);
+        selection.setOriginType(request.getParameterValue(PARAM_ORIGIN_TYPE)
+                .toString());
+        selection.setOrigin(request.getParameterValue(PARAM_ORIGIN_SPAN_ID)
+                .toInteger());
+        selection.setTargetType(request.getParameterValue(PARAM_TARGET_TYPE)
+                .toString());
+        selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
+                .toInteger());
+        selection.setAnnotate(getModelObject().getSelection().getAnnotation().isNotSet());
+        
+        bratSetHighlight(aTarget, getModelObject().getSelection()
+                .getAnnotation());
+        detailPanel.refresh(aTarget);
+        if (getModelObject().getSelection().getAnnotation().isNotSet()) {
+            detailPanel.actionAnnotate(aTarget, getModelObject(), false);
+            return null;
+        }
+        else {
+            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                    targetFs.getCoveredText() + "]");
+            
+            bratRender(aTarget, jCas);
+            return new ArcAnnotationResponse();
+        }
+    }
+
 }
