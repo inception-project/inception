@@ -1131,12 +1131,12 @@ public class AnnotationDetailEditorPanel
 
     protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
     {
-        // Overriden in BratAnnotator
+        // Overriden in CurationPanel
     }
 
     protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
     {
-        // Overriden in BratAnnotator
+        // Overriden in CurationPanel
     }
 
     protected void onAnnotate(AjaxRequestTarget aTarget, ActionContext aModel)
