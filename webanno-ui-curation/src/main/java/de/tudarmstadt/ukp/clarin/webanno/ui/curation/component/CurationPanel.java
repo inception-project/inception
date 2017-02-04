@@ -441,31 +441,29 @@ public class CurationPanel
                 // add subcomponents to the component
                 item.add(click);
 
-                String cC = curationViewItem.getSentenceState().getValue();
-                // mark current sentence in orange if disagree
+                // Is in focus?
                 if (curationViewItem.getSentenceNumber() == bModel.getFocusSentenceNumber()) {
-                    if (cC != null) {
-                        item.add(AttributeModifier.append("class", "current-disagree"));
-                    }
+                    item.add(AttributeModifier.append("class", "current"));
                 }
-                else if (cC != null) {
-                    // disagree in range
-                    if (curationViewItem.getSentenceNumber() >= fSn
-                            && curationViewItem.getSentenceNumber() <= lSn) {
-                        item.add(AttributeModifier.append("class", "range-disagree"));
-                    }
-                    else{
-                        item.add(AttributeModifier.append("class", "disagree"));
-                    }
+                
+                // Agree or disagree?
+                String cC = curationViewItem.getSentenceState().getValue();
+                if (cC != null) {
+                    item.add(AttributeModifier.append("class", "disagree"));
                 }
-                // agree and in range
-                else if (curationViewItem.getSentenceNumber() >= fSn
-                        && curationViewItem.getSentenceNumber() <= lSn) {
-                    item.add(AttributeModifier.append("class", "range-agree"));
-                }
-                else{
+                else {
                     item.add(AttributeModifier.append("class", "agree"));
                 }
+                
+                // In range or not?
+                if (curationViewItem.getSentenceNumber() >= fSn
+                        && curationViewItem.getSentenceNumber() <= lSn) {
+                    item.add(AttributeModifier.append("class", "in-range"));
+                }
+                else {
+                    item.add(AttributeModifier.append("class", "out-range"));
+                }
+                
                 Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
                         .getSentenceNumber().toString(), click);
                 item.add(sentenceNumber);
