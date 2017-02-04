@@ -298,22 +298,6 @@ public class BratAnnotator
         add(requestHandler);
     }
 
-    private String getActionFromRequest(IRequestParameters aRequest)
-    {
-        String action = aRequest.getParameterValue(PARAM_ACTION).toString();
-        getModelObject().setUserAction(action);
-        RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
-            @Override
-            public void onEndRequest(RequestCycle aCycle)
-            {
-                // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
-                // calls that do not go through this AjaxBehavior do not see an active user action.
-                BratAnnotator.this.getModelObject().clearUserAction();
-            }
-        });
-        return action;
-    }
-    
     /**
      * Extract offset information from the current request. These are either offsets of an existing
      * selected annotations or offsets contained in the request for the creation of a new
