@@ -3150,8 +3150,13 @@ Util.profileStart('rows');
           y += sizes.texts.height;
           row.textY = y - rowPadding;
           if (row.sentence) {
+// WEBANNO EXTENSION BEGIN - Just render sentence number as text to avoid need to load url_monitor    
+/*
             var sentence_hash = new URLHash(coll, doc, { focus: [[ 'sent', row.sentence ]] } );
             var link = svg.link(sentNumGroup, sentence_hash.getHash());
+*/
+        	var link = sentNumGroup;
+// WEBANNO EXTENSION END            
 // WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin           
 /*
             var text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
