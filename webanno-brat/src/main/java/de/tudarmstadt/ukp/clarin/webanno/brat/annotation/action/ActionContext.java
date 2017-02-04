@@ -264,29 +264,20 @@ public class ActionContext
             throw new IllegalStateException("Unable to fetch JCas from CAS", e);
         }
 
-        setFirstVisibleSentenceAddress(aSentence.getAddress());
+        displayWindowStartSentenceAddress = aSentence.getAddress();
         this.sentenceBeginOffset = aSentence.getBegin();
         this.sentenceEndOffset = aSentence.getEnd();
 
         Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
                 getPreferences().getWindowSize());
-        setFirstVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin()));
-        setLastVisibleSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin()));
+        this.fSN = BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin());
+        this.lSN = BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin());
     }
 
     @Override
     public int getFirstVisibleSentenceAddress()
     {
         return displayWindowStartSentenceAddress;
-    }
-
-    @Deprecated
-    @Override
-    public void setFirstVisibleSentenceAddress(int aSentenceAddress)
-    {
-        displayWindowStartSentenceAddress = aSentenceAddress;
     }
 
     @Override
@@ -431,24 +422,10 @@ public class ActionContext
         return fSN;
     }
 
-    @Deprecated
-    @Override
-    public void setFirstVisibleSentenceNumber(int fSN)
-    {
-        this.fSN = fSN;
-    }
-
     @Override
     public int getLastVisibleSentenceNumber()
     {
         return lSN;
-    }
-
-    @Deprecated
-    @Override
-    public void setLastVisibleSentenceNumber(int lSN)
-    {
-        this.lSN = lSN;
     }
 
     @Override

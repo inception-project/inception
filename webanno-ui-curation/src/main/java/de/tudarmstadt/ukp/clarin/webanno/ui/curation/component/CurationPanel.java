@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
@@ -516,11 +515,10 @@ public class CurationPanel
     {
         JCas jCas = repository.readCurationCas(bModel.getDocument());
 
-        final int sentenceAddress = getAddr(selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset()));
-        bModel.setFirstVisibleSentenceAddress(sentenceAddress);
+        final Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
+                bModel.getSentenceEndOffset());
+        bModel.setFirstVisibleSentence(sentence);
 
-        final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel
                 .getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the

@@ -754,8 +754,7 @@ public class AnnotationPage
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
-                int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(aJCas);
-                bModel.setFirstVisibleSentenceAddress(firstSentenceAddress);
+                bModel.setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
             }
             int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(aJCas,
                     bModel.getFirstVisibleSentenceAddress());

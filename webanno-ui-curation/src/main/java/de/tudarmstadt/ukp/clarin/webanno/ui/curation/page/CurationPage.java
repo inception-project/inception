@@ -204,9 +204,8 @@ public class CurationPage
                                 // If only one page, start displaying from
                                 // sentence 1
                                 if (totalNumberOfSentence == 1) {
-                                    int firstSentenceAddress = BratAjaxCasUtil
-                                            .getFirstSentenceAddress(mergeJCas);
-                                    bModel.setFirstVisibleSentenceAddress(firstSentenceAddress);
+                                    bModel.setFirstVisibleSentence(
+                                            BratAjaxCasUtil.getFirstSentence(mergeJCas));
                                 }
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas,
                                         bModel.getFirstVisibleSentenceAddress());

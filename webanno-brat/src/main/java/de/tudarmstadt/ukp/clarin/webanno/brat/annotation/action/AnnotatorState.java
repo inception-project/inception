@@ -64,17 +64,11 @@ public interface AnnotatorState
     public void setFirstVisibleSentence(Sentence aSentence);
     
     public int getFirstVisibleSentenceAddress();
-    @Deprecated
-    public void setFirstVisibleSentenceAddress(int aSentenceAddress);
     public int getSentenceBeginOffset();
     public int getSentenceEndOffset();
 
     public int getFirstVisibleSentenceNumber();
-    @Deprecated
-    public void setFirstVisibleSentenceNumber(int fSN);
     public int getLastVisibleSentenceNumber();
-    @Deprecated
-    public void setLastVisibleSentenceNumber(int lSN);
     
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
