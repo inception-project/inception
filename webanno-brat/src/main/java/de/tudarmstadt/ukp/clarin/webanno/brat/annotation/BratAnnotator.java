@@ -69,11 +69,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUrlMonitorResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
@@ -373,20 +371,17 @@ public class BratAnnotator
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
 
         // BRAT helpers
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        //aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
 
         // BRAT modules
         aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
+        //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         StringBuilder script = new StringBuilder();
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
@@ -404,7 +399,7 @@ public class BratAnnotator
         script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
         script.append("var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
         script.append("var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        script.append("var logger = new AnnotationLog(dispatcher);");
+        //script.append("var logger = new AnnotationLog(dispatcher);");
         script.append("dispatcher.post('init');");
         script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
         script.append("Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");

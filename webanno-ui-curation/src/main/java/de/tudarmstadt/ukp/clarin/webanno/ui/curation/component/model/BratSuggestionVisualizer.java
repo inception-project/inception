@@ -34,13 +34,10 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotationLogResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratSpinnerResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUrlMonitorResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
@@ -127,17 +124,17 @@ public class BratSuggestionVisualizer
         // BRAT helpers
         aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        //aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        //aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));      
         
         // BRAT modules
         aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));	    
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));        
+        //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 	    
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
         StringBuilder script = new StringBuilder();
