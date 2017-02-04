@@ -137,6 +137,10 @@ public class ArcAdapter
      *            the target FS.
      * @param aJCas
      *            the JCas.
+     * @param aWindowBegin
+     *            begin offset of the first visible sentence
+     * @param aWindowEnd
+     *            end offset of the last visible sentence
      * @param aFeature
      *            the feature.
      * @param aLabelValue
@@ -145,14 +149,14 @@ public class ArcAdapter
      * @throws BratAnnotationException
      *             if the annotation could not be created/updated.
      */
-    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas, int aStart,
-            int aEnd, AnnotationFeature aFeature, Object aLabelValue)
+    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin,
+            int aWindowEnd, AnnotationFeature aFeature, Object aLabelValue)
                 throws BratAnnotationException
     {
           if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            return interalAddToCas(aJCas, aStart, aEnd, aOriginFs, aTargetFs, aLabelValue,
-                    aFeature);
+            return interalAddToCas(aJCas, aWindowBegin, aWindowEnd, aOriginFs, aTargetFs,
+                    aLabelValue, aFeature);
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -162,8 +166,13 @@ public class ArcAdapter
 
     /**
      * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
+     * 
+     * @param aWindowBegin
+     *            begin offset of the first visible sentence
+     * @param aWindowEnd
+     *            end offset of the last visible sentence
      */
-    private AnnotationFS interalAddToCas(JCas aJCas, int aBegin, int aEnd, AnnotationFS aOriginFs,
+    private AnnotationFS interalAddToCas(JCas aJCas, int aWindowBegin, int aWindowEnd, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature) 
                 throws BratAnnotationException
     {
@@ -176,7 +185,9 @@ public class ArcAdapter
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
 
-        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+        // Locate the governor and dependent annotations - looking at the annotations that are
+        // presently visible on screen is sufficient - we don't have to scan the whole CAS.
+        for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, aWindowBegin, aWindowEnd)) {
 
             if (attachFeatureName != null) {
                 Feature arcSpanFeature = spanType.getFeatureByBaseName(attachFeatureName);

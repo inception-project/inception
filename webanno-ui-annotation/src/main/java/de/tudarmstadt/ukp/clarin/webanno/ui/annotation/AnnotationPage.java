@@ -446,8 +446,7 @@ public class AnnotationPage
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
                             updateSentenceAddress(jCas, aTarget);
                         }
 
@@ -499,8 +498,7 @@ public class AnnotationPage
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -536,8 +534,7 @@ public class AnnotationPage
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -576,8 +573,7 @@ public class AnnotationPage
 
                             aTarget.addChildren(getPage(), FeedbackPanel.class);
                             annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(BratAjaxCasUtil
-                                    .getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
+                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
                             updateSentenceAddress(jCas, aTarget);
                         }
                         else {
@@ -633,11 +629,11 @@ public class AnnotationPage
 
                         updateSentenceNumber(jCas, gotoPageAddress);
 
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         annotator.bratRenderLater(aTarget);
+                        gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                        
+                        aTarget.addChildren(getPage(), FeedbackPanel.class);
                         aTarget.add(numberOfPages);
-                        gotoPageTextField.setModelObject(BratAjaxCasUtil.getFirstSentenceNumber(
-                                jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
                         aTarget.add(gotoPageTextField);
                     }
                 }
@@ -756,22 +752,10 @@ public class AnnotationPage
             if (totalNumberOfSentence == 1) {
                 bModel.setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
             }
-            int sentenceNumber = BratAjaxCasUtil.getFirstSentenceNumber(aJCas,
-                    bModel.getFirstVisibleSentenceAddress());
-            int firstSentenceNumber = sentenceNumber + 1;
-            int lastSentenceNumber;
-            if (firstSentenceNumber + bModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
-                lastSentenceNumber = firstSentenceNumber + bModel.getPreferences().getWindowSize()
-                        - 1;
-            }
-            else {
-                lastSentenceNumber = totalNumberOfSentence;
-            }
 
-            labelText = "showing " + firstSentenceNumber + "-" + lastSentenceNumber + " of "
-                    + totalNumberOfSentence + " sentences [document "
-            		+ docIndex +" of "+ listofDoc.size()+"]";
-
+            labelText = "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
+                    + bModel.getLastVisibleSentenceNumber() + " of " + totalNumberOfSentence
+                    + " sentences [document " + docIndex + " of " + listofDoc.size() + "]";
         }
         else {
             labelText = "";// no document yet selected

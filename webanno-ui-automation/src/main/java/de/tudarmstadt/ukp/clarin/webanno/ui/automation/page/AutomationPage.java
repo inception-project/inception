@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -479,24 +478,10 @@ public class AutomationPage
                             	
                             	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
                             	
-                                int address = getAddr(selectSentenceAt(mergeJCas,
-                                        bModel.getFirstVisibleSentenceBegin(),
-                                        bModel.getFirstVisibleSentenceEnd()));
-                                sentenceNumber = getFirstSentenceNumber(mergeJCas, address);
-                                int firstSentenceNumber = sentenceNumber + 1;
-                                int lastSentenceNumber;
-                                if (firstSentenceNumber + bModel.getPreferences().getWindowSize()
-                                        - 1 < totalNumberOfSentence) {
-                                    lastSentenceNumber = firstSentenceNumber
-                                            + bModel.getPreferences().getWindowSize() - 1;
-                                }
-                                else {
-                                    lastSentenceNumber = totalNumberOfSentence;
-                                }
-
-                                return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
-                                        + " of " + totalNumberOfSentence + " sentences [document "
-                                        + docIndex +" of "+ listofDoc.size()+"]";
+                                return "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
+                                        + bModel.getLastVisibleSentenceNumber() + " of "
+                                        + totalNumberOfSentence + " sentences [document " + docIndex
+                                        + " of " + listofDoc.size() + "]";
                             }
                             catch (UIMAException e) {
                                 return "";
@@ -1335,8 +1320,7 @@ public class AutomationPage
             error(e.getMessage());
         }
 
-        gotoPageTextField
-                .setModelObject(getFirstSentenceNumber(jCas, bModel.getFirstVisibleSentenceAddress()) + 1);
+        gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
         gotoPageAddress = getSentenceAddress(jCas, gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);

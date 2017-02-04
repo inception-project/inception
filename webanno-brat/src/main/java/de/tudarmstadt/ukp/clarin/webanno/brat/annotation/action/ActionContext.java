@@ -88,6 +88,16 @@ public class ActionContext
     private int sentenceEndOffset;
 
     /**
+     * The begin offset of the first visible sentence.
+     */
+    private int windowBeginOffset;
+
+    /**
+     * The end offset of the last visible sentence.
+     */
+    private int windowEndOffset;
+
+    /**
      * the sentence number where an action occured (selection, modification, clicking)
      */
     private int focusSentenceNumber;
@@ -265,15 +275,32 @@ public class ActionContext
         }
 
         displayWindowStartSentenceAddress = aSentence.getAddress();
-        this.sentenceBeginOffset = aSentence.getBegin();
-        this.sentenceEndOffset = aSentence.getEnd();
+        sentenceBeginOffset = aSentence.getBegin();
+        sentenceEndOffset = aSentence.getEnd();
 
         Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
                 getPreferences().getWindowSize());
-        this.firstVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin());
-        this.lastVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin());
+        firstVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas,
+                aSentence.getBegin());
+        lastVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas,
+                lastVisibleSentence.getBegin());
+        
+        windowBeginOffset = aSentence.getBegin();
+        windowEndOffset = lastVisibleSentence.getEnd();
     }
 
+    @Override
+    public int getWindowBeginOffset()
+    {
+        return windowBeginOffset;
+    }
+    
+    @Override
+    public int getWindowEndOffset()
+    {
+        return windowEndOffset;
+    }
+    
     @Override
     public int getFirstVisibleSentenceAddress()
     {
@@ -480,8 +507,8 @@ public class ActionContext
         clearArmedSlot();
 
         // (Re)initialize brat model after potential creating / upgrading CAS
-        setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
         getPreferences().setWindowSize(aRepository.getNumberOfSentences());
+        setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
     }
 
     private AnnotationFeature armedFeature;

@@ -43,6 +43,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -630,8 +631,9 @@ public class BratAjaxCasUtil
      * @param aSentenceAddress
      *            the sentence ID.
      * @return the sentence number.
-     *
+     * @deprecated use {@link ActionContext#getFirstVisibleSentenceNumber()} instead
      */
+    @Deprecated
     public static int getFirstSentenceNumber(JCas aJcas, int aSentenceAddress)
     {
         int sentenceNumber = 0;

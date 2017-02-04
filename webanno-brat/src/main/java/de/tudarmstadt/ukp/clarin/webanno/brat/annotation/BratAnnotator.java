@@ -82,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceRefer
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Brat annotator component.
@@ -330,11 +329,10 @@ public class BratAnnotator
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
             OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
                     .readValue(offsets, OffsetsList.class);
-            Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
-                    .getFirstVisibleSentenceBegin(), getModelObject().getFirstVisibleSentenceEnd());
 
-            int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
-            int annotationEnd = sentence.getBegin()
+            int annotationBegin = getModelObject().getWindowBeginOffset()
+                    + offsetLists.get(0).getBegin();
+            int annotationEnd = getModelObject().getWindowBeginOffset()
                     + offsetLists.get(offsetLists.size() - 1).getEnd();
             return new Offsets(annotationBegin, annotationEnd);
         }
@@ -516,12 +514,7 @@ public class BratAnnotator
         AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
                 selection.getEnd());
         if (nextToken != null) {
-            // The first sentence address in the display window!
-            Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
-                    .getFirstVisibleSentenceBegin(), getModelObject().getFirstVisibleSentenceEnd());
-            Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(aJCas,
-                    firstSentence.getAddress(), getModelObject().getPreferences().getWindowSize());
-            if (ls.getEnd() > nextToken.getBegin()) {
+            if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
                 selection.clear();
                 selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
                 detailPanel.actionAnnotate(aTarget, getModelObject(), true);

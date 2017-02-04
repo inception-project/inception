@@ -19,9 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -80,23 +78,15 @@ public class BratSpanRenderer
             GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
-        // The first sentence address in the display window!
-        Sentence firstSentence = selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
-                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
-
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
-        int aFirstSentenceOffset = firstSentence.getBegin();
-
-        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class,
-                firstSentence.getBegin(), lastSentenceInPage.getEnd());
         
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
+        int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
+        int windowEnd = aBratAnnotatorModel.getWindowEndOffset();
+
+        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, windowBegin,
+                windowEnd);
+        
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
             String bratTypeName = TypeUtil.getBratTypeName(typeAdapter);
             String bratLabelText = TypeUtil.getBratLabelText(typeAdapter, fs, aFeatures);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
@@ -135,16 +125,16 @@ public class BratSpanRenderer
             if (sentences.size() > 1) {
                 for (Sentence sentence : sentences) {
                     if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
-                        offsets.add(new Offsets(fs.getBegin() - aFirstSentenceOffset, sentence
-                                .getEnd() - aFirstSentenceOffset));
+                        offsets.add(new Offsets(fs.getBegin() - windowBegin, sentence
+                                .getEnd() - windowBegin));
                     }
                     else if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
-                        offsets.add(new Offsets(sentence.getBegin() - aFirstSentenceOffset, fs
-                                .getEnd() - aFirstSentenceOffset));
+                        offsets.add(new Offsets(sentence.getBegin() - windowBegin, fs
+                                .getEnd() - windowBegin));
                     }
                     else {
-                        offsets.add(new Offsets(sentence.getBegin() - aFirstSentenceOffset,
-                                sentence.getEnd() - aFirstSentenceOffset));
+                        offsets.add(new Offsets(sentence.getBegin() - windowBegin,
+                                sentence.getEnd() - windowBegin));
                     }
                 }
                 aResponse.addEntity(new Entity(getAddr(fs), bratTypeName, offsets, bratLabelText,
@@ -154,7 +144,7 @@ public class BratSpanRenderer
                 // FIXME It should be possible to remove this case and the if clause because
                 // the case that a FS is inside a single sentence is just a special case
                 aResponse.addEntity(new Entity(getAddr(fs), bratTypeName, new Offsets(fs.getBegin()
-                        - aFirstSentenceOffset, fs.getEnd() - aFirstSentenceOffset), bratLabelText,
+                        - windowBegin, fs.getEnd() - windowBegin), bratLabelText,
                         color));
             }
 
@@ -184,8 +174,6 @@ public class BratSpanRenderer
     
     /**
      * Argument lists for the arc annotation
-     *
-     * @return
      */
     private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
     {

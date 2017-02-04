@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  */
 public interface AnnotatorState
 {
-    public void initForDocument(JCas aJCas, RepositoryService aRepository);
+    void initForDocument(JCas aJCas, RepositoryService aRepository);
 
     // ---------------------------------------------------------------------------------------------
     // Window of visible annotations
@@ -54,21 +54,24 @@ public interface AnnotatorState
     /**
      * Get the number of the sentence in focus (curation view)
      */
-    public int getFocusSentenceNumber();
+    int getFocusSentenceNumber();
     
     /**
      * Set the number of the sentence in focus (curation view)
      */
-    public void setFocusSentenceNumber(int sentenceNumber);
+    void setFocusSentenceNumber(int sentenceNumber);
     
-    public void setFirstVisibleSentence(Sentence aSentence);
+    void setFirstVisibleSentence(Sentence aSentence);
     
-    public int getFirstVisibleSentenceAddress();
-    public int getFirstVisibleSentenceBegin();
-    public int getFirstVisibleSentenceEnd();
+    int getFirstVisibleSentenceAddress();
+    int getFirstVisibleSentenceBegin();
+    int getFirstVisibleSentenceEnd();
 
-    public int getFirstVisibleSentenceNumber();
-    public int getLastVisibleSentenceNumber();
+    int getFirstVisibleSentenceNumber();
+    int getLastVisibleSentenceNumber();
+    
+    int getWindowBeginOffset();
+    int getWindowEndOffset();
     
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
@@ -111,8 +114,8 @@ public interface AnnotatorState
     
     // REC not sure if we need these really... we can fetch the user from the security context.
     // Might be interesting to have if we allow an admin to open another users annotation though.
-    public User getUser();
-    public void setUser(User aUser);
+    User getUser();
+    void setUser(User aUser);
     
     // ---------------------------------------------------------------------------------------------
     // Document
@@ -152,8 +155,8 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // User preferences
     // ---------------------------------------------------------------------------------------------
-    public AnnotationPreference getPreferences();
-    public void setPreferences(AnnotationPreference aPreferences);
+    AnnotationPreference getPreferences();
+    void setPreferences(AnnotationPreference aPreferences);
     List<AnnotationLayer> getAnnotationLayers();
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 }

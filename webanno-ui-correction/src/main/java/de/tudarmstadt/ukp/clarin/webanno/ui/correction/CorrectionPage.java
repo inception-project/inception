@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -27,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.sele
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -139,9 +137,6 @@ public class CorrectionPage
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
-
-    private int sentenceNumber = 1;
-    private int totalNumberOfSentence;
 
     private long currentprojectId;
 
@@ -342,58 +337,23 @@ public class CorrectionPage
 
                             JCas mergeJCas = null;
                             try {
-
                                 mergeJCas = repository.readCorrectionCas(bModel
                                         .getDocument());
 
-                                totalNumberOfSentence = getNumberOfPages(mergeJCas);
+                                int totalNumberOfSentence = getNumberOfPages(mergeJCas);
 
-                                // If only one page, start displaying from sentence 1
-                                /*
-                                 * if (totalNumberOfSentence == 1) {
-                                 * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
-                                 * .getFirstSentenceAddress()); }
-                                 */
                                 List<SourceDocument> listofDoc = getListOfDocs();
                             	
-                            	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
+                                int docIndex = listofDoc.indexOf(bModel.getDocument()) + 1;
                             	
-                                int address = getAddr(selectSentenceAt(mergeJCas,
-                                        bModel.getFirstVisibleSentenceBegin(),
-                                        bModel.getFirstVisibleSentenceEnd()));
-                                sentenceNumber = getFirstSentenceNumber(mergeJCas, address);
-                                int firstSentenceNumber = sentenceNumber + 1;
-                                int lastSentenceNumber;
-                                if (firstSentenceNumber
-                                        + bModel.getPreferences().getWindowSize() - 1 < totalNumberOfSentence) {
-                                    lastSentenceNumber = firstSentenceNumber
-                                            + bModel.getPreferences().getWindowSize()
-                                            - 1;
-                                }
-                                else {
-                                    lastSentenceNumber = totalNumberOfSentence;
-                                }
-
-                                return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
-                                        + " of " + totalNumberOfSentence + " sentences [document "
-                                        + docIndex +" of "+ listofDoc.size()+"]";
+                                return "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
+                                        + bModel.getLastVisibleSentenceNumber() + " of "
+                                        + totalNumberOfSentence + " sentences [document " + docIndex
+                                        + " of " + listofDoc.size() + "]";
                             }
-                            catch (UIMAException e) {
+                            catch (Exception e) {
                                 return "";
                             }
-                            catch (DataRetrievalFailureException e) {
-                                return "";
-                            }
-                            catch (ClassNotFoundException e) {
-                                return "";
-                            }
-                            catch (FileNotFoundException e) {
-                                return "";
-                            }
-                            catch (IOException e) {
-                                return "";
-                            }
-
                         }
                         else {
                             return "";// no document yet selected
@@ -1300,8 +1260,7 @@ public class CorrectionPage
             error(e.getMessage());
         }
 
-        gotoPageTextField.setModelObject(getFirstSentenceNumber(jCas,
-                bModel.getFirstVisibleSentenceAddress()) + 1);
+        gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
         gotoPageAddress = getSentenceAddress(jCas, gotoPageTextField.getModelObject());
 
         target.add(gotoPageTextField);

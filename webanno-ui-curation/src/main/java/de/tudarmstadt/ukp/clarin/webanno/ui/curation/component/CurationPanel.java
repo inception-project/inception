@@ -389,11 +389,9 @@ public class CurationPanel
 
         LoadableDetachableModel sentencesListModel = new LoadableDetachableModel()
         {
-
             @Override
             protected Object load()
             {
-
                 return getModelObject().getCurationViews();
             }
         };

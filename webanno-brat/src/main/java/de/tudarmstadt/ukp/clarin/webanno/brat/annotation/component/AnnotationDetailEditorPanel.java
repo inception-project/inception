@@ -20,14 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
 
 import java.io.IOException;
@@ -605,13 +603,8 @@ public class AnnotationDetailEditorPanel
 		            return;
 				}
 				if (adapter instanceof ArcAdapter) {
-					Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
-							bModel.getFirstVisibleSentenceEnd());
-					int start = sentence.getBegin();
-                    int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
-                            bModel.getPreferences().getWindowSize()).getEnd();
-
-					AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas, start, end, null, null);
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(originFs, targetFs, jCas,
+                            bModel.getWindowBeginOffset(), bModel.getWindowEndOffset(), null, null);
 					selection.setAnnotation(new VID(getAddr(arc)));
                     if (selection.getAnnotation().isSet()) {
                         selection.setText("[" + originFs.getCoveredText() + "] - [" + 
@@ -885,22 +878,18 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(jCas, aBModel.getSelection().getTarget());
 
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
-        Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
-                bModel.getFirstVisibleSentenceEnd());
-        int start = sentence.getBegin();
-        int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
-                bModel.getPreferences().getWindowSize()).getEnd();
         if (adapter instanceof ArcAdapter) {
             if(featureModels.size()==0){
                 //If no features, still create arc #256
-                AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, start, end,
-                        null, null);
+                AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+                        bModel.getWindowBeginOffset(), bModel.getWindowEndOffset(), null, null);
                     aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
             }
             else{
                 for (FeatureModel fm : featureModels) {
-                    AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas, start, end,
-                        fm.feature, fm.value);
+                    AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+                            bModel.getWindowBeginOffset(), bModel.getWindowEndOffset(), fm.feature,
+                            fm.value);
                     aBModel.getSelection().setAnnotation(new VID(getAddr(arc)));
                 }
             }
@@ -965,17 +954,18 @@ public class AnnotationDetailEditorPanel
     private void autoScroll(JCas jCas, ActionContext aBModel, boolean aForward)
     {
         if (aForward) {
-            // Get the current first sentence
-            Sentence sentence = selectByAddr(jCas, Sentence.class, aBModel.getFirstVisibleSentenceAddress());
+            // Fetch the first sentence on screen
+            Sentence sentence = selectByAddr(jCas, Sentence.class,
+                    aBModel.getFirstVisibleSentenceAddress());
             // Find the following one
             int address = getNextSentenceAddress(jCas, sentence);
             // Move to it
             aBModel.setFirstVisibleSentence(selectByAddr(jCas, Sentence.class, address));
         }
         else {
-            // Fetch the current sentence by offsets
-            Sentence sentence = selectSentenceAt(jCas, aBModel.getFirstVisibleSentenceBegin(),
-                    aBModel.getFirstVisibleSentenceEnd());
+            // Fetch the first sentence on screen
+            Sentence sentence = selectByAddr(jCas, Sentence.class,
+                    aBModel.getFirstVisibleSentenceAddress());
             // Calculate the first sentence in the window in such a way that the annotation
             // currently selected is in the center of the window
             sentence = findWindowStartCenteringOnSelection(jCas, sentence,

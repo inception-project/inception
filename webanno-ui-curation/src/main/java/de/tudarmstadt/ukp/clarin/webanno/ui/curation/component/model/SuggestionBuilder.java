@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -80,8 +77,7 @@ public class SuggestionBuilder
     private final RepositoryService repository;
     private final UserDao userRepository;
 
-    int sentenceNumber;
-    int begin, end;
+    int diffRangeBegin, diffRangeEnd;
     boolean firstload = true;
     public static Map<Integer, Set<Integer>> crossSentenceLists;
     //
@@ -127,23 +123,22 @@ public class SuggestionBuilder
             mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
             String username = jCases.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
-                    jCases.get(username), username, aBModel.getPreferences().getWindowSize());
-
+                    jCases.get(username), username, aBModel.getWindowBeginOffset(),
+                    aBModel.getWindowEndOffset());
         }
         else {
-
             jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
             mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
-                    CurationPanel.CURATION_USER, aBModel.getPreferences().getCurationWindowSize());
+                    CurationPanel.CURATION_USER, 0, mergeJCas.getDocumentText().length());
 
         }
 
         List<Type> entryTypes = null;
 
         segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
-        for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, begin, end)) {
+        for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
             segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(),
                     getAddr(sentence));
         }
@@ -215,7 +210,7 @@ public class SuggestionBuilder
                         thisSent = BratAjaxCasUtil.getSentenceNumber(c, begin);
                     }
                     // update cross-sentence annotation lists
-                    for (AnnotationFS fs : selectCovered(c.getCas(), t, this.begin, end)) {
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, this.diffRangeBegin, diffRangeEnd)) {
                         // CASE 1. annotation begins here
                         if (fs.getBegin() >= begin && fs.getBegin() <= segmentBeginEnd.get(begin)) {
                             if (fs.getEnd() > segmentBeginEnd.get(begin) || fs.getEnd() < begin) {
@@ -233,7 +228,7 @@ public class SuggestionBuilder
                         }
                     }
 
-                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, end)) {
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, diffRangeEnd)) {
                         if (fs.getBegin() <= segmentBeginEnd.get(begin)
                                 && fs.getEnd() > segmentBeginEnd.get(begin)) {
                             Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
@@ -365,25 +360,19 @@ public class SuggestionBuilder
     private void updateSegment(ActionContext aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
-            int aWinSize)
+            int aWindowStart, int aWindowEnd)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        Sentence firstSentence = selectSentenceAt(jCas,
-                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
-                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
-        Sentence lastSentence = getLastSentenceInDisplayWindow(jCas, getAddr(firstSentence),
-                aWinSize);
-
-        begin = firstSentence.getBegin();
-        end = lastSentence.getEnd();
-        sentenceNumber = getFirstSentenceNumber(jCas, getAddr(firstSentence));
+        diffRangeBegin = aWindowStart;
+        diffRangeEnd = aWindowEnd;
+        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, aWindowStart);
+        
         segmentAdress.put(username, new HashMap<Integer, Integer>());
-
-        for (Sentence sentence : selectCovered(jCas, Sentence.class, begin, end)) {
-            sentenceNumber += 1;
+        for (Sentence sentence : selectCovered(jCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
             segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
             segmentNumber.put(sentence.getBegin(), sentenceNumber);
             segmentAdress.get(username).put(sentence.getBegin(), getAddr(sentence));
+            sentenceNumber += 1;
         }
     }
 

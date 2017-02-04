@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
@@ -127,7 +126,6 @@ public class CurationPage
     private ActionContext bModel;
 
     private int gotoPageAddress;
-    private int sentenceNumber = 1;
     private int totalNumberOfSentence;
     private long currentprojectId;
     List<String> crossAnnoSentList;
@@ -170,8 +168,7 @@ public class CurationPage
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 aTarget.add(numberOfPages);
-                gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
-                        bModel.getFirstVisibleSentenceAddress()) + 1);
+                gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
                 gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
                 aTarget.add(gotoPageTextField);
                 aTarget.add(curationPanel);
@@ -207,26 +204,14 @@ public class CurationPage
                                     bModel.setFirstVisibleSentence(
                                             BratAjaxCasUtil.getFirstSentence(mergeJCas));
                                 }
-                                sentenceNumber = getFirstSentenceNumber(mergeJCas,
-                                        bModel.getFirstVisibleSentenceAddress());
-                                int firstSentenceNumber = sentenceNumber + 1;
-                                int lastSentenceNumber;
-                                if (firstSentenceNumber + bModel.getPreferences().getWindowSize()
-                                        - 1 < totalNumberOfSentence) {
-                                    lastSentenceNumber = firstSentenceNumber
-                                            + bModel.getPreferences().getWindowSize() - 1;
-                                }
-                                else {
-                                    lastSentenceNumber = totalNumberOfSentence;
-                                }
-                                
                                 List<SourceDocument> listofDoc = getListOfDocs();
                             	
                             	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
                                
-                            	return "showing " + firstSentenceNumber + "-" + lastSentenceNumber
-                                        + " of " + totalNumberOfSentence + " sentences [document "
-                                        + docIndex +" of "+ listofDoc.size()+"]";
+                                return "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
+                                        + bModel.getLastVisibleSentenceNumber() + " of "
+                                        + totalNumberOfSentence + " sentences [document " + docIndex
+                                        + " of " + listofDoc.size() + "]";
                             }
                             catch (Exception e) {
                                 return "";
@@ -888,8 +873,7 @@ public class CurationPage
             LOG.error("Unable to load data", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
-        gotoPageTextField.setModelObject(getFirstSentenceNumber(mergeJCas,
-                bModel.getFirstVisibleSentenceAddress()) + 1);
+        gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
         gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
         curationPanel.setOutputMarkupId(true);
         aTarget.add(gotoPageTextField);

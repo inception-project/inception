@@ -19,10 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -121,39 +117,32 @@ public class BratRenderer
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
-            ActionContext aBratAnnotatorModel)
+            ActionContext aAnnotatorState)
     {
-        // The first sentence in the display window!
-        Sentence firstSentence = selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
-                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
-
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
-        int sentenceNumber = getFirstSentenceNumber(aJcas, getAddr(firstSentence));
-        aResponse.setSentenceNumberOffset(sentenceNumber);
-
-        int aFirstSentenceOffset = firstSentence.getBegin();
+        int windowBegin = aAnnotatorState.getWindowBeginOffset();
+        int windowEnd = aAnnotatorState.getWindowEndOffset();
+        
+        aResponse.setSentenceNumberOffset(aAnnotatorState.getFirstVisibleSentenceNumber());
 
         // Render token + texts
-        for (AnnotationFS fs : selectCovered(aJcas, Token.class, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
+        for (AnnotationFS fs : selectCovered(aJcas, Token.class, windowBegin, windowEnd)) {
             // attache type such as POS adds non existing token element for ellipsis annotation
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
             }
-            aResponse.addToken(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
-                    - aFirstSentenceOffset);
+            aResponse.addToken(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin);
         }
-        aResponse.setText(aJcas.getDocumentText().substring(aFirstSentenceOffset,
-                lastSentenceInPage.getEnd()).replace("\n", " "));
+        
+        // Replace newline characters before sending to the client to avoid rendering glitches
+        // in the client-side brat rendering code
+        String visibleText = aJcas.getDocumentText().substring(windowBegin, windowEnd);
+        visibleText = visibleText.replace("\n", " ");
+        aResponse.setText(visibleText);
 
         // Render Sentence
-        for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
-            aResponse.addSentence(fs.getBegin() - aFirstSentenceOffset, fs.getEnd()
-                    - aFirstSentenceOffset);
+        for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, windowBegin, windowEnd)) {
+            aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd()
+                    - windowBegin);
         }
     }
     

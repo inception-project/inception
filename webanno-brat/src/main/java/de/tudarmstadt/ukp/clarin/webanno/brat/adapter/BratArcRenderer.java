@@ -18,9 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -49,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
@@ -84,16 +81,11 @@ public class BratArcRenderer
             GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
-        // The first sentence address in the display window!
-        Sentence firstSentence = selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
-                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
-
-        // the last sentence address in the display window
-        Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
-                getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());
-
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
+        
+        int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
+        int windowEnd = aBratAnnotatorModel.getWindowEndOffset();
+        
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
         Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
 
@@ -103,14 +95,13 @@ public class BratArcRenderer
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
 
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, firstSentence,
-                lastSentenceInPage, type, dependentFeature, governorFeature, arcSpanFeature);
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, windowBegin, windowEnd,
+                type, dependentFeature, governorFeature, arcSpanFeature);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
         List<Integer> yieldDeps = new ArrayList<>();
 
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
             if (typeAdapter.getAttachFeatureName() != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
@@ -207,16 +198,15 @@ public class BratArcRenderer
     /**
      * Get relation links to display in relation yield
      */
-    private Map<Integer, Set<Integer>> getRelationLinks(JCas aJcas, Sentence firstSentence,
-            Sentence lastSentenceInPage, Type type, Feature dependentFeature,
-            Feature governorFeature, Feature arcSpanFeature)
+    private Map<Integer, Set<Integer>> getRelationLinks(JCas aJcas, int aWindowBegin,
+            int aWindowEnd, Type type, Feature dependentFeature, Feature governorFeature,
+            Feature arcSpanFeature)
     {
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
 
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, firstSentence.getBegin(),
-                lastSentenceInPage.getEnd())) {
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, aWindowBegin, aWindowEnd)) {
             if (typeAdapter.getAttachFeatureName() != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
