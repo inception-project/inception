@@ -150,12 +150,6 @@ public class ActionContext
     private AnnotationPreference preferences = new AnnotationPreference();
 
     /**
-     * If the document is opened through the next/previous buttons on the annotation page, not with
-     * the open dialog method, used to change {@link #document}
-     */
-    private String documentName;
-
-    /**
      * The Mode of the current operations as either {@link Mode#ANNOTATION} or as
      * {@link Mode#CURATION}
      */
