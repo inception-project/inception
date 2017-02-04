@@ -94,11 +94,11 @@ public class ActionContext
     /**
      * The first sentence number in the display window
      */
-    private int fSN;
+    private int firstVisibleSentenceNumber;
     /**
      * The last sentence number in the display window
      */
-    private int lSN;
+    private int lastVisibleSentenceNumber;
 
     /**
      * Constraints object from rule file
@@ -270,8 +270,8 @@ public class ActionContext
 
         Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
                 getPreferences().getWindowSize());
-        this.fSN = BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin());
-        this.lSN = BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin());
+        this.firstVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas, aSentence.getBegin());
+        this.lastVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas, lastVisibleSentence.getBegin());
     }
 
     @Override
@@ -393,13 +393,13 @@ public class ActionContext
     }
 
     @Override
-    public int getSentenceBeginOffset()
+    public int getFirstVisibleSentenceBegin()
     {
         return sentenceBeginOffset;
     }
 
     @Override
-    public int getSentenceEndOffset()
+    public int getFirstVisibleSentenceEnd()
     {
         return sentenceEndOffset;
     }
@@ -419,13 +419,13 @@ public class ActionContext
     @Override
     public int getFirstVisibleSentenceNumber()
     {
-        return fSN;
+        return firstVisibleSentenceNumber;
     }
 
     @Override
     public int getLastVisibleSentenceNumber()
     {
-        return lSN;
+        return lastVisibleSentenceNumber;
     }
 
     @Override

@@ -125,8 +125,8 @@ public class BratRenderer
     {
         // The first sentence in the display window!
         Sentence firstSentence = selectSentenceAt(aJcas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset());
+                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
+                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
 
         Sentence lastSentenceInPage = getLastSentenceInDisplayWindow(aJcas,
                 getAddr(firstSentence), aBratAnnotatorModel.getPreferences().getWindowSize());

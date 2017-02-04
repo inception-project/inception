@@ -605,8 +605,8 @@ public class AnnotationDetailEditorPanel
 		            return;
 				}
 				if (adapter instanceof ArcAdapter) {
-					Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-							bModel.getSentenceEndOffset());
+					Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+							bModel.getFirstVisibleSentenceEnd());
 					int start = sentence.getBegin();
                     int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
                             bModel.getPreferences().getWindowSize()).getEnd();
@@ -731,7 +731,7 @@ public class AnnotationDetailEditorPanel
 		onAnnotate(aTarget, aBModel);
 
 		if (aBModel.isForwardAnnotation() && !aIsForwarded && featureModels.get(0).value != null) {
-			if (aBModel.getSelection().getEnd() >= aBModel.getSentenceEndOffset()) {
+			if (aBModel.getSelection().getEnd() >= aBModel.getFirstVisibleSentenceEnd()) {
 				autoScroll(jCas, aBModel, true);
 			}
 			onAutoForward(aTarget, aBModel);
@@ -885,8 +885,8 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(jCas, aBModel.getSelection().getTarget());
 
         TypeAdapter adapter = getAdapter(annotationService, aBModel.getSelectedAnnotationLayer());
-        Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
+        Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+                bModel.getFirstVisibleSentenceEnd());
         int start = sentence.getBegin();
         int end = getLastSentenceInDisplayWindow(jCas, getAddr(sentence),
                 bModel.getPreferences().getWindowSize()).getEnd();
@@ -974,8 +974,8 @@ public class AnnotationDetailEditorPanel
         }
         else {
             // Fetch the current sentence by offsets
-            Sentence sentence = selectSentenceAt(jCas, aBModel.getSentenceBeginOffset(),
-                    aBModel.getSentenceEndOffset());
+            Sentence sentence = selectSentenceAt(jCas, aBModel.getFirstVisibleSentenceBegin(),
+                    aBModel.getFirstVisibleSentenceEnd());
             // Calculate the first sentence in the window in such a way that the annotation
             // currently selected is in the center of the window
             sentence = findWindowStartCenteringOnSelection(jCas, sentence,

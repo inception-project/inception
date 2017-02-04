@@ -369,8 +369,8 @@ public class SuggestionBuilder
         throws UIMAException, ClassNotFoundException, IOException
     {
         Sentence firstSentence = selectSentenceAt(jCas,
-                aBratAnnotatorModel.getSentenceBeginOffset(),
-                aBratAnnotatorModel.getSentenceEndOffset());
+                aBratAnnotatorModel.getFirstVisibleSentenceBegin(),
+                aBratAnnotatorModel.getFirstVisibleSentenceEnd());
         Sentence lastSentence = getLastSentenceInDisplayWindow(jCas, getAddr(firstSentence),
                 aWinSize);
 

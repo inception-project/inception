@@ -320,7 +320,7 @@ public class BratAnnotator
     /**
      * Extract offset information from the current request. These are either offsets of an existing
      * selected annotations or offsets contained in the request for the creation of a new
-     * annotaiton.
+     * annotation.
      */
     private Offsets getOffsetsFromRequest(IRequestParameters request, JCas jCas, VID aVid)
         throws  IOException
@@ -331,7 +331,7 @@ public class BratAnnotator
             OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
                     .readValue(offsets, OffsetsList.class);
             Sentence sentence = BratAjaxCasUtil.selectSentenceAt(jCas, getModelObject()
-                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
+                    .getFirstVisibleSentenceBegin(), getModelObject().getFirstVisibleSentenceEnd());
 
             int annotationBegin = sentence.getBegin() + offsetLists.get(0).getBegin();
             int annotationEnd = sentence.getBegin()
@@ -518,7 +518,7 @@ public class BratAnnotator
         if (nextToken != null) {
             // The first sentence address in the display window!
             Sentence firstSentence = BratAjaxCasUtil.selectSentenceAt(aJCas, getModelObject()
-                    .getSentenceBeginOffset(), getModelObject().getSentenceEndOffset());
+                    .getFirstVisibleSentenceBegin(), getModelObject().getFirstVisibleSentenceEnd());
             Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(aJCas,
                     firstSentence.getAddress(), getModelObject().getPreferences().getWindowSize());
             if (ls.getEnd() > nextToken.getBegin()) {

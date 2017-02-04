@@ -515,8 +515,8 @@ public class CurationPanel
     {
         JCas jCas = repository.readCurationCas(bModel.getDocument());
 
-        final Sentence sentence = selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
+        final Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+                bModel.getFirstVisibleSentenceEnd());
         bModel.setFirstVisibleSentence(sentence);
 
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel
@@ -532,8 +532,8 @@ public class CurationPanel
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
 
         int ws = bModel.getPreferences().getWindowSize();
-        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset());
+        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+                bModel.getFirstVisibleSentenceEnd());
         Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());

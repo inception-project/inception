@@ -64,8 +64,8 @@ public interface AnnotatorState
     public void setFirstVisibleSentence(Sentence aSentence);
     
     public int getFirstVisibleSentenceAddress();
-    public int getSentenceBeginOffset();
-    public int getSentenceEndOffset();
+    public int getFirstVisibleSentenceBegin();
+    public int getFirstVisibleSentenceEnd();
 
     public int getFirstVisibleSentenceNumber();
     public int getLastVisibleSentenceNumber();

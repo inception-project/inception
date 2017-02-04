@@ -480,8 +480,8 @@ public class AutomationPage
                             	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
                             	
                                 int address = getAddr(selectSentenceAt(mergeJCas,
-                                        bModel.getSentenceBeginOffset(),
-                                        bModel.getSentenceEndOffset()));
+                                        bModel.getFirstVisibleSentenceBegin(),
+                                        bModel.getFirstVisibleSentenceEnd()));
                                 sentenceNumber = getFirstSentenceNumber(mergeJCas, address);
                                 int firstSentenceNumber = sentenceNumber + 1;
                                 int lastSentenceNumber;
@@ -928,7 +928,7 @@ public class AutomationPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
                         int address = getAddr(selectSentenceAt(mergeJCas,
-                                bModel.getSentenceBeginOffset(), bModel.getSentenceEndOffset()));
+                                bModel.getFirstVisibleSentenceBegin(), bModel.getFirstVisibleSentenceEnd()));
                         int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
                                 address, bModel.getPreferences().getWindowSize());
                         if (address != nextSentenceAddress) {
@@ -1034,7 +1034,7 @@ public class AutomationPage
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
 
                         int address = getAddr(selectSentenceAt(mergeJCas,
-                                bModel.getSentenceBeginOffset(), bModel.getSentenceEndOffset()));
+                                bModel.getFirstVisibleSentenceBegin(), bModel.getFirstVisibleSentenceEnd()));
                         int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
@@ -1289,8 +1289,8 @@ public class AutomationPage
     {
         JCas jCas = repository.readAnnotationCas(bModel.getDocument(), bModel.getUser());
 
-        final int sentenceAddress = getAddr(selectSentenceAt(jCas, bModel.getSentenceBeginOffset(),
-                bModel.getSentenceEndOffset()));
+        final int sentenceAddress = getAddr(selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+                bModel.getFirstVisibleSentenceEnd()));
 
         final Sentence sentence = selectByAddr(jCas, Sentence.class, sentenceAddress);
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel

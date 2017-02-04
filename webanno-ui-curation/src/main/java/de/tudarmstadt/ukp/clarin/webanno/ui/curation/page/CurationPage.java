@@ -767,7 +767,7 @@ public class CurationPage
                         mergeJCas = repository.readCurationCas(bModel.getDocument());
 
                         int address = getAddr(selectSentenceAt(mergeJCas,
-                                bModel.getSentenceBeginOffset(), bModel.getSentenceEndOffset()));
+                                bModel.getFirstVisibleSentenceBegin(), bModel.getFirstVisibleSentenceEnd()));
                         int firstAddress = getFirstSentenceAddress(mergeJCas);
 
                         if (firstAddress != address) {
