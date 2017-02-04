@@ -434,8 +434,8 @@ public class BratAjaxCasUtil
      *
      * @param aJcas
      *            the CAS object
-     * @param aSentenceAddress
-     *            the old sentence address
+     * @param aSentence
+     *            the old sentence
      * @param aFocosOffset
      *            the actual offset of the sentence.
      * @param aProject
