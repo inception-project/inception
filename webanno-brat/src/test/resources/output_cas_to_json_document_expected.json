@@ -12,7 +12,7 @@
   "equivs" : [ ],
   "comments" : [ ],
   "rtl_mode" : false,
-  "sentence_number_offset" : 0,
+  "sentence_number_offset" : 1,
   "source_files" : [ ],
   "token_offsets" : [ [ 0, 5 ], [ 6, 12 ], [ 13, 17 ], [ 18, 21 ], [ 22, 26 ], [ 27, 28 ], [ 29, 32 ], [ 33, 37 ], [ 38, 42 ], [ 43, 49 ], [ 50, 56 ], [ 57, 58 ] ],
   "sentence_offsets" : [ [ 0, 28 ], [ 29, 58 ] ]
