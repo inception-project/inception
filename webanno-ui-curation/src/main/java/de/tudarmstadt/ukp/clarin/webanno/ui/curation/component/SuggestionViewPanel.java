@@ -255,9 +255,9 @@ public class SuggestionViewPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(clickedJCas, aBModel.getFirstVisibleSentenceBegin(),
+            Sentence sentence = selectSentenceAt(aMergeJCas, aBModel.getFirstVisibleSentenceBegin(),
                     aBModel.getFirstVisibleSentenceEnd());
-            sentence = findWindowStartCenteringOnSelection(clickedJCas, sentence,
+            sentence = findWindowStartCenteringOnSelection(aMergeJCas, sentence,
                     fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
                     aBModel.getPreferences().getWindowSize());
             aBModel.setFirstVisibleSentence(sentence);
@@ -322,9 +322,9 @@ public class SuggestionViewPanel
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(clickedJCas, bModel.getFirstVisibleSentenceBegin(),
+            Sentence sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleSentenceBegin(),
                     bModel.getFirstVisibleSentenceEnd());
-            sentence = findWindowStartCenteringOnSelection(clickedJCas, sentence,
+            sentence = findWindowStartCenteringOnSelection(aJcas, sentence,
                     clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
                     bModel.getPreferences().getWindowSize());
             bModel.setFirstVisibleSentence(sentence);
