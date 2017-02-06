@@ -410,8 +410,6 @@ public class AutomationPage
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    // info(bratAnnotatorModel.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
                     bModel = aBratAnnotatorModel;
                     SuggestionBuilder builder = new SuggestionBuilder(repository,
                             annotationService, userRepository);
