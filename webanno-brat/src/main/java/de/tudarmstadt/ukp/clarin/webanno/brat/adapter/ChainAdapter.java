@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -377,7 +378,7 @@ public class ChainAdapter
     }
 
     @Override
-    public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
+    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
     {
         return new ArrayList<String>();
     }

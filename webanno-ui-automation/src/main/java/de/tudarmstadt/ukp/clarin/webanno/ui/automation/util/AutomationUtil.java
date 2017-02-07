@@ -117,10 +117,7 @@ public class AutomationUtil
             loadDocument(d, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
 
-            int beginOffset = 0;
-
-            int endOffset = jCas.getDocumentText().length()-1;
-            for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
+            for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
                 for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(),
                         i)) != -1; i = i + selectedText.length()) {
@@ -183,8 +180,7 @@ public class AutomationUtil
             }
             else {
                 for (Sentence sent : select(jCas, Sentence.class)) {
-                    List<AnnotationFS> spanAnnos = selectCovered(jCas.getCas(),
-                            governorFs.getType(), sent.getBegin(), sent.getEnd());
+                    List<AnnotationFS> spanAnnos = selectCovered(governorFs.getType(), sent);
                     repeatRelation(sent.getBegin(), sent.getEnd(), aFeature, aValue, jCas, adapter, dependentFs,
                             governorFs, spanAnnos);
                 }
@@ -335,14 +331,10 @@ public class AutomationUtil
             loadDocument(d, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
 
-            int beginOffset = 0;
-
-            int endOffset = jCas.getDocumentText().length() - 1;
-
             AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
                     aFeature.getLayer());
 
-            for (Sentence sentence : selectCovered(jCas, Sentence.class, beginOffset, endOffset)) {
+            for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
                 for (int i = -1; (i = sentenceText.indexOf(selectedText.toLowerCase(),
                         i)) != -1; i = i + selectedText.length()) {
@@ -489,8 +481,7 @@ public class AutomationUtil
                                     .getMultipleAnnotation(sentence, aFeature).values());
                         }
                         else {
-                            annotations.addAll(adapter.getAnnotation(sentence.getCAS().getJCas(),
-                                    aFeature, sentence.getBegin(), sentence.getEnd()));
+                            annotations.addAll(adapter.getAnnotation(sentence, aFeature));
                         }
 
                     }
@@ -508,8 +499,7 @@ public class AutomationUtil
                             .getMultipleAnnotation(sentence, aFeature).values());
                 }
                 else {
-                    annotations.addAll(adapter.getAnnotation(sentence.getCAS().getJCas(), aFeature,
-                            sentence.getBegin(), sentence.getEnd()));
+                    annotations.addAll(adapter.getAnnotation(sentence, aFeature));
                 }
             }
             aPredictions.add(annotations);
@@ -576,6 +566,8 @@ public class AutomationUtil
             UserDao aUserDao, boolean aBase)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
+        LOG.info("Starting to generate training document");
+        
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
         if (!miraDir.exists()) {
             FileUtils.forceMkdir(miraDir);
@@ -640,7 +632,9 @@ public class AutomationUtil
         AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
                 aAnnotationService, feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
-        for (SourceDocument sourceDocument : aRepository.listSourceDocuments(feature.getProject())) {
+        List<SourceDocument> sourceDocs = aRepository.listSourceDocuments(feature.getProject());
+        int sourceDocsCounter = 0;
+        for (SourceDocument sourceDocument : sourceDocs) {
             if ((sourceDocument.isTrainingDocument() && sourceDocument.getFeature() != null && sourceDocument
                     .getFeature().equals(feature))) {
                 JCas jCas = aRepository.readAnnotationCas(sourceDocument, user);
@@ -672,9 +666,14 @@ public class AutomationUtil
                     status.setTrainDocs(status.getTrainDocs() - 1);
                 }
             }
+            sourceDocsCounter++;
+            LOG.info("Processed source document " + sourceDocsCounter + " of " + sourceDocs.size());
         }
         // Tab-sep documents to be used as a target layer train document
-        for (SourceDocument document : aAutomationService.listTabSepDocuments(feature.getProject())) {
+        int goldStandardDocsCounter = 0;
+        List<SourceDocument> goldStandardDocs = aAutomationService
+                .listTabSepDocuments(feature.getProject());
+        for (SourceDocument document : goldStandardDocs) {
             if (document.getFormat().equals(WebAnnoConst.TAB_SEP) && document.getFeature() != null
                     && document.getFeature().equals(feature)) {
                 File tabSepFile = new File(aRepository.getDocumentFolder(document),
@@ -700,8 +699,13 @@ public class AutomationUtil
                     }
                 }
             }
+            goldStandardDocsCounter++;
+            LOG.info("Processed gold standard document " + goldStandardDocsCounter + " of "
+                    + goldStandardDocs.size());
         }
         trainOut.close();
+        
+        LOG.info("Completed generating training document");
     }
 
     public static void generatePredictDocument(MiraTemplate aTemplate,
@@ -763,15 +767,13 @@ public class AutomationUtil
                 multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(sentence, aLayerFeature);
             }
             else {
-                annotations = aAdapter.getAnnotation(sentence.getCAS().getJCas(), aLayerFeature,
-                        sentence.getBegin(), sentence.getEnd());
+                annotations = aAdapter.getAnnotation(sentence, aLayerFeature);
             }
 
         }
 
         int i = 0;
-        for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
-                sentence.getBegin(), sentence.getEnd())) {
+        for (Token token : selectCovered(Token.class, sentence)) {
             String word = token.getCoveredText();
 
             char[] words = word.toCharArray();

@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
@@ -302,7 +304,7 @@ public class ArcAdapter
     }
 
     @Override
-    public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
+    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
     {
         return new ArrayList<String>();
     }

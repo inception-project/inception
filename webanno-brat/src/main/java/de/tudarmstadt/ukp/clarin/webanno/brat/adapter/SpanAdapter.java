@@ -420,15 +420,17 @@ public class SpanAdapter
     }
 
     @Override
-    public List<String> getAnnotation(JCas aJcas, AnnotationFeature aFeature, int begin, int end)
+    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
     {
-        Type type = getType(aJcas.getCas(), getAnnotationTypeName());
+        CAS cas = aSentence.getCAS();
+        
+        Type type = getType(cas, getAnnotationTypeName());
         List<String> annotations = new ArrayList<String>();
 
-        for (Token token : selectCovered(aJcas, Token.class, begin, end)) {
-            if (selectCovered(aJcas.getCas(), type, token.getBegin(), token.getEnd()).size() > 0) {
-                AnnotationFS anno = selectCovered(aJcas.getCas(), type, token.getBegin(),
-                        token.getEnd()).get(0);
+        for (Token token : selectCovered(Token.class, aSentence)) {
+            List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
+            if (tokenLevelAnnotations.size() > 0) {
+                AnnotationFS anno = tokenLevelAnnotations.get(0);
                 Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
                 annotations.add(anno.getFeatureValueAsString(labelFeature));
             }
@@ -444,12 +446,10 @@ public class SpanAdapter
     {
         Map<Integer, String> multAnno = new HashMap<Integer, String>();
         Type type = getType(sentence.getCAS(), getAnnotationTypeName());
-        for (AnnotationFS fs : selectCovered(sentence.getCAS(), type, sentence.getBegin(),
-                sentence.getEnd())) {
+        for (AnnotationFS fs : selectCovered(type, sentence)) {
             boolean isBegin = true;
             Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
-            for (Token token : selectCovered(sentence.getCAS().getJCas(), Token.class,
-                    fs.getBegin(), fs.getEnd())) {
+            for (Token token : selectCovered(Token.class, fs)) {
                 if (multAnno.get(getAddr(token)) == null) {
                     if (isBegin) {
                         multAnno.put(getAddr(token),
