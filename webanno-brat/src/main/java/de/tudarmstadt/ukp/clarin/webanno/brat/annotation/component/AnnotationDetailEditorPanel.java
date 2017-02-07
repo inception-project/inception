@@ -112,6 +112,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -538,6 +539,94 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
+            String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
+        throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
+    {
+        assert jCas != null;
+        Selection selection = bModel.getSelection();
+
+        selection.setRelationAnno(true);
+        selection.setAnnotation(paramId);
+        selection.setOriginType(aOriginType);
+        selection.setOrigin(aOriginSpanId);
+        selection.setTargetType(aTargetType);
+        selection.setTarget(aTargetSpanId);
+        selection.setAnnotate(selection.getAnnotation().isNotSet());
+        
+        refresh(aTarget);
+        
+        if (selection.getAnnotation().isNotSet()) {
+            actionAnnotate(aTarget, bModel, false);
+        }
+        else {
+            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                    targetFs.getCoveredText() + "]");
+            
+            // Ensure we re-render and update the highlight
+            onChange(aTarget, bModel);
+        }
+    }
+    
+    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
+            Offsets offsets, VID paramId)
+        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    {
+        assert jCas != null;                        
+        if (bModel.isSlotArmed()) {
+            if (paramId.isSet()) {
+                // Fill slot with existing annotation
+                setSlot(aTarget, jCas, bModel, paramId.getId());
+            }
+            else if (!CAS.TYPE_NAME_ANNOTATION
+                    .equals(bModel.getArmedFeature().getType())) {
+                // Fill slot with new annotation (only works if a concrete type is
+                // set for the link feature!
+                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
+                        annotationService.getLayer(bModel.getArmedFeature().getType(),
+                                bModel.getProject()));
+
+                try {
+                    int id = adapter.add(jCas, offsets.getBegin(), offsets.getEnd(), null, null);
+                    setSlot(aTarget, jCas, bModel, id);
+                }
+                catch (BratAnnotationException e) {
+                    error(ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+                }
+            }
+            else {
+              throw new BratAnnotationException("Unable to create annotation of type ["+
+                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
+            }
+        }
+        else {
+            // Doing anything but filling an armed slot will unarm it
+            clearArmedSlotModel();
+            bModel.clearArmedSlot();
+
+            Selection selection = bModel.getSelection();
+
+            selection.setRelationAnno(false);
+
+            selection.setAnnotation(paramId);
+            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
+            refresh(aTarget);
+            
+            if (selection.getAnnotation().isNotSet()) {
+                selection.setAnnotate(true);
+                actionAnnotate(aTarget, bModel, false);
+            }
+            else {
+                selection.setAnnotate(false);
+                // Ensure we re-render and update the highlight
+                onChange(aTarget, bModel);
+            }
+        }
+    }
+    
     public void actionAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
     {
@@ -1202,6 +1291,16 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    public IModel<ActionContext> getModel()
+    {
+        return (IModel<ActionContext>) getDefaultModel();
+    }
+    
+    public ActionContext getModelObject()
+    {
+        return (ActionContext) getDefaultModelObject();
+    }
+    
     public class FeatureEditorPanelContent
         extends RefreshingView<FeatureModel>
     {

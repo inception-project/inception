@@ -1170,13 +1170,9 @@ public class AutomationPage
         }
         response.render(OnLoadHeaderItem.forScript(jQueryString));
         if (bModel.getProject() != null) {
-
-            annotator.setModelObject(bModel);
             annotator.setCollection("#" + bModel.getProject().getName() + "/");
             annotator.bratInitRenderLater(response);
-
         }
-
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)

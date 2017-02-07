@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-
 import java.io.IOException;
 import java.util.Locale;
 
@@ -27,7 +24,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -52,7 +48,6 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
@@ -111,30 +106,32 @@ public class BratAnnotator
     private String collection = "";
     private AnnotationDetailEditorPanel detailPanel;
 
-    /**
-     * Data models for {@link BratAnnotator}
-     *
-     * @param aModel
-     *            the model.
-     */
-    public void setModel(IModel<ActionContext> aModel)
-    {
-        setDefaultModel(aModel);
-    }
+//    /**
+//     * Data models for {@link BratAnnotator}
+//     *
+//     * @param aModel
+//     *            the model.
+//     */
+//    public void setModel(IModel<ActionContext> aModel)
+//    {
+//        setDefaultModel(aModel);
+//    }
+//
+//    public void setModelObject(ActionContext aModel)
+//    {
+//        setDefaultModelObject(aModel);
+//    }
 
-    public void setModelObject(ActionContext aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
+    @Deprecated
     public IModel<ActionContext> getModel()
     {
-        return (IModel<ActionContext>) getDefaultModel();
+        return detailPanel.getModel();
     }
 
+    @Deprecated
     public ActionContext getModelObject()
     {
-        return (ActionContext) getDefaultModelObject();
+        return detailPanel.getModelObject();
     }
 
     public BratAnnotator(String id, IModel<ActionContext> aModel,
@@ -239,10 +236,18 @@ public class BratAnnotator
                                 SecurityContextHolder.getContext().getAuthentication().getName());
                     }
                     else if (SpanAnnotationResponse.is(action)) {
-                        result = actionSpanAnnotation(aTarget, jCas, request, paramId);
+                        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                        detailPanel.actionSpanAnnotation(aTarget, jCas, offsets, paramId);
+                        result = new SpanAnnotationResponse();
                     }
                     else if (ArcAnnotationResponse.is(action)) {
-                        result = actionArcAnnotation(aTarget, jCas, request, paramId);
+                        String originType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
+                        int originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
+                        String targetType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
+                        int targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt();
+                        detailPanel.actionArcAnnotation(aTarget, jCas, paramId, originType,
+                                originSpanId, targetType, targetSpanId);
+                        result = new ArcAnnotationResponse();
                     }
                     else if (LoadConfResponse.is(action)) {
                         result = new LoadConfResponse();
@@ -286,6 +291,8 @@ public class BratAnnotator
                             + json + ";");
                 }
                 
+                // If we created a new annotation, then refresh the available annotation layers
+                // in the detail panel.
                 if (getModelObject().getSelection().getAnnotation().isNotSet()) {
                     detailPanel.refreshAnnotationLayers(getModelObject());
                 }
@@ -307,7 +314,8 @@ public class BratAnnotator
         throws  IOException
     {
         if (aVid.isNotSet()) {
-            // Create new span annotation
+            // Create new span annotation - in this case we get the offset information from the
+            // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
             OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
                     .readValue(offsets, OffsetsList.class);
@@ -319,7 +327,8 @@ public class BratAnnotator
             return new Offsets(annotationBegin, annotationEnd);
         }
         else {
-            // Edit existing span annotation
+            // Edit existing span annotation - in this case we look up the offsets in the CAS
+            // Let's not trust the client in this case.
             AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, aVid.getId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
@@ -576,115 +585,5 @@ public class BratAnnotator
         else {
             return repository.readCurationCas(aBratAnnotatorModel.getDocument());
         }
-    }
-    
-    private Object actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
-            IRequestParameters request, VID paramId)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
-    {
-        assert jCas != null;                        
-        if (getModelObject().isSlotArmed()) {
-            if (paramId.isSet()) {
-                // Fill slot with existing annotation
-                detailPanel.setSlot(aTarget, jCas,
-                        getModelObject(), paramId.getId());
-            }
-            else if (!CAS.TYPE_NAME_ANNOTATION.equals(getModelObject()
-                    .getArmedFeature().getType())) {
-                // Fill slot with new annotation (only works if a concrete type is
-                // set for the link feature!
-                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
-                        annotationService.getLayer(getModelObject()
-                                .getArmedFeature().getType(), getModelObject()
-                                .getProject()));
-
-                Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-
-                try {
-                    int id = adapter.add(jCas, offsets.getBegin(),
-                            offsets.getEnd(), null, null);
-                    detailPanel.setSlot(aTarget, jCas,
-                            getModelObject(), id);
-                }
-                catch (BratAnnotationException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                    LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
-                }
-            }
-            else {
-              throw new BratAnnotationException("Unable to create annotation of type ["+
-                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
-            }
-            return null;
-        }
-        else {
-            /*if (paramId.isSet()) {
-                getModelObject().setForwardAnnotation(false);
-            }*/
-            // Doing anything but filling an armed slot will unarm it
-            detailPanel.clearArmedSlotModel();
-            getModelObject().clearArmedSlot();
-
-            Selection selection = getModelObject().getSelection();
-
-            selection.setRelationAnno(false);
-
-            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-
-            selection.setAnnotation(paramId);
-            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
-            bratSetHighlight(aTarget, selection.getAnnotation());
-            detailPanel.refresh(aTarget);
-            
-            if (selection.getAnnotation().isNotSet()) {
-                selection.setAnnotate(true);
-                detailPanel.actionAnnotate(aTarget,
-                        getModelObject(), false);
-                return null;
-            }
-            else {
-                selection.setAnnotate(false);
-                bratRender(aTarget, jCas);
-                return new SpanAnnotationResponse();
-            }
-        }
-    }
-    
-    private Object actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas,
-            IRequestParameters request, VID paramId)
-        throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
-    {
-        assert jCas != null;
-        Selection selection = getModelObject().getSelection();
-
-        selection.setRelationAnno(true);
-        selection.setAnnotation(paramId);
-        selection.setOriginType(request.getParameterValue(PARAM_ORIGIN_TYPE)
-                .toString());
-        selection.setOrigin(request.getParameterValue(PARAM_ORIGIN_SPAN_ID)
-                .toInteger());
-        selection.setTargetType(request.getParameterValue(PARAM_TARGET_TYPE)
-                .toString());
-        selection.setTarget(request.getParameterValue(PARAM_TARGET_SPAN_ID)
-                .toInteger());
-        selection.setAnnotate(getModelObject().getSelection().getAnnotation().isNotSet());
-        
-        bratSetHighlight(aTarget, getModelObject().getSelection()
-                .getAnnotation());
-        detailPanel.refresh(aTarget);
-        if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-            detailPanel.actionAnnotate(aTarget, getModelObject(), false);
-            return null;
-        }
-        else {
-            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-                    targetFs.getCoveredText() + "]");
-            
-            bratRender(aTarget, jCas);
-            return new ArcAnnotationResponse();
-        }
-    }
-
+    }    
 }
