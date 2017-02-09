@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
@@ -26,12 +27,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -41,6 +40,7 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,11 +64,7 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -90,14 +86,11 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
-import org.codehaus.plexus.util.StringUtils;
 
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import com.googlecode.wicket.kendo.ui.form.TextField;
-import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
@@ -112,8 +105,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
@@ -131,6 +124,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -806,7 +800,7 @@ public class AnnotationDetailEditorPanel
 
 		aBModel.getSelection().setAnnotate(true);
 		if (aBModel.getSelection().getAnnotation().isSet()) {
-			String bratLabelText = TypeUtil.getBratLabelText(adapter,
+			String bratLabelText = TypeUtil.getUiLabelText(adapter,
 					selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId()), features);
 			info(generateMessage(aBModel.getSelectedAnnotationLayer(), bratLabelText, false));
 		}
@@ -2760,85 +2754,5 @@ public class AnnotationDetailEditorPanel
             msg += " Label: [" + aLabel + "]";
         }
         return msg;
-    }
-
-    class StyledComboBox<T>
-        extends ComboBox<T>
-    {
-        private static final long serialVersionUID = 1L;
-        
-        public StyledComboBox(String id, IModel<String> model, List<T> choices)
-        {
-            super(id, model, choices);            
-        }
-
-        public StyledComboBox(String string, List<T> choices)
-        {
-            super(string, choices);
-        }
-
-        @Override
-        protected void onInitialize()
-        {
-            super.onInitialize();
-            
-            add(new Behavior() {
-                private static final long serialVersionUID = -5674186692106167407L;
-                
-                @Override
-                public void renderHead(Component aComponent, IHeaderResponse aResponse)
-                {
-                    super.renderHead(aComponent, aResponse);
-                    
-                    // Force-remove KendoDataSource header item if there already is one. This allows
-                    // Wicket to re-declare the datasource for the callback URL of the new instance
-                    // of this feature editor.
-                    // This causes all the choices to be transferred again, but at least tags added
-                    // to open tagsets appear immediately in the dropdown list and constraints
-                    // apply (hopefully).
-                    // Note: this must be done here instead of before the call to super such that
-                    // first the old datasource declarations are removed and then the new one is
-                    // added and remains in the HTML. Here we rely on the fact that the feature
-                    // editors have a fixed markup ID (which we also rely on for restoring focus).
-                    aResponse.render(new PriorityHeaderItem(JavaScriptHeaderItem.forScript(
-                            "$('head script[id=kendo-datasource_" +
-                            StyledComboBox.this.getMarkupId() + "]').remove();", 
-                            null)));
-                }
-            });
-        }
-        
-        @Override
-        protected IJQueryTemplate newTemplate()
-        {
-            return new IJQueryTemplate()
-            {
-                private static final long serialVersionUID = 1L;
-                /**
-                 * Marks the reordered entries in bold.
-                 * Same as text feature editor.
-                 */
-                @Override
-                public String getText()
-                {
-                    // Some docs on how the templates work in Kendo, in case we need
-                    // more fancy dropdowns
-                    // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("# if (data.reordered == 'true') { #");
-                    sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
-                    sb.append("# } else { #");
-                    sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
-                    sb.append("# } #");
-                    return sb.toString();
-                }
-
-                @Override
-                public List<String> getTextProperties()
-                {
-                    return Arrays.asList("name", "description", "reordered");
-                }
-            };
-        }
     }
 }

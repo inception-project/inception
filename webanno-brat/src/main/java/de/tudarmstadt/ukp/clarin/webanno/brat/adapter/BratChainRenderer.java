@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
@@ -131,11 +132,11 @@ public class BratChainRenderer
                     continue; // Go to next link
                 }
 
-                String bratTypeName = TypeUtil.getBratTypeName(typeAdapter);
+                String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
                 // Render span
                 {
-                    String bratLabelText = TypeUtil.getBratLabelText(typeAdapter, linkFs,
+                    String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature)
                                     : Collections.EMPTY_LIST);
                     Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin,
@@ -152,12 +153,12 @@ public class BratChainRenderer
 
                     if (typeAdapter.isLinkedListBehavior() && arcLabelFeature != null) {
                         // Render arc label
-                        bratLabelText = TypeUtil.getBratLabelText(typeAdapter, prevLinkFs,
+                        bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
                                 asList(arcLabelFeature));
                     }
                     else {
                         // Render only chain type
-                        bratLabelText = TypeUtil.getBratLabelText(typeAdapter, prevLinkFs,
+                        bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
                                 Collections.EMPTY_LIST);
                     }
 

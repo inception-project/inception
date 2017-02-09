@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
@@ -88,8 +89,8 @@ public class BratSpanRenderer
                 windowEnd);
         
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
-            String bratTypeName = TypeUtil.getBratTypeName(typeAdapter);
-            String bratLabelText = TypeUtil.getBratLabelText(typeAdapter, fs, aFeatures);
+            String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
+            String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, fs, aFeatures);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
 
             Sentence beginSent = null;

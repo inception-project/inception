@@ -43,6 +43,7 @@ import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
@@ -112,8 +113,8 @@ public class BratArcRenderer
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
-            String bratLabelText = TypeUtil.getBratLabelText(typeAdapter, fs, aFeatures);
-            String bratTypeName = TypeUtil.getBratTypeName(typeAdapter);
+            String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, fs, aFeatures);
+            String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             String color = aColoringStrategy.getColor(fs, bratLabelText);
             
             if (dependentFs == null || governorFs == null) {

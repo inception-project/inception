@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -40,11 +40,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratArcRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratChainRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratSpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
@@ -245,7 +245,7 @@ public class BratRenderer
     private static RelationType configureRelationType(AnnotationLayer aLayer,
             AnnotationLayer aAttachingLayer)
     {
-        String attachingLayerBratTypeName = TypeUtil.getBratTypeName(aAttachingLayer);
+        String attachingLayerBratTypeName = TypeUtil.getUiTypeName(aAttachingLayer);
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
@@ -281,7 +281,7 @@ public class BratRenderer
 
     private static String getBratTypeName(AnnotationLayer aLayer)
     {
-        String bratTypeName = TypeUtil.getBratTypeName(aLayer);
+        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
 
         // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
         // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also

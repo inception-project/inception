@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import java.util.List;
 
@@ -115,7 +115,7 @@ public final class TypeUtil
      * @param aFeatures the features.
      * @return the label.
      */
-    public static String getBratLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
+    public static String getUiLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
         StringBuilder bratLabelText = new StringBuilder();
@@ -155,12 +155,12 @@ public final class TypeUtil
         return Long.parseLong(aBratTypeName.substring(0, aBratTypeName.indexOf("_")));
     }
 
-    public static String getBratTypeName(TypeAdapter aAdapter)
+    public static String getUiTypeName(TypeAdapter aAdapter)
     {
         return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
     }
 
-    public static String getBratTypeName(AnnotationLayer aLayer)
+    public static String getUiTypeName(AnnotationLayer aLayer)
     {
         return aLayer.getId() + "_" + aLayer.getName();
     }
