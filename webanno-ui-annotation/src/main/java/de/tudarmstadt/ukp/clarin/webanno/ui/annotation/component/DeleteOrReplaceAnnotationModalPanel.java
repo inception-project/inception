@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
