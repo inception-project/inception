@@ -37,8 +37,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -90,7 +90,7 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NN");
         mergeCAs.addFsToIndexes(existingFs);
 
-        exception.expect(BratAnnotationException.class);
+        exception.expect(AnnotationException.class);
         MergeCas.addSpanAnnotation(mergeCAs, clickedFs, false);
     }
 
@@ -190,7 +190,7 @@ public class CopyAnnotationTest
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
-        BratAjaxCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
+        WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
@@ -231,7 +231,7 @@ public class CopyAnnotationTest
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
-        BratAjaxCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
+        WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
@@ -372,7 +372,7 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(originToken2);
         mergeCAs.addFsToIndexes(targetToken2);
 
-        exception.expect(BratAnnotationException.class);
+        exception.expect(AnnotationException.class);
         MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false,  originToken, targetToken);
 
     }
@@ -431,7 +431,7 @@ public class CopyAnnotationTest
         existing.setFeatureValue(targetFeature, targetToken);
         mergeCAs.addFsToIndexes(clickedFs);
 
-        exception.expect(BratAnnotationException.class);
+        exception.expect(AnnotationException.class);
         MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false,  originToken, targetToken);
     }
     @Rule public final ExpectedException exception = ExpectedException.none();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2015
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,14 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-/**
- * Covers information relevant to a single request cycle.
- */
-public interface TransientActionContext
+import java.util.List;
+
+import org.apache.uima.jcas.JCas;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+
+public interface AutomationTypeAdapter
 {
-    String getUserAction();
-    void setUserAction(String aUserAction);
-    void clearUserAction();
+    List<String> getAnnotation(Sentence aSentence, AnnotationFeature feature);
+
+    // delete based on the begin,end, and type of annotation
+    void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue);
 }

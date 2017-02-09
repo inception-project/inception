@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
@@ -782,7 +782,7 @@ public class ProjectMiraTemplatePanel
                         automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     catch (AutomationException e) {

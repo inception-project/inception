@@ -1,5 +1,5 @@
 /*
- * Copyright 2015
+ * Copyright 2013
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,19 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-import java.util.List;
-
-import org.apache.uima.jcas.JCas;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-
-public interface AutomationTypeAdapter
+/**
+ * throw an exception if the a span annotation is not in the same sentence
+ */
+public class AnnotationException
+    extends Exception
 {
-    List<String> getAnnotation(Sentence aSentence, AnnotationFeature feature);
+    private static final long serialVersionUID = 1280015349963924638L;
 
-    // delete based on the begin,end, and type of annotation
-    void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue);
+    public AnnotationException(String message)
+    {
+        super(message);
+    }
+
+    public AnnotationException()
+    {
+        super();
+    }
+
+    public AnnotationException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public AnnotationException(Throwable aCause)
+    {
+        super(aCause);
+    }
 }

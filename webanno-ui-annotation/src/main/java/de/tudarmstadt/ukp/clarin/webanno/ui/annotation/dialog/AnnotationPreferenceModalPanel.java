@@ -41,10 +41,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -73,7 +73,7 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> sidebarSizeField;
     private NumberTextField<Integer> fontSizeField;
 
-    private final ActionContext bModel;
+    private final AnnotatorStateImpl bModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
@@ -200,7 +200,7 @@ public class AnnotationPreferenceModalPanel
                     }
                     catch (IOException e) {
                         error("Preference file not found");
-                    } catch (BratAnnotationException e) {
+                    } catch (AnnotationException e) {
                     	error("Preference file not found");
 					}
                     modalWindow.close(aTarget);                   
@@ -250,7 +250,7 @@ public class AnnotationPreferenceModalPanel
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            ActionContext aBModel, AnnotationDetailEditorPanel aEditor)
+            AnnotatorStateImpl aBModel, AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
         this.bModel = aBModel;

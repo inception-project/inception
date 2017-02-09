@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.Serializable;
@@ -37,9 +37,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.MultipleSentenceCoveredException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -104,9 +104,9 @@ public class ChainAdapter
             AnnotationFeature aFeature, String aLabelValue)
         throws MultipleSentenceCoveredException
     {
-        List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJCas, Token.class, aBegin, aEnd);
+        List<Token> tokens = WebAnnoCasUtil.selectOverlapping(aJCas, Token.class, aBegin, aEnd);
 
-        if (!BratAjaxCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
+        if (!WebAnnoCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
             throw new MultipleSentenceCoveredException(
                     "Annotation coveres multiple sentences, "
                             + "limit your annotation to single sentence!");
@@ -122,7 +122,7 @@ public class ChainAdapter
         // The added link is a new chain on its own - add the chain head FS
         newChain(aJCas, newLink);
 
-        return BratAjaxCasUtil.getAddr(newLink);
+        return WebAnnoCasUtil.getAddr(newLink);
     }
 
     // get feature Value of existing span annotation
@@ -150,11 +150,11 @@ public class ChainAdapter
         AnnotationFS targetNext = getNextLink(aTargetFs);
 
         // adjacent - origin links to target
-        if (BratAjaxCasUtil.isSame(originNext, aTargetFs)) {
-            BratAjaxCasUtil.setFeature(aOriginFs, aFeature, aValue);
+        if (WebAnnoCasUtil.isSame(originNext, aTargetFs)) {
+            WebAnnoCasUtil.setFeature(aOriginFs, aFeature, aValue);
         }
         // adjacent - target links to origin
-        else if (BratAjaxCasUtil.isSame(targetNext, aOriginFs)) {
+        else if (WebAnnoCasUtil.isSame(targetNext, aOriginFs)) {
             if (linkedListBehavior) {
                 throw new IllegalStateException("Cannot change direction of a link within a chain");
 //              BratAjaxCasUtil.setFeature(aTargetFs, aFeature, aValue);
@@ -170,7 +170,7 @@ public class ChainAdapter
 
             AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
 
-            if (!BratAjaxCasUtil.isSame(originChain, targetChain)) {
+            if (!WebAnnoCasUtil.isSame(originChain, targetChain)) {
                 if (linkedListBehavior) {
                     // if the two links are in different chains then split the chains up at the
                     // origin point and target point and create a new link betweek origin and target
@@ -196,7 +196,7 @@ public class ChainAdapter
 
                     // connect the rest of the target chain to the origin chain
                     setNextLink(aOriginFs, aTargetFs);
-                    BratAjaxCasUtil.setFeature(aOriginFs, aFeature, aValue);
+                    WebAnnoCasUtil.setFeature(aOriginFs, aFeature, aValue);
                 }
                 else {
                   // collect all the links
@@ -239,7 +239,7 @@ public class ChainAdapter
         }
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
-        return BratAjaxCasUtil.getAddr(aOriginFs);
+        return WebAnnoCasUtil.getAddr(aOriginFs);
     }
 
     @Override
@@ -255,7 +255,7 @@ public class ChainAdapter
 
     private void deleteArc(JCas aJCas, int aAddress)
     {
-        AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
+        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
 
         // Create the tail chain
@@ -270,7 +270,7 @@ public class ChainAdapter
     {
         Type chainType = getAnnotationType(aJCas.getCas());
 
-        AnnotationFS linkToDelete = BratAjaxCasUtil.selectByAddr(aJCas, AnnotationFS.class,
+        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
 
         // case 1 "removing first link": we keep the existing chain head and just remove the
@@ -292,7 +292,7 @@ public class ChainAdapter
 
             // Now we seek the link within the current chain
             while (linkFs != null) {
-                if (BratAjaxCasUtil.isSame(linkFs, linkToDelete)) {
+                if (WebAnnoCasUtil.isSame(linkFs, linkToDelete)) {
                     oldChainFs = chainFs;
                     break chainLoop;
                 }
@@ -399,8 +399,8 @@ public class ChainAdapter
     @Override
     public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
-        FeatureStructure fs = BratAjaxCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        BratAjaxCasUtil.setFeature(fs, aFeature, aValue);
+        FeatureStructure fs = WebAnnoCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        WebAnnoCasUtil.setFeature(fs, aFeature, aValue);
     }
 
     /**
@@ -419,7 +419,7 @@ public class ChainAdapter
 
             // Now we seek the link within the current chain
             while (linkFs != null) {
-                if (BratAjaxCasUtil.isSame(linkFs, aLink)) {
+                if (WebAnnoCasUtil.isSame(linkFs, aLink)) {
                     return chainFs;
                 }
                 linkFs = getNextLink(linkFs);
@@ -486,7 +486,7 @@ public class ChainAdapter
         String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
         Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
         AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, aBegin, aEnd);
-        BratAjaxCasUtil.setFeature(newLink, aFeature, aLabelValue);
+        WebAnnoCasUtil.setFeature(newLink, aFeature, aLabelValue);
         aJCas.getCas().addFsToIndexes(newLink);
         return newLink;
     }
@@ -524,7 +524,7 @@ public class ChainAdapter
         AnnotationFS prevLink = null;
         AnnotationFS curLink = getFirstLink(aChain);
         while (curLink != null) {
-            if (BratAjaxCasUtil.isSame(curLink, aLink)) {
+            if (WebAnnoCasUtil.isSame(curLink, aLink)) {
                 break;
             }
             prevLink = curLink;

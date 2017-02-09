@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getLastSentenceInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,10 +31,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.FeatureModel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -48,9 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
- * Data model for the {@link BratAnnotator}
+ * Data model for annotation editors
  */
-public class ActionContext
+public class AnnotatorStateImpl
     implements Serializable, AnnotatorState, TransientActionContext
 {
     private static final long serialVersionUID = 1078613192789450714L;
@@ -274,9 +272,9 @@ public class ActionContext
 
         Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
                 getPreferences().getWindowSize());
-        firstVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas,
+        firstVisibleSentenceNumber = WebAnnoCasUtil.getSentenceNumber(jcas,
                 aSentence.getBegin());
-        lastVisibleSentenceNumber = BratAjaxCasUtil.getSentenceNumber(jcas,
+        lastVisibleSentenceNumber = WebAnnoCasUtil.getSentenceNumber(jcas,
                 lastVisibleSentence.getBegin());
         
         windowBeginOffset = aSentence.getBegin();
@@ -502,7 +500,7 @@ public class ActionContext
 
         // (Re)initialize brat model after potential creating / upgrading CAS
         getPreferences().setWindowSize(aRepository.getNumberOfSentences());
-        setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
+        setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
     }
 
     private AnnotationFeature armedFeature;

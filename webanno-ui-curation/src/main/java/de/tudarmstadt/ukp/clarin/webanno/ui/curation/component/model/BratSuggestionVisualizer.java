@@ -31,8 +31,8 @@ import org.apache.wicket.model.IModel;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -78,7 +78,7 @@ public class BratSuggestionVisualizer
 				try {
                     onSelectAnnotationForMerge(aTarget);
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
@@ -165,7 +165,7 @@ public class BratSuggestionVisualizer
         return getModelObject().getCollectionData();
     }
 
-    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget) throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // Overriden in Curation Panel
     }

@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
  * An exception when {@code org.apache.uima.cas.Feature#getRange().getName()} is not either
  *  uima.cas.Integer or uima.cas.String
  *
  */
-public class RangeNameNotCheckedException extends BratAnnotationException{
+public class RangeNameNotCheckedException extends AnnotationException{
 
     private static final long serialVersionUID = 9006025257536279474L;
 

@@ -39,10 +39,10 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -177,9 +177,9 @@ public class CasToBratJsonTest
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        ActionContext bratannotatorModel = new ActionContext();
+        AnnotatorStateImpl bratannotatorModel = new AnnotatorStateImpl();
         bratannotatorModel.getPreferences().setWindowSize(10);
-        bratannotatorModel.setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(jCas));
+        bratannotatorModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(jCas));
 
         Project project = new Project();
         bratannotatorModel.setProject(project);

@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
  * throw an exception if there is a problem during cas diff computation
  */
 public class CasDiffException
-    extends BratAnnotationException
+    extends AnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 

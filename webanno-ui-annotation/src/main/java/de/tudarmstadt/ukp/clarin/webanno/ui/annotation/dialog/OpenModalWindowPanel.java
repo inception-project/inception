@@ -47,8 +47,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -89,12 +89,12 @@ public class OpenModalWindowPanel
     // Dialog is for annotation or curation
 
     private final Mode mode;
-    private final ActionContext bModel;
+    private final AnnotatorStateImpl bModel;
 
     private List<Project> projectesWithFinishedAnnos;
     private Map<Project, String> projectColors = new HashMap<Project, String>();
 
-    public OpenModalWindowPanel(String aId, ActionContext aBModel,
+    public OpenModalWindowPanel(String aId, AnnotatorStateImpl aBModel,
             ModalWindow aModalWindow, Mode aSubject)
     {
         super(aId);

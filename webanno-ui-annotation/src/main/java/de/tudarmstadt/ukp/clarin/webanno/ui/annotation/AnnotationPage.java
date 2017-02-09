@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -50,12 +51,12 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -128,7 +129,7 @@ public class AnnotationPage
     private int totalNumberOfSentence;
 
     private boolean closeButtonClicked;
-    private ActionContext bModel = new ActionContext();
+    private AnnotatorStateImpl bModel = new AnnotatorStateImpl();
 
     private WebMarkupContainer sidebarCell;
     private WebMarkupContainer annotationViewCell;
@@ -162,12 +163,12 @@ public class AnnotationPage
         add(annotationViewCell);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -186,12 +187,12 @@ public class AnnotationPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -201,13 +202,13 @@ public class AnnotationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
         
-        annotator = new BratAnnotator("embedder1", new Model<ActionContext>(bModel),
+        annotator = new BratAnnotator("embedder1", new Model<AnnotatorStateImpl>(bModel),
                 editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
             {
                 bModel = aBratAnnotatorModel;
                 aTarget.add(numberOfPages);
@@ -238,7 +239,7 @@ public class AnnotationPage
         bModel.setMode(Mode.ANNOTATION);
 
         add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
-                new Model<ActionContext>(bModel)).setOutputMarkupId(true));
+                new Model<AnnotatorStateImpl>(bModel)).setOutputMarkupId(true));
 
         numberOfPages = new Label("numberOfPages", new Model<String>());
         numberOfPages.setOutputMarkupId(true);
@@ -309,7 +310,7 @@ public class AnnotationPage
                         loadDocumentAction(target);
                         try {
 							editor.refresh(target);
-						} catch (BratAnnotationException e) {
+						} catch (AnnotationException e) {
 							error("Error loading layers"+e.getMessage());
 						}
                     }
@@ -320,7 +321,7 @@ public class AnnotationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<ActionContext>(bModel), editor)
+                new Model<AnnotatorStateImpl>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -344,7 +345,7 @@ public class AnnotationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -437,7 +438,7 @@ public class AnnotationPage
                 try {
                     if (bModel.getDocument() != null) {
                         JCas jCas = getJCas();
-                        int nextSentenceAddress = BratAjaxCasUtil.getNextPageFirstSentenceAddress(
+                        int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(
                                 jCas, bModel.getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
                         if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
@@ -477,9 +478,9 @@ public class AnnotationPage
                     if (bModel.getDocument() != null) {
 
                         JCas jCas = getJCas();
-                        int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(jCas);
+                        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
 
-                        int previousSentenceAddress = BratAjaxCasUtil
+                        int previousSentenceAddress = WebAnnoCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
                                         .getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
@@ -527,7 +528,7 @@ public class AnnotationPage
                     if (bModel.getDocument() != null) {
 
                         JCas jCas = getJCas();
-                        int firstSentenceAddress = BratAjaxCasUtil.getFirstSentenceAddress(jCas);
+                        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
 
                         if (firstSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
                             updateSentenceNumber(jCas, firstSentenceAddress);
@@ -564,7 +565,7 @@ public class AnnotationPage
 
                         JCas jCas = getJCas();
 
-                        int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(jCas, bModel
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
@@ -607,7 +608,7 @@ public class AnnotationPage
                 annotator.bratRenderLater(aTarget);
             }
         });
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
@@ -700,10 +701,10 @@ public class AnnotationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new Model<ActionContext>(bModel));
+        finish = new FinishImage("finishImage", new Model<AnnotatorStateImpl>(bModel));
         finish.setOutputMarkupId(true);
 
-        add(new FinishLink("showYesNoModalPanel", new Model<ActionContext>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", new Model<AnnotatorStateImpl>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -736,7 +737,7 @@ public class AnnotationPage
     private void updateSentenceAddress(JCas aJCas, AjaxRequestTarget aTarget)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        gotoPageAddress = BratAjaxCasUtil.getSentenceAddress(aJCas,
+        gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
                 gotoPageTextField.getModelObject());
 
         String labelText = "";
@@ -746,11 +747,11 @@ public class AnnotationPage
         	
         	int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
         	
-            totalNumberOfSentence = BratAjaxCasUtil.getNumberOfPages(aJCas);
+            totalNumberOfSentence = WebAnnoCasUtil.getNumberOfPages(aJCas);
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
-                bModel.setFirstVisibleSentence(BratAjaxCasUtil.getFirstSentence(aJCas));
+                bModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
             }
 
             labelText = "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
@@ -798,7 +799,7 @@ public class AnnotationPage
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
         bModel.setFirstVisibleSentence(sentence);
         bModel.setFocusSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+                WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)

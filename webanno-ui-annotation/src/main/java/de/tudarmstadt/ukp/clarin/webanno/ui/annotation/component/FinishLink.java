@@ -27,7 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.YesNoFinishModalPanel;
@@ -49,7 +49,7 @@ public class FinishLink
 
     ModalWindow yesNoModal;
 
-    public FinishLink(String id, final IModel<ActionContext> aModel,
+    public FinishLink(String id, final IModel<AnnotatorStateImpl> aModel,
             final FinishImage finishImag)
     {
         super(id, aModel);

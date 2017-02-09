@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,9 +44,9 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -192,7 +192,7 @@ public class MergeCas
             for (Feature roleFeature : baseFs.getType().getFeatures()) {
                 if (isLinkMode(baseFs, roleFeature)) {
                     // FeatureStructure roleFs = baseFs.getFeatureValue(f);
-                    ArrayFS roleFss = (ArrayFS) BratAjaxCasUtil
+                    ArrayFS roleFss = (ArrayFS) WebAnnoCasUtil
                             .getFeatureFS(baseFs, roleFeature.getShortName());
                     if (roleFss == null) {
                         continue;
@@ -284,7 +284,7 @@ public class MergeCas
                 // if non eqal stacked annotations with slot feature exists, get
                 // the right one
                 if (isSameAnno(aBaseAnno, baseFS)) {
-                    ArrayFS roleFs = (ArrayFS) BratAjaxCasUtil
+                    ArrayFS roleFs = (ArrayFS) WebAnnoCasUtil
                             .getFeatureFS(baseFS, aFeature.getShortName());
                     slotAnnosPerUser.put(usr, roleFs);
                     break;
@@ -427,7 +427,7 @@ public class MergeCas
     private static boolean isLinkMode(FeatureStructure aFs, Feature aFeature)
     {
         try {
-            ArrayFS slotFs = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFs, aFeature.getShortName());
+            ArrayFS slotFs = (ArrayFS) WebAnnoCasUtil.getFeatureFS(aFs, aFeature.getShortName());
             return true;
         }
         catch (Exception e) {
@@ -646,10 +646,10 @@ public class MergeCas
 
     public static void addSpanAnnotation(JCas aMergeJCas, AnnotationFS aFSClicked,
             boolean aAllowStacking)
-            throws BratAnnotationException
+            throws AnnotationException
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "Same Annotation exists on the mergeview." + " Please add it manually. ");
         }
 
@@ -669,7 +669,7 @@ public class MergeCas
             Integer aAddressTargetClicked, String aFSArcaddress, JCas aClickedJCas,
             List<AnnotationFeature> aFeatures, AnnotationFS aClickedFS, boolean aIsAttachType,
             boolean aIsAllowStacking)
-            throws BratAnnotationException
+            throws AnnotationException
     {
         AnnotationFS originFsClicked = selectByAddr(aClickedJCas, aAddressOriginClicked);
         AnnotationFS targetFsClicked = selectByAddr(aClickedJCas, aAddressTargetClicked);
@@ -690,7 +690,7 @@ public class MergeCas
     public static void addRelationArcAnnotation(JCas aJcas, AnnotationFS aClickedFS,
             boolean aIsAttachType, boolean aIsAllowStacking,
             AnnotationFS originFsClicked, AnnotationFS targetFsClicked)
-            throws BratAnnotationException
+            throws AnnotationException
     {
         AnnotationFS originFs;
         AnnotationFS targetFs;
@@ -704,7 +704,7 @@ public class MergeCas
 
         // check if target/source exists in the mergeview
         if (origins.size() == 0 || targets.size() == 0) {
-            throw new BratAnnotationException("Both the source and target annotation"
+            throw new AnnotationException("Both the source and target annotation"
                     + " should exist on the mergeview. Please first copy/create them");
         }
 
@@ -712,17 +712,17 @@ public class MergeCas
         targetFs = targets.get(0);
 
         if (origins.size() > 1) {
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "Stacked sources exist in mergeview. " + "Cannot copy this relation.");
 
         }
         if (targets.size() > 1) {
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "Stacked targets exist in mergeview. " + "Cannot copy this relation.");
 
         }
         if (merges.size() > 0) {
-            throw new BratAnnotationException("The annotation already exists on the mergeview. "
+            throw new AnnotationException("The annotation already exists on the mergeview. "
                     + "Add this manually to have stacked annotations");
         }
 
@@ -753,14 +753,14 @@ public class MergeCas
 
     public static void addSlotArcAnnotation(JCas aJcas, String aFSArcaddress, JCas aClickedJCas,
             List<AnnotationFeature> aFeatures, AnnotationFS aClickedFS)
-            throws BratAnnotationException
+            throws AnnotationException
     {
         List<AnnotationFS> merges = MergeCas.getMergeFS(aClickedFS, aJcas)
                 .collect(Collectors.toList());
 
         AnnotationFS targetFs;
         if (merges.size() == 0) {
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "The base annotation do not exist." + " Please add it first. ");
         }
         AnnotationFS mergeFs = merges.get(0);
@@ -768,16 +768,16 @@ public class MergeCas
         Integer liIndex = Integer.parseInt(aFSArcaddress.split("\\.")[2]);
 
         AnnotationFeature slotFeature = null;
-       AnnotationDetailEditorPanel.LinkWithRoleModel linkRole = null;
+       LinkWithRoleModel linkRole = null;
         int fi = 0;
         f:
         for (AnnotationFeature feat : aFeatures) {
             if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode()) && LinkMode.WITH_ROLE
                     .equals(feat.getLinkMode())) {
-                List<AnnotationDetailEditorPanel.LinkWithRoleModel> links = getFeature(aClickedFS,
+                List<LinkWithRoleModel> links = getFeature(aClickedFS,
                         feat);
                 for (int li = 0; li < links.size(); li++) {
-                    AnnotationDetailEditorPanel.LinkWithRoleModel link = links.get(li);
+                    LinkWithRoleModel link = links.get(li);
                     if (fi == fiIndex && li == liIndex) {
                         slotFeature = feat;
 
@@ -793,10 +793,10 @@ public class MergeCas
             fi++;
         }
 
-        List<AnnotationDetailEditorPanel.LinkWithRoleModel> links = getFeature(mergeFs,
+        List<LinkWithRoleModel> links = getFeature(mergeFs,
                 slotFeature);
-        AnnotationDetailEditorPanel.LinkWithRoleModel duplicateLink = null; //
-        for (AnnotationDetailEditorPanel.LinkWithRoleModel lr : links) {
+        LinkWithRoleModel duplicateLink = null; //
+        for (LinkWithRoleModel lr : links) {
             if (lr.targetAddr == linkRole.targetAddr) {
                 duplicateLink = lr;
                 break;
@@ -810,20 +810,20 @@ public class MergeCas
 
     private static List<AnnotationFS> checkAndGetTargets(JCas aJcas, JCas aClickedJCas,
             AnnotationFS aOldTraget)
-            throws BratAnnotationException
+            throws AnnotationException
     {
         List<AnnotationFS> targets = MergeCas
                 .getMergeFS(aOldTraget, aJcas)
                 .collect(Collectors.toList());
 
         if (targets.size() == 0) {
-            throw new BratAnnotationException("This target annotation do not exist."
+            throw new AnnotationException("This target annotation do not exist."
                     + " Copy or create the target first ");
         }
 
         if (targets.size() > 1) {
 
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "There are multiple targets on the mergeview."
                             + " Can not copy this slot annotation.");
         }

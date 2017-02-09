@@ -36,7 +36,7 @@ import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.WebAnnoCssReference;
 
 /**
@@ -57,7 +57,7 @@ public class GuidelineModalWindowPanel
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        public guidelineForm(String id, final ModalWindow modalWindow, final IModel<ActionContext> aModel)
+        public guidelineForm(String id, final ModalWindow modalWindow, final IModel<AnnotatorStateImpl> aModel)
         {
             super(id);
 
@@ -104,7 +104,7 @@ public class GuidelineModalWindowPanel
 
     private guidelineForm guidelineForm;
 
-    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<ActionContext> aModel)
+    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<AnnotatorStateImpl> aModel)
     {
         super(aId);
         guidelineForm = new guidelineForm("guidelineForm", modalWindow, aModel);

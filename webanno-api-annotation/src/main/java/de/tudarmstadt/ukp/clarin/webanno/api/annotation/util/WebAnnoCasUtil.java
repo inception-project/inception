@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.render;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -43,8 +43,8 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
  * process the CAS such getting the sentence address, determine page numbers,...
  */
-public class BratAjaxCasUtil
+public class WebAnnoCasUtil
 {
     /**
      * Annotation a and annotation b are the same if they have the same address ( used for
@@ -631,7 +631,7 @@ public class BratAjaxCasUtil
      * @param aSentenceAddress
      *            the sentence ID.
      * @return the sentence number.
-     * @deprecated use {@link ActionContext#getFirstVisibleSentenceNumber()} instead
+     * @deprecated use {@link AnnotatorStateImpl#getFirstVisibleSentenceNumber()} instead
      */
     @Deprecated
     public static int getFirstSentenceNumber(JCas aJcas, int aSentenceAddress)
@@ -707,7 +707,7 @@ public class BratAjaxCasUtil
     /**
      * For a span annotation, if a sub-token is selected, display the whole text so that the user is
      * aware of what is being annotated, based on
-     * {@link BratAjaxCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
+     * {@link WebAnnoCasUtil#selectOverlapping(JCas, Class, int, int)} ISSUE - Affected text not
      * correctly displayed in annotation dialog (Bug #272)
      *
      * @param aJcas
@@ -720,7 +720,7 @@ public class BratAjaxCasUtil
      */
     public static String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
     {
-        List<Token> tokens = BratAjaxCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
+        List<Token> tokens = WebAnnoCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
                 aEndOffset);
         StringBuilder seletedTextSb = new StringBuilder();
         for (Token token : tokens) {
@@ -924,7 +924,7 @@ public class BratAjaxCasUtil
             List<FeatureStructure> linkFSes)
     {
         // Create a new array if size differs otherwise re-use existing one
-        ArrayFS array = (ArrayFS) BratAjaxCasUtil.getFeatureFS(aFS, aFeature.getShortName());
+        ArrayFS array = (ArrayFS) WebAnnoCasUtil.getFeatureFS(aFS, aFeature.getShortName());
         if (array == null || (array.size() != linkFSes.size())) {
             array = aFS.getCAS().createArrayFS(linkFSes.size());
         }

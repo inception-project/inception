@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectAt;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -102,18 +102,20 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -123,7 +125,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -167,7 +168,7 @@ public class AnnotationDetailEditorPanel
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
 
     private List<FeatureModel> featureModels;
-    private ActionContext bModel;
+    private AnnotatorStateImpl bModel;
     private String selectedTag = "";
     
     /**
@@ -181,7 +182,7 @@ public class AnnotationDetailEditorPanel
             + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
             + "? $(this).attr('title') : 'no description' )+'</div>' }";
 
-    public AnnotationDetailEditorPanel(String id, IModel<ActionContext> aModel)
+    public AnnotationDetailEditorPanel(String id, IModel<AnnotatorStateImpl> aModel)
     {
         super(id, aModel);
         
@@ -211,7 +212,7 @@ public class AnnotationDetailEditorPanel
             protected void onSubmit(AjaxRequestTarget aTarget) { 
                try {
                    actionAnnotate(aTarget, bModel, false);
-    			} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+    			} catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
     				error(e.getMessage());
     			}
             } 
@@ -233,14 +234,14 @@ public class AnnotationDetailEditorPanel
     }
 
     private class AnnotationFeatureForm
-        extends Form<ActionContext>
+        extends Form<AnnotatorStateImpl>
     {
         private static final long serialVersionUID = 3635145598405490893L;
         private WebMarkupContainer featureEditorsContainer;
 
-        public AnnotationFeatureForm(String id, ActionContext aBModel)
+        public AnnotationFeatureForm(String id, AnnotatorStateImpl aBModel)
         {
-            super(id, new CompoundPropertyModel<ActionContext>(aBModel));
+            super(id, new CompoundPropertyModel<AnnotatorStateImpl>(aBModel));
 
             add(forwardAnnotationCheck = new CheckBox("forwardAnnotation")
             {
@@ -323,7 +324,7 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                     catch (UIMAException | ClassNotFoundException | IOException
-                            | CASRuntimeException | BratAnnotationException e) {
+                            | CASRuntimeException | AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -354,7 +355,7 @@ public class AnnotationDetailEditorPanel
                     try {
                         actionReverse(aTarget, bModel);
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
                         LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
@@ -467,7 +468,7 @@ public class AnnotationDetailEditorPanel
 		            	try {
 							actionAnnotate(aTarget, aBModel, false);
 							selectedTag ="";
-						} catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+						} catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
 						error(e);
 						}
 		            	return;
@@ -541,7 +542,7 @@ public class AnnotationDetailEditorPanel
 
     public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
             String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
-        throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
+        throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         assert jCas != null;
         Selection selection = bModel.getSelection();
@@ -572,7 +573,7 @@ public class AnnotationDetailEditorPanel
     
     public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
             Offsets offsets, VID paramId)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         assert jCas != null;                        
         if (bModel.isSlotArmed()) {
@@ -592,13 +593,13 @@ public class AnnotationDetailEditorPanel
                     int id = adapter.add(jCas, offsets.getBegin(), offsets.getEnd(), null, null);
                     setSlot(aTarget, jCas, bModel, id);
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(ExceptionUtils.getRootCauseMessage(e));
                     LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                 }
             }
             else {
-              throw new BratAnnotationException("Unable to create annotation of type ["+
+              throw new AnnotationException("Unable to create annotation of type ["+
                 CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
             }
         }
@@ -627,11 +628,11 @@ public class AnnotationDetailEditorPanel
         }
     }
     
-    public void actionAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel, boolean aIsForwarded)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    public void actionAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel, boolean aIsForwarded)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
 		if (isAnnotationFinished()) {
-			throw new BratAnnotationException(
+			throw new AnnotationException(
 					"This document is already closed. Please ask your project manager to re-open it via the Monitoring page");
 		}
         // If there is no annotation yet, create one. During creation, the adapter
@@ -642,8 +643,8 @@ public class AnnotationDetailEditorPanel
         actionAnnotate(aTarget, aBModel, jCas, aIsForwarded);
     }
 
-    public void actionAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel, JCas jCas, boolean aIsForwarded)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    public void actionAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel, JCas jCas, boolean aIsForwarded)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         if (aBModel.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
@@ -728,7 +729,7 @@ public class AnnotationDetailEditorPanel
 									.map(Map.Entry::getKey).findFirst().orElse(null);
 						} else {
 							actionClear(aTarget, bModel);
-							throw new BratAnnotationException("Cannot create another annotation of layer ["
+							throw new AnnotationException("Cannot create another annotation of layer ["
 									+ bModel.getSelectedAnnotationLayer().getUiName() + "] at this"
 									+ " location - stacking is not enabled for this layer.");
 						}
@@ -736,7 +737,7 @@ public class AnnotationDetailEditorPanel
 				}
 				Integer annoId = ((SpanAdapter) adapter).add(jCas, selection.getBegin(), selection.getEnd(), null, null);
 				selection.setAnnotation(new VID(annoId));
-				AnnotationFS annoFs = BratAjaxCasUtil.selectByAddr(jCas, annoId);
+				AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(jCas, annoId);
 				selection.set(jCas, annoFs.getBegin(), annoFs.getEnd());
 			} else {
 
@@ -828,9 +829,9 @@ public class AnnotationDetailEditorPanel
 		}
 	}
     
-    public void actionDelete(AjaxRequestTarget aTarget, ActionContext aBModel)
+    public void actionDelete(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
-        BratAnnotationException
+        AnnotationException
     {
         JCas jCas = getCas(aBModel);
         AnnotationFS fs = selectByAddr(jCas, aBModel.getSelection().getAnnotation().getId());
@@ -953,8 +954,8 @@ public class AnnotationDetailEditorPanel
         onDelete(aTarget, aBModel, fs);
     }
 
-    private void actionReverse(AjaxRequestTarget aTarget, ActionContext aBModel)
-        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    private void actionReverse(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         JCas jCas;
         jCas = getCas(aBModel);
@@ -1010,15 +1011,15 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget, aBModel);
     }
 
-    public  void actionClear(AjaxRequestTarget aTarget, ActionContext aBModel)
-        throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    public  void actionClear(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         reset(aTarget);
         aTarget.add(annotationFeatureForm);
         onChange(aTarget, aBModel);
     }
     
-    public JCas getCas(ActionContext aBModel)
+    public JCas getCas(AnnotatorStateImpl aBModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
 
@@ -1040,7 +1041,7 @@ public class AnnotationDetailEditorPanel
      *            instead of centering on the sentence that had the last editor, just scroll down
      *            one sentence. This is for forward-annotation mode.
      */
-    private void autoScroll(JCas jCas, ActionContext aBModel, boolean aForward)
+    private void autoScroll(JCas jCas, AnnotatorStateImpl aBModel, boolean aForward)
     {
         if (aForward) {
             // Fetch the first sentence on screen
@@ -1066,7 +1067,7 @@ public class AnnotationDetailEditorPanel
     }
 
     @SuppressWarnings("unchecked")
-    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final ActionContext aBModel,
+    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, final AnnotatorStateImpl aBModel,
             int aAnnotationId)
     {
         // Set an armed slot
@@ -1084,7 +1085,7 @@ public class AnnotationDetailEditorPanel
             try {
                 actionAnnotate(aTarget, bModel, aJCas, false);
             }
-            catch (BratAnnotationException e) {
+            catch (AnnotationException e) {
                 error(e.getMessage());
                 LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
             }
@@ -1096,7 +1097,7 @@ public class AnnotationDetailEditorPanel
     }
 
     private void arcSelected(AjaxRequestTarget aTarget, JCas aJCas) 
-        throws BratAnnotationException
+        throws AnnotationException
     {
         // FIXME REC I think this whole section which meddles around with the selected annotation
         // layer should be moved out of there to the place where we originally set the annotation
@@ -1108,7 +1109,7 @@ public class AnnotationDetailEditorPanel
                 bModel.getSelection().isAnnotate() && 
                 !spanLayer.equals(bModel.getDefaultAnnotationLayer())) 
         {
-            throw new BratAnnotationException("No relation annotation allowed on the "
+            throw new AnnotationException("No relation annotation allowed on the "
                     + "selected span layer");
         }
 
@@ -1218,27 +1219,27 @@ public class AnnotationDetailEditorPanel
         }        
     }
 
-    protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
+    protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
     {
         // Overriden in CurationPanel
     }
 
-    protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
+    protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
     {
         // Overriden in CurationPanel
     }
 
-    protected void onAnnotate(AjaxRequestTarget aTarget, ActionContext aModel)
+    protected void onAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aModel)
     {
         // Overriden in AutomationPage
     }
 
-    protected void onDelete(AjaxRequestTarget aTarget, ActionContext aModel, AnnotationFS aFs)
+    protected void onDelete(AjaxRequestTarget aTarget, AnnotatorStateImpl aModel, AnnotationFS aFs)
     {
         // Overriden in AutomationPage
     }
 
-    public void refreshAnnotationLayers(ActionContext aBModel)
+    public void refreshAnnotationLayers(AnnotatorStateImpl aBModel)
     {
         updateLayersDropdown(aBModel);
         if (annotationLayers.size() == 0) {
@@ -1256,7 +1257,7 @@ public class AnnotationDetailEditorPanel
         updateRememberLayer();
     }
 
-    private void updateLayersDropdown(ActionContext aBModel)
+    private void updateLayersDropdown(AnnotatorStateImpl aBModel)
     {
         annotationLayers.clear();
         AnnotationLayer l = null;
@@ -1291,14 +1292,14 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public IModel<ActionContext> getModel()
+    public IModel<AnnotatorStateImpl> getModel()
     {
-        return (IModel<ActionContext>) getDefaultModel();
+        return (IModel<AnnotatorStateImpl>) getDefaultModel();
     }
     
-    public ActionContext getModelObject()
+    public AnnotatorStateImpl getModelObject()
     {
-        return (ActionContext) getDefaultModelObject();
+        return (AnnotatorStateImpl) getDefaultModelObject();
     }
     
     public class FeatureEditorPanelContent
@@ -1500,7 +1501,7 @@ public class AnnotationDetailEditorPanel
                         }
                         actionAnnotate(aTarget, bModel, false);
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                     }
@@ -1676,7 +1677,7 @@ public class AnnotationDetailEditorPanel
             indicator.reset(); //reset the indicator
             if (aModel.feature.getTagset() != null) {
                 List<Tag> tagset = null;
-                ActionContext model = bModel;
+                AnnotatorStateImpl model = bModel;
                 // verification to check whether constraints exist for this project or NOT
                 if (model.getConstraints() != null && model.getSelection().getAnnotation().isSet()) {
 //                    indicator.setRulesExist(true);
@@ -1765,7 +1766,7 @@ public class AnnotationDetailEditorPanel
         /**
          * Adds and sorts tags based on Constraints rules
          */
-        private List<Tag> populateTagsBasedOnRules(ActionContext model, FeatureModel aModel)
+        private List<Tag> populateTagsBasedOnRules(AnnotatorStateImpl model, FeatureModel aModel)
         {
             // Add values from rules
             String restrictionFeaturePath;
@@ -1943,7 +1944,7 @@ public class AnnotationDetailEditorPanel
                         @Override
                         public String getObject()
                         {
-                            ActionContext model = bModel;
+                            AnnotatorStateImpl model = bModel;
                             if (model.isArmedSlot(aModel.feature, aItem.getIndex())) {
                                 return "; background: orange";
                             }
@@ -2081,7 +2082,7 @@ public class AnnotationDetailEditorPanel
                 
                 @Override
                 protected void onConfigure(){
-                    ActionContext model = bModel;
+                    AnnotatorStateImpl model = bModel;
                     setVisible(!(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature())));
 //                    setEnabled(!(model.isSlotArmed()
@@ -2118,7 +2119,7 @@ public class AnnotationDetailEditorPanel
 
                 @Override
                 protected void onConfigure(){
-                    ActionContext model = bModel;
+                    AnnotatorStateImpl model = bModel;
                     setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
 //                    setEnabled(model.isSlotArmed()
@@ -2130,7 +2131,7 @@ public class AnnotationDetailEditorPanel
                 {
                     List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                             .getModelObject().value;
-                    ActionContext model = bModel;
+                    AnnotatorStateImpl model = bModel;
                     
                     //Update the slot
                     LinkWithRoleModel m = new LinkWithRoleModel();
@@ -2145,7 +2146,7 @@ public class AnnotationDetailEditorPanel
                     try {
                         actionAnnotate(aTarget, bModel, false);
                     }
-                    catch(BratAnnotationException e){
+                    catch(AnnotationException e){
                         error(ExceptionUtils.getRootCauseMessage(e));
                         LOG.error(ExceptionUtils.getRootCause(e),e);
                     }
@@ -2164,7 +2165,7 @@ public class AnnotationDetailEditorPanel
                 @Override
                 protected void onConfigure()
                 {
-                    ActionContext model = bModel;
+                    AnnotatorStateImpl model = bModel;
                     setVisible(model.isSlotArmed()
                             && aModel.feature.equals(model.getArmedFeature()));
 //                    setEnabled(model.isSlotArmed()
@@ -2177,7 +2178,7 @@ public class AnnotationDetailEditorPanel
                     List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                             .getModelObject().value;
 
-                    ActionContext model = bModel;
+                    AnnotatorStateImpl model = bModel;
                     links.remove(model.getArmedSlot());
                     model.clearArmedSlot();
 
@@ -2188,7 +2189,7 @@ public class AnnotationDetailEditorPanel
                         try {
                             actionAnnotate(aTarget, bModel, false);
                         }
-                        catch (BratAnnotationException e) {
+                        catch (AnnotationException e) {
                             error(ExceptionUtils.getRootCauseMessage(e));
                             LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
                         }
@@ -2207,7 +2208,7 @@ public class AnnotationDetailEditorPanel
          * @return List containing tags which exist in tagset and also suggested by rules, followed
          *         by the remaining tags in tagset.
          */
-        private List<Tag> addTagsBasedOnRules(ActionContext model, final FeatureModel aModel)
+        private List<Tag> addTagsBasedOnRules(AnnotatorStateImpl model, final FeatureModel aModel)
         {
             String restrictionFeaturePath = aModel.feature.getName() + "."
                     + aModel.feature.getLinkTypeRoleFeatureName();
@@ -2357,7 +2358,7 @@ public class AnnotationDetailEditorPanel
             
             Serializable value = null;
             if (aFS != null) {
-                value = (Serializable) BratAjaxCasUtil.getFeature(aFS, feature);
+                value = (Serializable) WebAnnoCasUtil.getFeature(aFS, feature);
             }
             else if (aRemembered != null) {
                 value = aRemembered.get(feature);
@@ -2468,7 +2469,7 @@ public class AnnotationDetailEditorPanel
                                 actionClear(aTarget, bModel);
                             }
                             catch (UIMAException | ClassNotFoundException | IOException
-                                    | BratAnnotationException e) {
+                                    | AnnotationException e) {
                                 error(e.getMessage());
                             }
                         } 
@@ -2515,70 +2516,7 @@ public class AnnotationDetailEditorPanel
         return null;
     }
 
-    /**
-     * Represents a link with a role in the UI.
-     */
-    public static class LinkWithRoleModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = 2027345278696308900L;
-
-        public static final String CLICK_HINT = "<Click to activate>";
-
-        public String role;
-        public String label = CLICK_HINT;
-        public int targetAddr = -1;
-        public boolean autoCreated;
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((label == null) ? 0 : label.hashCode());
-            result = prime * result + ((role == null) ? 0 : role.hashCode());
-            result = prime * result + targetAddr;
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            LinkWithRoleModel other = (LinkWithRoleModel) obj;
-            if (label == null) {
-                if (other.label != null) {
-                    return false;
-                }
-            }
-            else if (!label.equals(other.label)) {
-                return false;
-            }
-            if (role == null) {
-                if (other.role != null) {
-                    return false;
-                }
-            }
-            else if (!role.equals(other.role)) {
-                return false;
-            }
-            if (targetAddr != other.targetAddr) {
-                return false;
-            }
-            return true;
-        }
-
-    }
-
-	private void updateForwardAnnotation(ActionContext aBModel) {
+    private void updateForwardAnnotation(AnnotatorStateImpl aBModel) {
 		if (aBModel.getSelectedAnnotationLayer() != null
 				&& !aBModel.getSelectedAnnotationLayer().isLockToTokenOffset()) {
 			aBModel.setForwardAnnotation(false);// no forwarding for
@@ -2588,26 +2526,7 @@ public class AnnotationDetailEditorPanel
 		}
 	}
 
-    public static class FeatureModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = 3512979848975446735L;
-        public final AnnotationFeature feature;
-        public Serializable value;
-
-        public FeatureModel(AnnotationFeature aFeature, Serializable aValue)
-        {
-            feature = aFeature;
-            value = aValue;
-
-            // Avoid having null here because otherwise we have to handle null in zillion places!
-            if (value == null && MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())) {
-                value = new ArrayList<>();
-            }
-        }
-    }
-    
-	private Map<String, String> getBindTags() {
+    private Map<String, String> getBindTags() {
 
 		AnnotationFeature f = annotationService.listAnnotationFeature(bModel.getSelectedAnnotationLayer()).get(0);
 		TagSet tagSet = f.getTagset();
@@ -2662,7 +2581,7 @@ public class AnnotationDetailEditorPanel
     }
 
     public void refresh(AjaxRequestTarget aTarget) 
-        throws BratAnnotationException
+        throws AnnotationException
     {
         try {
             if (!bModel.getSelection().isRelationAnno()) {
@@ -2682,11 +2601,11 @@ public class AnnotationDetailEditorPanel
             
             aTarget.add(annotationFeatureForm);
         }
-        catch (BratAnnotationException e) {
+        catch (AnnotationException e) {
             throw e;
         }
         catch (Exception e) {
-            throw new BratAnnotationException(e);
+            throw new AnnotationException(e);
         }
     }
 

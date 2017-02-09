@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -41,9 +41,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -91,8 +91,8 @@ public class SuggestionBuilder
         userRepository = aUserDao;
     }
 
-    public CurationContainer buildCurationContainer(ActionContext aBModel)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+    public CurationContainer buildCurationContainer(AnnotatorStateImpl aBModel)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
@@ -207,22 +207,22 @@ public class SuggestionBuilder
             for (Type t : entryTypes) {
                 for (JCas c : jCases.values()) {
                     if (thisSent == -1) {
-                        thisSent = BratAjaxCasUtil.getSentenceNumber(c, begin);
+                        thisSent = WebAnnoCasUtil.getSentenceNumber(c, begin);
                     }
                     // update cross-sentence annotation lists
                     for (AnnotationFS fs : selectCovered(c.getCas(), t, this.diffRangeBegin, diffRangeEnd)) {
                         // CASE 1. annotation begins here
                         if (fs.getBegin() >= begin && fs.getBegin() <= segmentBeginEnd.get(begin)) {
                             if (fs.getEnd() > segmentBeginEnd.get(begin) || fs.getEnd() < begin) {
-                                Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
-                                int thatSent = BratAjaxCasUtil.getSentenceNumber(c, s.getBegin());
+                                Sentence s = WebAnnoCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
+                                int thatSent = WebAnnoCasUtil.getSentenceNumber(c, s.getBegin());
                                 crossSents.add(thatSent);
                             }
                         }
                         // CASE 2. Annotation ends here
                         else if (fs.getEnd() >= begin && fs.getEnd() <= segmentBeginEnd.get(begin)) {
                             if (fs.getBegin() > segmentBeginEnd.get(begin) || fs.getBegin() < begin) {
-                                int thatSent = BratAjaxCasUtil.getSentenceNumber(c, fs.getBegin());
+                                int thatSent = WebAnnoCasUtil.getSentenceNumber(c, fs.getBegin());
                                 crossSents.add(thatSent);
                             }
                         }
@@ -231,7 +231,7 @@ public class SuggestionBuilder
                     for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, diffRangeEnd)) {
                         if (fs.getBegin() <= segmentBeginEnd.get(begin)
                                 && fs.getEnd() > segmentBeginEnd.get(begin)) {
-                            Sentence s = BratAjaxCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
+                            Sentence s = WebAnnoCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
                             segmentBeginEnd.put(begin, s.getEnd());
                         }
                     }
@@ -304,12 +304,12 @@ public class SuggestionBuilder
      *             hum?
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws BratAnnotationException
+     * @throws AnnotationException
      *             hum?
      */
-    public JCas getMergeCas(ActionContext aBratAnnotatorModel, SourceDocument aDocument,
+    public JCas getMergeCas(AnnotatorStateImpl aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas mergeJCas = null;
         try {
@@ -357,7 +357,7 @@ public class SuggestionBuilder
      * @throws ClassNotFoundException
      * @throws UIMAException
      */
-    private void updateSegment(ActionContext aBratAnnotatorModel,
+    private void updateSegment(AnnotatorStateImpl aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
             int aWindowStart, int aWindowEnd)
@@ -365,7 +365,7 @@ public class SuggestionBuilder
     {
         diffRangeBegin = aWindowStart;
         diffRangeEnd = aWindowEnd;
-        int sentenceNumber = BratAjaxCasUtil.getSentenceNumber(jCas, aWindowStart);
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aWindowStart);
         
         segmentAdress.put(username, new HashMap<Integer, Integer>());
         for (Sentence sentence : selectCovered(jCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
@@ -435,7 +435,7 @@ public class SuggestionBuilder
         return mergeJCas;
     }
     
-    private JCas createCorrectionCas(JCas mergeJCas, ActionContext aBratAnnotatorModel,
+    private JCas createCorrectionCas(JCas mergeJCas, AnnotatorStateImpl aBratAnnotatorModel,
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {

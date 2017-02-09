@@ -21,9 +21,9 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
@@ -47,5 +47,5 @@ public interface TypeRenderer
      *            the  coloring strategy to render this layer
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            ActionContext aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
+            AnnotatorStateImpl aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
 }

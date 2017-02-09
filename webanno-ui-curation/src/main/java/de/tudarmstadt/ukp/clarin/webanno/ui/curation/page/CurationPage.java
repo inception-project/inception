@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -60,10 +60,10 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -123,7 +123,7 @@ public class CurationPage
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
-    private ActionContext bModel;
+    private AnnotatorStateImpl bModel;
 
     private int gotoPageAddress;
     private int totalNumberOfSentence;
@@ -143,7 +143,7 @@ public class CurationPage
     @SuppressWarnings("deprecation")
     public CurationPage()
     {
-        bModel = new ActionContext();
+        bModel = new AnnotatorStateImpl();
         bModel.setMode(Mode.CURATION);
         reMerge = new ReMergeCasModel();
 
@@ -179,7 +179,7 @@ public class CurationPage
         add(curationPanel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<ActionContext>(bModel)));
+                new Model<AnnotatorStateImpl>(bModel)));
         documentNamePanel.setOutputMarkupId(true);
 
         add(numberOfPages = (Label) new Label("numberOfPages",
@@ -202,7 +202,7 @@ public class CurationPage
                                 // sentence 1
                                 if (totalNumberOfSentence == 1) {
                                     bModel.setFirstVisibleSentence(
-                                            BratAjaxCasUtil.getFirstSentence(mergeJCas));
+                                            WebAnnoCasUtil.getFirstSentence(mergeJCas));
                                 }
                                 List<SourceDocument> listofDoc = getListOfDocs();
                             	
@@ -287,7 +287,7 @@ public class CurationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<ActionContext>(bModel), curationPanel.editor)
+                new Model<AnnotatorStateImpl>(bModel), curationPanel.editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -396,7 +396,7 @@ public class CurationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
-        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel))
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = -468896211970839443L;
 
@@ -592,7 +592,7 @@ public class CurationPage
 
         showFinishCurationModal.add(finish);
 
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
 
         final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
@@ -710,7 +710,7 @@ public class CurationPage
                     try {
                         aTarget.add(getFeedbackPanel());
                         mergeJCas = repository.readCurationCas(bModel.getDocument());
-                        int previousSentenceAddress = BratAjaxCasUtil
+                        int previousSentenceAddress = WebAnnoCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas, bModel
                                         .getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
@@ -791,7 +791,7 @@ public class CurationPage
                     try {
                         aTarget.add(getFeedbackPanel());
                         mergeJCas = repository.readCurationCas(bModel.getDocument());
-                        int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
@@ -901,10 +901,10 @@ public class CurationPage
     {
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
         bModel.setFirstVisibleSentence(sentence);
-        bModel.setFocusSentenceNumber(BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        bModel.setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+    private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
@@ -953,7 +953,7 @@ public class CurationPage
         // (Re)initialize brat model after potential creating / upgrading CAS
         bModel.initForDocument(mergeJCas, repository);
         bModel.getPreferences().setCurationWindowSize(
-                BratAjaxCasUtil.getSentenceSize(mergeJCas));
+                WebAnnoCasUtil.getSentenceSize(mergeJCas));
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bModel.getProject().getId()) {

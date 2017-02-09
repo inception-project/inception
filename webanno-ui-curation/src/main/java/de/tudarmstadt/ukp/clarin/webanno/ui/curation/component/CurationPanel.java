@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.IOException;
@@ -53,11 +53,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
@@ -97,7 +97,7 @@ public class CurationPanel
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer corssSentAnnoView;
 
-    private ActionContext bModel;
+    private AnnotatorStateImpl bModel;
 
     private int fSn = 0;
     private int lSn = 0;
@@ -243,7 +243,7 @@ public class CurationPanel
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
@@ -253,12 +253,12 @@ public class CurationPanel
         annotationViewCell.add(suggestionViewPanel);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
@@ -267,12 +267,12 @@ public class CurationPanel
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -293,14 +293,14 @@ public class CurationPanel
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<ActionContext>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorStateImpl>(bModel),
                 editor)
         {
 
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, ActionContext bratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl bratAnnotatorModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {
@@ -315,7 +315,7 @@ public class CurationPanel
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
@@ -431,7 +431,7 @@ public class CurationPanel
                         catch (IOException e) {
                             error(e.getMessage());
                         }
-                        catch (BratAnnotationException e) {
+                        catch (AnnotationException e) {
                             error(e.getMessage());
                         }
                     }
@@ -477,9 +477,9 @@ public class CurationPanel
     private void updateCurationView(final CurationContainer curationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, JCas jCas)
     {
-        Sentence currentSent = BratAjaxCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
+        Sentence currentSent = WebAnnoCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
                 curationViewItem.getEnd());
-        bModel.setFirstVisibleSentence(BratAjaxCasUtil.findWindowStartCenteringOnSelection(jCas,
+        bModel.setFirstVisibleSentence(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
                 currentSent, curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(),
                 bModel.getPreferences().getWindowSize()));
         curationContainer.setBratAnnotatorModel(bModel);
@@ -507,7 +507,7 @@ public class CurationPanel
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas jCas = repository.readCurationCas(bModel.getDocument());
 
@@ -528,11 +528,11 @@ public class CurationPanel
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
 
         int ws = bModel.getPreferences().getWindowSize();
-        Sentence fs = BratAjaxCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
+        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
                 bModel.getFirstVisibleSentenceEnd());
-        Sentence ls = BratAjaxCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
-        fSn = BratAjaxCasUtil.getSentenceNumber(jCas, fs.getBegin());
-        lSn = BratAjaxCasUtil.getSentenceNumber(jCas, ls.getBegin());
+        Sentence ls = WebAnnoCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
+        fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
+        lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
         sentencesListView.addOrReplace(sentenceList);
         aTarget.add(sentencesListView);
@@ -563,7 +563,7 @@ public class CurationPanel
     {
         try {
 			editor.refresh(aTarget);
-		} catch (BratAnnotationException e) {
+		} catch (AnnotationException e) {
 			// DO NOTHING
 		}
     }

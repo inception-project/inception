@@ -34,8 +34,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -63,7 +63,7 @@ public class PreferencesUtil
      * @param aRepositoryService the repository service.
      * @param aAnnotationService the annotation service.
      * @param aBModel
-     *            The {@link ActionContext} that will be populated with preferences from the
+     *            The {@link AnnotatorStateImpl} that will be populated with preferences from the
      *            file
      * @param aMode the mode.
      * @throws BeansException hum?
@@ -71,7 +71,7 @@ public class PreferencesUtil
      */
     public static void setAnnotationPreference(String aUsername,
             RepositoryService aRepositoryService, AnnotationService aAnnotationService,
-            ActionContext aBModel, Mode aMode)
+            AnnotatorStateImpl aBModel, Mode aMode)
         throws BeansException, IOException
     {
         AnnotationPreference preference = new AnnotationPreference();
@@ -122,7 +122,7 @@ public class PreferencesUtil
         }
     }
 
-    public static void savePreference(ActionContext aBModel, RepositoryService aRepository)
+    public static void savePreference(AnnotatorStateImpl aBModel, RepositoryService aRepository)
         throws FileNotFoundException, IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();

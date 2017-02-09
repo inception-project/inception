@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -66,14 +66,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.AutomationTypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.AutomationTypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -97,17 +97,17 @@ public class AutomationUtil
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateSpanAnnotation(ActionContext aBModel,
+    public static void repeateSpanAnnotation(AnnotatorStateImpl aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(aBModel.getDocument(),
                 aBModel.getUser());
         JCas annoCas = aRepository.readAnnotationCas(annoDoc);
 
         // get selected text, concatenations of tokens
-        String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
+        String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
         SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
                 aFeature.getLayer());
         for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
@@ -134,10 +134,10 @@ public class AutomationUtil
         }
     }
 
-    public static void repeateRelationAnnotation(ActionContext aBModel,
+    public static void repeateRelationAnnotation(AnnotatorStateImpl aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
@@ -194,7 +194,7 @@ public class AutomationUtil
     private static void repeatRelation(int aStart, int aEnd, AnnotationFeature aFeature,
             String aValue, JCas jCas, ArcAdapter adapter, AnnotationFS aDepFS,
             AnnotationFS aGovFS, List<AnnotationFS> aSpanAnnos)
-        throws BratAnnotationException
+        throws AnnotationException
     {
         String dCoveredText = aDepFS.getCoveredText();
         String gCoveredText = aGovFS.getCoveredText();
@@ -277,7 +277,7 @@ public class AutomationUtil
      */
     public static void loadDocument(SourceDocument aDocument, RepositoryService aRepository,
             User logedInUser)
-                throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas jCas = null;
         if (!aRepository.existsCorrectionCas(aDocument)) {
@@ -312,17 +312,17 @@ public class AutomationUtil
         }
     }
 
-    public static void deleteSpanAnnotation(ActionContext aBModel,
+    public static void deleteSpanAnnotation(AnnotatorStateImpl aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
 
         AnnotationDocument annoDoc = aRepository.getAnnotationDocument(aBModel.getDocument(),
                 aBModel.getUser());
         JCas annoCas = aRepository.readAnnotationCas(annoDoc);
         // get selected text, concatenations of tokens
-        String selectedText = BratAjaxCasUtil.getSelectedText(annoCas, aStart, aEnd);
+        String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
@@ -353,10 +353,10 @@ public class AutomationUtil
     /**
      * 
      */
-    public static void deleteRelationAnnotation(ActionContext aBModel,
+    public static void deleteRelationAnnotation(AnnotatorStateImpl aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
 
         for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
@@ -1181,7 +1181,7 @@ public class AutomationUtil
      *             hum?
      * @throws IOException
      *             hum?
-     * @throws BratAnnotationException
+     * @throws AnnotationException
      *             hum?
      *
      * @throws AutomationException
@@ -1190,7 +1190,7 @@ public class AutomationUtil
     public static String generateFinalClassifier(MiraTemplate aTemplate,
             RepositoryService aRepository, AnnotationService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException
     {
         int frequency = 2;
@@ -1430,7 +1430,7 @@ public class AutomationUtil
      *             hum?
      * @throws IOException
      *             hum?
-     * @throws BratAnnotationException
+     * @throws AnnotationException
      *             hum?
      * @throws AutomationException
      *             hum?
@@ -1438,7 +1438,7 @@ public class AutomationUtil
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
             RepositoryService aRepository, AnnotationService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException,
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
@@ -1563,13 +1563,13 @@ public class AutomationUtil
      *            the feature.
      * @param aLabelValues
      *            the values.
-     * @throws BratAnnotationException
+     * @throws AnnotationException
      *             if the annotations could not be created/updated.
      * @throws IOException
      *             if an I/O error occurs.
      */
     public static void automate(JCas aJcas, AnnotationFeature aFeature, List<String> aLabelValues)
-        throws BratAnnotationException, IOException
+        throws AnnotationException, IOException
     {
 
         String typeName = aFeature.getLayer().getName();
@@ -1667,7 +1667,7 @@ public class AutomationUtil
     public static void predict(MiraTemplate aTemplate, RepositoryService aRepository,
             AutomationService aAutomationService, UserDao aUserDao)
         throws CASException, UIMAException, ClassNotFoundException, IOException,
-        BratAnnotationException
+        AnnotationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 

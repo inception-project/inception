@@ -29,15 +29,16 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -69,13 +70,13 @@ public class BratChainRenderer
      */
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, ActionContext aBratAnnotatorModel,
+            GetDocumentResponse aResponse, AnnotatorStateImpl aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
         // Get begin and end offsets of window content
-        int windowBegin = BratAjaxCasUtil.selectByAddr(aJcas,
+        int windowBegin = WebAnnoCasUtil.selectByAddr(aJcas,
                 Sentence.class, aBratAnnotatorModel.getFirstVisibleSentenceAddress()).getBegin();
-        int windowEnd = BratAjaxCasUtil.getLastSentenceInDisplayWindow(aJcas,
+        int windowEnd = WebAnnoCasUtil.getLastSentenceInDisplayWindow(aJcas,
                 aBratAnnotatorModel.getFirstVisibleSentenceAddress(),
                 aBratAnnotatorModel.getPreferences().getWindowSize()).getEnd();
 
@@ -140,7 +141,7 @@ public class BratChainRenderer
                     Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin,
                             linkFs.getEnd() - windowBegin);
 
-                    VID vid = new VID(BratAjaxCasUtil.getAddr(linkFs), VID.NONE, VID.NONE, VID.NONE);
+                    VID vid = new VID(WebAnnoCasUtil.getAddr(linkFs), VID.NONE, VID.NONE, VID.NONE);
                     aResponse.addEntity(new Entity(vid, bratTypeName, offsets, bratLabelText, color));
                 }
 
@@ -161,10 +162,10 @@ public class BratChainRenderer
                     }
 
                     List<Argument> argumentList = asList(
-                            new Argument("Arg1", BratAjaxCasUtil.getAddr(prevLinkFs)),
-                            new Argument("Arg2", BratAjaxCasUtil.getAddr(linkFs)));
+                            new Argument("Arg1", WebAnnoCasUtil.getAddr(prevLinkFs)),
+                            new Argument("Arg2", WebAnnoCasUtil.getAddr(linkFs)));
 
-                    VID vid = new VID(BratAjaxCasUtil.getAddr(prevLinkFs), 1, VID.NONE, VID.NONE);
+                    VID vid = new VID(WebAnnoCasUtil.getAddr(prevLinkFs), 1, VID.NONE, VID.NONE);
                     aResponse.addRelation(new Relation(vid, bratTypeName, argumentList,
                             bratLabelText, color));
                 }

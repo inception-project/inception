@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.isSameSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectOverlapping;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -45,9 +45,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.MultipleSentenceCoveredException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -167,11 +167,11 @@ public class SpanAdapter
      * @param aValue
      *            the value of the annotation for the span
      * @return the ID.
-     * @throws BratAnnotationException
+     * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
     public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
-        throws BratAnnotationException
+        throws AnnotationException
     {
         // if zero-offset annotation is requested
         if (aBegin == aEnd) {
@@ -182,7 +182,7 @@ public class SpanAdapter
                 List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
-                    throw new BratAnnotationException("No token is found to annotate");
+                    throw new AnnotationException("No token is found to annotate");
                 }
                 return updateCas(aJcas.getCas(), tokens.get(0).getBegin(), tokens.get(0).getEnd(),
                         aFeature, aValue);
@@ -260,7 +260,7 @@ public class SpanAdapter
      */
     private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             Object aValue)
-        throws BratAnnotationException
+        throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
@@ -277,7 +277,7 @@ public class SpanAdapter
 
     private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, Object aValue, Type aType)
-        throws BratAnnotationException
+        throws AnnotationException
     {
         AnnotationFS newAnnotation = aCas.createAnnotation(aType, aBegin, aEnd);
         setFeature(newAnnotation, aFeature, aValue);
@@ -286,7 +286,7 @@ public class SpanAdapter
             Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
-                throw new BratAnnotationException("No annotation of type [" + getAttachTypeName()
+                throw new AnnotationException("No annotation of type [" + getAttachTypeName()
                         + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
             }
             CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
@@ -298,11 +298,11 @@ public class SpanAdapter
 
     /**
      * A Helper method to add annotation to a Curation CAS
-     * @throws BratAnnotationException 
+     * @throws AnnotationException 
      */
     public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)
-        throws BratAnnotationException
+        throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = null;
@@ -341,7 +341,7 @@ public class SpanAdapter
             newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
         }
         if (aIsSlot && countAnno > 1) {
-            throw new BratAnnotationException(
+            throw new AnnotationException(
                     "There are different stacking annotation on curation panel, cannot copy the slot feature");
         }
         return newAnnotation;

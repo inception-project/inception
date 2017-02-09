@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package de.tudarmstadt.ukp.clarin.webanno.brat.exception;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 /**
- * Throw an exception if either a target or orgin span annotation is not merged before the arc
- * annotation merging is attempted
- *
+ * Covers information relevant to a single request cycle.
  */
-public class NoOriginOrTargetAnnotationSelectedException
-    extends BratAnnotationException
+public interface TransientActionContext
 {
-    private static final long serialVersionUID = 1280015349963924638L;
-
-    public NoOriginOrTargetAnnotationSelectedException(String message)
-    {
-        super(message);
-    }
-
+    String getUserAction();
+    void setUserAction(String aUserAction);
+    void clearUserAction();
 }

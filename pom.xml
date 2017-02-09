@@ -105,6 +105,11 @@
             </dependency>
             <dependency>
                 <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                <artifactId>webanno-api-annotation</artifactId>
+                <version>3.1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
                 <artifactId>webanno-api-dao</artifactId>
                 <version>3.1.0-SNAPSHOT</version>
             </dependency>
@@ -453,6 +458,7 @@
         <!-- Core -->
         <module>webanno-model</module>
         <module>webanno-api</module>
+        <module>webanno-api-annotation</module>
         <module>webanno-api-dao</module>
         <module>webanno-support</module>
         <module>webanno-dkprocore</module>

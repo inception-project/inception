@@ -23,7 +23,7 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelineModalWindowPanel;
 
@@ -36,7 +36,7 @@ public class GuidelineModalPanel
 {
     private static final long serialVersionUID = 671214149298791793L;
 
-    public GuidelineModalPanel(String id, final IModel<ActionContext> aModel)
+    public GuidelineModalPanel(String id, final IModel<AnnotatorStateImpl> aModel)
     {
         super(id, aModel);
         final ModalWindow guidelineModal;

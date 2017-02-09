@@ -40,7 +40,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffAdapter;
@@ -624,7 +624,7 @@ public class MergeCasTest {
 
 		assertEquals(1, numHost);
 		for (FeatureStructure host : CasUtil.select(mergeCas.getCas(), hostType)) {
-			ArrayFS linkFss = (ArrayFS) BratAjaxCasUtil.getFeatureFS(host, "links");
+			ArrayFS linkFss = (ArrayFS) WebAnnoCasUtil.getFeatureFS(host, "links");
 			assertEquals(0, linkFss.toArray().length);
 		}
 
@@ -662,7 +662,7 @@ public class MergeCasTest {
 
 		assertEquals(1, numHost);
 		for (FeatureStructure host : CasUtil.select(mergeCas.getCas(), hostType)) {
-			ArrayFS linkFss = (ArrayFS) BratAjaxCasUtil.getFeatureFS(host, "links");
+			ArrayFS linkFss = (ArrayFS) WebAnnoCasUtil.getFeatureFS(host, "links");
 			assertEquals(0, linkFss.toArray().length);
 		}
 	}

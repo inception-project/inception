@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.IOException;
@@ -66,12 +66,12 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
@@ -133,7 +133,7 @@ public class CorrectionPage
     private UserDao userRepository;
 
     private CurationContainer curationContainer;
-    private ActionContext bModel;
+    private AnnotatorStateImpl bModel;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -158,7 +158,7 @@ public class CorrectionPage
 
     public CorrectionPage()
     {
-        bModel = new ActionContext();
+        bModel = new AnnotatorStateImpl();
         bModel.setMode(Mode.CORRECTION);
 
         WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
@@ -221,7 +221,7 @@ public class CorrectionPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
                 annotator.bratRenderLater(aTarget);
@@ -234,12 +234,12 @@ public class CorrectionPage
         annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -259,12 +259,12 @@ public class CorrectionPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -276,12 +276,12 @@ public class CorrectionPage
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView",
-                new Model<ActionContext>(bModel), editor)
+                new Model<AnnotatorStateImpl>(bModel), editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -308,7 +308,7 @@ public class CorrectionPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
                 update(aTarget);
@@ -323,7 +323,7 @@ public class CorrectionPage
         curationContainer.setBratAnnotatorModel(bModel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<ActionContext>(bModel)));
+                new Model<AnnotatorStateImpl>(bModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -409,7 +409,7 @@ public class CorrectionPage
                                     .getName();
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
-                                    new Model<ActionContext>(bModel), user, repository));
+                                    new Model<AnnotatorStateImpl>(bModel), user, repository));
     						editor.refresh(target);
                         }
                         catch (Exception e) {
@@ -428,7 +428,7 @@ public class CorrectionPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<ActionContext>(bModel),editor)
+                new Model<AnnotatorStateImpl>(bModel),editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -459,7 +459,7 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel))
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = -468896211970839443L;
 
@@ -518,7 +518,7 @@ public class CorrectionPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
@@ -596,25 +596,25 @@ public class CorrectionPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<ActionContext>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorStateImpl>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected ActionContext load()
+            protected AnnotatorStateImpl load()
             {
                 return bModel;
             }
         });
 
         add(new FinishLink("showYesNoModalPanel",
-                new Model<ActionContext>(bModel), finish)
+                new Model<AnnotatorStateImpl>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -670,7 +670,7 @@ public class CorrectionPage
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -726,7 +726,7 @@ public class CorrectionPage
                 catch (IOException e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
@@ -794,7 +794,7 @@ public class CorrectionPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -823,7 +823,7 @@ public class CorrectionPage
                     try {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                        int previousSentenceAddress = BratAjaxCasUtil
+                        int previousSentenceAddress = WebAnnoCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
                                         bModel.getFirstVisibleSentenceAddress(), bModel
                                                 .getPreferences().getWindowSize());
@@ -857,7 +857,7 @@ public class CorrectionPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -919,7 +919,7 @@ public class CorrectionPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -946,7 +946,7 @@ public class CorrectionPage
                     try {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                        int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
                                         bModel.getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel
@@ -980,7 +980,7 @@ public class CorrectionPage
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -1016,7 +1016,7 @@ public class CorrectionPage
                             annotationService, userRepository);
                 }
                 catch (UIMAException | ClassNotFoundException | IOException
-                        | BratAnnotationException e) {
+                        | AnnotationException e) {
                     error(e);
                     LOG.error(e);
                 }
@@ -1025,7 +1025,7 @@ public class CorrectionPage
             }
         });
         
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(
                 bModel)));
     }
 
@@ -1066,7 +1066,7 @@ public class CorrectionPage
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         User loggedInUser = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
@@ -1252,7 +1252,7 @@ public class CorrectionPage
         catch (IOException e) {
             error(e.getMessage());
         }
-        catch (BratAnnotationException e) {
+        catch (AnnotationException e) {
             error(e.getMessage());
         }
 

@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.findWindowStartCenteringOnSelection;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -130,11 +130,11 @@ public class SuggestionViewPanel
                      * @throws IOException
                      * @throws ClassNotFoundException
                      * @throws UIMAException
-                     * @throws BratAnnotationException
+                     * @throws AnnotationException
                      */
                     @Override protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
                             throws UIMAException, ClassNotFoundException, IOException,
-                            BratAnnotationException
+                            AnnotationException
                     {
                         // TODO: chain the error from this component up in the
                         // CurationPage
@@ -207,7 +207,7 @@ public class SuggestionViewPanel
     private void mergeSpan(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
             RepositoryService aRepository, AnnotationService aAnnotationService)
-            throws BratAnnotationException, UIMAException, ClassNotFoundException, IOException
+            throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         Integer address = aRequest.getParameterValue("id").toInteger();
         String spanType = removePrefix(aRequest.getParameterValue("type").toString());
@@ -230,9 +230,9 @@ public class SuggestionViewPanel
                 clickedAnnotationDocument, address);
     }
 
-    private void createSpan(String spanType, ActionContext aBModel, JCas aMergeJCas,
+    private void createSpan(String spanType, AnnotatorStateImpl aBModel, JCas aMergeJCas,
             AnnotationDocument aAnnotationDocument, int aAddress)
-            throws IOException, UIMAException, ClassNotFoundException, BratAnnotationException
+            throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         JCas clickedJCas = getJCas(aBModel, aAnnotationDocument);
 
@@ -240,7 +240,7 @@ public class SuggestionViewPanel
 
        	if(isCorefType(fsClicked)){
        		
-    		throw new BratAnnotationException(" Coreference Annotation not supported in curation");
+    		throw new AnnotationException(" Coreference Annotation not supported in curation");
     	}
         long layerId = TypeUtil.getLayerId(spanType);
 
@@ -267,7 +267,7 @@ public class SuggestionViewPanel
 
     private void mergeArc(IRequestParameters aRequest,
             CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas)
-            throws BratAnnotationException, IOException, UIMAException, ClassNotFoundException
+            throws AnnotationException, IOException, UIMAException, ClassNotFoundException
     {
         Integer addressOriginClicked = aRequest.getParameterValue("originSpanId").toInteger();
         Integer addressTargetClicked = aRequest.getParameterValue("targetSpanId").toInteger();
@@ -276,7 +276,7 @@ public class SuggestionViewPanel
         String fsArcaddress = aRequest.getParameterValue("arcId").toString();
 
         String username = aCurationUserSegment.getUsername();
-        ActionContext bModel = aCurationUserSegment.getBratAnnotatorModel();
+        AnnotatorStateImpl bModel = aCurationUserSegment.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
 
         JCas clickedJCas = null;
@@ -307,7 +307,7 @@ public class SuggestionViewPanel
 
      	if(isCorefType(clickedFS)){
        		
-    		throw new BratAnnotationException(" Coreference Annotation not supported in curation");
+    		throw new AnnotationException(" Coreference Annotation not supported in curation");
     	}
      	
         MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
@@ -332,7 +332,7 @@ public class SuggestionViewPanel
     }
 
 
-    private JCas getJCas(ActionContext aModel, AnnotationDocument aDocument)
+    private JCas getJCas(AnnotatorStateImpl aModel, AnnotationDocument aDocument)
             throws IOException
     {
         try {

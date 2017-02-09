@@ -48,21 +48,22 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -123,18 +124,18 @@ public class BratAnnotator
 //    }
 
     @Deprecated
-    public IModel<ActionContext> getModel()
+    public IModel<AnnotatorStateImpl> getModel()
     {
         return detailPanel.getModel();
     }
 
     @Deprecated
-    public ActionContext getModelObject()
+    public AnnotatorStateImpl getModelObject()
     {
         return detailPanel.getModelObject();
     }
 
-    public BratAnnotator(String id, IModel<ActionContext> aModel,
+    public BratAnnotator(String id, IModel<AnnotatorStateImpl> aModel,
             final AnnotationDetailEditorPanel aEditor)
     {
         super(id, aModel);
@@ -329,7 +330,7 @@ public class BratAnnotator
         else {
             // Edit existing span annotation - in this case we look up the offsets in the CAS
             // Let's not trust the client in this case.
-            AnnotationFS fs = BratAjaxCasUtil.selectByAddr(jCas, aVid.getId());
+            AnnotationFS fs = WebAnnoCasUtil.selectByAddr(jCas, aVid.getId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
     }
@@ -488,18 +489,18 @@ public class BratAnnotator
      * Display an annotation on the next token if auto forwarding is enabled
      * @param aTarget
      * @param aJCas
-     * @throws BratAnnotationException 
+     * @throws AnnotationException 
      * @throws IOException 
      * @throws ClassNotFoundException 
      * @throws UIMAException 
      */
     public void autoForward(AjaxRequestTarget aTarget, JCas aJCas)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         LOG.info("BEGIN auto-forward annotation");
         Selection selection = getModelObject().getSelection();
 
-        AnnotationFS nextToken = BratAjaxCasUtil.getNextToken(aJCas, selection.getBegin(),
+        AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas, selection.getBegin(),
                 selection.getEnd());
         if (nextToken != null) {
             if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
@@ -554,7 +555,7 @@ public class BratAnnotator
         this.collection = collection;
     }
 
-    public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
+    public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
     {
 
     }
@@ -571,7 +572,7 @@ public class BratAnnotator
         return json;
     }
 
-    private JCas getCas(ActionContext aBratAnnotatorModel)
+    private JCas getCas(AnnotatorStateImpl aBratAnnotatorModel)
         throws UIMAException, IOException, ClassNotFoundException
     {
         if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)

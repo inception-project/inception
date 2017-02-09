@@ -25,8 +25,8 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**
@@ -40,7 +40,7 @@ public class DeleteOrReplaceAnnotationModalPanel
     private static final long serialVersionUID = 9059154802785333743L;
     private final Log log = LogFactory.getLog(getClass());
 
-    public DeleteOrReplaceAnnotationModalPanel(String aId, ActionContext aBModel,
+    public DeleteOrReplaceAnnotationModalPanel(String aId, AnnotatorStateImpl aBModel,
             ModalWindow aModalWindow, AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer,
             boolean aIsReplace)
     {
@@ -55,7 +55,7 @@ public class DeleteOrReplaceAnnotationModalPanel
         private static final long serialVersionUID = 2676469299552059617L;
 
         public YesNoButtonsForm(String id, final ModalWindow modalWindow,
-                ActionContext aBModel, AnnotationDetailEditorPanel aEditor,
+                AnnotatorStateImpl aBModel, AnnotationDetailEditorPanel aEditor,
                 AnnotationLayer aLayer, boolean aIsReplace)
         {
             super(id);

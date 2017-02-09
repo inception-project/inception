@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNextPageFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getNumberOfPages;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.getSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextPageFirstSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.io.FileNotFoundException;
@@ -71,12 +71,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.brat.exception.BratAnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratAjaxCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -146,7 +146,7 @@ public class AutomationPage
     private UserDao userRepository;
 
     private CurationContainer curationContainer;
-    private ActionContext bModel;
+    private AnnotatorStateImpl bModel;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -175,7 +175,7 @@ public class AutomationPage
 
     public AutomationPage()
     {
-        bModel = new ActionContext();
+        bModel = new AnnotatorStateImpl();
         bModel.setMode(Mode.AUTOMATION);
 
         WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
@@ -238,7 +238,7 @@ public class AutomationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
                 annotator.bratRenderLater(aTarget);
@@ -250,12 +250,12 @@ public class AutomationPage
         annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<ActionContext>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
 
@@ -274,7 +274,7 @@ public class AutomationPage
             }
             
             @Override
-            public void onAnnotate(AjaxRequestTarget aTarget, ActionContext aBModel)
+            public void onAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
             	if(aBModel.isForwardAnnotation()){
             		return;
@@ -336,19 +336,19 @@ public class AutomationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, ActionContext aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
                     annotator.autoForward(aTarget, getCas(aBModel));
                    // onAnnotate(aTarget, aBModel);
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | BratAnnotationException e) {
+                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -356,7 +356,7 @@ public class AutomationPage
             }
             
             @Override
-            public void onDelete(AjaxRequestTarget aTarget, ActionContext aBModel,
+            public void onDelete(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel,
                     AnnotationFS aFS)
             {
                 AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
@@ -390,7 +390,7 @@ public class AutomationPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -400,13 +400,13 @@ public class AutomationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<ActionContext>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorStateImpl>(bModel),
                 editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
 
             @Override
-            public void onChange(AjaxRequestTarget aTarget, ActionContext aBratAnnotatorModel)
+            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
             {
                 try {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -432,7 +432,7 @@ public class AutomationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
                 update(aTarget);
@@ -447,7 +447,7 @@ public class AutomationPage
         curationContainer.setBratAnnotatorModel(bModel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<ActionContext>(bModel)));
+                new Model<AnnotatorStateImpl>(bModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -551,7 +551,7 @@ public class AutomationPage
                             update(target);
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
-                                    new Model<ActionContext>(bModel), user, repository));
+                                    new Model<AnnotatorStateImpl>(bModel), user, repository));
     						editor.refresh(target);
     		
                         }
@@ -567,7 +567,7 @@ public class AutomationPage
                             target.addChildren(getPage(), FeedbackPanel.class);
                             error(e.getMessage());
                         }
-                        catch (BratAnnotationException e) {
+                        catch (AnnotationException e) {
                             error(e.getMessage());
                         }
                         finish.setModelObject(bModel);
@@ -582,7 +582,7 @@ public class AutomationPage
         });
 
         add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<ActionContext>(bModel), editor)
+                new Model<AnnotatorStateImpl>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -613,7 +613,7 @@ public class AutomationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<ActionContext>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -671,7 +671,7 @@ public class AutomationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
@@ -749,24 +749,24 @@ public class AutomationPage
                 catch (IOException e) {
                     error(e.getMessage());
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     error(e.getMessage());
                 }
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<ActionContext>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorStateImpl>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected ActionContext load()
+            protected AnnotatorStateImpl load()
             {
                 return bModel;
             }
         });
 
-        add(new FinishLink("showYesNoModalPanel", new Model<ActionContext>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", new Model<AnnotatorStateImpl>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -822,7 +822,7 @@ public class AutomationPage
                     catch (IOException e) {
                         error(ExceptionUtils.getRootCause(e));
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -880,7 +880,7 @@ public class AutomationPage
                 catch (IOException e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
-                catch (BratAnnotationException e) {
+                catch (AnnotationException e) {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                     error(e.getMessage());
                 }
@@ -939,7 +939,7 @@ public class AutomationPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -963,7 +963,7 @@ public class AutomationPage
                     try {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                        int previousSentenceAddress = BratAjaxCasUtil
+                        int previousSentenceAddress = WebAnnoCasUtil
                                 .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas, bModel
                                         .getFirstVisibleSentenceAddress(), bModel.getPreferences()
                                         .getWindowSize());
@@ -993,7 +993,7 @@ public class AutomationPage
                         ;
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -1044,7 +1044,7 @@ public class AutomationPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -1066,7 +1066,7 @@ public class AutomationPage
                     try {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         mergeJCas = repository.readCorrectionCas(bModel.getDocument());
-                        int lastDisplayWindowBeginingSentenceAddress = BratAjaxCasUtil
+                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                                 .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
                                         .getPreferences().getWindowSize());
                         if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
@@ -1095,7 +1095,7 @@ public class AutomationPage
                     catch (IOException e) {
                         error(e.getMessage());
                     }
-                    catch (BratAnnotationException e) {
+                    catch (AnnotationException e) {
                         error(e.getMessage());
                     }
                 }
@@ -1126,7 +1126,7 @@ public class AutomationPage
                             annotationService, userRepository);
                 }
                 catch (UIMAException | ClassNotFoundException | IOException
-                        | BratAnnotationException e) {
+                        | AnnotationException e) {
                     error(e);
                     LOG.error(e);
                 }
@@ -1135,7 +1135,7 @@ public class AutomationPage
             }
         });
         
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<ActionContext>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
     }
 
     
@@ -1176,7 +1176,7 @@ public class AutomationPage
     }
 
     private void loadDocumentAction(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, BratAnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User loggedInUser = userRepository.get(SecurityContextHolder.getContext()
@@ -1288,7 +1288,7 @@ public class AutomationPage
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
         bModel.setFirstVisibleSentence(sentence);
         bModel.setFocusSentenceNumber(
-                BratAjaxCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+                WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     private void update(AjaxRequestTarget target)
@@ -1310,7 +1310,7 @@ public class AutomationPage
         catch (IOException e) {
             error(e.getMessage());
         }
-        catch (BratAnnotationException e) {
+        catch (AnnotationException e) {
             error(e.getMessage());
         }
 

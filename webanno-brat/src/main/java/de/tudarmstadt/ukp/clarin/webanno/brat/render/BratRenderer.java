@@ -34,16 +34,17 @@ import java.util.Set;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratArcRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratChainRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratSpanRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.action.ActionContext;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
@@ -77,7 +78,7 @@ public class BratRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, ActionContext aBModel,
+    public static void render(GetDocumentResponse aResponse, AnnotatorStateImpl aBModel,
             JCas aJCas, AnnotationService aAnnotationService)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getScriptDirection()));
@@ -117,7 +118,7 @@ public class BratRenderer
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
-            ActionContext aAnnotatorState)
+            AnnotatorStateImpl aAnnotatorState)
     {
         int windowBegin = aAnnotatorState.getWindowBeginOffset();
         int windowEnd = aAnnotatorState.getWindowEndOffset();
