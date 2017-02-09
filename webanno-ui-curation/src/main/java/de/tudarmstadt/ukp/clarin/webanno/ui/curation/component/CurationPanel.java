@@ -263,16 +263,25 @@ public class CurationPanel
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
 
-                annotator.onChange(aTarget, aBModel);
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                try {
+                    updatePanel(aTarget, cCModel.getObject());
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException | IOException | AnnotationException e) {
+                    error(e.getMessage());
+                }
             }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
-                    annotator.autoForward(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -294,32 +303,7 @@ public class CurationPanel
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<AnnotatorStateImpl>(bModel),
-                editor)
-        {
-
-            private static final long serialVersionUID = 7279648231521710155L;
-
-            @Override
-            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl bratAnnotatorModel)
-            {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                try {
-                    updatePanel(aTarget, cCModel.getObject());
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (AnnotationException e) {
-                    error(e.getMessage());
-                }
-            }
-        };
+                editor);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);

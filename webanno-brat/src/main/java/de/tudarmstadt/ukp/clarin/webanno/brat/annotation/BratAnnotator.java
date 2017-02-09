@@ -49,10 +49,8 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -465,39 +463,6 @@ public class BratAnnotator
     }
     
     /**
-     * Display an annotation on the next token if auto forwarding is enabled
-     * @param aTarget
-     * @param aJCas
-     * @throws AnnotationException 
-     * @throws IOException 
-     * @throws ClassNotFoundException 
-     * @throws UIMAException 
-     */
-    public void autoForward(AjaxRequestTarget aTarget, JCas aJCas)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        LOG.info("BEGIN auto-forward annotation");
-        Selection selection = getModelObject().getSelection();
-
-        AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas, selection.getBegin(),
-                selection.getEnd());
-        if (nextToken != null) {
-            if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                selection.clear();
-                selection.set(aJCas, nextToken.getBegin(), nextToken.getEnd());
-                detailPanel.actionAnnotate(aTarget, getModelObject(), true);
-            }
-        }
-        
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
-        String json = toJson(response);
-        LOG.info("auto-forward annotation");
-        aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                + "').dispatcher.post('renderData', [" + json + "]);");
-    }
-
-    /**
      * Render content as part of the current request.
      *
      * @param aTarget
@@ -534,11 +499,6 @@ public class BratAnnotator
         this.collection = collection;
     }
 
-    public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
-    {
-
-    }
-    
     private String toJson(Object result)
     {
         String json = "[]";

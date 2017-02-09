@@ -171,28 +171,26 @@ public class AnnotationPage
             protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.add(numberOfPages);
 
                 try {
                     annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
                 }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-
-                annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
-
-                annotator.onChange(aTarget, aBModel);
             }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
-                    annotator.autoForward(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -206,13 +204,6 @@ public class AnnotationPage
                 editor)
         {
             private static final long serialVersionUID = 7279648231521710155L;
-
-            @Override
-            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
-            {
-                bModel = aBratAnnotatorModel;
-                aTarget.add(numberOfPages);
-            }
 
             @Override
             public void renderHead(IHeaderResponse aResponse)
@@ -336,7 +327,7 @@ public class AnnotationPage
                     annotator.bratRender(aTarget, jCas);
                     updateSentenceAddress(jCas, aTarget);
                 }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;

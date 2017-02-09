@@ -625,6 +625,7 @@ public class AnnotationDetailEditorPanel
         }
     }
     
+    @Override
     public void actionAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel, boolean aIsForwarded)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -814,8 +815,22 @@ public class AnnotationDetailEditorPanel
 			if (aBModel.getSelection().getEnd() >= aBModel.getFirstVisibleSentenceEnd()) {
 				autoScroll(jCas, aBModel, true);
 			}
-			onAutoForward(aTarget, aBModel);
 
+	        LOG.info("BEGIN auto-forward annotation");
+
+	        AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(jCas, selection.getBegin(),
+	                selection.getEnd());
+	        if (nextToken != null) {
+	            if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
+	                selection.clear();
+	                selection.set(jCas, nextToken.getBegin(), nextToken.getEnd());
+	                actionAnnotate(aTarget, getModelObject(), true);
+	            }
+	        }
+
+			onAutoForward(aTarget, aBModel);
+			
+	        LOG.info("END auto-forward annotation");
 		} else if (aBModel.getPreferences().isScrollPage()) {
 			autoScroll(jCas, aBModel, false);
 		}
@@ -1236,6 +1251,7 @@ public class AnnotationDetailEditorPanel
         // Overriden in AutomationPage
     }
 
+    @Override
     public void refreshAnnotationLayers(AnnotatorStateImpl aBModel)
     {
         updateLayersDropdown(aBModel);
@@ -1294,6 +1310,7 @@ public class AnnotationDetailEditorPanel
         return (IModel<AnnotatorStateImpl>) getDefaultModel();
     }
     
+    @Override
     public AnnotatorStateImpl getModelObject()
     {
         return (AnnotatorStateImpl) getDefaultModelObject();

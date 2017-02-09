@@ -242,29 +242,48 @@ public class CorrectionPage
             protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.add(automateView);
+                aTarget.add(numberOfPages);
 
                 try {
                     annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
                 }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
 
-                annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                try {
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    // info(bratAnnotatorModel.getMessage());
+                    SuggestionBuilder builder = new SuggestionBuilder(repository,
+                            annotationService, userRepository);
+                    curationContainer = builder.buildCurationContainer(bModel);
+                    setCurationSegmentBeginEnd();
+                    curationContainer.setBratAnnotatorModel(bModel);
 
-                annotator.onChange(aTarget, aBModel);
-
+                    CuratorUtil.updatePanel(aTarget, automateView, curationContainer, annotator,
+                            repository, annotationSelectionByUsernameAndAddress, curationSegment,
+                            annotationService, userRepository);
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException | IOException | AnnotationException e) {
+                    error(e.getMessage());
+                }
+                update(aTarget);
             }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
             {
                 try {
-                    annotator.autoForward(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas(aBModel));
                 }
-                catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
+                catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
@@ -276,44 +295,8 @@ public class CorrectionPage
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView",
-                new Model<AnnotatorStateImpl>(bModel), editor)
-        {
-            private static final long serialVersionUID = 7279648231521710155L;
-
-            @Override
-            public void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBratAnnotatorModel)
-            {
-                try {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    // info(bratAnnotatorModel.getMessage());
-                    bModel = aBratAnnotatorModel;
-                    SuggestionBuilder builder = new SuggestionBuilder(repository,
-                            annotationService, userRepository);
-                    curationContainer = builder.buildCurationContainer(bModel);
-                    setCurationSegmentBeginEnd();
-                    curationContainer.setBratAnnotatorModel(bModel);
-
-                    CuratorUtil.updatePanel(aTarget, automateView, curationContainer, this,
-                            repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, userRepository);
-                    aTarget.add(automateView);
-                    aTarget.add(numberOfPages);
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (AnnotationException e) {
-                    error(e.getMessage());
-                }
-                update(aTarget);
-            }
-        };
+                new Model<AnnotatorStateImpl>(bModel), editor);
+;
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
