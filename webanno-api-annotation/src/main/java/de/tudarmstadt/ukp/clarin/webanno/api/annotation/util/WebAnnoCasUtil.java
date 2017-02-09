@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -59,8 +58,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class WebAnnoCasUtil
 {
     /**
-     * Annotation a and annotation b are the same if they have the same address ( used for
-     * {@link CoreferenceChain})
+     * Annotation a and annotation b are the same if they have the same address.
      *
      * @param a
      *            a FS.
