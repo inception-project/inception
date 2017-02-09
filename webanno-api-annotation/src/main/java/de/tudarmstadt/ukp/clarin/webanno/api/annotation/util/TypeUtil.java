@@ -148,7 +148,7 @@ public final class TypeUtil
     /**
      * @param aBratTypeName the brat type name.
      * @return the layer ID.
-     * @see #getBratTypeName
+     * @see #getUiTypeName
      */
     public static long getLayerId(String aBratTypeName)
     {
