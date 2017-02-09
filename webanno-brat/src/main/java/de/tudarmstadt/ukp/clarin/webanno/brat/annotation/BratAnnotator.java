@@ -48,13 +48,13 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.component.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -105,29 +105,7 @@ public class BratAnnotator
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
     private String collection = "";
-    private AnnotationDetailEditorPanel detailPanel;
-
-//    /**
-//     * Data models for {@link BratAnnotator}
-//     *
-//     * @param aModel
-//     *            the model.
-//     */
-//    public void setModel(IModel<ActionContext> aModel)
-//    {
-//        setDefaultModel(aModel);
-//    }
-//
-//    public void setModelObject(ActionContext aModel)
-//    {
-//        setDefaultModelObject(aModel);
-//    }
-
-    @Deprecated
-    public IModel<AnnotatorStateImpl> getModel()
-    {
-        return detailPanel.getModel();
-    }
+    private AnnotationActionHandler detailPanel;
 
     @Deprecated
     public AnnotatorStateImpl getModelObject()
@@ -136,7 +114,7 @@ public class BratAnnotator
     }
 
     public BratAnnotator(String id, IModel<AnnotatorStateImpl> aModel,
-            final AnnotationDetailEditorPanel aEditor)
+            final AnnotationActionHandler aEditor)
     {
         super(id, aModel);
         this.detailPanel = aEditor;
@@ -238,7 +216,8 @@ public class BratAnnotator
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        detailPanel.actionSpanAnnotation(aTarget, jCas, offsets, paramId);
+                        detailPanel.actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
+                                offsets.getEnd(), paramId);
                         result = new SpanAnnotationResponse();
                     }
                     else if (ArcAnnotationResponse.is(action)) {

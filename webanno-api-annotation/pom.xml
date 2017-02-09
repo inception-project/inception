@@ -52,6 +52,12 @@
       <artifactId>commons-lang</artifactId>
     </dependency>
 
+    <!-- Wicket dependencies -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+
     <!-- Jackson dependencies -->
 
     <dependency>

@@ -95,6 +95,7 @@ import com.googlecode.wicket.kendo.ui.form.TextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -108,7 +109,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -136,6 +136,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class AnnotationDetailEditorPanel
     extends Panel
+    implements AnnotationActionHandler
 {
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
@@ -534,6 +535,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    @Override
     public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
             String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
         throws AnnotationException, UIMAException, ClassNotFoundException, IOException
@@ -565,8 +567,9 @@ public class AnnotationDetailEditorPanel
         }
     }
     
+    @Override
     public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
-            Offsets offsets, VID paramId)
+            int aBegin, int aEnd, VID paramId)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         assert jCas != null;                        
@@ -584,7 +587,7 @@ public class AnnotationDetailEditorPanel
                                 bModel.getProject()));
 
                 try {
-                    int id = adapter.add(jCas, offsets.getBegin(), offsets.getEnd(), null, null);
+                    int id = adapter.add(jCas, aBegin, aEnd, null, null);
                     setSlot(aTarget, jCas, bModel, id);
                 }
                 catch (AnnotationException e) {
@@ -607,7 +610,7 @@ public class AnnotationDetailEditorPanel
             selection.setRelationAnno(false);
 
             selection.setAnnotation(paramId);
-            selection.set(jCas, offsets.getBegin(), offsets.getEnd());
+            selection.set(jCas, aBegin, aEnd);
             refresh(aTarget);
             
             if (selection.getAnnotation().isNotSet()) {
