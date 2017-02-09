@@ -778,7 +778,7 @@ public class AnnotationDetailEditorPanel
                     Tag selectedTag = new Tag();
                     selectedTag.setName(value);
                     selectedTag.setTagSet(fm.feature.getTagset());
-                    annotationService.createTag(selectedTag, aBModel.getUser());
+                    annotationService.createTag(selectedTag);
                 }
             }
             adapter.updateFeature(jCas, fm.feature, aBModel.getSelection().getAnnotation().getId(),

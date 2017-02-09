@@ -271,12 +271,12 @@ public class ProjectTagSetsPanel
                             try {
                                 tagInputStream = tagFile.getInputStream();
                                 if(overwriteTagsetFlag.getModelObject()){
-                                    JsonImportUtil.importTagSetFromJsonWithOverwrite(project, user,
-                                            tagInputStream, annotationService);
+                                    JsonImportUtil.importTagSetFromJsonWithOverwrite(project, tagInputStream,
+                                            annotationService);
                                 }
                                 else {
-                                    JsonImportUtil.importTagSetFromJson(project, user,
-                                            tagInputStream, annotationService);
+                                    JsonImportUtil.importTagSetFromJson(project, tagInputStream,
+                                            annotationService);
                                 }
                                 		                                        
 
@@ -337,7 +337,7 @@ public class ProjectTagSetsPanel
                                                 .replace("\\n", "\n"));
                                         tagSet.setLanguage(tagsetLanguage);
                                         tagSet.setProject(project);
-                                        annotationService.createTagSet(tagSet, user);
+                                        annotationService.createTagSet(tagSet);
                                     }
                                     // otherwise it is a tag entry, add the tag
                                     // to the tagset
@@ -347,7 +347,7 @@ public class ProjectTagSetsPanel
                                                 "\\n", "\n"));
                                         tag.setName(key);
                                         tag.setTagSet(tagSet);
-                                        annotationService.createTag(tag, user);
+                                        annotationService.createTag(tag);
                                     }
                                     i++;
                                 }
@@ -429,7 +429,7 @@ public class ProjectTagSetsPanel
 
                             tagSet.setProject(selectedProjectModel.getObject());
                             try {
-                                annotationService.createTagSet(tagSet, user);
+                                annotationService.createTagSet(tagSet);
                                 tagSelectionForm.setVisible(true);
                                 tagDetailForm.setVisible(true);
                                 // annotationService.createType(tagSet.getFeature().getLayer(),
@@ -684,7 +684,7 @@ public class ProjectTagSetsPanel
                             User user = userRepository.get(username);
 
                             try {
-                                annotationService.createTag(tag, user);
+                                annotationService.createTag(tag);
                             }
                             catch (IOException e) {
                                 error("unable to create a log file while creating the Tag " + ":"

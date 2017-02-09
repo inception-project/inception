@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
@@ -42,13 +41,11 @@ public interface AnnotationService
      *
      * @param tag
      *            the tag.
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createTag(Tag tag, User user)
+    void createTag(Tag tag)
         throws IOException;
 
     /**
@@ -56,13 +53,11 @@ public interface AnnotationService
      *
      * @param tagset
      *            the tagset.
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createTagSet(TagSet tagset, User user)
+    void createTagSet(TagSet tagset)
         throws IOException;
 
     /**
@@ -73,13 +68,11 @@ public interface AnnotationService
      *
      * @param type
      *            the type.
-     * @param user
-     *            the user.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type, User user)
+    void createLayer(AnnotationLayer type)
         throws IOException;
 
     void createFeature(AnnotationFeature feature);
@@ -229,8 +222,6 @@ public interface AnnotationService
      * 
      * @param project
      *            the project.
-     * @param user
-     *            the user.
      * @param postags
      *            the pos tags.
      * @param posTagDescriptions
@@ -250,10 +241,9 @@ public interface AnnotationService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void initializeTypesForProject(Project project, User user, String[] postags,
-            String[] posTagDescriptions, String[] depTags, String[] depTagDescriptions,
-            String[] neTags, String[] neTagDescriptions, String[] corefTypeTags,
-            String[] corefRelTags)
+    void initializeTypesForProject(Project project, String[] postags, String[] posTagDescriptions,
+            String[] depTags, String[] depTagDescriptions, String[] neTags,
+            String[] neTagDescriptions, String[] corefTypeTags, String[] corefRelTags)
         throws IOException;
 
     /**
@@ -262,12 +252,10 @@ public interface AnnotationService
      * 
      * @param aProject
      *            the project.
-     * @param aUser
-     *            the user.
      * @throws IOException
      *             if an I/O error occurs.
      */ 
-    void initializeTypesForProject(Project aProject, User aUser)
+    void initializeTypesForProject(Project aProject)
             throws IOException;
     
     /**
@@ -394,6 +382,6 @@ public interface AnnotationService
     void removeAnnotationLayer(AnnotationLayer type);
 
     TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
-            String[] aTagDescription, Project aProject, User aUser)
+            String[] aTagDescription, Project aProject)
                 throws IOException;
 }

@@ -288,7 +288,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createProject(Project aProject, User aUser)
+    public void createProject(Project aProject)
         throws IOException
     {
         entityManager.persist(aProject);

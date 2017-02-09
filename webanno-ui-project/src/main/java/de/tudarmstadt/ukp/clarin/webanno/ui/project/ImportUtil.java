@@ -214,11 +214,11 @@ public class ImportUtil
             }
         }
         
-        aAnnotationService.initializeTypesForProject(aProject, user,
-                posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
-                depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
-                neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
-                corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
+        aAnnotationService.initializeTypesForProject(aProject, posTags.toArray(new String[0]),
+                posTagDescriptions.toArray(new String[0]), depTags.toArray(new String[0]),
+                depTagDescriptions.toArray(new String[0]), neTags.toArray(new String[0]),
+                neTagDescriptions.toArray(new String[0]), corefTypeTags.toArray(new String[0]),
+                corefRelTags.toArray(new String[0]));
     }
 
     private static Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> createV1Layer(
@@ -277,12 +277,12 @@ public class ImportUtil
                 AnnotationLayer attachLayer = aAnnotationService.getLayer(exLayer.getAttachType()
                         .getName(), aProject);
                 layer.setAttachType(attachLayer);
-                aAnnotationService.createLayer(layersMap.get(exLayer), aUser);
+                aAnnotationService.createLayer(layersMap.get(exLayer));
             }
             if (exLayer.getAttachFeature() != null) {
                 layersMap.get(exLayer)
                         .setAttachFeature(featuresMap.get(exLayer.getAttachFeature()));
-                aAnnotationService.createLayer(layersMap.get(exLayer), aUser);
+                aAnnotationService.createLayer(layersMap.get(exLayer));
             }
 
             for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature eXFeature : exLayer
@@ -308,7 +308,7 @@ public class ImportUtil
         aTagSet.setLanguage(aExTagSet.getLanguage());
         aTagSet.setName(aExTagSet.getName());
         aTagSet.setProject(aProject);
-        aAnnotationService.createTagSet(aTagSet, aUser);
+        aAnnotationService.createTagSet(aTagSet);
 
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag : aExTagSet.getTags()) {
             // do not duplicate tag
@@ -319,7 +319,7 @@ public class ImportUtil
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
-            aAnnotationService.createTag(tag, aUser);
+            aAnnotationService.createTag(tag);
         }
     }
 
@@ -341,7 +341,7 @@ public class ImportUtil
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
-        aAnnotationService.createLayer(aLayer, aUser);
+        aAnnotationService.createLayer(aLayer);
     }
 
     public static void setFeature(AnnotationService aAnnotationService, AnnotationFeature aFeature,
@@ -407,7 +407,7 @@ public class ImportUtil
             project.setScriptDirection(aProject.getScriptDirection());
         }
         
-        aRepository.createProject(project, user);
+        aRepository.createProject(project);
         return project;
     }
 
@@ -895,13 +895,13 @@ public class ImportUtil
         newTagSet.setName(importedTagSetName);
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
-        aAnnotationService.createTagSet(newTagSet, user);
+        aAnnotationService.createTagSet(newTagSet);
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());
             newTag.setTagSet(newTagSet);
-            aAnnotationService.createTag(newTag, user);
+            aAnnotationService.createTag(newTag);
         }
         
         return newTagSet;

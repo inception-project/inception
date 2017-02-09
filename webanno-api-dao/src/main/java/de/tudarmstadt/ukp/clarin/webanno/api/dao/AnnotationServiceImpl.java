@@ -31,6 +31,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -39,6 +41,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -49,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -83,20 +86,20 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void createTag(Tag aTag, User aUser)
+    public void createTag(Tag aTag)
         throws IOException
     {
         entityManager.persist(aTag);
 
-        createLog(aTag.getTagSet().getProject(), aUser.getUsername()).info(
+        createLog(aTag.getTagSet().getProject()).info(
                 " Added tag [" + aTag.getName() + "] with ID [" + aTag.getId() + "] to TagSet ["
                         + aTag.getTagSet().getName() + "]");
-        createLog(aTag.getTagSet().getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aTag.getTagSet().getProject()).removeAllAppenders();
     }
 
     @Override
     @Transactional
-    public void createTagSet(TagSet aTagSet, User aUser)
+    public void createTagSet(TagSet aTagSet)
         throws IOException
     {
 
@@ -106,14 +109,14 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aTagSet);
         }
-        createLog(aTagSet.getProject(), aUser.getUsername()).info(
+        createLog(aTagSet.getProject()).info(
                 " Added tagset [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
-        createLog(aTagSet.getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aTagSet.getProject()).removeAllAppenders();
     }
 
     @Override
     @Transactional
-    public void createLayer(AnnotationLayer aLayer, User aUser)
+    public void createLayer(AnnotationLayer aLayer)
         throws IOException
     {
         if (aLayer.getId() == 0) {
@@ -122,9 +125,9 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aLayer);
         }
-        createLog(aLayer.getProject(), aUser.getUsername()).info(
+        createLog(aLayer.getProject()).info(
                 " Added layer [" + aLayer.getName() + "] with ID [" + aLayer.getId() + "]");
-        createLog(aLayer.getProject(), aUser.getUsername()).removeAllAppenders();
+        createLog(aLayer.getProject()).removeAllAppenders();
     }
 
     @Override
@@ -302,7 +305,7 @@ public class AnnotationServiceImpl
 
     @Override
     public TagSet createTagSet(String aDescription, String aTagSetName, String aLanguage,
-            String[] aTags, String[] aTagDescription, Project aProject, User aUser)
+            String[] aTags, String[] aTagDescription, Project aProject)
                 throws IOException
     {
         TagSet tagSet = new TagSet();
@@ -311,7 +314,7 @@ public class AnnotationServiceImpl
         tagSet.setName(aTagSetName);
         tagSet.setProject(aProject);
 
-        createTagSet(tagSet, aUser);
+        createTagSet(tagSet);
 
         int i = 0;
         for (String tagName : aTags) {
@@ -319,7 +322,7 @@ public class AnnotationServiceImpl
             tag.setTagSet(tagSet);
             tag.setDescription(aTagDescription[i]);
             tag.setName(tagName);
-            createTag(tag, aUser);
+            createTag(tag);
             i++;
         }
         
@@ -327,7 +330,7 @@ public class AnnotationServiceImpl
     }
 
     private AnnotationFeature createFeature(String aName, String aUiName, String aDescription,
-            String aType, TagSet aTagSet, Project aProject, User aUser)
+            String aType, TagSet aTagSet, Project aProject)
         throws IOException
     {
         AnnotationFeature feature = new AnnotationFeature();
@@ -344,13 +347,12 @@ public class AnnotationServiceImpl
 
     @Override
     @Transactional
-    public void initializeTypesForProject(Project aProject, User aUser, String[] aPostags,
-            String[] aPosTagDescriptions, String[] aDepTags, String[] aDepTagDescriptions,
-            String[] aNeTags, String[] aNeTagDescriptions, String[] aCorefTypeTags,
-            String[] aCorefRelTags)
+    public void initializeTypesForProject(Project aProject, String[] aPostags, String[] aPosTagDescriptions,
+            String[] aDepTags, String[] aDepTagDescriptions, String[] aNeTags,
+            String[] aNeTagDescriptions, String[] aCorefTypeTags, String[] aCorefRelTags)
         throws IOException
     {
-        createTokenLayer(aProject, aUser);
+        createTokenLayer(aProject);
 
         String[] posTags = aPostags.length > 0 ? aPostags : new String[] { "$(", "$,", "$.",
                 "ADJA", "ADJD", "ADV", "APPO", "APPR", "APPRART", "APZR", "ART", "CARD", "FM",
@@ -420,9 +422,9 @@ public class AnnotationServiceImpl
                 "Stuttgart-Tübingen-Tag-Set \nGerman Part of Speech tagset "
                         + "STTS Tag Table (1995/1999): "
                         + "http://www.ims.uni-stuttgart.de/projekte/corplex/TagSets/stts-table.html",
-            "STTS", "de", posTags, posTagDescriptions, aProject, aUser);
+            "STTS", "de", posTags, posTagDescriptions, aProject);
         
-        createPOSLayer(aProject, aUser, posFeatureTagset);
+        createPOSLayer(aProject, posFeatureTagset);
 
         String[] depTags = aDepTags.length > 0 ? aDepTags : new String[] { "ADV", "APP", "ATTR",
                 "AUX", "AVZ", "CJ", "DET", "ETH", "EXPL", "GMOD", "GRAD", "KOM", "KON", "KONJ",
@@ -436,8 +438,8 @@ public class AnnotationServiceImpl
         String[] depTagsDescription = aDepTagDescriptions.length == depTags.length ? aDepTagDescriptions
                 : depTags;
         TagSet deFeatureTagset = createTagSet("Dependency annotation", "Tiger", "de", depTags,
-                depTagsDescription, aProject, aUser);
-        createDepLayer(aProject, aUser, deFeatureTagset);
+                depTagsDescription, aProject);
+        createDepLayer(aProject, deFeatureTagset);
 
         String[] neTags = aNeTags.length > 0 ? aNeTags : new String[] { "PER", "PERderiv",
                 "PERpart", "LOC", "LOCderiv", "LOCpart", "ORG", "ORGderiv", "ORGpart", "OTH",
@@ -450,71 +452,69 @@ public class AnnotationServiceImpl
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" };
         TagSet neFeatureTagset = createTagSet("Named Entity annotation", "NER_WebAnno", "de",
-                neTags, neTagDescriptions, aProject, aUser);
-        createNeLayer(aProject, aUser, neFeatureTagset);
+                neTags, neTagDescriptions, aProject);
+        createNeLayer(aProject, neFeatureTagset);
 
         // Coref Layer
         TagSet corefTypeFeatureTagset = createTagSet("coreference type annotation", "BART", "de",
                 aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" },
-                aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject,
-                aUser);
+                aCorefTypeTags.length > 0 ? aCorefTypeTags : new String[] { "nam" }, aProject);
         TagSet corefRelFeatureTagset = createTagSet("coreference relation annotation", "TuebaDZ",
                 "de", aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" },
-                aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject,
-                aUser);
-        createCorefLayer(aProject, aUser, corefTypeFeatureTagset, corefRelFeatureTagset);
+                aCorefRelTags.length > 0 ? aCorefRelTags : new String[] { "anaphoric" }, aProject);
+        createCorefLayer(aProject, corefTypeFeatureTagset, corefRelFeatureTagset);
 
-        createLemmaLayer(aProject, aUser);
+        createLemmaLayer(aProject);
 
-        createChunkLayer(aProject, aUser);
+        createChunkLayer(aProject);
     }
 
     @Override
     @Transactional
-    public void initializeTypesForProject(Project aProject, User aUser)
+    public void initializeTypesForProject(Project aProject)
         throws IOException
     {
         // Default layers with default tagsets
-        createTokenLayer(aProject, aUser);
+        createTokenLayer(aProject);
 
-        TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/mul-pos-ud.json").getInputStream(), this);
-        createPOSLayer(aProject, aUser, posTagSet);
+        createPOSLayer(aProject, posTagSet);
 
-        TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/mul-dep-ud.json").getInputStream(), this);
-        createDepLayer(aProject, aUser, depTagSet);
+        createDepLayer(aProject, depTagSet);
 
-        TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        TagSet nerTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(), this);
-        createNeLayer(aProject, aUser, nerTagSet);
+        createNeLayer(aProject, nerTagSet);
 
-        TagSet corefTypeTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        TagSet corefTypeTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-coref-type-bart.json").getInputStream(), this);
-        TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(), this);
-        createCorefLayer(aProject, aUser, corefTypeTagSet, corefRelTagSet);
+        createCorefLayer(aProject, corefTypeTagSet, corefRelTagSet);
 
-        createLemmaLayer(aProject, aUser);
+        createLemmaLayer(aProject);
 
-        createChunkLayer(aProject, aUser);
+        createChunkLayer(aProject);
 
-        createSurfaceFormLayer(aProject, aUser);
+        createSurfaceFormLayer(aProject);
 
         // Extra tagsets
-        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(), this);
-        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(), this);
-        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(), this);
-        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(), this);
-        JsonImportUtil.importTagSetFromJson(aProject, aUser,
+        JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(), this);
-    }    
+    }
     
-    private void createLemmaLayer(Project aProject, User aUser)
+    private void createLemmaLayer(Project aProject)
         throws IOException
     {
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
@@ -526,7 +526,7 @@ public class AnnotationServiceImpl
                 aProject, true);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
-        createLayer(lemmaLayer, aUser);
+        createLayer(lemmaLayer);
 
         AnnotationFeature lemmaFeature = new AnnotationFeature();
         lemmaFeature.setDescription("lemma Annotation");
@@ -538,8 +538,7 @@ public class AnnotationServiceImpl
         createFeature(lemmaFeature);
     }
 
-    private AnnotationLayer createCorefLayer(Project aProject, User aUser, TagSet aCorefTypeTags,
-            TagSet aCorefRelTags)
+    private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags, TagSet aCorefRelTags)
                 throws IOException
     {
         AnnotationLayer base = new AnnotationLayer(
@@ -549,38 +548,38 @@ public class AnnotationServiceImpl
         base.setAllowStacking(true);
         base.setMultipleTokens(true);
         base.setLockToTokenOffset(false);
-        createLayer(base, aUser);
+        createLayer(base);
 
         AnnotationFeature corefTypeFeature = createFeature("referenceType", "referenceType",
-                "Coreference type", CAS.TYPE_NAME_STRING, aCorefTypeTags, aProject, aUser);
+                "Coreference type", CAS.TYPE_NAME_STRING, aCorefTypeTags, aProject);
         corefTypeFeature.setLayer(base);
         corefTypeFeature.setVisible(true);
 
         AnnotationFeature corefRelFeature = createFeature("referenceRelation", "referenceRelation",
-                "Coreference relation", CAS.TYPE_NAME_STRING, aCorefRelTags, aProject, aUser);
+                "Coreference relation", CAS.TYPE_NAME_STRING, aCorefRelTags, aProject);
         corefRelFeature.setLayer(base);
         corefRelFeature.setVisible(true);
 
         return base;
     }
 
-    private void createNeLayer(Project aProject, User aUser, TagSet aTagset)
+    private void createNeLayer(Project aProject, TagSet aTagset)
         throws IOException
     {
         AnnotationFeature neFeature = createFeature("value", "value", "Named entity type",
-                CAS.TYPE_NAME_STRING, aTagset, aProject, aUser);
+                CAS.TYPE_NAME_STRING, aTagset, aProject);
 
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
                 SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
         neLayer.setLockToTokenOffset(false);
-        createLayer(neLayer, aUser);
+        createLayer(neLayer);
 
         neFeature.setLayer(neLayer);
     }
 
-    private void createChunkLayer(Project aProject, User aUser)
+    private void createChunkLayer(Project aProject)
         throws IOException
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
@@ -588,7 +587,7 @@ public class AnnotationServiceImpl
         chunkLayer.setAllowStacking(false);
         chunkLayer.setMultipleTokens(true);
         chunkLayer.setLockToTokenOffset(false);
-        createLayer(chunkLayer, aUser);
+        createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
         chunkValueFeature.setDescription("Chunk tag");
@@ -600,7 +599,7 @@ public class AnnotationServiceImpl
         createFeature(chunkValueFeature);
     }
 
-    private void createSurfaceFormLayer(Project aProject, User aUser)
+    private void createSurfaceFormLayer(Project aProject)
         throws IOException
     {
         AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
@@ -609,7 +608,7 @@ public class AnnotationServiceImpl
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
         surfaceFormLayer.setLockToTokenOffset(false);
         surfaceFormLayer.setMultipleTokens(true);
-        createLayer(surfaceFormLayer, aUser);
+        createLayer(surfaceFormLayer);
 
         AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
         surfaceFormValueFeature.setDescription("Original surface text");
@@ -621,7 +620,7 @@ public class AnnotationServiceImpl
         createFeature(surfaceFormValueFeature);
     }
 
-    private void createDepLayer(Project aProject, User aUser, TagSet aTagset)
+    private void createDepLayer(Project aProject, TagSet aTagset)
         throws IOException
     {
         // Dependency Layer
@@ -639,22 +638,22 @@ public class AnnotationServiceImpl
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenPosFeature);
 
-        createLayer(depLayer, aUser);
+        createLayer(depLayer);
 
         AnnotationFeature featRel = createFeature("DependencyType", "Relation",
-                "Dependency relation", CAS.TYPE_NAME_STRING, aTagset, aProject, aUser);
+                "Dependency relation", CAS.TYPE_NAME_STRING, aTagset, aProject);
         featRel.setLayer(depLayer);
         
         String[] flavors = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
         String[] flavorDesc = { DependencyFlavor.BASIC, DependencyFlavor.ENHANCED };
         TagSet flavorsTagset = createTagSet("Dependency flavors", "Dependency flavors", "mul",
-                flavors, flavorDesc, aProject, aUser);
+                flavors, flavorDesc, aProject);
         AnnotationFeature featFlavor = createFeature("flavor", "Flavor",
-                "Dependency relation", CAS.TYPE_NAME_STRING, flavorsTagset, aProject, aUser);
+                "Dependency relation", CAS.TYPE_NAME_STRING, flavorsTagset, aProject);
         featFlavor.setLayer(depLayer);
     }
 
-    private void createPOSLayer(Project aProject, User aUser, TagSet aPosTagset)
+    private void createPOSLayer(Project aProject, TagSet aPosTagset)
         throws IOException
     {
         AnnotationLayer tokenLayer = getLayer(Token.class.getName(), aProject);
@@ -666,20 +665,20 @@ public class AnnotationServiceImpl
         tokenPosFeature.setVisible(true);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
-        createLayer(posLayer, aUser);
+        createLayer(posLayer);
 
         AnnotationFeature posFeature = createFeature("PosValue", "PosValue", "Part-of-speech tag",
-                CAS.TYPE_NAME_STRING, aPosTagset, aProject, aUser);
+                CAS.TYPE_NAME_STRING, aPosTagset, aProject);
         posFeature.setLayer(posLayer);
     }
 
-    private AnnotationLayer createTokenLayer(Project aProject, User aUser)
+    private AnnotationLayer createTokenLayer(Project aProject)
         throws IOException
     {
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
                 aProject, true);
 
-        createLayer(tokenLayer, aUser);
+        createLayer(tokenLayer);
         return tokenLayer;
     }
 
@@ -840,13 +839,22 @@ public class AnnotationServiceImpl
 
     private static final String PROJECT = "/project/";
 
-    private Logger createLog(Project aProject, String aUser)
+    private Logger createLog(Project aProject)
         throws IOException
     {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication != null ? authentication.getName() : "SYSTEM";
+
         Logger logger = Logger.getLogger(getClass());
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
-                targetLog, true);
+        Appender apndr;
+        try {
+            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
+                    true);
+        }
+        catch (IOException e) {
+            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
+        }
         logger.addAppender(apndr);
         logger.setLevel(Level.ALL);
         return logger;

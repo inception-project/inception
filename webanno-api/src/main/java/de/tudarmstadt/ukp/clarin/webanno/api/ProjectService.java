@@ -144,13 +144,11 @@ public interface ProjectService
      *
      * @param project
      *            The {@link Project} object to be created.
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
-    void createProject(Project project, User user)
+    void createProject(Project project)
         throws IOException;
 
     /**

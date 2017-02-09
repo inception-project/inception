@@ -855,7 +855,7 @@ public class ProjectLayersPanel
                         layer.setProject(project);
                         try {
                             layer.setName(TYPE_PREFIX + layerName);
-                            annotationService.createLayer(layer, user);
+                            annotationService.createLayer(layer);
                             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                                 AnnotationFeature relationFeature = new AnnotationFeature();
                                 relationFeature.setType(CAS.TYPE_NAME_STRING);

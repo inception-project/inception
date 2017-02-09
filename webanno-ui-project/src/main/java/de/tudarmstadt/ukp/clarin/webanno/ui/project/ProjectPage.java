@@ -529,7 +529,7 @@ public class ProjectPage
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = userRepository.get(username);
-                        repository.createProject(project, user);
+                        repository.createProject(project);
 
                         repository.createProjectPermission(new ProjectPermission(project,
                                 username, PermissionLevel.ADMIN));
@@ -538,7 +538,7 @@ public class ProjectPage
                         repository.createProjectPermission(
                                 new ProjectPermission(project, username, PermissionLevel.USER));
 
-                        annotationService.initializeTypesForProject(project, user);
+                        annotationService.initializeTypesForProject(project);
                         projectDetailForm.setVisible(true);
                         SelectionModel selectionModel = new SelectionModel();
                         selectionModel.project = project;
