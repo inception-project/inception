@@ -554,7 +554,7 @@
                   <groupId>org.codehaus.mojo</groupId>
                   <artifactId>build-helper-maven-plugin</artifactId>
                   <version>1.8</version>
-                </plugin>   
+                </plugin>
                 <plugin>
                   <groupId>org.asciidoctor</groupId>
                   <artifactId>asciidoctor-maven-plugin</artifactId>
@@ -562,8 +562,18 @@
                   <dependencies>
                     <dependency>
                       <groupId>org.asciidoctor</groupId>
+                      <artifactId>asciidoctorj</artifactId>
+                      <version>1.5.4.1</version>
+                    </dependency>
+                    <dependency>
+                      <groupId>org.asciidoctor</groupId>
                       <artifactId>asciidoctorj-pdf</artifactId>
                       <version>1.5.0-alpha.11</version>
+                    </dependency>
+                    <dependency>
+                      <groupId>org.jruby</groupId>
+                      <artifactId>jruby-complete</artifactId>
+                      <version>1.7.26</version>
                     </dependency>
                   </dependencies>
                 </plugin>
