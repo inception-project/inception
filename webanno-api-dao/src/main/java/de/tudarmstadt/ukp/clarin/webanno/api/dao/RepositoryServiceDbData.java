@@ -2237,13 +2237,9 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    public List<Project> listAccessibleProjects()
+    public List<Project> listAccessibleProjects(User user)
     {
         List<Project> allowedProject = new ArrayList<Project>();
-
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-
         List<Project> allProjects = listProjects();
 
         // if global admin, show all projects

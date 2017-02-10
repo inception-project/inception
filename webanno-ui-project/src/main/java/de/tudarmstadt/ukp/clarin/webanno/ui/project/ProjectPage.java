@@ -187,7 +187,10 @@ public class ProjectPage
                         @Override
                         protected List<Project> load()
                         {
-                            return repository.listAccessibleProjects();
+                            String username = SecurityContextHolder.getContext().getAuthentication()
+                                    .getName();
+                            User user = userRepository.get(username);
+                            return repository.listAccessibleProjects(user);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));

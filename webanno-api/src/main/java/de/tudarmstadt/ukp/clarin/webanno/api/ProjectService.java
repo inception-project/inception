@@ -249,7 +249,7 @@ public interface ProjectService
      *
      * @return list of projects accessible by the user.
      */
-    List<Project> listAccessibleProjects();
+    List<Project> listAccessibleProjects(User aUser);
 
     /**
      * Export the associated project log for this {@link Project} while copying a project

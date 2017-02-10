@@ -163,8 +163,8 @@ public class RemoteApiController
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
-        projectRepository.createProject(project, user);
-        annotationService.initializeTypesForProject(project, user);
+        projectRepository.createProject(project);
+        annotationService.initializeTypesForProject(project);
         
         // Create permission for the project creator
         projectRepository.createProjectPermission(
@@ -249,7 +249,7 @@ public class RemoteApiController
         }
 
         // Get projects with permission
-        List<Project> accessibleProjects = projectRepository.listAccessibleProjects();
+        List<Project> accessibleProjects = projectRepository.listAccessibleProjects(user);
 
         // Add permissions for each project into JSON array and store in JSON object
         JSONObject returnJSONObj = new JSONObject();
