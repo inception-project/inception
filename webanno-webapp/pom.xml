@@ -232,11 +232,20 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
+        <!-- Wicket 7 -->
+        <!--  
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        <!-- Wicket 6 -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
 		<!-- Jackson dependencies -->
 
@@ -341,7 +350,7 @@
 		<dependency>
 			<groupId>commons-dbcp</groupId>
 			<artifactId>commons-dbcp</artifactId>
-			<version>1.2.2</version>
+			<version>1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

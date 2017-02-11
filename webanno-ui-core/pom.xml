@@ -48,9 +48,18 @@
             <artifactId>webanno-support</artifactId>
         </dependency>
 
+        <!-- Wicket 7 -->
+        <!--  
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        -->
+        <!-- Wicket 6 -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
 

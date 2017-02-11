@@ -15,10 +15,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans:beans xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<beans:beans 
+    xmlns:beans="http://www.springframework.org/schema/beans" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.springframework.org/schema/security"
-    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
-	http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.0.xsd">
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xs
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
 
     <beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <beans:property name="ignoreUnresolvablePlaceholders" value="true" />
