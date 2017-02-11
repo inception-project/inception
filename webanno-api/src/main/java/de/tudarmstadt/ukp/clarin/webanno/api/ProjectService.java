@@ -39,12 +39,9 @@ public interface ProjectService
      *
      * @param permission
      *            the permission
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
-    void createProjectPermission(ProjectPermission permission)
-        throws IOException;
+    void createProjectPermission(ProjectPermission permission);
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
@@ -121,12 +118,9 @@ public interface ProjectService
      *
      * @param projectPermission
      *            The ProjectPermission to be removed
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProjectPermission(ProjectPermission projectPermission)
-        throws IOException;
+    void removeProjectPermission(ProjectPermission projectPermission);
 
     /**
      * list Projects which contain with those annotation documents state is finished

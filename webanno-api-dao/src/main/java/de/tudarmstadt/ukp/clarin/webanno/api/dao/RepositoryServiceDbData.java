@@ -295,20 +295,19 @@ public class RepositoryServiceDbData
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         FileUtils.forceMkdir(new File(path));
         createLog(aProject).info(
-                "Created  Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
+                "Created project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
         createLog(aProject).removeAllAppenders();
     }
 
     @Override
     @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
-        throws IOException
     {
         entityManager.persist(aPermission);
-        createLog(aPermission.getProject()).info(
-                " New Permission created on Project[" + aPermission.getProject().getName()
-                        + "] for user [" + aPermission.getUser() + "] with permission ["
-                        + aPermission.getLevel() + "]" + "]");
+        createLog(aPermission.getProject()).info("Created permission [" + aPermission.getLevel()
+                + "] for user [" + aPermission.getUser() + "] on project ["
+                + aPermission.getProject().getName() + "] with ID ["
+                + aPermission.getProject().getId() + "]");
         createLog(aPermission.getProject()).removeAllAppenders();
     }
 
@@ -323,7 +322,6 @@ public class RepositoryServiceDbData
         else {
             entityManager.merge(aDocument);
         }
-
     }
 
     @Override
@@ -1299,7 +1297,6 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public void removeProjectPermission(ProjectPermission projectPermission)
-        throws IOException
     {
         entityManager.remove(projectPermission);
         createLog(projectPermission.getProject()).info(

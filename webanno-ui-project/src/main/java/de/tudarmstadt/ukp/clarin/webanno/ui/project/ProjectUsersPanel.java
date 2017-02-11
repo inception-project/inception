@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
@@ -97,7 +95,8 @@ public class ProjectUsersPanel
                         public Object getDisplayValue(User aObject)
                         {
                             List<ProjectPermission> projectPermissions = projectRepository
-                                    .listProjectPermissionLevel(aObject, selectedProject.getObject());
+                                    .listProjectPermissionLevel(aObject,
+                                            selectedProject.getObject());
                             List<String> permissionLevels = new ArrayList<String>();
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
@@ -154,7 +153,7 @@ public class ProjectUsersPanel
 
                 }
             });
-            
+
             Button removeUserButton = new Button("removeUser", new ResourceModel("label"))
             {
 
@@ -170,13 +169,7 @@ public class ProjectUsersPanel
                     List<ProjectPermission> projectPermissions = projectRepository
                             .listProjectPermissionLevel(selectedUser, selectedProject.getObject());
                     for (ProjectPermission projectPermission : projectPermissions) {
-                        try {
-                            projectRepository.removeProjectPermission(projectPermission);
-                        }
-                        catch (IOException e) {
-                            error("Unable to remove project permission level "
-                                    + ExceptionUtils.getRootCauseMessage(e));
-                        }
+                        projectRepository.removeProjectPermission(projectPermission);
                     }
                     userLists.remove(selectedUser);
                 }
@@ -184,33 +177,33 @@ public class ProjectUsersPanel
             // Add check to prevent accidental delete operation
             removeUserButton.add(new AttributeModifier("onclick",
                     "if(!confirm('Do you really want to remove this User?')) return false;"));
-            
-            add(removeUserButton);           
-//            add(new Button("removeUser", new ResourceModel("label"))
-//            {
-//                private static final long serialVersionUID = 1L;
-//
-//                @Override
-//                public void onSubmit()
-//                {
-//                    if (selectedUser == null) {
-//                        info("No user is selected to remove");
-//                        return;
-//                    }
-//                    List<ProjectPermission> projectPermissions = projectRepository
-//                            .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
-//                    for (ProjectPermission projectPermission : projectPermissions) {
-//                        try {
-//                            projectRepository.removeProjectPermission(projectPermission);
-//                        }
-//                        catch (IOException e) {
-//                            error("Unable to remove project permission level "
-//                                    + ExceptionUtils.getRootCauseMessage(e));
-//                        }
-//                    }
-//                    userLists.remove(selectedUser);
-//                }
-//            });
+
+            add(removeUserButton);
+            // add(new Button("removeUser", new ResourceModel("label"))
+            // {
+            // private static final long serialVersionUID = 1L;
+            //
+            // @Override
+            // public void onSubmit()
+            // {
+            // if (selectedUser == null) {
+            // info("No user is selected to remove");
+            // return;
+            // }
+            // List<ProjectPermission> projectPermissions = projectRepository
+            // .listProjectPermisionLevel(selectedUser, selectedProject.getObject());
+            // for (ProjectPermission projectPermission : projectPermissions) {
+            // try {
+            // projectRepository.removeProjectPermission(projectPermission);
+            // }
+            // catch (IOException e) {
+            // error("Unable to remove project permission level "
+            // + ExceptionUtils.getRootCauseMessage(e));
+            // }
+            // }
+            // userLists.remove(selectedUser);
+            // }
+            // });
 
             add(new Button("addPermissionLevel", new ResourceModel("label"))
             {
@@ -295,14 +288,7 @@ public class ProjectUsersPanel
 
                         // Remove old permissionLevels
                         for (ProjectPermission ExistingProjectPermission : projectPermissions) {
-                            try {
-                                projectRepository
-                                        .removeProjectPermission(ExistingProjectPermission);
-                            }
-                            catch (IOException e) {
-                                error("Unable to remove permission level "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
+                            projectRepository.removeProjectPermission(ExistingProjectPermission);
                         }
 
                         for (PermissionLevel level : PermissionLevelDetailForm.this
@@ -313,13 +299,7 @@ public class ProjectUsersPanel
                                 projectPermission.setLevel(level);
                                 projectPermission.setUser(selectedUser.getUsername());
                                 projectPermission.setProject(selectedProject.getObject());
-                                try {
-                                    projectRepository.createProjectPermission(projectPermission);
-                                }
-                                catch (IOException e) {
-                                    error("Unable to create Log File "
-                                            + ExceptionUtils.getRootCauseMessage(e));
-                                }
+                                projectRepository.createProjectPermission(projectPermission);
                             }
                         }
                     }
@@ -364,7 +344,7 @@ public class ProjectUsersPanel
                         }
                     }, new ChoiceRenderer<User>("username", "username")));
             users.setSuffix("<br>");
-            
+
             add(new Button("add")
             {
                 private static final long serialVersionUID = 1L;
@@ -378,17 +358,11 @@ public class ProjectUsersPanel
                             projectPermission.setProject(selectedProject.getObject());
                             projectPermission.setUser(user.getUsername());
                             projectPermission.setLevel(PermissionLevel.USER);
-                            try {
-                                projectRepository.createProjectPermission(projectPermission);
-                            }
-                            catch (IOException e) {
-                                error("Unable to write to LOG file "
-                                        + ExceptionUtils.getRootCauseMessage(e));
-                            }
+                            projectRepository.createProjectPermission(projectPermission);
                             selectedUser = user;
                         }
+                        
                         SelectionModel userSelectionModel = new SelectionModel();
-
                         userSelectionModel.user = selectedUser;
                         userSelectionModel.permissionLevels.clear();
                         userSelectionModel.permissionLevels.add(PermissionLevel.USER);
