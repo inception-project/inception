@@ -218,8 +218,7 @@ public class AnnotationPage
                     // We want to trigger a late rendering only on a page reload, but not on a
                     // Ajax request.
                     if (!aResponse.getResponse().getClass().getName().endsWith("AjaxResponse")) {
-                        aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
-                        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+                        bratInitRenderLater(aResponse);
                     }
                 }
             }

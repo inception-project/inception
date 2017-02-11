@@ -102,7 +102,6 @@ public class BratAnnotator
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
-    private String collection = "";
     private AnnotationActionHandler detailPanel;
 
     @Deprecated
@@ -122,10 +121,6 @@ public class BratAnnotator
         // The annotator is invisible when no document has been selected. Make sure that we can
         // make it visible via AJAX once the document has been selected.
         setOutputMarkupPlaceholderTag(true);
-
-        if (getModelObject().getDocument() != null) {
-            collection = "#" + getModelObject().getProject().getName() + "/";
-        }
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
@@ -382,17 +377,22 @@ public class BratAnnotator
         aResponse.render(OnDomReadyHeaderItem.forScript(script.toString()));
     }
 
-    private String bratInitCommand()
-    {
-        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
-        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
-                .getAnnotationLayers(), annotationService));
-        String json = toJson(response);
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
-                + "]);";
-    }
+//    private String bratInitCommand()
+//    {
+//        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
+//        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
+//                .getAnnotationLayers(), annotationService));
+//        String json = toJson(response);
+//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
+//                + "]);";
+//    }
+    
+//    public void bratInit(AjaxRequestTarget aTarget)
+//    {
+//        aTarget.appendJavaScript(bratInitCommand());
+//    }
 
-    public String bratRenderCommand(JCas aJCas)
+    private String bratRenderCommand(JCas aJCas)
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
@@ -408,7 +408,7 @@ public class BratAnnotator
      *
      * @return the init script.
      */
-    protected String bratInitLaterCommand()
+    private String bratInitLaterCommand()
     {
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
                 + "[{action: 'getCollectionInformation',collection: '" + getCollection()
@@ -420,7 +420,7 @@ public class BratAnnotator
      *
      * @return brat
      */
-    protected String bratRenderLaterCommand()
+    private String bratRenderLaterCommand()
     {
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "['"
                 + getCollection() + "', '1234', {}, true]);";
@@ -484,19 +484,14 @@ public class BratAnnotator
         }
     }
 
-    public void bratInit(AjaxRequestTarget aTarget)
+    private String getCollection()
     {
-        aTarget.appendJavaScript(bratInitCommand());
-    }
-
-    public String getCollection()
-    {
-        return collection;
-    }
-
-    public void setCollection(String collection)
-    {
-        this.collection = collection;
+        if (getModelObject().getProject() != null) {
+            return "#" + getModelObject().getProject().getName() + "/";
+        }
+        else {
+            return "";
+        }
     }
 
     private String toJson(Object result)

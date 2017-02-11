@@ -484,8 +484,6 @@ public class CurationPanel
             firstLoad = false;
         }
         else if (bModel.getProject() != null) {
-            // mergeVisualizer.setModelObject(bratAnnotatorModel);
-            annotator.setCollection("#" + bModel.getProject().getName() + "/");
             annotator.bratInitRenderLater(response);
         }
     }
