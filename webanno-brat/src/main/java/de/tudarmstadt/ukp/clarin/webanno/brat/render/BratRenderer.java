@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -137,7 +138,8 @@ public class BratRenderer
         // Replace newline characters before sending to the client to avoid rendering glitches
         // in the client-side brat rendering code
         String visibleText = aJcas.getDocumentText().substring(windowBegin, windowEnd);
-        visibleText = visibleText.replace("\n", " ");
+        visibleText = StringUtils.replaceEachRepeatedly(visibleText, 
+                new String[] { "\n", "\r" }, new String[] { " ", " " });
         aResponse.setText(visibleText);
 
         // Render Sentence
