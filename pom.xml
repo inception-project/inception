@@ -44,8 +44,8 @@
         <connection>scm:git:git://github.com/webanno/webanno</connection>
         <developerConnection>scm:git:git@github.com:webanno/webanno.git</developerConnection>
         <url>https://github.com/webanno/webanno</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
         <jackson.version>2.8.6</jackson.version>
         <uima.version>2.9.0</uima.version>
@@ -58,7 +58,7 @@
         <wicket.version>6.26.0</wicket.version>
         <wicketstuff.version>${wicket.version}</wicketstuff.version>
         <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-        <hibernate.version>5.1.4.Final</hibernate.version>
+        <hibernate.version>4.3.11.Final</hibernate.version>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <dkpro.version>1.7.0</dkpro.version>
     </properties>
