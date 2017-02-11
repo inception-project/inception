@@ -54,7 +54,6 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
-    <dependency>
     <!-- Wicket 7 -->
     <!--  
     <dependency>
