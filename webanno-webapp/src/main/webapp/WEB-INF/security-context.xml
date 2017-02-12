@@ -24,7 +24,7 @@
 
 	<!-- <security:global-method-security secured-annotations="enabled"/> -->
 
-    <security:http pattern="/api/doc/**">
+    <security:http pattern="/doc/**">
         <security:csrf disabled="true"/>
         <security:remember-me />
         <security:logout />

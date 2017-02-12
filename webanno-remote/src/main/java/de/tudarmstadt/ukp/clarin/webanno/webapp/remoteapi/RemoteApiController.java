@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
  */
+@RequestMapping("/api/v1")
 @Controller
 public class RemoteApiController
 {

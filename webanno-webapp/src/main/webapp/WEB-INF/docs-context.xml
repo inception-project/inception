@@ -26,6 +26,6 @@
         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
 
   <mvc:annotation-driven />
-  <!-- <mvc:default-servlet-handler /> -->
+  <mvc:default-servlet-handler />
   <mvc:resources mapping="/doc/**" location="classpath:/de/tudarmstadt/ukp/clarin/webanno/doc/" />
 </beans>

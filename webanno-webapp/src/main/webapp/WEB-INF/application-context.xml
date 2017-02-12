@@ -106,10 +106,10 @@
 	</bean>
 	
 	<beans profile="auto-mode-builtin">
-		<import resource="securityContext.xml"/>
+		<import resource="security-context.xml"/>
 	</beans>
 	
 	<beans profile="auto-mode-preauth">
-		<import resource="preAuthSecurityContext.xml"/>
+		<import resource="preAuthSecurity-context.xml"/>
 	</beans>	
 </beans>
