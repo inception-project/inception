@@ -210,7 +210,7 @@ public class RemoteApiController
             else if (!FilenameUtils.getExtension(entry.toString()).equals("")
                     && !FilenameUtils.getName(entry.toString()).equals(".")) {
 
-                uploadSourceDocument(zip, entry, project, user, aFileType);
+                uploadSourceDocument(zip, entry, project, aFileType);
             }
         }
                 
@@ -322,7 +322,7 @@ public class RemoteApiController
         
         // remove project is user has admin access
         LOG.info("Deleting project [" + aProjectId + "]");
-        projectRepository.removeProject(project, user);
+        projectRepository.removeProject(project);
         LOG.info("Successfully deleted project [" + aProjectId + "]");
         return ResponseEntity.ok("Project [" + aProjectId + "] deleted.");
     }
@@ -529,7 +529,7 @@ public class RemoteApiController
         
         // Check if file already present or not
         try (InputStream is = aFile.getInputStream()) {
-            uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, user, aFileType);
+            uploadSourceDocumentFile(is,aFile.getOriginalFilename(), project, aFileType);
         }
         
         // add id of added source document in return json string
@@ -902,7 +902,7 @@ public class RemoteApiController
         }
     }
     
-    private void uploadSourceDocumentFile(InputStream is, String name, Project project, User user,
+    private void uploadSourceDocumentFile(InputStream is, String name, Project project,
             String aFileType)
         throws IOException, UIMAException
     {
@@ -916,13 +916,13 @@ public class RemoteApiController
             document.setProject(project);
             document.setFormat(aFileType);
             // Meta data entry to the database
-            projectRepository.createSourceDocument(document, user);
+            projectRepository.createSourceDocument(document);
             // Import source document to the project repository folder
             projectRepository.uploadSourceDocument(is, document);
         }
     }
-    
-    private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project, User user,
+
+    private void uploadSourceDocument(ZipFile zip, ZipEntry entry, Project project,
             String aFileType)
         throws IOException, UIMAException
     {
@@ -934,7 +934,7 @@ public class RemoteApiController
         document.setProject(project);
         document.setFormat(aFileType);
         // Meta data entry to the database
-        projectRepository.createSourceDocument(document, user);
+        projectRepository.createSourceDocument(document);
         // Import source document to the project repository folder
         projectRepository.uploadSourceDocument(zipStream, document);
     }
