@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+# * Copyright 2012
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -1385,22 +1385,24 @@ public class RepositoryServiceDbData
     public void uploadSourceDocument(File aFile, SourceDocument aDocument)
         throws IOException
     {
+        // Create the metadata record - this also assigns the ID to the document
+        createSourceDocument(aDocument);
+
         // Copy the original file into the repository
         File targetFile = getSourceDocumentFile(aDocument);
         FileUtils.forceMkdir(targetFile.getParentFile());
         FileUtils.copyFile(aFile, targetFile);
         
         // Check if the file has a valid format / can be converted without error
+        // This requires that the document ID has already been assigned
         try {
             createInitialCas(aDocument);
         }
         catch (Exception e) {
             FileUtils.forceDelete(targetFile);
+            removeSourceDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
-
-        // Create the metadata record
-        createSourceDocument(aDocument);
 
         createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
