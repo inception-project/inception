@@ -584,7 +584,7 @@ public class ProjectPage
                         }
                         // END: Remove automation stuff
 
-                        repository.removeProject(project, user);
+                        repository.removeProject(project);
                         projectDetailForm.setVisible(false);
                     }
                     catch (IOException e) {

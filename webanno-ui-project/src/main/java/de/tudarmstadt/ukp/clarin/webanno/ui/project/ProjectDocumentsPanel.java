@@ -132,18 +132,14 @@ public class ProjectDocumentsPanel
                     try {
                         File uploadFile = documentToUpload.writeToTempFile();
 
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
+                        String format = repository.getReadableFormatId(readableFormatsChoice
+                                .getModelObject());
 
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
                         document.setProject(project);
-
-                        String reader = repository.getReadableFormatId(readableFormatsChoice
-                                .getModelObject());
-                        document.setFormat(reader);
-                        repository.createSourceDocument(document, user);
+                        document.setFormat(format);
+                        
                         repository.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }

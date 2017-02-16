@@ -865,7 +865,7 @@ public class AnnotationPage
             if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
                 bModel.getDocument().setState(SourceDocumentStateTransition.transition(
                         SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                repository.createSourceDocument(bModel.getDocument(), user);
+                repository.createSourceDocument(bModel.getDocument());
             }
         }
         catch (UIMAException e) {

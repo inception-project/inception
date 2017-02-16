@@ -229,13 +229,11 @@ public interface ProjectService
      *
      * @param project
      *            the project to be deleted
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             if the project to be deleted is not available in the file system
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProject(Project project, User user)
+    void removeProject(Project project)
         throws IOException;
 
     /**

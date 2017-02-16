@@ -122,7 +122,7 @@ public class YesNoFinishModalPanel
                             bModel.getDocument().setProcessed(false);
                         }
                         try {
-                            repository.createSourceDocument(bModel.getDocument(), user);
+                            repository.createSourceDocument(bModel.getDocument());
                         }
                         catch (IOException e) {
                             error("Unable to update source file "

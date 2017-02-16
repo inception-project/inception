@@ -100,6 +100,7 @@ import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -241,7 +242,7 @@ public class RepositoryServiceDbData
      *             if the file cannot be renamed.
      * @return the target file.
      */
-    private File renameFile(File aFrom, File aTo)
+    private static File renameFile(File aFrom, File aTo)
         throws IOException
     {
         if (!aFrom.renameTo(aTo)) {
@@ -280,14 +281,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser)
-        throws IOException
-    {
-        writeCas(aDocument, aJcas, aUser.getUsername());
-    }
-
-    @Override
-    @Transactional
     public void createProject(Project aProject)
         throws IOException
     {
@@ -313,7 +306,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void createSourceDocument(SourceDocument aDocument, User aUser)
+    public void createSourceDocument(SourceDocument aDocument)
         throws IOException
     {
         if (aDocument.getId() == 0) {
@@ -348,7 +341,6 @@ public class RepositoryServiceDbData
     @Transactional
     public boolean existsCorrectionDocument(SourceDocument aDocument)
     {
-
         try {
             readCorrectionCas(aDocument);
             return true;
@@ -756,61 +748,6 @@ public class RepositoryServiceDbData
                 .setParameter("project", aDocument.getProject()).getSingleResult();
     }
 
-    @Override
-    @Transactional
-    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
-        throws IOException
-    {
-        // If there is no CAS yet for the annotation document, create one.
-        JCas jcas = null;
-        SourceDocument aDocument = aAnnotationDocument.getDocument();
-        String user = aAnnotationDocument.getUser();
-        if (!existsCas(aAnnotationDocument.getDocument(), user)) {
-            // Convert the source file into an annotation CAS
-            try {
-                if (!existsCas(aAnnotationDocument.getDocument(), INITIAL_CAS_PSEUDO_USER)) {
-                    // Normally, the initial CAS should be created on document import, but after
-                    // adding this feature, the existing projects do not yet have initial CASes, so
-                    // we create them here lazily
-                    jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument),
-                            getReadableFormats().get(aDocument.getFormat()), aDocument);
-
-                    analyzeAndRepair(aDocument, jcas.getCas());
-                    
-                    writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
-                }
-
-                // Ok, so at this point, we either have the lazily converted CAS already loaded
-                // or we know that we can load the existing initial CAS.
-                if (jcas == null) {
-                    jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null)
-                            .getJCas();
-                    readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
-                    
-                    analyzeAndRepair(aDocument, jcas.getCas());
-                }
-            }
-            catch (ClassNotFoundException e) {
-                throw new IOException("There is no reader for format [" + aDocument.getFormat()
-                        + "]: " + e.getMessage());
-            }
-            catch (Exception e) {
-                log.error("The reader for format [" + aDocument.getFormat()
-                        + "] is unable to digest data", e);
-                throw new IOException("The reader for format [" + aDocument.getFormat()
-                        + "] is unable to digest data" + e.getMessage());
-            }
-            writeCas(aDocument, jcas, user);
-        }
-        else {
-            // Read existing CAS
-            // We intentionally do not upgrade the CAS here because in general the IDs
-            // must remain stable. If an upgrade is required the caller should do it
-            jcas = readCas(aDocument, user);
-        }
-
-        return jcas;
-    }
     
     private void analyzeAndRepair(SourceDocument aDocument, CAS aCas)
     {
@@ -1219,7 +1156,7 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public void removeProject(Project aProject, User aUser)
+    public void removeProject(Project aProject)
         throws IOException
     {
         for (SourceDocument document : listSourceDocuments(aProject)) {
@@ -1399,10 +1336,10 @@ public class RepositoryServiceDbData
         createLog(aProject).removeAllAppenders();
 
     }
-
+    
     @Override
     @Transactional
-    public void uploadSourceDocument(File aFile, SourceDocument aDocument)
+    public void uploadTrainingDocument(File aFile, SourceDocument aDocument)
         throws IOException
     {
         // Check if the file has a valid format / can be converted without error
@@ -1415,8 +1352,7 @@ public class RepositoryServiceDbData
                 }
             }
             else {
-                cas = convertSourceDocumentToCas(aFile,
-                        getReadableFormats().get(aDocument.getFormat()), aDocument);
+                cas = convertSourceDocumentToCas(aFile, aDocument);
             }
         }
         catch (IOException e) {
@@ -1437,6 +1373,34 @@ public class RepositoryServiceDbData
         if (cas != null) {
             writeSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         }
+
+        createLog(aDocument.getProject()).info(
+                " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
+                        + "] to Project [" + aDocument.getProject().getId() + "]");
+        createLog(aDocument.getProject()).removeAllAppenders();
+    }
+    
+    @Override
+    @Transactional
+    public void uploadSourceDocument(File aFile, SourceDocument aDocument)
+        throws IOException
+    {
+        // Copy the original file into the repository
+        File targetFile = getSourceDocumentFile(aDocument);
+        FileUtils.forceMkdir(targetFile.getParentFile());
+        FileUtils.copyFile(aFile, targetFile);
+        
+        // Check if the file has a valid format / can be converted without error
+        try {
+            createInitialCas(aDocument);
+        }
+        catch (Exception e) {
+            FileUtils.forceDelete(targetFile);
+            throw new IOException(e.getMessage(), e);
+        }
+
+        // Create the metadata record
+        createSourceDocument(aDocument);
 
         createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
@@ -1583,6 +1547,102 @@ public class RepositoryServiceDbData
             String aAnnotationPreferencePropertiesFileName)
     {
         annotationPreferencePropertiesFileName = aAnnotationPreferencePropertiesFileName;
+    }
+    
+    private boolean existsInitialCas(SourceDocument aDocument)
+        throws IOException
+    {
+        return existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
+    }
+    
+    private JCas createInitialCas(SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        // Normally, the initial CAS should be created on document import, but after
+        // adding this feature, the existing projects do not yet have initial CASes, so
+        // we create them here lazily
+        JCas jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument), aDocument);
+
+        writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        
+        return jcas;
+    }
+    
+    private JCas readInitialCas(SourceDocument aDocument)
+        throws CASException, ResourceInitializationException, IOException
+    {
+        JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
+        
+        readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        
+        analyzeAndRepair(aDocument, jcas.getCas());
+        
+        return jcas;
+    }
+
+    @Override
+    @Transactional
+    @Deprecated
+    public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
+        throws IOException
+    {
+        // Change the state of the source document to in progress
+        aDocument.setState(SourceDocumentStateTransition
+                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
+
+        // Check if there is an annotation document entry in the database. If there is none,
+        // create one.
+        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
+
+        return readAnnotationCas(annotationDocument);
+    }
+    
+    @Override
+    @Transactional
+    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
+        throws IOException
+    {
+        // If there is no CAS yet for the annotation document, create one.
+        JCas jcas = null;
+        SourceDocument aDocument = aAnnotationDocument.getDocument();
+        String user = aAnnotationDocument.getUser();
+        if (!existsCas(aAnnotationDocument.getDocument(), user)) {
+            // Convert the source file into an annotation CAS
+            try {
+                if (!existsInitialCas(aDocument)) {
+                    jcas = createInitialCas(aDocument);
+                }
+
+                // Ok, so at this point, we either have the lazily converted CAS already loaded
+                // or we know that we can load the existing initial CAS.
+                if (jcas == null) {
+                    jcas = readInitialCas(aDocument);
+                }
+            }
+            catch (Exception e) {
+                log.error("The reader for format [" + aDocument.getFormat()
+                        + "] is unable to digest data", e);
+                throw new IOException("The reader for format [" + aDocument.getFormat()
+                        + "] is unable to digest data" + e.getMessage());
+            }
+            writeCas(aDocument, jcas, user);
+        }
+        else {
+            // Read existing CAS
+            // We intentionally do not upgrade the CAS here because in general the IDs
+            // must remain stable. If an upgrade is required the caller should do it
+            jcas = readCas(aDocument, user);
+        }
+
+        return jcas;
+    }
+    
+    @Override
+    @Transactional
+    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser)
+        throws IOException
+    {
+        writeCas(aDocument, aJcas, aUser.getUsername());
     }
 
     @Override
@@ -1929,7 +1989,6 @@ public class RepositoryServiceDbData
         upgradeCas(aCas, aDocument, CORRECTION_USER);
     }
        
-
     private void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
@@ -1968,23 +2027,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    @Deprecated
-    public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
-        throws IOException
-    {
-        // Change the state of the source document to in progress
-        aDocument.setState(SourceDocumentStateTransition
-                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
-        // Check if there is an annotation document entry in the database. If there is none,
-        // create one.
-        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
-
-        return readAnnotationCas(annotationDocument);
-    }
-
-    @Override
-    @Transactional
     public void writeCas(Mode aMode, SourceDocument aSourceDocument, User aUser, JCas aJcas)
         throws IOException
     {
@@ -2002,10 +2044,8 @@ public class RepositoryServiceDbData
     /**
      * Get CAS object for the first time, from the source document using the provided reader
      *
-     * @param file
+     * @param aFile
      *            the file.
-     * @param reader
-     *            the DKPro Core reader.
      * @param aDocument
      *            the source document.
      * @return the JCas.
@@ -2013,11 +2053,14 @@ public class RepositoryServiceDbData
      *             if a conversion error occurs.
      * @throws IOException
      *             if an I/O error occurs.
+     * @throws ClassNotFoundException 
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private JCas convertSourceDocumentToCas(File aFile, Class aReader, SourceDocument aDocument)
-        throws UIMAException, IOException
+    private JCas convertSourceDocumentToCas(File aFile, SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
     {
+        Class readerClass = getReadableFormats().get(aDocument.getFormat());
+        
         // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
@@ -2027,7 +2070,7 @@ public class RepositoryServiceDbData
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS
-        CollectionReader reader = CollectionReaderFactory.createReader(aReader,
+        CollectionReader reader = CollectionReaderFactory.createReader(readerClass,
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, aFile.getParentFile()
                         .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
                 new String[] { "[+]" + aFile.getName() });

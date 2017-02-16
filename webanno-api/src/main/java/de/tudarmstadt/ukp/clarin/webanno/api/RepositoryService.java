@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
@@ -42,4 +45,7 @@ public interface RepositoryService
      * @return the roles.
      */
     List<Authority> listAuthorities(User user);
+    
+    void uploadTrainingDocument(File aFile, SourceDocument aDocument)
+            throws IOException;
 }

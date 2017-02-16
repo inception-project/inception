@@ -96,13 +96,11 @@ public interface DocumentService
      *
      * @param document
      *            {@link SourceDocument} to be created
-     * @param user
-     *            The User who perform this operation
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void createSourceDocument(SourceDocument document, User user)
+    void createSourceDocument(SourceDocument document)
         throws IOException;
 
     /**
@@ -120,7 +118,7 @@ public interface DocumentService
     /**
      * Get meta data information about {@link SourceDocument} from the database. This method is
      * called either for {@link AnnotationDocument} object creation or
-     * {@link RepositoryService#createSourceDocument(SourceDocument, User)}
+     * {@link RepositoryService#createSourceDocument(SourceDocument)}
      *
      * @param project
      *            the {@link Project} where the {@link SourceDocument} belongs

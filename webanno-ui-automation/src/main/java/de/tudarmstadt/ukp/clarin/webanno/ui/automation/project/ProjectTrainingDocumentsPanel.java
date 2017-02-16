@@ -155,10 +155,6 @@ public class ProjectTrainingDocumentsPanel
                     try {
                         File uploadFile = documentToUpload.writeToTempFile();
 
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
                         document.setProject(project);
@@ -192,8 +188,8 @@ public class ProjectTrainingDocumentsPanel
                                     .getModelObject());
                             document.setFormat(reader);
                         }
-                        repository.createSourceDocument(document, user);
-                        repository.uploadSourceDocument(uploadFile, document);
+                        repository.createSourceDocument(document);
+                        repository.uploadTrainingDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (IOException e) {

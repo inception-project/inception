@@ -264,16 +264,13 @@ public class CurationPage
                             return;
                         }
                         if(bModel.getDocument()!=null){
-                            User user = userRepository.get(username);
-
                             try {
-                                repository.createSourceDocument(bModel.getDocument(), user);
+                                repository.createSourceDocument(bModel.getDocument());
                                 repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
                                         username);
 
                                 loadDocumentAction(target);
                                 curationPanel.reloadEditorLayer(target);
-
                             }
                             catch (Exception e) {
                                 LOG.error("Unable to load data", e);
@@ -914,7 +911,7 @@ public class CurationPage
         if (!bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
             bModel.getDocument().setState(SourceDocumentStateTransition.transition(
                     SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
-            repository.createSourceDocument(bModel.getDocument(), userLoggedIn);
+            repository.createSourceDocument(bModel.getDocument());
         }
 
         bModel.setUser(userLoggedIn);

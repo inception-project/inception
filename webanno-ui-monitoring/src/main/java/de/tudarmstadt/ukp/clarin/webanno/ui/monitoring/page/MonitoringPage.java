@@ -1382,16 +1382,13 @@ public class MonitoringPage
                             SourceDocument doc = repository.getSourceDocument(project,
                                     value.substring(value.indexOf(":") + 1));
                             if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc, user,
-                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc, CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }
                             else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, user,
-                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                                changeSourceDocumentState(doc, CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
                             }
                             else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, user,
-                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc, ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                             }
                         }
                         catch (IOException e) {
@@ -1597,17 +1594,16 @@ public class MonitoringPage
          * change source document state when curation document state is changed.
          *
          * @param aSourceDocument
-         * @param aUser
          * @param aSourceDocumentStateTransition
          * @throws IOException
          */
-        private void changeSourceDocumentState(SourceDocument aSourceDocument, User aUser,
+        private void changeSourceDocumentState(SourceDocument aSourceDocument,
                 SourceDocumentStateTransition aSourceDocumentStateTransition)
             throws IOException
         {
-            aSourceDocument.setState(SourceDocumentStateTransition
-                    .transition(aSourceDocumentStateTransition));
-            repository.createSourceDocument(aSourceDocument, aUser);
+            aSourceDocument.setState(
+                    SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
+            repository.createSourceDocument(aSourceDocument);
         }
     }
 }

@@ -449,8 +449,6 @@ public class ImportUtil
             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> aFeatureMap)
         throws IOException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument importedSourceDocument : aImportedProjectSetting
                 .getSourceDocuments()) {
             SourceDocument sourceDocument = new SourceDocument();
@@ -466,7 +464,7 @@ public class ImportUtil
                                                // project settings
             sourceDocument.setTrainingDocument(importedSourceDocument.isTrainingDocument());
             sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
-            aRepository.createSourceDocument(sourceDocument, user);
+            aRepository.createSourceDocument(sourceDocument);
         }
     }
 
