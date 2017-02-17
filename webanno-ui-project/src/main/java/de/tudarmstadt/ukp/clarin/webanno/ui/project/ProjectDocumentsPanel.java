@@ -85,18 +85,9 @@ public class ProjectDocumentsPanel
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
-        try {
-            readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
-            selectedFormat = readableFormats.get(0);
-        }
-        catch (IOException e) {
-            error("Properties file not found or key not int the properties file " + ":"
-                    + ExceptionUtils.getRootCauseMessage(e));
-        }
-        catch (ClassNotFoundException e) {
-            error("The Class name in the properties is not found " + ":"
-                    + ExceptionUtils.getRootCauseMessage(e));
-        }
+        readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
+        selectedFormat = readableFormats.get(0);
+        
         add(fileUpload = new FileUploadField("content", new Model()));
 
         add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
@@ -142,10 +133,6 @@ public class ProjectDocumentsPanel
                         
                         repository.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(e.getMessage());
-                        LOG.error(e.getMessage(), e);
                     }
                     catch (Exception e) {
                         error("Error while uploading document " + fileName + ": "

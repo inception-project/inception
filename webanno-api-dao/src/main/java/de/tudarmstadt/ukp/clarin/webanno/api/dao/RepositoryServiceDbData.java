@@ -1406,7 +1406,7 @@ public class RepositoryServiceDbData
 
         createLog(aDocument.getProject()).info(
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] to Project [" + aDocument.getProject().getId() + "]");
+                        + "] to project [" + aDocument.getProject().getId() + "]");
         createLog(aDocument.getProject()).removeAllAppenders();
     }
 
@@ -1433,12 +1433,10 @@ public class RepositoryServiceDbData
                 " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
                         + "] to Project [" + aDocument.getProject().getId() + "]");
         createLog(aDocument.getProject()).removeAllAppenders();
-
     }
 
     @Override
     public List<String> getReadableFormatLabels()
-        throws ClassNotFoundException
     {
         List<String> readableFormats = new ArrayList<String>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
@@ -1455,7 +1453,6 @@ public class RepositoryServiceDbData
 
     @Override
     public String getReadableFormatId(String aLabel)
-        throws ClassNotFoundException
     {
         String readableFormat = "";
         for (String key : readWriteFileFormats.stringPropertyNames()) {
@@ -1489,7 +1486,6 @@ public class RepositoryServiceDbData
 
     @Override
     public List<String> getWritableFormatLabels()
-        throws ClassNotFoundException
     {
         List<String> writableFormats = new ArrayList<String>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
@@ -1506,7 +1502,6 @@ public class RepositoryServiceDbData
 
     @Override
     public String getWritableFormatId(String aLabel)
-        throws ClassNotFoundException
     {
         String writableFormat = "";
         for (String key : readWriteFileFormats.stringPropertyNames()) {

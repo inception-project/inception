@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -237,17 +236,11 @@ public class ProjectExportPanel extends Panel {
 
                 @Override
                 protected List<String> load()
-                {
-                    try {
-                        List<String> formats = new ArrayList<String>(
-                                repository.getWritableFormatLabels());
-                        formats.add(0, FORMAT_AUTO);
-                        return formats;
-                    }
-                    catch (ClassNotFoundException | IOException e) {
-                        error(e.getMessage());
-                        return Collections.emptyList();
-                    }
+                {                    
+                    List<String> formats = new ArrayList<String>(
+                            repository.getWritableFormatLabels());
+                    formats.add(0, FORMAT_AUTO);
+                    return formats;
                 }
             }) {
                 private static final long serialVersionUID = 1L;

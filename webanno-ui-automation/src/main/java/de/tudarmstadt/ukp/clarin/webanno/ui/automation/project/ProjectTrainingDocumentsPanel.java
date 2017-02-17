@@ -91,24 +91,14 @@ public class ProjectTrainingDocumentsPanel
         super(id);
         this.selectedProjectModel = aProjectModel;
         feature = afeatureModel.getObject();
-        try {
-            if (aTabsDocModel.getObject().isTabSep()) {
-                readableFormats = new ArrayList<String>(
-                        Arrays.asList(new String[] { WebAnnoConst.TAB_SEP }));
-                selectedFormat = WebAnnoConst.TAB_SEP;
-            }
-            else {
-                readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
-                selectedFormat = readableFormats.get(0);
-            }
+        if (aTabsDocModel.getObject().isTabSep()) {
+            readableFormats = new ArrayList<String>(
+                    Arrays.asList(new String[] { WebAnnoConst.TAB_SEP }));
+            selectedFormat = WebAnnoConst.TAB_SEP;
         }
-        catch (IOException e) {
-            error("Properties file not found or key not int the properties file " + ":"
-                    + ExceptionUtils.getRootCauseMessage(e));
-        }
-        catch (ClassNotFoundException e) {
-            error("The Class name in the properties is not found " + ":"
-                    + ExceptionUtils.getRootCauseMessage(e));
+        else {
+            readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
+            selectedFormat = readableFormats.get(0);
         }
         add(fileUpload = new FileUploadField("content", new Model()));
 

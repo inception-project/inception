@@ -81,18 +81,8 @@ public class ExportModalWindowPanel
         public ExportDetailsForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<DefaultModel>(new DefaultModel()));
-            try {
-                writeableFormats = (ArrayList<String>) repository.getWritableFormatLabels();
-                selectedFormat = writeableFormats.get(0);
-            }
-            catch (IOException e) {
-                error("Properties file not found or key not int the properties file" + ":"
-                        + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (ClassNotFoundException e) {
-                error("The Class name in the properties is not found " + ":"
-                        + ExceptionUtils.getRootCauseMessage(e));
-            }
+            writeableFormats = (ArrayList<String>) repository.getWritableFormatLabels();
+            selectedFormat = writeableFormats.get(0);
             add(writeableFormatsChoice = new DropDownChoice<String>("writeableFormats", new Model(
                     selectedFormat), writeableFormats));
             writeableFormatsChoice.add(new AjaxFormComponentUpdatingBehavior("change")

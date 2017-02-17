@@ -35,13 +35,8 @@ public interface ImportExportService
      * properties File
      *
      * @return labels of readable formats.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
      */
-    List<String> getReadableFormatLabels()
-        throws IOException, ClassNotFoundException;
+    List<String> getReadableFormatLabels();
 
     /**
      * Returns the Id of the format for the {@link SourceDocument} to be read from a properties File
@@ -50,13 +45,8 @@ public interface ImportExportService
      *            the label.
      *
      * @return the ID.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
      */
-    String getReadableFormatId(String label)
-        throws IOException, ClassNotFoundException;
+    String getReadableFormatId(String label);
 
     /**
      * Returns formats of the {@link SourceDocument} to be read from a properties File
@@ -75,13 +65,8 @@ public interface ImportExportService
      * Returns the labels on the UI for the format of {@link AnnotationDocument} while exporting
      *
      * @return the labels.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
      */
-    List<String> getWritableFormatLabels()
-        throws IOException, ClassNotFoundException;
+    List<String> getWritableFormatLabels();
 
     /**
      * Returns the Id of the format for {@link AnnotationDocument} while exporting
@@ -89,13 +74,8 @@ public interface ImportExportService
      * @param label
      *            the label.
      * @return the ID.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
      */
-    String getWritableFormatId(String label)
-        throws IOException, ClassNotFoundException;
+    String getWritableFormatId(String label);
 
     /**
      * Returns formats of {@link AnnotationDocument} while exporting
