@@ -364,7 +364,7 @@ public class CurationPage
             public void onClick(AjaxRequestTarget aTarget)
             {
                 curationPanel.resetEditor(aTarget);
-             // List of all Source Documents in the project
+                // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
                 // Index of the current source document in the list

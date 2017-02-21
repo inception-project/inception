@@ -483,9 +483,6 @@ public class CurationPanel
         if (firstLoad) {
             firstLoad = false;
         }
-        else if (bModel.getProject() != null) {
-            annotator.bratInitRenderLater(response);
-        }
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
@@ -526,7 +523,6 @@ public class CurationPanel
         if (annotate) {
             annotator.bratRender(aTarget, editor.getCas(bModel));
             annotator.bratSetHighlight(aTarget, bModel.getSelection().getAnnotation());
-
         }
         else {
             annotator.bratRenderLater(aTarget);

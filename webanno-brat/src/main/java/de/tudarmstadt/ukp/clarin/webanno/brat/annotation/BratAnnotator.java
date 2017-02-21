@@ -375,6 +375,14 @@ public class BratAnnotator
         // appended to the same AJAX request which turns the annotator visible after a document
         // has been chosen.
         aResponse.render(OnDomReadyHeaderItem.forScript(script.toString()));
+        
+        // If the page is reloaded in the browser and a document was already open, we need
+        // to render it. We use the "later" commands here to avoid polluting the Javascript
+        // header items with document data and because loading times are not that critical
+        // on a reload.
+        if (getModelObject().getProject() != null) {
+            bratInitRenderLater(aResponse);
+        }
     }
 
 //    private String bratInitCommand()
@@ -432,7 +440,7 @@ public class BratAnnotator
      * @param aResponse
      *            the response.
      */
-    public void bratInitRenderLater(IHeaderResponse aResponse)
+    private void bratInitRenderLater(IHeaderResponse aResponse)
     {
         aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
         aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));

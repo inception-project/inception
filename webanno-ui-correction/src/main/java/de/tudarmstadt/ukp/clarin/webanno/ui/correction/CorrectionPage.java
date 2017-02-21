@@ -1036,14 +1036,10 @@ public class CorrectionPage
     {
         super.renderHead(response);
 
-        String jQueryString = "";
         if (firstLoad) {
-            jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
+            response.render(OnLoadHeaderItem
+                    .forScript("jQuery('#showOpenDocumentModal').trigger('click');"));
             firstLoad = false;
-        }
-        response.render(OnLoadHeaderItem.forScript(jQueryString));
-        if (bModel.getProject() != null) {
-            annotator.bratInitRenderLater(response);
         }
     }
 

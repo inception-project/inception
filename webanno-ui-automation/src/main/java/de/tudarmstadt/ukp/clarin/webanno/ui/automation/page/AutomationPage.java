@@ -791,18 +791,9 @@ public class AutomationPage
                         loadDocumentAction(aTarget);
                         setCurationSegmentBeginEnd();
                         update(aTarget);
-
                     }
-                    catch (UIMAException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (ClassNotFoundException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (IOException e) {
-                        error(ExceptionUtils.getRootCause(e));
-                    }
-                    catch (AnnotationException e) {
+                    catch (Exception e) {
+                        LOG.error(e.getMessage(), e);
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error(e.getMessage());
                     }
@@ -1143,14 +1134,10 @@ public class AutomationPage
     {
         super.renderHead(response);
 
-        String jQueryString = "";
         if (firstLoad) {
-            jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
+            response.render(OnLoadHeaderItem
+                    .forScript("jQuery('#showOpenDocumentModal').trigger('click');"));
             firstLoad = false;
-        }
-        response.render(OnLoadHeaderItem.forScript(jQueryString));
-        if (bModel.getProject() != null) {
-            annotator.bratInitRenderLater(response);
         }
     }
 

@@ -200,29 +200,7 @@ public class AnnotationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
         
-        annotator = new BratAnnotator("embedder1", new Model<AnnotatorStateImpl>(bModel),
-                editor)
-        {
-            private static final long serialVersionUID = 7279648231521710155L;
-
-            @Override
-            public void renderHead(IHeaderResponse aResponse)
-            {
-                super.renderHead(aResponse);
-
-                // If the page is reloaded in the browser and a document was already open, we need
-                // to render it. We use the "later" commands here to avoid polluting the Javascript
-                // header items with document data and because loading times are not that critical
-                // on a reload.
-                if (getModelObject().getProject() != null) {
-                    // We want to trigger a late rendering only on a page reload, but not on a
-                    // Ajax request.
-                    if (!aResponse.getResponse().getClass().getName().endsWith("AjaxResponse")) {
-                        bratInitRenderLater(aResponse);
-                    }
-                }
-            }
-        };
+        annotator = new BratAnnotator("embedder1", new Model<AnnotatorStateImpl>(bModel), editor);
         annotationViewCell.add(annotator);
 
         // This is an Annotation Operation, set model to ANNOTATION mode
@@ -318,20 +296,25 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-
                 try {
+                    JCas jCas = getJCas();
+                    
+                    // The number of visible sentences may have changed - let the state recalculate 
+                    // the visible sentences 
+                    Sentence sentence = selectByAddr(jCas, Sentence.class,
+                            bModel.getFirstVisibleSentenceAddress());
+                    bModel.setFirstVisibleSentence(sentence);
+                    
+                    updateSentenceAddress(jCas, aTarget);
+                    
                     // Re-render the whole page because the width of the sidebar may have changed
                     aTarget.add(AnnotationPage.this);
-                    JCas jCas = getJCas();
-                    annotator.bratRender(aTarget, jCas);
-                    updateSentenceAddress(jCas, aTarget);
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-
             }
         });
 
@@ -821,7 +804,7 @@ public class AnnotationPage
             bModel.initForDocument(jcas, repository);
 
             // Load constraints
-            bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));
+            bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));            
 
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
