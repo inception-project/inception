@@ -136,6 +136,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		int prevSentEnd = 0;
 		StringBuilder sentLineSb = new StringBuilder();
 		String lastSent = "";
+		int format = -1;
 		while (lineIterator.hasNext()) {
 			String line = lineIterator.next();
 			if (line.startsWith("#T_")) {
@@ -144,15 +145,26 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			}
 
 			if (line.startsWith("#Text=")) {
+			    String text = line.substring(line.indexOf("=") + 1);
+			    if (format == 31) {
+			        text = unescapeJava(text);
+			    }
+			    
 				if (sentLineSb.toString().isEmpty()) {
-					sentLineSb.append(unescapeJava(line.substring(line.indexOf("=") + 1)));
+					sentLineSb.append(text);
 				} else {
-					sentLineSb.append(LF + unescapeJava(line.substring(line.indexOf("=") + 1)));
+					sentLineSb.append(LF + text);
 				}
 				lastSent = sentLineSb.toString();
 				continue;
 			}
 			if (line.startsWith("#FORMAT=")) {
+			    if ("#FORMAT=WebAnno TSV 3".equals(line)) {
+			        format = 3;
+			    }
+			    else if ("#FORMAT=WebAnno TSV 3.1".equals(line)) {
+			        format = 31;
+			    }
 				continue;
 			}
             if (line.trim().isEmpty()) {

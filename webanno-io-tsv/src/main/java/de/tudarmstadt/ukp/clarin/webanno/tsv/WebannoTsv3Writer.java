@@ -232,12 +232,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	/**
 	 * Write headers, in the sequence <br>
 	 * Type TAB List(Features sep by TAB)
-	 * 
-	 * @param docOS
-	 * @throws IOException
 	 */
 	private void writeHeader(OutputStream docOS) throws IOException {
-		IOUtils.write("#FORMAT=WebAnno TSV 3" + LF, docOS, encoding);
+		IOUtils.write("#FORMAT=WebAnno TSV 3.1" + LF, docOS, encoding);
 		for (String type : featurePerLayer.keySet()) {
 			String annoType;
 			if (spanLayers.contains(type)) {
