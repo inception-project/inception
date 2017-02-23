@@ -23,14 +23,12 @@ import static org.apache.commons.lang.StringEscapeUtils.unescapeJava;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -147,9 +145,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 			if (line.startsWith("#Text=")) {
 				if (sentLineSb.toString().isEmpty()) {
-					sentLineSb.append(line.substring(line.indexOf("=") + 1));
+					sentLineSb.append(unescapeJava(line.substring(line.indexOf("=") + 1)));
 				} else {
-					sentLineSb.append(LF + line.substring(line.indexOf("=") + 1));
+					sentLineSb.append(LF + unescapeJava(line.substring(line.indexOf("=") + 1)));
 				}
 				lastSent = sentLineSb.toString();
 				continue;
@@ -290,16 +288,17 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                                 }
                                 boolean isMultitoken = false;
 
-                                if (!multiTokUnits.isEmpty() && prevAnnoFs !=null && prevAnnoFs.getBegin()!=unit.begin )
-                                  contAnno:  for (AnnotationUnit u : multiTokUnits.keySet()) {
-                                        for (Integer r : multiTokUnits.get(u).keySet()) {
-                                            if (ref == r) {
-                                                isMultitoken = true;
-                                                prevAnnoFs = multiTokUnits.get(u).get(r);
-                                                break contAnno;
+                                if (!multiTokUnits.isEmpty() && prevAnnoFs !=null && prevAnnoFs.getBegin()!=unit.begin ) {
+                                    contAnno:  for (AnnotationUnit u : multiTokUnits.keySet()) {
+                                            for (Integer r : multiTokUnits.get(u).keySet()) {
+                                                if (ref == r) {
+                                                    isMultitoken = true;
+                                                    prevAnnoFs = multiTokUnits.get(u).get(r);
+                                                    break contAnno;
+                                                }
                                             }
                                         }
-                                    }
+                                }
                                 if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
@@ -447,8 +446,9 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 									}
 
 								}
-                                if(stackedAnnos.length>1)
-                                ref++;
+                                if(stackedAnnos.length>1) {
+                                    ref++;
+                                }
 							}
 							if (type.getName().equals(POS.class.getName())) {
 								units2Tokens.get(unit).setPos((POS) annos.get(i));
@@ -499,7 +499,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                     boolean isMultitoken = false;
                     AnnotationFS multiAnnoFs = null;
 
-                    if (!aMultiTokUnits.isEmpty())
+                    if (!aMultiTokUnits.isEmpty()) {
                         for (AnnotationUnit u : aMultiTokUnits.keySet()) {
                             for (Integer r : aMultiTokUnits.get(u).keySet()) {
                                 if (aRef == r) {
@@ -509,6 +509,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
                                 }
                             }
                         }
+                    }
                     
                     if (isMultitoken) {
 

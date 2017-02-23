@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -144,12 +145,12 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			for (AnnotationUnit unit : units) {
 				if (sentenceUnits.containsKey(unit)) {
 					String [] sentWithNl = sentenceUnits.get(unit).split("\n");
-					IOUtils.write(LF + "#Text=" +sentWithNl[0] + LF, docOS, encoding);
+					IOUtils.write(LF + "#Text=" + escapeJava(sentWithNl[0]) + LF, docOS, encoding);
 					// if sentence contains new line character
 					// GITHUB ISSUE 318: New line in sentence should be exported as is
 					if(sentWithNl.length >1){
 						for(int i=0;i<sentWithNl.length-1;i++){
-							IOUtils.write("#Text=" +sentWithNl[i+1] + LF, docOS, encoding);
+							IOUtils.write("#Text=" +escapeJava(sentWithNl[i+1]) + LF, docOS, encoding);
 						}
 					}
 				}
@@ -377,8 +378,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 					}
 					linkFs = nextLinkFs;
 					linkNo++;
-					if (nextLinkFs != null)
-						unit = getUnit(linkFs.getBegin(), linkFs.getEnd(), linkFs.getCoveredText());
+					if (nextLinkFs != null) {
+                        unit = getUnit(linkFs.getBegin(), linkFs.getEnd(), linkFs.getCoveredText());
+                    }
 				}
 				if (annotationsPertype.keySet().size() > 0) {
 					annotationsPerPostion.put(l, annotationsPertype);
@@ -758,10 +760,12 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 			}
 			String annotation = aFs.getFeatureValueAsString(feature);
 			
-			if (annotation == null)
-				annotation = "*";
-			else
-				annotation = replaceEscapeChars(annotation);
+			if (annotation == null) {
+                annotation = "*";
+            }
+            else {
+                annotation = replaceEscapeChars(annotation);
+            }
 
 			if (feature.getShortName().equals(REF_REL)) {
 				annotation = annotation + "->" + achainNo + "-" + aLinkNo;
@@ -780,8 +784,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		ambigUnits.putIfAbsent(aType.getName(), new HashMap<>());
 		ambigUnits.get(aType.getName()).put(aUnit, true); // coref are always ambig
 		
-		if (annoPerFeatures.size() == 0)
-			annoPerFeatures.add("*"+"[" + achainNo + "]");
+		if (annoPerFeatures.size() == 0) {
+            annoPerFeatures.add("*"+"[" + achainNo + "]");
+        }
 		aAnnotationsPertype.get(aUnit).add(annoPerFeatures);
 	}
 
@@ -816,8 +821,9 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		featurePerLayer.get(type.getName()).add(BT + aDepType.getName());
 		// the column for the dependent unit address
 		annotationsPertype.putIfAbsent(depUnit, new ArrayList<>());
-		if (annoPerFeatures.size() == 0)
-			annoPerFeatures.add("*");
+		if (annoPerFeatures.size() == 0) {
+            annoPerFeatures.add("*");
+        }
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
 	}
 
