@@ -59,8 +59,7 @@ public interface Evaluator
      * @param aFeature The affected feature
      * @param parsedConstraints Object containing parsed rules
      * @return true if features can be affected by this execution
-     * @throws UIMAException
      */
-    boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,ParsedConstraints parsedConstraints)
-        throws UIMAException;
+    boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,
+            ParsedConstraints parsedConstraints);
 }

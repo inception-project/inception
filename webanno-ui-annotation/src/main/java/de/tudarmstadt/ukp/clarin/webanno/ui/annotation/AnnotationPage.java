@@ -20,11 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,17 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -791,20 +780,20 @@ public class AnnotationPage
                     bModel.getDocument(), user);
 
             // Read the CAS
-            JCas jcas = repository.readAnnotationCas(annotationDocument);
+            JCas annotationCas = repository.readAnnotationCas(annotationDocument);
 
             // Update the annotation document CAS
-            repository.upgradeCas(jcas.getCas(), annotationDocument);
+            repository.upgradeCas(annotationCas.getCas(), annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            repository.writeAnnotationCas(jcas.getCas().getJCas(),
+            repository.writeAnnotationCas(annotationCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            bModel.initForDocument(jcas, repository);
+            bModel.initForDocument(annotationCas, repository);
 
             // Load constraints
-            bModel.setConstraints(loadConstraints(aTarget, bModel.getProject()));            
+            bModel.setConstraints(repository.loadConstraints(bModel.getProject()));            
 
             // Load user preferences
             PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
@@ -825,22 +814,8 @@ public class AnnotationPage
 
             gotoPageTextField.setModelObject(1);
 
-            updateSentenceAddress(jcas, aTarget);
+            updateSentenceAddress(annotationCas, aTarget);
 
-//            // Update dynamic elements in action bar
-//            aTarget.add(finish);
-//            aTarget.add(numberOfPages);
-//            aTarget.add(documentNamePanel);
-//            // Wicket-level rendering of annotator because it becomes visible
-//            // after selecting a document
-//            aTarget.add(annotator);
-//            // Resize areas according to preferences
-//            aTarget.add(sidebarCell);
-//            aTarget.add(annotationViewCell);
-//            // brat-level initialization and rendering of document
-//            annotator.bratInit(aTarget);
-//            annotator.bratRender(aTarget, jcas);
-            
             // Re-render the whole page because the font size
             aTarget.add(AnnotationPage.this);
             
@@ -863,66 +838,5 @@ public class AnnotationPage
         }
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
-    }
-
-    private ParsedConstraints loadConstraints(AjaxRequestTarget aTarget, Project aProject)
-        throws IOException
-    {
-        ParsedConstraints merged = null;
-
-        for (ConstraintSet set : repository.listConstraintSets(aProject)) {
-            try {
-                String script = repository.readConstrainSet(set);
-                ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
-                Parse p = parser.Parse();
-                ParsedConstraints constraints = p.accept(new ParserVisitor());
-
-                if (merged == null) {
-                    merged = constraints;
-                }
-                else {
-                    // Merge imports
-                    for(Entry<String,String> e: constraints.getImports().entrySet()){
-                        //Check if the value already points to some other feature in previous constraint file(s).
-                        if(merged.getImports().containsKey(e.getKey()) && !e.getValue().equalsIgnoreCase(merged.getImports().get(e.getKey()))){
-                            //If detected, notify user with proper message and abort merging
-                            StringBuffer errorMessage = new StringBuffer();
-                            errorMessage.append("Conflict detected in imports for key \"");
-                            errorMessage.append(e.getKey());
-                            errorMessage.append("\", conflicting values are \"");
-                            errorMessage.append(e.getValue());
-                            errorMessage.append("\" & \"");
-                            errorMessage.append(merged.getImports().get(e.getKey()));
-                            errorMessage.append("\". Please contact Project Admin for correcting this. Constraints feature may not work.");
-                            errorMessage.append("\nAborting Constraint rules merge!");
-                            LOG.error(errorMessage.toString());
-                            error(errorMessage.toString());
-                            break; 
-                        }
-                    }
-                    merged.getImports().putAll(constraints.getImports());
-
-                    // Merge scopes
-                    for (Scope scope : constraints.getScopes()) {
-                        Scope target = merged.getScopeByName(scope.getScopeName());
-                        if (target == null) {
-                            // Scope does not exist yet
-                            merged.getScopes().add(scope);
-                        }
-                        else {
-                            // Scope already exists
-                            target.getRules().addAll(scope.getRules());
-                        }
-                    }
-                }
-            }
-            catch (ParseException e) {
-                LOG.error("Error", e);
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                error(e.getMessage());
-            }
-        }
-
-        return merged;
     }
 }

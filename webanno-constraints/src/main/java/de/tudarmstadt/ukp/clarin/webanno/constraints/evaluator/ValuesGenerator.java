@@ -250,7 +250,6 @@ public class ValuesGenerator
     @Override
     public boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,
             ParsedConstraints parsedConstraints)
-                throws UIMAException
     {
         return parsedConstraints.areThereRules(aContext.getType().getName(), aFeature);
 //        if (!areThereRulesFor(aContext, parsedConstraints)) {

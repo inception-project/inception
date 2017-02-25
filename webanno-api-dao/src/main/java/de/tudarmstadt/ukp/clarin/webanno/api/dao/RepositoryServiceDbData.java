@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -121,6 +122,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -339,19 +346,6 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
-    public boolean existsCorrectionDocument(SourceDocument aDocument)
-    {
-        try {
-            readCorrectionCas(aDocument);
-            return true;
-        }
-        catch (Exception ex) {
-            return false;
-        }
-    }
-
-    @Override
-    @Transactional
     public boolean existsProject(String aName)
     {
         try {
@@ -373,27 +367,16 @@ public class RepositoryServiceDbData
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
     public boolean existsCorrectionCas(SourceDocument aSourceDocument)
+        throws IOException
     {
-
         try {
             readCorrectionCas(aSourceDocument);
             return true;
         }
-        catch (UIMAException e) {
+        catch (FileNotFoundException e) {
             return false;
         }
-        catch (DataRetrievalFailureException e) {
-            return false;
-        }
-        catch (ClassNotFoundException e) {
-            return false;
-        }
-        catch (IOException e) {
-            return false;
-        }
-
     }
 
     @Override
@@ -1204,6 +1187,62 @@ public class RepositoryServiceDbData
     }
 
     @Override
+    public ParsedConstraints loadConstraints(Project aProject)
+            throws IOException, ParseException
+    {
+        ParsedConstraints merged = null;
+
+        for (ConstraintSet set : listConstraintSets(aProject)) {
+            String script = readConstrainSet(set);
+            ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
+            Parse p = parser.Parse();
+            ParsedConstraints constraints = p.accept(new ParserVisitor());
+
+            if (merged == null) {
+                merged = constraints;
+            }
+            else {
+                // Merge imports
+                for (Entry<String, String> e : constraints.getImports().entrySet()) {
+                    // Check if the value already points to some other feature in previous
+                    // constraint file(s).
+                    if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
+                            .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
+                        // If detected, notify user with proper message and abort merging
+                        StringBuffer errorMessage = new StringBuffer();
+                        errorMessage.append("Conflict detected in imports for key \"");
+                        errorMessage.append(e.getKey());
+                        errorMessage.append("\", conflicting values are \"");
+                        errorMessage.append(e.getValue());
+                        errorMessage.append("\" & \"");
+                        errorMessage.append(merged.getImports().get(e.getKey()));
+                        errorMessage.append(
+                                "\". Please contact Project Admin for correcting this. Constraints feature may not work.");
+                        errorMessage.append("\nAborting Constraint rules merge!");
+                        throw new ParseException(errorMessage.toString());
+                    }
+                }
+                merged.getImports().putAll(constraints.getImports());
+
+                // Merge scopes
+                for (Scope scope : constraints.getScopes()) {
+                    Scope target = merged.getScopeByName(scope.getScopeName());
+                    if (target == null) {
+                        // Scope does not exist yet
+                        merged.getScopes().add(scope);
+                    }
+                    else {
+                        // Scope already exists
+                        target.getRules().addAll(scope.getRules());
+                    }
+                }
+            }
+        }
+
+        return merged;
+    }
+    
+    @Override
     public void removeGuideline(Project aProject, String aFileName, String username)
         throws IOException
     {
@@ -1546,13 +1585,15 @@ public class RepositoryServiceDbData
         annotationPreferencePropertiesFileName = aAnnotationPreferencePropertiesFileName;
     }
     
-    private boolean existsInitialCas(SourceDocument aDocument)
+    @Override
+    public boolean existsInitialCas(SourceDocument aDocument)
         throws IOException
     {
         return existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
     
-    private JCas createInitialCas(SourceDocument aDocument)
+    @Override
+    public JCas createInitialCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
         // Normally, the initial CAS should be created on document import, but after
@@ -1565,7 +1606,8 @@ public class RepositoryServiceDbData
         return jcas;
     }
     
-    private JCas readInitialCas(SourceDocument aDocument)
+    @Override
+    public JCas readInitialCas(SourceDocument aDocument)
         throws CASException, ResourceInitializationException, IOException
     {
         JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
@@ -1660,7 +1702,7 @@ public class RepositoryServiceDbData
 
     @Override
     public JCas readCorrectionCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException
     {
         return readCas(aDocument, CORRECTION_USER);
     }

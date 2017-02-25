@@ -26,7 +26,9 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -359,6 +361,15 @@ public interface DocumentService
     JCas readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
+    boolean existsInitialCas(SourceDocument aDocument)
+        throws IOException;
+    
+    JCas createInitialCas(SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException;
+    
+    JCas readInitialCas(SourceDocument aDocument)
+        throws CASException, ResourceInitializationException, IOException;
+    
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
      * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the

@@ -55,19 +55,10 @@ public interface CorrectionDocumentService
      * A method to check if there exist a correction document already. Base correction document
      * should be the same for all users
      *
-     * @param document
+     * @param sourceDocument
      *            the source document.
      * @return if a correction document exists.
      */
-    boolean existsCorrectionDocument(SourceDocument document);
-
-    /**
-     * check if there is an already automated document. This is important as automated document
-     * should appear the same among users
-     *
-     * @param sourceDocument
-     *            the source document.
-     * @return if an automation document exists.
-     */
-    boolean existsCorrectionCas(SourceDocument sourceDocument);
+    boolean existsCorrectionCas(SourceDocument sourceDocument)
+        throws IOException;
 }

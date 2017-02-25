@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -29,19 +31,23 @@ public interface ConstraintsService
 {
     /**
      * Creates Constraint Set
+     * 
      * @param aSet
      */
     void createConstraintSet(ConstraintSet aSet);
-    
+
     /**
      * Returns list of ConstraintSets in a project
-     * @param aProject The project 
+     * 
+     * @param aProject
+     *            The project
      * @return List of Constraints in a project
      */
     List<ConstraintSet> listConstraintSets(Project aProject);
-    
+
     /**
      * Remove a constraint
+     * 
      * @param aSet
      */
     void removeConstraintSet(ConstraintSet aSet);
@@ -51,19 +57,27 @@ public interface ConstraintsService
 
     void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException;
-    
+
     /**
      * Returns Constraint as a file
-     * @param aSet The Constraint Set
+     * 
+     * @param aSet
+     *            The Constraint Set
      * @return File pointing to Constraint
      * @throws IOException
      */
-    File exportConstraintAsFile(ConstraintSet aSet) throws IOException; 
-    
+    File exportConstraintAsFile(ConstraintSet aSet)
+        throws IOException;
+
     /**
      * Checks if there's a constraint set already with the name
-     * @param constraintSetName The name of constraint set
+     * 
+     * @param constraintSetName
+     *            The name of constraint set
      * @return true if exists
      */
     boolean existConstraintSet(String constraintSetName, Project aProject);
+
+    ParsedConstraints loadConstraints(Project aProject)
+        throws IOException, ParseException;
 }
