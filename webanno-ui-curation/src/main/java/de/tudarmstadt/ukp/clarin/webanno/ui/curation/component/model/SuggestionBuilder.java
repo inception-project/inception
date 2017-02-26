@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -91,7 +91,7 @@ public class SuggestionBuilder
         userRepository = aUserDao;
     }
 
-    public CurationContainer buildCurationContainer(AnnotatorStateImpl aBModel)
+    public CurationContainer buildCurationContainer(AnnotatorState aBModel)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
@@ -307,7 +307,7 @@ public class SuggestionBuilder
      * @throws AnnotationException
      *             hum?
      */
-    public JCas getMergeCas(AnnotatorStateImpl aBratAnnotatorModel, SourceDocument aDocument,
+    public JCas getMergeCas(AnnotatorState aBratAnnotatorModel, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -357,7 +357,7 @@ public class SuggestionBuilder
      * @throws ClassNotFoundException
      * @throws UIMAException
      */
-    private void updateSegment(AnnotatorStateImpl aBratAnnotatorModel,
+    private void updateSegment(AnnotatorState aBratAnnotatorModel,
             Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
             Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
             int aWindowStart, int aWindowEnd)
@@ -435,7 +435,7 @@ public class SuggestionBuilder
         return mergeJCas;
     }
     
-    private JCas createCorrectionCas(JCas mergeJCas, AnnotatorStateImpl aBratAnnotatorModel,
+    private JCas createCorrectionCas(JCas mergeJCas, AnnotatorState aBratAnnotatorModel,
             AnnotationDocument randomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {

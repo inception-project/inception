@@ -25,21 +25,24 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferenceModalPanel;
 
 /**
  * A panel used by {@link AnnotationPage} {@code CurationPage} and {code CorrectionPage} consisting
  * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
  */
-public class AnnotationLayersModalPanel
+public class AnnotationPreferencesModalPanel
     extends Panel
 {
     private static final long serialVersionUID = 671214149298791793L;
 
     private boolean closeButtonClicked;
 
-    public AnnotationLayersModalPanel(String id, final IModel<AnnotatorStateImpl> aBModel, AnnotationDetailEditorPanel aEditor)
+    public AnnotationPreferencesModalPanel(String id, final IModel<AnnotatorState> aBModel,
+            AnnotationDetailEditorPanel aEditor)
     {
         super(id, aBModel);
         // dialog window to select annotation layer preferences

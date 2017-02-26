@@ -48,7 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.WebAnnoCssReference;
 
@@ -237,13 +237,13 @@ public class ExportModalWindowPanel
     }
 
     private ExportDetailsForm exportForm;
-    private AnnotatorStateImpl bratAnnotatorModel;
+    private AnnotatorState bratAnnotatorModel;
 
     public ExportModalWindowPanel(String aId, final ModalWindow modalWindow,
-            AnnotatorStateImpl aBratAnnotatorModel)
+            AnnotatorState aBratAnnotatorModel)
     {
         super(aId);
-        this.bratAnnotatorModel = aBratAnnotatorModel;
+        bratAnnotatorModel = aBratAnnotatorModel;
         exportForm = new ExportDetailsForm("exportForm", modalWindow);
         add(exportForm);
     }

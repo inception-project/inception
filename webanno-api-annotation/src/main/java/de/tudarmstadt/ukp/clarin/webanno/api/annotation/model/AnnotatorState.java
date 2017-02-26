@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * cycles.
  */
 public interface AnnotatorState
+    extends Serializable
 {
     void initForDocument(JCas aJCas, RepositoryService aRepository);
 
@@ -96,14 +97,11 @@ public interface AnnotatorState
     // those of the last annotation of the same type. This can be useful when many annotations of
     // the same type with similar feature values need to be created.
     // ---------------------------------------------------------------------------------------------
+    void rememberFeatures();
     AnnotationLayer getRememberedSpanLayer();
-    void setRememberedSpanLayer(AnnotationLayer rememberedSpanLayer);
     AnnotationLayer getRememberedArcLayer();
-    void setRememberedArcLayer(AnnotationLayer rememberedArcLayer);
     Map<AnnotationFeature, Serializable> getRememberedSpanFeatures();
-    void setRememberedSpanFeatures(List<FeatureModel> aModels);
     Map<AnnotationFeature, Serializable> getRememberedArcFeatures();
-    void setRememberedArcFeatures(List<FeatureModel> aModels);
     void clearRememberedFeatures();
     
     // ---------------------------------------------------------------------------------------------
@@ -157,4 +155,15 @@ public interface AnnotatorState
     void setPreferences(AnnotationPreference aPreferences);
     List<AnnotationLayer> getAnnotationLayers();
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
+
+    // ---------------------------------------------------------------------------------------------
+    // Feature value models
+    // ---------------------------------------------------------------------------------------------
+    List<FeatureState> getFeatureStates();
+    FeatureState getFeatureState(AnnotationFeature aFeature);
+    
+    // ---------------------------------------------------------------------------------------------
+    // Access to transient context
+    // ---------------------------------------------------------------------------------------------
+    TransientActionContext getAction();
 }

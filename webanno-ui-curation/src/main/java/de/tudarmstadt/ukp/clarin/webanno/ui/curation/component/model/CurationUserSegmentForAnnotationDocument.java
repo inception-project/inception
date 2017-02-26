@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import java.io.Serializable;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
 
@@ -38,7 +38,7 @@ public class CurationUserSegmentForAnnotationDocument
     private String collectionData = "{}";
     private String username = "";
     //NEw Additions
-    private AnnotatorStateImpl bratAnnotatorModel;
+    private AnnotatorState bratAnnotatorModel;
     private  AnnotationSelection annotationSelection;
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress;
 
@@ -78,12 +78,12 @@ public class CurationUserSegmentForAnnotationDocument
         username = aUsername;
     }
 
-    public AnnotatorStateImpl getBratAnnotatorModel()
+    public AnnotatorState getBratAnnotatorModel()
     {
         return bratAnnotatorModel;
     }
 
-    public void setBratAnnotatorModel(AnnotatorStateImpl bratAnnotatorModel)
+    public void setBratAnnotatorModel(AnnotatorState bratAnnotatorModel)
     {
         this.bratAnnotatorModel = bratAnnotatorModel;
     }

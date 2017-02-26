@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -70,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
@@ -112,7 +113,7 @@ public class CurationPage
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
-    private AnnotatorStateImpl bModel;
+    private AnnotatorState bModel;
 
     private int gotoPageAddress;
     private int totalNumberOfSentence;
@@ -168,7 +169,7 @@ public class CurationPage
         add(curationPanel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<AnnotatorStateImpl>(bModel)));
+                new Model<AnnotatorState>(bModel)));
         documentNamePanel.setOutputMarkupId(true);
 
         add(numberOfPages = (Label) new Label("numberOfPages",
@@ -259,7 +260,7 @@ public class CurationPage
                                         username);
 
                                 loadDocumentAction(target);
-                                curationPanel.reloadEditorLayer(target);
+                                curationPanel.editor.loadFeatureEditorModels(target);
                             }
                             catch (Exception e) {
                                 LOG.error("Unable to load data", e);
@@ -272,8 +273,8 @@ public class CurationPage
             }
         });
 
-        add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<AnnotatorStateImpl>(bModel), curationPanel.editor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
+                new Model<AnnotatorState>(bModel), curationPanel.editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -312,7 +313,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                curationPanel.resetEditor(aTarget);
+                curationPanel.editor.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
@@ -352,7 +353,7 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                curationPanel.resetEditor(aTarget);
+                curationPanel.editor.reset(aTarget);
                 // List of all Source Documents in the project
                 List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
 
@@ -382,7 +383,7 @@ public class CurationPage
             }
         }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
-        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel))
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = -468896211970839443L;
 
@@ -578,7 +579,7 @@ public class CurationPage
 
         showFinishCurationModal.add(finish);
 
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorState>(bModel)));
 
         final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));

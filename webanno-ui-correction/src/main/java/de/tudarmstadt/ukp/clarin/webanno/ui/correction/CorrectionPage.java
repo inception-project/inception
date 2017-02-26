@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -74,13 +75,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -118,7 +119,7 @@ public class CorrectionPage
     private UserDao userRepository;
 
     private CurationContainer curationContainer;
-    private AnnotatorStateImpl bModel;
+    private AnnotatorState bModel;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -217,22 +218,23 @@ public class CorrectionPage
         annotationViewCell.add(correctionView);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(correctionView);
                 aTarget.add(numberOfPages);
 
                 try {
-                    JCas annotationCas = getCas(aBModel);
-                    JCas correctionCas = repository.readCorrectionCas(aBModel.getDocument());
+                    AnnotatorState state = getModelObject();
+                    JCas annotationCas = getCas();
+                    JCas correctionCas = repository.readCorrectionCas(state.getDocument());
                     annotator.bratRender(aTarget, annotationCas);
-                    annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                    annotator.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
 
                     // info(bratAnnotatorModel.getMessage());
                     SuggestionBuilder builder = new SuggestionBuilder(repository,
@@ -258,10 +260,10 @@ public class CorrectionPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas());
                 }
                 catch (Exception e) {
                     LOG.error("Error reading CAS " + e.getMessage());
@@ -274,9 +276,8 @@ public class CorrectionPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView",
-                new Model<AnnotatorStateImpl>(bModel), editor);
-;
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor);
+        ;
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
@@ -286,7 +287,7 @@ public class CorrectionPage
         curationContainer.setBratAnnotatorModel(bModel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<AnnotatorStateImpl>(bModel)));
+                new Model<AnnotatorState>(bModel)));
         documentNamePanel.setOutputMarkupId(true);
 
         add(numberOfPages = (Label) new Label("numberOfPages",
@@ -347,8 +348,7 @@ public class CorrectionPage
             }
         });
 
-        add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<AnnotatorStateImpl>(bModel),editor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", Model.of(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -377,7 +377,7 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel))
+        add(new ExportModalPanel("exportModalPanel", Model.of(bModel))
         {
             private static final long serialVersionUID = -468896211970839443L;
 
@@ -479,12 +479,12 @@ public class CorrectionPage
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorStateImpl>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorState>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected AnnotatorStateImpl load()
+            protected AnnotatorState load()
             {
                 return bModel;
             }
@@ -492,7 +492,7 @@ public class CorrectionPage
         finish.setOutputMarkupId(true);
 
         add(new FinishLink("showYesNoModalPanel",
-                new Model<AnnotatorStateImpl>(bModel), finish)
+                new Model<AnnotatorState>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -581,8 +581,7 @@ public class CorrectionPage
             }
         });
         
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(
-                bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", Model.of(bModel)));
     }
 
 	private List<SourceDocument> getListOfDocs() {
@@ -645,9 +644,8 @@ public class CorrectionPage
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = userRepository.get(username);
-                    editor.setEnabled(!FinishImage.isFinished(
-                            new Model<AnnotatorStateImpl>(bModel), user, repository));
-                    editor.refresh(target);
+                    editor.setEnabled(!FinishImage.isFinished(Model.of(bModel), user, repository));
+                    editor.loadFeatureEditorModels(target);
                 }
                 catch (Exception e) {
                     LOG.error("Unable to load data", e);

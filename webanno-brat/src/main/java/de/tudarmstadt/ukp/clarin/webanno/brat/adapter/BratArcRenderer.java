@@ -42,7 +42,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
@@ -80,7 +80,7 @@ public class BratArcRenderer
      */
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, AnnotatorStateImpl aBratAnnotatorModel,
+            GetDocumentResponse aResponse, AnnotatorState aBratAnnotatorModel,
             ColoringStrategy aColoringStrategy)
     {
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());

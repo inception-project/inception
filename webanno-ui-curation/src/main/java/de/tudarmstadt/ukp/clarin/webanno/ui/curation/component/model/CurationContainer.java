@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -40,7 +40,7 @@ public class CurationContainer
 
     private Map<Integer, SourceListView> curationViewByBegin = new HashMap<Integer, SourceListView>();
 
-    private AnnotatorStateImpl bratAnnotatorModel;
+    private AnnotatorState bratAnnotatorModel;
 
     public List<SourceListView> getCurationViews()
     {
@@ -71,12 +71,12 @@ public class CurationContainer
 
     }
 
-    public AnnotatorStateImpl getBratAnnotatorModel()
+    public AnnotatorState getBratAnnotatorModel()
     {
         return bratAnnotatorModel;
     }
 
-    public void setBratAnnotatorModel(AnnotatorStateImpl bratAnnotatorModel)
+    public void setBratAnnotatorModel(AnnotatorState bratAnnotatorModel)
     {
         this.bratAnnotatorModel = bratAnnotatorModel;
     }

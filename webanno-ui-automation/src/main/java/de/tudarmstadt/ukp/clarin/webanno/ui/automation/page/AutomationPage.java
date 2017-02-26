@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -87,13 +88,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
@@ -136,7 +137,7 @@ public class AutomationPage
     private UserDao userRepository;
 
     private CurationContainer curationContainer;
-    private AnnotatorStateImpl bModel;
+    private AnnotatorState bModel;
 
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
@@ -240,18 +241,20 @@ public class AutomationPage
         annotationViewCell.add(automateView);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onChange(AjaxRequestTarget aTarget)
             {
+                AnnotatorState state = getModelObject();
+                
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
-                    annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
                 }
                 catch (UIMAException | ClassNotFoundException | IOException e) {
                     LOG.info("Error reading CAS " + e.getMessage());
@@ -280,16 +283,18 @@ public class AutomationPage
             }
             
             @Override
-            public void onAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            public void onAnnotate(AjaxRequestTarget aTarget)
             {
-            	if(aBModel.isForwardAnnotation()){
+                AnnotatorState state = getModelObject();
+                
+            	if(state.isForwardAnnotation()){
             		return;
             	}
-                AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
-                int address = aBModel.getSelection().getAnnotation().getId();
+                AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                int address = state.getSelection().getAnnotation().getId();
                 try {
                     AnnotationDocument annodoc = repository.createOrGetAnnotationDocument(
-                            aBModel.getDocument(), aBModel.getUser());
+                            state.getDocument(), state.getUser());
                     JCas jCas = repository.readAnnotationCas(annodoc);
                     AnnotationFS fs = selectByAddr(jCas, address);
 
@@ -317,13 +322,13 @@ public class AutomationPage
                         if (automationService.getMiraTemplate(f) != null && isRepeatable) {
 
                             if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {                               
-                                AutomationUtil.repeateRelationAnnotation(aBModel, repository,
+                                AutomationUtil.repeateRelationAnnotation(state, repository,
                                         annotationService, fs, f, fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
                             }
                             else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
-                                AutomationUtil.repeateSpanAnnotation(aBModel, repository,
+                                AutomationUtil.repeateSpanAnnotation(state, repository,
                                         annotationService, fs.getBegin(), fs.getEnd(), f,
                                         fs.getFeatureValueAsString(feat));
                                 update(aTarget);
@@ -348,10 +353,10 @@ public class AutomationPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas());
                    // onAnnotate(aTarget, aBModel);
                 }
                 catch (UIMAException | ClassNotFoundException | IOException e) {
@@ -362,10 +367,10 @@ public class AutomationPage
             }
             
             @Override
-            public void onDelete(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel,
-                    AnnotationFS aFS)
+            public void onDelete(AjaxRequestTarget aTarget, AnnotationFS aFS)
             {
-                AnnotationLayer layer = aBModel.getSelectedAnnotationLayer();
+                AnnotatorState state = getModelObject();
+                AnnotationLayer layer = state.getSelectedAnnotationLayer();
                 for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                     if (!automationService.existsMiraTemplate(f)) {
                         continue;
@@ -377,11 +382,11 @@ public class AutomationPage
                         Type type = CasUtil.getType(aFS.getCAS(), layer.getName());
                         Feature feat = type.getFeatureByBaseName(f.getName());
                         if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
-                            AutomationUtil.deleteRelationAnnotation(aBModel, repository,
+                            AutomationUtil.deleteRelationAnnotation(state, repository,
                                     annotationService, aFS, f, aFS.getFeatureValueAsString(feat));
                         }
                         else {
-                            AutomationUtil.deleteSpanAnnotation(aBModel, repository,
+                            AutomationUtil.deleteSpanAnnotation(state, repository,
                                     annotationService, aFS.getBegin(), aFS.getEnd(), f,
                                     aFS.getFeatureValueAsString(feat));
                         }
@@ -406,7 +411,7 @@ public class AutomationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<AnnotatorStateImpl>(bModel),
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel),
                 editor);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
@@ -417,7 +422,7 @@ public class AutomationPage
         curationContainer.setBratAnnotatorModel(bModel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                new Model<AnnotatorStateImpl>(bModel)));
+                new Model<AnnotatorState>(bModel)));
 
         add(numberOfPages = (Label) new Label("numberOfPages",
                 new LoadableDetachableModel<String>()
@@ -521,8 +526,8 @@ public class AutomationPage
                             update(target);
                             User user = userRepository.get(username);
                             editor.setEnabled(!FinishImage.isFinished(
-                                    new Model<AnnotatorStateImpl>(bModel), user, repository));
-    						editor.refresh(target);
+                                    new Model<AnnotatorState>(bModel), user, repository));
+    						editor.loadFeatureEditorModels(target);
     		
                         }
                         catch (UIMAException e) {
@@ -551,8 +556,8 @@ public class AutomationPage
             }
         });
 
-        add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<AnnotatorStateImpl>(bModel), editor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
+                new Model<AnnotatorState>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -583,7 +588,7 @@ public class AutomationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorState>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -725,18 +730,18 @@ public class AutomationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorStateImpl>()
+        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorState>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
 
             @Override
-            protected AnnotatorStateImpl load()
+            protected AnnotatorState load()
             {
                 return bModel;
             }
         });
 
-        add(new FinishLink("showYesNoModalPanel", new Model<AnnotatorStateImpl>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", new Model<AnnotatorState>(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             
@@ -1096,7 +1101,7 @@ public class AutomationPage
             }
         });
         
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", Model.of(bModel)));
     }
 
     

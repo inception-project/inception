@@ -43,7 +43,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -629,7 +629,7 @@ public class WebAnnoCasUtil
      * @param aSentenceAddress
      *            the sentence ID.
      * @return the sentence number.
-     * @deprecated use {@link AnnotatorStateImpl#getFirstVisibleSentenceNumber()} instead
+     * @deprecated use {@link AnnotatorState#getFirstVisibleSentenceNumber()} instead
      */
     @Deprecated
     public static int getFirstSentenceNumber(JCas aJcas, int aSentenceAddress)

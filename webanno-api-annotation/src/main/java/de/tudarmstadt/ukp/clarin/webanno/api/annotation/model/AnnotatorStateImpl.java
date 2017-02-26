@@ -99,15 +99,19 @@ public class AnnotatorStateImpl
      * the sentence number where an action occured (selection, modification, clicking)
      */
     private int focusSentenceNumber;
+    
     /**
      * The first sentence number in the display window
      */
     private int firstVisibleSentenceNumber;
+    
     /**
      * The last sentence number in the display window
      */
     private int lastVisibleSentenceNumber;
 
+    private List<FeatureState> featureModels = new ArrayList<>();          
+    
     /**
      * Constraints object from rule file
      */
@@ -342,21 +346,9 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setRememberedSpanLayer(AnnotationLayer rememberedSpanLayer)
-    {
-        this.rememberedSpanLayer = rememberedSpanLayer;
-    }
-
-    @Override
     public AnnotationLayer getRememberedArcLayer()
     {
         return rememberedArcLayer;
-    }
-
-    @Override
-    public void setRememberedArcLayer(AnnotationLayer rememberedArcLayer)
-    {
-        this.rememberedArcLayer = rememberedArcLayer;
     }
 
     @Override
@@ -365,12 +357,11 @@ public class AnnotatorStateImpl
         return rememberedSpanFeatures;
     }
 
-    @Override
-    public void setRememberedSpanFeatures(List<FeatureModel> aModels)
+    private void setRememberedSpanFeatures(List<FeatureState> aModels)
     {
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
-            for (FeatureModel fm : aModels) {
+            for (FeatureState fm : aModels) {
                 // Do not remember values unless this feature is enabled
                 if (!fm.feature.isRemember()) {
                     continue;
@@ -391,12 +382,11 @@ public class AnnotatorStateImpl
         return rememberedArcFeatures;
     }
 
-    @Override
-    public void setRememberedArcFeatures(List<FeatureModel> aModels)
+    private void setRememberedArcFeatures(List<FeatureState> aModels)
     {
         rememberedArcFeatures = new HashMap<>();
         if (aModels != null) {
-            for (FeatureModel fm : aModels) {
+            for (FeatureState fm : aModels) {
                 // Do not remember values unless this feature is enabled
                 if (!fm.feature.isRemember()) {
                     continue;
@@ -484,12 +474,25 @@ public class AnnotatorStateImpl
     }
 
     @Override
+    public void rememberFeatures()
+    {
+        if (getSelection().isRelationAnno()) {
+            this.rememberedArcLayer = getSelectedAnnotationLayer();
+            setRememberedArcFeatures(featureModels);
+        }
+        else {
+            this.rememberedSpanLayer = getSelectedAnnotationLayer();
+            setRememberedSpanFeatures(featureModels);
+        }
+    }
+    
+    @Override
     public void clearRememberedFeatures()
     {
         setRememberedArcFeatures(null);
-        setRememberedArcLayer(null);
+        this.rememberedArcLayer = null;
         setRememberedSpanFeatures(null);
-        setRememberedSpanLayer(null);
+        this.rememberedSpanLayer = null;
     }
 
     @Override
@@ -542,5 +545,43 @@ public class AnnotatorStateImpl
     public int getArmedSlot()
     {
         return armedSlot;
+    }
+ 
+    @Override
+    public List<FeatureState> getFeatureStates()
+    {
+        return featureModels;
+    }
+
+    @Override
+    public FeatureState getFeatureState(AnnotationFeature aFeature)
+    {
+        for (FeatureState f : featureModels) {
+            if (f.feature.getId() == aFeature.getId()) {
+                return f;
+            }
+        }
+        return null;
+    }
+    
+    @Override
+    public TransientActionContext getAction()
+    {
+        return this;
+    }
+    
+    // if it is annotation or delete operation
+    private boolean isAnnotate = true;
+
+    @Override
+    public boolean isAnnotate()
+    {
+        return isAnnotate;
+    }
+
+    @Override
+    public void setAnnotate(boolean isAnnotate)
+    {
+        this.isAnnotate = isAnnotate;
     }
 }

@@ -26,9 +26,6 @@ public class Selection
 {
     private static final long serialVersionUID = 2257223261821341371L;
 
-    // if it is annotation or delete operation
-    private boolean isAnnotate = true;
-
     // is the annotation span or arc annotation
     private boolean isRelationAnno;
 
@@ -64,16 +61,6 @@ public class Selection
     public void setRelationAnno(boolean isRelationAnno)
     {
         this.isRelationAnno = isRelationAnno;
-    }
-
-    public boolean isAnnotate()
-    {
-        return isAnnotate;
-    }
-
-    public void setAnnotate(boolean isAnnotate)
-    {
-        this.isAnnotate = isAnnotate;
     }
 
     public int getOrigin()

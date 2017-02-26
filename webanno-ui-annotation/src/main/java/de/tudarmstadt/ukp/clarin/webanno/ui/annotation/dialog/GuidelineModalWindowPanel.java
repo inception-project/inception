@@ -36,7 +36,7 @@ import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.WebAnnoCssReference;
 
 /**
@@ -52,19 +52,19 @@ public class GuidelineModalWindowPanel
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    private class guidelineForm
-        extends Form<Void>
+    private class GuidelineForm
+        extends Form<AnnotatorState>
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        public guidelineForm(String id, final ModalWindow modalWindow, final IModel<AnnotatorStateImpl> aModel)
+        public GuidelineForm(String id, final ModalWindow modalWindow, final IModel<AnnotatorState> aModel)
         {
-            super(id);
+            super(id, aModel);
 
             // Overall progress by Projects
             RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
             add(guidelineRepeater);
-                for (String guidelineFileName : repository.listGuidelines(aModel.getObject().getProject())) {
+                for (String guidelineFileName : repository.listGuidelines(getModelObject().getProject())) {
                     AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
 
                     guidelineRepeater.add(item);
@@ -73,7 +73,7 @@ public class GuidelineModalWindowPanel
                     PopupSettings popupSettings = new PopupSettings(PopupSettings.RESIZABLE
                             | PopupSettings.SCROLLBARS).setHeight(500).setWidth(700);
 
-                    IResourceStream stream = new FileResourceStream(repository.getGuideline(aModel.getObject().getProject(), guidelineFileName));
+                    IResourceStream stream = new FileResourceStream(repository.getGuideline(getModelObject().getProject(), guidelineFileName));
                     ResourceStreamResource resource = new ResourceStreamResource(stream);
                     ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
                     rlink.setPopupSettings(popupSettings);
@@ -102,12 +102,12 @@ public class GuidelineModalWindowPanel
         aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
     }
 
-    private guidelineForm guidelineForm;
+    private GuidelineForm guidelineForm;
 
-    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<AnnotatorStateImpl> aModel)
+    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<AnnotatorState> aModel)
     {
         super(aId);
-        guidelineForm = new guidelineForm("guidelineForm", modalWindow, aModel);
+        guidelineForm = new GuidelineForm("guidelineForm", modalWindow, aModel);
         add(guidelineForm);
     }
 

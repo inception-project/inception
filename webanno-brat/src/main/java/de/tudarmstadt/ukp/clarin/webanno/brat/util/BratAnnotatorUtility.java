@@ -31,7 +31,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -51,7 +51,7 @@ public class BratAnnotatorUtility
 {
 
     public static boolean isDocumentFinished(RepositoryService aRepository,
-            AnnotatorStateImpl aBratAnnotatorModel)
+            AnnotatorState aBratAnnotatorModel)
     {
         // if annotationDocument is finished, disable editing
         boolean finished = false;

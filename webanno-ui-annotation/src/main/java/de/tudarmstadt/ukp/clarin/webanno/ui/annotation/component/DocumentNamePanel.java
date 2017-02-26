@@ -25,7 +25,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 
@@ -44,7 +44,7 @@ public class DocumentNamePanel
 
     ModalWindow yesNoModal;
 
-    public DocumentNamePanel(String id, final IModel<AnnotatorStateImpl> aModel)
+    public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
         add(new Label("doumentName", new LoadableDetachableModel<String>()

@@ -71,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.AutomationTypeAd
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -97,7 +97,7 @@ public class AutomationUtil
     private static Log LOG = LogFactory.getLog(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateSpanAnnotation(AnnotatorStateImpl aBModel,
+    public static void repeateSpanAnnotation(AnnotatorState aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, AnnotationException
@@ -134,7 +134,7 @@ public class AutomationUtil
         }
     }
 
-    public static void repeateRelationAnnotation(AnnotatorStateImpl aBModel,
+    public static void repeateRelationAnnotation(AnnotatorState aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, AnnotationException
@@ -312,7 +312,7 @@ public class AutomationUtil
         }
     }
 
-    public static void deleteSpanAnnotation(AnnotatorStateImpl aBModel,
+    public static void deleteSpanAnnotation(AnnotatorState aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
             int aEnd, AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, AnnotationException
@@ -353,7 +353,7 @@ public class AutomationUtil
     /**
      * 
      */
-    public static void deleteRelationAnnotation(AnnotatorStateImpl aBModel,
+    public static void deleteRelationAnnotation(AnnotatorState aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, AnnotationException

@@ -42,14 +42,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -73,14 +73,15 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> sidebarSizeField;
     private NumberTextField<Integer> fontSizeField;
 
-    private final AnnotatorStateImpl bModel;
+    private final AnnotatorState bModel;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow, AnnotationDetailEditorPanel aEditor)
+        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow,
+                AnnotationDetailEditorPanel aEditor)
         {
             super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
                     new AnnotationLayerDetailFormModel()));
@@ -193,7 +194,7 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
                         PreferencesUtil.savePreference(bModel, repository);
-                        aEditor.refresh(aTarget);
+                        aEditor.loadFeatureEditorModels(aTarget);
                     }
                     catch (FileNotFoundException e) {
                         error("Preference file not found");
@@ -250,7 +251,7 @@ public class AnnotationPreferenceModalPanel
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            AnnotatorStateImpl aBModel, AnnotationDetailEditorPanel aEditor)
+            AnnotatorState aBModel, AnnotationDetailEditorPanel aEditor)
     {
         super(aId);
         this.bModel = aBModel;

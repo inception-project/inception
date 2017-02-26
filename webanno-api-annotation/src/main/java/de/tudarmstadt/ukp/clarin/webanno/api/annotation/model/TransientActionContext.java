@@ -25,4 +25,6 @@ public interface TransientActionContext
     String getUserAction();
     void setUserAction(String aUserAction);
     void clearUserAction();
+    boolean isAnnotate();
+    void setAnnotate(boolean isAnnotate);
 }

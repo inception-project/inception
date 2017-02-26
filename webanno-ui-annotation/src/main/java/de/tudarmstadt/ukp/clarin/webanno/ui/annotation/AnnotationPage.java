@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -61,13 +63,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationLayersModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -118,7 +120,7 @@ public class AnnotationPage
     private int totalNumberOfSentence;
 
     private boolean closeButtonClicked;
-    private AnnotatorStateImpl bModel = new AnnotatorStateImpl();
+    private AnnotatorState bModel = new AnnotatorStateImpl();
 
     private WebMarkupContainer sidebarCell;
     private WebMarkupContainer annotationViewCell;
@@ -152,19 +154,20 @@ public class AnnotationPage
         add(annotationViewCell);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(numberOfPages);
 
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
-                    annotator.bratSetHighlight(aTarget, aBModel.getSelection().getAnnotation());
+                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratSetHighlight(aTarget,
+                            getModelObject().getSelection().getAnnotation());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
@@ -174,10 +177,10 @@ public class AnnotationPage
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage());
@@ -189,14 +192,14 @@ public class AnnotationPage
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
         
-        annotator = new BratAnnotator("embedder1", new Model<AnnotatorStateImpl>(bModel), editor);
+        annotator = new BratAnnotator("embedder1", new Model<AnnotatorState>(bModel), editor);
         annotationViewCell.add(annotator);
 
         // This is an Annotation Operation, set model to ANNOTATION mode
         bModel.setMode(Mode.ANNOTATION);
 
         add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
-                new Model<AnnotatorStateImpl>(bModel)).setOutputMarkupId(true));
+                new Model<AnnotatorState>(bModel)).setOutputMarkupId(true));
 
         numberOfPages = new Label("numberOfPages", new Model<String>());
         numberOfPages.setOutputMarkupId(true);
@@ -266,10 +269,11 @@ public class AnnotationPage
 
                         loadDocumentAction(target);
                         try {
-							editor.refresh(target);
-						} catch (AnnotationException e) {
-							error("Error loading layers"+e.getMessage());
-						}
+							editor.loadFeatureEditorModels(target);
+                        }
+                        catch (AnnotationException e) {
+                            error("Error loading layers" + e.getMessage());
+                        }
                     }
                 });
                 // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
@@ -277,8 +281,8 @@ public class AnnotationPage
             }
         });
 
-        add(new AnnotationLayersModalPanel("annotationLayersModalPanel",
-                new Model<AnnotatorStateImpl>(bModel), editor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
+                new Model<AnnotatorState>(bModel), editor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -307,7 +311,7 @@ public class AnnotationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorStateImpl>(bModel)){
+        add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorState>(bModel)){
             private static final long serialVersionUID = -468896211970839443L;
             
             {
@@ -570,7 +574,7 @@ public class AnnotationPage
                 annotator.bratRenderLater(aTarget);
             }
         });
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorStateImpl>(bModel)));
+        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorState>(bModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
                 new Model<Integer>(0));
@@ -663,10 +667,10 @@ public class AnnotationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new Model<AnnotatorStateImpl>(bModel));
+        finish = new FinishImage("finishImage", Model.of(bModel));
         finish.setOutputMarkupId(true);
 
-        add(new FinishLink("showYesNoModalPanel", new Model<AnnotatorStateImpl>(bModel), finish)
+        add(new FinishLink("showYesNoModalPanel", Model.of(bModel), finish)
         {
             private static final long serialVersionUID = -4657965743173979437L;
             

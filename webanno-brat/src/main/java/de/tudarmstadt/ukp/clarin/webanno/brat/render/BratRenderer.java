@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratArcRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratChainRenderer;
@@ -72,36 +72,36 @@ public class BratRenderer
      *
      * @param aResponse
      *            the response.
-     * @param aBModel
+     * @param aState
      *            the annotator model.
      * @param aJCas
      *            the JCas.
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, AnnotatorStateImpl aBModel,
+    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
             JCas aJCas, AnnotationService aAnnotationService)
     {
-        aResponse.setRtlMode(ScriptDirection.RTL.equals(aBModel.getScriptDirection()));
+        aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
-        renderTokenAndSentence(aJCas, aResponse, aBModel);
+        renderTokenAndSentence(aJCas, aResponse, aState);
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
                     || (layer.getType().equals(CHAIN_TYPE)
-                            && (aBModel.getMode().equals(Mode.AUTOMATION)
-                                    || aBModel.getMode().equals(Mode.CORRECTION)
-                                    || aBModel.getMode().equals(Mode.CURATION)))
+                            && (aState.getMode().equals(Mode.AUTOMATION)
+                                    || aState.getMode().equals(Mode.CORRECTION)
+                                    || aState.getMode().equals(Mode.CURATION)))
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
 
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
-                    aAnnotationService, layer, aBModel.getPreferences(), colorQueues);
+                    aAnnotationService, layer, aState.getPreferences(), colorQueues);
 
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
             List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
@@ -114,17 +114,17 @@ public class BratRenderer
             
             TypeAdapter adapter = getAdapter(aAnnotationService, layer);
             TypeRenderer renderer = getRenderer(adapter);
-            renderer.render(aJCas, features, aResponse, aBModel, coloringStrategy);
+            renderer.render(aJCas, features, aResponse, aState, coloringStrategy);
         }
     }
 
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
-            AnnotatorStateImpl aAnnotatorState)
+            AnnotatorState aState)
     {
-        int windowBegin = aAnnotatorState.getWindowBeginOffset();
-        int windowEnd = aAnnotatorState.getWindowEndOffset();
+        int windowBegin = aState.getWindowBeginOffset();
+        int windowEnd = aState.getWindowEndOffset();
         
-        aResponse.setSentenceNumberOffset(aAnnotatorState.getFirstVisibleSentenceNumber());
+        aResponse.setSentenceNumberOffset(aState.getFirstVisibleSentenceNumber());
 
         // Render token + texts
         for (AnnotationFS fs : selectCovered(aJcas, Token.class, windowBegin, windowEnd)) {

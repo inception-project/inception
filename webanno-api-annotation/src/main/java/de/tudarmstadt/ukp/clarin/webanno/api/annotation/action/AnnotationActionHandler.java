@@ -24,12 +24,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-
     void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId, String aOriginType,
             int aOriginSpanId, String aTargetType, int aTargetSpanId)
         throws AnnotationException, UIMAException, ClassNotFoundException, IOException;
@@ -38,10 +37,8 @@ public interface AnnotationActionHandler
             VID paramId)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
 
-    void actionAnnotate(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel, boolean aIsForwarded)
+    void actionAnnotate(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
 
-    void refreshAnnotationLayers(AnnotatorStateImpl aBModel);
-    
-    AnnotatorStateImpl getModelObject();
+    AnnotatorState getModelObject();
 }

@@ -23,6 +23,7 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportModalWindowPanel;
@@ -36,7 +37,7 @@ public class ExportModalPanel
 {
     private static final long serialVersionUID = 671214149298791793L;
 
-    public ExportModalPanel(String id, final IModel<AnnotatorStateImpl> aModel)
+    public ExportModalPanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
 

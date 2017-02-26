@@ -26,7 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
@@ -49,28 +49,28 @@ public class FinishImage
 
     WebMarkupContainer finish;
 
-    public void setModel(IModel<AnnotatorStateImpl> aModel)
+    public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(AnnotatorStateImpl aModel)
+    public void setModelObject(AnnotatorState aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<AnnotatorStateImpl> getModel()
+    public IModel<AnnotatorState> getModel()
     {
-        return (IModel<AnnotatorStateImpl>) getDefaultModel();
+        return (IModel<AnnotatorState>) getDefaultModel();
     }
 
-    public AnnotatorStateImpl getModelObject()
+    public AnnotatorState getModelObject()
     {
-        return (AnnotatorStateImpl) getDefaultModelObject();
+        return (AnnotatorState) getDefaultModelObject();
     }
 
-    public FinishImage(String id, final IModel<AnnotatorStateImpl> aModel)
+    public FinishImage(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
 
@@ -101,12 +101,11 @@ public class FinishImage
         }));
     }
 
-    public static boolean isFinished(final IModel<AnnotatorStateImpl> aModel, User user,
+    public static boolean isFinished(final IModel<AnnotatorState> aModel, User user,
             RepositoryService aRepository)
     {
         return aRepository.existsAnnotationDocument(aModel.getObject().getDocument(), user)
                 && aRepository.getAnnotationDocument(aModel.getObject().getDocument(), user)
                         .getState().equals(AnnotationDocumentState.FINISHED);
     }
-
 }

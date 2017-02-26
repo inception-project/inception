@@ -35,6 +35,11 @@ public class StyledComboBox<T>
 {
     private static final long serialVersionUID = 1L;
     
+    public StyledComboBox(String aId, IModel<List<T>> aChoices)
+    {
+        super(aId, aChoices);
+    }
+
     public StyledComboBox(String id, IModel<String> model, List<T> choices)
     {
         super(id, model, choices);            

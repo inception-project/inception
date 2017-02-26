@@ -49,8 +49,8 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -105,12 +105,12 @@ public class BratAnnotator
     private AnnotationActionHandler detailPanel;
 
     @Deprecated
-    public AnnotatorStateImpl getModelObject()
+    public AnnotatorState getModelObject()
     {
         return detailPanel.getModelObject();
     }
 
-    public BratAnnotator(String id, IModel<AnnotatorStateImpl> aModel,
+    public BratAnnotator(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aEditor)
     {
         super(id, aModel);
@@ -159,7 +159,7 @@ public class BratAnnotator
                 String action = request.getParameterValue(PARAM_ACTION).toString();
                 
                 // Record the action in the action context (which currently is persistent...)
-                getModelObject().setUserAction(action);
+                getModelObject().getAction().setUserAction(action);
                 
                 // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
                 // calls that do not go through this AjaxBehavior do not see an active user action.
@@ -167,7 +167,7 @@ public class BratAnnotator
                     @Override
                     public void onEndRequest(RequestCycle aCycle)
                     {
-                        BratAnnotator.this.getModelObject().clearUserAction();
+                        BratAnnotator.this.getModelObject().getAction().clearUserAction();
                     }
                 });
 
@@ -248,7 +248,7 @@ public class BratAnnotator
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
-                    LOG.error(e);
+                    LOG.error("Error: " + e.getMessage(), e);
                 }
 
                 // Serialize updated document to JSON
@@ -262,12 +262,6 @@ public class BratAnnotator
                     // up from there and then pass it on to BRAT to do the rendering.
                     aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = "
                             + json + ";");
-                }
-                
-                // If we created a new annotation, then refresh the available annotation layers
-                // in the detail panel.
-                if (getModelObject().getSelection().getAnnotation().isNotSet()) {
-                    detailPanel.refreshAnnotationLayers(getModelObject());
                 }
                 
                 LOG.info("AJAX-RPC DONE: [" + action + "] completed in "
@@ -514,19 +508,19 @@ public class BratAnnotator
         return json;
     }
 
-    private JCas getCas(AnnotatorStateImpl aBratAnnotatorModel)
+    private JCas getCas(AnnotatorState aState)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        if (aBratAnnotatorModel.getMode().equals(Mode.ANNOTATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)
-                || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION_MERGE)) {
+        if (aState.getMode().equals(Mode.ANNOTATION)
+                || aState.getMode().equals(Mode.AUTOMATION)
+                || aState.getMode().equals(Mode.CORRECTION)
+                || aState.getMode().equals(Mode.CORRECTION_MERGE)) {
 
-            return repository.readAnnotationCas(aBratAnnotatorModel.getDocument(),
-                    aBratAnnotatorModel.getUser());
+            return repository.readAnnotationCas(aState.getDocument(),
+                    aState.getUser());
         }
         else {
-            return repository.readCurationCas(aBratAnnotatorModel.getDocument());
+            return repository.readCurationCas(aState.getDocument());
         }
     }    
 }

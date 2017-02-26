@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
@@ -41,11 +41,11 @@ public interface TypeRenderer
      * @param features the features.
      * @param aResponse
      *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
+     * @param aState
      *            Data model for brat annotations
      * @param aColoringStrategy
      *            the  coloring strategy to render this layer
      */
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
-            AnnotatorStateImpl aBratAnnotatorModel, ColoringStrategy aColoringStrategy);
+            AnnotatorState aState, ColoringStrategy aColoringStrategy);
 }

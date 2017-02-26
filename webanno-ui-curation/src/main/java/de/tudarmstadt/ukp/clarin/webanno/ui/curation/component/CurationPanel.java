@@ -54,11 +54,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
@@ -97,7 +97,7 @@ public class CurationPanel
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer corssSentAnnoView;
 
-    private AnnotatorStateImpl bModel;
+    private AnnotatorState bModel;
 
     private int fSn = 0;
     private int lSn = 0;
@@ -253,36 +253,37 @@ public class CurationPanel
         annotationViewCell.add(suggestionViewPanel);
 
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<AnnotatorStateImpl>(bModel))
+                "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
 
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {
                     updatePanel(aTarget, cCModel.getObject());
                 }
                 catch (UIMAException e) {
+                    LOG.error("Error: " + e.getMessage(), e);
                     error(ExceptionUtils.getRootCause(e));
                 }
-                catch (ClassNotFoundException | IOException | AnnotationException e) {
+                catch (Exception e) {
+                    LOG.error("Error: " + e.getMessage(), e);
                     error(e.getMessage());
                 }
             }
 
             @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget, AnnotatorStateImpl aBModel)
+            protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas(aBModel));
+                    annotator.bratRender(aTarget, getCas());
                 }
                 catch (Exception e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
+                    LOG.info("Error reading CAS " + e.getMessage(), e);
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
@@ -302,8 +303,7 @@ public class CurationPanel
         editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<AnnotatorStateImpl>(bModel),
-                editor);
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
@@ -311,7 +311,6 @@ public class CurationPanel
 
         LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
         {
-
             @Override
             protected Object load()
             {
@@ -521,7 +520,7 @@ public class CurationPanel
          */
         aTarget.add(suggestionViewPanel);
         if (annotate) {
-            annotator.bratRender(aTarget, editor.getCas(bModel));
+            annotator.bratRender(aTarget, editor.getCas());
             annotator.bratSetHighlight(aTarget, bModel.getSelection().getAnnotation());
         }
         else {
@@ -531,18 +530,5 @@ public class CurationPanel
         CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotator, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
-    }
-
-    public void resetEditor(AjaxRequestTarget aTarget)
-    {
-        editor.reset(aTarget);
-    }
-    public void reloadEditorLayer(AjaxRequestTarget aTarget)
-    {
-        try {
-			editor.refresh(aTarget);
-		} catch (AnnotationException e) {
-			// DO NOTHING
-		}
     }
 }

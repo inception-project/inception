@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -127,7 +127,7 @@ public class CuratorUtil
     public static void populateCurationSentences(
             Map<String, JCas> aJCases,
             List<CurationUserSegmentForAnnotationDocument> aSentences,
-            AnnotatorStateImpl aBratAnnotatorModel,
+            AnnotatorState aBratAnnotatorModel,
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationService aAnnotationService, CurationContainer aCurationContainer,
@@ -193,7 +193,7 @@ public class CuratorUtil
     }
 
     private static String render(JCas aJcas, AnnotationService aAnnotationService,
-            AnnotatorStateImpl aBratAnnotatorModel, ColoringStrategy aCurationColoringStrategy)
+            AnnotatorState aBratAnnotatorModel, ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
         GetDocumentResponse response = new GetDocumentResponse();
@@ -278,7 +278,7 @@ public class CuratorUtil
             SourceListView aCurationSegment, AnnotationService aAnnotationService, UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorStateImpl bModel = aCurationContainer.getBratAnnotatorModel();
+        AnnotatorState bModel = aCurationContainer.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
         Map<String, JCas> jCases = new HashMap<String, JCas>();
 
@@ -427,7 +427,7 @@ public class CuratorUtil
     }
 
     public static JCas getAnnotatorCase(
-            AnnotatorStateImpl aBModel,
+            AnnotatorState aBModel,
             RepositoryService aRepository,
             UserDao aUserDao,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,

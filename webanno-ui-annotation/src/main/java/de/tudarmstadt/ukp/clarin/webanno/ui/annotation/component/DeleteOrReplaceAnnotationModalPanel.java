@@ -25,9 +25,10 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 
 /**
  * A yes/NO dialog window to confirm if the user is meant to delete the selected annotation or not.
@@ -40,7 +41,7 @@ public class DeleteOrReplaceAnnotationModalPanel
     private static final long serialVersionUID = 9059154802785333743L;
     private final Log log = LogFactory.getLog(getClass());
 
-    public DeleteOrReplaceAnnotationModalPanel(String aId, AnnotatorStateImpl aBModel,
+    public DeleteOrReplaceAnnotationModalPanel(String aId, AnnotatorState aBModel,
             ModalWindow aModalWindow, AnnotationDetailEditorPanel aEditor, AnnotationLayer aLayer,
             boolean aIsReplace)
     {
@@ -55,7 +56,7 @@ public class DeleteOrReplaceAnnotationModalPanel
         private static final long serialVersionUID = 2676469299552059617L;
 
         public YesNoButtonsForm(String id, final ModalWindow modalWindow,
-                AnnotatorStateImpl aBModel, AnnotationDetailEditorPanel aEditor,
+                AnnotatorState aState, AnnotationDetailEditorPanel aEditor,
                 AnnotationLayer aLayer, boolean aIsReplace)
         {
             super(id);
@@ -68,19 +69,24 @@ public class DeleteOrReplaceAnnotationModalPanel
                 {
                     try {
                         if (aIsReplace) {
-                            aEditor.actionDelete(aTarget, aBModel);
-                            aBModel.getSelection().setAnnotate(true);
-                            aBModel.getSelection().setAnnotation(VID.NONE_ID);
-                            aBModel.setSelectedAnnotationLayer(aLayer);
-                            aBModel.setDefaultAnnotationLayer(aLayer);
+                            // Delete current annotation
+                            aEditor.actionDelete(aTarget);
+                            
+                            // Set up the action to create the replacement annotation
+                            aState.getAction().setAnnotate(true);
+                            aState.getSelection().setAnnotation(VID.NONE_ID);
+                            aState.setSelectedAnnotationLayer(aLayer);
+                            aState.setDefaultAnnotationLayer(aLayer);
                             aEditor.getSelectedAnnotationLayer()
                                     .setDefaultModelObject(aLayer.getUiName());
-                            aEditor.refresh(aTarget);
-                            aEditor.actionAnnotate(aTarget, aBModel, false);
+                            aEditor.loadFeatureEditorModels(aTarget);
+                            
+                            // Create the replacement annotation
+                            aEditor.actionAnnotate(aTarget);
                             aTarget.add(aEditor.getAnnotationFeatureForm());
                         }
                         else {
-                            aEditor.actionDelete(aTarget, aBModel);
+                            aEditor.actionDelete(aTarget);
                         }
                     }
                     catch (Exception e) {
@@ -99,7 +105,7 @@ public class DeleteOrReplaceAnnotationModalPanel
                 public void onClick(AjaxRequestTarget aTarget)
                 {
                     if (aIsReplace) {
-                        aBModel.setDefaultAnnotationLayer(aBModel.getSelectedAnnotationLayer());
+                        aState.setDefaultAnnotationLayer(aState.getSelectedAnnotationLayer());
                         aTarget.add(aEditor.getAnnotationFeatureForm());
                         modalWindow.close(aTarget);
                     }

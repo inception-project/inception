@@ -39,6 +39,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -177,7 +178,7 @@ public class CasToBratJsonTest
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        AnnotatorStateImpl bratannotatorModel = new AnnotatorStateImpl();
+        AnnotatorState bratannotatorModel = new AnnotatorStateImpl();
         bratannotatorModel.getPreferences().setWindowSize(10);
         bratannotatorModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(jCas));
 
