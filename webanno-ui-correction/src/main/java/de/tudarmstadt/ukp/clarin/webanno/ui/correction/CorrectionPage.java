@@ -1085,12 +1085,6 @@ public class CorrectionPage
             aTarget.addChildren(getPage(), FeedbackPanel.class);
             error("Error: " + e.getMessage());
         }
-
-        if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
-            bModel.getDocument().setState(SourceDocumentStateTransition.transition(
-                    SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-            repository.createSourceDocument(bModel.getDocument());
-        }
         
         LOG.debug("Configured BratAnnotatorModel for user [" + bModel.getUser() + "] f:["
                 + bModel.getFirstVisibleSentenceNumber() + "] l:["
@@ -1123,37 +1117,37 @@ public class CorrectionPage
     }
 
     private void updateSentenceAddress(JCas aJCas, AjaxRequestTarget aTarget)
-            throws UIMAException, IOException, ClassNotFoundException
-        {
-            gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
-                    gotoPageTextField.getModelObject());
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
+                gotoPageTextField.getModelObject());
 
-            String labelText = "";
-            if (bModel.getDocument() != null) {
-                
-                List<SourceDocument> listofDoc = getListOfDocs();
-                
-                int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
-                
-                int totalNumberOfSentence = WebAnnoCasUtil.getNumberOfPages(aJCas);
+        String labelText = "";
+        if (bModel.getDocument() != null) {
+            
+            List<SourceDocument> listofDoc = getListOfDocs();
+            
+            int docIndex = listofDoc.indexOf(bModel.getDocument())+1;
+            
+            int totalNumberOfSentence = WebAnnoCasUtil.getNumberOfPages(aJCas);
 
-                // If only one page, start displaying from sentence 1
-                if (totalNumberOfSentence == 1) {
-                    bModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
-                }
-
-                labelText = "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
-                        + bModel.getLastVisibleSentenceNumber() + " of " + totalNumberOfSentence
-                        + " sentences [document " + docIndex + " of " + listofDoc.size() + "]";
-            }
-            else {
-                labelText = "";// no document yet selected
+            // If only one page, start displaying from sentence 1
+            if (totalNumberOfSentence == 1) {
+                bModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
             }
 
-            numberOfPages.setDefaultModelObject(labelText);
-            aTarget.add(numberOfPages);
-            aTarget.add(gotoPageTextField);
+            labelText = "showing " + bModel.getFirstVisibleSentenceNumber() + "-"
+                    + bModel.getLastVisibleSentenceNumber() + " of " + totalNumberOfSentence
+                    + " sentences [document " + docIndex + " of " + listofDoc.size() + "]";
         }
+        else {
+            labelText = "";// no document yet selected
+        }
+
+        numberOfPages.setDefaultModelObject(labelText);
+        aTarget.add(numberOfPages);
+        aTarget.add(gotoPageTextField);
+    }
     
     private void update(JCas aJCas, AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
