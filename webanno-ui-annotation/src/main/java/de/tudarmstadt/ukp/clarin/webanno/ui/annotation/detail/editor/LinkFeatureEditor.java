@@ -1,0 +1,544 @@
+/*
+ * Copyright 2015
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
+import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
+import com.googlecode.wicket.kendo.ui.form.TextField;
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+
+public class LinkFeatureEditor
+    extends FeatureEditor
+{
+    private static final Log LOG = LogFactory.getLog(LinkFeatureEditor.class);
+    
+    private static final long serialVersionUID = 7469241620229001983L;
+
+    @SpringBean(name = "annotationService")
+    private AnnotationService annotationService;
+    
+    private WebMarkupContainer content;
+
+//    // For showing the status of Constraints rules kicking in.
+//    private RulesIndicator indicator = new RulesIndicator();
+
+    @SuppressWarnings("rawtypes")
+    private final AbstractTextComponent field;
+    private boolean isDrop;
+    private boolean hideUnconstraintFeature;
+
+    private IModel<AnnotatorState> stateModel;
+    private AnnotationDetailEditorPanel owner;
+    
+    private String newRole;
+
+    @SuppressWarnings("unchecked")
+    public LinkFeatureEditor(String aId, String aMarkupId, AnnotationDetailEditorPanel aOwner,
+            final IModel<FeatureState> aFeatureStateModel)
+    {
+        super(aId, aMarkupId, aOwner.getAnnotationFeatureForm(),
+                CompoundPropertyModel.of(aFeatureStateModel));
+
+        stateModel = aOwner.getModel();
+        owner = aOwner;
+
+        // Checks whether hide un-constraint feature is enabled or not
+        hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
+        
+        add(new Label("feature", getModelObject().feature.getUiName()));
+
+        // Most of the content is inside this container such that we can refresh it independently
+        // from the rest of the form
+        content = new WebMarkupContainer("content");
+        content.setOutputMarkupId(true);
+        add(content);
+
+        content.add(new RefreshingView<LinkWithRoleModel>("slots",
+                PropertyModel.of(getModel(), "value"))
+        {
+            private static final long serialVersionUID = 5475284956525780698L;
+
+            @Override
+            protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
+            {
+                ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
+                        (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value)
+                {
+                    @Override
+                    protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
+                    {
+                        return Model.of(aObject);
+                    }
+                };
+                return i;
+            }
+
+            @Override
+            protected void populateItem(final Item<LinkWithRoleModel> aItem)
+            {
+                AnnotatorState state = stateModel.getObject();
+
+                aItem.setModel(
+                        new CompoundPropertyModel<LinkWithRoleModel>(aItem.getModelObject()));
+                
+                Label role = new Label("role");
+                aItem.add(role);
+                
+                final Label label;
+                if (aItem.getModelObject().targetAddr == -1
+                        && state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                    label = new Label("label", "<Select to fill>");
+                }
+                else {
+                    label = new Label("label");
+                }
+                label.add(new AjaxEventBehavior("click")
+                {
+                    private static final long serialVersionUID = 7633309278417475424L;
+
+                    @Override
+                    protected void onEvent(AjaxRequestTarget aTarget)
+                    {
+                        actionToggleArmedState(aTarget, aItem);
+                    }
+                });
+                label.add(new AttributeAppender("style", new Model<String>()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public String getObject()
+                    {
+                        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                            return "; background: orange";
+                        }
+                        else {
+                            return "";
+                        }
+                    }
+                }));
+                aItem.add(label);
+            }
+        });
+
+        if (getModelObject().feature.getTagset() != null) {
+            field = new StyledComboBox<Tag>("newRole", PropertyModel.of(this, "newRole"),
+                    PropertyModel.of(getModel(), "tagset"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onInitialize()
+                {
+                    super.onInitialize();
+
+                    // Ensure proper order of the initializing JS header items: first combo box
+                    // behavior (in super.onInitialize()), then tooltip.
+                    Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                    options.set("content", AnnotationDetailEditorPanel.FUNCTION_FOR_TOOLTIP);
+                    add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]",
+                            options)
+                    {
+                        private static final long serialVersionUID = -7207021885475073279L;
+
+                        @Override
+                        protected String $()
+                        {
+                            // REC: It takes a moment for the KendoDatasource to load the data and
+                            // for the Combobox to render the hidden dropdown. I did not find
+                            // a way to hook into this process and to get notified when the
+                            // data is available in the dropdown, so trying to handle this
+                            // with a slight delay hopeing that all is set up after 1 second.
+                            return "try {setTimeout(function () { " + super.$()
+                                    + " }, 1000); } catch (err) {}; ";
+                        }
+                    });
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    
+                    // If a slot is armed, then load the slot's role into the dropdown
+                    AnnotatorState state = stateModel.getObject();
+                    if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
+                            .equals(state.getArmedFeature())) {
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                                .getModelObject().value;
+                        setModelObject(links.get(state.getArmedSlot()).role);
+                    }
+                    else {
+                        setModelObject("");
+                    }
+                    
+                    // Trigger a re-loading of the tagset from the server as constraints may have
+                    // changed the ordering
+                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                    if (target != null) {
+                        LOG.trace("onInitialize() requesting datasource re-reading");
+                        target.appendJavaScript(
+                                String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
+                    }
+                }
+            };
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshs of the feature editor panel. This is required to restore the focus.
+            field.setOutputMarkupId(true);
+            field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
+            
+            content.add(field);
+
+            isDrop = true;
+        }
+        else {
+            content.add(field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+
+                    AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+                    FeatureState featureState = LinkFeatureEditor.this.getModelObject();
+
+                    if (state.isSlotArmed()
+                            && featureState.feature.equals(state.getArmedFeature())) {
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+                        setModelObject(links.get(state.getArmedSlot()).role);
+                    }
+                    else {
+                        setModelObject("");
+                    }
+                }
+            });
+        }
+
+        // Shows whether constraints are triggered or not
+        // also shows state of constraints use.
+        Component constraintsInUseIndicator = new WebMarkupContainer("linkIndicator")
+        {
+            private static final long serialVersionUID = 4346767114287766710L;
+
+            @Override
+            public boolean isVisible()
+            {
+                return getModelObject().indicator.isAffected();
+            }
+        }.add(new AttributeAppender("class", new Model<String>()
+        {
+            private static final long serialVersionUID = -7683195283137223296L;
+
+            @Override
+            public String getObject()
+            {
+                // adds symbol to indicator
+                return getModelObject().indicator.getStatusSymbol();
+            }
+        })).add(new AttributeAppender("style", new Model<String>()
+        {
+            private static final long serialVersionUID = -5255873539738210137L;
+
+            @Override
+            public String getObject()
+            {
+                // adds color to indicator
+                return "; color: " + getModelObject().indicator.getStatusColor();
+            }
+        }));
+        add(constraintsInUseIndicator);
+
+        // Add a new empty slot with the specified role
+        content.add(new AjaxButton("add")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConfigure()
+            {
+                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+                setVisible(!(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
+                        .equals(state.getArmedFeature())));
+                // setEnabled(!(model.isSlotArmed()
+                // && aModel.feature.equals(model.getArmedFeature())));
+            }
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                actionAdd(aTarget);
+            }
+        });
+
+        // Allows user to update slot
+        content.add(new AjaxButton("set")
+        {
+
+            private static final long serialVersionUID = 7923695373085126646L;
+
+            @Override
+            protected void onConfigure()
+            {
+                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+                setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
+                        .equals(state.getArmedFeature()));
+                // setEnabled(model.isSlotArmed()
+                // && aModel.feature.equals(model.getArmedFeature()));
+            }
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                actionSet(aTarget);
+            }
+        });
+
+        // Add a new empty slot with the specified role
+        content.add(new AjaxButton("del")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConfigure()
+            {
+                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+                setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
+                        .equals(state.getArmedFeature()));
+                // setEnabled(model.isSlotArmed()
+                // && aModel.feature.equals(model.getArmedFeature()));
+            }
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                actionDel(aTarget);
+            }
+        });
+    }
+
+    private void removeAutomaticallyAddedUnusedEntries()
+    {
+        // Remove unused (but auto-added) tags.
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                .getModelObject().value;
+
+        Iterator<LinkWithRoleModel> existingLinks = list.iterator();
+        while (existingLinks.hasNext()) {
+            LinkWithRoleModel link = existingLinks.next();
+            if (link.autoCreated && link.targetAddr == -1) {
+                // remove it
+                existingLinks.remove();
+            }
+        }
+    }
+
+    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> possibleValues)
+    {
+        // Construct a quick index for tags
+        Set<String> tagset = new HashSet<String>();
+        for (Tag t : aTagset) {
+            tagset.add(t.getName());
+        }
+
+        // Get links list and build role index
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getModelObject().value;
+        Set<String> roles = new HashSet<String>();
+        for (LinkWithRoleModel l : links) {
+            roles.add(l.role);
+        }
+
+        // Loop over values to see which of the tags are important and add them.
+        for (PossibleValue value : possibleValues) {
+            if (!value.isImportant() || !tagset.contains(value.getValue())) {
+                continue;
+            }
+
+            // Check if there is already a slot with the given name
+            if (roles.contains(value.getValue())) {
+                continue;
+            }
+
+            // Add empty slot in UI with that name.
+            LinkWithRoleModel m = new LinkWithRoleModel();
+            m.role = value.getValue();
+            // Marking so that can be ignored later.
+            m.autoCreated = true;
+            links.add(m);
+            // NOT arming the slot here!
+        }
+    }
+
+    @Override
+    public Component getFocusComponent()
+    {
+        return field;
+    }
+
+    @Override
+    public boolean isDropOrchoice()
+    {
+        return isDrop;
+    }
+
+    /**
+     * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
+     * feature doesn't match any constraint rule
+     */
+    @Override
+    public void onConfigure()
+    {
+        // Update entries for important tags.
+        removeAutomaticallyAddedUnusedEntries();
+        FeatureState featureState = getModelObject();
+        autoAddImportantTags(featureState.tagset, featureState.possibleValues);
+        
+        // if enabled and constraints rule execution returns anything other than green
+        setVisible(!hideUnconstraintFeature || (getModelObject().indicator.isAffected()
+                && getModelObject().indicator.getStatusColor().equals("green")));
+    }
+    
+    private void actionAdd(AjaxRequestTarget aTarget)
+    {
+        if (StringUtils.isBlank((String) field.getModelObject())) {
+            error("Must set slot label before adding!");
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+        else {
+            @SuppressWarnings("unchecked")
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                    .getModelObject().value;
+            AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+            
+            LinkWithRoleModel m = new LinkWithRoleModel();
+            m.role = (String) field.getModelObject();
+            links.add(m);
+            state.setArmedSlot(LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+
+            // Need to re-render the whole form because a slot in another
+            // link editor might get unarmed
+            aTarget.add(owner.getAnnotationFeatureForm());
+        }
+    }
+    
+    private void actionSet(AjaxRequestTarget aTarget)
+    {
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                .getModelObject().value;
+        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+
+        // Update the slot
+        LinkWithRoleModel m = links.get(state.getArmedSlot());
+        m.role = (String) field.getModelObject();
+        links.set(state.getArmedSlot(), m); // avoid reordering
+        
+        aTarget.add(content);
+        
+        // Commit change
+        try {
+            owner.actionAnnotate(aTarget);
+        }
+        catch (Exception e) {
+            AnnotationDetailEditorPanel.handleException(this, aTarget, e);
+        }
+    }
+    
+    private void actionDel(AjaxRequestTarget aTarget)
+    {
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                .getModelObject().value;
+        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        
+        links.remove(state.getArmedSlot());
+        state.clearArmedSlot();
+
+        aTarget.add(content);
+
+        // Auto-commit if working on existing annotation
+        if (state.getSelection().getAnnotation().isSet()) {
+            try {
+                owner.actionAnnotate(aTarget);
+            }
+            catch (Exception e) {
+                AnnotationDetailEditorPanel.handleException(this, aTarget, e);
+            }
+        }
+    }
+    
+    private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
+    {
+        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        
+        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+            state.clearArmedSlot();
+            aTarget.add(content);
+        }
+        else {
+            state.setArmedSlot(getModelObject().feature, aItem.getIndex());
+            // Need to re-render the whole form because a slot in another
+            // link editor might get unarmed
+            aTarget.add(owner.getAnnotationFeatureForm());
+        }
+    }
+}

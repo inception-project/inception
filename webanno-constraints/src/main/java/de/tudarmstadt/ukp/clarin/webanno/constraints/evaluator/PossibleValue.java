@@ -17,14 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
+import java.io.Serializable;
+
 /**
  * Class for containing possible values based on a rule and evaluation Also includes flag values
- * 
- *
  */
 public class PossibleValue
-    implements Comparable<PossibleValue>
+    implements Comparable<PossibleValue>, Serializable
 {
+    private static final long serialVersionUID = -310345685698644725L;
+    
     private final String value;
     private final boolean important;
 
@@ -57,21 +59,27 @@ public class PossibleValue
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        PossibleValue other = (PossibleValue) obj;
-        if (important != other.important)
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
         }
-        else if (!value.equals(other.value))
+        if (obj == null) {
             return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        PossibleValue other = (PossibleValue) obj;
+        if (important != other.important) {
+            return false;
+        }
+        if (value == null) {
+            if (other.value != null) {
+                return false;
+            }
+        }
+        else if (!value.equals(other.value)) {
+            return false;
+        }
         return true;
     }
 
@@ -96,9 +104,10 @@ public class PossibleValue
         else if (this.isImportant() && !o.isImportant()) {
             return -1;
         }
-        else
+        else {
             // Sort based on string value if important tags are same, A-Z
             return this.getValue().compareTo(o.getValue());
+        }
 
     }
 }

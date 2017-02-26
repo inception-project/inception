@@ -49,7 +49,7 @@ public class TextFeatureEditor
 {
     private static final long serialVersionUID = 7763348613632105600L;
 
-    private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
+    private static final Log LOG = LogFactory.getLog(TextFeatureEditor.class);
 
     @SuppressWarnings("rawtypes")
     private final AbstractTextComponent field;
@@ -60,7 +60,8 @@ public class TextFeatureEditor
             IModel<FeatureState> aModel)
     {
         super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureState>(aModel));
-        //Checks whether hide un-constraint feature is enabled or not
+        
+        // Checks whether hide un-constraint feature is enabled or not
         hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
         
         add(new Label("feature", getModelObject().feature.getUiName()));
@@ -89,7 +90,8 @@ public class TextFeatureEditor
                             // a way to hook into this process and to get notified when the
                             // data is available in the dropdown, so trying to handle this
                             // with a slight delay hopeing that all is set up after 1 second.
-                            return "try {setTimeout(function () { " + super.$() + " }, 1000); } catch (err) {}; ";
+                            return "try {setTimeout(function () { " + super.$()
+                                    + " }, 1000); } catch (err) {}; ";
                         }
                     });
                 }
@@ -124,9 +126,10 @@ public class TextFeatureEditor
         
         add(field);
         
-        //Shows whether constraints are triggered or not
-        //also shows state of constraints use.
-        Component constraintsInUseIndicator = new WebMarkupContainer("textIndicator"){
+        // Shows whether constraints are triggered or not
+        // also shows state of constraints use.
+        Component constraintsInUseIndicator = new WebMarkupContainer("textIndicator")
+        {
             private static final long serialVersionUID = 4346767114287766710L;
 
             @Override
@@ -134,23 +137,24 @@ public class TextFeatureEditor
             {
                 return getModelObject().indicator.isAffected();
             }
-        }.add(new AttributeAppender("class", new Model<String>(){
+        }.add(new AttributeAppender("class", new Model<String>()
+        {
             private static final long serialVersionUID = -7683195283137223296L;
 
             @Override
             public String getObject()
             {
-                //adds symbol to indicator
+                // adds symbol to indicator
                 return getModelObject().indicator.getStatusSymbol();
             }
-        }))
-          .add(new AttributeAppender("style", new Model<String>(){
+        })).add(new AttributeAppender("style", new Model<String>()
+        {
             private static final long serialVersionUID = -5255873539738210137L;
 
             @Override
             public String getObject()
             {
-                //adds color to indicator
+                // adds color to indicator
                 return "; color: " + getModelObject().indicator.getStatusColor();
             }
         }));
@@ -178,8 +182,8 @@ public class TextFeatureEditor
     }
     
     /**
-     * Hides feature if "Hide un-constraint feature" is enabled
-     * and constraint rules are applied and feature doesn't match any constraint rule
+     * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
+     * feature doesn't match any constraint rule
      */
     @Override
     public void onConfigure()

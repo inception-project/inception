@@ -55,8 +55,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
@@ -69,7 +67,6 @@ import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -88,8 +85,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -124,10 +119,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DeleteOrReplaceAnnotationModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.BooleanFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.LinkFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.NumberFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.TextFeatureEditor;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -180,7 +175,7 @@ public class AnnotationDetailEditorPanel
                     actionAnnotate(aTarget);
                 }
                 catch (Exception e) {
-                    handleException(aTarget, e);
+                    handleException(annotationFeatureForm, aTarget, e);
                 }
             } 
         }); 
@@ -199,7 +194,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private class AnnotationFeatureForm
+    public class AnnotationFeatureForm
         extends Form<AnnotatorState>
     {
         private static final long serialVersionUID = 3635145598405490893L;
@@ -308,7 +303,7 @@ public class AnnotationDetailEditorPanel
                         }
                     }
                     catch (Exception e) {
-                        handleException(aTarget, e);
+                        handleException(this, aTarget, e);
                     }
                 }
             });
@@ -342,7 +337,7 @@ public class AnnotationDetailEditorPanel
                         actionReverse(aTarget);
                     }
                     catch (Exception e) {
-                        handleException(aTarget, e);
+                        handleException(this, aTarget, e);
                     }
                 }
             });
@@ -369,7 +364,7 @@ public class AnnotationDetailEditorPanel
                         actionClear(aTarget);
                     }
                     catch (Exception e) {
-                        handleException(aTarget, e);
+                        handleException(this, aTarget, e);
                     }
                 }
             });
@@ -448,7 +443,7 @@ public class AnnotationDetailEditorPanel
                             selectedTag = "";
                         }
                         catch (Exception e) {
-                            handleException(aTarget, e);
+                            handleException(forwardAnnotationText, aTarget, e);
                         }
 		            	return;
 		            }
@@ -689,7 +684,7 @@ public class AnnotationDetailEditorPanel
                                     actionClear(aTarget);
                                 }
                                 catch (Exception e) {
-                                    handleException(aTarget, e);
+                                    handleException(LayerSelector.this, aTarget, e);
                                 }
                             }
                             else {
@@ -794,7 +789,7 @@ public class AnnotationDetailEditorPanel
                     case WITH_ROLE: {
                         // If it is none of the primitive types, it must be a link feature
                         frag = new LinkFeatureEditor("editor", "linkFeatureEditor",
-                                AnnotationFeatureForm.this, item.getModel());
+                                AnnotationDetailEditorPanel.this, item.getModel());
                         break;
 
                     }
@@ -959,7 +954,7 @@ public class AnnotationDetailEditorPanel
                             actionAnnotate(aTarget);
                         }
                         catch (Exception e) {
-                            handleException(aTarget, e);
+                            handleException(FeatureEditorPanelContent.this, aTarget, e);
                         }
                     }
                 });
@@ -1047,7 +1042,7 @@ public class AnnotationDetailEditorPanel
                     setSlot(aTarget, jCas, id);
                 }
                 catch (Exception e) {
-                    handleException(aTarget, e);
+                    handleException(this, aTarget, e);
                 }
             }
             else {
@@ -1736,7 +1731,7 @@ public class AnnotationDetailEditorPanel
                 actionAnnotate(aTarget, aJCas, false);
             }
             catch (Exception e) {
-                handleException(aTarget, e);
+                handleException(this, aTarget, e);
             }
         }
     }
@@ -1961,492 +1956,6 @@ public class AnnotationDetailEditorPanel
         return (AnnotatorState) getDefaultModelObject();
     }
 
-    public class LinkFeatureEditor
-        extends FeatureEditor
-    {
-        private static final long serialVersionUID = 7469241620229001983L;
-
-        private WebMarkupContainer content;
-        //For showing the status of Constraints rules kicking in.
-        private RulesIndicator indicator = new RulesIndicator();
-
-        @SuppressWarnings("rawtypes")
-        private final AbstractTextComponent newRole;
-        private boolean isDrop;
-        private boolean hideUnconstraintFeature;
-        
-        @SuppressWarnings("unchecked")
-        public LinkFeatureEditor(String aId, String aMarkupId, MarkupContainer aItem,
-                final IModel<FeatureState> aModel)
-        {
-            super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureState>(aModel));
-            //Checks whether hide un-constraint feature is enabled or not
-            hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
-            add(new Label("feature", getModelObject().feature.getUiName()));
-
-            // Most of the content is inside this container such that we can refresh it independently
-            // from the rest of the form
-            content = new WebMarkupContainer("content");
-            content.setOutputMarkupId(true);
-            add(content);
-
-            content.add(new RefreshingView<LinkWithRoleModel>("slots",
-                    PropertyModel.of(getModel(), "value"))
-            {
-                private static final long serialVersionUID = 5475284956525780698L;
-
-                @Override
-                protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
-                {
-                    ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
-                            (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value)
-                    {
-                        @Override
-                        protected IModel<LinkWithRoleModel> model(LinkWithRoleModel aObject)
-                        {
-                            return Model.of(aObject);
-                        }
-                    };
-                    return i;
-                }
-
-                @Override
-                protected void populateItem(final Item<LinkWithRoleModel> aItem)
-                {
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    
-                    aItem.setModel(new CompoundPropertyModel<LinkWithRoleModel>(aItem
-                            .getModelObject()));
-                    Label role = new Label("role");
-                    
-                    aItem.add(role);
-                    final Label label;
-                    if (aItem.getModelObject().targetAddr == -1
-                            && state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
-                        label = new Label("label", "<Select to fill>");
-                    }
-                    else {
-                        label = new Label("label");
-                    }
-                    label.add(new AjaxEventBehavior("click")
-                    {
-                        private static final long serialVersionUID = 7633309278417475424L;
-
-                        @Override
-                        protected void onEvent(AjaxRequestTarget aTarget)
-                        {
-                            if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
-                                state.clearArmedSlot();                                
-                                aTarget.add(content);
-                            }
-                            else {
-                                state.setArmedSlot(getModelObject().feature, aItem.getIndex());
-                                // Need to re-render the whole form because a slot in another
-                                // link editor might get unarmed
-                                aTarget.add(annotationFeatureForm);
-                            }
-                        }
-                    });
-                    label.add(new AttributeAppender("style", new Model<String>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        public String getObject()
-                        {
-                            if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
-                                return "; background: orange";
-                            }
-                            else {
-                                return "";
-                            }
-                        }
-                    }));
-                    aItem.add(label);
-                }
-            });
-
-            if (getModelObject().feature.getTagset() != null) {
-                AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                List<Tag> tagset = null;
-                //reset the indicator
-                indicator.reset();
-                if (state.getConstraints() != null && state.getSelection().getAnnotation().isSet()) {
-//                    indicator.setRulesExist(true); //Constraint rules exist!
-                    tagset = addTagsBasedOnRules(state, getModelObject());
-                }
-                else {
-//                    indicator.setRulesExist(false); //No constraint rules.
-                    // add tagsets only, earlier behavior
-                    tagset = annotationService.listTags(getModelObject().feature.getTagset());
-                }
-
-                newRole = new StyledComboBox<Tag>("newRole", Model.of(""), tagset) {
-                    private static final long serialVersionUID = 1L;
-                    
-                    @Override
-                    protected void onInitialize()
-                    {
-                        super.onInitialize();
-                        
-                        // Ensure proper order of the initializing JS header items: first combo box
-                        // behavior (in super.onInitialize()), then tooltip.
-                        Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                        options.set("content", FUNCTION_FOR_TOOLTIP);
-                        add(new TooltipBehavior("#"+newRole.getMarkupId()+"_listbox *[title]", options) {
-                            private static final long serialVersionUID = -7207021885475073279L;
-
-                            @Override
-                            protected String $()
-                            {
-                                // REC: It takes a moment for the KendoDatasource to load the data and
-                                // for the Combobox to render the hidden dropdown. I did not find
-                                // a way to hook into this process and to get notified when the
-                                // data is available in the dropdown, so trying to handle this
-                                // with a slight delay hopeing that all is set up after 1 second.
-                                return "try {setTimeout(function () { " + super.$() + " }, 1000); } catch (err) {}; ";
-                            }
-                        });
-                    }
-                    
-                    @Override
-                    protected void onConfigure()
-                    {
-                        super.onConfigure();
-                        if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                                .equals(state.getArmedFeature())) {
-                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                    .getModelObject().value;
-                            setModelObject(links.get(state.getArmedSlot()).role);
-                        }
-                        else {
-                            setModelObject("");
-                        }
-                    }
-                };
-                
-                // Ensure that markup IDs of feature editor focus components remain constant across
-                // refreshs of the feature editor panel. This is required to restore the focus.
-                newRole.setOutputMarkupId(true);
-                newRole.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-                
-                content.add(newRole);
-                
-                isDrop = true;
-            }
-            else {
-                content.add(newRole = new TextField<String>("newRole", Model.of("")) {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected void onConfigure()
-                    {
-                        super.onConfigure();
-                        
-                        AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                        
-                        if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                                .equals(state.getArmedFeature())) {
-                            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                    .getModelObject().value;
-                            setModelObject(links.get(state.getArmedSlot()).role);
-                        }
-                        else {
-                            setModelObject("");
-                        }
-                    }
-                });
-            }
-            
-            //Shows whether constraints are triggered or not
-            //also shows state of constraints use.
-            Component constraintsInUseIndicator = new WebMarkupContainer("linkIndicator"){
-                private static final long serialVersionUID = 4346767114287766710L;
-
-                @Override
-                public boolean isVisible()
-                {
-                    return indicator.isAffected();
-                }
-            }.add(new AttributeAppender("class", new Model<String>(){
-                private static final long serialVersionUID = -7683195283137223296L;
-
-                @Override
-                public String getObject()
-                {
-                    //adds symbol to indicator
-                    return indicator.getStatusSymbol();
-                }
-            }))
-              .add(new AttributeAppender("style", new Model<String>(){
-                private static final long serialVersionUID = -5255873539738210137L;
-
-                @Override
-                public String getObject()
-                {
-                    //adds color to indicator
-                    return "; color: " + indicator.getStatusColor();
-                }
-            }));
-            add(constraintsInUseIndicator);
-            
-            // Add a new empty slot with the specified role
-            content.add(new AjaxButton("add")
-            {
-                private static final long serialVersionUID = 1L;
-                
-                @Override
-                protected void onConfigure(){
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    setVisible(
-                            !(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                                    .equals(state.getArmedFeature())));
-                    //                    setEnabled(!(model.isSlotArmed()
-//                            && aModel.feature.equals(model.getArmedFeature())));
-                }
-                
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-                    if (StringUtils.isBlank((String) newRole.getModelObject())) {
-                        error("Must set slot label before adding!");
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    }
-                    else {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                .getModelObject().value;
-                        LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = (String) newRole.getModelObject();
-                        links.add(m);
-                        AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                        state.setArmedSlot(LinkFeatureEditor.this.getModelObject().feature,
-                                links.size() - 1);
-                        
-                        // Need to re-render the whole form because a slot in another
-                        // link editor might get unarmed
-                        aTarget.add(annotationFeatureForm);
-                    }
-                }
-            });
-            
-            // Allows user to update slot
-            content.add(new AjaxButton("set"){
-
-                private static final long serialVersionUID = 7923695373085126646L;
-
-                @Override
-                protected void onConfigure(){
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    setVisible(
-                            state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                                    .equals(state.getArmedFeature()));
-                    //                    setEnabled(model.isSlotArmed()
-//                            && aModel.feature.equals(model.getArmedFeature()));
-                }
-                
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                            .getModelObject().value;
-                    //Update the slot
-                    LinkWithRoleModel m = new LinkWithRoleModel();
-                    m = links.get(state.getArmedSlot());
-                    m.role = (String) newRole.getModelObject();
-//                    int index = model.getArmedSlot(); //retain index
-//                    links.remove(model.getArmedSlot());
-//                    model.clearArmedSlot();
-//                    links.add(m);
-                    links.set(state.getArmedSlot(), m); //avoid reordering
-                    aTarget.add(content);
-                    try {
-                        actionAnnotate(aTarget);
-                    }
-                    catch (Exception e) {
-                        handleException(aTarget, e);
-                    }
-                }
-            });
-
-            // Add a new empty slot with the specified role
-            content.add(new AjaxButton("del")
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    setVisible(
-                            state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                                    .equals(state.getArmedFeature()));
-                    //                    setEnabled(model.isSlotArmed()
-//                            && aModel.feature.equals(model.getArmedFeature()));
-                }
-
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-                {
-                    AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-                    
-                    List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                            .getModelObject().value;
-
-                    links.remove(state.getArmedSlot());
-                    state.clearArmedSlot();
-
-                    aTarget.add(content);
-
-                    // Auto-commit if working on existing annotation
-                    if (state.getSelection().getAnnotation().isSet()) {
-                        try {
-                            actionAnnotate(aTarget);
-                        }
-                        catch (Exception e) {
-                            handleException(aTarget, e);
-                        }
-                    }
-                }
-            });
-        }
-
-        /**
-         * Adds tagset based on Constraints rules, auto-adds tags which are marked important.
-         *
-         * @return List containing tags which exist in tagset and also suggested by rules, followed
-         *         by the remaining tags in tagset.
-         */
-        private List<Tag> addTagsBasedOnRules(AnnotatorState aState, final FeatureState aModel)
-        {
-            String restrictionFeaturePath = aModel.feature.getName() + "."
-                    + aModel.feature.getLinkTypeRoleFeatureName();
-
-            List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature.getTagset());
-
-            try {
-                JCas jCas = getCas();
-
-                FeatureStructure featureStructure = selectByAddr(jCas, aState.getSelection()
-                        .getAnnotation().getId());
-
-                Evaluator evaluator = new ValuesGenerator();
-                //Only show indicator if this feature can be affected by Constraint rules!
-                indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
-                        restrictionFeaturePath, aState.getConstraints()));
-                
-                List<PossibleValue> possibleValues;
-                try {
-                    possibleValues = evaluator.generatePossibleValues(
-                            featureStructure, restrictionFeaturePath, aState.getConstraints());
-    
-                    LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                            + restrictionFeaturePath + "]: " + possibleValues);
-                }
-                catch (Exception e) {
-                    error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
-                    LOG.error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e), e);
-                    possibleValues = new ArrayList<>();
-                }
-
-                // Only adds tags which are suggested by rules and exist in tagset.
-                List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, indicator);
-                removeAutomaticallyAddedUnusedEntries();
-
-                // Create entries for important tags.
-                autoAddImportantTags(tagset, possibleValues);
-
-                // Add remaining tags.
-                addRemainingTags(tagset, valuesFromTagset);
-                return tagset;
-            }
-            catch (Exception e) {
-                handleException(null, e);
-            }
-
-            return valuesFromTagset;
-        }
-
-        private void removeAutomaticallyAddedUnusedEntries()
-        {
-            // Remove unused (but auto-added) tags.
-            @SuppressWarnings("unchecked")
-            List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                    .getModelObject().value;
-
-            Iterator<LinkWithRoleModel> existingLinks = list.iterator();
-            while (existingLinks.hasNext()) {
-                LinkWithRoleModel link = existingLinks.next();
-                if (link.autoCreated && link.targetAddr == -1) {
-                    // remove it
-                    existingLinks.remove();
-                }
-            }
-        }
-
-        private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> possibleValues)
-        {
-            // Construct a quick index for tags
-            Set<String> tagset = new HashSet<String>();
-            for (Tag t : aTagset) {
-                tagset.add(t.getName());
-            }
-
-            // Get links list and build role index
-            @SuppressWarnings("unchecked")
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                    .getModelObject().value;
-            Set<String> roles = new HashSet<String>();
-            for (LinkWithRoleModel l : links) {
-                roles.add(l.role);
-            }
-
-            // Loop over values to see which of the tags are important and add them.
-            for (PossibleValue value : possibleValues) {
-                if (!value.isImportant() || !tagset.contains(value.getValue())) {
-                    continue;
-                }
-
-                // Check if there is already a slot with the given name
-                if (roles.contains(value.getValue())) {
-                    continue;
-                }
-
-                // Add empty slot in UI with that name.
-                LinkWithRoleModel m = new LinkWithRoleModel();
-                m.role = value.getValue();
-                // Marking so that can be ignored later.
-                m.autoCreated = true;
-                links.add(m);
-                // NOT arming the slot here!
-            }
-        }
-
-        @Override
-        public Component getFocusComponent()
-        {
-            return newRole;
-        }
-
-        @Override
-        public boolean isDropOrchoice()
-        {
-            return isDrop;
-        }
-        
-        /**
-         * Hides feature if "Hide un-constraint feature" is enabled
-         * and constraint rules are applied and feature doesn't match any constraint rule
-         */
-        @Override
-        public void onConfigure()
-        {
-            // if enabled and constraints rule execution returns anything other than green
-            setVisible(!hideUnconstraintFeature
-                    || (indicator.isAffected() && indicator.getStatusColor().equals("green")));
-        }
-    };
-
     /**
      * Clear the values from the feature editors.
      */
@@ -2487,6 +1996,7 @@ public class AnnotationDetailEditorPanel
         
         aModel.indicator.reset();
         
+        // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
             FeatureStructure featureStructure = selectByAddr(aJCas, state.getSelection()
@@ -2509,28 +2019,24 @@ public class AnnotationDetailEditorPanel
             possibleValues = new ArrayList<>();
         }
 
+        // Fetch actual tagset
         List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature.getTagset());
         
-        // only adds tags which are suggested by rules and exist in tagset.
+        // First add tags which are suggested by rules and exist in tagset
         List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, aModel.indicator);
 
-        // add remaining tags
-        addRemainingTags(tagset, valuesFromTagset);
-        
-        aModel.tagset = tagset;
-    }
-    
-    public static void addRemainingTags(List<Tag> tagset, List<Tag> valuesFromTagset)
-    {
-        // adding the remaining part of tagset.
+        // Then add the remaining tags
         for (Tag remainingTag : valuesFromTagset) {
             if (!tagset.contains(remainingTag)) {
                 tagset.add(remainingTag);
             }
         }
-
+        
+        // Record the possible values and the (re-ordered) tagset in the feature state
+        aModel.possibleValues = possibleValues;
+        aModel.tagset = tagset;
     }
-
+    
     /*
      * Compares existing tagset with possible values resulted from rule evaluation Adds only which
      * exist in tagset and is suggested by rules. The remaining values from tagset are added
@@ -2705,7 +2211,8 @@ public class AnnotationDetailEditorPanel
 		return true;
 	}
     
-    private void handleException(AjaxRequestTarget aTarget, Exception aException)
+    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
+            Exception aException)
     {
         try {
             throw aException;
@@ -2715,16 +2222,16 @@ public class AnnotationDetailEditorPanel
                 aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
             }
             else {
-                error(e.getMessage());
+                aComponent.error(e.getMessage());
             }
             LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (UIMAException e) {
-            error(ExceptionUtils.getRootCauseMessage(e));
+            aComponent.error(ExceptionUtils.getRootCauseMessage(e));
             LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (Exception e) {
-            error(e.getMessage());
+            aComponent.error(e.getMessage());
             LOG.error(e.getMessage(), e);
         }
     }

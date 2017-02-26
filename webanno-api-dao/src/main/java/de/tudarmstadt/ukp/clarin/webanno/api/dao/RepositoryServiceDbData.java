@@ -2424,7 +2424,7 @@ public class RepositoryServiceDbData
     {
         entityManager.persist(aSet);
         createLog(aSet.getProject()).info(
-                "Read constraints set [" + aSet.getName() + "] for project ["
+                "Created constraints set [" + aSet.getName() + "] for project ["
                         + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
                         + "]");
         createLog(aSet.getProject()).removeAllAppenders();

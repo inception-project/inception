@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -33,6 +34,7 @@ public class FeatureState
     public final AnnotationFeature feature;
     public Serializable value;
     public List<Tag> tagset;
+    public List<PossibleValue> possibleValues;
     public RulesIndicator indicator = new RulesIndicator();
 
     public FeatureState(AnnotationFeature aFeature, Serializable aValue)
