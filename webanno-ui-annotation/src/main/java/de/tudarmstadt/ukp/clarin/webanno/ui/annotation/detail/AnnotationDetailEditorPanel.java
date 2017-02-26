@@ -741,7 +741,7 @@ public class AnnotationDetailEditorPanel
                 // This strategy caches items as long as the panel exists. This is important to
                 // allow the Kendo ComboBox datasources to be re-read when constraints change the
                 // available tags.
-                setItemReuseStrategy(CachingReuseStrategy.getInstance());
+                setItemReuseStrategy(new CachingReuseStrategy());
             }
 
             @SuppressWarnings("rawtypes")

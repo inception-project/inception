@@ -33,15 +33,9 @@ import org.apache.wicket.util.lang.Generics;
 public class CachingReuseStrategy
     implements IItemReuseStrategy
 {
-    private static final long serialVersionUID = 1L;
-
-    private static IItemReuseStrategy instance = new CachingReuseStrategy();
+    private static final long serialVersionUID = -6888699389854940706L;
+    
     private final Map<IModel<?>, Item<?>> modelToItem = Generics.newHashMap();
-
-    public static IItemReuseStrategy getInstance()
-    {
-        return instance;
-    }
 
     @Override
     public <T> Iterator<Item<T>> getItems(final IItemFactory<T> factory,
