@@ -581,6 +581,9 @@ public class ImportUtil
             
             if (entryName.startsWith(SOURCE)) {
                 String fileName = FilenameUtils.getName(entryName);
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
                 File sourceFilePath = aRepository.getSourceDocumentFile(sourceDocument);
@@ -614,6 +617,9 @@ public class ImportUtil
             if (entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS+"/")) {
                 String fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS+"/", "");
 
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
                 String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
@@ -653,13 +659,15 @@ public class ImportUtil
             
             if (entryName.startsWith(CURATION_AS_SERIALISED_CAS)) {
                 String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS, "");
-
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
                 String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
 
                 // name of the annotation document
                 fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
                 de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument = aRepository
                         .getSourceDocument(aProject, fileName);
                 File annotationFilePath = aRepository.getCasFile(sourceDocument, username);
@@ -692,13 +700,16 @@ public class ImportUtil
             String entryName = normalizeEntryName(entry);
             
             if (entryName.startsWith(GUIDELINE)) {
-                String filename = FilenameUtils.getName(entry.getName());
+                String fileName = FilenameUtils.getName(entry.getName());
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
                 File guidelineDir = aRepository.getGuidelinesFile(aProject);
                 FileUtils.forceMkdir(guidelineDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
-                        filename));
+                        fileName));
                 
-                LOG.info("Imported guideline [" + filename + "] for project [" + aProject.getName()
+                LOG.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
         }
@@ -781,13 +792,16 @@ public class ImportUtil
             String entryName = normalizeEntryName(entry);
             
             if (entryName.startsWith(CONSTRAINTS)) {
-                String filename = FilenameUtils.getName(entry.getName());
+                String fileName = FilenameUtils.getName(entry.getName());
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
                 ConstraintSet constraintSet = new ConstraintSet();
                 constraintSet.setProject(aProject);
-                constraintSet.setName(filename);
+                constraintSet.setName(fileName);
                 aRepository.createConstraintSet(constraintSet);
                 aRepository.writeConstraintSet(constraintSet, zip.getInputStream(entry));
-                LOG.info("Imported constraint [" + filename + "] for project [" + aProject.getName()
+                LOG.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
         }
