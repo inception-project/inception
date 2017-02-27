@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
@@ -129,6 +130,9 @@ public class CurationPage
     private CurationPanel curationPanel;
     private WebMarkupContainer finish;
     private AjaxLink<Void> showreCreateMergeCasModal;
+    private ModalWindow openDocumentsModal;
+    private ModalWindow finishCurationModal;
+    private ModalWindow reCreateMergeCas;
 
     @SuppressWarnings("deprecation")
     public CurationPage()
@@ -214,64 +218,14 @@ public class CurationPage
                     }
                 }).setOutputMarkupId(true));
 
-        final ModalWindow openDocumentsModal;
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
-
         openDocumentsModal.setInitialWidth(620);
         openDocumentsModal.setInitialHeight(440);
         openDocumentsModal.setResizable(true);
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
-
-        // Add project and document information at the top
-        add(new AjaxLink<Void>("showOpenDocumentModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {              
-            	bModel.getSelection().clear();
-                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), bModel, openDocumentsModal, Mode.CURATION));
-                openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                {
-                    private static final long serialVersionUID = -1746088901018629567L;
-
-                    @Override
-                    public void onClose(AjaxRequestTarget target)
-                    {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        /*
-                         * Changed for #152, getDocument was returning null even after opening a document
-                         * Also, surrounded following code into if block to avoid error.
-                         */
-                        if (bModel.getProject() == null) {
-                            setResponsePage(getApplication().getHomePage());
-                            return;
-                        }
-                        if(bModel.getDocument()!=null){
-                            try {
-                                repository.createSourceDocument(bModel.getDocument());
-                                repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
-                                        username);
-
-                                loadDocumentAction(target);
-                                curationPanel.editor.loadFeatureEditorModels(target);
-                            }
-                            catch (Exception e) {
-                                LOG.error("Unable to load data", e);
-                                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
-                    }
-                });
-                openDocumentsModal.show(aTarget);
-            }
-        });
 
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
                 new Model<AnnotatorState>(bModel), curationPanel.editor)
@@ -300,88 +254,6 @@ public class CurationPage
                 }
             }
         });
-
-        // Show the previous document, if exist
-        add(new AjaxLink<Void>("showPreviousDocument")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                curationPanel.editor.reset(aTarget);
-                // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
-
-                // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
-
-                // If the first the document
-                if (currentDocumentIndex == 0) {
-                    aTarget.appendJavaScript("alert('This is the first document!')");
-                }
-                else {
-                    bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
-                    try {
-                        repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION, bModel
-                                .getUser().getUsername());
-
-                        loadDocumentAction(aTarget);
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
-
-        // Show the next document if exist
-        add(new AjaxLink<Void>("showNextDocument")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                curationPanel.editor.reset(aTarget);
-                // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
-
-                // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
-
-                // If the first document
-                if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    aTarget.appendJavaScript("alert('This is the last document!')");
-                }
-                else {
-                    bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
-
-                    try {
-                        aTarget.add(getFeedbackPanel());
-                        repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION, bModel
-                                .getUser().getUsername());
-
-                        loadDocumentAction(aTarget);
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
 
         add(new ExportModalPanel("exportModalPanel", new Model<AnnotatorState>(bModel))
         {
@@ -463,43 +335,6 @@ public class CurationPage
             }
         });
 
-        add(new AjaxLink<Void>("gotoPageLink")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-
-                if (gotoPageAddress == 0) {
-                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                    return;
-                }
-                if (bModel.getDocument() == null) {
-                    aTarget.appendJavaScript("alert('Please open a document first!')");
-                    return;
-                }
-
-                JCas mergeJCas = null;
-                try {
-                    aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.readCurationCas(bModel.getDocument());
-                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-
-                        updateSentenceNumber(mergeJCas, gotoPageAddress);
-
-                        aTarget.add(numberOfPages);
-                        curationPanel.updatePanel(aTarget, curationContainer);
-                    }
-                }
-                catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
-            }
-        });
-
         finish = new WebMarkupContainer("finishImage");
         finish.setOutputMarkupId(true);
         finish.add(new AttributeModifier("src", new LoadableDetachableModel<String>()
@@ -528,10 +363,8 @@ public class CurationPage
             }
         }));
 
-        final ModalWindow finishCurationModal;
         add(finishCurationModal = new ModalWindow("finishCurationModal"));
         finishCurationModal.setOutputMarkupId(true);
-
         finishCurationModal.setInitialWidth(650);
         finishCurationModal.setInitialHeight(40);
         finishCurationModal.setResizable(true);
@@ -546,42 +379,12 @@ public class CurationPage
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                if (bModel.getDocument() != null
-                        && bModel.getDocument().getState()
-                                .equals(SourceDocumentState.CURATION_FINISHED)) {
-                    finishCurationModal
-                            .setTitle("Curation was finished. Are you sure you want to re-open document for curation?");
-                    //Change size if you change text here
-                    finishCurationModal.setInitialWidth(650);
-                }
-                else {
-                    finishCurationModal.setTitle("Are you sure you want to finish curating?");
-                    //Change size if you change text here
-                    finishCurationModal.setInitialWidth(370);
-                    
-                }
-                finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal
-                        .getContentId(), bModel, finishCurationModal, Mode.CURATION));
-                finishCurationModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                {
-                    private static final long serialVersionUID = -1746088901018629567L;
-
-                    @Override
-                    public void onClose(AjaxRequestTarget target)
-                    {
-                        target.add(finish);
-                        target.appendJavaScript("Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                    }
-                });
-                finishCurationModal.show(target);
+                actionFinishDocument(target);
             }
         });
 
         showFinishCurationModal.add(finish);
 
-        add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorState>(bModel)));
-
-        final ModalWindow reCreateMergeCas;
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
         reCreateMergeCas.setOutputMarkupId(true);
         //Change size if you change text here
@@ -606,235 +409,44 @@ public class CurationPage
             }
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick(AjaxRequestTarget aTarget)
             {
-                reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas
-                        .getContentId(), reCreateMergeCas, reMerge));
-                reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                {
-
-                    private static final long serialVersionUID = 4816615910398625993L;
-
-                    @Override
-                    public void onClose(AjaxRequestTarget aTarget)
-                    {
-                        if (reMerge.isReMerege()) {
-                            try {
-                                aTarget.add(getFeedbackPanel());
-                                repository.removeCurationDocumentContent(bModel.getDocument(),
-                                        bModel.getUser().getUsername());
-                                loadDocumentAction(aTarget);
-
-                                aTarget.appendJavaScript("alert('Re-merge finished!')");
-                            }
-                            catch (Exception e) {
-                                aTarget.add(getFeedbackPanel());
-                                LOG.error("Unable to load data", e);
-                                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                            }
-                        }
-                    }
-                });
-                reCreateMergeCas.show(target);
+                actionRemergeDocument(aTarget);
             }
         });
-        // Show the next page of this document
-        add(new AjaxLink<Void>("showNext")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (bModel.getDocument() != null) {
-                    JCas mergeJCas = null;
-                    try {
-                        mergeJCas = repository.readCurationCas(bModel.getDocument());
-                        int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
-                                bModel.getFirstVisibleSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
-                        if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
-                            aTarget.add(getFeedbackPanel());
-
-                            updateSentenceNumber(mergeJCas, nextSentenceAddress);
-
-                            aTarget.add(numberOfPages);
-                            curationPanel.updatePanel(aTarget, curationContainer);
-                            updatePanel(curationContainer, aTarget);
-                        }
-
-                        else {
-                            aTarget.appendJavaScript("alert('This is last page!')");
-                        }
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-                else {
-                    aTarget.appendJavaScript("alert('Please open a document first!')");
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
-
-        // SHow the previous page of this document
-        add(new AjaxLink<Void>("showPrevious")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (bModel.getDocument() != null) {
-
-                    JCas mergeJCas = null;
-                    try {
-                        aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.readCurationCas(bModel.getDocument());
-                        int previousSentenceAddress = WebAnnoCasUtil
-                                .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas, bModel
-                                        .getFirstVisibleSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
-                        if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
-
-                            updateSentenceNumber(mergeJCas, previousSentenceAddress);
-
-                            aTarget.add(numberOfPages);
-                            curationPanel.updatePanel(aTarget, curationContainer);
-                            updatePanel(curationContainer, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is first page!')");
-                        }
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-                else {
-                    aTarget.appendJavaScript("alert('Please open a document first!')");
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new AjaxLink<Void>("showFirst")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (bModel.getDocument() != null) {
-                    JCas mergeJCas = null;
-                    try {
-                        aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.readCurationCas(bModel.getDocument());
-
-                        int address = getAddr(selectSentenceAt(mergeJCas,
-                                bModel.getFirstVisibleSentenceBegin(), bModel.getFirstVisibleSentenceEnd()));
-                        int firstAddress = getFirstSentenceAddress(mergeJCas);
-
-                        if (firstAddress != address) {
-
-                            updateSentenceNumber(mergeJCas, firstAddress);
-
-                            aTarget.add(numberOfPages);
-                            curationPanel.updatePanel(aTarget, curationContainer);
-                            updatePanel(curationContainer, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is first page!')");
-                        }
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-                else {
-                    aTarget.appendJavaScript("alert('Please open a document first!')");
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new AjaxLink<Void>("showLast")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (bModel.getDocument() != null) {
-                    JCas mergeJCas = null;
-                    try {
-                        aTarget.add(getFeedbackPanel());
-                        mergeJCas = repository.readCurationCas(bModel.getDocument());
-                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                                .getLastDisplayWindowFirstSentenceAddress(mergeJCas, bModel
-                                        .getPreferences().getWindowSize());
-                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
-
-                            updateSentenceNumber(mergeJCas,
-                                    lastDisplayWindowBeginingSentenceAddress);
-
-                            aTarget.add(numberOfPages);
-                            curationPanel.updatePanel(aTarget, curationContainer);
-                            updatePanel(curationContainer, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is last page!')");
-                        }
-                    }
-                    catch (Exception e) {
-                        aTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-                else {
-                    aTarget.appendJavaScript("alert('Please open a document first!')");
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
         
-        add(new AjaxLink<Void>("toggleScriptDirection")
-        {
-            private static final long serialVersionUID = -4332566542278611728L;
+        add(new GuidelineModalPanel("guidelineModalPanel", Model.of(bModel)));        
+        
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+        
+        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
+                        EventType.click)));        
 
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
-                    bModel.setScriptDirection(ScriptDirection.RTL);
-                }
-                else {
-                    bModel.setScriptDirection(ScriptDirection.LTR);
-                }
-                try {
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                }
-                catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
-            }
-        });
+        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
+                        EventType.click)));        
+
+        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
+
+        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
+
+        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
+
+        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+
+        add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
+        
+        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
     }
     
-	private List<SourceDocument> getListOfDocs() {
-		// List of all Source Documents in the project
-		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
+    private List<SourceDocument> getListOfDocs() {
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
         List<SourceDocument> sourceDocumentsNotFinished = new ArrayList<SourceDocument>();
         for (SourceDocument sourceDocument : listOfSourceDocuements) {
             if (!repository
@@ -843,9 +455,9 @@ public class CurationPage
             }
         }
 
-		listOfSourceDocuements.removeAll(sourceDocumentsNotFinished);
-		return listOfSourceDocuements;
-	}
+        listOfSourceDocuements.removeAll(sourceDocumentsNotFinished);
+        return listOfSourceDocuements;
+    }
 
     // Update the curation panel.
 
@@ -891,12 +503,365 @@ public class CurationPage
         bModel.setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget) throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException, AnnotationException
+    private void actionOpenDocument(AjaxRequestTarget aTarget)
+    {
+        bModel.getSelection().clear();
+        openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
+                bModel, openDocumentsModal, Mode.CURATION));
+        openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            private static final long serialVersionUID = -1746088901018629567L;
+
+            @Override
+            public void onClose(AjaxRequestTarget target)
+            {
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                /*
+                 * Changed for #152, getDocument was returning null even after opening a document
+                 * Also, surrounded following code into if block to avoid error.
+                 */
+                if (bModel.getProject() == null) {
+                    setResponsePage(getApplication().getHomePage());
+                    return;
+                }
+                if (bModel.getDocument() != null) {
+                    try {
+                        repository.createSourceDocument(bModel.getDocument());
+                        repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION, username);
+
+                        loadDocumentAction(target);
+                        curationPanel.editor.loadFeatureEditorModels(target);
+                    }
+                    catch (Exception e) {
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                }
+            }
+        });
+        openDocumentsModal.show(aTarget);
+    }
+
+    private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
+    {
+        curationPanel.editor.reset(aTarget);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
+
+        // Index of the current source document in the list
+        int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+
+        // If the first the document
+        if (currentDocumentIndex == 0) {
+            aTarget.appendJavaScript("alert('This is the first document!')");
+        }
+        else {
+            bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
+            try {
+                repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
+                        bModel.getUser().getUsername());
+
+                loadDocumentAction(aTarget);
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+    }
+
+    private void actionShowNextDocument(AjaxRequestTarget aTarget)
+    {
+        curationPanel.editor.reset(aTarget);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
+
+        // Index of the current source document in the list
+        int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+
+        // If the first document
+        if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
+            aTarget.appendJavaScript("alert('This is the last document!')");
+        }
+        else {
+            bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
+
+            try {
+                aTarget.add(getFeedbackPanel());
+                repository.upgradeCasAndSave(bModel.getDocument(), Mode.CURATION,
+                        bModel.getUser().getUsername());
+
+                loadDocumentAction(aTarget);
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+    }
+
+    private void actionGotoPage(AjaxRequestTarget aTarget)
+    {
+        if (gotoPageAddress == 0) {
+            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+            return;
+        }
+        if (bModel.getDocument() == null) {
+            aTarget.appendJavaScript("alert('Please open a document first!')");
+            return;
+        }
+
+        JCas mergeJCas = null;
+        try {
+            aTarget.add(getFeedbackPanel());
+            mergeJCas = repository.readCurationCas(bModel.getDocument());
+            if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+
+                updateSentenceNumber(mergeJCas, gotoPageAddress);
+
+                aTarget.add(numberOfPages);
+                curationPanel.updatePanel(aTarget, curationContainer);
+            }
+        }
+        catch (Exception e) {
+            aTarget.add(getFeedbackPanel());
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
+    private void actionShowPreviousPage(AjaxRequestTarget aTarget)
+    {
+        if (bModel.getDocument() != null) {
+
+            JCas mergeJCas = null;
+            try {
+                aTarget.add(getFeedbackPanel());
+                mergeJCas = repository.readCurationCas(bModel.getDocument());
+                int previousSentenceAddress = WebAnnoCasUtil
+                        .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
+                                bModel.getFirstVisibleSentenceAddress(),
+                                bModel.getPreferences().getWindowSize());
+                if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
+
+                    updateSentenceNumber(mergeJCas, previousSentenceAddress);
+
+                    aTarget.add(numberOfPages);
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is first page!')");
+                }
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        else {
+            aTarget.appendJavaScript("alert('Please open a document first!')");
+        }
+    }
+
+    private void actionShowNextPage(AjaxRequestTarget aTarget)
+    {
+        if (bModel.getDocument() != null) {
+            JCas mergeJCas = null;
+            try {
+                mergeJCas = repository.readCurationCas(bModel.getDocument());
+                int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
+                        bModel.getFirstVisibleSentenceAddress(),
+                        bModel.getPreferences().getWindowSize());
+                if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
+                    aTarget.add(getFeedbackPanel());
+
+                    updateSentenceNumber(mergeJCas, nextSentenceAddress);
+
+                    aTarget.add(numberOfPages);
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                }
+
+                else {
+                    aTarget.appendJavaScript("alert('This is last page!')");
+                }
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        else {
+            aTarget.appendJavaScript("alert('Please open a document first!')");
+        }
+    }
+
+    private void actionShowFirstPage(AjaxRequestTarget aTarget)
+    {
+        if (bModel.getDocument() != null) {
+            JCas mergeJCas = null;
+            try {
+                aTarget.add(getFeedbackPanel());
+                mergeJCas = repository.readCurationCas(bModel.getDocument());
+
+                int address = getAddr(
+                        selectSentenceAt(mergeJCas, bModel.getFirstVisibleSentenceBegin(),
+                                bModel.getFirstVisibleSentenceEnd()));
+                int firstAddress = getFirstSentenceAddress(mergeJCas);
+
+                if (firstAddress != address) {
+
+                    updateSentenceNumber(mergeJCas, firstAddress);
+
+                    aTarget.add(numberOfPages);
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is first page!')");
+                }
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        else {
+            aTarget.appendJavaScript("alert('Please open a document first!')");
+        }
+    }
+
+    private void actionShowLastPage(AjaxRequestTarget aTarget)
+    {
+        if (bModel.getDocument() != null) {
+            JCas mergeJCas = null;
+            try {
+                aTarget.add(getFeedbackPanel());
+                mergeJCas = repository.readCurationCas(bModel.getDocument());
+                int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
+                        .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
+                                bModel.getPreferences().getWindowSize());
+                if (lastDisplayWindowBeginingSentenceAddress != bModel
+                        .getFirstVisibleSentenceAddress()) {
+
+                    updateSentenceNumber(mergeJCas, lastDisplayWindowBeginingSentenceAddress);
+
+                    aTarget.add(numberOfPages);
+                    curationPanel.updatePanel(aTarget, curationContainer);
+                    updatePanel(curationContainer, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is last page!')");
+                }
+            }
+            catch (Exception e) {
+                aTarget.add(getFeedbackPanel());
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        else {
+            aTarget.appendJavaScript("alert('Please open a document first!')");
+        }
+    }
+
+    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
+    {
+        if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
+            bModel.setScriptDirection(ScriptDirection.RTL);
+        }
+        else {
+            bModel.setScriptDirection(ScriptDirection.LTR);
+        }
+        try {
+            curationPanel.updatePanel(aTarget, curationContainer);
+            updatePanel(curationContainer, aTarget);
+        }
+        catch (Exception e) {
+            aTarget.add(getFeedbackPanel());
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+    {
+        if (bModel.getDocument() != null
+                && bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+            finishCurationModal.setTitle(
+                    "Curation was finished. Are you sure you want to re-open document for curation?");
+            // Change size if you change text here
+            finishCurationModal.setInitialWidth(650);
+        }
+        else {
+            finishCurationModal.setTitle("Are you sure you want to finish curating?");
+            // Change size if you change text here
+            finishCurationModal.setInitialWidth(370);
+
+        }
+        finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal.getContentId(),
+                bModel, finishCurationModal, Mode.CURATION));
+        finishCurationModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            private static final long serialVersionUID = -1746088901018629567L;
+
+            @Override
+            public void onClose(AjaxRequestTarget target)
+            {
+                target.add(finish);
+                target.appendJavaScript(
+                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
+            }
+        });
+        finishCurationModal.show(aTarget);
+    }
+
+    private void actionRemergeDocument(AjaxRequestTarget aTarget)
+    {
+        reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas.getContentId(),
+                reCreateMergeCas, reMerge));
+        reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+
+            private static final long serialVersionUID = 4816615910398625993L;
+
+            @Override
+            public void onClose(AjaxRequestTarget aTarget)
+            {
+                if (reMerge.isReMerege()) {
+                    try {
+                        aTarget.add(getFeedbackPanel());
+                        repository.removeCurationDocumentContent(bModel.getDocument(),
+                                bModel.getUser().getUsername());
+                        loadDocumentAction(aTarget);
+
+                        aTarget.appendJavaScript("alert('Re-merge finished!')");
+                    }
+                    catch (Exception e) {
+                        aTarget.add(getFeedbackPanel());
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                }
+            }
+        });
+        reCreateMergeCas.show(aTarget);
+    }
+
+    private void loadDocumentAction(AjaxRequestTarget aTarget)
+        throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException,
+        AnnotationException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
-                .getAuthentication().getName());
-        
+        User userLoggedIn = userRepository
+                .get(SecurityContextHolder.getContext().getAuthentication().getName());
+
         // Update source document state to CURRATION_INPROGRESS, if it was not ANNOTATION_FINISHED
         if (!bModel.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
             bModel.getDocument().setState(SourceDocumentStateTransition.transition(
@@ -906,22 +871,21 @@ public class CurationPage
 
         bModel.setUser(userLoggedIn);
         // Load user preferences
-        PreferencesUtil.setAnnotationPreference(username, repository, annotationService,
-                bModel, Mode.CURATION);
+        PreferencesUtil.setAnnotationPreference(username, repository, annotationService, bModel,
+                Mode.CURATION);
         // Re-render whole page as sidebar size preference may have changed
         aTarget.add(CurationPage.this);
 
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
-        for (AnnotationDocument annotationDocument : repository.listAnnotationDocuments(bModel
-                .getDocument())) {
+        for (AnnotationDocument annotationDocument : repository
+                .listAnnotationDocuments(bModel.getDocument())) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
             }
         }
 
-        SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService,
-                userRepository);
+        SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService, userRepository);
         AnnotationDocument randomAnnotationDocument = null;
         if (finishedAnnotationDocuments.size() > 0) {
             randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -939,8 +903,7 @@ public class CurationPage
 
         // (Re)initialize brat model after potential creating / upgrading CAS
         bModel.initForDocument(mergeJCas, repository);
-        bModel.getPreferences().setCurationWindowSize(
-                WebAnnoCasUtil.getSentenceSize(mergeJCas));
+        bModel.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceSize(mergeJCas));
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != bModel.getProject().getId()) {
@@ -963,7 +926,7 @@ public class CurationPage
         }
         catch (ParseException e) {
             LOG.error("Error", e);
-        //        aTarget.addChildren(getPage(), FeedbackPanel.class);
+            // aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(e.getMessage());
         }
 
