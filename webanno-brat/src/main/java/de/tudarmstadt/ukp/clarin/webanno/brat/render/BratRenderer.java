@@ -60,10 +60,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * an Ajax Controller for the BRAT Front End. Most of the actions such as getCollectionInformation ,
- * getDocument, createArc, CreateSpan, deleteSpan, DeleteArc,... are implemented. Besides returning
- * the JSON response to the brat FrontEnd, This controller also manipulates creation of annotation
- * Documents
+ * Render documents using brat. This class converts a UIMA annotation representation into the 
+ * object model used by brat. The result can be converted to JSON that the browser-side brat SVG
+ * renderer can then use.
  */
 public class BratRenderer
 {
