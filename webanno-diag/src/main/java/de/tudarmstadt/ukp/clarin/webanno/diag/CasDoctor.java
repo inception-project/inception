@@ -61,8 +61,6 @@ public class CasDoctor
     @Value(value = "${debug.casDoctor.forceReleaseBehavior}")
     private boolean disableAutoScan = false;
 
-    private boolean skipPreRepairAnalysis;
-    
     public CasDoctor()
     {
         // Bean operation
@@ -106,7 +104,6 @@ public class CasDoctor
         // This constructor is only used for tests. In tests we want to control which checks are
         // used and do not want to auto-scan.
         disableAutoScan = true;
-        skipPreRepairAnalysis = true;
         
         afterPropertiesSet();
     }
@@ -142,15 +139,6 @@ public class CasDoctor
             return;
         }
         
-        // PRE-CONDITION: CAS must be consistent
-        // First ensure that the CAS is consistent - when repairs are active, this analysis is
-        // fatal! We don't want a repair to break an already broken CAS any more
-        // We only skip this for unit tests were we actually start with an inconsistent CAS in order
-        // to test the repair action
-        if (!skipPreRepairAnalysis) {
-            analyze(aProject, aCas, aMessages, true);
-        }
-        
         // APPLY REPAIRS
         long tStart = System.currentTimeMillis();
         for (Class<? extends Repair> repairClass : repairClasses) {
@@ -176,7 +164,7 @@ public class CasDoctor
         log.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart) + "ms");
         
         // POST-CONDITION: CAS must be consistent
-        // Ensure that the repairs did not break the CAS
+        // Ensure that the repairs actually fixed the CAS
         analyze(aProject, aCas, aMessages, true);
     }
     
