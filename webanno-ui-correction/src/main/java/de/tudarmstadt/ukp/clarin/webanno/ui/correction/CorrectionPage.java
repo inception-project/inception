@@ -40,7 +40,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -74,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
@@ -277,9 +277,6 @@ public class CorrectionPage
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor);
-        ;
-        // reset sentenceAddress and lastSentenceAddress to the orginal once
-
         annotator.setOutputMarkupId(true);
         annotationViewCell.add(annotator);
 
@@ -335,18 +332,6 @@ public class CorrectionPage
         openDocumentsModal.setWidthUnit("px");
         openDocumentsModal.setHeightUnit("px");
         openDocumentsModal.setTitle("Open document");
-
-        // Add project and document information at the top
-        add(new AjaxLink<Void>("showOpenDocumentModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showOpenDocumentDialogAction(aTarget);
-            }
-        });
 
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", Model.of(bModel), editor)
         {
@@ -468,17 +453,6 @@ public class CorrectionPage
             }
         });
 
-        add(new AjaxLink<Void>("gotoPageLink")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                gotoPageAction(aTarget);
-            }
-        });
-
         finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorState>()
         {
             private static final long serialVersionUID = -2737326878793568454L;
@@ -504,82 +478,31 @@ public class CorrectionPage
             }
         });
 
-        add(new AjaxLink<Void>("showPreviousDocument")
-        {
-            private static final long serialVersionUID = -1L;
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
 
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showPreviousDocumentAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
+        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
+                        EventType.click)));
 
-        add(new AjaxLink<Void>("showNextDocument")
-        {
-            private static final long serialVersionUID = -1L;
+        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
+                        EventType.click)));
 
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showNextDocumentAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
+        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new AjaxLink<Void>("showNext")
-        {
-            private static final long serialVersionUID = -1L;
+        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showNextPageAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
+        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new AjaxLink<Void>("showPrevious")
-        {
-            private static final long serialVersionUID = -1L;
+        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showPreviousPageAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new AjaxLink<Void>("showFirst")
-        {
-            private static final long serialVersionUID = -1L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showFirstPageAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new AjaxLink<Void>("showLast")
-        {
-            private static final long serialVersionUID = -1L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                showLastPageAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
-
-        add(new AjaxLink<Void>("toggleScriptDirection")
-        {
-            private static final long serialVersionUID = -1L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                toggleScriptDirectionAction(aTarget);
-            }
-        });
+        add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
+        
+        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(new GuidelineModalPanel("guidelineModalPanel", Model.of(bModel)));
     }
@@ -615,7 +538,7 @@ public class CorrectionPage
         }
     }
     
-    private void showOpenDocumentDialogAction(AjaxRequestTarget aTarget)
+    private void actionOpenDocument(AjaxRequestTarget aTarget)
     {
         bModel.getSelection().clear();
         openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
@@ -637,7 +560,7 @@ public class CorrectionPage
                     bModel.setDocument(bModel.getDocument());
                     bModel.setProject(bModel.getProject());
 
-                    loadDocumentAction(target);
+                    actionLoadDocument(target);
                     setCurationSegmentBeginEnd();
                     update(repository.readCorrectionCas(bModel.getDocument()), target);
 
@@ -664,7 +587,7 @@ public class CorrectionPage
     /**
      * Show the previous document, if exist
      */
-    private void showPreviousDocumentAction(AjaxRequestTarget aTarget)
+    private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         editor.reset(aTarget);
         aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -685,7 +608,7 @@ public class CorrectionPage
                     .get(currentDocumentIndex - 1));
 
             try {
-                loadDocumentAction(aTarget);
+                actionLoadDocument(aTarget);
                 setCurationSegmentBeginEnd();
                 update(repository.readCorrectionCas(bModel.getDocument()), aTarget);
             }
@@ -708,7 +631,7 @@ public class CorrectionPage
     /**
      *  Show the next document if exist
      */
-    private void showNextDocumentAction(AjaxRequestTarget aTarget)
+    private void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         editor.reset(aTarget);
         aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -726,7 +649,7 @@ public class CorrectionPage
         bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
 
         try {
-            loadDocumentAction(aTarget);
+            actionLoadDocument(aTarget);
             setCurationSegmentBeginEnd();
             update(repository.readCorrectionCas(bModel.getDocument()), aTarget);
         }
@@ -748,7 +671,7 @@ public class CorrectionPage
     /**
      * Show the next page of this document
      */
-    private void showNextPageAction(AjaxRequestTarget aTarget)
+    private void actionShowNextPage(AjaxRequestTarget aTarget)
     {
         if (bModel.getDocument() != null) {
             aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -793,7 +716,7 @@ public class CorrectionPage
     /**
      *  SHow the previous page of this document
      */
-    private void showPreviousPageAction(AjaxRequestTarget aTarget)
+    private void actionShowPreviousPage(AjaxRequestTarget aTarget)
     {
         if (bModel.getDocument() != null) {
 
@@ -836,7 +759,7 @@ public class CorrectionPage
         }
     }
     
-    private void showFirstPageAction(AjaxRequestTarget aTarget)
+    private void actionShowFirstPage(AjaxRequestTarget aTarget)
     {
         if (bModel.getDocument() != null) {
             aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -879,7 +802,7 @@ public class CorrectionPage
         }        
     }
     
-    private void showLastPageAction(AjaxRequestTarget aTarget)
+    private void actionShowLastPage(AjaxRequestTarget aTarget)
     {
         if (bModel.getDocument() != null) {
             aTarget.addChildren(getPage(), FeedbackPanel.class);
@@ -920,7 +843,7 @@ public class CorrectionPage
         }        
     }
 
-    private void gotoPageAction(AjaxRequestTarget aTarget)
+    private void actionGotoPage(AjaxRequestTarget aTarget)
     {
         if (gotoPageAddress == 0) {
             aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
@@ -957,7 +880,7 @@ public class CorrectionPage
         }
     }
     
-    private void toggleScriptDirectionAction(AjaxRequestTarget aTarget)
+    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
     {
         if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
             bModel.setScriptDirection(ScriptDirection.RTL);
@@ -980,7 +903,7 @@ public class CorrectionPage
         annotator.bratRenderLater(aTarget);
     }
     
-    private void loadDocumentAction(AjaxRequestTarget aTarget)
+    private void actionLoadDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");

@@ -30,7 +30,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -227,8 +226,6 @@ public class AnnotationPage
             }
         });
 
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
-
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
                 new Model<AnnotatorState>(bModel), editor)
         {
@@ -276,7 +273,9 @@ public class AnnotationPage
                                 || !bModel.getProject().isDisableExport()));
             }
         });
-        
+
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -296,6 +295,8 @@ public class AnnotationPage
 
         add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+
+        add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -338,17 +339,6 @@ public class AnnotationPage
                     error(e.getMessage());
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
                 }
-            }
-        });
-
-        add(new AjaxLink<Void>("gotoPageLink")
-        {
-            private static final long serialVersionUID = -1L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                actionGotoPage(aTarget);
             }
         });
 
