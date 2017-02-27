@@ -1,5 +1,5 @@
 /*
- * Copyright 2016
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -18,15 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static org.apache.uima.fit.util.FSUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSesWithOwner;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
-
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -35,7 +36,11 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class ReattachFeatureAttachedSpanAnnotationsRepair
+/**
+ * Finds annotations that are reachable through an attach-feature but that are not actually
+ * indexed and adds them back to the index.
+ */
+public class ReindexFeatureAttachedSpanAnnotationsRepair
     implements Repair
 {
     @Resource(name = "annotationService")
@@ -44,6 +49,8 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
+        Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
+        
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
@@ -53,25 +60,19 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno   -> e.g. Lemma
             // attach -> e.g. Token
-            for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
-                for (AnnotationFS attach : selectCovered(getType(aCas, layer.getAttachType().getName()), anno)) {
-                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
-                    if (candidate == null) {
-                        setFeature(attach, layer.getAttachFeature().getName(), anno);
-                        count++;
-                    }
-                    else if (candidate != anno) {
-                        aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                                "Cannot attach annotation because attach feature alread non-null"));
-                    }
+            // anno   -> e.g. Lemma
+            for (AnnotationFS attach : select(aCas, getType(aCas, layer.getAttachType().getName()))) {
+                AnnotationFS anno = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
+                if (anno != null && nonIndexed.containsKey(anno)) {
+                    aCas.addFsToIndexes(anno);
+                    count++;
                 }
             }
             
             if (count > 0) {
                 aMessages.add(new LogMessage(this, LogLevel.INFO,
-                        "Reattached [%d] unattached spans on layer [" + layer.getName() + "].", count));
+                        "Reindexed [%d] unindexed spans in layer [" + layer.getName() + "].", count));
             }
         }
     }

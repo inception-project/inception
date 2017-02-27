@@ -27,7 +27,9 @@ curation or the calculation of agreement. Thus, checks should not be enabled on 
 unless WebAnno behaves strangely and it is necessary to check the documents for consistency.
 
 Enabling <<sect_repairs,repairs>> should be done with great care as most repairs are performing
-destructive actions. Repairs should never be enabled on a production system.
+destructive actions. Repairs should never be enabled on a production system. The repairs are
+executed in the order in which they are appear in the `debug.casDoctor.repairs` setting. This is
+important in particular when applying destructive repairs.
 
 When documents are loaded, CAS Doctor first tries to apply any enabled <<sect_repairs,repairs>>
 and afterwards applies enabled <<sect_checks,checks>> to ensure that the potentially repaired
@@ -66,7 +68,7 @@ and saving inconsistent documents.
 | comma-separated list of <<sect_checks,checks>>
 
 | debug.casDoctor.repairs
-| Repairs to be performed when a CAS is loaded
+| Repairs to be performed when a CAS is loaded - order matters!
 | _unset_
 | comma-separated list of <<sect_repairs,repairs>>
 
@@ -84,7 +86,7 @@ and saving inconsistent documents.
 
 [horizontal]
 ID:: `AllFeatureStructuresIndexedCheck`
-Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>
+Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>
 
 This check verifies if all reachable feature structures in the CAS are also indexed. WebAnno does not
 currently use any unindexed feature structures. If there are any unindexed feature structures in the
@@ -100,7 +102,7 @@ This check is very extensive and slow.
 
 [horizontal]
 ID:: `FeatureAttachedSpanAnnotationsTrulyAttachedCheck`
-Related repairs:: <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>
+Related repairs:: <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>, <<repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair>>
 
 Certain span layers in WebAnno are attached to another span layer through a feature reference
 from that second layer. For example, annotations in the POS layer must always be referenced from
@@ -131,7 +133,7 @@ Zero-sized tokens and sentences are not valid in WebAnno and can cause undefined
 === Repairs
 
 [[repair_ReattachFeatureAttachedSpanAnnotationsRepair]]
-==== Reattach Feature-Attached Span Annotations
+==== Re-attach Feature-Attached Span Annotations
 
 [horizontal]
 ID:: `ReattachFeatureAttachedSpanAnnotationsRepair`
@@ -143,6 +145,32 @@ attached annotations would be an indication of a bug because attached layers are
 stack.
 
 This is a safe repair action as it does not delete anything.
+
+
+[[repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair]]
+==== Re-attach Feature-Attached Span Annotations And Delete Extras
+
+[horizontal]
+ID:: `ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair`
+
+This is a destructive variant of <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>. In
+addition to re-attaching unattached annotations, it also removes all extra candidates that cannot
+be attached. For example, if there are two unattached Lemma annotations at the position of a Token
+annotation, then one will be attached and the other will be deleted. Which one is attached and 
+which one is deleted is undefined.
+
+
+[[repair_ReindexFeatureAttachedSpanAnnotationsRepair]]
+==== Re-index Feature-Attached Span Annotations
+
+[horizontal]
+ID:: `ReindexFeatureAttachedSpanAnnotationsRepair`
+
+This repair locates annotations that are reachable via a attach feature but which are not actually
+indexed in the CAS. Such annotations are then added back to the CAS indexes.
+
+This is a safe repair action as it does not delete anything.
+
 
 [[repair_RemoveDanglingChainLinksRepair]]
 ==== Remove Dangling Chain Links
