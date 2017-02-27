@@ -80,8 +80,6 @@ public class CachingReuseStrategy
             {
                 throw new UnsupportedOperationException();
             }
-
         };
     }
-
 }
