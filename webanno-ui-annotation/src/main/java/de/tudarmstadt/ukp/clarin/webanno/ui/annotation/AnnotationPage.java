@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -63,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
@@ -124,6 +124,8 @@ public class AnnotationPage
 
     private WebMarkupContainer sidebarCell;
     private WebMarkupContainer annotationViewCell;
+    
+    private ModalWindow openDocumentsModal;
     
     public AnnotationPage()
     {
@@ -205,10 +207,8 @@ public class AnnotationPage
         numberOfPages.setOutputMarkupId(true);
         add(numberOfPages);
 
-        final ModalWindow openDocumentsModal;
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
-
         openDocumentsModal.setInitialWidth(620);
         openDocumentsModal.setInitialHeight(440);
         openDocumentsModal.setResizable(true);
@@ -227,59 +227,7 @@ public class AnnotationPage
             }
         });
 
-        add(new AjaxLink<Void>("showOpenDocumentModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-            	bModel.getSelection().clear();             
-                closeButtonClicked = false;
-                openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
-                        .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
-                {
-
-                    private static final long serialVersionUID = -3434069761864809703L;
-
-                    @Override
-                    protected void onCancel(AjaxRequestTarget aTarget)
-                    {
-                        closeButtonClicked = true;
-                    };
-                });
-                openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                {
-                    private static final long serialVersionUID = -1746088901018629567L;
-
-                    @Override
-                    public void onClose(AjaxRequestTarget target)
-                    {
-                        // A hack, the dialog opens for the first time, and if no document is
-                        // selected window will be "blind down". Something in the brat js causes
-                        // this!
-                        if (bModel.getProject() == null || bModel.getDocument() == null) {
-                            setResponsePage(getApplication().getHomePage());
-                        }
-
-                        // Dialog was cancelled rather that a document was selected.
-                        if (closeButtonClicked) {
-                            return;
-                        }
-
-                        loadDocumentAction(target);
-                        try {
-							editor.loadFeatureEditorModels(target);
-                        }
-                        catch (AnnotationException e) {
-                            error("Error loading layers" + e.getMessage());
-                        }
-                    }
-                });
-                // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
-                openDocumentsModal.show(aTarget);
-            }
-        });
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
 
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel",
                 new Model<AnnotatorState>(bModel), editor)
@@ -329,251 +277,28 @@ public class AnnotationPage
             }
         });
         
-        // Show the previous document, if exist
-        add(new AjaxLink<Void>("showPreviousDocument")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
+        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
+                        EventType.click)));
 
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                editor.reset(aTarget);
-                // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
+        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
+                        EventType.click)));
 
-                // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-                // If the first the document
-                if (currentDocumentIndex == 0) {
-                    aTarget.appendJavaScript("alert('This is the first document!')");
-                    return;
-                }
-                bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
+        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-                loadDocumentAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click)));
+        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        // Show the next document if exist
-        add(new AjaxLink<Void>("showNextDocument")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
+        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                editor.reset(aTarget);
-                // List of all Source Documents in the project
-                List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
-
-                // Index of the current source document in the list
-                int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
-
-                // If the first document
-                if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-                    aTarget.appendJavaScript("alert('This is the last document!')");
-                    return;
-                }
-                bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
-
-                loadDocumentAction(aTarget);
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down }, EventType.click)));
-
-        // Show the next page of this document
-        add(new AjaxLink<Void>("showNext")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            /**
-             * Get the current beginning sentence address and add on it the size of the display
-             * window
-             */
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                try {
-                    if (bModel.getDocument() != null) {
-                        JCas jCas = getJCas();
-                        int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(
-                                jCas, bModel.getFirstVisibleSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
-                        if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
-
-                            updateSentenceNumber(jCas, nextSentenceAddress);
-
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
-                            updateSentenceAddress(jCas, aTarget);
-                        }
-
-                        else {
-                            aTarget.appendJavaScript("alert('This is last page!')");
-                        }
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('Please open a document first!')");
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
-
-        // Show the previous page of this document
-        add(new AjaxLink<Void>("showPrevious")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                try {
-                    if (bModel.getDocument() != null) {
-
-                        JCas jCas = getJCas();
-                        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
-
-                        int previousSentenceAddress = WebAnnoCasUtil
-                                .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
-                                        .getFirstVisibleSentenceAddress(), bModel.getPreferences()
-                                        .getWindowSize());
-                        //Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same address 
-                        //if there are not much sentences to go back to as defined in windowSize
-                        if (
-                                previousSentenceAddress == bModel.getFirstVisibleSentenceAddress() && 
-                                // Check whether it's not the beginning of document
-                                bModel.getFirstVisibleSentenceAddress() != firstSentenceAddress
-                        ) {
-                            previousSentenceAddress = firstSentenceAddress;
-                        }
-                        
-                        if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
-                            updateSentenceNumber(jCas, previousSentenceAddress);
-
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
-                            updateSentenceAddress(jCas, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is First Page!')");
-                        }
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('Please open a document first!')");
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new AjaxLink<Void>("showFirst")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                try {
-                    if (bModel.getDocument() != null) {
-
-                        JCas jCas = getJCas();
-                        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
-
-                        if (firstSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
-                            updateSentenceNumber(jCas, firstSentenceAddress);
-
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
-                            updateSentenceAddress(jCas, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is first page!')");
-                        }
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('Please open a document first!')");
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new AjaxLink<Void>("showLast")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                try {
-                    if (bModel.getDocument() != null) {
-
-                        JCas jCas = getJCas();
-
-                        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                                .getLastDisplayWindowFirstSentenceAddress(jCas, bModel
-                                        .getPreferences().getWindowSize());
-                        if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
-
-                            updateSentenceNumber(jCas, lastDisplayWindowBeginingSentenceAddress);
-
-                            aTarget.addChildren(getPage(), FeedbackPanel.class);
-                            annotator.bratRenderLater(aTarget);
-                            gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
-                            updateSentenceAddress(jCas, aTarget);
-                        }
-                        else {
-                            aTarget.appendJavaScript("alert('This is last Page!')");
-                        }
-                    }
-                    else {
-                        aTarget.appendJavaScript("alert('Please open a document first!')");
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
-            }
-        }.add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
-
-        add(new AjaxLink<Void>("toggleScriptDirection")
-        {
-            private static final long serialVersionUID = -4332566542278611728L;
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
-                    bModel.setScriptDirection(ScriptDirection.RTL);
-                }
-                else {
-                    bModel.setScriptDirection(ScriptDirection.LTR);
-                }
-                annotator.bratRenderLater(aTarget);
-            }
-        });
+        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
+        
         add(new GuidelineModalPanel("guidelineModalPanel", new Model<AnnotatorState>(bModel)));
 
         gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
@@ -581,33 +306,12 @@ public class AnnotationPage
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
         gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "submit")
         {
-            private static final long serialVersionUID = -4549805321484461545L;
+            private static final long serialVersionUID = -1L;
 
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                try {
-                    if (gotoPageAddress == 0) {
-                        aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                        return;
-                    }
-                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-                        JCas jCas = getJCas();
-
-                        updateSentenceNumber(jCas, gotoPageAddress);
-
-                        annotator.bratRenderLater(aTarget);
-                        gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
-                        
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
-                        aTarget.add(numberOfPages);
-                        aTarget.add(gotoPageTextField);
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
+                actionEnterPageNumer(aTarget);
             }
         });
         gotoPageTextField.setType(Integer.class);
@@ -639,31 +343,12 @@ public class AnnotationPage
 
         add(new AjaxLink<Void>("gotoPageLink")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = -1L;
 
             @Override
             public void onClick(AjaxRequestTarget aTarget)
             {
-                try {
-                    if (gotoPageAddress == 0) {
-                        aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                        return;
-                    }
-                    if (bModel.getDocument() == null) {
-                        aTarget.appendJavaScript("alert('Please open a document first!')");
-                        return;
-                    }
-                    if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-                        JCas jCas = getJCas();
-                        updateSentenceNumber(jCas, gotoPageAddress);
-                        updateSentenceAddress(jCas, aTarget);
-                        annotator.bratRenderLater(aTarget);
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
+                actionGotoPage(aTarget);
             }
         });
 
@@ -682,8 +367,8 @@ public class AnnotationPage
             }
         });
     }
-    
-	private List<SourceDocument> getListOfDocs() {
+
+    private List<SourceDocument> getListOfDocs() {
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		User user = userRepository.get(username);
 		// List of all Source Documents in the project
@@ -768,7 +453,304 @@ public class AnnotationPage
                 WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget)
+    private void actionOpenDocument(AjaxRequestTarget aTarget)
+    {
+        bModel.getSelection().clear();             
+        closeButtonClicked = false;
+        openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal
+                .getContentId(), bModel, openDocumentsModal, Mode.ANNOTATION)
+        {
+            private static final long serialVersionUID = -3434069761864809703L;
+
+            @Override
+            protected void onCancel(AjaxRequestTarget aTarget)
+            {
+                closeButtonClicked = true;
+            };
+        });
+        openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
+        {
+            private static final long serialVersionUID = -1746088901018629567L;
+
+            @Override
+            public void onClose(AjaxRequestTarget target)
+            {
+                // A hack, the dialog opens for the first time, and if no document is
+                // selected window will be "blind down". Something in the brat js causes
+                // this!
+                if (bModel.getProject() == null || bModel.getDocument() == null) {
+                    setResponsePage(getApplication().getHomePage());
+                }
+
+                // Dialog was cancelled rather that a document was selected.
+                if (closeButtonClicked) {
+                    return;
+                }
+
+                actionLoadDocument(target);
+                try {
+                    editor.loadFeatureEditorModels(target);
+                }
+                catch (AnnotationException e) {
+                    error("Error loading layers" + e.getMessage());
+                }
+            }
+        });
+        // target.appendJavaScript("Wicket.Window.unloadConfirmation = false;");
+        openDocumentsModal.show(aTarget);
+    }
+    
+    private void actionShowLastPage(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (bModel.getDocument() != null) {
+
+                JCas jCas = getJCas();
+
+                int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
+                        .getLastDisplayWindowFirstSentenceAddress(jCas, bModel
+                                .getPreferences().getWindowSize());
+                if (lastDisplayWindowBeginingSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
+
+                    updateSentenceNumber(jCas, lastDisplayWindowBeginingSentenceAddress);
+
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
+                    gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                    updateSentenceAddress(jCas, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is last Page!')");
+                }
+            }
+            else {
+                aTarget.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }
+
+    private void actionShowFirstPage(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (bModel.getDocument() != null) {
+
+                JCas jCas = getJCas();
+                int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
+
+                if (firstSentenceAddress != bModel.getFirstVisibleSentenceAddress()) {
+                    updateSentenceNumber(jCas, firstSentenceAddress);
+
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
+                    gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                    updateSentenceAddress(jCas, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is first page!')");
+                }
+            }
+            else {
+                aTarget.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }
+
+    /**
+     *  Show the previous page of this document
+     */
+    private void actionShowPreviousPage(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (bModel.getDocument() != null) {
+
+                JCas jCas = getJCas();
+                int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(jCas);
+
+                int previousSentenceAddress = WebAnnoCasUtil
+                        .getPreviousDisplayWindowSentenceBeginAddress(jCas, bModel
+                                .getFirstVisibleSentenceAddress(), bModel.getPreferences()
+                                .getWindowSize());
+                //Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same address 
+                //if there are not much sentences to go back to as defined in windowSize
+                if (
+                        previousSentenceAddress == bModel.getFirstVisibleSentenceAddress() && 
+                        // Check whether it's not the beginning of document
+                        bModel.getFirstVisibleSentenceAddress() != firstSentenceAddress
+                ) {
+                    previousSentenceAddress = firstSentenceAddress;
+                }
+                
+                if (bModel.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
+                    updateSentenceNumber(jCas, previousSentenceAddress);
+
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
+                    gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                    updateSentenceAddress(jCas, aTarget);
+                }
+                else {
+                    aTarget.appendJavaScript("alert('This is First Page!')");
+                }
+            }
+            else {
+                aTarget.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }
+
+    /**
+     *  Show the next page of this document
+     */
+    private void actionShowNextPage(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (bModel.getDocument() != null) {
+                JCas jCas = getJCas();
+                int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(
+                        jCas, bModel.getFirstVisibleSentenceAddress(), bModel.getPreferences()
+                                .getWindowSize());
+                if (bModel.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
+
+                    updateSentenceNumber(jCas, nextSentenceAddress);
+
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    annotator.bratRenderLater(aTarget);
+                    gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                    updateSentenceAddress(jCas, aTarget);
+                }
+
+                else {
+                    aTarget.appendJavaScript("alert('This is last page!')");
+                }
+            }
+            else {
+                aTarget.appendJavaScript("alert('Please open a document first!')");
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }
+
+    /**
+     *  Show the next document if exist
+     */
+    private void actionShowNextDocument(AjaxRequestTarget aTarget)
+    {
+        editor.reset(aTarget);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
+
+        // Index of the current source document in the list
+        int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+
+        // If the first document
+        if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
+            aTarget.appendJavaScript("alert('This is the last document!')");
+            return;
+        }
+        bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
+
+        actionLoadDocument(aTarget);
+    }
+
+    /**
+     * Show the previous document, if exist
+     */
+    private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
+    {
+        editor.reset(aTarget);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements=   getListOfDocs();
+
+        // Index of the current source document in the list
+        int currentDocumentIndex = listOfSourceDocuements.indexOf(bModel.getDocument());
+
+        // If the first the document
+        if (currentDocumentIndex == 0) {
+            aTarget.appendJavaScript("alert('This is the first document!')");
+            return;
+        }
+        bModel.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
+
+        actionLoadDocument(aTarget);
+    }
+    
+    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
+    {
+        if (ScriptDirection.LTR.equals(bModel.getScriptDirection())) {
+            bModel.setScriptDirection(ScriptDirection.RTL);
+        }
+        else {
+            bModel.setScriptDirection(ScriptDirection.LTR);
+        }
+        annotator.bratRenderLater(aTarget);
+    }
+
+    private void actionEnterPageNumer(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (gotoPageAddress == 0) {
+                aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+                return;
+            }
+            if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+                JCas jCas = getJCas();
+
+                updateSentenceNumber(jCas, gotoPageAddress);
+
+                annotator.bratRenderLater(aTarget);
+                gotoPageTextField.setModelObject(bModel.getFirstVisibleSentenceNumber());
+                
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.add(numberOfPages);
+                aTarget.add(gotoPageTextField);
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }
+    
+    protected void actionGotoPage(AjaxRequestTarget aTarget)
+    {
+        try {
+            if (gotoPageAddress == 0) {
+                aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+                return;
+            }
+            if (bModel.getDocument() == null) {
+                aTarget.appendJavaScript("alert('Please open a document first!')");
+                return;
+            }
+            if (bModel.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+                JCas jCas = getJCas();
+                updateSentenceNumber(jCas, gotoPageAddress);
+                updateSentenceAddress(jCas, aTarget);
+                annotator.bratRenderLater(aTarget);
+            }
+        }
+        catch (Exception e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
+    }    
+
+    private void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
         
