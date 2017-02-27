@@ -119,7 +119,7 @@ public class CurationPage
     private int gotoPageAddress;
     private int totalNumberOfSentence;
     private long currentprojectId;
-    List<String> crossAnnoSentList;
+    private List<String> crossAnnoSentList;
 
     // Open the dialog window on first load
     private boolean firstLoad = true;
@@ -134,7 +134,6 @@ public class CurationPage
     private ModalWindow finishCurationModal;
     private ModalWindow reCreateMergeCas;
 
-    @SuppressWarnings("deprecation")
     public CurationPage()
     {
         bModel = new AnnotatorStateImpl();
@@ -325,7 +324,6 @@ public class CurationPage
                     mergeJCas = repository.readCurationCas(bModel.getDocument());
                     gotoPageAddress = getSentenceAddress(mergeJCas,
                             gotoPageTextField.getModelObject());
-
                 }
                 catch (Exception e) {
                     aTarget.add(getFeedbackPanel());
@@ -344,7 +342,6 @@ public class CurationPage
             @Override
             protected String load()
             {
-
                 if (bModel.getProject() != null && bModel.getDocument() != null) {
                     if (repository
                             .getSourceDocument(bModel.getDocument().getProject(),
@@ -359,7 +356,6 @@ public class CurationPage
                 else {
                     return "images/inprogress.png";
                 }
-
             }
         }));
 
@@ -444,13 +440,14 @@ public class CurationPage
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
     }
     
-    private List<SourceDocument> getListOfDocs() {
+    private List<SourceDocument> getListOfDocs()
+    {
         // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
+        List<SourceDocument> listOfSourceDocuements = repository
+                .listSourceDocuments(bModel.getProject());
         List<SourceDocument> sourceDocumentsNotFinished = new ArrayList<SourceDocument>();
         for (SourceDocument sourceDocument : listOfSourceDocuements) {
-            if (!repository
-                    .existFinishedDocument(sourceDocument, bModel.getProject())) {
+            if (!repository.existFinishedDocument(sourceDocument, bModel.getProject())) {
                 sourceDocumentsNotFinished.add(sourceDocument);
             }
         }
@@ -828,7 +825,6 @@ public class CurationPage
                 reCreateMergeCas, reMerge));
         reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
-
             private static final long serialVersionUID = 4816615910398625993L;
 
             @Override

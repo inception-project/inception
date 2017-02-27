@@ -128,7 +128,7 @@ public class CorrectionPage
     private long currentprojectId;
 
     // Open the dialog window on first load
-    boolean firstLoad = true;
+    private boolean firstLoad = true;
 
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
@@ -978,7 +978,7 @@ public class CorrectionPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
 
-        bModel.setUser(userRepository.get(username));
+        bModel.setUser(user);
 
         try {
             // Check if there is an annotation document entry in the database. If there is none,

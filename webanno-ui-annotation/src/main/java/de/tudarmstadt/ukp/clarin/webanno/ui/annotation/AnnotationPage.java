@@ -358,22 +358,25 @@ public class AnnotationPage
         });
     }
 
-    private List<SourceDocument> getListOfDocs() {
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		User user = userRepository.get(username);
-		// List of all Source Documents in the project
-		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
-		List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
-		for (SourceDocument sourceDocument : listOfSourceDocuements) {
-			if (repository.existsAnnotationDocument(sourceDocument, user) && repository
-					.getAnnotationDocument(sourceDocument, user).getState().equals(AnnotationDocumentState.IGNORE)) {
-				sourceDocumentsInIgnoreState.add(sourceDocument);
-			}
-		}
+    private List<SourceDocument> getListOfDocs()
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements = repository
+                .listSourceDocuments(bModel.getProject());
+        List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : listOfSourceDocuements) {
+            if (repository.existsAnnotationDocument(sourceDocument, user)
+                    && repository.getAnnotationDocument(sourceDocument, user).getState()
+                            .equals(AnnotationDocumentState.IGNORE)) {
+                sourceDocumentsInIgnoreState.add(sourceDocument);
+            }
+        }
 
-		listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
-		return listOfSourceDocuements;
-	}
+        listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
+        return listOfSourceDocuements;
+    }
 
     private void updateSentenceAddress(JCas aJCas, AjaxRequestTarget aTarget)
         throws UIMAException, IOException, ClassNotFoundException

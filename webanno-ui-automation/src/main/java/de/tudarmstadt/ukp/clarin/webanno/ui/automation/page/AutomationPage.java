@@ -149,7 +149,7 @@ public class AutomationPage
     private long currentprojectId;
 
     // Open the dialog window on first load
-    boolean firstLoad = true;
+    private boolean firstLoad = true;
 
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
@@ -669,22 +669,26 @@ public class AutomationPage
         add(new GuidelineModalPanel("guidelineModalPanel", Model.of(bModel)));
     }
 
-    private List<SourceDocument> getListOfDocs() {
-		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-		User user = userRepository.get(username);
-		// List of all Source Documents in the project
-		List<SourceDocument> listOfSourceDocuements = repository.listSourceDocuments(bModel.getProject());
-		List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
-		for (SourceDocument sourceDocument : listOfSourceDocuements) {
-			if (repository.existsAnnotationDocument(sourceDocument, user) && repository
-					.getAnnotationDocument(sourceDocument, user).getState().equals(AnnotationDocumentState.IGNORE)) {
-				sourceDocumentsInIgnoreState.add(sourceDocument);
-			}
-		}
+    private List<SourceDocument> getListOfDocs()
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        // List of all Source Documents in the project
+        List<SourceDocument> listOfSourceDocuements = repository
+                .listSourceDocuments(bModel.getProject());
+        List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
+        for (SourceDocument sourceDocument : listOfSourceDocuements) {
+            if (repository.existsAnnotationDocument(sourceDocument, user)
+                    && repository.getAnnotationDocument(sourceDocument, user).getState()
+                            .equals(AnnotationDocumentState.IGNORE)) {
+                sourceDocumentsInIgnoreState.add(sourceDocument);
+            }
+        }
 
-		listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
-		return listOfSourceDocuements;
-	}
+        listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
+        return listOfSourceDocuements;
+    }
+
     /**
      * for the first time the page is accessed, open the <b>open document dialog</b>
      */
@@ -1154,11 +1158,12 @@ public class AutomationPage
     private void loadDocumentAction(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User loggedInUser = userRepository
-                .get(SecurityContextHolder.getContext().getAuthentication().getName());
+        LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
-        bModel.setUser(loggedInUser);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+
+        bModel.setUser(user);
 
         if (bModel.getDocument().getState().equals(SourceDocumentState.NEW)) {
             bModel.getDocument().setState(SourceDocumentStateTransition
@@ -1169,11 +1174,11 @@ public class AutomationPage
         JCas jCas = null;
         try {
             AnnotationDocument logedInUserAnnotationDocument = repository
-                    .getAnnotationDocument(bModel.getDocument(), loggedInUser);
+                    .getAnnotationDocument(bModel.getDocument(), user);
             jCas = repository.readAnnotationCas(logedInUserAnnotationDocument);
             // upgrade this cas
             repository.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
-            repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), user);
 
             // upgrade this automation cas
             repository.upgradeCorrectionCas(
@@ -1188,15 +1193,15 @@ public class AutomationPage
         catch (DataRetrievalFailureException e) {
 
             jCas = repository.readAnnotationCas(
-                    repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
+                    repository.createOrGetAnnotationDocument(bModel.getDocument(), user));
             // upgrade this cas
             repository.upgradeCas(jCas.getCas(),
-                    repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
-            repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
+                    repository.createOrGetAnnotationDocument(bModel.getDocument(), user));
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), user);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
-                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), user);
             }
             else {
                 // upgrade this automation cas
@@ -1207,15 +1212,15 @@ public class AutomationPage
         }
         catch (NoResultException e) {
             jCas = repository.readAnnotationCas(
-                    repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
+                    repository.createOrGetAnnotationDocument(bModel.getDocument(), user));
             // upgrade this cas
             repository.upgradeCas(jCas.getCas(),
-                    repository.createOrGetAnnotationDocument(bModel.getDocument(), loggedInUser));
-            repository.writeAnnotationCas(jCas, bModel.getDocument(), loggedInUser);
+                    repository.createOrGetAnnotationDocument(bModel.getDocument(), user));
+            repository.writeAnnotationCas(jCas, bModel.getDocument(), user);
             // This is the auto annotation, save it under CORRECTION_USER, Only if it is not created
             // by another annotator
             if (!repository.existsCorrectionCas(bModel.getDocument())) {
-                repository.writeCorrectionCas(jCas, bModel.getDocument(), loggedInUser);
+                repository.writeCorrectionCas(jCas, bModel.getDocument(), user);
             }
             else {
                 // upgrade this automation cas
@@ -1256,5 +1261,7 @@ public class AutomationPage
                 + bModel.getFirstVisibleSentenceNumber() + "] l:["
                 + bModel.getLastVisibleSentenceNumber() + "] s:[" + bModel.getFocusSentenceNumber()
                 + "]");
+
+        LOG.info("END LOAD_DOCUMENT_ACTION");
     }
 }
