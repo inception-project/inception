@@ -992,12 +992,7 @@ public class CorrectionPage
                 correctionCas = repository.readCorrectionCas(bModel.getDocument());
             }
             else {
-                if (repository.existsInitialCas(bModel.getDocument())) {
-                    correctionCas = repository.readInitialCas(bModel.getDocument());
-                }
-                else {
-                    correctionCas = repository.createInitialCas(bModel.getDocument());
-                }
+                correctionCas = repository.createOrReadInitialCas(bModel.getDocument());
             }
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
@@ -1007,12 +1002,7 @@ public class CorrectionPage
                 annotationCas = repository.readAnnotationCas(annotationDocument);
             }
             else {
-                if (repository.existsInitialCas(bModel.getDocument())) {
-                    annotationCas = repository.readInitialCas(bModel.getDocument());
-                }
-                else {
-                    annotationCas = repository.createInitialCas(bModel.getDocument());
-                }
+                annotationCas = repository.createOrReadInitialCas(bModel.getDocument());
                 annotationCas = BratAnnotatorUtility.clearJcasAnnotations(annotationCas,
                         bModel.getDocument(), user, repository);
             }

@@ -1422,12 +1422,7 @@ public class MonitoringPage
                     annotationDocument.setProject(project);
                     annotationDocument.setUser(annotator.getUsername());
                     annotationDocument.setState(state);
-                    try {
-                        repository.createAnnotationDocument(annotationDocument);
-                    }
-                    catch (IOException e) {
-                        LOG.info("Unable to get the LOG file");
-                    }
+                    repository.createAnnotationDocument(annotationDocument);
                 }
 
                 // if state is in progress, add the last sentence number accessed
@@ -1499,13 +1494,7 @@ public class MonitoringPage
                             annotationDocument.setUser(user.getUsername());
                             annotationDocument.setState(AnnotationDocumentStateTransition
                                     .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
-                            try {
-                                repository.createAnnotationDocument(annotationDocument);
-                            }
-                            catch (IOException e) {
-                                LOG.info("Unable to get the LOG file");
-                            }
-
+                            repository.createAnnotationDocument(annotationDocument);
                         }
                         
                         updateAgreementTable(aTarget, true);
@@ -1576,18 +1565,11 @@ public class MonitoringPage
         private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
                 AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
         {
-
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     aSourceDocument, aUser);
             annotationDocument.setState(AnnotationDocumentStateTransition
                     .transition(aAnnotationDocumentStateTransition));
-            try {
                 repository.createAnnotationDocument(annotationDocument);
-            }
-            catch (IOException e) {
-                LOG.info("Unable to get the LOG file");
-            }
-
         }
 
         /**

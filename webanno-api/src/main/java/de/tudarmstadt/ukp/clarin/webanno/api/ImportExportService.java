@@ -17,12 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.uima.UIMAException;
+import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public interface ImportExportService
 {
@@ -57,8 +67,7 @@ public interface ImportExportService
      * @throws ClassNotFoundException
      *             if a DKPro Core reader/writer cannot be loaded.
      */
-    @SuppressWarnings("rawtypes")
-    Map<String, Class> getReadableFormats()
+    Map<String, Class<CollectionReader>> getReadableFormats()
         throws IOException, ClassNotFoundException;
 
     /**
@@ -86,7 +95,61 @@ public interface ImportExportService
      * @throws ClassNotFoundException
      *             if a DKPro Core reader/writer cannot be loaded.
      */
-    @SuppressWarnings("rawtypes")
-    Map<String, Class> getWritableFormats()
+    Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
         throws IOException, ClassNotFoundException;
+    
+    /**
+     * Convert a file to a CAS.
+     *
+     * @param aFile
+     *            the file.
+     * @param aProject
+     *            the project to which this file belongs (required to get the type system).
+     * @param aFormat
+     *            ID of a supported file format
+     * @return the JCas.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws ClassNotFoundException 
+     */
+    JCas importCasFromFile(File aFile, Project aProject, String aFormat)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
+            Class aWriter, boolean aStripExtension)
+        throws IOException, UIMAException;
+    
+    /**
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     *
+     * @param document
+     *            The {@link SourceDocument} where we get the id which hosts both the source
+     *            Document and the annotated document
+     * @param user
+     *            the {@link User} who annotates the document.
+     * @param writer
+     *            the DKPro Core writer.
+     * @param fileName
+     *            the file name.
+     * @param mode
+     *            the mode.
+     * @return a temporary file.
+     * @throws UIMAException
+     *             if there was a conversion error.
+     * @throws IOException
+     *             if there was an I/O error.
+     * @throws ClassNotFoundException
+     *             if the DKPro Core writer could not be found.
+     */
+    @SuppressWarnings("rawtypes")
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    @SuppressWarnings("rawtypes")
+    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+            String fileName, Mode mode, boolean stripExtension)
+        throws UIMAException, IOException, ClassNotFoundException;
 }

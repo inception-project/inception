@@ -99,16 +99,8 @@ public class YesNoFinishModalPanel
                                 .setState(AnnotationDocumentStateTransition
                                         .transition(AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
                         // manually update state change!! No idea why it is not updated in the DB
-                        // with
-                        // out calling
-                        // createAnnotationDocument(...)
-                        try {
-                            repository.createAnnotationDocument(annotationDocument);
-                        }
-                        catch (IOException e) {
-                            error("Unable to get the LOG file");
-                        }
-
+                        // without calling createAnnotationDocument(...)
+                        repository.createAnnotationDocument(annotationDocument);
                     }
                     else {
                         if (bModel.getDocument().getState()

@@ -218,12 +218,9 @@ public interface DocumentService
      * @param annotationDocument
      *            {@link AnnotationDocument} comprises of the the name of the {@link SourceDocument}
      *            , id of {@link SourceDocument}, id of the {@link Project}, and id of {@link User}
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createAnnotationDocument(AnnotationDocument annotationDocument)
-        throws IOException;
+    void createAnnotationDocument(AnnotationDocument annotationDocument);
 
     /**
      * Creates an annotation document. The {@link AnnotationDocument} is stored in the
@@ -271,38 +268,6 @@ public interface DocumentService
      */
     boolean existsCas(SourceDocument sourceDocument, String username)
         throws IOException;
-
-    /**
-     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
-     *
-     * @param document
-     *            The {@link SourceDocument} where we get the id which hosts both the source
-     *            Document and the annotated document
-     * @param user
-     *            the {@link User} who annotates the document.
-     * @param writer
-     *            the DKPro Core writer.
-     * @param fileName
-     *            the file name.
-     * @param mode
-     *            the mode.
-     * @return a temporary file.
-     * @throws UIMAException
-     *             if there was a conversion error.
-     * @throws IOException
-     *             if there was an I/O error.
-     * @throws ClassNotFoundException
-     *             if the DKPro Core writer could not be found.
-     */
-    @SuppressWarnings("rawtypes")
-    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
-            String fileName, Mode mode)
-        throws UIMAException, IOException, ClassNotFoundException;
-
-    @SuppressWarnings("rawtypes")
-    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
-            String fileName, Mode mode, boolean stripExtension)
-        throws UIMAException, IOException, ClassNotFoundException;
 
     /**
      * Export a Serialized CAS annotation document from the file system
@@ -369,6 +334,9 @@ public interface DocumentService
     
     JCas readInitialCas(SourceDocument aDocument)
         throws CASException, ResourceInitializationException, IOException;
+    
+    JCas createOrReadInitialCas(SourceDocument aDocument)
+        throws IOException, UIMAException, ClassNotFoundException;
     
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
@@ -456,6 +424,5 @@ public interface DocumentService
      */
     boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
 
-    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
-            throws IOException;
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 }

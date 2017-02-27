@@ -83,6 +83,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.uima.UIMAException;
+import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
@@ -224,7 +225,6 @@ public class RepositoryServiceDbData
     @Override
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
-        throws IOException
     {
         if (aAnnotationDocument.getId() == 0) {
             entityManager.persist(aAnnotationDocument);
@@ -470,7 +470,7 @@ public class RepositoryServiceDbData
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("rawtypes")
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
@@ -480,12 +480,7 @@ public class RepositoryServiceDbData
         return exportAnnotationDocument(aDocument, aUser, aWriter, aFileName, aMode, true);
     }
 
-    /**
-     * A new directory is created using UUID so that every exported file will reside in its own
-     * directory. This is useful as the written file can have multiple extensions based on the
-     * Writer class used.
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("rawtypes")
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser, Class aWriter,
@@ -519,129 +514,16 @@ public class RepositoryServiceDbData
 
         // Update type system the CAS
         upgradeCas(cas, aDocument, aUser);
+        
+        File exportFile = exportCasToFile(cas, aDocument, aFileName, aWriter, aStripExtension);
 
-        // Update the source file name in case it is changed for some reason
         Project project = aDocument.getProject();
-        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
-                + DOCUMENT + aDocument.getId() + SOURCE);
-        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
-        documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
-                .toExternalForm());
-        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
-                + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
-                .toExternalForm());
-
-        // update with the correct tagset name
-        List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
-        for (AnnotationFeature feature : features) {
-
-            TagSet tagSet = feature.getTagset();
-            if (tagSet == null) {
-                continue;
-            }
-            else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                updateCasWithTagSet(cas, feature.getLayer().getName(), tagSet.getName());
-            }
-        }
-
-        File exportTempDir = File.createTempFile("webanno", "export");
-        exportTempDir.delete();
-        exportTempDir.mkdirs();
-
-        AnalysisEngineDescription writer;
-        if (aWriter.getName()
-                .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
-			List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
-
-			List<String> slotFeatures = new ArrayList<String>();
-			List<String> slotTargets = new ArrayList<String>();
-			List<String> linkTypes = new ArrayList<String>();
-
-			Set<String> spanLayers = new HashSet<String>();
-			Set<String> slotLayers = new HashSet<String>();
-			for (AnnotationLayer layer : layers) {
-				
-				if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
-					// TSV will not use this
-					if(!annotationExists(cas, layer.getName())){
-						continue;
-					}
-					boolean isslotLayer = false;
-					for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
-						if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
-								&& LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
-							isslotLayer = true;
-							slotFeatures.add(layer.getName() + ":" + f.getName());
-							slotTargets.add(f.getType());
-							linkTypes.add(f.getLinkTypeName());
-						}
-					}
-					
-					if (isslotLayer) {
-						slotLayers.add(layer.getName());
-					} else {
-						spanLayers.add(layer.getName());
-					}
-				}
-			}
-			spanLayers.addAll(slotLayers);
-			List<String> chainLayers = new ArrayList<String>();
-			for (AnnotationLayer layer : layers) {
-				if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
-					if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
-						continue;
-					}
-					chainLayers.add(layer.getName());
-				}
-			}
-
-			List<String> relationLayers = new ArrayList<String>();
-			for (AnnotationLayer layer : layers) {
-				if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
-					// TSV will not use this
-					if(!annotationExists(cas, layer.getName())){
-						continue;
-					}
-					relationLayers.add(layer.getName());
-				}
-			}
-
-			writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-					JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
-					"slotFeatures", slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers",
-					chainLayers, "relationLayers", relationLayers);
-        }
-        else {
-            writer = createEngineDescription(aWriter,
-                    JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                    JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
-        }
-
-        runPipeline(cas, writer);
-
         createLog(project).info(
                 "Exported annotation file [" + aDocument.getName() + "] with ID ["
                         + aDocument.getId() + "] for user [" + aUser + "] from project ["
                         + project.getId() + "]");
         createLog(project).removeAllAppenders();
 
-        File exportFile;
-        if (exportTempDir.listFiles().length > 1) {
-            exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-            try {
-                ZipUtils.zipFolder(exportTempDir, exportFile);
-            }
-            catch (Exception e) {
-                createLog(project).info("Unable to create zip File");
-            }
-        }
-        else {
-            exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
-            FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
-        }
-        FileUtils.forceDelete(exportTempDir);
         return exportFile;
     }
 
@@ -699,7 +581,6 @@ public class RepositoryServiceDbData
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
-        throws IOException
     {
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
@@ -732,9 +613,9 @@ public class RepositoryServiceDbData
     }
 
     
-    private void analyzeAndRepair(SourceDocument aDocument, CAS aCas)
+    private void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
     {
-        // Check if repairs are active - if this is the case, we only need to run the reparis
+        // Check if repairs are active - if this is the case, we only need to run the repairs
         // because the repairs do an analysis as a pre- and post-condition. 
         if (casDoctor.isRepairsActive()) {
             try {
@@ -742,7 +623,7 @@ public class RepositoryServiceDbData
             }
             catch (Exception e) {
                 throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                        + INITIAL_CAS_PSEUDO_USER + "] for source document ["
+                        + aUsername + "] for document ["
                         + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
                         + aDocument.getProject().getName() + "] ("
                         + aDocument.getProject().getId() + ")", e);
@@ -756,7 +637,7 @@ public class RepositoryServiceDbData
             catch (CasDoctorException e) {
                 StringBuilder detailMsg = new StringBuilder();
                 detailMsg.append("CAS Doctor found problems for user ["
-                        + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                        + aUsername + "] in document [" + aDocument.getName() + "] ("
                         + aDocument.getId() + ") in project["
                         + aDocument.getProject().getName() + "] ("
                         + aDocument.getProject().getId() + ")\n");
@@ -767,7 +648,7 @@ public class RepositoryServiceDbData
             }
             catch (Exception e) {
                 throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                        + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                        + aUsername + "] in document [" + aDocument.getName() + "] ("
                         + aDocument.getId() + ") in project["
                         + aDocument.getProject().getName() + "] ("
                         + aDocument.getProject().getId() + ")", e);
@@ -1391,7 +1272,8 @@ public class RepositoryServiceDbData
                 }
             }
             else {
-                cas = convertSourceDocumentToCas(aFile, aDocument);
+                cas = importCasFromFile(aFile, aDocument.getProject(), aDocument.getFormat());
+                analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, cas.getCas());
             }
         }
         catch (IOException e) {
@@ -1505,17 +1387,17 @@ public class RepositoryServiceDbData
         return readableFormat;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public Map<String, Class> getReadableFormats()
+    public Map<String, Class<CollectionReader>> getReadableFormats()
         throws ClassNotFoundException
     {
-        Map<String, Class> readableFormats = new HashMap<String, Class>();
+        Map<String, Class<CollectionReader>> readableFormats = new HashMap<>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    readableFormats.put(readerLabel, Class.forName(readWriteFileFormats
+                    readableFormats.put(readerLabel, (Class) Class.forName(readWriteFileFormats
                             .getProperty(readerLabel + ".reader")));
                 }
             }
@@ -1556,17 +1438,17 @@ public class RepositoryServiceDbData
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public Map<String, Class> getWritableFormats()
+    public Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
         throws ClassNotFoundException
     {
-        Map<String, Class> writableFormats = new HashMap<String, Class>();
+        Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = new HashMap<>();
         Set<String> keys = (Set) readWriteFileFormats.keySet();
 
         for (String keyvalue : keys) {
             if (keyvalue.contains(".label")) {
                 String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.put(writerLabel, Class.forName(readWriteFileFormats
+                    writableFormats.put(writerLabel, (Class) Class.forName(readWriteFileFormats
                             .getProperty(writerLabel + ".writer")));
                 }
             }
@@ -1599,8 +1481,9 @@ public class RepositoryServiceDbData
         // Normally, the initial CAS should be created on document import, but after
         // adding this feature, the existing projects do not yet have initial CASes, so
         // we create them here lazily
-        JCas jcas = convertSourceDocumentToCas(getSourceDocumentFile(aDocument), aDocument);
-
+        JCas jcas = importCasFromFile(getSourceDocumentFile(aDocument), aDocument.getProject(),
+                aDocument.getFormat());
+        analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
         writeSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         
         return jcas;
@@ -1614,11 +1497,23 @@ public class RepositoryServiceDbData
         
         readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         
-        analyzeAndRepair(aDocument, jcas.getCas());
+        analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
         
         return jcas;
     }
 
+    @Override
+    public JCas createOrReadInitialCas(SourceDocument aDocument)
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+        if (existsInitialCas(aDocument)) {
+            return readInitialCas(aDocument);
+        }
+        else {
+            return createInitialCas(aDocument);
+        }
+    }
+    
     @Override
     @Transactional
     @Deprecated
@@ -1934,7 +1829,7 @@ public class RepositoryServiceDbData
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 readSerializedCas(cas.getJCas(), serializedCasFile);
 
-                analyzeAndRepair(aDocument, cas);
+                analyzeAndRepair(aDocument, aUsername, cas);
 
                 return cas.getJCas();
             }
@@ -2080,30 +1975,20 @@ public class RepositoryServiceDbData
         updateTimeStamp(aSourceDocument, aUser, aMode);
     }
 
-    /**
-     * Get CAS object for the first time, from the source document using the provided reader
-     *
-     * @param aFile
-     *            the file.
-     * @param aDocument
-     *            the source document.
-     * @return the JCas.
-     * @throws UIMAException
-     *             if a conversion error occurs.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException 
-     */
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private JCas convertSourceDocumentToCas(File aFile, SourceDocument aDocument)
+    public JCas importCasFromFile(File aFile, Project aProject, String aFormat)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        Class readerClass = getReadableFormats().get(aDocument.getFormat());
+        Class readerClass = getReadableFormats().get(aFormat);
+        if (readerClass == null) {
+            throw new IOException("No reader available for format [" + aFormat + "]");
+        }
         
         // Prepare a CAS with the project type system
         TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                 .createTypeSystemDescription();
-        List<TypeSystemDescription> projectTypes = getProjectTypes(aDocument.getProject());
+        List<TypeSystemDescription> projectTypes = getProjectTypes(aProject);
         projectTypes.add(builtInTypes);
         TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
@@ -2128,13 +2013,150 @@ public class RepositoryServiceDbData
             AnalysisEngine pipeline = createEngine(createEngineDescription(
                     BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
                     !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
-            pipeline.process(cas.getJCas());
+            pipeline.process(jCas);
         }
 
-        analyzeAndRepair(aDocument, cas);
-        
         return jCas;
     }
+    
+    /**
+     * A new directory is created using UUID so that every exported file will reside in its own
+     * directory. This is useful as the written file can have multiple extensions based on the
+     * Writer class used.
+     */
+    @Override
+    public File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
+            @SuppressWarnings("rawtypes") Class aWriter, boolean aStripExtension)
+        throws IOException, UIMAException
+    {
+        // Update the source file name in case it is changed for some reason. This is necessary
+        // for the writers to create the files under the correct names.
+        Project project = aDocument.getProject();
+        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
+                + DOCUMENT + aDocument.getId() + SOURCE);
+        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
+                .toExternalForm());
+        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
+        documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
+                + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
+                .toExternalForm());
+
+        // update with the correct tagset name
+        List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
+        for (AnnotationFeature feature : features) {
+
+            TagSet tagSet = feature.getTagset();
+            if (tagSet == null) {
+                continue;
+            }
+            else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                updateCasWithTagSet(cas, feature.getLayer().getName(), tagSet.getName());
+            }
+        }
+
+        File exportTempDir = File.createTempFile("webanno", "export");
+        try {
+            exportTempDir.delete();
+            exportTempDir.mkdirs();
+            
+            AnalysisEngineDescription writer;
+            if (aWriter.getName()
+                    .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
+                List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+    
+                List<String> slotFeatures = new ArrayList<String>();
+                List<String> slotTargets = new ArrayList<String>();
+                List<String> linkTypes = new ArrayList<String>();
+    
+                Set<String> spanLayers = new HashSet<String>();
+                Set<String> slotLayers = new HashSet<String>();
+                for (AnnotationLayer layer : layers) {
+                    
+                    if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
+                        // TSV will not use this
+                        if(!annotationExists(cas, layer.getName())){
+                            continue;
+                        }
+                        boolean isslotLayer = false;
+                        for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+                            if (MultiValueMode.ARRAY.equals(f.getMultiValueMode())
+                                    && LinkMode.WITH_ROLE.equals(f.getLinkMode())) {
+                                isslotLayer = true;
+                                slotFeatures.add(layer.getName() + ":" + f.getName());
+                                slotTargets.add(f.getType());
+                                linkTypes.add(f.getLinkTypeName());
+                            }
+                        }
+                        
+                        if (isslotLayer) {
+                            slotLayers.add(layer.getName());
+                        } else {
+                            spanLayers.add(layer.getName());
+                        }
+                    }
+                }
+                spanLayers.addAll(slotLayers);
+                List<String> chainLayers = new ArrayList<String>();
+                for (AnnotationLayer layer : layers) {
+                    if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
+                        if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
+                            continue;
+                        }
+                        chainLayers.add(layer.getName());
+                    }
+                }
+    
+                List<String> relationLayers = new ArrayList<String>();
+                for (AnnotationLayer layer : layers) {
+                    if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
+                        // TSV will not use this
+                        if(!annotationExists(cas, layer.getName())){
+                            continue;
+                        }
+                        relationLayers.add(layer.getName());
+                    }
+                }
+    
+                writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
+                        "slotFeatures", slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers",
+                        chainLayers, "relationLayers", relationLayers);
+            }
+            else {
+                writer = createEngineDescription(aWriter,
+                        JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+            }
+    
+            runPipeline(cas, writer);
+    
+            // If the writer produced more than one file, we package it up as a ZIP file
+            File exportFile;
+            if (exportTempDir.listFiles().length > 1) {
+                exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
+                try {
+                    ZipUtils.zipFolder(exportTempDir, exportFile);
+                }
+                catch (Exception e) {
+                    createLog(project).info("Unable to create zip File");
+                }
+            }
+            else {
+                exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
+                FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
+            }
+            
+            return exportFile;
+        }
+        finally {
+            if (exportTempDir != null) {
+                FileUtils.forceDelete(exportTempDir);
+            }
+        }
+    }
+
 
     @Transactional
     private void updateTimeStamp(SourceDocument aDocument, User aUser, Mode aMode)
