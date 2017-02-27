@@ -388,8 +388,7 @@ public class TcfReader
                 link.setReferenceRelation(reference.getRelation());
             }
             link.addToIndexes();
-            aReferencesMap.put(link.getAddress(), link);
-
+            aReferencesMap.put(aJcas.getCasImpl().ll_getFSRef(link), link);
         }
     }
 

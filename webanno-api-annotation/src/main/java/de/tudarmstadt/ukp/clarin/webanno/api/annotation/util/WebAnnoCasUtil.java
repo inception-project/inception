@@ -497,9 +497,9 @@ public class WebAnnoCasUtil
 
 	public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence) {
 		try {
-			return selectFollowing(Sentence.class, aSentence, 1).get(0).getAddress();
+			return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
 		} catch (Exception e) { // end of the document reached
-			return aSentence.getAddress();
+			return WebAnnoCasUtil.getAddr(aSentence);
 		}
 	}
     /**

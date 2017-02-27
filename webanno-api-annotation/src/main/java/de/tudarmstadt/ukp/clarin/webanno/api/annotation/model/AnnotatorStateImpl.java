@@ -270,7 +270,7 @@ public class AnnotatorStateImpl
             throw new IllegalStateException("Unable to fetch JCas from CAS", e);
         }
 
-        displayWindowStartSentenceAddress = aSentence.getAddress();
+        displayWindowStartSentenceAddress = WebAnnoCasUtil.getAddr(aSentence);
         sentenceBeginOffset = aSentence.getBegin();
         sentenceEndOffset = aSentence.getEnd();
 

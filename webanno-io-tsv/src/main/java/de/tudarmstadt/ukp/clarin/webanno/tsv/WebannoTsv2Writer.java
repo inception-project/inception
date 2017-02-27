@@ -39,6 +39,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.LowLevelCAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
@@ -114,6 +115,8 @@ public class WebannoTsv2Writer
     private void convertToTsv(JCas aJCas, OutputStream aOs, String aEncoding)
         throws IOException, ResourceInitializationException, CASRuntimeException, CASException
     {
+        LowLevelCAS llCas = aJCas.getLowLevelCas();
+        
         tokenIds = new HashMap<Integer, String>();
         setTokenId(aJCas, tokenIds);
         tokenPositions = new TreeMap<Integer, Integer>();
@@ -266,12 +269,12 @@ public class WebannoTsv2Writer
             IOUtils.write("#text=" + sentence.getCoveredText().replace("\n", "") + "\n", aOs,
                     aEncoding);
             for (Token token : selectCovered(Token.class, sentence)) {
-                IOUtils.write(tokenIds.get(token.getAddress()) + "\t" + token.getCoveredText()
+                IOUtils.write(tokenIds.get(llCas.ll_getFSRef(token)) + "\t" + token.getCoveredText()
                         + "\t", aOs, aEncoding);
 
                 // all span annotations on this token
                 for (Feature feature : spanFeatures.keySet()) {
-                    String annos = allAnnos.get(feature).get(token.getAddress());
+                    String annos = allAnnos.get(feature).get(llCas.ll_getFSRef(token));
                     if (annos == null) {
                         if (multipleSpans.contains(spanFeatures.get(feature).getName())) {
                             IOUtils.write("O\t", aOs, aEncoding);
@@ -295,7 +298,7 @@ public class WebannoTsv2Writer
                                 || feature.getShortName().equals(DEPENDENT)) {
                             continue;
                         }
-                        String annos = relAnnos.get(feature).get(token.getAddress());
+                        String annos = relAnnos.get(feature).get(llCas.ll_getFSRef(token));
                         if (annos == null) {
                             IOUtils.write("_\t", aOs, aEncoding);
                         }
@@ -305,12 +308,13 @@ public class WebannoTsv2Writer
                     }
 
                     // the governor positions
-                    String govPos = governorAnnos.get(type).get(token.getAddress());
+                    String govPos = governorAnnos.get(type).get(llCas.ll_getFSRef(token));
                     if (govPos == null) {
                         IOUtils.write("_\t", aOs, aEncoding);
                     }
                     else {
-                        IOUtils.write(governorAnnos.get(type).get(token.getAddress()) + "\t", aOs,
+                        IOUtils.write(
+                                governorAnnos.get(type).get(llCas.ll_getFSRef(token)) + "\t", aOs,
                                 aEncoding);
                     }
                 }
@@ -323,38 +327,39 @@ public class WebannoTsv2Writer
 
     private void setTokenSentenceAddress(JCas aJCas, Map<Integer, Integer> aTokenListInSentence)
     {
+        LowLevelCAS llCas = aJCas.getLowLevelCas();
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-
             for (Token token : selectCovered(Token.class, sentence)) {
-                aTokenListInSentence.put(token.getAddress(), sentence.getAddress());
+                aTokenListInSentence.put(llCas.ll_getFSRef(token), llCas.ll_getFSRef(sentence));
             }
         }
-
     }
 
     private void setTokenId(JCas aJCas, Map<Integer, String> aTokenAddress)
     {
+        LowLevelCAS llCas = aJCas.getLowLevelCas();
         int sentenceId = 1;
         for (Sentence sentence : select(aJCas, Sentence.class)) {
             int tokenId = 1;
             for (Token token : selectCovered(Token.class, sentence)) {
-                aTokenAddress.put(token.getAddress(), sentenceId + "-" + tokenId++);
+                aTokenAddress.put(llCas.ll_getFSRef(token), sentenceId + "-" + tokenId++);
             }
             sentenceId++;
         }
-
     }
 
     private void setTokenPosition(JCas aJCas, Map<Integer, Integer> aTokenAddress)
     {
+        LowLevelCAS llCas = aJCas.getLowLevelCas();
         for (Token token : select(aJCas, Token.class)) {
-            aTokenAddress.put(token.getBegin(), token.getAddress());
+            aTokenAddress.put(token.getBegin(), llCas.ll_getFSRef(token));
         }
     }
 
     private void setTokenAnnos(CAS aCas, Map<Integer, String> aTokenAnnoMap, Type aType,
             Feature aFeature)
     {
+        LowLevelCAS llCas = aCas.getLowLevelCAS();
         for (AnnotationFS annoFs : CasUtil.select(aCas, aType)) {
             boolean first = true;
             boolean previous = false; // exists previous annotation, place-holed O-_ should be kept
@@ -364,23 +369,23 @@ public class WebannoTsv2Writer
                     if (annotation == null) {
                         annotation = aType.getName()+"_";
                     }
-                    if (aTokenAnnoMap.get(token.getAddress()) == null) {
+                    if (aTokenAnnoMap.get(llCas.ll_getFSRef(token)) == null) {
                         if (previous) {
                             if (!multipleSpans.contains(aType.getName())) {
-                                aTokenAnnoMap.put(token.getAddress(), annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(token.getAddress(), "O-_|"
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), "O-_|"
                                         + (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
                         else {
                             if (!multipleSpans.contains(aType.getName())) {
-                                aTokenAnnoMap.put(token.getAddress(), annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(token.getAddress(), (first ? "B-" : "I-")
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), (first ? "B-" : "I-")
                                         + annotation);
                                 first = false;
                             }
@@ -388,13 +393,14 @@ public class WebannoTsv2Writer
                     }
                     else {
                         if (!multipleSpans.contains(aType.getName())) {
-                            aTokenAnnoMap.put(token.getAddress(),
-                                    aTokenAnnoMap.get(token.getAddress()) + "|" + annotation);
+                            aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|"
+                                            + annotation);
                             previous = true;
                         }
                         else {
-                            aTokenAnnoMap.put(token.getAddress(),
-                                    aTokenAnnoMap.get(token.getAddress()) + "|"
+                            aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|"
                                             + (first ? "B-" : "I-") + annotation);
                             first = false;
                             previous = true;
@@ -410,6 +416,7 @@ public class WebannoTsv2Writer
             Feature aFeature)
         throws CASRuntimeException, CASException
     {
+        LowLevelCAS llCas = aCas.getLowLevelCAS();
         Feature dependent = null;
         AnnotationFS temp = null;
         for (Feature feature : aType.getFeatures()) {
@@ -432,30 +439,27 @@ public class WebannoTsv2Writer
                     if (annotation == null) {
                         annotation = aType.getName()+"_";
                     }
-                    if (aRelAnnoMap.get(token.getAddress()) == null) {
-
+                    if (aRelAnnoMap.get(llCas.ll_getFSRef(token)) == null) {
                         if (!multipleSpans.contains(aType.getName())) {
-
-                            aRelAnnoMap.put(token.getAddress(), annotation);
+                            aRelAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                         }
                         else {
-
-                            aRelAnnoMap.put(token.getAddress(), (first ? "B-" : "I-") + annotation);
+                            aRelAnnoMap.put(llCas.ll_getFSRef(token),
+                                    (first ? "B-" : "I-") + annotation);
                             first = false;
                         }
                     }
                     else {
-
                         if (!multipleSpans.contains(aType.getName())) {
-                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                    + "|" + annotation);
+                            aRelAnnoMap.put(llCas.ll_getFSRef(token),
+                                    aRelAnnoMap.get(llCas.ll_getFSRef(token)) + "|" + annotation);
                         }
                         else {
-                            aRelAnnoMap.put(token.getAddress(), aRelAnnoMap.get(token.getAddress())
-                                    + "|" + (first ? "B-" : "I-") + annotation);
+                            aRelAnnoMap.put(llCas.ll_getFSRef(token),
+                                    aRelAnnoMap.get(llCas.ll_getFSRef(token)) + "|"
+                                            + (first ? "B-" : "I-") + annotation);
                             first = false;
                         }
-
                     }
                 }
                 //TODO: remove the B- and I- code in the if/else above. no such a thing of 
@@ -483,6 +487,7 @@ public class WebannoTsv2Writer
             }
         }
 
+        LowLevelCAS llCas = aCas.getLowLevelCAS();
         for (AnnotationFS anno : CasUtil.select(aCas, aType)) {
             // relation annotation will be from Governor to Dependent
             // Entry done on Dependent side
@@ -491,20 +496,17 @@ public class WebannoTsv2Writer
             for (Token token : selectCovered(aCas.getJCas(), Token.class, anno.getBegin(),
                     anno.getEnd())) {
                 if (anno.getBegin() <= token.getBegin() && anno.getEnd() >= token.getEnd()) {
-
-                    if (aRelationGovernorMap.get(token.getAddress()) == null) {
+                    if (aRelationGovernorMap.get(llCas.ll_getFSRef(token)) == null) {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
-                        aRelationGovernorMap.put(token.getAddress(), tokenIds.get(tokenPositions
-                                .floorEntry(govAnno.getBegin()).getValue()));
+                        aRelationGovernorMap.put(llCas.ll_getFSRef(token), tokenIds
+                                .get(tokenPositions.floorEntry(govAnno.getBegin()).getValue()));
                     }
                     else {
                         AnnotationFS govAnno = (AnnotationFS) temp.getFeatureValue(governor);
-                        aRelationGovernorMap.put(
-                                token.getAddress(),
-                                aRelationGovernorMap.get(token.getAddress())
-                                        + "|"
-                                        + tokenIds.get(tokenPositions
-                                                .floorEntry(govAnno.getBegin()).getValue()));
+                        aRelationGovernorMap.put(llCas.ll_getFSRef(token), aRelationGovernorMap
+                                .get(llCas.ll_getFSRef(token)) + "|"
+                                + tokenIds.get(
+                                        tokenPositions.floorEntry(govAnno.getBegin()).getValue()));
                     }
                 }
              // if the annotation gov/dep span annotation is on multiple tokens,
