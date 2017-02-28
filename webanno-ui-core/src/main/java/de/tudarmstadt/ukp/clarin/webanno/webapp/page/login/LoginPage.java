@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.login;
 
 import org.slf4j.LoggerFactory;
+import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -28,14 +29,13 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.security.LoginForm;
 
 /**
  * A wicket page for the {@link LoginForm}
- *
- *
  */
-
+@StatelessComponent
 public class LoginPage
     extends ApplicationPageBase
 {
-
+    private static final long serialVersionUID = -333578034707672294L;
+    
     private static final String ADMIN_DEFAULT_USERNAME = "admin";
     private static final String ADMIN_DEFAULT_PASSWORD = "admin";
 
@@ -44,6 +44,9 @@ public class LoginPage
 
     public LoginPage()
     {
+        setStatelessHint(true);
+        setVersioned(false);
+        
         if (userRepository.list().isEmpty()) {
             User admin = new User();
             admin.setUsername(ADMIN_DEFAULT_USERNAME);
@@ -59,4 +62,5 @@ public class LoginPage
         }
         add(new LoginForm("loginForm"));
     }
+    
 }

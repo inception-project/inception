@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
+import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 /**
@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
  *
  */
 public class LoginForm
-    extends Form<LoginForm>
+    extends StatelessForm<LoginForm>
 {
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(LoginForm.class);

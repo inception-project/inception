@@ -22,8 +22,10 @@ import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.wicket.Page;
+import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
+import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
@@ -55,6 +57,9 @@ public class WicketApplication
     {
         super.init();
         getComponentInstantiationListeners().add(new SpringComponentInjector(this));
+        if (RuntimeConfigurationType.DEVELOPMENT.equals(getConfigurationType())) {
+            getComponentPostOnBeforeRenderListeners().add(new StatelessChecker());
+        }
         
         if (!isInitialized) {
             // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser

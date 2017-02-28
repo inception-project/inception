@@ -22,11 +22,12 @@ import javax.servlet.http.HttpSession;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
+import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.link.Link;
+import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -37,6 +38,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 /**
  * A wicket panel for logout.
  */
+@StatelessComponent
 public class LogoutPanel
     extends Panel
 {
@@ -45,27 +47,28 @@ public class LogoutPanel
     public LogoutPanel(String id)
     {
         super(id);
-        initialize();
+        commonInit();
     }
 
     public LogoutPanel(String id, IModel<?> model)
     {
         super(id, model);
-        initialize();
+        commonInit();
     }
 
     @SuppressWarnings("serial")
-    private void initialize()
+    private void commonInit()
     {
         add(new Label("username").setDefaultModel(new Model<String>(SecurityContextHolder
                 .getContext().getAuthentication().getName())));
 
-        add(new Link<Void>("logout")
+        add(new StatelessLink<Void>("logout")
         {
             @Override
             public void onClick()
             {
                 AuthenticatedWebSession.get().signOut();
+                getSession().invalidate();
                 setResponsePage(getApplication().getHomePage());
             }
         });

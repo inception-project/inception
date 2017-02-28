@@ -24,8 +24,7 @@ import java.util.Properties;
 
 import javax.persistence.NoResultException;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -70,16 +69,19 @@ public class WelcomePage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private AjaxLink<Void> projectSettings;
-    private AjaxLink<Void> curation;
-    private AjaxLink<Void> annotation;
-    private AjaxLink<Void> monitoring;
-    private AjaxLink<Void> userManagement;
-    private AjaxLink<Void> correction;
-    private AjaxLink<Void> automation;
+    private StatelessLink<Void> projectSettings;
+    private StatelessLink<Void> curation;
+    private StatelessLink<Void> annotation;
+    private StatelessLink<Void> monitoring;
+    private StatelessLink<Void> userManagement;
+    private StatelessLink<Void> correction;
+    private StatelessLink<Void> automation;
 
     public WelcomePage()
     {
+        setStatelessHint(true);
+        setVersioned(false);
+        
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         // if a user is logged recently, session will not expire,
@@ -96,12 +98,12 @@ public class WelcomePage
 
         // Add Project Setting Link
         // Only Super Admin or Project admins can see this link
-        projectSettings = new AjaxLink<Void>("projectSettings")
+        projectSettings = new StatelessLink<Void>("projectSettings")
         {
-            private static final long serialVersionUID = 7496156015186497496L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(ProjectPage.class);
             }
@@ -111,12 +113,12 @@ public class WelcomePage
 
         // Add curation Link
         // Only project admins or curators can see this link
-        curation = new AjaxLink<Void>("curation")
+        curation = new StatelessLink<Void>("curation")
         {
-            private static final long serialVersionUID = 3681686831639096179L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(CurationPage.class);
             }
@@ -126,12 +128,12 @@ public class WelcomePage
 
         // Add annotation link
         // Only project admins and annotators can see this link
-        annotation = new AjaxLink<Void>("annotation")
+        annotation = new StatelessLink<Void>("annotation")
         {
-            private static final long serialVersionUID = -845758775690774624L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(AnnotationPage.class);
             }
@@ -141,12 +143,12 @@ public class WelcomePage
 
         // Add correction Link
         // Only project admins and annotators can see this link
-        correction = new AjaxLink<Void>("correction")
+        correction = new StatelessLink<Void>("correction")
         {
-            private static final long serialVersionUID = -3113946217791583714L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(CorrectionPage.class);
             }
@@ -156,12 +158,12 @@ public class WelcomePage
 
         // Add automation Link
         // Only project admins and annotators can see this link
-        automation = new AjaxLink<Void>("automation")
+        automation = new StatelessLink<Void>("automation")
         {
-            private static final long serialVersionUID = -6527983833667707141L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(AutomationPage.class);
             }
@@ -177,12 +179,12 @@ public class WelcomePage
         
         // Add monitoring link
         // Only project admins and curators can see this link
-        monitoring = new AjaxLink<Void>("monitoring")
+        monitoring = new StatelessLink<Void>("monitoring")
         {
-            private static final long serialVersionUID = 545914367958126874L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(MonitoringPage.class);
             }
@@ -190,12 +192,12 @@ public class WelcomePage
         add(monitoring);
         monitoring.setVisible(monitoringEnabeled(user));
 
-        userManagement = new AjaxLink<Void>("userManagement")
+        userManagement = new StatelessLink<Void>("userManagement")
         {
-            private static final long serialVersionUID = -4722275335074746935L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public void onClick(AjaxRequestTarget target)
+            public void onClick()
             {
                 setResponsePage(ManageUsersPage.class);
             }
