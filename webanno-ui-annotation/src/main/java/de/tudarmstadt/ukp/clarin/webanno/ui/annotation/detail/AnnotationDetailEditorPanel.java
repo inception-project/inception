@@ -2219,20 +2219,20 @@ public class AnnotationDetailEditorPanel
         }
         catch (AnnotationException e) {
             if (aTarget != null) {
-                aTarget.prependJavaScript("alert('" + e.getMessage() + "')");
+                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
             }
             else {
-                aComponent.error(e.getMessage());
+                aComponent.error("Error: " + e.getMessage());
             }
-            LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (UIMAException e) {
-            aComponent.error(ExceptionUtils.getRootCauseMessage(e));
-            LOG.error(ExceptionUtils.getRootCauseMessage(e), e);
+            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (Exception e) {
-            aComponent.error(e.getMessage());
-            LOG.error(e.getMessage(), e);
+            aComponent.error("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage(), e);
         }
     }
     
