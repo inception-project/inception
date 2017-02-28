@@ -164,6 +164,8 @@ public class AnnotationDetailEditorPanel
     {
         super(id, aModel);
         
+        setOutputMarkupId(true);
+        
         annotationFeatureForm = new AnnotationFeatureForm("annotationFeatureForm", getModel());
         annotationFeatureForm.setOutputMarkupId(true);
         annotationFeatureForm.add(new AjaxFormValidatingBehavior(annotationFeatureForm, "submit") { 
@@ -1750,7 +1752,7 @@ public class AnnotationDetailEditorPanel
         }
     }
     
-    private void loadFeatureEditorModels(JCas aJCas, AjaxRequestTarget aTarget)
+    public void loadFeatureEditorModels(JCas aJCas, AjaxRequestTarget aTarget)
         throws AnnotationException
     {
         LOG.trace(String.format("loadFeatureEditorModels()"));

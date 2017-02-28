@@ -409,7 +409,6 @@ public class AutomationPage
 
             }
         };
-        editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", getModel(), editor);

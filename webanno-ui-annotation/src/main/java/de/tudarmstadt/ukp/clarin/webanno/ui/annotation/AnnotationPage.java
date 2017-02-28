@@ -50,7 +50,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -171,8 +170,8 @@ public class AnnotationPage
                             getModelObject().getSelection().getAnnotation());
                 }
                 catch (Exception e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
+                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
+                    error("Error reading CAS: " + e.getMessage());
                     return;
                 }
             }
@@ -184,13 +183,12 @@ public class AnnotationPage
                     annotator.bratRender(aTarget, getCas());
                 }
                 catch (Exception e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
+                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
             }
         };
-        editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
         
         annotator = new BratAnnotator("embedder1", getModel(), editor);
@@ -210,12 +208,6 @@ public class AnnotationPage
             public void onDocumentSelected(AjaxRequestTarget aTarget)
             {
                 actionLoadDocument(aTarget);
-                try {
-                    editor.loadFeatureEditorModels(aTarget);
-                }
-                catch (AnnotationException e) {
-                    error("Error loading layers" + e.getMessage());
-                }
             }
         });
 
@@ -479,7 +471,6 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
         
-        editor.reset(aTarget);
         // List of all Source Documents in the project
         List<SourceDocument> listOfSourceDocuements = getListOfDocs();
 
@@ -503,7 +494,6 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
         
-        editor.reset(aTarget);
         // List of all Source Documents in the project
         List<SourceDocument> listOfSourceDocuements = getListOfDocs();
 
@@ -795,6 +785,10 @@ public class AnnotationPage
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
                 repository.createSourceDocument(state.getDocument());
             }
+            
+            // Reset the editor
+            editor.reset(aTarget);
+            editor.loadFeatureEditorModels(annotationCas, aTarget);
         }
         catch (UIMAException e) {
             LOG.error("Error", e);

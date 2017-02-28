@@ -299,8 +299,6 @@ public class CurationPanel
                         .equals(SourceDocumentState.CURATION_FINISHED));
             }
         };
-
-        editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor);

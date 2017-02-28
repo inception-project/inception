@@ -273,8 +273,6 @@ public class CorrectionPage
                 }
             }
         };
-
-        editor.setOutputMarkupId(true);
         sidebarCell.add(editor);
 
         annotator = new BratAnnotator("mergeView", getModel(), editor);
