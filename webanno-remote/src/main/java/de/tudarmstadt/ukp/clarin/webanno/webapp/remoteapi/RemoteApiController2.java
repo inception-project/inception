@@ -546,7 +546,7 @@ public class RemoteApiController2
     @ApiOperation(value = "Create annotations for a document in a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-                    + PARAM_DOCUMENT_ID + "}" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
             method = RequestMethod.POST,
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -652,7 +652,7 @@ public class RemoteApiController2
     @ApiOperation(value = "Get annotations of a document in a project", response=byte[].class)
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-                    + PARAM_DOCUMENT_ID + "}" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> annotationsRead(
