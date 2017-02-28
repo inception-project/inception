@@ -203,7 +203,7 @@ public class OpenModalWindowPanel
         switch (mode) {
         case ANNOTATION:
             for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isMember(project, repository, user)
+                if (SecurityUtil.isAnnotator(project, repository, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
@@ -224,7 +224,7 @@ public class OpenModalWindowPanel
             break;
         case CORRECTION:
             for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isMember(project, repository, user)
+                if (SecurityUtil.isAnnotator(project, repository, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
@@ -232,7 +232,7 @@ public class OpenModalWindowPanel
             break;
         case AUTOMATION:
             for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isMember(project, repository, user)
+                if (SecurityUtil.isAnnotator(project, repository, user)
                         && project.getMode().equals(Mode.AUTOMATION)) {
                     allowedProject.add(project);
                 }

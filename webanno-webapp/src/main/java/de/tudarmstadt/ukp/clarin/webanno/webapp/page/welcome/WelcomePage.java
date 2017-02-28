@@ -248,7 +248,7 @@ public class WelcomePage
     private boolean annotationEnabeled(User user, Mode mode)
     {
         for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isMember(project, repository, user)
+            if (SecurityUtil.isAnnotator(project, repository, user)
                     && mode.equals(project.getMode())) {
                 return true;
             }

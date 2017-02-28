@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
  * {@link Project#getName()} and {@link SourceDocument#getName()}
- *
  */
 public class DocumentNamePanel
     extends Panel
@@ -42,34 +41,41 @@ public class DocumentNamePanel
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    ModalWindow yesNoModal;
-
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
         add(new Label("doumentName", new LoadableDetachableModel<String>()
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
             protected String load()
             {
-                String projectName;
-                String documentName;
-                if (aModel.getObject().getProject() == null) {
-                    projectName = "/";
+                StringBuilder sb = new StringBuilder();
+                
+                if (aModel.getObject().getProject() != null) {
+                    sb.append(aModel.getObject().getProject().getName());
                 }
-                else {
-                    projectName = aModel.getObject().getProject().getName() + "/";
+
+                sb.append("/");
+
+                if (aModel.getObject().getDocument() != null) {
+                    sb.append(aModel.getObject().getDocument().getName());
                 }
-                if (aModel.getObject().getDocument() == null) {
-                    documentName = "";
+                
+                if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                    sb.append(" (");
+                    if (aModel.getObject().getProject() != null) {
+                        sb.append(aModel.getObject().getProject().getId());
+                    }
+                    sb.append("/");
+                    if (aModel.getObject().getDocument() != null) {
+                        sb.append(aModel.getObject().getDocument().getId());
+                    }
+                    sb.append(")");
                 }
-                else {
-                    documentName = aModel.getObject().getDocument().getName();
-                }
-                return projectName + documentName;
+                
+                return sb.toString();
 
             }
         }).setOutputMarkupId(true));

@@ -172,7 +172,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is a member.
      */
-    public static boolean isMember(Project aProject, RepositoryService aProjectRepository,
+    public static boolean isAnnotator(Project aProject, RepositoryService aProjectRepository,
             User aUser)
     {
         boolean user = false;

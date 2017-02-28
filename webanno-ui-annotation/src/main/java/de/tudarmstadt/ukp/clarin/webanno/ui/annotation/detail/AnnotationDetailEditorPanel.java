@@ -1821,7 +1821,9 @@ public class AnnotationDetailEditorPanel
 
             annotationFeatureForm.updateRememberLayer();
             
-            aTarget.add(annotationFeatureForm);
+            if (aTarget != null) {
+                aTarget.add(annotationFeatureForm);
+            }
         }
         catch (Exception e) {
             throw new AnnotationException(e);

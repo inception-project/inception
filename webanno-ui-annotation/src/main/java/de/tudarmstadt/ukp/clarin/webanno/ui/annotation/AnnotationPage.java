@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
@@ -58,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -81,13 +84,17 @@ import wicket.contrib.input.events.key.KeyType;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
-@MountPath("/annotation.html")
+@MountPath(value = "/annotation.html", alt = "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${"
+        + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}")
 public class AnnotationPage
     extends ApplicationPageBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
+    
+    public static final String PAGE_PARAM_PROJECT_ID = "projectId";
+    public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
@@ -122,9 +129,61 @@ public class AnnotationPage
     
     private ModalWindow openDocumentsModal;
     
+    public AnnotationPage()
+    {
+        super();
+        LOG.debug("Setting up annotation page without parameters");
+        commonInit();
+    }
+    
     public AnnotationPage(final PageParameters aPageParameters)
     {
+        super(aPageParameters);
+        LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
+
+        commonInit();
+
+        long projectId = aPageParameters.get("projectId").toLong();
+        Project project;
+        try {
+            project = repository.getProject(projectId);
+        }
+        catch (NoResultException e) {
+            error("Project [" + projectId + "] does not exist");
+            return;
+        }
+       
+        long documentId = aPageParameters.get("documentId").toLong();
+        SourceDocument document;
+        try {
+            document = repository.getSourceDocument(projectId, documentId);
+        }
+        catch (NoResultException e) {
+            error("Document [" + documentId + "] does not exist in project [" + projectId + "]");
+            return;
+        }
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.get(username);
+        
+        if (!SecurityUtil.isAnnotator(project, repository, user)) {
+            error("You have no permission to access document [" + documentId + "] in project ["
+                    + projectId + "]");
+            return;
+        }
+
+        firstLoad = false;
+        
+        getModelObject().setProject(project);
+        getModelObject().setDocument(document);
+
+        actionLoadDocument(null);
+    }
+    
+    private void commonInit() {
         setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        
+        setVersioned(false);
         
         sidebarCell = new WebMarkupContainer("sidebarCell") {
             private static final long serialVersionUID = 1L;
@@ -207,7 +266,11 @@ public class AnnotationPage
             @Override
             public void onDocumentSelected(AjaxRequestTarget aTarget)
             {
-                actionLoadDocument(aTarget);
+                //actionLoadDocument(aTarget);
+                PageParameters pageParameters = new PageParameters();
+                pageParameters.set(PAGE_PARAM_PROJECT_ID, getModelObject().getProject().getId());
+                pageParameters.set(PAGE_PARAM_DOCUMENT_ID, getModelObject().getDocument().getId());
+                setResponsePage(AnnotationPage.class, pageParameters);
             }
         });
 
@@ -417,8 +480,10 @@ public class AnnotationPage
         }
 
         numberOfPages.setDefaultModelObject(labelText);
-        aTarget.add(numberOfPages);
-        aTarget.add(gotoPageTextField);
+        if (aTarget != null) {
+            aTarget.add(numberOfPages);
+            aTarget.add(gotoPageTextField);
+        }
     }
 
     @Override
@@ -777,7 +842,9 @@ public class AnnotationPage
             updateSentenceAddress(annotationCas, aTarget);
 
             // Re-render the whole page because the font size
-            aTarget.add(AnnotationPage.this);
+            if (aTarget != null) {
+                aTarget.add(AnnotationPage.this);
+            }
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
@@ -791,13 +858,17 @@ public class AnnotationPage
             editor.loadFeatureEditorModels(annotationCas, aTarget);
         }
         catch (UIMAException e) {
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+            }
             LOG.error("Error", e);
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
             error(ExceptionUtils.getRootCauseMessage(e));
         }
         catch (Exception e) {
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+            }
             LOG.error("Error", e);
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
             error("Error: " + e.getMessage());
         }
 
