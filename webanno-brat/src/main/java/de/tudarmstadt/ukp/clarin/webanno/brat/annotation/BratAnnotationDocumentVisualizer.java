@@ -29,8 +29,8 @@ import java.util.Queue;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -60,7 +60,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratAnnotationDocumentVisualizer
     extends BratVisualizer
 {
-    private final static Log LOG = LogFactory.getLog(BratAnnotationDocumentVisualizer.class);
+    private final static Logger LOG = LoggerFactory.getLogger(BratAnnotationDocumentVisualizer.class);
 
     private static final long serialVersionUID = -5898873898138122798L;
 

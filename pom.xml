@@ -52,7 +52,7 @@
         <uimafit.version>2.2.0</uimafit.version>
         <spring.version>4.3.6.RELEASE</spring.version>
         <spring.security.version>4.2.1.RELEASE</spring.security.version>
-        <slf4j.version>1.7.22</slf4j.version>
+        <slf4j.version>1.7.24</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <!-- wicket.version>7.6.0</wicket.version --> 
         <wicket.version>6.26.0</wicket.version>
@@ -307,6 +307,13 @@
                 <artifactId>jcommon</artifactId>
                 <version>1.0.21</version>
             </dependency>
+            
+            <!-- SLF4J -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>            
 
             <!-- Wicket 7 -->
             <!--  

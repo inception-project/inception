@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -49,7 +49,7 @@ public class TextFeatureEditor
 {
     private static final long serialVersionUID = 7763348613632105600L;
 
-    private static final Log LOG = LogFactory.getLog(TextFeatureEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TextFeatureEditor.class);
 
     @SuppressWarnings("rawtypes")
     private final AbstractTextComponent field;

@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -99,7 +99,7 @@ import wicket.contrib.input.events.key.KeyType;
 public class CurationPage
     extends ApplicationPageBase
 {
-    private final static Log LOG = LogFactory.getLog(CurationPage.class);
+    private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
 

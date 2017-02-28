@@ -34,8 +34,8 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -75,7 +75,7 @@ public class ImportUtil
     public static final String EXPORTED_PROJECT = "exportedproject";
     public static final String CONSTRAINTS = "constraints";
 
-    private static final Log LOG = LogFactory.getLog(ImportUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ImportUtil.class);
 
     /**
      * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB

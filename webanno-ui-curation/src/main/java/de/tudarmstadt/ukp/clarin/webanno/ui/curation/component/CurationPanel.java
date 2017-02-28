@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -77,7 +77,7 @@ public class CurationPanel
 {
     private static final long serialVersionUID = -5128648754044819314L;
 
-    private static final Log LOG = LogFactory.getLog(CurationPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CurationPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;

@@ -24,8 +24,8 @@ import java.util.Set;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
  */
 public class SecurityUtil
 {
-    private static final Log LOG = LogFactory.getLog(SecurityUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
     public static Set<String> getRoles(RepositoryService aProjectRepository, User aUser)
     {

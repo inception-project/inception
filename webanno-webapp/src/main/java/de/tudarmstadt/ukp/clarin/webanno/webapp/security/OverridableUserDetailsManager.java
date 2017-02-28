@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 public class OverridableUserDetailsManager
     extends JdbcUserDetailsManager
 {
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     protected List<GrantedAuthority> loadUserAuthorities(String aUsername)

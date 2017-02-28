@@ -74,13 +74,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
@@ -161,7 +160,7 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 public class RepositoryServiceDbData
     implements RepositoryService, InitializingBean
 {
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
@@ -2554,12 +2553,12 @@ public class RepositoryServiceDbData
         return numberOfSentences;
     }
     
-    private Logger createLog(Project aProject)
+    private org.apache.log4j.Logger createLog(Project aProject)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication != null ? authentication.getName() : "SYSTEM";
 
-        Logger logger = Logger.getLogger(getClass());
+        org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(getClass());
         String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
         Appender apndr;
         try {

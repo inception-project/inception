@@ -41,8 +41,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -125,7 +125,7 @@ public class RemoteApiController2
     
     private static final String FORMAT_DEFAULT = "text";
     
-    private final Log LOG = LogFactory.getLog(getClass());
+    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Resource(name = "documentRepository")
     private RepositoryService repository;

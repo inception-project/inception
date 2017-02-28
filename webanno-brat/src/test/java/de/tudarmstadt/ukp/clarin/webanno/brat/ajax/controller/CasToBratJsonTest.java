@@ -27,8 +27,8 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -69,7 +69,7 @@ public class CasToBratJsonTest
     @Resource(name = "annotationService")
     private static AnnotationService annotationService;
 
-    private Log LOG = LogFactory.getLog(getClass());
+    private Logger LOG = LoggerFactory.getLogger(getClass());
 
     /**
      * generate BRAT JSON for the collection informations
@@ -165,10 +165,10 @@ public class CasToBratJsonTest
 
         }
         catch (FileNotFoundException ex) {
-            LOG.info("The file specified not found " + ex.getCause());
+            LOG.info("The file specified not found " + ex.getCause(), ex);
         }
         catch (Exception ex) {
-            LOG.info(ex);
+            LOG.info("Unable to process", ex);
         }
 
         List<String> tagSetNames = new ArrayList<String>();

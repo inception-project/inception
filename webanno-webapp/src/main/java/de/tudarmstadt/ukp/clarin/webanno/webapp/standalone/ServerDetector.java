@@ -21,8 +21,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.standalone;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <a href="ServerDetector.java.html"><b><i>View Source</i></b></a>
@@ -353,7 +353,7 @@ public class ServerDetector
     {
     }
 
-    private static Log LOG = LogFactory.getLog(ServerDetector.class);
+    private static Logger LOG = LoggerFactory.getLogger(ServerDetector.class);
 
     private static ServerDetector _instance = new ServerDetector();
 

@@ -21,8 +21,8 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 
@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class RemoveZeroSizeTokensAndSentencesRepair
     implements Repair
 {
-    private Log log = LogFactory.getLog(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)

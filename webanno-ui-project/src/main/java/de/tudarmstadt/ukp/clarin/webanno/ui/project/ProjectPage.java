@@ -34,8 +34,8 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -104,7 +104,7 @@ public class ProjectPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Log LOG = LogFactory.getLog(ProjectPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;

@@ -35,8 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
@@ -91,7 +91,7 @@ public class RemoteApiController
     private static final String PARAM_NAME = "name";
     private static final String PARAM_FORMAT = "format";
 
-    private final Log LOG = LogFactory.getLog(getClass());
+    private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Resource(name = "documentRepository")
     private RepositoryService projectRepository;

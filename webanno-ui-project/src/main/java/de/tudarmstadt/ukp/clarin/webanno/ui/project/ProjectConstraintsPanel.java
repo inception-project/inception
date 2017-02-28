@@ -25,8 +25,8 @@ import java.util.List;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
@@ -64,7 +64,7 @@ public class ProjectConstraintsPanel
 {
     private static final long serialVersionUID = 8910455936756021733L;
 
-    private static final Log LOG = LogFactory.getLog(ProjectConstraintsPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectConstraintsPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService projectRepository;

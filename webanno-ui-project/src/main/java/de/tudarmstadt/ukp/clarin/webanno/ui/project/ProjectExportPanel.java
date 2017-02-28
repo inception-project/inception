@@ -36,8 +36,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -87,7 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService
 public class ProjectExportPanel extends Panel {
 	private static final long serialVersionUID = 2116717853865353733L;
 
-    private static final Log LOG = LogFactory.getLog(ProjectPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
     
     private static final String FORMAT_AUTO = "AUTO";
 
@@ -339,14 +339,13 @@ public class ProjectExportPanel extends Panel {
                 @Override
                 public void onClick()
                 {
-                    try{
+                    try {
                         super.onClick();
-                    }catch(IllegalStateException e)
-                    {
-                        LOG.error(e);
+                    }
+                    catch (IllegalStateException e) {
+                        LOG.error("Error: %s", e.getMessage(), e);
                         error("Unable to export curated documents because of exception while processing.");
                     }
-                   
                 }
             }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
@@ -748,8 +747,7 @@ public class ProjectExportPanel extends Panel {
 				    errorMessage.append("Source file '");
 				    errorMessage.append(sourceDocument.getName());
 				    errorMessage.append("' related to project couldn't be located in repository");
-				    LOG.error(errorMessage.toString());
-					LOG.error(ExceptionUtils.getRootCause(e));
+				    LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
 					messages.add(errorMessage.toString());
 					throw new ProjectExportException("Couldn't find some source file(s) related to project");
 //					continue;

@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
@@ -60,7 +60,7 @@ public class ExportModalWindowPanel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Log LOG = LogFactory.getLog(ExportModalWindowPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ExportModalWindowPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;

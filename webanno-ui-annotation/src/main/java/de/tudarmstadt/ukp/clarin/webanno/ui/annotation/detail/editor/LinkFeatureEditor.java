@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEd
 public class LinkFeatureEditor
     extends FeatureEditor
 {
-    private static final Log LOG = LogFactory.getLog(LinkFeatureEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LinkFeatureEditor.class);
     
     private static final long serialVersionUID = 7469241620229001983L;
 

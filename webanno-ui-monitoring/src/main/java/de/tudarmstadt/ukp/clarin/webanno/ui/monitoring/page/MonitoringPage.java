@@ -42,8 +42,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -145,7 +145,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class MonitoringPage
     extends ApplicationPageBase
 {
-    private static final Log LOG = LogFactory.getLog(DocumentStatusColumnMetaData.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DocumentStatusColumnMetaData.class);
     
     private static final long serialVersionUID = -2102136855109258306L;
 

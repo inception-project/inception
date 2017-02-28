@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class ChainAdapter
     implements TypeAdapter, AutomationTypeAdapter
 {
-//    private final Log log = LogFactory.getLog(getClass());
+//    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";

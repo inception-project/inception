@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 public class CasDoctor
     implements InitializingBean, ApplicationContextAware
 {
-    private Log log = LogFactory.getLog(getClass());
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     @Value(value = "${debug.casDoctor.checks}")
     private String activeChecks;
@@ -123,7 +123,7 @@ public class CasDoctor
         List<LogMessage> messages = new ArrayList<>();
         repair(aProject, aCas, messages);
         if (log.isWarnEnabled() && !messages.isEmpty()) {
-            messages.forEach(s -> log.warn(s));
+            messages.forEach(s -> log.warn("%s", s));
         }
     }
     
@@ -174,7 +174,7 @@ public class CasDoctor
         List<LogMessage> messages = new ArrayList<>();
         boolean result = analyze(aProject, aCas, messages);
         if (log.isDebugEnabled()) {
-            messages.forEach(s -> log.debug(s));
+            messages.forEach(s -> log.debug("%s", s));
         }
         return result;
     }
@@ -211,7 +211,7 @@ public class CasDoctor
         }
 
         if (!ok) {
-            aMessages.forEach(s -> log.error(s));
+            aMessages.forEach(s -> log.error("%s", s));
         }
         
         if (!ok && aFatalChecks) {

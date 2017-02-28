@@ -879,7 +879,7 @@ public class ProjectLayersPanel
                             }
                         }
                         catch (IOException e) {
-                            error("unable to create Log file while creating this layer" + ":"
+                            error("unable to create Logger file while creating this layer" + ":"
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
                         featureSelectionForm.setVisible(true);

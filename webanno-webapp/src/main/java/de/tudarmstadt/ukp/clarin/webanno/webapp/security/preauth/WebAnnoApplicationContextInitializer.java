@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -39,7 +39,7 @@ public class WebAnnoApplicationContextInitializer
 
     private static final String AUTH_MODE_PREAUTH = "preauth";
 
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)

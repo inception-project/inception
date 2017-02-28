@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 public class ProjectDocumentsPanel
     extends Panel
 {
-    private final static Log LOG = LogFactory.getLog(ProjectDocumentsPanel.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ProjectDocumentsPanel.class);
     
     private static final long serialVersionUID = 2116717853865353733L;
 

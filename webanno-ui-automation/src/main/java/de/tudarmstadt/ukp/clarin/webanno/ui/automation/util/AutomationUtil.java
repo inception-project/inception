@@ -48,8 +48,8 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -94,7 +94,7 @@ import edu.lium.mira.Mira;
 public class AutomationUtil
 {
 
-    private static Log LOG = LogFactory.getLog(AutomationUtil.class);
+    private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
     public static void repeateSpanAnnotation(AnnotatorState aBModel,

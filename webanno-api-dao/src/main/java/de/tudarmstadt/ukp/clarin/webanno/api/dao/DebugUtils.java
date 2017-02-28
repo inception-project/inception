@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DebugUtils
 {
-    private static final Log LOG = LogFactory.getLog(DebugUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DebugUtils.class);
     
     public static void smallStack()
     {
@@ -56,6 +56,6 @@ public class DebugUtils
                 break;
             }
         }
-        LOG.debug(sb);
+        LOG.debug(sb.toString());
     }
 }

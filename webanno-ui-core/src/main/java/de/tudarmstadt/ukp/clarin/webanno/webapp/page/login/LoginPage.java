@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.login;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -55,7 +55,7 @@ public class LoginPage
             String msg = "No user accounts have been found. An admin account has been created: "
                     + ADMIN_DEFAULT_USERNAME + "/" + ADMIN_DEFAULT_PASSWORD;
             info(msg);
-            LogFactory.getLog(getClass()).info(msg);
+            LoggerFactory.getLogger(getClass()).info(msg);
         }
         add(new LoginForm("loginForm"));
     }

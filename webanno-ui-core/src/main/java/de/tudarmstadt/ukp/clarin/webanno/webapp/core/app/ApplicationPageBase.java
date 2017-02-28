@@ -22,8 +22,8 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.Application;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RuntimeConfigurationType;
@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.core.security.LogoutPanel;
 public abstract class ApplicationPageBase
     extends WebPage
 {
-    private final static Log LOG = LogFactory.getLog(ApplicationPageBase.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ApplicationPageBase.class);
 
     private static final long serialVersionUID = -1690130604031181803L;
 
@@ -113,19 +113,19 @@ public abstract class ApplicationPageBase
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                 String username = auth != null ? auth.getName() : "SYSTEM";
                 if (aMessage.isFatal()) {
-                    LOG.fatal(username + ": " + aMessage.getMessage());
+                    LOG.error("%s: %s", username, aMessage.getMessage());
                 }
                 else if (aMessage.isError()) {
-                    LOG.error(username + ": " + aMessage.getMessage());
+                    LOG.error("%s: %s", username, aMessage.getMessage());
                 }
                 else if (aMessage.isWarning()) {
-                    LOG.warn(username + ": " + aMessage.getMessage());
+                    LOG.warn("%s: %s", username, aMessage.getMessage());
                 }
                 else if (aMessage.isInfo()) {
-                    LOG.info(username + ": " + aMessage.getMessage());
+                    LOG.info("%s: %s", username, aMessage.getMessage());
                 }
                 else if (aMessage.isDebug()) {
-                    LOG.debug(username + ": " + aMessage.getMessage());
+                    LOG.debug("%s: %s", username, aMessage.getMessage());
                 }
                 return true;
             }

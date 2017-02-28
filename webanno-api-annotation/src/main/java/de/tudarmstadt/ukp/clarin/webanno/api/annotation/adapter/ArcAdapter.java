@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class ArcAdapter
     implements TypeAdapter, AutomationTypeAdapter
 {
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final long typeId;
 

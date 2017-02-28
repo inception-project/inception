@@ -43,8 +43,8 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
@@ -139,7 +139,7 @@ public class AnnotationDetailEditorPanel
     implements AnnotationActionHandler
 {
     private static final long serialVersionUID = 7324241992353693848L;
-    private static final Log LOG = LogFactory.getLog(AnnotationDetailEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;

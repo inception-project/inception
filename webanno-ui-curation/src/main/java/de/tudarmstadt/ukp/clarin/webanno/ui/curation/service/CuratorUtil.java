@@ -29,8 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
@@ -83,7 +83,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class CuratorUtil
 {
-    private static final Log LOG = LogFactory.getLog(CuratorUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CuratorUtil.class);
 
     public final static String CURATION_USER = "CURATION_USER";
 

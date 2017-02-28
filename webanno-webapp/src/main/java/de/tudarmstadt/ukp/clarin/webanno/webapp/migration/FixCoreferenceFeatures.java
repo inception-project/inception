@@ -27,8 +27,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -44,7 +44,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 public class FixCoreferenceFeatures
     implements SmartLifecycle
 {
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private boolean running = false;
 

@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import static java.lang.String.format;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
 import org.apache.wicket.injection.Injector;
@@ -42,7 +42,7 @@ public class SpringAuthenticatedWebSession
 {
     private static final long serialVersionUID = 1L;
 
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @SpringBean(name = "org.springframework.security.authenticationManager")
     private AuthenticationManager authenticationManager;

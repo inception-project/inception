@@ -37,8 +37,8 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -83,7 +83,7 @@ public class ProjectTagSetsPanel
 {
     private static final long serialVersionUID = 7004037105647505760L;
 
-    private static final Log LOG = LogFactory.getLog(ProjectTagSetsPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectTagSetsPanel.class);
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -436,7 +436,7 @@ public class ProjectTagSetsPanel
                                 // user);
                             }
                             catch (IOException e) {
-                                error("unable to create Log file while creating the TagSet" + ":"
+                                error("unable to create Logger file while creating the TagSet" + ":"
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                             TagSetDetailForm.this.setModelObject(tagSet);

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
@@ -119,7 +119,7 @@ public class SettingsUtil
                     settings.load(in);
                 }
                 catch (IOException e) {
-                    LogFactory.getLog(SettingsUtil.class).error(
+                    LoggerFactory.getLogger(SettingsUtil.class).error(
                             "Unable to load settings file [" + settings + "]", e);
                 }
             }

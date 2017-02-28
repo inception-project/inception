@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.Form;
@@ -37,7 +37,7 @@ public class LoginForm
     extends Form<LoginForm>
 {
     private static final long serialVersionUID = 1L;
-    private static final Log LOG = LogFactory.getLog(LoginForm.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoginForm.class);
     private String username;
     private String password;
 

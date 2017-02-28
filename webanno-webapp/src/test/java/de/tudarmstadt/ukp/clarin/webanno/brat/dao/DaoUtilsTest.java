@@ -32,15 +32,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 
 public class DaoUtilsTest
 {
-    private Log LOG = LogFactory.getLog(getClass());
+    private Logger LOG = LoggerFactory.getLogger(getClass());
     @SuppressWarnings("resource")
     @Test
     public void testZipFolder()
