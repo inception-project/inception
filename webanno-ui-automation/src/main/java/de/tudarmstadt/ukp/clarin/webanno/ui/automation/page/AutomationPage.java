@@ -1149,7 +1149,7 @@ public class AutomationPage
         }
         catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
             error("Error: " + e.getMessage());
-            LOG.error("%s", e.getMessage(), e);
+            LOG.error("{}", e.getMessage(), e);
         }
 
         annotator.bratRenderLater(aTarget);

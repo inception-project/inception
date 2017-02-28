@@ -343,7 +343,7 @@ public class ProjectExportPanel extends Panel {
                         super.onClick();
                     }
                     catch (IllegalStateException e) {
-                        LOG.error("Error: %s", e.getMessage(), e);
+                        LOG.error("Error: {}", e.getMessage(), e);
                         error("Unable to export curated documents because of exception while processing.");
                     }
                 }

@@ -123,7 +123,7 @@ public class CasDoctor
         List<LogMessage> messages = new ArrayList<>();
         repair(aProject, aCas, messages);
         if (log.isWarnEnabled() && !messages.isEmpty()) {
-            messages.forEach(s -> log.warn("%s", s));
+            messages.forEach(s -> log.warn("{}", s));
         }
     }
     
@@ -174,7 +174,7 @@ public class CasDoctor
         List<LogMessage> messages = new ArrayList<>();
         boolean result = analyze(aProject, aCas, messages);
         if (log.isDebugEnabled()) {
-            messages.forEach(s -> log.debug("%s", s));
+            messages.forEach(s -> log.debug("{}", s));
         }
         return result;
     }
@@ -211,7 +211,7 @@ public class CasDoctor
         }
 
         if (!ok) {
-            aMessages.forEach(s -> log.error("%s", s));
+            aMessages.forEach(s -> log.error("{}", s));
         }
         
         if (!ok && aFatalChecks) {

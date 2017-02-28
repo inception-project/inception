@@ -113,19 +113,19 @@ public abstract class ApplicationPageBase
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                 String username = auth != null ? auth.getName() : "SYSTEM";
                 if (aMessage.isFatal()) {
-                    LOG.error("%s: %s", username, aMessage.getMessage());
+                    LOG.error("{}: {}", username, aMessage.getMessage());
                 }
                 else if (aMessage.isError()) {
-                    LOG.error("%s: %s", username, aMessage.getMessage());
+                    LOG.error("{}: {}", username, aMessage.getMessage());
                 }
                 else if (aMessage.isWarning()) {
-                    LOG.warn("%s: %s", username, aMessage.getMessage());
+                    LOG.warn("{}: {}", username, aMessage.getMessage());
                 }
                 else if (aMessage.isInfo()) {
-                    LOG.info("%s: %s", username, aMessage.getMessage());
+                    LOG.info("{}: {}", username, aMessage.getMessage());
                 }
                 else if (aMessage.isDebug()) {
-                    LOG.debug("%s: %s", username, aMessage.getMessage());
+                    LOG.debug("{}: {}", username, aMessage.getMessage());
                 }
                 return true;
             }

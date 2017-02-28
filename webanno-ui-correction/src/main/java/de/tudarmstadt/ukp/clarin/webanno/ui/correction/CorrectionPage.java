@@ -965,7 +965,7 @@ public class CorrectionPage
         }
         catch (Exception e) {
             error("Error: " + e.getMessage());
-            LOG.error("Error: %s", e.getMessage(), e);
+            LOG.error("Error: {}", e.getMessage(), e);
         }
 
         annotator.bratRenderLater(aTarget);
