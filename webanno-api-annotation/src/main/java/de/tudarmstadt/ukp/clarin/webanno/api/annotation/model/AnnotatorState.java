@@ -88,7 +88,6 @@ public interface AnnotatorState
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages
     Mode getMode();
-    void setMode(Mode mode);
     
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values
@@ -147,6 +146,7 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     ScriptDirection getScriptDirection();
     void setScriptDirection(ScriptDirection aScriptDirection);
+    void toggleScriptDirection();
     
     // ---------------------------------------------------------------------------------------------
     // User preferences

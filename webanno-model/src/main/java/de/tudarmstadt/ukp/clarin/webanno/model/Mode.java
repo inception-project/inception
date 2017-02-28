@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 /**
  * Subjects of interest, either annotation or curation.
- *
- *
  */
 public enum Mode
     implements PersistentEnum
@@ -48,21 +46,11 @@ public enum Mode
      */
     CURATION("curation"),
     /**
-     * This mode is used when the user is in the curation page of WebAnno but makes an explicit
-     * annotation in addition to adjudicating annotations from users.
-     */
-    CURATION_MERGE("curation_merge"),
-    /**
      * This mode is used when the user is in the Correction Page making correction of automatically
      * annotated documents. Besides it help identifying the type of the project (Annotation Project
      * or Correction Project)
      */
-    CORRECTION("correction"),
-    /**
-     * This mode is used when the user is in the correction page of WebAnno but makes an explicit
-     * annotation in addition to correcting annotations from the autaomatic annotation.
-     */
-    CORRECTION_MERGE("correction_merge");
+    CORRECTION("correction");
 
     public String getName()
     {

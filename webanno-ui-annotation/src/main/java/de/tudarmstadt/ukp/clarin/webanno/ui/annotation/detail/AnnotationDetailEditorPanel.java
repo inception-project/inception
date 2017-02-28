@@ -1667,8 +1667,7 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
 
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-                || state.getMode().equals(Mode.CORRECTION)
-                || state.getMode().equals(Mode.CORRECTION_MERGE)) {
+                || state.getMode().equals(Mode.CORRECTION)) {
 
             return repository.readAnnotationCas(state.getDocument(), state.getUser());
         }

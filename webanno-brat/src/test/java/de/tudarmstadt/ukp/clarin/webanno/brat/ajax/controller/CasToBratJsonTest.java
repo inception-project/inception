@@ -178,13 +178,12 @@ public class CasToBratJsonTest
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
 
-        AnnotatorState bratannotatorModel = new AnnotatorStateImpl();
+        AnnotatorState bratannotatorModel = new AnnotatorStateImpl(Mode.ANNOTATION);
         bratannotatorModel.getPreferences().setWindowSize(10);
         bratannotatorModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(jCas));
 
         Project project = new Project();
         bratannotatorModel.setProject(project);
-        bratannotatorModel.setMode(Mode.ANNOTATION);
 
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());

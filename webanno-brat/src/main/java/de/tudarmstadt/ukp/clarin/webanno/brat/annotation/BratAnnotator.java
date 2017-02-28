@@ -513,8 +513,7 @@ public class BratAnnotator
     {
         if (aState.getMode().equals(Mode.ANNOTATION)
                 || aState.getMode().equals(Mode.AUTOMATION)
-                || aState.getMode().equals(Mode.CORRECTION)
-                || aState.getMode().equals(Mode.CORRECTION_MERGE)) {
+                || aState.getMode().equals(Mode.CORRECTION)) {
 
             return repository.readAnnotationCas(aState.getDocument(),
                     aState.getUser());

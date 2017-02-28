@@ -1964,10 +1964,10 @@ public class RepositoryServiceDbData
         throws IOException
     {
         if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
-                || aMode.equals(Mode.CORRECTION) || aMode.equals(Mode.CORRECTION_MERGE)) {
+                || aMode.equals(Mode.CORRECTION)) {
             writeAnnotationCas(aJcas, aSourceDocument, aUser);
         }
-        else if (aMode.equals(Mode.CURATION) || aMode.equals(Mode.CURATION_MERGE)) {
+        else if (aMode.equals(Mode.CURATION)) {
             writeCurationCas(aJcas, aSourceDocument, aUser);
         }
 

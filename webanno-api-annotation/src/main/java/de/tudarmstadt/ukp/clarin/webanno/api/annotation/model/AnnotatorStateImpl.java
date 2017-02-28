@@ -29,7 +29,6 @@ import java.util.Map;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
@@ -117,18 +116,6 @@ public class AnnotatorStateImpl
      */
     private ParsedConstraints constraints;
 
-    @Override
-    public ParsedConstraints getConstraints()
-    {
-        return constraints;
-    }
-
-    @Override
-    public void setConstraints(ParsedConstraints aConstraints)
-    {
-        constraints = aConstraints;
-    }
-
     // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
@@ -184,6 +171,23 @@ public class AnnotatorStateImpl
     // User action while annotating on document
     private String userAction;
 
+    public AnnotatorStateImpl(Mode aMode)
+    {
+        mode = aMode;
+    }
+
+    @Override
+    public ParsedConstraints getConstraints()
+    {
+        return constraints;
+    }
+
+    @Override
+    public void setConstraints(ParsedConstraints aConstraints)
+    {
+        constraints = aConstraints;
+    }
+
     @Override
     public String getUserAction()
     {
@@ -227,6 +231,17 @@ public class AnnotatorStateImpl
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
+    }
+    
+    @Override
+    public void toggleScriptDirection()
+    {
+        if (ScriptDirection.LTR.equals(getScriptDirection())) {
+            setScriptDirection(ScriptDirection.RTL);
+        }
+        else {
+            setScriptDirection(ScriptDirection.LTR);
+        }
     }
 
     @Override
@@ -331,12 +346,6 @@ public class AnnotatorStateImpl
     public Mode getMode()
     {
         return mode;
-    }
-
-    @Override
-    public void setMode(Mode mode)
-    {
-        this.mode = mode;
     }
 
     @Override

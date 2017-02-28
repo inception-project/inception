@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -138,7 +139,7 @@ public class BratAnnotationDocumentVisualizer
         GetDocumentResponse response = new GetDocumentResponse();
         response.setText(jCas.getDocumentText());
 
-        AnnotatorStateImpl bratAnnotatorModel = new AnnotatorStateImpl();
+        AnnotatorStateImpl bratAnnotatorModel = new AnnotatorStateImpl(Mode.ANNOTATION);
         BratRenderer.renderTokenAndSentence(jCas, response, bratAnnotatorModel);
 
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
