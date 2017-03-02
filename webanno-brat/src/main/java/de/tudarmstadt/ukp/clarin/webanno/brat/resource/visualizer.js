@@ -1227,8 +1227,8 @@ var Visualizer = (function($, window, undefined) {
         var commentName = (coll + '/' + doc).replace('--', '-\\-');
         $svg.append('<!-- document: ' + commentName + ' -->');
         var defs = svg.defs();
-        var $blurFilter = $('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>');
-        svg.add(defs, $blurFilter);
+        var $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
+        svg.add(defs, $blurFilter.children(0));
         return defs;
       }
 
@@ -1893,7 +1893,7 @@ Util.profileStart('chunks');
                   bx - markedSpanSize, by - markedSpanSize,
                   bw + 2 * markedSpanSize, bh + 2 * markedSpanSize, {
 
-                  // filter: 'url(#Gaussian_Blur)',
+                  filter: 'url(#Gaussian_Blur)',
                   'class': "shadow_EditHighlight",
                   rx: markedSpanSize,
                   ry: markedSpanSize,
@@ -1922,8 +1922,6 @@ Util.profileStart('chunks');
             // .match() removes unconfigured shadows, which were
             // always showing up as black.
             // TODO: don't hard-code configured shadowclasses.
-// BEGIN WEBANNO EXTENSION - WebAnno does not operate with shadows
-/*
             if (span.shadowClass &&
                 span.shadowClass.match('True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation ')) {
               shadowRect = svg.rect(fragment.group,
@@ -1938,8 +1936,6 @@ Util.profileStart('chunks');
               chunkTo = Math.max(bx + bw + rectShadowSize, chunkTo);
               fragmentHeight = Math.max(bh + 2 * rectShadowSize, fragmentHeight);
             }
-*/
-// WEBANNO EXTENSION END           
             fragment.rect = svg.rect(fragment.group,
                 bx, by, bw, bh, {
 
@@ -2777,7 +2773,7 @@ Util.profileStart('arcs');
                 var markedRect = svg.rect(shadowGroup,
                     textBox.x - markedArcSize, textBox.y - markedArcSize,
                     textBox.width + 2 * markedArcSize, textBox.height + 2 * markedArcSize, {
-                      // filter: 'url(#Gaussian_Blur)',
+                      filter: 'url(#Gaussian_Blur)',
                       'class': "shadow_EditHighlight",
                       rx: markedArcSize,
                       ry: markedArcSize,
