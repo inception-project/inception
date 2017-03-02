@@ -15,7 +15,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides Spring Security Infrastructure for the {@link de.tudarmstadt.ukp.clarin.webanno.webapp.security.LoginForm} skeleton
- */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
