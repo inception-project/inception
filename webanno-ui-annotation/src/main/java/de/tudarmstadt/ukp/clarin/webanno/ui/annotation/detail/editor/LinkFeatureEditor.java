@@ -391,8 +391,13 @@ public class LinkFeatureEditor
         }
     }
 
-    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> possibleValues)
+    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
     {
+        if (aTagset == null || aTagset.isEmpty() || aPossibleValues == null
+                || aPossibleValues.isEmpty()) {
+            return;
+        }
+        
         // Construct a quick index for tags
         Set<String> tagset = new HashSet<String>();
         for (Tag t : aTagset) {
@@ -408,7 +413,7 @@ public class LinkFeatureEditor
         }
 
         // Loop over values to see which of the tags are important and add them.
-        for (PossibleValue value : possibleValues) {
+        for (PossibleValue value : aPossibleValues) {
             if (!value.isImportant() || !tagset.contains(value.getValue())) {
                 continue;
             }
