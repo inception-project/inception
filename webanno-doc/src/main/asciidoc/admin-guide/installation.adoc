@@ -109,6 +109,10 @@ $ chmod +x /etc/init.d/webanno
 $ update-rc.d webanno defaults
 ----
 
+NOTE: If you deploy WebAnno on a Linux machine that is short on entropy, you can significantly 
+      decrease startup time by adding `-Djava.security.egd=file:/dev/urandom` to the `JAVA_OPTS`
+      variable in the init script.
+
 Now we have a dedicated Apache Tomcat instance for WebAnno installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
 
 === Deploy WAR file
