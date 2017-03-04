@@ -26,7 +26,10 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
@@ -944,6 +947,34 @@ public class WebAnnoTsv3ReaderWriterTest
         neToken.addToIndexes();
         
         writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
+    
+    @Test
+    public void testEscaping() throws Exception
+    {
+        Map<String, String> samples = new LinkedHashMap<>();
+        samples.put("hack\\sign", "hack\\\\sign");
+        samples.put("[lala](url)", "\\[lala\\](url)");
+        samples.put("(1|2)", "(1\\|2)");
+        samples.put("under_score", "under\\_score");
+        samples.put("from -> to", "from \\-> to");
+        samples.put("complain; next", "complain\\; next");
+        samples.put("1.0\t2.0", "1.0\\t2.0");
+        samples.put("new\nline", "new\\nline");
+        samples.put("A*-search", "A\\*-search");
+        samples.put("[[jo]]->**mo**", "\\[\\[jo\\]\\]\\->\\*\\*mo\\*\\*");
+        
+        for (Entry<String, String> sample : samples.entrySet()) {
+            assertEquals(sample.getValue(), WebannoTsv3Writer.replaceEscapeChars(sample.getKey()));
+        }
+        
+        long start = System.currentTimeMillis();
+        for (int n = 0; n < 100000; n++) {
+            for (Entry<String, String> sample : samples.entrySet()) {
+                WebannoTsv3Writer.replaceEscapeChars(sample.getKey());
+            }
+        }
+        System.out.printf("Time: %dms%n", System.currentTimeMillis() - start);
     }
 
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)

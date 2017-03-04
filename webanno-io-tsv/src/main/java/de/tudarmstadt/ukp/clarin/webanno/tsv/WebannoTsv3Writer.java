@@ -17,18 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
-import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -55,12 +62,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * all the relations. relation is given in the form of Source--&gt;Target and
  * the RelationType is added to the Target token. The next column indicates the
  * source of the relation (the source of the arc drown)
- *
- *
  */
-
-public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
-
+public class WebannoTsv3Writer
+    extends JCasFileWriter_ImplBase
+{
 	/**
 	 * Name of configuration parameter that contains the character encoding used
 	 * by the input files.
@@ -123,7 +128,6 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 	
 	private Map<Type,Map<FeatureStructure, Integer>> annotaionRefPerType = new HashMap<>();
 	
-	
 	private Map<String, Map<AnnotationUnit, Boolean>> ambigUnits = new HashMap<>();
 	private Map<Type, Map<AnnotationUnit, Map<FeatureStructure, Integer>>> multiAnnosPerUnit = new HashMap<>();
 	private Map<String, String> slotLinkTypes = new HashMap<>();
@@ -131,9 +135,7 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 
 	@Override
 	public void process(JCas aJCas) throws AnalysisEngineProcessException {
-		OutputStream docOS = null;
-		try {
-			docOS = getOutputStream(aJCas, filenameSuffix);
+		try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
 			setSlotLinkTypes();
 			setLinkMaps(aJCas);
 			setTokenSentenceAddress(aJCas);
@@ -196,11 +198,10 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 				}
 				IOUtils.write(LF, docOS, encoding);
 			}
-		} catch (Exception e) {
-			throw new AnalysisEngineProcessException(e);
-		} finally {
-			closeQuietly(docOS);
-		}
+        }
+        catch (Exception e) {
+            throw new AnalysisEngineProcessException(e);
+        }
 	}
 
 	private void setSlotLinkTypes() {
@@ -824,11 +825,11 @@ public class WebannoTsv3Writer extends JCasFileWriter_ImplBase {
 		annotationsPertype.get(depUnit).add(annoPerFeatures);
 	}
 
-    private String replaceEscapeChars(String annotation)
+    public static String replaceEscapeChars(String annotation)
     {
-        return annotation.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]").replace("|", "\\|")
-                .replace("_", "\\_").replace("->", "\\->").replace(";", "\\;")
-                .replace("\t", "\\t").replace("\n", "\\n").replace("*", "\\*");
+        return StringUtils.replaceEach(annotation, 
+                new String[] {"\\",   "[",   "]",   "|",   "_",   "->",   ";",   "\t",  "\n",  "*"}, 
+                new String[] {"\\\\", "\\[", "\\]", "\\|", "\\_", "\\->", "\\;", "\\t", "\\n", "\\*"});
     }
 
 	private void setAnnoFeature(boolean aIsMultiToken, boolean aIsFirst, List<String> aAnnoPerFeatures,
