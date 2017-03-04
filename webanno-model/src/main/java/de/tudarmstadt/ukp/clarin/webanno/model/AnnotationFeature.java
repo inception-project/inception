@@ -87,6 +87,8 @@ public class AnnotationFeature
     private boolean remember;
     
     private boolean hideUnconstraintFeature;
+    
+    private boolean required;
 
     @Column(name = "multi_value_mode")
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
@@ -354,11 +356,21 @@ public class AnnotationFeature
 		return hideUnconstraintFeature;
 	}
 
-	public void setHideUnconstraintFeature(boolean hideUnconstraintFeature) {
-		this.hideUnconstraintFeature = hideUnconstraintFeature;
+	public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature) {
+		hideUnconstraintFeature = aHideUnconstraintFeature;
 	}
+	
+	public boolean isRequired()
+    {
+        return required;
+    }
 
-	@Override
+    public void setRequired(boolean aRequired)
+    {
+        required = aRequired;
+    }
+
+    @Override
     public int hashCode()
     {
         final int prime = 31;

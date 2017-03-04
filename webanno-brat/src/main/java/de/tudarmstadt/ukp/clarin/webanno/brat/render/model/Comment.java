@@ -31,6 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 @JsonPropertyOrder(value = { "vid", "commentType", "comment" })
 public class Comment
 {
+    public static final String ANNOTATION_ERROR = "AnnotationError";
+    
     private VID vid;
     private String commentType;
     private String comment;
@@ -40,9 +42,9 @@ public class Comment
         // Nothing to do
     }
 
-    public Comment(int aId, String aommentType, String aComment)
+    public Comment(int aId, String aCommentType, String aComment)
     {
-        this(new VID(aId), aommentType, aComment);
+        this(new VID(aId), aCommentType, aComment);
     }
 
     public Comment(VID aVid, String aCommentType, String aComment)
@@ -50,7 +52,6 @@ public class Comment
         vid = aVid;
         commentType = aCommentType;
         comment = aComment;
-
     }
 
     @Deprecated
@@ -94,6 +95,4 @@ public class Comment
     {
         this.comment = comment;
     }
-
-
 }

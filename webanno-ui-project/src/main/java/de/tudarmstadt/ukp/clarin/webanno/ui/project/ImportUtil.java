@@ -364,6 +364,7 @@ public class ImportUtil
         }
         aFeature.setName(aExFeature.getName());
         aFeature.setRemember(aExFeature.isRemember());
+        aFeature.setRequired(aExFeature.isRequired());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
         aFeature.setMode(aExFeature.getMultiValueMode());
         aFeature.setLinkMode(aExFeature.getLinkMode());
@@ -838,6 +839,7 @@ public class ImportUtil
             exFeature.setDescription(feature.getDescription());
             exFeature.setEnabled(feature.isEnabled());
             exFeature.setRemember(feature.isRemember());
+            exFeature.setRequired(feature.isRequired());
             exFeature.setHideUnconstraintFeature(feature.isHideUnconstraintFeature());
             exFeature.setName(feature.getName());
             exFeature.setProjectName(feature.getProject().getName());

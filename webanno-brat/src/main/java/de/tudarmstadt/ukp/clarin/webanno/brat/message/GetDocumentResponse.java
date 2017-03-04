@@ -137,9 +137,9 @@ public class GetDocumentResponse
         this.comments = aComments;
     }
 
-    public void addComments(Comment aComments)
+    public void addComment(Comment aComment)
     {
-        comments.add(aComments);
+        comments.add(aComment);
     }
 
     /**

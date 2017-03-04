@@ -52,6 +52,9 @@ public class AnnotationFeature
     @JsonProperty("visible")
     private boolean visible = false;
 
+    @JsonProperty("required")
+    private boolean required = false;
+
     @JsonProperty("remember")
     private boolean remember = false;
     
@@ -205,6 +208,16 @@ public class AnnotationFeature
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
+    }
+
+    public boolean isRequired()
+    {
+        return required;
+    }
+
+    public void setRequired(boolean aRequired)
+    {
+        required = aRequired;
     }
 
     public boolean isRemember()

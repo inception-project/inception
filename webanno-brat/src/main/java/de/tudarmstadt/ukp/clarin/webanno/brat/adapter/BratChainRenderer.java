@@ -170,6 +170,10 @@ public class BratChainRenderer
                     aResponse.addRelation(new Relation(vid, bratTypeName, argumentList,
                             bratLabelText, color));
                 }
+                
+                // Render errors if required features are missing
+                renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
+                
 
 //                if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
 //                    log.error("Loop in CAS detected, aborting rendering of chains");

@@ -135,6 +135,9 @@ public class BratArcRenderer
             aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
                     bratLabelText, color));
 
+            // Render errors if required features are missing
+            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+            
             if (relationLinks.keySet().contains(getAddr(governorFs))
                     && !yieldDeps.contains(getAddr(governorFs))) {
                 yieldDeps.add(getAddr(governorFs));
@@ -152,7 +155,7 @@ public class BratArcRenderer
                 });
 
                 StringBuffer cm = getYieldMessage(aJcas, sortedDepFs);
-                aResponse.addComments(new Comment(getAddr(governorFs), "Yield of relation", cm
+                aResponse.addComment(new Comment(getAddr(governorFs), "Yield of relation", cm
                         .toString()));
             }
         }

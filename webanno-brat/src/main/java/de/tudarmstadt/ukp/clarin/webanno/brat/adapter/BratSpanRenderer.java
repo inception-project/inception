@@ -27,6 +27,7 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -149,6 +150,9 @@ public class BratSpanRenderer
                         - windowBegin, fs.getEnd() - windowBegin), bratLabelText,
                         color));
             }
+            
+            // Render errors if required features are missing
+            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
 
             // Render slots
             int fi = 0;
