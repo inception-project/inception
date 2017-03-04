@@ -967,6 +967,7 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
         DropDownChoice<TagSet> tagSet;
         DropDownChoice<String> featureType;
+        CheckBox required;
         List<String> types = new ArrayList<String>();
 
         public FeatureDetailForm(String id)
@@ -990,7 +991,25 @@ public class ProjectLayersPanel
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
             add(new CheckBox("remember"));
-            add(new CheckBox("required"));
+            add(required = new CheckBox("required") {
+                private static final long serialVersionUID = -2716373442353375910L;
+
+                {
+                    setOutputMarkupId(true);
+                }
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    boolean relevant = CAS.TYPE_NAME_STRING
+                            .equals(FeatureDetailForm.this.getModelObject().getType());
+                    setEnabled(relevant);
+                    if (!relevant) {
+                        FeatureDetailForm.this.getModelObject().setRequired(false);
+                    }
+                }
+            });
             add(new CheckBox("hideUnconstraintFeature"));
 
 //            spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
@@ -1041,6 +1060,7 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     aTarget.add(tagSet);
+                    aTarget.add(required);
                 }
             });
             add(tagSet = new DropDownChoice<TagSet>("tagset")
