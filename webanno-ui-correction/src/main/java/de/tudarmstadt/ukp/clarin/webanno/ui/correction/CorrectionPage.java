@@ -50,6 +50,8 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -79,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -139,6 +142,9 @@ public class CorrectionPage
 
     private SourceListView curationSegment = new SourceListView();
 
+    private ConfirmationDialog resetDocumentDialog;
+    private LambdaAjaxLink resetDocumentLink;
+    
     public CorrectionPage()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
@@ -483,6 +489,27 @@ public class CorrectionPage
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
 
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ConfirmationDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = CorrectionPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -783,6 +810,17 @@ public class CorrectionPage
         }
 
         annotator.bratRenderLater(aTarget);
+    }
+    
+    private void actionResetDocument(AjaxRequestTarget aTarget)
+    {
+        resetDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            JCas jcas = repository.createOrReadInitialCas(state.getDocument());
+            repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+            actionLoadDocument(target);
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
     private void actionLoadDocument(AjaxRequestTarget aTarget)

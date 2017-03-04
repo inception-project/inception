@@ -92,6 +92,9 @@ public class ConfirmationDialog
     @Override
     public void show(AjaxRequestTarget aTarget)
     {
+        challengeModel.detach();
+        expectedResponseModel.detach();
+        
         State state = new State();
         state.challenge = challengeModel.getObject();
         state.expectedResponse = expectedResponseModel.getObject();

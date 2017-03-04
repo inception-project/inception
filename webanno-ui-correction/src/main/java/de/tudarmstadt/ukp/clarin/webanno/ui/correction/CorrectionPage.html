@@ -52,10 +52,10 @@
 										title="press Shift+PgDown"> <img
 											src="images/document_next.png" title="Done" /><br />Next
 									</a></li>
-									<span wicket:id="exportModalPanel" />
-
-									<span wicket:id="annotationLayersModalPanel" />
-
+                  
+                                    <span wicket:id="exportModalPanel" />
+    
+                                    <span wicket:id="annotationLayersModalPanel" />
 								</ul>
 							</fieldset>
 						</li>
@@ -116,6 +116,13 @@
 							<fieldset>
 								<legend>Workflow</legend>
 								<ul class="horizontal">
+                                    <li><a wicket:id="showResetDocumentDialog"
+                                        id="showResetDocumentDialog"> <img
+                                            src="images/recycle.png" title="Reset" /><br />Reset
+                                    </a></li>
+
+                                    <span wicket:id="resetDocumentDialog" />
+                                    
 									<span wicket:id="showYesNoModalPanel" />
 								</ul>
 							</fieldset>

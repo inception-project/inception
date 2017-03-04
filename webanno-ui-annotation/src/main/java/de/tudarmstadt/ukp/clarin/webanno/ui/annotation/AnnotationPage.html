@@ -36,11 +36,6 @@
 											src="images/drawer_open.png" title="Open" /><br />Open
 									</a></li>
 
-                                    <li><a wicket:id="showResetDocumentDialog"
-                                        id="showResetDocumentDialog"> <img
-                                            src="images/recycle.png" title="Reset" /><br />Reset
-                                    </a></li>
-
 									<li><a wicket:id="showPreviousDocument"
 										title="press Shift+PgUp"> <img
 											src="images/document_back.png" title="Previous document" /><br />Prev.
@@ -51,8 +46,6 @@
 									</a></li>
 
                                     <span wicket:id="exportModalPanel" />
-
-									<span wicket:id="resetDocumentDialog" />
 
 									<span wicket:id="annotationLayersModalPanel" />
 								</ul>
@@ -118,6 +111,13 @@
 							<fieldset>
 								<legend>Workflow</legend>
 								<ul class="horizontal">
+                                    <li><a wicket:id="showResetDocumentDialog"
+                                        id="showResetDocumentDialog"> <img
+                                            src="images/recycle.png" title="Reset" /><br />Reset
+                                    </a></li>
+
+                                    <span wicket:id="resetDocumentDialog" />
+
 									<span wicket:id="showYesNoModalPanel" />
 								</ul>
 							</fieldset>

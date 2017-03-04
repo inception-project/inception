@@ -25,8 +25,6 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -130,6 +128,7 @@ public class AnnotationPage
     private ModalWindow openDocumentsModal;
 
     private ConfirmationDialog resetDocumentDialog;
+    private LambdaAjaxLink resetDocumentLink;
     
     public AnnotationPage()
     {
@@ -334,7 +333,20 @@ public class AnnotationPage
                 new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
                         documentNameModel),
                 documentNameModel));
-        add(new LambdaAjaxLink("showResetDocumentDialog", this::actionResetDocument));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AnnotationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
 
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -418,6 +430,7 @@ public class AnnotationPage
             public void onClose(AjaxRequestTarget aTarget)
             {
                 super.onClose(aTarget);
+                aTarget.add(resetDocumentLink);
                 aTarget.add(editor);
             }
         });
@@ -628,20 +641,18 @@ public class AnnotationPage
     private void actionResetDocument(AjaxRequestTarget aTarget)
     {
         resetDocumentDialog.setConfirmAction((target) -> {
-            try {
-                AnnotatorState state = getModelObject();
-                JCas jcas = repository.createOrReadInitialCas(state.getDocument());
-                repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
-                actionLoadDocument(target);
-            }
-            catch (Exception e) {
-                error("Error: " + e.getMessage());
-                LOG.error("Error: {}", e.getMessage(), e);
-            }
+            AnnotatorState state = getModelObject();
+            JCas jcas = repository.createOrReadInitialCas(state.getDocument());
+            repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+            actionLoadDocument(target);
         });
         resetDocumentDialog.show(aTarget);
     }
 
+    /**
+     * Open a document or to a different document. This method should be used only the first time
+     * that a document is accessed. It reset the annotator state and upgrades the CAS.
+     */
     private void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
@@ -709,26 +720,20 @@ public class AnnotationPage
             
             // Reset the editor
             editor.reset(aTarget);
-            // At this point, nothing is selcted editor.loadFeatureEditorModels(annotationCas, aTarget);
-        }
-        catch (UIMAException e) {
-            if (aTarget != null) {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-            }
-            LOG.error("Error", e);
-            error(ExceptionUtils.getRootCauseMessage(e));
         }
         catch (Exception e) {
-            if (aTarget != null) {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-            }
-            LOG.error("Error", e);
-            error("Error: " + e.getMessage());
+            handleException(aTarget, e);
         }
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
     
+    /**
+     * Re-render the document and update all related UI elements.
+     * 
+     * This method should be used while the editing process is ongoing. It does not upgrade the CAS
+     * and it does not reset the annotator state.
+     */
     private void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
     {
         annotator.bratRenderLater(aTarget);
@@ -740,6 +745,8 @@ public class AnnotationPage
     {
         LOG.error("Error: " + aException.getMessage(), aException);
         error("Error: " + aException.getMessage());
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
+        if (aTarget != null) {
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
     }
 }

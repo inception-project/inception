@@ -109,7 +109,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -187,12 +186,12 @@ public class AnnotationDetailEditorPanel
     private boolean isAnnotationFinished()
     {
         AnnotatorState state = getModelObject();
+        
         if (state.getMode().equals(Mode.CURATION)) {
             return state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
         }
         else {
-            return repository.getAnnotationDocument(state.getDocument(), state.getUser())
-                    .getState().equals(AnnotationDocumentState.FINISHED);
+            return repository.isAnnotationFinished(state.getDocument(), state.getUser());
         }
     }
 
