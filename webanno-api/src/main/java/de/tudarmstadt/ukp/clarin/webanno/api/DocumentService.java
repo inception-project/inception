@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
@@ -420,9 +421,21 @@ public interface DocumentService
         throws UIMAException, IOException;
 
     /**
-     * If any of the users finised one annotation document
+     * If any of the users finished one annotation document
      */
     boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject);
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
+    
+    /**
+     * Returns the annotatable {@link SourceDocument source documents} from the given project for
+     * the given user. Annotatable documents are those for which there is no corresponding
+     * {@link AnnotationDocument annotation document} with the state
+     * {@link AnnotationDocumentState#IGNORE}. Mind that annotation documents are created lazily
+     * in the database, thus there may be source documents without associated annotation documents.
+     * In order to provide access to the status of a document for a given user, the results is
+     * returned as a map where the source document is the key and the annotation document is the
+     * value. The annotation document may be {@code null}.
+     */
+    Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
 }

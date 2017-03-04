@@ -29,6 +29,7 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -129,14 +130,20 @@ public class ConfirmationDialog
         
         // Check if the challenge was met
         if (!ObjectUtils.equals(state.expectedResponse, state.response)) {
-            aForm.getModelObject().feedback = "Your response did not meet the challenge.";
+            state.feedback = "Your response did not meet the challenge.";
             aTarget.add(aForm);
             return;
         }
         
         // Invoke callback if one is defined
         if (confirmAction != null) {
-            confirmAction.accept(aTarget);
+            try {
+                confirmAction.accept(aTarget);
+            }
+            catch (Exception e) {
+                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
+                state.feedback = "Error: " + e.getMessage();
+            }
         }
         
         close(aTarget);
@@ -145,7 +152,13 @@ public class ConfirmationDialog
     protected void onCancelInternal(AjaxRequestTarget aTarget, Form<State> aForm)
     {
         if (cancelAction != null) {
-            cancelAction.accept(aTarget);
+            try {
+                cancelAction.accept(aTarget);
+            }
+            catch (Exception e) {
+                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
+                aForm.getModelObject().feedback = "Error: " + e.getMessage();
+            }
         }
         close(aTarget);
     }

@@ -982,344 +982,6 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    @Override
-    public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
-            String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
-        throws AnnotationException, UIMAException, ClassNotFoundException, IOException
-    {
-        assert jCas != null;
-        
-        AnnotatorState state = getModelObject();
-        
-        Selection selection = state.getSelection();
-        selection.setRelationAnno(true);
-        selection.setAnnotation(paramId);
-        selection.setOriginType(aOriginType);
-        selection.setOrigin(aOriginSpanId);
-        selection.setTargetType(aTargetType);
-        selection.setTarget(aTargetSpanId);
-        state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
-        
-        if (selection.getAnnotation().isNotSet()) {
-            // Create new annotation
-            actionAnnotate(aTarget);
-        }
-        else {
-            // Edit existing annotation
-            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-                    targetFs.getCoveredText() + "]");
-            loadFeatureEditorModels(jCas, aTarget);
-            
-            // Ensure we re-render and update the highlight
-            onChange(aTarget);
-        }
-    }
-    
-    @Override
-    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
-            int aBegin, int aEnd, VID paramId)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        assert jCas != null;                        
-
-        AnnotatorState state = getModelObject();
-
-        if (state.isSlotArmed()) {
-            if (paramId.isSet()) {
-                // Fill slot with existing annotation
-                setSlot(aTarget, jCas, paramId.getId());
-            }
-            else if (!CAS.TYPE_NAME_ANNOTATION
-                    .equals(state.getArmedFeature().getType())) {
-                // Fill slot with new annotation (only works if a concrete type is
-                // set for the link feature!
-                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
-                        annotationService.getLayer(state.getArmedFeature().getType(),
-                                state.getProject()));
-
-                try {
-                    int id = adapter.add(jCas, aBegin, aEnd, null, null);
-                    setSlot(aTarget, jCas, id);
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
-            }
-            else {
-              throw new AnnotationException("Unable to create annotation of type ["+
-                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
-            }
-        }
-        else {
-            // Doing anything but filling an armed slot will unarm it
-            clearArmedSlotModel();
-            state.clearArmedSlot();
-
-            Selection selection = state.getSelection();
-            selection.setRelationAnno(false);
-            selection.setAnnotation(paramId);
-            selection.set(jCas, aBegin, aEnd);
-            state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
-            
-            if (selection.getAnnotation().isNotSet()) {
-                // Create new annotation
-                actionAnnotate(aTarget);
-            }
-            else {
-                // Edit existing annotation
-                loadFeatureEditorModels(jCas, aTarget);
-                
-                // Ensure we re-render and update the highlight
-                onChange(aTarget);
-            }
-        }
-    }
-    
-    @Override
-    public void actionAnnotate(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        // If there is no annotation yet, create one. During creation, the adapter
-        // may notice that it would create a duplicate and return the address of
-        // an existing annotation instead of a new one.
-        JCas jCas = getCas();
-
-        actionAnnotate(aTarget, jCas, false);
-    }
-
-    private void actionAnnotate(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        LOG.trace(String.format("actionAnnotate(isForwarded: %b)", aIsForwarded));
-
-        if (isAnnotationFinished()) {
-            throw new AnnotationException("This document is already closed. Please ask your "
-                    + "project manager to re-open it via the Monitoring page");
-        }
-        
-        AnnotatorState state = getModelObject();
-        state.getAction().setAnnotate(true);
-        
-        // Note that refresh changes the selected layer if a relation is created. Then the layer
-        // switches from the selected span layer to the relation layer that is attached to the span
-        if (state.getSelection().isRelationAnno()) {
-            LOG.trace(String
-                    .format("actionAnnotate() relation annotation - looking for attached layer"));
-
-            // FIXME REC I think this whole section which meddles around with the selected annotation
-            // layer should be moved out of there to the place where we originally set the annotation
-            // layer...!
-            long layerId = TypeUtil.getLayerId(state.getSelection().getOriginType());
-            AnnotationLayer spanLayer = annotationService.getLayer(layerId);
-            if (
-                    state.getPreferences().isRememberLayer() && 
-                    state.getAction().isAnnotate() && 
-                    !spanLayer.equals(state.getDefaultAnnotationLayer())) 
-            {
-                throw new AnnotationException(
-                        "No relation annotation allowed ["+ spanLayer.getUiName() +"]");
-            }
-
-            AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
-            
-            // If we are creating a relation annotation, we have to set the current layer depending
-            // on the type of relation that is permitted between the source/target span. This is
-            // necessary because we have no separate UI control to set the relation annotation type.
-            // It is possible because currently only a single relation layer is allowed to attach to
-            // any given span layer.
-            
-            // If we drag an arc between POS annotations, then the relation must be a dependency
-            // relation.
-            // FIXME - Actually this case should be covered by the last case - the database lookup!
-            if (
-                    spanLayer.isBuiltIn() && 
-                    spanLayer.getName().equals(POS.class.getName())) 
-            {
-                AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
-                        state.getProject());
-                if (state.getAnnotationLayers().contains(depLayer)) {
-                    state.setSelectedAnnotationLayer(depLayer);
-                }
-                else {
-                    state.setSelectedAnnotationLayer(null);
-                }
-            }
-            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
-            // Chain layers consist of arcs and spans
-            else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                // one layer both for the span and arc annotation
-                state.setSelectedAnnotationLayer(spanLayer);
-            }
-            // Otherwise, look up the possible relation layer(s) in the database.
-            else {
-                for (AnnotationLayer layer : annotationService.listAnnotationLayer(state
-                        .getProject())) {
-                    if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
-                        if (state.getAnnotationLayers().contains(layer)) {
-                            state.setSelectedAnnotationLayer(layer);
-                        }
-                        else {
-                            state.setSelectedAnnotationLayer(null);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            state.setDefaultAnnotationLayer(spanLayer);
-         
-            // If we switched layers, we need to initialize the feature editors for the new layer
-            if (!ObjectUtils.equals(previousLayer, state.getSelectedAnnotationLayer())) {
-                loadFeatureEditorModels(aJCas, aTarget);
-            }
-        }
-
-        LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
-                state.getSelectedAnnotationLayer().getUiName()));
-        LOG.trace(String.format("actionAnnotate() defaultLayer: %s",
-                state.getDefaultAnnotationLayer().getUiName()));
-        
-        if (state.getSelectedAnnotationLayer() == null) {
-            error("No layer is selected. First select a layer.");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            return;
-        }
-
-        if (state.getSelectedAnnotationLayer().isReadonly()) {
-            error("Layer is not editable.");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            return;
-        }
-        
-        // Verify if input is valid according to tagset
-        LOG.trace(String.format("actionAnnotate() verifying feature values in editors"));
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (int i = 0; i < featureStates.size(); i++) {
-            AnnotationFeature feature = featureStates.get(i).feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureStates.get(i).value;
-            	
-                // Check if tag is necessary, set, and correct
-                if (
-                    value != null &&
-                    feature.getTagset() != null && 
-                    !feature.getTagset().isCreateTag() && 
-                    !annotationService.existsTag(value, feature.getTagset())
-                ) {
-                    error("[" + value
-                            + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
-        
-        // #186 - After filling a slot, the annotation detail panel is not updated 
-        aTarget.add(annotationFeatureForm);
-
-        TypeAdapter adapter = getAdapter(annotationService, state.getSelectedAnnotationLayer());
-        
-        // If this is an annotation creation action, create the annotation
-		if (state.getSelection().getAnnotation().isNotSet()) {
-		    // Load the feature editors with the remembered values (if any)
-		    loadFeatureEditorModels(aJCas, aTarget);
-		    createNewAnnotation(aTarget, adapter, aJCas);
-		}
-
-        // Update the features of the selected annotation from the values presently in the
-		// feature editors
-		writeFeatureEditorModelsToCas(adapter, aJCas);
-
-        // Update progress information
-        LOG.trace(String.format("actionAnnotate() updating progress information"));
-        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
-        state.setFocusSentenceNumber(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
-
-        // persist changes
-        repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
-
-        // Remember the current feature values independently for spans and relations
-        LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
-        state.rememberFeatures();
-
-		// Loading feature editor values from CAS
-		loadFeatureEditorModels(aJCas, aTarget);
-		
-		// onAnnotate callback
-        LOG.trace(String.format("onAnnotate()"));
-		onAnnotate(aTarget);
-
-		// Handle auto-forward if it is enabled
-		if (state.isForwardAnnotation() && !aIsForwarded && featureStates.get(0).value != null) {
-			if (state.getSelection().getEnd() >= state.getFirstVisibleSentenceEnd()) {
-				autoScroll(aJCas, true);
-			}
-
-	        LOG.info("BEGIN auto-forward annotation");
-
-	        AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas, state.getSelection().getBegin(),
-	                state.getSelection().getEnd());
-	        if (nextToken != null) {
-	            if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-	                state.getSelection().clear();
-	                state.getSelection().set(aJCas, nextToken.getBegin(), nextToken.getEnd());
-	                actionAnnotate(aTarget, aJCas, true);
-	            }
-	        }
-
-	        LOG.trace(String.format("onAutoForward()"));
-			onAutoForward(aTarget);
-			
-	        LOG.info("END auto-forward annotation");
-		} 
-		// Perform auto-scroll if it is enabled
-		else if (state.getPreferences().isScrollPage()) {
-			autoScroll(aJCas, false);
-		}
-		
-		annotationFeatureForm.forwardAnnotationText.setModelObject(null);
-		
-        LOG.trace(String.format("onChange()"));
-		onChange(aTarget);
-		
-		if (state.isForwardAnnotation() && state.getFeatureStates().get(0).value != null) {
-			aTarget.add(annotationFeatureForm);
-		}
-		
-        // If we created a new annotation, then refresh the available annotation layers in the
-        // detail panel.
-        if (state.getSelection().getAnnotation().isNotSet()) {
-            // This already happens in loadFeatureEditorModels() above - probably not needed
-            // here again
-            // annotationFeatureForm.updateLayersDropdown();
-            
-            LOG.trace(String.format("actionAnnotate() setting selected layer (not sure why)"));
-            if (annotationFeatureForm.annotationLayers.size() == 0) {
-                state.setSelectedAnnotationLayer(new AnnotationLayer());
-            }
-            else if (state.getSelectedAnnotationLayer() == null) {
-                if (state.getRememberedSpanLayer() == null) {
-                    state.setSelectedAnnotationLayer(annotationFeatureForm.annotationLayers.get(0));
-                }
-                else {
-                    state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
-                }
-            }
-            LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
-                    state.getSelectedAnnotationLayer().getUiName()));
-            
-            // Actually not sure why we would want to clear these here - in fact, they should
-            // still be around for the rendering phase of the feature editors...
-            //clearFeatureEditorModels(aTarget);
-            
-            // This already happens in loadFeatureEditorModels() above - probably not needed
-            // here again
-            // annotationFeatureForm.updateRememberLayer();
-        }
-	}
-    
     private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, JCas aJCas)
         throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
@@ -1474,6 +1136,344 @@ public class AnnotationDetailEditorPanel
         selection.setBegin(originFs.getBegin());
     }
     
+    @Override
+    public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
+            String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
+        throws AnnotationException, UIMAException, ClassNotFoundException, IOException
+    {
+        assert jCas != null;
+        
+        AnnotatorState state = getModelObject();
+        
+        Selection selection = state.getSelection();
+        selection.setRelationAnno(true);
+        selection.setAnnotation(paramId);
+        selection.setOriginType(aOriginType);
+        selection.setOrigin(aOriginSpanId);
+        selection.setTargetType(aTargetType);
+        selection.setTarget(aTargetSpanId);
+        state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
+        
+        if (selection.getAnnotation().isNotSet()) {
+            // Create new annotation
+            actionAnnotate(aTarget);
+        }
+        else {
+            // Edit existing annotation
+            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
+            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
+            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
+                    targetFs.getCoveredText() + "]");
+            loadFeatureEditorModels(jCas, aTarget);
+            
+            // Ensure we re-render and update the highlight
+            onChange(aTarget);
+        }
+    }
+
+    @Override
+    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
+            int aBegin, int aEnd, VID paramId)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        assert jCas != null;                        
+    
+        AnnotatorState state = getModelObject();
+    
+        if (state.isSlotArmed()) {
+            if (paramId.isSet()) {
+                // Fill slot with existing annotation
+                setSlot(aTarget, jCas, paramId.getId());
+            }
+            else if (!CAS.TYPE_NAME_ANNOTATION
+                    .equals(state.getArmedFeature().getType())) {
+                // Fill slot with new annotation (only works if a concrete type is
+                // set for the link feature!
+                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
+                        annotationService.getLayer(state.getArmedFeature().getType(),
+                                state.getProject()));
+    
+                try {
+                    int id = adapter.add(jCas, aBegin, aEnd, null, null);
+                    setSlot(aTarget, jCas, id);
+                }
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
+                }
+            }
+            else {
+              throw new AnnotationException("Unable to create annotation of type ["+
+                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
+            }
+        }
+        else {
+            // Doing anything but filling an armed slot will unarm it
+            clearArmedSlotModel();
+            state.clearArmedSlot();
+    
+            Selection selection = state.getSelection();
+            selection.setRelationAnno(false);
+            selection.setAnnotation(paramId);
+            selection.set(jCas, aBegin, aEnd);
+            state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
+            
+            if (selection.getAnnotation().isNotSet()) {
+                // Create new annotation
+                actionAnnotate(aTarget);
+            }
+            else {
+                // Edit existing annotation
+                loadFeatureEditorModels(jCas, aTarget);
+                
+                // Ensure we re-render and update the highlight
+                onChange(aTarget);
+            }
+        }
+    }
+
+    @Override
+    public void actionAnnotate(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        // If there is no annotation yet, create one. During creation, the adapter
+        // may notice that it would create a duplicate and return the address of
+        // an existing annotation instead of a new one.
+        JCas jCas = getCas();
+    
+        actionAnnotate(aTarget, jCas, false);
+    }
+
+    private void actionAnnotate(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        LOG.trace(String.format("actionAnnotate(isForwarded: %b)", aIsForwarded));
+    
+        if (isAnnotationFinished()) {
+            throw new AnnotationException("This document is already closed. Please ask your "
+                    + "project manager to re-open it via the Monitoring page");
+        }
+        
+        AnnotatorState state = getModelObject();
+        state.getAction().setAnnotate(true);
+        
+        // Note that refresh changes the selected layer if a relation is created. Then the layer
+        // switches from the selected span layer to the relation layer that is attached to the span
+        if (state.getSelection().isRelationAnno()) {
+            LOG.trace(String
+                    .format("actionAnnotate() relation annotation - looking for attached layer"));
+    
+            // FIXME REC I think this whole section which meddles around with the selected annotation
+            // layer should be moved out of there to the place where we originally set the annotation
+            // layer...!
+            long layerId = TypeUtil.getLayerId(state.getSelection().getOriginType());
+            AnnotationLayer spanLayer = annotationService.getLayer(layerId);
+            if (
+                    state.getPreferences().isRememberLayer() && 
+                    state.getAction().isAnnotate() && 
+                    !spanLayer.equals(state.getDefaultAnnotationLayer())) 
+            {
+                throw new AnnotationException(
+                        "No relation annotation allowed ["+ spanLayer.getUiName() +"]");
+            }
+    
+            AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
+            
+            // If we are creating a relation annotation, we have to set the current layer depending
+            // on the type of relation that is permitted between the source/target span. This is
+            // necessary because we have no separate UI control to set the relation annotation type.
+            // It is possible because currently only a single relation layer is allowed to attach to
+            // any given span layer.
+            
+            // If we drag an arc between POS annotations, then the relation must be a dependency
+            // relation.
+            // FIXME - Actually this case should be covered by the last case - the database lookup!
+            if (
+                    spanLayer.isBuiltIn() && 
+                    spanLayer.getName().equals(POS.class.getName())) 
+            {
+                AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
+                        state.getProject());
+                if (state.getAnnotationLayers().contains(depLayer)) {
+                    state.setSelectedAnnotationLayer(depLayer);
+                }
+                else {
+                    state.setSelectedAnnotationLayer(null);
+                }
+            }
+            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
+            // Chain layers consist of arcs and spans
+            else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+                // one layer both for the span and arc annotation
+                state.setSelectedAnnotationLayer(spanLayer);
+            }
+            // Otherwise, look up the possible relation layer(s) in the database.
+            else {
+                for (AnnotationLayer layer : annotationService.listAnnotationLayer(state
+                        .getProject())) {
+                    if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
+                        if (state.getAnnotationLayers().contains(layer)) {
+                            state.setSelectedAnnotationLayer(layer);
+                        }
+                        else {
+                            state.setSelectedAnnotationLayer(null);
+                        }
+                        break;
+                    }
+                }
+            }
+    
+            state.setDefaultAnnotationLayer(spanLayer);
+         
+            // If we switched layers, we need to initialize the feature editors for the new layer
+            if (!ObjectUtils.equals(previousLayer, state.getSelectedAnnotationLayer())) {
+                loadFeatureEditorModels(aJCas, aTarget);
+            }
+        }
+    
+        LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
+                state.getSelectedAnnotationLayer().getUiName()));
+        LOG.trace(String.format("actionAnnotate() defaultLayer: %s",
+                state.getDefaultAnnotationLayer().getUiName()));
+        
+        if (state.getSelectedAnnotationLayer() == null) {
+            error("No layer is selected. First select a layer.");
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            return;
+        }
+    
+        if (state.getSelectedAnnotationLayer().isReadonly()) {
+            error("Layer is not editable.");
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            return;
+        }
+        
+        // Verify if input is valid according to tagset
+        LOG.trace(String.format("actionAnnotate() verifying feature values in editors"));
+        List<FeatureState> featureStates = getModelObject().getFeatureStates();
+        for (int i = 0; i < featureStates.size(); i++) {
+            AnnotationFeature feature = featureStates.get(i).feature;
+            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
+                String value = (String) featureStates.get(i).value;
+            	
+                // Check if tag is necessary, set, and correct
+                if (
+                    value != null &&
+                    feature.getTagset() != null && 
+                    !feature.getTagset().isCreateTag() && 
+                    !annotationService.existsTag(value, feature.getTagset())
+                ) {
+                    error("[" + value
+                            + "] is not in the tag list. Please choose from the existing tags");
+                    return;
+                }
+            }
+        }
+        
+        // #186 - After filling a slot, the annotation detail panel is not updated 
+        aTarget.add(annotationFeatureForm);
+    
+        TypeAdapter adapter = getAdapter(annotationService, state.getSelectedAnnotationLayer());
+        
+        // If this is an annotation creation action, create the annotation
+    	if (state.getSelection().getAnnotation().isNotSet()) {
+    	    // Load the feature editors with the remembered values (if any)
+    	    loadFeatureEditorModels(aJCas, aTarget);
+    	    createNewAnnotation(aTarget, adapter, aJCas);
+    	}
+    
+        // Update the features of the selected annotation from the values presently in the
+    	// feature editors
+    	writeFeatureEditorModelsToCas(adapter, aJCas);
+    
+        // Update progress information
+        LOG.trace(String.format("actionAnnotate() updating progress information"));
+        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
+        state.setFocusSentenceNumber(sentenceNumber);
+        state.getDocument().setSentenceAccessed(sentenceNumber);
+    
+        // persist changes
+        repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
+    
+        // Remember the current feature values independently for spans and relations
+        LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
+        state.rememberFeatures();
+    
+    	// Loading feature editor values from CAS
+    	loadFeatureEditorModels(aJCas, aTarget);
+    	
+    	// onAnnotate callback
+        LOG.trace(String.format("onAnnotate()"));
+    	onAnnotate(aTarget);
+    
+    	// Handle auto-forward if it is enabled
+    	if (state.isForwardAnnotation() && !aIsForwarded && featureStates.get(0).value != null) {
+    		if (state.getSelection().getEnd() >= state.getFirstVisibleSentenceEnd()) {
+    			autoScroll(aJCas, true);
+    		}
+    
+            LOG.info("BEGIN auto-forward annotation");
+    
+            AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas, state.getSelection().getBegin(),
+                    state.getSelection().getEnd());
+            if (nextToken != null) {
+                if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
+                    state.getSelection().clear();
+                    state.getSelection().set(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                    actionAnnotate(aTarget, aJCas, true);
+                }
+            }
+    
+            LOG.trace(String.format("onAutoForward()"));
+    		onAutoForward(aTarget);
+    		
+            LOG.info("END auto-forward annotation");
+    	} 
+    	// Perform auto-scroll if it is enabled
+    	else if (state.getPreferences().isScrollPage()) {
+    		autoScroll(aJCas, false);
+    	}
+    	
+    	annotationFeatureForm.forwardAnnotationText.setModelObject(null);
+    	
+        LOG.trace(String.format("onChange()"));
+    	onChange(aTarget);
+    	
+    	if (state.isForwardAnnotation() && state.getFeatureStates().get(0).value != null) {
+    		aTarget.add(annotationFeatureForm);
+    	}
+    	
+        // If we created a new annotation, then refresh the available annotation layers in the
+        // detail panel.
+        if (state.getSelection().getAnnotation().isNotSet()) {
+            // This already happens in loadFeatureEditorModels() above - probably not needed
+            // here again
+            // annotationFeatureForm.updateLayersDropdown();
+            
+            LOG.trace(String.format("actionAnnotate() setting selected layer (not sure why)"));
+            if (annotationFeatureForm.annotationLayers.size() == 0) {
+                state.setSelectedAnnotationLayer(new AnnotationLayer());
+            }
+            else if (state.getSelectedAnnotationLayer() == null) {
+                if (state.getRememberedSpanLayer() == null) {
+                    state.setSelectedAnnotationLayer(annotationFeatureForm.annotationLayers.get(0));
+                }
+                else {
+                    state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
+                }
+            }
+            LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
+                    state.getSelectedAnnotationLayer().getUiName()));
+            
+            // Actually not sure why we would want to clear these here - in fact, they should
+            // still be around for the rendering phase of the feature editors...
+            //clearFeatureEditorModels(aTarget);
+            
+            // This already happens in loadFeatureEditorModels() above - probably not needed
+            // here again
+            // annotationFeatureForm.updateRememberLayer();
+        }
+    }
+
     public void actionDelete(AjaxRequestTarget aTarget)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         AnnotationException

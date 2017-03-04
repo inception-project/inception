@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
@@ -76,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -693,22 +690,9 @@ public class AutomationPage
     
     private List<SourceDocument> getListOfDocs()
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = repository
-                .listSourceDocuments(getModelObject().getProject());
-        List<SourceDocument> sourceDocumentsInIgnoreState = new ArrayList<SourceDocument>();
-        for (SourceDocument sourceDocument : listOfSourceDocuements) {
-            if (repository.existsAnnotationDocument(sourceDocument, user)
-                    && repository.getAnnotationDocument(sourceDocument, user).getState()
-                            .equals(AnnotationDocumentState.IGNORE)) {
-                sourceDocumentsInIgnoreState.add(sourceDocument);
-            }
-        }
-
-        listOfSourceDocuements.removeAll(sourceDocumentsInIgnoreState);
-        return listOfSourceDocuements;
+        AnnotatorState state = getModelObject();
+        return new ArrayList<>(
+                repository.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -726,6 +710,18 @@ public class AutomationPage
         }
     }
     
+    private JCas getCorrectionCas()
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+        AnnotatorState state = getModelObject();
+
+        if (state.getDocument() == null) {
+            throw new IllegalStateException("Please open a document first!");
+        }
+
+        return repository.readCorrectionCas(state.getDocument());
+    }
+
     private void setCurationSegmentBeginEnd()
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -850,89 +846,17 @@ public class AutomationPage
     }
 
     private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        editor.reset(aTarget);
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
-
-        // Index of the current source document in the list
-        int currentDocumentIndex = listOfSourceDocuements.indexOf(state.getDocument());
-
-        // If the first the document
-        if (currentDocumentIndex == 0) {
-            aTarget.appendJavaScript("alert('This is the first document!')");
-        }
-        else {
-            state.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
-
-            try {
-                repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                        state.getUser().getUsername());
-                loadDocumentAction(aTarget);
-                setCurationSegmentBeginEnd();
-                update(aTarget);
-            }
-            catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                error(e.getMessage());
-            }
-
-            finish.setModelObject(state);
-            aTarget.add(finish.setOutputMarkupId(true));
-            aTarget.add(numberOfPages);
-            aTarget.add(documentNamePanel);
-            annotator.bratRenderLater(aTarget);
-        }
+        getModelObject().moveToPreviousDocument(getListOfDocs());
+        loadDocumentAction(aTarget);
     }
 
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        editor.reset(aTarget);
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
-
-        // Index of the current source document in the list
-        int currentDocumentIndex = listOfSourceDocuements.indexOf(state.getDocument());
-
-        // If the first document
-        if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-            aTarget.appendJavaScript("alert('This is the last document!')");
-            return;
-        }
-        state.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
-
-        try {
-            repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                    state.getUser().getUsername());
-            loadDocumentAction(aTarget);
-            setCurationSegmentBeginEnd();
-            update(aTarget);
-
-        }
-        catch (UIMAException e) {
-            error(ExceptionUtils.getRootCause(e));
-        }
-        catch (ClassNotFoundException e) {
-            error(ExceptionUtils.getRootCause(e));
-        }
-        catch (IOException e) {
-            error(ExceptionUtils.getRootCause(e));
-        }
-        catch (AnnotationException e) {
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
-            error(e.getMessage());
-        }
-
-        finish.setModelObject(state);
-        aTarget.add(finish.setOutputMarkupId(true));
-        aTarget.add(numberOfPages);
-        aTarget.add(documentNamePanel);
-        annotator.bratRenderLater(aTarget);
+        getModelObject().moveToNextDocument(getListOfDocs());
+        loadDocumentAction(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget)
@@ -978,193 +902,37 @@ public class AutomationPage
     }
 
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-
-            JCas mergeJCas = null;
-            try {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                mergeJCas = repository.readCorrectionCas(state.getDocument());
-                int previousSentenceAddress = WebAnnoCasUtil
-                        .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
-                                state.getFirstVisibleSentenceAddress(),
-                                state.getPreferences().getWindowSize());
-                if (state.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
-                    updateSentenceNumber(mergeJCas, previousSentenceAddress);
-
-                    SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
-                            userRepository);
-
-                    curationContainer = builder.buildCurationContainer(state);
-                    setCurationSegmentBeginEnd();
-                    curationContainer.setBratAnnotatorModel(state);
-                    update(aTarget);
-                    annotator.bratRenderLater(aTarget);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is First Page!')");
-                }
-            }
-            catch (UIMAException e) {
-                error(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                error(e.getMessage());
-            }
-            catch (IOException e) {
-                ;
-                error(e.getMessage());
-            }
-            catch (AnnotationException e) {
-                error(e.getMessage());
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCorrectionCas();
+        getModelObject().moveToPreviousPage(jcas);
+        actionRefreshDocument(aTarget, jcas);
     }
 
     private void actionShowNextPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                mergeJCas = repository.readCorrectionCas(state.getDocument());
-                int address = getAddr(
-                        selectSentenceAt(mergeJCas, state.getFirstVisibleSentenceBegin(),
-                                state.getFirstVisibleSentenceEnd()));
-                int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas, address,
-                        state.getPreferences().getWindowSize());
-                if (address != nextSentenceAddress) {
-                    updateSentenceNumber(mergeJCas, nextSentenceAddress);
-
-                    SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
-                            userRepository);
-                    curationContainer = builder.buildCurationContainer(state);
-                    setCurationSegmentBeginEnd();
-                    curationContainer.setBratAnnotatorModel(state);
-                    update(aTarget);
-                    annotator.bratRenderLater(aTarget);
-                }
-
-                else {
-                    aTarget.appendJavaScript("alert('This is last page!')");
-                }
-            }
-            catch (UIMAException e) {
-                error(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                error(e.getMessage());
-            }
-            catch (IOException e) {
-                error(e.getMessage());
-            }
-            catch (AnnotationException e) {
-                error(e.getMessage());
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCorrectionCas();
+        getModelObject().moveToNextPage(jcas);
+        actionRefreshDocument(aTarget, jcas);
     }
 
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                mergeJCas = repository.readCorrectionCas(state.getDocument());
-
-                int address = getAddr(
-                        selectSentenceAt(mergeJCas, state.getFirstVisibleSentenceBegin(),
-                                state.getFirstVisibleSentenceEnd()));
-                int firstAddress = getFirstSentenceAddress(mergeJCas);
-
-                if (firstAddress != address) {
-                    updateSentenceNumber(mergeJCas, firstAddress);
-
-                    SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
-                            userRepository);
-                    curationContainer = builder.buildCurationContainer(state);
-                    setCurationSegmentBeginEnd();
-                    curationContainer.setBratAnnotatorModel(state);
-                    update(aTarget);
-                    annotator.bratRenderLater(aTarget);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is first page!')");
-                }
-            }
-            catch (UIMAException e) {
-                error(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                error(e.getMessage());
-            }
-            catch (IOException e) {
-                error(e.getMessage());
-            }
-            catch (AnnotationException e) {
-                error(e.getMessage());
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCorrectionCas();
+        getModelObject().moveToFirstPage(jcas);
+        actionRefreshDocument(aTarget, jcas);
     }
 
     private void actionShowLastPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                mergeJCas = repository.readCorrectionCas(state.getDocument());
-                int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                        .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
-                                state.getPreferences().getWindowSize());
-                if (lastDisplayWindowBeginingSentenceAddress != state
-                        .getFirstVisibleSentenceAddress()) {
-                    updateSentenceNumber(mergeJCas, lastDisplayWindowBeginingSentenceAddress);
-
-                    SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
-                            userRepository);
-                    curationContainer = builder.buildCurationContainer(state);
-                    setCurationSegmentBeginEnd();
-                    curationContainer.setBratAnnotatorModel(state);
-                    update(aTarget);
-                    annotator.bratRenderLater(aTarget);
-
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is last Page!')");
-                }
-            }
-            catch (UIMAException e) {
-                error(ExceptionUtils.getRootCause(e));
-            }
-            catch (ClassNotFoundException e) {
-                error(e.getMessage());
-            }
-            catch (IOException e) {
-                error(e.getMessage());
-            }
-            catch (AnnotationException e) {
-                error(e.getMessage());
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCorrectionCas();
+        getModelObject().moveToLastPage(jcas);
+        actionRefreshDocument(aTarget, jcas);
     }
-
+    
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
     {
         getModelObject().toggleScriptDirection();
@@ -1273,6 +1041,8 @@ public class AutomationPage
         if (currentprojectId != state.getProject().getId()) {
             state.clearRememberedFeatures();
         }
+        
+        editor.reset(aTarget);
 
         // Load constraints
         try {
@@ -1293,5 +1063,18 @@ public class AutomationPage
                 + "]");
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
+    }
+
+    private void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+                userRepository);
+        curationContainer = builder.buildCurationContainer(state);
+        setCurationSegmentBeginEnd();
+        curationContainer.setBratAnnotatorModel(state);
+        update(aTarget);
+        annotator.bratRenderLater(aTarget);
     }
 }

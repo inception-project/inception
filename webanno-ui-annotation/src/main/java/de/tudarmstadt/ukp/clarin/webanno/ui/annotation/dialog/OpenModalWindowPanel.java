@@ -22,8 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
+import java.util.Map.Entry;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -274,7 +273,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            List<SourceDocument> allDocuments = listDOcuments(documnetColors);
+                            List<SourceDocument> allDocuments = listDocuments(documnetColors);
                             return allDocuments;
                         }
                     })
@@ -335,7 +334,7 @@ public class OpenModalWindowPanel
         }
     }
 
-    private List<SourceDocument> listDOcuments(final Map<SourceDocument, String> states)
+    private List<SourceDocument> listDocuments(final Map<SourceDocument, String> states)
     {
         if (selectedProject == null) {
             return new ArrayList<SourceDocument>();
@@ -350,36 +349,27 @@ public class OpenModalWindowPanel
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
-            allSourceDocuments = repository.listSourceDocuments(selectedProject);
-            List<SourceDocument> sourceDocumentsToExclude = new ArrayList<>();
-            for (SourceDocument sourceDocument : allSourceDocuments) {
-                if (sourceDocument.isTrainingDocument()) {
-                    sourceDocumentsToExclude.add(sourceDocument);
-                    continue;
-                }
-                List<AnnotationDocument> allAnnotationDocuments = repository
-                        .listAnnotationDocuments(selectedProject, user);
-                Optional<AnnotationDocument> annotationDocument = allAnnotationDocuments.stream()
-                        .filter(a -> a.getDocument().getId() == sourceDocument.getId()).findFirst();
+            Map<SourceDocument, AnnotationDocument> docs = repository
+                    .listAnnotatableDocuments(selectedProject, user);
 
-                if (annotationDocument.isPresent()) {
-                    if (AnnotationDocumentState.IGNORE.equals(annotationDocument.get().getState())) {
-                        sourceDocumentsToExclude.add(sourceDocument);
-                    }
-                    else if (AnnotationDocumentState.FINISHED.equals(annotationDocument.get().getState())) {
+            for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+                if (e.getValue() != null) {
+                    SourceDocument sourceDocument = e.getKey();
+                    AnnotationDocument adoc = e.getValue();
+                    if (AnnotationDocumentState.FINISHED.equals(adoc.getState())) {
                         states.put(sourceDocument, "red");
                     }
-                    else if (AnnotationDocumentState.IN_PROGRESS.equals(annotationDocument.get().getState())) {
+                    else if (AnnotationDocumentState.IN_PROGRESS.equals(adoc.getState())) {
                         states.put(sourceDocument, "blue");
                     }
                 }
             }
-            allSourceDocuments.removeAll(sourceDocumentsToExclude);
+
+            allSourceDocuments = new ArrayList<>(docs.keySet());
             break;
         }
         case CURATION: {
-            allSourceDocuments = repository
-                    .listCuratableSourceDocuments(selectedProject);
+            allSourceDocuments = repository.listCuratableSourceDocuments(selectedProject);
             
             for (SourceDocument sourceDocument : allSourceDocuments) {
                 if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {

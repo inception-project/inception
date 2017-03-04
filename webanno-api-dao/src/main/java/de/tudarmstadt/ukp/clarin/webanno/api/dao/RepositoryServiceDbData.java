@@ -53,7 +53,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +61,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2387,18 +2387,39 @@ public class RepositoryServiceDbData
         List<SourceDocument> docs = entityManager
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
-                        + "WHERE adoc.project = :project AND adoc.state = (:state)",
+                        + "WHERE adoc.project = :project AND adoc.state = (:state) "
+                        + "AND NOT adoc.document.trainingDocument",
                         SourceDocument.class)
                 .setParameter("project", aProject)
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
-        docs.sort(new Comparator<SourceDocument>() {
-            @Override
-            public int compare(SourceDocument aO1, SourceDocument aO2)
-            {
-                return aO1.getName().compareTo(aO2.getName());
-            }
-        });
+        docs.sort(SourceDocument.NAME_COMPARATOR);
         return docs;
+    }
+    
+    @Override
+    public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
+            User aUser)
+    {
+        @SuppressWarnings("unchecked")
+        List<Object[]> result = entityManager
+                .createQuery(
+                        "SELECT doc, adoc "
+                        + "FROM AnnotationDocument AS adoc "
+                        + "RIGHT OUTER JOIN adoc.document AS doc "
+                        + "WHERE doc.project = :project "
+                        + "AND doc.trainingDocument = false "
+                        + "AND (adoc is null OR (adoc.state != (:state) AND adoc.user = (:username)))")
+                .setParameter("project", aProject)
+                .setParameter("username", aUser.getUsername())
+                .setParameter("state", AnnotationDocumentState.IGNORE)
+                .getResultList();
+        
+        Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
+        for (Object[] row : result) {
+            map.put((SourceDocument) row[0], (AnnotationDocument) row[1]);
+        }
+        
+        return map;
     }
 
     private static void writeSerializedCas(JCas aJCas, File aFile)

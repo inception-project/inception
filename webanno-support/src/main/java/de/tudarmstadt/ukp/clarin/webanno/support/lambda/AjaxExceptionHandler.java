@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
+import java.util.function.BiConsumer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 @FunctionalInterface
-public interface AjaxCallback
-    extends Serializable
+public interface AjaxExceptionHandler
+    extends BiConsumer<AjaxRequestTarget, Exception>, Serializable
 {
-    void accept(AjaxRequestTarget t)
-        throws Exception;
+    // No changes compared to parent interfaces
 }

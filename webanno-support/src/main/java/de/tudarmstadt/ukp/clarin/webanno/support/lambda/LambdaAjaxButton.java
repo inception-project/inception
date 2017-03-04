@@ -20,23 +20,46 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.slf4j.LoggerFactory;
 
-public class LambdaAjaxButton<T> extends AjaxButton
+public class LambdaAjaxButton<T>
+    extends AjaxButton
 {
     private static final long serialVersionUID = 3946442967075930557L;
-    
+
     private AjaxFormCallback<T> action;
+    private AjaxExceptionHandler exceptionHandler;
 
     public LambdaAjaxButton(String aId, AjaxFormCallback<T> aAction)
     {
+        this(aId, aAction, null);
+    }
+
+    public LambdaAjaxButton(String aId, AjaxFormCallback<T> aAction,
+            AjaxExceptionHandler aExceptionHandler)
+    {
         super(aId);
         action = aAction;
+        exceptionHandler = aExceptionHandler;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        action.accept(aTarget, (Form<T>) aForm);
+        try {
+            action.accept(aTarget, (Form<T>) aForm);
+        }
+        catch (Exception e) {
+            if (exceptionHandler != null) {
+                exceptionHandler.accept(aTarget, e);
+            }
+            else {
+                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
+                error("Error: " + e.getMessage());
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+            }
+        }
     }
 }

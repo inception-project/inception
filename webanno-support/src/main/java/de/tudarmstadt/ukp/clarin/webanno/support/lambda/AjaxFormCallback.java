@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
-import java.util.function.BiConsumer;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 
+@FunctionalInterface
 public interface AjaxFormCallback<T>
-    extends BiConsumer<AjaxRequestTarget, Form<T>>, Serializable
+    extends Serializable
 {
-    // No changes compared to parent interfaces
+    void accept(AjaxRequestTarget aTarget, Form<T> aForm);
 }

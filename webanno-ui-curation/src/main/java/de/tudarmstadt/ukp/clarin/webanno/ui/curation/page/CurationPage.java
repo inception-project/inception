@@ -17,14 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextPageFirstSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -469,19 +464,7 @@ public class CurationPage
     
     private List<SourceDocument> getListOfDocs()
     {
-        AnnotatorState state = getModelObject();
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = repository
-                .listSourceDocuments(state.getProject());
-        List<SourceDocument> sourceDocumentsNotFinished = new ArrayList<SourceDocument>();
-        for (SourceDocument sourceDocument : listOfSourceDocuements) {
-            if (!repository.existFinishedDocument(sourceDocument, state.getProject())) {
-                sourceDocumentsNotFinished.add(sourceDocument);
-            }
-        }
-
-        listOfSourceDocuements.removeAll(sourceDocumentsNotFinished);
-        return listOfSourceDocuements;
+        return repository.listCuratableSourceDocuments(getModelObject().getProject());
     }
 
     // Update the curation panel.
@@ -521,6 +504,18 @@ public class CurationPage
         }
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
+    
+    private JCas getCurationCas()
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+        AnnotatorState state = getModelObject();
+
+        if (state.getDocument() == null) {
+            throw new IllegalStateException("Please open a document first!");
+        }
+
+        return repository.readCurationCas(state.getDocument());
+    }
 
     private void updateSentenceNumber(JCas aJCas, int aAddress)
     {
@@ -557,7 +552,7 @@ public class CurationPage
                         repository.createSourceDocument(state.getDocument());
                         repository.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
 
-                        loadDocumentAction(target);
+                        actionLoadDocument(target);
                         curationPanel.editor.loadFeatureEditorModels(target);
                     }
                     catch (Exception e) {
@@ -571,65 +566,27 @@ public class CurationPage
     }
 
     private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
+        throws IOException, DataRetrievalFailureException, UIMAException, ClassNotFoundException,
+        AnnotationException
     {
         AnnotatorState state = getModelObject();
-        curationPanel.editor.reset(aTarget);
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
-
-        // Index of the current source document in the list
-        int currentDocumentIndex = listOfSourceDocuements.indexOf(state.getDocument());
-
-        // If the first the document
-        if (currentDocumentIndex == 0) {
-            aTarget.appendJavaScript("alert('This is the first document!')");
-        }
-        else {
-            state.setDocument(listOfSourceDocuements.get(currentDocumentIndex - 1));
-            try {
-                repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                        state.getUser().getUsername());
-
-                loadDocumentAction(aTarget);
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
+        state.moveToPreviousDocument(getListOfDocs());
+        
+        repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
+                state.getUser().getUsername());
+        actionLoadDocument(aTarget);
     }
 
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
+        throws IOException, DataRetrievalFailureException, UIMAException, ClassNotFoundException,
+        AnnotationException
     {
         AnnotatorState state = getModelObject();
-        curationPanel.editor.reset(aTarget);
-        // List of all Source Documents in the project
-        List<SourceDocument> listOfSourceDocuements = getListOfDocs();
+        state.moveToNextDocument(getListOfDocs());
 
-        // Index of the current source document in the list
-        int currentDocumentIndex = listOfSourceDocuements.indexOf(state.getDocument());
-
-        // If the first document
-        if (currentDocumentIndex == listOfSourceDocuements.size() - 1) {
-            aTarget.appendJavaScript("alert('This is the last document!')");
-        }
-        else {
-            state.setDocument(listOfSourceDocuements.get(currentDocumentIndex + 1));
-
-            try {
-                aTarget.add(getFeedbackPanel());
-                repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                        state.getUser().getUsername());
-
-                loadDocumentAction(aTarget);
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
+        repository.upgradeCasAndSave(state.getDocument(), state.getMode(),
+                state.getUser().getUsername());
+        actionLoadDocument(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget)
@@ -664,162 +621,45 @@ public class CurationPage
     }
 
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-
-            JCas mergeJCas = null;
-            try {
-                aTarget.add(getFeedbackPanel());
-                mergeJCas = repository.readCurationCas(state.getDocument());
-                int previousSentenceAddress = WebAnnoCasUtil
-                        .getPreviousDisplayWindowSentenceBeginAddress(mergeJCas,
-                                state.getFirstVisibleSentenceAddress(),
-                                state.getPreferences().getWindowSize());
-                if (state.getFirstVisibleSentenceAddress() != previousSentenceAddress) {
-
-                    updateSentenceNumber(mergeJCas, previousSentenceAddress);
-
-                    aTarget.add(numberOfPages);
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is first page!')");
-                }
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCurationCas();
+        getModelObject().moveToPreviousPage(jcas);
+        actionRefreshDocument(aTarget);
     }
 
     private void actionShowNextPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                mergeJCas = repository.readCurationCas(state.getDocument());
-                int nextSentenceAddress = getNextPageFirstSentenceAddress(mergeJCas,
-                        state.getFirstVisibleSentenceAddress(),
-                        state.getPreferences().getWindowSize());
-                if (state.getFirstVisibleSentenceAddress() != nextSentenceAddress) {
-                    aTarget.add(getFeedbackPanel());
-
-                    updateSentenceNumber(mergeJCas, nextSentenceAddress);
-
-                    aTarget.add(numberOfPages);
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                }
-
-                else {
-                    aTarget.appendJavaScript("alert('This is last page!')");
-                }
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCurationCas();
+        getModelObject().moveToNextPage(jcas);
+        actionRefreshDocument(aTarget);
     }
 
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                aTarget.add(getFeedbackPanel());
-                mergeJCas = repository.readCurationCas(state.getDocument());
-
-                int address = getAddr(
-                        selectSentenceAt(mergeJCas, state.getFirstVisibleSentenceBegin(),
-                                state.getFirstVisibleSentenceEnd()));
-                int firstAddress = getFirstSentenceAddress(mergeJCas);
-
-                if (firstAddress != address) {
-
-                    updateSentenceNumber(mergeJCas, firstAddress);
-
-                    aTarget.add(numberOfPages);
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is first page!')");
-                }
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCurationCas();
+        getModelObject().moveToFirstPage(jcas);
+        actionRefreshDocument(aTarget);
     }
 
     private void actionShowLastPage(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null) {
-            JCas mergeJCas = null;
-            try {
-                aTarget.add(getFeedbackPanel());
-                mergeJCas = repository.readCurationCas(state.getDocument());
-                int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                        .getLastDisplayWindowFirstSentenceAddress(mergeJCas,
-                                state.getPreferences().getWindowSize());
-                if (lastDisplayWindowBeginingSentenceAddress != state
-                        .getFirstVisibleSentenceAddress()) {
-
-                    updateSentenceNumber(mergeJCas, lastDisplayWindowBeginingSentenceAddress);
-
-                    aTarget.add(numberOfPages);
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                }
-                else {
-                    aTarget.appendJavaScript("alert('This is last page!')");
-                }
-            }
-            catch (Exception e) {
-                aTarget.add(getFeedbackPanel());
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-        }
-        else {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-        }
+        JCas jcas = getCurationCas();
+        getModelObject().moveToLastPage(jcas);
+        actionRefreshDocument(aTarget);
     }
-
+    
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
         state.toggleScriptDirection();
-        
-        try {
-            curationPanel.updatePanel(aTarget, curationContainer);
-            updatePanel(curationContainer, aTarget);
-        }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
+
+        curationPanel.updatePanel(aTarget, curationContainer);
+        updatePanel(curationContainer, aTarget);
     }
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)
@@ -872,7 +712,7 @@ public class CurationPage
                         aTarget.add(getFeedbackPanel());
                         repository.removeCurationDocumentContent(state.getDocument(),
                                 state.getUser().getUsername());
-                        loadDocumentAction(aTarget);
+                        actionLoadDocument(aTarget);
 
                         aTarget.appendJavaScript("alert('Re-merge finished!')");
                     }
@@ -887,7 +727,7 @@ public class CurationPage
         reCreateMergeCas.show(aTarget);
     }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget)
+    private void actionLoadDocument(AjaxRequestTarget aTarget)
         throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException,
         AnnotationException
     {
@@ -950,10 +790,12 @@ public class CurationPage
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
         curationContainer.setBratAnnotatorModel(state);
+        curationPanel.editor.reset(aTarget);
         curationPanel.updatePanel(aTarget, curationContainer);
         updatePanel(curationContainer, aTarget);
         updateSentenceNumber(mergeJCas, state.getFirstVisibleSentenceAddress());
 
+        
         // Load constraints
         try {
             state.setConstraints(repository.loadConstraints(state.getProject()));
@@ -968,5 +810,13 @@ public class CurationPage
         aTarget.add(numberOfPages);
         aTarget.add(documentNamePanel);
         aTarget.add(showreCreateMergeCasModal);
+    }
+
+    private void actionRefreshDocument(AjaxRequestTarget aTarget)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        aTarget.add(numberOfPages);
+        curationPanel.updatePanel(aTarget, curationContainer);
+        updatePanel(curationContainer, aTarget);
     }
 }

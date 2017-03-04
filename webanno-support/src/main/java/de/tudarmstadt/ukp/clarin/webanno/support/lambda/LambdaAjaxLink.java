@@ -19,22 +19,44 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.slf4j.LoggerFactory;
 
-public class LambdaAjaxLink extends AjaxLink<Void>
+public class LambdaAjaxLink
+    extends AjaxLink<Void>
 {
     private static final long serialVersionUID = 3946442967075930557L;
-    
+
     private AjaxCallback action;
+    private AjaxExceptionHandler exceptionHandler;
 
     public LambdaAjaxLink(String aId, AjaxCallback aAction)
     {
+        this(aId, aAction, null);
+    }
+
+    public LambdaAjaxLink(String aId, AjaxCallback aAction, AjaxExceptionHandler aExceptionHandler)
+    {
         super(aId);
         action = aAction;
+        exceptionHandler = aExceptionHandler;
     }
 
     @Override
     public void onClick(AjaxRequestTarget aTarget)
     {
-        action.accept(aTarget);
+        try {
+            action.accept(aTarget);
+        }
+        catch (Exception e) {
+            if (exceptionHandler != null) {
+                exceptionHandler.accept(aTarget, e);
+            }
+            else {
+                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
+                error("Error: " + e.getMessage());
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+            }
+        }
     }
 }

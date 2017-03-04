@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import java.util.Map;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -166,4 +169,98 @@ public interface AnnotatorState
     // Access to transient context
     // ---------------------------------------------------------------------------------------------
     TransientActionContext getAction();
+    
+    // ---------------------------------------------------------------------------------------------
+    // Navigation within or across a document
+    // ---------------------------------------------------------------------------------------------
+    default void moveToPreviousDocument(List<SourceDocument> aDocuments)
+    {
+        // Index of the current source document in the list
+        int currentDocumentIndex = aDocuments.indexOf(getDocument());
+
+        // If the first the document
+        if (currentDocumentIndex <= 0) {
+            throw new IllegalStateException("This is the first document!");
+        }
+
+        setDocument(aDocuments.get(currentDocumentIndex - 1));
+    }
+
+    default void moveToNextDocument(List<SourceDocument> aDocuments)
+    {
+        // Index of the current source document in the list
+        int currentDocumentIndex = aDocuments.indexOf(getDocument());
+
+        // If the last document
+        if (currentDocumentIndex >= aDocuments.size() - 1) {
+            throw new IllegalStateException("This is the last document!");
+        }
+
+        setDocument(aDocuments.get(currentDocumentIndex + 1));
+    }
+
+    default void moveToPreviousPage(JCas aJCas)
+    {
+        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
+
+        int previousSentenceAddress = WebAnnoCasUtil.getPreviousDisplayWindowSentenceBeginAddress(
+                aJCas, getFirstVisibleSentenceAddress(), getPreferences().getWindowSize());
+        // Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same
+        // address
+        // if there are not much sentences to go back to as defined in windowSize
+        if (previousSentenceAddress == getFirstVisibleSentenceAddress() &&
+        // Check whether it's not the beginning of document
+                getFirstVisibleSentenceAddress() != firstSentenceAddress) {
+            previousSentenceAddress = firstSentenceAddress;
+        }
+
+        if (getFirstVisibleSentenceAddress() == previousSentenceAddress) {
+            throw new IllegalStateException("This is First Page!");
+        }
+
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, previousSentenceAddress);
+        setFirstVisibleSentence(sentence);
+        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+    }
+
+    default void moveToNextPage(JCas aJCas)
+    {
+        int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(aJCas,
+                getFirstVisibleSentenceAddress(), getPreferences().getWindowSize());
+
+        if (getFirstVisibleSentenceAddress() == nextSentenceAddress) {
+            throw new IllegalStateException("This is last page!");
+        }
+
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, nextSentenceAddress);
+        setFirstVisibleSentence(sentence);
+        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+    }
+
+    default void moveToFirstPage(JCas aJCas)
+    {
+        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
+
+        if (firstSentenceAddress == getFirstVisibleSentenceAddress()) {
+            throw new IllegalStateException("This is first page!");
+        }
+
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, firstSentenceAddress);
+        setFirstVisibleSentence(sentence);
+        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+    }
+
+    default void moveToLastPage(JCas aJCas)
+    {
+        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
+                .getLastDisplayWindowFirstSentenceAddress(aJCas, getPreferences().getWindowSize());
+        if (lastDisplayWindowBeginingSentenceAddress == getFirstVisibleSentenceAddress()) {
+            throw new IllegalStateException("This is last page!");
+        }
+
+        Sentence sentence = selectByAddr(aJCas, Sentence.class,
+                lastDisplayWindowBeginingSentenceAddress);
+        setFirstVisibleSentence(sentence);
+        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+    }
 }

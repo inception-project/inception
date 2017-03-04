@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -210,5 +211,11 @@ public class SourceDocument
 		this.feature = feature;
 	}
 
-
+	public static final Comparator<SourceDocument> NAME_COMPARATOR = new Comparator<SourceDocument>() {
+        @Override
+        public int compare(SourceDocument aO1, SourceDocument aO2)
+        {
+            return aO1.getName().compareTo(aO2.getName());
+        }
+    };
 }
