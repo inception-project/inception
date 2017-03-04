@@ -42,6 +42,8 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -65,7 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
@@ -73,6 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -128,6 +131,8 @@ public class AnnotationPage
     private WebMarkupContainer annotationViewCell;
     
     private ModalWindow openDocumentsModal;
+
+    private ConfirmationDialog resetDocumentDialog;
     
     public AnnotationPage()
     {
@@ -325,6 +330,14 @@ public class AnnotationPage
         });
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+        
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ConfirmationDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(new LambdaAjaxLink("showResetDocumentDialog", this::actionResetDocument));
 
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -786,6 +799,23 @@ public class AnnotationPage
     {
         getModelObject().toggleScriptDirection();
         annotator.bratRenderLater(aTarget);
+    }
+    
+    private void actionResetDocument(AjaxRequestTarget aTarget)
+    {
+        resetDocumentDialog.setConfirmAction((target) -> {
+            try {
+                AnnotatorState state = getModelObject();
+                JCas jcas = repository.createOrReadInitialCas(state.getDocument());
+                repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+                actionLoadDocument(target);
+            }
+            catch (Exception e) {
+                error("Error: " + e.getMessage());
+                LOG.error("Error: {}", e.getMessage(), e);
+            }
+        });
+        resetDocumentDialog.show(aTarget);
     }
 
     private void actionLoadDocument(AjaxRequestTarget aTarget)

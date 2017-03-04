@@ -15,35 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support;
+package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.markup.html.form.Form;
 
-public class LambdaAjaxLink extends AjaxLink<Void>
+public interface AjaxFormCallback<T>
+    extends BiConsumer<AjaxRequestTarget, Form<T>>, Serializable
 {
-    private static final long serialVersionUID = 3946442967075930557L;
-    
-    private AjaxAction action;
-
-    public LambdaAjaxLink(String aId, AjaxAction aAction)
-    {
-        super(aId);
-        action = aAction;
-    }
-
-    @Override
-    public void onClick(AjaxRequestTarget aTarget)
-    {
-        action.accept(aTarget);
-    }
-    
-    public static interface AjaxAction
-        extends Consumer<AjaxRequestTarget>, Serializable
-    {
-        // No changes compared to parent interfaces
-    }
+    // No changes compared to parent interfaces
 }

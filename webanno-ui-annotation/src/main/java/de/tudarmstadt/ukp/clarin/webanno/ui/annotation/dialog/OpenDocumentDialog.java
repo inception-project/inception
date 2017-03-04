@@ -60,7 +60,7 @@ public abstract class OpenDocumentDialog extends ModalWindow
             private static final long serialVersionUID = -3434069761864809703L;
 
             @Override
-            protected void onCancel(AjaxRequestTarget aTarget)
+            protected void onCancel(AjaxRequestTarget aInnerTarget)
             {
                 closeButtonClicked = true;
             };
@@ -71,7 +71,7 @@ public abstract class OpenDocumentDialog extends ModalWindow
             private static final long serialVersionUID = -1746088901018629567L;
 
             @Override
-            public void onClose(AjaxRequestTarget aTarget)
+            public void onClose(AjaxRequestTarget aInnerTarget)
             {
                 // A hack, the dialog opens for the first time, and if no document is
                 // selected window will be "blind down". Something in the brat js causes
@@ -86,7 +86,7 @@ public abstract class OpenDocumentDialog extends ModalWindow
                     return;
                 }
 
-                onDocumentSelected(aTarget);
+                onDocumentSelected(aInnerTarget);
             }
         });
         
