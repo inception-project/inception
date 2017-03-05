@@ -57,6 +57,8 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -92,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
@@ -161,6 +164,9 @@ public class AutomationPage
 
     private final SourceListView curationSegment = new SourceListView();
 
+    private ConfirmationDialog resetDocumentDialog;
+    private LambdaAjaxLink resetDocumentLink;
+    
     public AutomationPage()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.AUTOMATION)));
@@ -635,10 +641,32 @@ public class AutomationPage
             {
                 super.onClose(aTarget);
                 aTarget.add(editor);
+                aTarget.add(resetDocumentLink);
             }
         });
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ConfirmationDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AutomationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
         
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -810,7 +838,7 @@ public class AutomationPage
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
 
-                    loadDocumentAction(target);
+                    actionLoadDocument(target);
                     setCurationSegmentBeginEnd();
                     update(target);
                     User user = userRepository.get(username);
@@ -849,14 +877,14 @@ public class AutomationPage
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         getModelObject().moveToPreviousDocument(getListOfDocs());
-        loadDocumentAction(aTarget);
+        actionLoadDocument(aTarget);
     }
 
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         getModelObject().moveToNextDocument(getListOfDocs());
-        loadDocumentAction(aTarget);
+        actionLoadDocument(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget)
@@ -950,8 +978,19 @@ public class AutomationPage
 
         annotator.bratRenderLater(aTarget);
     }
+    
+    private void actionResetDocument(AjaxRequestTarget aTarget)
+    {
+        resetDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            JCas jcas = repository.createOrReadInitialCas(state.getDocument());
+            repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+            actionLoadDocument(target);
+        });
+        resetDocumentDialog.show(aTarget);
+    }
 
-    private void loadDocumentAction(AjaxRequestTarget aTarget)
+    private void actionLoadDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");

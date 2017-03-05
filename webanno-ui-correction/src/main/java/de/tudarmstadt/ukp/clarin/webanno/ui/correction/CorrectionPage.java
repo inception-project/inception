@@ -484,6 +484,7 @@ public class CorrectionPage
             {
                 super.onClose(aTarget);
                 aTarget.add(editor);
+                aTarget.add(resetDocumentLink);
             }
         });
 
