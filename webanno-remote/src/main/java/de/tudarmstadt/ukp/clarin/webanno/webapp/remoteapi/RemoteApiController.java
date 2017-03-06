@@ -776,7 +776,7 @@ public class RemoteApiController
      * Test when running in Eclipse: Open your browser, paste following URL with appropriate values:
      *
      * http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects/{aProjectId}/curationdoc/
-     * { aSourceDocumentId}?format=xmi
+     * {aSourceDocumentId}?format=xmi
      * 
      * @param response
      *            HttpServletResponse.
@@ -790,7 +790,7 @@ public class RemoteApiController
      *             if there was an error.
      */
     @RequestMapping(
-            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+CURATION+"/{"+PARAM_DOCUMENT_ID+"}/", 
+            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+CURATION+"/{"+PARAM_DOCUMENT_ID+"}", 
             method = RequestMethod.GET)
     public void curationDocumentRead(HttpServletResponse response, 
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
