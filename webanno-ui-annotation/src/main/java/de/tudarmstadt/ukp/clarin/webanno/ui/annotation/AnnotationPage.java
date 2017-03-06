@@ -720,6 +720,8 @@ public class AnnotationPage
             
             // Reset the editor
             editor.reset(aTarget);
+            // Populate the layer dropdown box
+            editor.loadFeatureEditorModels(annotationCas, aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);
