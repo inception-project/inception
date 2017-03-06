@@ -2400,7 +2400,7 @@ public class RepositoryServiceDbData
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
                         + "WHERE adoc.project = :project AND adoc.state = (:state) "
-                        + "AND NOT adoc.document.trainingDocument",
+                        + "AND adoc.document.trainingDocument = false",
                         SourceDocument.class)
                 .setParameter("project", aProject)
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
