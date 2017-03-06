@@ -146,6 +146,15 @@ public interface ProjectService
         throws IOException;
 
     /**
+     * Update a project. This is only necessary when dealing with a detached project entity.
+     * 
+     * @param project
+     *            The {@link Project} object to be updated.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_REMOTE','ROLE_PROJECT_CREATOR')")
+    void updateProject(Project project);
+
+    /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
      * if the project is not created, hence existProject returns false.
      *

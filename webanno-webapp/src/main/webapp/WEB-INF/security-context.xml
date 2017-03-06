@@ -42,7 +42,10 @@
 
 	<security:http create-session="never" auto-config="true">
         <security:csrf disabled="true"/>
-		<security:remember-me />
+        <security:headers>
+            <security:frame-options policy="SAMEORIGIN"/>
+        </security:headers>
+    	<security:remember-me />
 		<security:logout />
 		<security:intercept-url pattern="/login.html*"
 			access="permitAll" />

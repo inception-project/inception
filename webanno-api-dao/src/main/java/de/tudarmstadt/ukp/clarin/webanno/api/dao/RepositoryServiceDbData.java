@@ -300,6 +300,13 @@ public class RepositoryServiceDbData
 
     @Override
     @Transactional
+    public void updateProject(Project aProject)
+    {
+        entityManager.merge(aProject);
+    }
+
+    @Override
+    @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
     {
         entityManager.persist(aPermission);
@@ -1039,6 +1046,22 @@ public class RepositoryServiceDbData
             annotationService.removeTagSet(tagSet);
         }
 
+        for (ProjectPermission permissions : getProjectPermissions(aProject)) {
+            entityManager.remove(permissions);
+        }
+        
+        //Remove Constraints
+        for (ConstraintSet set: listConstraintSets(aProject) ){
+            removeConstraintSet(set);
+        }
+        
+        // remove metadata from DB
+        Project project = aProject;
+        if (!entityManager.contains(project)) {
+            project = entityManager.merge(project);
+        }
+        entityManager.remove(project);
+        
         // remove the project directory from the file system
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         try {
@@ -1048,20 +1071,9 @@ public class RepositoryServiceDbData
             createLog(aProject).warn(
                     "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
         }
-
-        for (ProjectPermission permisions : getProjectPermissions(aProject)) {
-            entityManager.remove(permisions);
-        }
         
-        //Remove Constraints
-        for (ConstraintSet set: listConstraintSets(aProject) ){
-            removeConstraintSet(set);
-        }
-        
-        // remove metadata from DB
-        entityManager.remove(aProject);
         createLog(aProject).info(
-                " Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
+                "Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
         createLog(aProject).removeAllAppenders();
 
     }

@@ -36,7 +36,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -55,11 +54,15 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,8 +84,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
@@ -95,8 +99,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.NameUtil;
  * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
- *
- *
  */
 @MountPath("/projectsetting.html")
 public class ProjectPage
@@ -122,16 +124,15 @@ public class ProjectPage
     public static ProjectDetailForm projectDetailForm;
     private final ImportProjectForm importProjectForm;
 
-    private RadioChoice<Mode> projectType;
     public static boolean visible = true;
 
     public ProjectPage()
     {
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+        setModel(Model.of(new ProjectPageState()));
+        
+        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm", getModel());
 
-        projectDetailForm = new ProjectDetailForm("projectDetailForm");
-        projectDetailForm.setOutputMarkupPlaceholderTag(true);
-        projectDetailForm.setVisible(false);
+        projectDetailForm = new ProjectDetailForm("projectDetailForm", new Model<>());
 
         importProjectForm = new ImportProjectForm("importProjectForm");
 
@@ -142,16 +143,37 @@ public class ProjectPage
         MetaDataRoleAuthorizationStrategy.authorize(importProjectForm, Component.RENDER,
                 "ROLE_ADMIN");
     }
+    
+    public void setModel(IModel<ProjectPageState> aModel)
+    {
+        setDefaultModel(aModel);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public IModel<ProjectPageState> getModel()
+    {
+        return (IModel<ProjectPageState>) getDefaultModel();
+    }
+
+    public void setModelObject(ProjectPageState aModel)
+    {
+        setDefaultModelObject(aModel);
+    }
+    
+    public ProjectPageState getModelObject()
+    {
+        return (ProjectPageState) getDefaultModelObject();
+    }
 
     class ProjectSelectionForm
-        extends Form<SelectionModel>
+        extends Form<ProjectPageState>
     {
         private static final long serialVersionUID = -1L;
         private Button createProject;
 
-        public ProjectSelectionForm(String id)
+        public ProjectSelectionForm(String id, IModel<ProjectPageState> aModel)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, CompoundPropertyModel.of(aModel));
 
             add(createProject = new Button("create", new ResourceModel("label"))
             {
@@ -161,11 +183,7 @@ public class ProjectPage
                 public void onSubmit()
                 {
                     projectDetailForm.setModelObject(new Project());
-                    projectDetailForm.setVisible(true);
-                    ProjectSelectionForm.this.setModelObject(new SelectionModel());
-                    if (projectType != null) {
-                        projectType.setEnabled(true);
-                    }
+                    ProjectSelectionForm.this.getModelObject().project = null;
                 }
             });
 
@@ -204,14 +222,10 @@ public class ProjectPage
                         protected void onUpdate(AjaxRequestTarget aTarget)
                         {
                             if (getModelObject() != null) {
-                                projectDetailForm.setModelObject(getModelObject());
-                                projectDetailForm.setVisible(true);
-                                
+                                projectDetailForm.setModelObject(
+                                        ProjectSelectionForm.this.getModelObject().project);
                                 projectDetailForm.allTabs.setSelectedTab(0);
                                 aTarget.add(projectDetailForm);
-                            }
-                            if (projectType != null) {
-                                projectType.setEnabled(false);
                             }
                         }
                     });
@@ -226,11 +240,11 @@ public class ProjectPage
         }            
     }
 
-    static public class SelectionModel
+    static public class ProjectPageState
         implements Serializable
     {
-        private static final long serialVersionUID = -1L;
-
+        private static final long serialVersionUID = 502442621850380752L;
+        
         public Project project;
         public List<String> documents;
         public List<String> permissionLevels;
@@ -238,7 +252,7 @@ public class ProjectPage
     }
 
     private class ImportProjectForm
-        extends Form<ImportProjectModel>
+        extends Form<ImportProjectFormState>
     {
         private static final long serialVersionUID = -6361609153142402692L;
         private FileUploadField fileUpload;
@@ -246,7 +260,7 @@ public class ProjectPage
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportProjectForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new ImportProjectModel()));
+            super(id, new CompoundPropertyModel<>(new ImportProjectFormState()));
             add(new CheckBox("generateUsers"));
             add(fileUpload = new FileUploadField("content", new Model()));
 
@@ -270,7 +284,7 @@ public class ProjectPage
         }
     }
 
-    private class ImportProjectModel
+    private static class ImportProjectFormState
         implements Serializable
     {
         private static final long serialVersionUID = -5858027181097577052L;
@@ -285,11 +299,19 @@ public class ProjectPage
 
         private AjaxTabbedPanel<ITab> allTabs;
 
-        public ProjectDetailForm(String id)
+        public ProjectDetailForm(String id, IModel<Project> aModel)
         {
-            super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
+            super(id, CompoundPropertyModel.of(aModel));
             add(allTabs = makeTabs());
-            ProjectDetailForm.this.setMultiPart(true);
+            setMultiPart(true);
+            setOutputMarkupPlaceholderTag(true);
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            setVisible(getModelObject() != null);
         }
         
         private AjaxTabbedPanel<ITab> makeTabs()
@@ -325,7 +347,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -342,7 +365,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -359,7 +383,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -376,7 +401,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -393,7 +419,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -410,7 +437,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0 && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -427,7 +455,8 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return ProjectDetailForm.this.getModelObject().getId() != 0;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
                 }
             });
 
@@ -444,15 +473,15 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    Project project = ProjectDetailForm.this.getModelObject();
-                    return project.getId() != 0 && project.getMode().equals(Mode.AUTOMATION)
-                            && visible;
+                    IModel<Project> model = ProjectDetailForm.this.getModel();
+                    return model.getObject() != null && model.getObject().getId() != 0
+                            && model.getObject().getMode().equals(Mode.AUTOMATION) && visible;
                 }
             });
-            AjaxTabbedPanel<ITab> allTabs = new AjaxTabbedPanel<ITab>("tabs", tabs);
-            allTabs.setOutputMarkupPlaceholderTag(true);
-            allTabs.setOutputMarkupId(true);
-            return allTabs;
+            AjaxTabbedPanel<ITab> tabsPanel = new AjaxTabbedPanel<ITab>("tabs", tabs);
+            tabsPanel.setOutputMarkupPlaceholderTag(true);
+            tabsPanel.setOutputMarkupId(true);
+            return tabsPanel;
         }
     }
     
@@ -461,7 +490,10 @@ public class ProjectPage
     {
         private static final long serialVersionUID = 1118880151557285316L;
 
-        @SuppressWarnings("unchecked")
+        private ConfirmationDialog deleteProjectDialog;
+        private LambdaAjaxLink deleteProjectLink;
+        private RadioChoice<Mode> projectType;
+        
         public ProjectDetailsPanel(String id)
         {
             super(id);
@@ -471,9 +503,19 @@ public class ProjectPage
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
-            add(projectType = (RadioChoice<Mode>) new RadioChoice<Mode>("mode",
-                    Arrays.asList(new Mode[] { Mode.ANNOTATION, Mode.AUTOMATION, Mode.CORRECTION }))
-                    .setEnabled(projectDetailForm.getModelObject().getId() == 0));
+            add(projectType = new RadioChoice<Mode>("mode",
+                    Arrays.asList(Mode.ANNOTATION, Mode.AUTOMATION, Mode.CORRECTION))
+            {
+                private static final long serialVersionUID = -8268365384613932108L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    IModel<Project> model = projectDetailForm.getModel();
+                    setEnabled(model.getObject() != null && model.getObject().getId() == 0);
+                }
+            });
 
             add(new DropDownChoice<ScriptDirection>("scriptDirection",
                     Arrays.asList(ScriptDirection.values())));
@@ -482,9 +524,7 @@ public class ProjectPage
 
             add(new Button("save", new ResourceModel("label"))
             {
-
                 private static final long serialVersionUID = 1L;
-                
                 
                 @Override
 				public void validate() {
@@ -499,7 +539,6 @@ public class ProjectPage
 						} 
 					
 				}
-
 
 				@Override
                 public void onSubmit()
@@ -528,135 +567,104 @@ public class ProjectPage
                         error("project updated with name [" + project.getName() + "]");
                         return;
                     }
-                    try {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-                        repository.createProject(project);
+                    
+                    if (project.getId() == 0) {
+                        try {
+                            String username = SecurityContextHolder.getContext().getAuthentication()
+                                    .getName();
+                            repository.createProject(project);
 
-                        repository.createProjectPermission(new ProjectPermission(project,
-                                username, PermissionLevel.ADMIN));
-                        repository.createProjectPermission(new ProjectPermission(project,
-                                username, PermissionLevel.CURATOR));
-                        repository.createProjectPermission(
-                                new ProjectPermission(project, username, PermissionLevel.USER));
+                            repository.createProjectPermission(new ProjectPermission(project,
+                                    username, PermissionLevel.ADMIN));
+                            repository.createProjectPermission(new ProjectPermission(project,
+                                    username, PermissionLevel.CURATOR));
+                            repository.createProjectPermission(
+                                    new ProjectPermission(project, username, PermissionLevel.USER));
 
-                        annotationService.initializeTypesForProject(project);
-                        projectDetailForm.setVisible(true);
-                        SelectionModel selectionModel = new SelectionModel();
-                        selectionModel.project = project;
-                        projectSelectionForm.setModelObject(selectionModel);
+                            annotationService.initializeTypesForProject(project);
+                            
+                            projectSelectionForm.getModelObject().project = project;
+                        }
+                        catch (IOException e) {
+                            error("Project repository path not found " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                            LOG.error("Project repository path not found " + ":"
+                                    + ExceptionUtils.getRootCauseMessage(e));
+                        }
                     }
-                    catch (IOException e) {
-                        error("Project repository path not found " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error("Project repository path not found " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
+                    else {
+                        repository.updateProject(project);
                     }
                 }
             });
             
-            Button removeProjectButton = new Button("remove", new ResourceModel("label"))
-            {
-
-                private static final long serialVersionUID = 3822752631615693388L;
+            IModel<String> projectNameModel = PropertyModel.of(projectDetailForm.getModel(),
+                    "name");
+            add(deleteProjectDialog = new ConfirmationDialog("deleteProjectDialog",
+                    new StringResourceModel("DeleteProjectDialog.title", this, null),
+                    new StringResourceModel("DeleteProjectDialog.text", this, projectDetailForm.getModel(),
+                            projectNameModel),
+                    projectNameModel));
+            add(deleteProjectLink = new LambdaAjaxLink("deleteProjectLink",
+                    this::actionDeleteProject) {
+                private static final long serialVersionUID = -7483337091365688847L;
 
                 @Override
-                public void onSubmit()
+                protected void onConfigure()
                 {
+                    super.onConfigure();
                     Project project = projectDetailForm.getModelObject();
-                    if (project.getId() == 0) {
-
-                    }
-                    try {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-
-                        // BEGIN: Remove automation stuff
-                        for (MiraTemplate template : automationService.listMiraTemplates(project)) {
-                            automationService.removeMiraTemplate(template);
-                        }
-
-                        for (SourceDocument document : automationService
-                                .listTabSepDocuments(project)) {
-                            repository.removeSourceDocument(document);
-                        }
-                        // END: Remove automation stuff
-
-                        repository.removeProject(project);
-                        projectDetailForm.setVisible(false);
-                    }
-                    catch (IOException e) {
-                        LOG.error("Unable to remove project :"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        error("Unable to remove project " + ":"
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
+                    setVisible(project != null && project.getId() != 0);
                 }
-            };
-            
-            // Add check to prevent accidental delete operation
-            removeProjectButton.add(new AttributeModifier("onclick",
-                    "if(!confirm('Do you really want to delete this Project and all of its contents?')) return false;"));
-            
-            add(removeProjectButton);
+            });
  
-//            add(new Button("remove", new ResourceModel("label"))
-//            {
-//                private static final long serialVersionUID = 1L;
-//
-//                @Override
-//                public void onSubmit()
-//                {
-//                    Project project = projectDetailForm.getModelObject();
-//                    if (project.getId() == 0) {
-//
-//                    }
-//                    try {
-//                        String username = SecurityContextHolder.getContext().getAuthentication()
-//                                .getName();
-//                        User user = userRepository.get(username);
-//
-//                        // BEGIN: Remove automation stuff
-//                        for (MiraTemplate template : automationService.listMiraTemplates(project)) {
-//                            automationService.removeMiraTemplate(template);
-//                        }
-//
-//                        for (SourceDocument document : automationService
-//                                .listTabSepDocuments(project)) {
-//                            repository.removeSourceDocument(document);
-//                        }
-//                        // END: Remove automation stuff
-//
-//                        repository.removeProject(project, user);
-//                        projectDetailForm.setVisible(false);
-//                    }
-//                    catch (IOException e) {
-//                        LOG.error("Unable to remove project :"
-//                                + ExceptionUtils.getRootCauseMessage(e));
-//                        error("Unable to remove project " + ":"
-//                                + ExceptionUtils.getRootCauseMessage(e));
-//                    }
-//                }
-//            });
             add(new Button("cancel", new ResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
-                    setVisible(true);
                 }
                 
                 @Override
                 public void onSubmit()
                 {
-//                    projectSelectionForm.setModel(null);
-//                    projectDetailForm.setVisible(false);
-                    projectDetailForm.setModelObject(new Project());
+                    projectSelectionForm.getModelObject().project = null;
+                    projectDetailForm.setModelObject(null);
                 }
             });
+        }
+        
+        private void actionDeleteProject(AjaxRequestTarget aTarget)
+        {
+            deleteProjectDialog.setConfirmAction((target) -> {
+                Project project = projectDetailForm.getModelObject();
+                try {
+                    // BEGIN: Remove automation stuff
+                    for (MiraTemplate template : automationService.listMiraTemplates(project)) {
+                        automationService.removeMiraTemplate(template);
+                    }
+
+                    for (SourceDocument document : automationService
+                            .listTabSepDocuments(project)) {
+                        repository.removeSourceDocument(document);
+                    }
+                    // END: Remove automation stuff
+
+                    repository.removeProject(project);
+                    projectDetailForm.setModelObject(null);
+                    projectSelectionForm.getModelObject().project = null;
+                    target.add(ProjectPage.this);
+                }
+                catch (IOException e) {
+                    LOG.error("Unable to remove project :"
+                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Unable to remove project " + ":"
+                            + ExceptionUtils.getRootCauseMessage(e));
+                    target.addChildren(getPage(), FeedbackPanel.class);
+                }
+            });
+            deleteProjectDialog.show(aTarget);
         }
     }
 
@@ -734,11 +742,11 @@ public class ProjectPage
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
             }
         }
+        
         projectDetailForm.setModelObject(importedProject);
-        SelectionModel selectedProjectModel = new SelectionModel();
+        ProjectPageState selectedProjectModel = new ProjectPageState();
         selectedProjectModel.project = importedProject;
         projectSelectionForm.setModelObject(selectedProjectModel);
-        projectDetailForm.setVisible(true);
         RequestCycle.get().setResponsePage(getPage());
     }
 }
