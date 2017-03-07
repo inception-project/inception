@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 
-public class ConfirmationDialog
+public class ChallengeResponseDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = 5194857538069045172L;
@@ -46,7 +46,7 @@ public class ConfirmationDialog
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
 
-    public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
+    public ChallengeResponseDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
             IModel<String> aExpectedResponse)
     {
         super(aId);
@@ -192,8 +192,8 @@ public class ConfirmationDialog
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
-            form.add(new LambdaAjaxButton<State>("confirm",  ConfirmationDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxButton<State>("cancel", ConfirmationDialog.this::onCancelInternal));
+            form.add(new LambdaAjaxButton<State>("confirm",  ChallengeResponseDialog.this::onConfirmInternal));
+            form.add(new LambdaAjaxButton<State>("cancel", ChallengeResponseDialog.this::onCancelInternal));
             
             add(form);
         }

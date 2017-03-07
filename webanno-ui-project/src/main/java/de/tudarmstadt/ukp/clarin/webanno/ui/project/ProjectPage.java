@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
@@ -490,7 +490,7 @@ public class ProjectPage
     {
         private static final long serialVersionUID = 1118880151557285316L;
 
-        private ConfirmationDialog deleteProjectDialog;
+        private ChallengeResponseDialog deleteProjectDialog;
         private LambdaAjaxLink deleteProjectLink;
         private RadioChoice<Mode> projectType;
         
@@ -600,7 +600,7 @@ public class ProjectPage
             
             IModel<String> projectNameModel = PropertyModel.of(projectDetailForm.getModel(),
                     "name");
-            add(deleteProjectDialog = new ConfirmationDialog("deleteProjectDialog",
+            add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
                     new StringResourceModel("DeleteProjectDialog.title", this, null),
                     new StringResourceModel("DeleteProjectDialog.text", this, projectDetailForm.getModel(),
                             projectNameModel),

@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
@@ -142,7 +142,7 @@ public class CorrectionPage
 
     private SourceListView curationSegment = new SourceListView();
 
-    private ConfirmationDialog resetDocumentDialog;
+    private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
     
     public CorrectionPage()
@@ -491,7 +491,7 @@ public class CorrectionPage
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
 
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        add(resetDocumentDialog = new ConfirmationDialog("resetDocumentDialog",
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this, null),
                 new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
                         documentNameModel),
