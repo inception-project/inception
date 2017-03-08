@@ -286,7 +286,7 @@ public class AnnotationDetailEditorPanel
                     try {
                         AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
                         
-                        JCas jCas = getCas();
+                        JCas jCas = getEditorCas();
                         AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
 
                         AnnotationLayer layer = state.getSelectedAnnotationLayer();
@@ -1237,7 +1237,7 @@ public class AnnotationDetailEditorPanel
         // If there is no annotation yet, create one. During creation, the adapter
         // may notice that it would create a duplicate and return the address of
         // an existing annotation instead of a new one.
-        JCas jCas = getCas();
+        JCas jCas = getEditorCas();
     
         actionAnnotate(aTarget, jCas, false);
     }
@@ -1477,7 +1477,7 @@ public class AnnotationDetailEditorPanel
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         AnnotationException
     {
-        JCas jCas = getCas();
+        JCas jCas = getEditorCas();
         
         AnnotatorState state = getModelObject();
         
@@ -1598,7 +1598,7 @@ public class AnnotationDetailEditorPanel
     private void actionReverse(AjaxRequestTarget aTarget)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
-        JCas jCas = getCas();
+        JCas jCas = getEditorCas();
 
         AnnotatorState state = getModelObject();
         
@@ -1662,7 +1662,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
     
-    public JCas getCas()
+    public JCas getEditorCas()
         throws UIMAException, IOException, ClassNotFoundException
     {
         AnnotatorState state = getModelObject();
@@ -1740,7 +1740,7 @@ public class AnnotationDetailEditorPanel
         throws AnnotationException
     {
         try {
-            JCas annotationCas = getCas();
+            JCas annotationCas = getEditorCas();
             loadFeatureEditorModels(annotationCas, aTarget);
         }
         catch (AnnotationException e) {

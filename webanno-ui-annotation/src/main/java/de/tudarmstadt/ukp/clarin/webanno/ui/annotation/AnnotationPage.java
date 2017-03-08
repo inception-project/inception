@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -65,12 +66,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
@@ -105,30 +106,32 @@ public class AnnotationPage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private BratAnnotator annotator;
-
-    private FinishImage finish;
-
     private NumberTextField<Integer> gotoPageTextField;
-    private AnnotationDetailEditorPanel editor;
-
-    private int gotoPageAddress;
+    private Label numberOfPages;
+    private DocumentNamePanel documentNamePanel;
+    
+    private long currentprojectId;
 
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private Label numberOfPages;
-    private DocumentNamePanel documentNamePanel;
+    private int gotoPageAddress;
 
-    private long currentprojectId;
-
-    private WebMarkupContainer sidebarCell;
-    private WebMarkupContainer annotationViewCell;
-    
     private ModalWindow openDocumentsModal;
+
+    private BratAnnotator annotator;
+
+    private AnnotationDetailEditorPanel editor;    
 
     private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
+    
+    private FinishImage finishDocumentIcon;
+    private ConfirmationDialog finishDocumentDialog;
+    private LambdaAjaxLink finishDocumentLink;
+
+    private WebMarkupContainer sidebarCell;
+    private WebMarkupContainer annotationViewCell;
     
     public AnnotationPage()
     {
@@ -225,7 +228,7 @@ public class AnnotationPage
                 aTarget.add(numberOfPages);
 
                 try {
-                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratRender(aTarget, getEditorCas());
                     annotator.bratSetHighlight(aTarget,
                             getModelObject().getSelection().getAnnotation());
                 }
@@ -240,7 +243,7 @@ public class AnnotationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratRender(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
@@ -285,7 +288,7 @@ public class AnnotationPage
                 try {
                     AnnotatorState state = AnnotationPage.this.getModelObject();
                     
-                    JCas jCas = getJCas();
+                    JCas jCas = getEditorCas();
                     
                     // The number of visible sentences may have changed - let the state recalculate 
                     // the visible sentences 
@@ -308,12 +311,12 @@ public class AnnotationPage
 
         add(new ExportModalPanel("exportModalPanel", getModel()){
             private static final long serialVersionUID = -468896211970839443L;
-            
+
             {
                 setOutputMarkupId(true);
                 setOutputMarkupPlaceholderTag(true);
             }
-            
+
             @Override
             protected void onConfigure()
             {
@@ -325,29 +328,52 @@ public class AnnotationPage
             }
         });
 
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
-        
-        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this, null),
-                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
-                        documentNameModel),
-                documentNameModel));
-        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                this::actionResetDocument)
+        gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
+                new Model<Integer>(0));
+        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
+        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "submit")
         {
-            private static final long serialVersionUID = 874573384012299998L;
+            private static final long serialVersionUID = -1L;
 
             @Override
-            protected void onConfigure()
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                super.onConfigure();
-                AnnotatorState state = AnnotationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+                try {
+                    actionEnterPageNumer(aTarget);
+                }
+                catch (Exception e) {
+                    handleException(aTarget, e);
+                }
+            }
+        });
+        gotoPageTextField.setType(Integer.class);
+        gotoPageTextField.setMinimum(1);
+        gotoPageTextField.setDefaultModelObject(1);
+        add(gotoPageTextFieldForm.add(gotoPageTextField));
+        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            private static final long serialVersionUID = 56637289242712170L;
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                try {
+                    if (gotoPageTextField.getModelObject() < 1) {
+                        aTarget.appendJavaScript("alert('Page number shouldn't be less than 1')");
+                    }
+                    else {
+                        updateSentenceAddress(getEditorCas(), aTarget);
+                    }
+                }
+                catch (Exception e) {
+                    error(e.getMessage());
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                }
             }
         });
 
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+        
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -373,67 +399,49 @@ public class AnnotationPage
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));
-
-        gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
-                new Model<Integer>(0));
-        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "submit")
+        
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
         {
-            private static final long serialVersionUID = -1L;
+            private static final long serialVersionUID = 874573384012299998L;
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
+            protected void onConfigure()
             {
-                try {
-                    actionEnterPageNumer(aTarget);
-                }
-                catch (Exception e) {
-                    handleException(aTarget, e);
-                }
+                super.onConfigure();
+                AnnotatorState state = AnnotationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
-        gotoPageTextField.setType(Integer.class);
-        gotoPageTextField.setMinimum(1);
-        gotoPageTextField.setDefaultModelObject(1);
-        add(gotoPageTextFieldForm.add(gotoPageTextField));
-
-        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("change")
+        resetDocumentLink.setOutputMarkupId(true);
+        
+        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
+                this::actionFinishDocument)
         {
-            private static final long serialVersionUID = 56637289242712170L;
+            private static final long serialVersionUID = 874573384012299998L;
 
             @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
+            protected void onConfigure()
             {
-                try {
-                    if (gotoPageTextField.getModelObject() < 1) {
-                        aTarget.appendJavaScript("alert('Page number shouldn't be less than 1')");
-                    }
-                    else {
-                        updateSentenceAddress(getJCas(), aTarget);
-                    }
-                }
-                catch (Exception e) {
-                    error(e.getMessage());
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                }
+                super.onConfigure();
+                AnnotatorState state = AnnotationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
-
-        finish = new FinishImage("finishImage", getModel());
-        finish.setOutputMarkupId(true);
-
-        add(new FinishLink("showYesNoModalPanel", getModel(), finish)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
-            
-            @Override
-            public void onClose(AjaxRequestTarget aTarget)
-            {
-                super.onClose(aTarget);
-                aTarget.add(resetDocumentLink);
-                aTarget.add(editor);
-            }
-        });
+        finishDocumentIcon = new FinishImage("finishImage", getModel());
+        finishDocumentIcon.setOutputMarkupId(true);
+        finishDocumentLink.add(finishDocumentIcon);
     }
     
     public void setModel(IModel<AnnotatorState> aModel)
@@ -466,7 +474,7 @@ public class AnnotationPage
 
     private void updateSentenceAddress(JCas aJCas, AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = AnnotationPage.this.getModelObject();
+        AnnotatorState state = getModelObject();
 
         gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
                 gotoPageTextField.getModelObject());
@@ -500,6 +508,9 @@ public class AnnotationPage
         }
     }
 
+    /**
+     * for the first time, open the <b>open document dialog</b>
+     */
     @Override
     public void renderHead(IHeaderResponse response)
     {
@@ -513,7 +524,7 @@ public class AnnotationPage
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
 
-    private JCas getJCas()
+    private JCas getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -575,7 +586,7 @@ public class AnnotationPage
         }
 
         if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-            JCas jCas = getJCas();
+            JCas jCas = getEditorCas();
             updateSentenceNumber(jCas, gotoPageAddress);
             updateSentenceAddress(jCas, aTarget);
             annotator.bratRenderLater(aTarget);
@@ -592,7 +603,7 @@ public class AnnotationPage
         }
 
         if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-            JCas jCas = getJCas();
+            JCas jCas = getEditorCas();
             updateSentenceNumber(jCas, gotoPageAddress);
             gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
             updateSentenceAddress(jCas, aTarget);
@@ -603,7 +614,7 @@ public class AnnotationPage
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws IOException
     {
-        JCas jcas = getJCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -611,7 +622,7 @@ public class AnnotationPage
     private void actionShowNextPage(AjaxRequestTarget aTarget)
         throws IOException
     {
-        JCas jcas = getJCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -619,7 +630,7 @@ public class AnnotationPage
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
         throws IOException
     {
-        JCas jcas = getJCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -627,7 +638,7 @@ public class AnnotationPage
     private void actionShowLastPage(AjaxRequestTarget aTarget)
         throws IOException
     {
-        JCas jcas = getJCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -649,6 +660,28 @@ public class AnnotationPage
         resetDocumentDialog.show(aTarget);
     }
 
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+    {
+        finishDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                    state.getDocument(), state.getUser());
+
+            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
+                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            
+            // manually update state change!! No idea why it is not updated in the DB
+            // without calling createAnnotationDocument(...)
+            repository.createAnnotationDocument(annotationDocument);
+            
+            target.add(finishDocumentIcon);
+            target.add(finishDocumentLink);
+            target.add(editor);
+            target.add(resetDocumentLink);
+        });
+        finishDocumentDialog.show(aTarget);
+    }
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
@@ -662,7 +695,7 @@ public class AnnotationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
 
-        state.setUser(userRepository.get(username));
+        state.setUser(user);
 
         try {
             // Check if there is an annotation document entry in the database. If there is none,

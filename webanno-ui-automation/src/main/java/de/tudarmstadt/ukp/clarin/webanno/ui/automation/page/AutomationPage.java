@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -86,13 +87,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
@@ -127,45 +128,50 @@ public class AutomationPage
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
 
-    @SpringBean(name = "automationService")
-    private AutomationService automationService;
-
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private CurationContainer curationContainer;
+    private BratAnnotator annotator;
 
+    private long currentprojectId;
+
+    private AnnotationDetailEditorPanel editor;
+    
+    private NumberTextField<Integer> gotoPageTextField;
     private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
+
+    // Open the dialog window on first load
+    private boolean firstLoad = true;
+
+    private ChallengeResponseDialog resetDocumentDialog;
+    private LambdaAjaxLink resetDocumentLink;
+    
+    private FinishImage finishDocumentIcon;
+    private ConfirmationDialog finishDocumentDialog;
+    private LambdaAjaxLink finishDocumentLink;
+    
+    private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
+
+    private final SourceListView curationSegment = new SourceListView();
+
+    @SpringBean(name = "automationService")
+    private AutomationService automationService;
+
+    private CurationContainer curationContainer;
 
     private int sentenceNumber = 1;
     private int totalNumberOfSentence;
 
     private long currentDocumentId;
-    private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean firstLoad = true;
-
-    private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
-    private AnnotationDetailEditorPanel editor;
     private ModalWindow openDocumentsModal;
     
-    private FinishImage finish;
-
     private SuggestionViewPanel automateView;
-    private BratAnnotator annotator;
-
-    private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
-
-    private final SourceListView curationSegment = new SourceListView();
-
-    private ChallengeResponseDialog resetDocumentDialog;
-    private LambdaAjaxLink resetDocumentLink;
     
     public AutomationPage()
     {
@@ -195,6 +201,7 @@ public class AutomationPage
                 aTag.put("width", (100-state.getPreferences().getSidebarSize())+"%");
             }
         };
+        annotationViewCell.setOutputMarkupId(true);
         add(annotationViewCell);
         
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
@@ -257,7 +264,7 @@ public class AutomationPage
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 try {
-                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratRender(aTarget, getEditorCas());
                     annotator.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
                 }
                 catch (UIMAException | ClassNotFoundException | IOException e) {
@@ -360,11 +367,10 @@ public class AutomationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas());
-                   // onAnnotate(aTarget, aBModel);
+                    annotator.bratRender(aTarget, getEditorCas());
                 }
-                catch (UIMAException | ClassNotFoundException | IOException e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
+                catch (Exception e) {
+                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
@@ -525,12 +531,12 @@ public class AutomationPage
 
         add(new ExportModalPanel("exportModalPanel", getModel()){
             private static final long serialVersionUID = -468896211970839443L;
-            
+
             {
                 setOutputMarkupId(true);
                 setOutputMarkupPlaceholderTag(true);
             }
-            
+
             @Override
             protected void onConfigure()
             {
@@ -620,54 +626,8 @@ public class AutomationPage
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorState>()
-        {
-            private static final long serialVersionUID = -2737326878793568454L;
-
-            @Override
-            protected AnnotatorState load()
-            {
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                return state;
-            }
-        });
-
-        add(new FinishLink("showYesNoModalPanel", getModel(), finish)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
-            
-            @Override
-            public void onClose(AjaxRequestTarget aTarget)
-            {
-                super.onClose(aTarget);
-                aTarget.add(editor);
-                aTarget.add(resetDocumentLink);
-            }
-        });
-
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
-
-        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this, null),
-                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
-                        documentNameModel),
-                documentNameModel));
-        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                this::actionResetDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        
+       
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));        
@@ -689,10 +649,53 @@ public class AutomationPage
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
-        
+
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));
+        
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AutomationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        resetDocumentLink.setOutputMarkupId(true);
+        
+        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
+                this::actionFinishDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AutomationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        finishDocumentIcon = new FinishImage("finishImage", getModel());
+        finishDocumentIcon.setOutputMarkupId(true);
+        finishDocumentLink.add(finishDocumentIcon);
     }
 
     public void setModel(IModel<AnnotatorState> aModel)
@@ -738,7 +741,7 @@ public class AutomationPage
         }
     }
     
-    private JCas getCorrectionCas()
+    private JCas getEditorCas()
         throws IOException, UIMAException, ClassNotFoundException
     {
         AnnotatorState state = getModelObject();
@@ -862,8 +865,8 @@ public class AutomationPage
                 catch (AnnotationException e) {
                     error(e.getMessage());
                 }
-                finish.setModelObject(state);
-                target.add(finish.setOutputMarkupId(true));
+                finishDocumentIcon.setModelObject(state);
+                target.add(finishDocumentIcon.setOutputMarkupId(true));
                 target.appendJavaScript(
                         "Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 target.add(documentNamePanel.setOutputMarkupId(true));
@@ -873,6 +876,9 @@ public class AutomationPage
         openDocumentsModal.show(aTarget);
     }
 
+    /**
+     * Show the previous document, if exist
+     */
     private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -880,6 +886,9 @@ public class AutomationPage
         actionLoadDocument(aTarget);
     }
 
+    /**
+     * Show the next document if exist
+     */
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -890,6 +899,7 @@ public class AutomationPage
     private void actionGotoPage(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
+
         if (gotoPageAddress == 0) {
             aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
             return;
@@ -932,7 +942,7 @@ public class AutomationPage
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -940,7 +950,7 @@ public class AutomationPage
     private void actionShowNextPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -948,7 +958,7 @@ public class AutomationPage
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -956,11 +966,11 @@ public class AutomationPage
     private void actionShowLastPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
-    
+
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
     {
         getModelObject().toggleScriptDirection();
@@ -990,6 +1000,28 @@ public class AutomationPage
         resetDocumentDialog.show(aTarget);
     }
 
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+    {
+        finishDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                    state.getDocument(), state.getUser());
+
+            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
+                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            
+            // manually update state change!! No idea why it is not updated in the DB
+            // without calling createAnnotationDocument(...)
+            repository.createAnnotationDocument(annotationDocument);
+            
+            target.add(finishDocumentIcon);
+            target.add(finishDocumentLink);
+            target.add(editor);
+            target.add(resetDocumentLink);
+        });
+        finishDocumentDialog.show(aTarget);
+    }
+    
     private void actionLoadDocument(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -1103,7 +1135,13 @@ public class AutomationPage
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
-
+    
+    /**
+     * Re-render the document and update all related UI elements.
+     * 
+     * This method should be used while the editing process is ongoing. It does not upgrade the CAS
+     * and it does not reset the annotator state.
+     */
     private void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {

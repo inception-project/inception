@@ -44,6 +44,7 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -65,14 +66,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.YesNoFinishModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
@@ -107,27 +109,34 @@ public class CurationPage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private ReMergeCasModel reMerge;
-    private CurationContainer curationContainer;
-
-    private int gotoPageAddress;
-    private int totalNumberOfSentence;
+    private NumberTextField<Integer> gotoPageTextField;
+    private Label numberOfPages;
+    private DocumentNamePanel documentNamePanel;
+    
     private long currentprojectId;
-    private List<String> crossAnnoSentList;
 
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
-    private DocumentNamePanel documentNamePanel;
+    private int gotoPageAddress;
+
+    private ModalWindow openDocumentsModal;
+
+    private ReMergeCasModel reMerge;
+    private CurationContainer curationContainer;
+
+    private int totalNumberOfSentence;
+    private List<String> crossAnnoSentList;
+
     private CurationPanel curationPanel;
     private WebMarkupContainer finish;
     private AjaxLink<Void> showreCreateMergeCasModal;
-    private ModalWindow openDocumentsModal;
-    private ModalWindow finishCurationModal;
     private ModalWindow reCreateMergeCas;
 
+    private FinishImage finishDocumentIcon;
+    private ConfirmationDialog finishDocumentDialog;
+    private LambdaAjaxLink finishDocumentLink;
+    
     public CurationPage()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
@@ -359,28 +368,6 @@ public class CurationPage
             }
         }));
 
-        add(finishCurationModal = new ModalWindow("finishCurationModal"));
-        finishCurationModal.setOutputMarkupId(true);
-        finishCurationModal.setInitialWidth(650);
-        finishCurationModal.setInitialHeight(40);
-        finishCurationModal.setResizable(true);
-        finishCurationModal.setWidthUnit("px");
-        finishCurationModal.setHeightUnit("px");
-
-        AjaxLink<Void> showFinishCurationModal;
-        add(showFinishCurationModal = new AjaxLink<Void>("showFinishCurationModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                actionFinishDocument(target);
-            }
-        });
-
-        showFinishCurationModal.add(finish);
-
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
         reCreateMergeCas.setOutputMarkupId(true);
         //Change size if you change text here
@@ -411,6 +398,7 @@ public class CurationPage
                 actionRemergeDocument(aTarget);
             }
         });
+        showreCreateMergeCasModal.setOutputMarkupId(true);
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));        
         
@@ -418,11 +406,11 @@ public class CurationPage
         
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));        
+                        EventType.click)));
 
         add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));        
+                        EventType.click)));
 
         add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
@@ -437,8 +425,29 @@ public class CurationPage
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
-        
+
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
+        
+        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
+                this::actionFinishDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = CurationPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        finishDocumentIcon = new FinishImage("finishImage", getModel());
+        finishDocumentIcon.setOutputMarkupId(true);
+        finishDocumentLink.add(finishDocumentIcon);
     }
     
     public void setModel(IModel<AnnotatorState> aModel)
@@ -504,8 +513,8 @@ public class CurationPage
         }
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
-    
-    private JCas getCurationCas()
+
+    private JCas getEditorCas()
         throws IOException, UIMAException, ClassNotFoundException
     {
         AnnotatorState state = getModelObject();
@@ -565,6 +574,9 @@ public class CurationPage
         openDocumentsModal.show(aTarget);
     }
 
+    /**
+     * Show the previous document, if exist
+     */
     private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
         throws IOException, DataRetrievalFailureException, UIMAException, ClassNotFoundException,
         AnnotationException
@@ -577,6 +589,9 @@ public class CurationPage
         actionLoadDocument(aTarget);
     }
 
+    /**
+     * Show the next document if exist
+     */
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
         throws IOException, DataRetrievalFailureException, UIMAException, ClassNotFoundException,
         AnnotationException
@@ -623,7 +638,7 @@ public class CurationPage
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCurationCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
         actionRefreshDocument(aTarget);
     }
@@ -631,7 +646,7 @@ public class CurationPage
     private void actionShowNextPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCurationCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
         actionRefreshDocument(aTarget);
     }
@@ -639,7 +654,7 @@ public class CurationPage
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCurationCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
         actionRefreshDocument(aTarget);
     }
@@ -647,7 +662,7 @@ public class CurationPage
     private void actionShowLastPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCurationCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
         actionRefreshDocument(aTarget);
     }
@@ -655,8 +670,7 @@ public class CurationPage
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-        state.toggleScriptDirection();
+        getModelObject().toggleScriptDirection();
 
         curationPanel.updatePanel(aTarget, curationContainer);
         updatePanel(curationContainer, aTarget);
@@ -664,35 +678,29 @@ public class CurationPage
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
-        if (state.getDocument() != null
-                && state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-            finishCurationModal.setTitle(
-                    "Curation was finished. Are you sure you want to re-open document for curation?");
-            // Change size if you change text here
-            finishCurationModal.setInitialWidth(650);
-        }
-        else {
-            finishCurationModal.setTitle("Are you sure you want to finish curating?");
-            // Change size if you change text here
-            finishCurationModal.setInitialWidth(370);
+        finishDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            
+            SourceDocument sourceDocument = state.getDocument();
 
-        }
-        finishCurationModal.setContent(new YesNoFinishModalPanel(finishCurationModal.getContentId(),
-                state, finishCurationModal, state.getMode()));
-        finishCurationModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = -1746088901018629567L;
-
-            @Override
-            public void onClose(AjaxRequestTarget target)
-            {
-                target.add(finish);
-                target.appendJavaScript(
-                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                sourceDocument.setState(SourceDocumentStateTransition.transition(
+                        SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
             }
+            else {
+                sourceDocument.setState(SourceDocumentStateTransition.transition(
+                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
+                sourceDocument.setProcessed(false);
+            }
+            
+            repository.createSourceDocument(sourceDocument);
+            
+            target.add(finishDocumentIcon);
+            target.add(finishDocumentLink);
+            target.add(curationPanel.editor);
+            target.add(showreCreateMergeCasModal);
         });
-        finishCurationModal.show(aTarget);
+        finishDocumentDialog.show(aTarget);
     }
 
     private void actionRemergeDocument(AjaxRequestTarget aTarget)
@@ -727,6 +735,10 @@ public class CurationPage
         reCreateMergeCas.show(aTarget);
     }
 
+    /**
+     * Open a document or to a different document. This method should be used only the first time
+     * that a document is accessed. It reset the annotator state and upgrades the CAS.
+     */
     private void actionLoadDocument(AjaxRequestTarget aTarget)
         throws DataRetrievalFailureException, IOException, UIMAException, ClassNotFoundException,
         AnnotationException

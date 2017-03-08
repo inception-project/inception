@@ -55,8 +55,6 @@
 									<span wicket:id="exportModalPanel" />
 
 									<span wicket:id="annotationLayersModalPanel" />
-
-
 								</ul>
 							</fieldset>
 						</li>
@@ -116,9 +114,20 @@
 						<li>
 							<fieldset>
 								<legend>Workflow</legend>
-								<ul class="horizontal">
-									<span wicket:id="showYesNoModalPanel" />
-								</ul>
+                                <ul class="horizontal">
+                                    <li><a wicket:id="showResetDocumentDialog"
+                                        id="showResetDocumentDialog"> <img
+                                            src="images/recycle.png" title="Reset" /><br />Reset
+                                    </a></li>
+
+                                    <li><a wicket:id="showFinishDocumentDialog"> <img 
+                                        wicket:id="finishImage" /><br />Finish
+                                    </a></li>
+
+                                    <span wicket:id="resetDocumentDialog" />
+
+                                    <span wicket:id="finishDocumentDialog" />
+                                </ul>
 							</fieldset>
 						</li>
 

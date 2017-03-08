@@ -67,19 +67,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
@@ -126,14 +127,10 @@ public class CorrectionPage
     
     private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean firstLoad = true;
-
     private NumberTextField<Integer> gotoPageTextField;
     private int gotoPageAddress;
     private AnnotationDetailEditorPanel editor;
 
-    private FinishImage finish;
 
     private SuggestionViewPanel correctionView;
     private BratAnnotator annotator;
@@ -141,9 +138,16 @@ public class CorrectionPage
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
 
     private SourceListView curationSegment = new SourceListView();
-
+    
+    // Open the dialog window on first load
+    private boolean firstLoad = true;
+    
     private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
+    
+    private FinishImage finishDocumentIcon;
+    private ConfirmationDialog finishDocumentDialog;
+    private LambdaAjaxLink finishDocumentLink;
     
     public CorrectionPage()
     {
@@ -235,7 +239,7 @@ public class CorrectionPage
 
                 try {
                     AnnotatorState state = getModelObject();
-                    JCas annotationCas = getCas();
+                    JCas annotationCas = getEditorCas();
                     JCas correctionCas = repository.readCorrectionCas(state.getDocument());
                     annotator.bratRender(aTarget, annotationCas);
                     annotator.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
@@ -267,7 +271,7 @@ public class CorrectionPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getCas());
+                    annotator.bratRender(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     LOG.error("Error reading CAS " + e.getMessage());
@@ -367,8 +371,7 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", getModel())
-        {
+        add(new ExportModalPanel("exportModalPanel", getModel()){
             private static final long serialVersionUID = -468896211970839443L;
 
             {
@@ -462,55 +465,8 @@ public class CorrectionPage
             }
         });
 
-        finish = new FinishImage("finishImage", new LoadableDetachableModel<AnnotatorState>()
-        {
-            private static final long serialVersionUID = -2737326878793568454L;
-
-            @Override
-            protected AnnotatorState load()
-            {
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                return state;
-            }
-        });
-        finish.setOutputMarkupId(true);
-
-        add(new FinishLink("showYesNoModalPanel", getModel(), finish)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
-            
-            @Override
-            public void onClose(AjaxRequestTarget aTarget)
-            {
-                super.onClose(aTarget);
-                aTarget.add(editor);
-                aTarget.add(resetDocumentLink);
-            }
-        });
-
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
 
-        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                new StringResourceModel("ResetDocumentDialog.title", this, null),
-                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
-                        documentNameModel),
-                documentNameModel));
-        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                this::actionResetDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -532,10 +488,53 @@ public class CorrectionPage
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
-        
+
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));
+        
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
+                new StringResourceModel("ResetDocumentDialog.title", this, null),
+                new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
+                        documentNameModel),
+                documentNameModel));
+        add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
+                this::actionResetDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = CorrectionPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        resetDocumentLink.setOutputMarkupId(true);
+        
+        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
+                this::actionFinishDocument)
+        {
+            private static final long serialVersionUID = 874573384012299998L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = CorrectionPage.this.getModelObject();
+                setEnabled(state.getDocument() != null
+                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+            }
+        });
+        finishDocumentIcon = new FinishImage("finishImage", getModel());
+        finishDocumentIcon.setOutputMarkupId(true);
+        finishDocumentLink.add(finishDocumentIcon);
     }
     
     public void setModel(IModel<AnnotatorState> aModel)
@@ -558,7 +557,7 @@ public class CorrectionPage
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-
+    
     private List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
@@ -581,7 +580,7 @@ public class CorrectionPage
         }
     }
     
-    private JCas getCorrectionCas()
+    private JCas getEditorCas()
         throws IOException, UIMAException, ClassNotFoundException
     {
         AnnotatorState state = getModelObject();
@@ -618,17 +617,17 @@ public class CorrectionPage
         throws UIMAException, IOException, ClassNotFoundException
     {
         AnnotatorState state = getModelObject();
-        
+
         gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
                 gotoPageTextField.getModelObject());
 
         String labelText = "";
         if (state.getDocument() != null) {
-            
+
             List<SourceDocument> listofDoc = getListOfDocs();
-            
-            int docIndex = listofDoc.indexOf(state.getDocument())+1;
-            
+
+            int docIndex = listofDoc.indexOf(state.getDocument()) + 1;
+
             int totalNumberOfSentence = WebAnnoCasUtil.getNumberOfPages(aJCas);
 
             // If only one page, start displaying from sentence 1
@@ -701,7 +700,7 @@ public class CorrectionPage
                     LOG.error("Unable to load data", e);
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 }
-                target.add(finish);
+                target.add(finishDocumentIcon);
                 target.appendJavaScript(
                         "Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 target.add(documentNamePanel);
@@ -711,12 +710,18 @@ public class CorrectionPage
         openDocumentsModal.show(aTarget);
     }
 
+    /**
+     * Show the previous document, if exist
+     */
     private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToPreviousDocument(getListOfDocs());
         actionLoadDocument(aTarget);
     }
 
+    /**
+     * Show the next document if exist
+     */
     private void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToNextDocument(getListOfDocs());
@@ -765,7 +770,7 @@ public class CorrectionPage
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -773,7 +778,7 @@ public class CorrectionPage
     private void actionShowNextPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -781,7 +786,7 @@ public class CorrectionPage
     private void actionShowFirstPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -789,7 +794,7 @@ public class CorrectionPage
     private void actionShowLastPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jcas = getCorrectionCas();
+        JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
         actionRefreshDocument(aTarget, jcas);
     }
@@ -823,13 +828,35 @@ public class CorrectionPage
         });
         resetDocumentDialog.show(aTarget);
     }
+    
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+    {
+        finishDocumentDialog.setConfirmAction((target) -> {
+            AnnotatorState state = getModelObject();
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                    state.getDocument(), state.getUser());
+
+            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
+                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            
+            // manually update state change!! No idea why it is not updated in the DB
+            // without calling createAnnotationDocument(...)
+            repository.createAnnotationDocument(annotationDocument);
+            
+            target.add(finishDocumentIcon);
+            target.add(finishDocumentLink);
+            target.add(editor);
+            target.add(resetDocumentLink);
+        });
+        finishDocumentDialog.show(aTarget);
+    }
 
     private void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
         AnnotatorState state = getModelObject();
-
+        
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
 
