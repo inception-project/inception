@@ -128,7 +128,6 @@ public class CurationPage
     private List<String> crossAnnoSentList;
 
     private CurationPanel curationPanel;
-    private WebMarkupContainer finish;
     private AjaxLink<Void> showreCreateMergeCasModal;
     private ModalWindow reCreateMergeCas;
 
@@ -817,10 +816,10 @@ public class CurationPage
             error(e.getMessage());
         }
 
-        aTarget.add(finish);
         aTarget.add(numberOfPages);
         aTarget.add(documentNamePanel);
         aTarget.add(showreCreateMergeCasModal);
+        aTarget.add(finishDocumentLink);
     }
 
     private void actionRefreshDocument(AjaxRequestTarget aTarget)
