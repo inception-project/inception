@@ -72,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
@@ -133,7 +132,7 @@ public class CurationPage
     private AjaxLink<Void> showreCreateMergeCasModal;
     private ModalWindow reCreateMergeCas;
 
-    private FinishImage finishDocumentIcon;
+    private WebMarkupContainer finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
     
@@ -341,33 +340,6 @@ public class CurationPage
             }
         });
 
-        finish = new WebMarkupContainer("finishImage");
-        finish.setOutputMarkupId(true);
-        finish.add(new AttributeModifier("src", new LoadableDetachableModel<String>()
-        {
-            private static final long serialVersionUID = 1562727305401900776L;
-
-            @Override
-            protected String load()
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                if (state.getProject() != null && state.getDocument() != null) {
-                    if (repository
-                            .getSourceDocument(state.getDocument().getProject(),
-                                    state.getDocument().getName()).getState()
-                            .equals(SourceDocumentState.CURATION_FINISHED)) {
-                        return "images/accept.png";
-                    }
-                    else {
-                        return "images/inprogress.png";
-                    }
-                }
-                else {
-                    return "images/inprogress.png";
-                }
-            }
-        }));
-
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
         reCreateMergeCas.setOutputMarkupId(true);
         //Change size if you change text here
@@ -441,12 +413,39 @@ public class CurationPage
             {
                 super.onConfigure();
                 AnnotatorState state = CurationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+                setEnabled(state.getProject() != null && state.getDocument() != null
+                        && !repository
+                                .getSourceDocument(state.getDocument().getProject(),
+                                        state.getDocument().getName())
+                                .getState().equals(SourceDocumentState.CURATION_FINISHED));
             }
         });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
+        finishDocumentIcon = new WebMarkupContainer("finishImage");
         finishDocumentIcon.setOutputMarkupId(true);
+        finishDocumentIcon.add(new AttributeModifier("src", new LoadableDetachableModel<String>()
+        {
+            private static final long serialVersionUID = 1562727305401900776L;
+
+            @Override
+            protected String load()
+            {
+                AnnotatorState state = CurationPage.this.getModelObject();
+                if (state.getProject() != null && state.getDocument() != null) {
+                    if (repository
+                            .getSourceDocument(state.getDocument().getProject(),
+                                    state.getDocument().getName()).getState()
+                            .equals(SourceDocumentState.CURATION_FINISHED)) {
+                        return "images/accept.png";
+                    }
+                    else {
+                        return "images/inprogress.png";
+                    }
+                }
+                else {
+                    return "images/inprogress.png";
+                }
+            }
+        }));
         finishDocumentLink.add(finishDocumentIcon);
     }
     

@@ -22,7 +22,6 @@
 <body>
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
-		<div wicket:id=finishCurationModal></div>
 		<div wicket:id=reCreateMergeCasModal></div>
 
 		<div class="top-sticker">
@@ -115,13 +114,16 @@
 						</li>
 		
 						<li>
-							<fieldset>
-								<legend>Workflow</legend>
-								<ul class="horizontal">
-									<li><a wicket:id="showFinishCurationModal"><img
-											wicket:id="finishImage" title="Done" /><br />Done </a></li>
-								</ul>
-							</fieldset>
+                            <fieldset>
+                                <legend>Workflow</legend>
+                                <ul class="horizontal">
+                                    <li><a wicket:id="showFinishDocumentDialog"> <img 
+                                        wicket:id="finishImage" /><br />Finish
+                                    </a></li>
+
+                                    <span wicket:id="finishDocumentDialog" />
+                                </ul>
+                            </fieldset>
 						</li>
 					</ul>
 				</div>
