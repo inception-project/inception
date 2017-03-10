@@ -456,7 +456,7 @@ public class ProjectPage
                 public boolean isVisible()
                 {
                     IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+                    return model.getObject() != null && model.getObject().getId() != 0;
                 }
             });
 
