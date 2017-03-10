@@ -2412,25 +2412,40 @@ public class RepositoryServiceDbData
     public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
             User aUser)
     {
-        @SuppressWarnings("unchecked")
-        List<Object[]> result = entityManager
+        // First get the source documents
+        List<SourceDocument> sourceDocuments = entityManager
                 .createQuery(
-                        "SELECT doc, adoc "
-                        + "FROM AnnotationDocument AS adoc "
-                        + "RIGHT OUTER JOIN adoc.document AS doc "
-                        + "WHERE doc.project = :project "
-                        + "AND doc.trainingDocument = false "
-                        + "AND (adoc is null OR (adoc.state != (:state) AND adoc.user = (:username)))")
+                        "FROM SourceDocument " +
+                        "WHERE project = (:project) AND trainingDocument = false",
+                        SourceDocument.class)
                 .setParameter("project", aProject)
+                .getResultList();
+
+        // Next check if we have any annotation document records that state that the document
+        // is ignored for the given user
+        List<AnnotationDocument> annotationDocuments = entityManager
+                .createQuery(
+                        "FROM AnnotationDocument " +
+                        "WHERE user = (:username) AND state != (:state) AND project = (:project)",
+                        AnnotationDocument.class)
                 .setParameter("username", aUser.getUsername())
+                .setParameter("project", aProject)
                 .setParameter("state", AnnotationDocumentState.IGNORE)
                 .getResultList();
-        
+
+        // First we add all the source documents for which we have an annotation document
         Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
-        for (Object[] row : result) {
-            map.put((SourceDocument) row[0], (AnnotationDocument) row[1]);
+        for (AnnotationDocument adoc : annotationDocuments) {
+            map.put(adoc.getDocument(), adoc);
         }
-        
+
+        // Then we also add all the source documents for which we do not have an annoation document
+        for (SourceDocument doc : sourceDocuments) {
+            if (!map.containsKey(doc)) {
+                map.put(doc, null);
+            }
+        }
+
         return map;
     }
 
