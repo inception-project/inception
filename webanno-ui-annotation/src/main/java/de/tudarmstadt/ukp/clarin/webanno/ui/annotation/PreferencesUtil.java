@@ -69,13 +69,15 @@ public class PreferencesUtil
      * @throws BeansException hum?
      * @throws IOException hum?
      */
-    public static void setAnnotationPreference(String aUsername,
+    public static void loadPreferences(String aUsername,
             RepositoryService aRepositoryService, AnnotationService aAnnotationService,
             AnnotatorState aBModel, Mode aMode)
         throws BeansException, IOException
     {
         AnnotationPreference preference = new AnnotationPreference();
+        
         BeanWrapper wrapper = new BeanWrapperImpl(preference);
+        
         // get annotation preference from file system
         try {
             Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
@@ -97,7 +99,6 @@ public class PreferencesUtil
                     }
                 }
             }
-            aBModel.setPreferences(preference);
 
             // Get tagset using the id, from the properties file
             aBModel.getAnnotationLayers().clear();
@@ -119,7 +120,10 @@ public class PreferencesUtil
             List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
                     .getProject());
             aBModel.setAnnotationLayers(layers);
+            preference.setWindowSize(aRepositoryService.getNumberOfSentences());
         }
+        
+        aBModel.setPreferences(preference);
     }
 
     public static void savePreference(AnnotatorState aBModel, RepositoryService aRepository)

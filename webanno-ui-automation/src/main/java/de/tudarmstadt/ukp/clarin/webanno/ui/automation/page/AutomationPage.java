@@ -1100,11 +1100,15 @@ public class AutomationPage
         }
 
         // (Re)initialize brat model after potential creating / upgrading CAS
-        state.initForDocument(jCas, repository);
+        state.clearAllSelections();
 
         // Load user preferences
-        PreferencesUtil.setAnnotationPreference(username, repository, annotationService, state,
+        PreferencesUtil.loadPreferences(username, repository, annotationService, state,
                 state.getMode());
+        
+        // Initialize the visible content
+        state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(jCas));
+        
         // Re-render whole page as sidebar size preference may have changed
         aTarget.add(AutomationPage.this);
 

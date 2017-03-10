@@ -714,15 +714,18 @@ public class AnnotationPage
                     annotationDocument.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.initForDocument(annotationCas, repository);
+            state.clearAllSelections();
 
             // Load constraints
             state.setConstraints(repository.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.setAnnotationPreference(username, repository, annotationService, state,
+            PreferencesUtil.loadPreferences(username, repository, annotationService, state,
                     state.getMode());
 
+            // Initialize the visible content
+            state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(annotationCas));
+            
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();

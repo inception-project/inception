@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -44,7 +43,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public interface AnnotatorState
     extends Serializable
 {
-    void initForDocument(JCas aJCas, RepositoryService aRepository);
+    void clearAllSelections();
 
     // ---------------------------------------------------------------------------------------------
     // Window of visible annotations

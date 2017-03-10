@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -505,14 +505,10 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void initForDocument(JCas aJCas, RepositoryService aRepository)
+    public void clearAllSelections()
     {
         getSelection().clear();
         clearArmedSlot();
-
-        // (Re)initialize brat model after potential creating / upgrading CAS
-        getPreferences().setWindowSize(aRepository.getNumberOfSentences());
-        setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
     }
 
     private AnnotationFeature armedFeature;

@@ -755,8 +755,10 @@ public class CurationPage
 
         state.setUser(userLoggedIn);
         // Load user preferences
-        PreferencesUtil.setAnnotationPreference(username, repository, annotationService, state,
+        PreferencesUtil.loadPreferences(username, repository, annotationService, state,
                 state.getMode());
+        
+        
         // Re-render whole page as sidebar size preference may have changed
         aTarget.add(CurationPage.this);
 
@@ -786,8 +788,11 @@ public class CurationPage
                 randomAnnotationDocument);
 
         // (Re)initialize brat model after potential creating / upgrading CAS
-        state.initForDocument(mergeJCas, repository);
+        state.clearAllSelections();
         state.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceSize(mergeJCas));
+        
+        // Initialize the visible content
+        state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(mergeJCas));
 
         // if project is changed, reset some project specific settings
         if (currentprojectId != state.getProject().getId()) {

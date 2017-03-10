@@ -899,15 +899,18 @@ public class CorrectionPage
             repository.writeCorrectionCas(correctionCas, state.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.initForDocument(correctionCas, repository);
+            state.clearAllSelections();
 
             // Load constraints
             state.setConstraints(repository.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.setAnnotationPreference(username, repository, annotationService, state,
+            PreferencesUtil.loadPreferences(username, repository, annotationService, state,
                     state.getMode());
 
+            // Initialize the visible content
+            state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(annotationCas));
+            
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
