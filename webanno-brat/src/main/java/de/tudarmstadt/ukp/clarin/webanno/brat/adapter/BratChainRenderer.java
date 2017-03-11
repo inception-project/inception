@@ -41,21 +41,20 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
- * Render 
+ * Render
  */
 public class BratChainRenderer
     implements TypeRenderer
 {
     private ChainAdapter typeAdapter;
-    
+
     public BratChainRenderer(ChainAdapter aTypeAdapter)
     {
         typeAdapter = aTypeAdapter;
     }
-    
+
     /**
      * Add annotations from the CAS, which is controlled by the window size, to the brat response
      * {@link GetDocumentResponse}
@@ -64,23 +63,15 @@ public class BratChainRenderer
      *            The JCAS object containing annotations
      * @param aResponse
      *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
+     * @param aState
      *            Data model for brat annotations
      * @param aColoringStrategy
      *            the coloring strategy to render this layer (ignored)
      */
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, AnnotatorState aBratAnnotatorModel,
-            ColoringStrategy aColoringStrategy)
+    public void render(JCas aJcas, List<AnnotationFeature> aFeatures, GetDocumentResponse aResponse,
+            AnnotatorState aState, ColoringStrategy aColoringStrategy)
     {
-        // Get begin and end offsets of window content
-        int windowBegin = WebAnnoCasUtil.selectByAddr(aJcas,
-                Sentence.class, aBratAnnotatorModel.getFirstVisibleSentenceAddress()).getBegin();
-        int windowEnd = WebAnnoCasUtil.getLastSentenceInDisplayWindow(aJcas,
-                aBratAnnotatorModel.getFirstVisibleSentenceAddress(),
-                aBratAnnotatorModel.getPreferences().getWindowSize()).getEnd();
-
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
@@ -120,13 +111,14 @@ public class BratChainRenderer
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= windowEnd) {
+                if (linkFs.getBegin() >= aState.getWindowEndOffset()) {
                     break; // Go to next chain
                 }
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= windowBegin) && (linkFs.getEnd() <= windowEnd)) {
+                if (!(linkFs.getBegin() >= aState.getWindowBeginOffset())
+                        && (linkFs.getEnd() <= aState.getWindowEndOffset())) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -139,11 +131,12 @@ public class BratChainRenderer
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature)
                                     : Collections.EMPTY_LIST);
-                    Offsets offsets = new Offsets(linkFs.getBegin() - windowBegin,
-                            linkFs.getEnd() - windowBegin);
+                    Offsets offsets = new Offsets(linkFs.getBegin() - aState.getWindowBeginOffset(),
+                            linkFs.getEnd() - aState.getWindowBeginOffset());
 
                     VID vid = new VID(WebAnnoCasUtil.getAddr(linkFs), VID.NONE, VID.NONE, VID.NONE);
-                    aResponse.addEntity(new Entity(vid, bratTypeName, offsets, bratLabelText, color));
+                    aResponse.addEntity(
+                            new Entity(vid, bratTypeName, offsets, bratLabelText, color));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -167,18 +160,17 @@ public class BratChainRenderer
                             new Argument("Arg2", WebAnnoCasUtil.getAddr(linkFs)));
 
                     VID vid = new VID(WebAnnoCasUtil.getAddr(prevLinkFs), 1, VID.NONE, VID.NONE);
-                    aResponse.addRelation(new Relation(vid, bratTypeName, argumentList,
-                            bratLabelText, color));
+                    aResponse.addRelation(
+                            new Relation(vid, bratTypeName, argumentList, bratLabelText, color));
                 }
-                
+
                 // Render errors if required features are missing
                 renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
-                
 
-//                if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
-//                    log.error("Loop in CAS detected, aborting rendering of chains");
-//                    break;
-//                }
+                // if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
+                // log.error("Loop in CAS detected, aborting rendering of chains");
+                // break;
+                // }
 
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
