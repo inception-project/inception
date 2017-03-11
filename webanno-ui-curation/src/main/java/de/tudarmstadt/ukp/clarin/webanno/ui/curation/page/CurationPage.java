@@ -235,25 +235,7 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                
-                // Re-render the whole page because the width of the sidebar may have changed
-                aTarget.add(CurationPage.this);
-                
-                aTarget.add(numberOfPages);
-                JCas mergeJCas = null;
-                try {
-                    aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.readCurationCas(state.getDocument());
-                    curationPanel.updatePanel(aTarget, curationContainer);
-                    updatePanel(curationContainer, aTarget);
-                    updateSentenceNumber(mergeJCas, state.getFirstVisibleSentenceAddress());
-                }
-                catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
+                actionCompletePreferencesChange(aTarget);
             }
         });
 
@@ -287,28 +269,7 @@ public class CurationPage
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                if (gotoPageAddress == 0) {
-                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                    return;
-                }
-                AnnotatorState state = CurationPage.this.getModelObject();
-                JCas mergeJCas = null;
-                try {
-                    aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.readCurationCas(state.getDocument());
-                    if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-
-                        updateSentenceNumber(mergeJCas, gotoPageAddress);
-
-                        aTarget.add(numberOfPages);
-                        updatePanel(curationContainer, aTarget);
-                    }
-                }
-                catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
+                actionEnterPageNumer(aTarget);
             }
         });
 
@@ -633,6 +594,32 @@ public class CurationPage
         }
     }
 
+    private void actionEnterPageNumer(AjaxRequestTarget aTarget)
+    {
+        if (gotoPageAddress == 0) {
+            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+            return;
+        }
+        AnnotatorState state = CurationPage.this.getModelObject();
+        JCas mergeJCas = null;
+        try {
+            aTarget.add(getFeedbackPanel());
+            mergeJCas = repository.readCurationCas(state.getDocument());
+            if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+    
+                updateSentenceNumber(mergeJCas, gotoPageAddress);
+    
+                aTarget.add(numberOfPages);
+                updatePanel(curationContainer, aTarget);
+            }
+        }
+        catch (Exception e) {
+            aTarget.add(getFeedbackPanel());
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -672,6 +659,29 @@ public class CurationPage
 
         curationPanel.updatePanel(aTarget, curationContainer);
         updatePanel(curationContainer, aTarget);
+    }
+
+    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = CurationPage.this.getModelObject();
+        
+        // Re-render the whole page because the width of the sidebar may have changed
+        aTarget.add(CurationPage.this);
+        
+        aTarget.add(numberOfPages);
+        JCas mergeJCas = null;
+        try {
+            aTarget.add(getFeedbackPanel());
+            mergeJCas = repository.readCurationCas(state.getDocument());
+            curationPanel.updatePanel(aTarget, curationContainer);
+            updatePanel(curationContainer, aTarget);
+            updateSentenceNumber(mergeJCas, state.getFirstVisibleSentenceAddress());
+        }
+        catch (Exception e) {
+            aTarget.add(getFeedbackPanel());
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
     }
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)

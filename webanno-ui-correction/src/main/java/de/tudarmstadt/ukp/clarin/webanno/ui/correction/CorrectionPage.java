@@ -347,27 +347,7 @@ public class CorrectionPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                
-                // Re-render the whole page because the width of the sidebar may have changed
-                aTarget.add(CorrectionPage.this);
-                
-                curationContainer.setBratAnnotatorModel(state);
-                try {
-                    setCurationSegmentBeginEnd();
-                    update(repository.readCorrectionCas(state.getDocument()), aTarget);
-                    // mergeVisualizer.reloadContent(aTarget);
-                    aTarget.appendJavaScript(
-                            "Wicket.Window.unloadConfirmation = false;window.location.reload()");
-                }
-                catch (UIMAException e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (Exception e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error(e.getMessage());
-                }
+                actionCompletePreferencesChange(aTarget);
             }
         });
 
@@ -400,38 +380,7 @@ public class CorrectionPage
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                if (gotoPageAddress == 0) {
-                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                    return;
-                }
-                
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                JCas correctionCas = null;
-                try {
-                    correctionCas = repository.readCorrectionCas(state.getDocument());
-                    if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-                        Sentence sentence = selectByAddr(correctionCas, Sentence.class, gotoPageAddress);
-                        state.setFirstVisibleSentence(sentence);
-
-                        SuggestionBuilder builder = new SuggestionBuilder(repository,
-                                annotationService, userRepository);
-                        curationContainer = builder.buildCurationContainer(state);
-                        setCurationSegmentBeginEnd();
-                        curationContainer.setBratAnnotatorModel(state);
-                        update(correctionCas, aTarget);
-                        annotator.bratRenderLater(aTarget);
-                    }
-                }
-                catch (UIMAException e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (Exception e) {
-                    LOG.error("Error: " + e.getMessage(), e);
-                    error(e.getMessage());
-                }
+                actionEnterPageNumer(aTarget);
             }
         });
 
@@ -683,7 +632,7 @@ public class CorrectionPage
 
                 target.addChildren(getPage(), FeedbackPanel.class);
                 try {
-                    state.setDocument(state.getDocument());
+                    state.setDocument(state.getDocument(), getListOfDocs());
                     state.setProject(state.getProject());
 
                     actionLoadDocument(target);
@@ -767,6 +716,42 @@ public class CorrectionPage
         }
     }
 
+    private void actionEnterPageNumer(AjaxRequestTarget aTarget)
+    {
+        if (gotoPageAddress == 0) {
+            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+            return;
+        }
+        
+        AnnotatorState state = CorrectionPage.this.getModelObject();
+        
+        aTarget.addChildren(getPage(), FeedbackPanel.class);
+        JCas correctionCas = null;
+        try {
+            correctionCas = repository.readCorrectionCas(state.getDocument());
+            if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+                Sentence sentence = selectByAddr(correctionCas, Sentence.class, gotoPageAddress);
+                state.setFirstVisibleSentence(sentence);
+    
+                SuggestionBuilder builder = new SuggestionBuilder(repository,
+                        annotationService, userRepository);
+                curationContainer = builder.buildCurationContainer(state);
+                setCurationSegmentBeginEnd();
+                curationContainer.setBratAnnotatorModel(state);
+                update(correctionCas, aTarget);
+                annotator.bratRenderLater(aTarget);
+            }
+        }
+        catch (UIMAException e) {
+            LOG.error("Error: " + e.getMessage(), e);
+            error(ExceptionUtils.getRootCause(e));
+        }
+        catch (Exception e) {
+            LOG.error("Error: " + e.getMessage(), e);
+            error(e.getMessage());
+        }
+    }
+
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -818,6 +803,30 @@ public class CorrectionPage
         annotator.bratRenderLater(aTarget);
     }
     
+    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = CorrectionPage.this.getModelObject();
+        
+        // Re-render the whole page because the width of the sidebar may have changed
+        aTarget.add(CorrectionPage.this);
+        
+        curationContainer.setBratAnnotatorModel(state);
+        try {
+            setCurationSegmentBeginEnd();
+            update(repository.readCorrectionCas(state.getDocument()), aTarget);
+            // mergeVisualizer.reloadContent(aTarget);
+            aTarget.appendJavaScript(
+                    "Wicket.Window.unloadConfirmation = false;window.location.reload()");
+        }
+        catch (UIMAException e) {
+            LOG.error("Error: " + e.getMessage(), e);
+            error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (Exception e) {
+            LOG.error("Error: " + e.getMessage(), e);
+            error(e.getMessage());
+        }    }
+
     private void actionResetDocument(AjaxRequestTarget aTarget)
     {
         resetDocumentDialog.setConfirmAction((target) -> {
