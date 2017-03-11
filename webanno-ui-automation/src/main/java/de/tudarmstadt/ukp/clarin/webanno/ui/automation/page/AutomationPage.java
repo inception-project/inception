@@ -431,62 +431,59 @@ public class AutomationPage
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
 
-        add(numberOfPages = (Label) new Label("numberOfPages",
-                new LoadableDetachableModel<String>()
-                {
-                    private static final long serialVersionUID = 891566759811286173L;
+        add(numberOfPages = (Label) new Label("numberOfPages", new LoadableDetachableModel<String>()
+        {
+            private static final long serialVersionUID = 891566759811286173L;
 
-                    @Override
-                    protected String load()
-                    {
-                        AnnotatorState state = AutomationPage.this.getModelObject();
-                        if (state.getDocument() != null) {
+            @Override
+            protected String load()
+            {
+                AnnotatorState state = AutomationPage.this.getModelObject();
+                if (state.getDocument() != null) {
 
-                            JCas mergeJCas = null;
-                            try {
+                    JCas mergeJCas = null;
+                    try {
 
-                                mergeJCas = repository.readCorrectionCas(state.getDocument());
+                        mergeJCas = repository.readCorrectionCas(state.getDocument());
 
-                                totalNumberOfSentence = getNumberOfPages(mergeJCas);
+                        totalNumberOfSentence = getNumberOfPages(mergeJCas);
 
-                                // If only one page, start displaying from sentence 1
-                                /*
-                                 * if (totalNumberOfSentence == 1) {
-                                 * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
-                                 * .getFirstSentenceAddress()); }
-                                 */
-                                List<SourceDocument> listofDoc = getListOfDocs();
-                            	
-                            	int docIndex = listofDoc.indexOf(state.getDocument())+1;
-                            	
-                                return "showing " + state.getFirstVisibleSentenceNumber() + "-"
-                                        + state.getLastVisibleSentenceNumber() + " of "
-                                        + totalNumberOfSentence + " sentences [document " + docIndex
-                                        + " of " + listofDoc.size() + "]";
-                            }
-                            catch (UIMAException e) {
-                                return "";
-                            }
-                            catch (DataRetrievalFailureException e) {
-                                return "";
-                            }
-                            catch (ClassNotFoundException e) {
-                                return "";
-                            }
-                            catch (FileNotFoundException e) {
-                                return "";
-                            }
-                            catch (IOException e) {
-                                return "";
-                            }
+                        // If only one page, start displaying from sentence 1
+                        /*
+                         * if (totalNumberOfSentence == 1) {
+                         * bratAnnotatorModel.setSentenceAddress(bratAnnotatorModel
+                         * .getFirstSentenceAddress()); }
+                         */
+                        List<SourceDocument> listofDoc = getListOfDocs();
 
-                        }
-                        else {
-                            return "";// no document yet selected
-                        }
+                        int docIndex = listofDoc.indexOf(state.getDocument()) + 1;
 
+                        return "showing " + state.getFirstVisibleSentenceNumber() + "-"
+                                + state.getLastVisibleSentenceNumber() + " of "
+                                + totalNumberOfSentence + " sentences [document " + docIndex
+                                + " of " + listofDoc.size() + "]";
                     }
-                }).setOutputMarkupId(true));
+                    catch (UIMAException e) {
+                        return "";
+                    }
+                    catch (DataRetrievalFailureException e) {
+                        return "";
+                    }
+                    catch (ClassNotFoundException e) {
+                        return "";
+                    }
+                    catch (FileNotFoundException e) {
+                        return "";
+                    }
+                    catch (IOException e) {
+                        return "";
+                    }
+                }
+                else {
+                    return "";// no document yet selected
+                }
+            }
+        }).setOutputMarkupId(true));
 
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -505,27 +502,7 @@ public class AutomationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                // Re-render the whole page because the width of the sidebar may have changed
-                aTarget.add(AutomationPage.this);
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                curationContainer.setBratAnnotatorModel(state);
-                try {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    setCurationSegmentBeginEnd();
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                update(aTarget);
-                // mergeVisualizer.reloadContent(aTarget);
-                aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
-
+                actionCompletePreferencesChange(aTarget);
             }
         });
 
@@ -558,40 +535,7 @@ public class AutomationPage
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
             {
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                if (gotoPageAddress == 0) {
-                    aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-                    return;
-                }
-                JCas mergeJCas = null;
-                try {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    mergeJCas = repository.readCorrectionCas(state.getDocument());
-                    if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-
-                        updateSentenceNumber(mergeJCas, gotoPageAddress);
-
-                        SuggestionBuilder builder = new SuggestionBuilder(repository,
-                                annotationService, userRepository);
-                        curationContainer = builder.buildCurationContainer(state);
-                        setCurationSegmentBeginEnd();
-                        curationContainer.setBratAnnotatorModel(state);
-                        update(aTarget);
-                        annotator.bratRenderLater(aTarget);
-                    }
-                }
-                catch (UIMAException e) {
-                    error(ExceptionUtils.getRootCause(e));
-                }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (AnnotationException e) {
-                    error(e.getMessage());
-                }
+                actionEnterPageNumer(aTarget);
             }
         });
 
@@ -835,7 +779,7 @@ public class AutomationPage
 
                 try {
                     target.addChildren(getPage(), FeedbackPanel.class);
-                    state.setDocument(state.getDocument());
+                    state.setDocument(state.getDocument(), getListOfDocs());
                     state.setProject(state.getProject());
 
                     String username = SecurityContextHolder.getContext().getAuthentication()
@@ -939,6 +883,44 @@ public class AutomationPage
         }
     }
 
+    private void actionEnterPageNumer(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = AutomationPage.this.getModelObject();
+        if (gotoPageAddress == 0) {
+            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
+            return;
+        }
+        JCas mergeJCas = null;
+        try {
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            mergeJCas = repository.readCorrectionCas(state.getDocument());
+            if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
+    
+                updateSentenceNumber(mergeJCas, gotoPageAddress);
+    
+                SuggestionBuilder builder = new SuggestionBuilder(repository,
+                        annotationService, userRepository);
+                curationContainer = builder.buildCurationContainer(state);
+                setCurationSegmentBeginEnd();
+                curationContainer.setBratAnnotatorModel(state);
+                update(aTarget);
+                annotator.bratRenderLater(aTarget);
+            }
+        }
+        catch (UIMAException e) {
+            error(ExceptionUtils.getRootCause(e));
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        catch (AnnotationException e) {
+            error(e.getMessage());
+        }
+    }
+
     private void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -989,6 +971,30 @@ public class AutomationPage
         annotator.bratRenderLater(aTarget);
     }
     
+    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
+    {
+        // Re-render the whole page because the width of the sidebar may have changed
+        aTarget.add(AutomationPage.this);
+        AnnotatorState state = AutomationPage.this.getModelObject();
+        curationContainer.setBratAnnotatorModel(state);
+        try {
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            setCurationSegmentBeginEnd();
+        }
+        catch (UIMAException e) {
+            error(ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (ClassNotFoundException e) {
+            error(e.getMessage());
+        }
+        catch (IOException e) {
+            error(e.getMessage());
+        }
+        update(aTarget);
+        // mergeVisualizer.reloadContent(aTarget);
+        aTarget.appendJavaScript("Wicket.Window.unloadConfirmation = false;window.location.reload()");
+    }
+
     private void actionResetDocument(AjaxRequestTarget aTarget)
     {
         resetDocumentDialog.setConfirmAction((target) -> {
