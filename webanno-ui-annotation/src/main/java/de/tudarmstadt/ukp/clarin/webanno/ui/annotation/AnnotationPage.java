@@ -178,8 +178,9 @@ public class AnnotationPage
 
         firstLoad = false;
         
+        getModelObject().setUser(user);
         getModelObject().setProject(project);
-        getModelObject().setDocument(document);
+        getModelObject().setDocument(document, getListOfDocs());
 
         actionLoadDocument(null);
     }
@@ -217,52 +218,14 @@ public class AnnotationPage
         annotationViewCell.setOutputMarkupId(true);
         add(annotationViewCell);
 
-        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
-        {
-            private static final long serialVersionUID = 2857345299480098279L;
-
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(numberOfPages);
-
-                try {
-                    annotator.bratRender(aTarget, getEditorCas());
-                    annotator.bratSetHighlight(aTarget,
-                            getModelObject().getSelection().getAnnotation());
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
-                    error("Error reading CAS: " + e.getMessage());
-                    return;
-                }
-            }
-
-            @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget)
-            {
-                try {
-                    annotator.bratRender(aTarget, getEditorCas());
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
-                    error("Error reading CAS " + e.getMessage());
-                    return;
-                }
-            }
-        };
-        sidebarCell.add(editor);
+        sidebarCell.add(editor = createDetailEditor());
         
         annotator = new BratAnnotator("embedder1", getModel(), editor);
         annotationViewCell.add(annotator);
 
-        add(documentNamePanel = (DocumentNamePanel) new DocumentNamePanel("documentNamePanel",
-                getModel()).setOutputMarkupId(true));
+        add(documentNamePanel = createDocumentInfoLabel());
 
-        numberOfPages = new Label("numberOfPages", new Model<String>());
-        numberOfPages.setOutputMarkupId(true);
-        add(numberOfPages);
+        add(numberOfPages = createPositionInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel()) {
             private static final long serialVersionUID = 5474030848589262638L;
@@ -285,27 +248,7 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                try {
-                    AnnotatorState state = AnnotationPage.this.getModelObject();
-                    
-                    JCas jCas = getEditorCas();
-                    
-                    // The number of visible sentences may have changed - let the state recalculate 
-                    // the visible sentences 
-                    Sentence sentence = selectByAddr(jCas, Sentence.class,
-                            state.getFirstVisibleSentenceAddress());
-                    state.setFirstVisibleSentence(sentence);
-                    
-                    updateSentenceAddress(jCas, aTarget);
-                    
-                    // Re-render the whole page because the width of the sidebar may have changed
-                    aTarget.add(AnnotationPage.this);
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
-                    return;
-                }
+                actionCompletePreferencesChange(aTarget);
             }
         });
 
@@ -444,6 +387,75 @@ public class AnnotationPage
         finishDocumentLink.add(finishDocumentIcon);
     }
     
+    private DocumentNamePanel createDocumentInfoLabel()
+    {
+        return new DocumentNamePanel("documentNamePanel", getModel());
+    }
+
+    private AnnotationDetailEditorPanel createDetailEditor()
+    {
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        {
+            private static final long serialVersionUID = 2857345299480098279L;
+
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.add(numberOfPages);
+
+                try {
+                    annotator.bratRender(aTarget, getEditorCas());
+                    annotator.bratSetHighlight(aTarget,
+                            getModelObject().getSelection().getAnnotation());
+                }
+                catch (Exception e) {
+                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
+                    error("Error reading CAS: " + e.getMessage());
+                    return;
+                }
+            }
+
+            @Override
+            protected void onAutoForward(AjaxRequestTarget aTarget)
+            {
+                try {
+                    annotator.bratRender(aTarget, getEditorCas());
+                }
+                catch (Exception e) {
+                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
+                    error("Error reading CAS " + e.getMessage());
+                    return;
+                }
+            }
+        };
+    }
+
+    private Label createPositionInfoLabel()
+    {
+        return new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
+                this, getModel(), 
+                PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
+                PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
+                PropertyModel.of(getModel(), "numberOfSentences"),
+                PropertyModel.of(getModel(), "documentIndex"),
+                PropertyModel.of(getModel(), "numberOfDocuments"))) {
+            private static final long serialVersionUID = 7176610419683776917L;
+
+            {
+                setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(getModelObject().getDocument() != null);
+            }
+        };
+    }
+
     public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
@@ -479,29 +491,15 @@ public class AnnotationPage
         gotoPageAddress = WebAnnoCasUtil.getSentenceAddress(aJCas,
                 gotoPageTextField.getModelObject());
 
-        String labelText = "";
         if (state.getDocument() != null) {
-
-            List<SourceDocument> listofDoc = getListOfDocs();
-
-            int docIndex = listofDoc.indexOf(state.getDocument()) + 1;
-
             int totalNumberOfSentence = WebAnnoCasUtil.getNumberOfPages(aJCas);
 
             // If only one page, start displaying from sentence 1
             if (totalNumberOfSentence == 1) {
                 state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(aJCas));
             }
-
-            labelText = "showing " + state.getFirstVisibleSentenceNumber() + "-"
-                    + state.getLastVisibleSentenceNumber() + " of " + totalNumberOfSentence
-                    + " sentences [document " + docIndex + " of " + listofDoc.size() + "]";
-        }
-        else {
-            labelText = "";// no document yet selected
         }
 
-        numberOfPages.setDefaultModelObject(labelText);
         if (aTarget != null) {
             aTarget.add(numberOfPages);
             aTarget.add(gotoPageTextField);
@@ -647,6 +645,31 @@ public class AnnotationPage
     {
         getModelObject().toggleScriptDirection();
         annotator.bratRenderLater(aTarget);
+    }
+    
+    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
+    {
+        try {
+            AnnotatorState state = AnnotationPage.this.getModelObject();
+            
+            JCas jCas = getEditorCas();
+            
+            // The number of visible sentences may have changed - let the state recalculate 
+            // the visible sentences 
+            Sentence sentence = selectByAddr(jCas, Sentence.class,
+                    state.getFirstVisibleSentenceAddress());
+            state.setFirstVisibleSentence(sentence);
+            
+            updateSentenceAddress(jCas, aTarget);
+            
+            // Re-render the whole page because the width of the sidebar may have changed
+            aTarget.add(AnnotationPage.this);
+        }
+        catch (Exception e) {
+            LOG.info("Error reading CAS " + e.getMessage());
+            error("Error reading CAS " + e.getMessage());
+            return;
+        }
     }
     
     private void actionResetDocument(AjaxRequestTarget aTarget)

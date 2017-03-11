@@ -44,6 +44,7 @@ public class DocumentNamePanel
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
+        setOutputMarkupId(true);
         add(new Label("doumentName", new LoadableDetachableModel<String>()
         {
             private static final long serialVersionUID = 1L;

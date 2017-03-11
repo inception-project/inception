@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,6 +62,8 @@ public class AnnotatorStateImpl
      * The source document the to be annotated
      */
     private SourceDocument document;
+    private int documentIndex = -1;
+    private int numberOfDocuments = -1;
 
     /**
      * The current user annotating the document
@@ -108,6 +111,11 @@ public class AnnotatorStateImpl
      * The last sentence number in the display window
      */
     private int lastVisibleSentenceNumber;
+
+    /**
+     * The total number of sentences in the document
+     */
+    private int numberOfSentences;
 
     private List<FeatureState> featureModels = new ArrayList<>();          
     
@@ -257,9 +265,29 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setDocument(SourceDocument aDocument)
+    public int getDocumentIndex()
+    {
+        return documentIndex;
+    }
+    
+    @Override
+    public int getNumberOfDocuments()
+    {
+        return numberOfDocuments;
+    }
+    
+    @Override
+    public void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments)
     {
         document = aDocument;
+        if (aDocument != null) {
+            documentIndex = aDocuments.indexOf(aDocument);
+            numberOfDocuments = aDocuments.size();
+        }
+        else {
+            documentIndex = -1;
+            numberOfDocuments = -1;
+        }
     }
 
     @Override
@@ -295,6 +323,7 @@ public class AnnotatorStateImpl
                 aSentence.getBegin());
         lastVisibleSentenceNumber = WebAnnoCasUtil.getSentenceNumber(jcas,
                 lastVisibleSentence.getBegin());
+        numberOfSentences = select(jcas, Sentence.class).size();
         
         windowBeginOffset = aSentence.getBegin();
         windowEndOffset = lastVisibleSentence.getEnd();
@@ -444,6 +473,12 @@ public class AnnotatorStateImpl
     public int getLastVisibleSentenceNumber()
     {
         return lastVisibleSentenceNumber;
+    }
+    
+    @Override
+    public int getNumberOfSentences()
+    {
+        return numberOfSentences;
     }
 
     @Override

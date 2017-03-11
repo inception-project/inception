@@ -48,49 +48,60 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // Window of visible annotations
     // ---------------------------------------------------------------------------------------------
-    
+
     // REC: sentenceNumber/sentenceAddress can probably be dropped in favor of
     // firstSentenceNumber/firstSentenceAddress?
-    
+
     /**
      * Get the number of the sentence in focus (curation view)
      */
     int getFocusSentenceNumber();
-    
+
     /**
      * Set the number of the sentence in focus (curation view)
      */
     void setFocusSentenceNumber(int sentenceNumber);
-    
+
     void setFirstVisibleSentence(Sentence aSentence);
-    
+
     int getFirstVisibleSentenceAddress();
+
     int getFirstVisibleSentenceBegin();
+
     int getFirstVisibleSentenceEnd();
 
     int getFirstVisibleSentenceNumber();
+
     int getLastVisibleSentenceNumber();
-    
+
+    int getNumberOfSentences();
+
     int getWindowBeginOffset();
+
     int getWindowEndOffset();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
     //
-    // Control which kinds of annotations are created when an annotation creation action is 
+    // Control which kinds of annotations are created when an annotation creation action is
     // triggered and also what happens after the annotation has been created (e.g. auto-forward)
     // ---------------------------------------------------------------------------------------------
     boolean isForwardAnnotation();
+
     void setForwardAnnotation(boolean forwardAnnotation);
+
     AnnotationLayer getSelectedAnnotationLayer();
+
     void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer);
+
     AnnotationLayer getDefaultAnnotationLayer();
+
     void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer);
-    
+
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages
     Mode getMode();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values
     //
@@ -99,76 +110,101 @@ public interface AnnotatorState
     // the same type with similar feature values need to be created.
     // ---------------------------------------------------------------------------------------------
     void rememberFeatures();
+
     AnnotationLayer getRememberedSpanLayer();
+
     AnnotationLayer getRememberedArcLayer();
+
     Map<AnnotationFeature, Serializable> getRememberedSpanFeatures();
+
     Map<AnnotationFeature, Serializable> getRememberedArcFeatures();
+
     void clearRememberedFeatures();
-    
+
     // ---------------------------------------------------------------------------------------------
     // User
     // ---------------------------------------------------------------------------------------------
-    
+
     // REC not sure if we need these really... we can fetch the user from the security context.
     // Might be interesting to have if we allow an admin to open another users annotation though.
     User getUser();
+
     void setUser(User aUser);
-    
+
     // ---------------------------------------------------------------------------------------------
     // Document
     // ---------------------------------------------------------------------------------------------
     SourceDocument getDocument();
-    void setDocument(SourceDocument aDocument);
-    
+
+    void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
+
+    int getDocumentIndex();
+
+    int getNumberOfDocuments();
+
     // ---------------------------------------------------------------------------------------------
     // Project
     // ---------------------------------------------------------------------------------------------
     Project getProject();
+
     void setProject(Project aProject);
-    
+
     // REC: we cache the constraints when a document is opened because parsing them takes some time
     ParsedConstraints getConstraints();
+
     void setConstraints(ParsedConstraints aConstraints);
-    
+
     // ---------------------------------------------------------------------------------------------
     // Selection
     // ---------------------------------------------------------------------------------------------
     Selection getSelection();
+
     void setArmedSlot(AnnotationFeature aName, int aIndex);
+
     boolean isArmedSlot(AnnotationFeature aName, int aIndex);
+
     void clearArmedSlot();
+
     boolean isSlotArmed();
+
     AnnotationFeature getArmedFeature();
+
     int getArmedSlot();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Rendering
     // - script direction can be changed by the user at will - it defaults to the direction
-    //   configured in the project
+    // configured in the project
     // ---------------------------------------------------------------------------------------------
     ScriptDirection getScriptDirection();
+
     void setScriptDirection(ScriptDirection aScriptDirection);
+
     void toggleScriptDirection();
-    
+
     // ---------------------------------------------------------------------------------------------
     // User preferences
     // ---------------------------------------------------------------------------------------------
     AnnotationPreference getPreferences();
+
     void setPreferences(AnnotationPreference aPreferences);
+
     List<AnnotationLayer> getAnnotationLayers();
+
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 
     // ---------------------------------------------------------------------------------------------
     // Feature value models
     // ---------------------------------------------------------------------------------------------
     List<FeatureState> getFeatureStates();
+
     FeatureState getFeatureState(AnnotationFeature aFeature);
-    
+
     // ---------------------------------------------------------------------------------------------
     // Access to transient context
     // ---------------------------------------------------------------------------------------------
     TransientActionContext getAction();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Navigation within or across a document
     // ---------------------------------------------------------------------------------------------
@@ -182,7 +218,7 @@ public interface AnnotatorState
             throw new IllegalStateException("This is the first document!");
         }
 
-        setDocument(aDocuments.get(currentDocumentIndex - 1));
+        setDocument(aDocuments.get(currentDocumentIndex - 1), aDocuments);
     }
 
     default void moveToNextDocument(List<SourceDocument> aDocuments)
@@ -195,7 +231,7 @@ public interface AnnotatorState
             throw new IllegalStateException("This is the last document!");
         }
 
-        setDocument(aDocuments.get(currentDocumentIndex + 1));
+        setDocument(aDocuments.get(currentDocumentIndex + 1), aDocuments);
     }
 
     default void moveToPreviousPage(JCas aJCas)

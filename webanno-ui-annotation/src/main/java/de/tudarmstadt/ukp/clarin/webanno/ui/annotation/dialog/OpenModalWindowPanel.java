@@ -258,6 +258,8 @@ public class OpenModalWindowPanel
     {
         private static final long serialVersionUID = -1L;
 
+        ListView<SourceDocument> lv;
+        
         public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
 
@@ -265,7 +267,7 @@ public class OpenModalWindowPanel
             final Map<SourceDocument, String> documnetColors = new HashMap<SourceDocument, String>();
 
             documentSelection = new Select<SourceDocument>("documentSelection");
-            ListView<SourceDocument> lv = new ListView<SourceDocument>("documents",
+            lv = new ListView<SourceDocument>("documents",
                     new LoadableDetachableModel<List<SourceDocument>>()
                     {
                         private static final long serialVersionUID = 1L;
@@ -326,7 +328,7 @@ public class OpenModalWindowPanel
                     }
                     if (selectedProject != null && selectedDocument != null) {
                         bModel.setProject(selectedProject);
-                        bModel.setDocument(selectedDocument);
+                        bModel.setDocument(selectedDocument, lv.getModelObject());
                         modalWindow.close(aTarget);
                     }
                 }
@@ -428,7 +430,8 @@ public class OpenModalWindowPanel
                         }
                         
                         bModel.setProject(selectedProject);
-                        bModel.setDocument(selectedDocument);
+                        bModel.setDocument(selectedDocument,
+                                documentSelectionForm.lv.getModelObject());
                         modalWindow.close(aTarget);
                     }
                 }
@@ -450,7 +453,7 @@ public class OpenModalWindowPanel
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
                     if (mode.equals(Mode.CURATION)) {
-                        bModel.setDocument(null); // on cancel, go welcomePage
+                        bModel.setDocument(null, null); // on cancel, go welcomePage
                     }
                     onCancel(aTarget);
                     modalWindow.close(aTarget);
