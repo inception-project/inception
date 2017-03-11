@@ -1952,7 +1952,6 @@ public class AnnotationDetailEditorPanel
         return (IModel<AnnotatorState>) getDefaultModel();
     }
     
-    @Override
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();

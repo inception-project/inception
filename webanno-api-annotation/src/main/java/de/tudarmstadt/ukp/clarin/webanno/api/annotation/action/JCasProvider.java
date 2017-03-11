@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
+import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.form.Form;
+import org.apache.uima.jcas.JCas;
 
 @FunctionalInterface
-public interface AjaxFormCallback<T>
+public interface JCasProvider
     extends Serializable
 {
-    void accept(AjaxRequestTarget aTarget, Form<T> aForm)
-        throws Exception;
+    JCas get()
+        throws IOException;
 }

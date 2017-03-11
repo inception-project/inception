@@ -49,6 +49,7 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -72,12 +73,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 /**
  * Brat annotator component.
- *
  */
 public class BratAnnotator
     extends Panel
@@ -102,19 +101,21 @@ public class BratAnnotator
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
-    private AnnotationActionHandler detailPanel;
+    private AnnotationActionHandler actionHandler;
+    private JCasProvider jcasProvider;
 
-    @Deprecated
     public AnnotatorState getModelObject()
     {
-        return detailPanel.getModelObject();
+        return (AnnotatorState) getDefaultModelObject();
     }
 
     public BratAnnotator(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aEditor)
+            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
     {
         super(id, aModel);
-        this.detailPanel = aEditor;
+        actionHandler = aActionHandler;
+        jcasProvider = aJCasProvider;
+        
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -141,6 +142,10 @@ public class BratAnnotator
 
                 final IRequestParameters request = getRequest().getPostParameters();
                 
+                // Get action from the request
+                String action = request.getParameterValue(PARAM_ACTION).toString();
+                LOG.info("AJAX-RPC CALLED: [{}]", action);
+                
                 // Parse annotation ID if present in request
                 VID paramId;
                 if (!request.getParameterValue(PARAM_ID).isEmpty()
@@ -154,9 +159,6 @@ public class BratAnnotator
                 else {
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
-                
-                // Get action from the request
-                String action = request.getParameterValue(PARAM_ACTION).toString();
                 
                 // Record the action in the action context (which currently is persistent...)
                 getModelObject().getAction().setUserAction(action);
@@ -201,15 +203,13 @@ public class BratAnnotator
 
                 Object result = null;
                 try {
-                    LOG.info("AJAX-RPC CALLED: [" + action + "]");
-
                     if (WhoamiResponse.is(action)) {
                         result = new WhoamiResponse(
                                 SecurityContextHolder.getContext().getAuthentication().getName());
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        detailPanel.actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
+                        actionHandler.actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
                                 offsets.getEnd(), paramId);
                         result = new SpanAnnotationResponse();
                     }
@@ -218,7 +218,7 @@ public class BratAnnotator
                         int originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
                         String targetType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
                         int targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt();
-                        detailPanel.actionArcAnnotation(aTarget, jCas, paramId, originType,
+                        actionHandler.actionArcAnnotation(aTarget, jCas, paramId, originType,
                                 originSpanId, targetType, targetSpanId);
                         result = new ArcAnnotationResponse();
                     }
@@ -253,7 +253,7 @@ public class BratAnnotator
 
                 // Serialize updated document to JSON
                 if (result == null) {
-                    LOG.warn("AJAX-RPC: Action [" + action + "] produced no result!");
+                    LOG.warn("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
                     String json = toJson(result);
@@ -264,8 +264,8 @@ public class BratAnnotator
                             + json + ";");
                 }
                 
-                LOG.info("AJAX-RPC DONE: [" + action + "] completed in "
-                        + (System.currentTimeMillis() - timerStart) + "ms");
+                LOG.info("AJAX-RPC DONE: [{}] completed in {}ms", action,
+                        (System.currentTimeMillis() - timerStart));
             }
         };
 
@@ -511,15 +511,16 @@ public class BratAnnotator
     private JCas getCas(AnnotatorState aState)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        if (aState.getMode().equals(Mode.ANNOTATION)
-                || aState.getMode().equals(Mode.AUTOMATION)
-                || aState.getMode().equals(Mode.CORRECTION)) {
-
-            return repository.readAnnotationCas(aState.getDocument(),
-                    aState.getUser());
-        }
-        else {
-            return repository.readCurationCas(aState.getDocument());
-        }
+        return jcasProvider.get();
+//        if (aState.getMode().equals(Mode.ANNOTATION)
+//                || aState.getMode().equals(Mode.AUTOMATION)
+//                || aState.getMode().equals(Mode.CORRECTION)) {
+//
+//            return repository.readAnnotationCas(aState.getDocument(),
+//                    aState.getUser());
+//        }
+//        else {
+//            return repository.readCurationCas(aState.getDocument());
+//        }
     }    
 }

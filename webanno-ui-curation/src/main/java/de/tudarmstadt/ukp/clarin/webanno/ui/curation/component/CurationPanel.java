@@ -301,7 +301,8 @@ public class CurationPanel
         };
         sidebarCell.add(editor);
 
-        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor);
+        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor,
+                () -> { return getEditorCas(); });
         // reset sentenceAddress and lastSentenceAddress to the orginal once
 
         annotator.setOutputMarkupId(true);
@@ -470,6 +471,16 @@ public class CurationPanel
     protected void onChange(AjaxRequestTarget aTarget)
     {
 
+    }
+
+    protected JCas getEditorCas()
+        throws IOException
+    {
+        if (bModel.getDocument() == null) {
+            throw new IllegalStateException("Please open a document first!");
+        }
+
+        return repository.readCurationCas(bModel.getDocument());
     }
 
     @Override

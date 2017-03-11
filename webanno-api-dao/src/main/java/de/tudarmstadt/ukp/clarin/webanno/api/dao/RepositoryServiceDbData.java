@@ -1615,7 +1615,7 @@ public class RepositoryServiceDbData
 
     @Override
     public JCas readCurationCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws IOException
     {
         return readCas(aDocument, CURATION_USER);
     }
@@ -1635,8 +1635,9 @@ public class RepositoryServiceDbData
     private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
-        log.debug("Updating annotation document [" + aDocument.getName() + "] " + "with ID ["
-                + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId() + "]");
+        log.debug("Writing annotation document [{}] ({}) for user [{}] in project [{}] ({})",
+                aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
+                aDocument.getProject().getId());
         // DebugUtils.smallStack();
 
         try {
@@ -1814,11 +1815,9 @@ public class RepositoryServiceDbData
     private JCas readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        if (log.isDebugEnabled()) {
-            log.debug("Getting annotation document [" + aDocument.getName() + "] with ID ["
-                    + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
-                    + "] for user [" + aUsername + "]");
-        }
+        log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
+                aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
+                aDocument.getProject().getId());
 
         // DebugUtils.smallStack();
 

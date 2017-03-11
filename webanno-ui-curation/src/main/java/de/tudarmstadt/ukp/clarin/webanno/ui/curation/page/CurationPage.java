@@ -334,7 +334,7 @@ public class CurationPage
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));        
         
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionOpenDocument));
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
         add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -493,7 +493,7 @@ public class CurationPage
         state.setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    private void actionOpenDocument(AjaxRequestTarget aTarget)
+    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
         state.getSelection().clear();
@@ -669,13 +669,20 @@ public class CurationPage
         aTarget.add(CurationPage.this);
         
         aTarget.add(numberOfPages);
-        JCas mergeJCas = null;
+        JCas mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
-            mergeJCas = repository.readCurationCas(state.getDocument());
+            mergeCas = repository.readCurationCas(state.getDocument());
+            
+            // The number of visible sentences may have changed - let the state recalculate 
+            // the visible sentences 
+            Sentence sentence = selectByAddr(mergeCas, Sentence.class,
+                    state.getFirstVisibleSentenceAddress());
+            state.setFirstVisibleSentence(sentence);
+            
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeJCas, state.getFirstVisibleSentenceAddress());
+            updateSentenceNumber(mergeCas, state.getFirstVisibleSentenceAddress());
         }
         catch (Exception e) {
             aTarget.add(getFeedbackPanel());

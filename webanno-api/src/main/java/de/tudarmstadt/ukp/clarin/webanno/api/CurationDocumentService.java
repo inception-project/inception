@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -56,15 +55,11 @@ public interface CurationDocumentService
      * @param document
      *            the source document.
      * @return the curation JCas.
-     * @throws UIMAException
-     *             if a conversion error occurs.
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if the DKPro Core reader/writer cannot be loaded.
      */
     JCas readCurationCas(SourceDocument document)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws IOException;
 
     /**
      * Remove a curation annotation document from the file system, for this {@link SourceDocument}

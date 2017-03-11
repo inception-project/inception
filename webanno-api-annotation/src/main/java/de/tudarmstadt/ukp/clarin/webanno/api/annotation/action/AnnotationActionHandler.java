@@ -24,7 +24,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
@@ -39,6 +38,4 @@ public interface AnnotationActionHandler
 
     void actionAnnotate(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
-
-    AnnotatorState getModelObject();
 }

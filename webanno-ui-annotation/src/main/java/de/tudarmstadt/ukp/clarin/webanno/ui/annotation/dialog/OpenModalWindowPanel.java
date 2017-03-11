@@ -264,7 +264,7 @@ public class OpenModalWindowPanel
         {
 
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            final Map<SourceDocument, String> documnetColors = new HashMap<SourceDocument, String>();
+            final Map<SourceDocument, String> documentColors = new HashMap<SourceDocument, String>();
 
             documentSelection = new Select<SourceDocument>("documentSelection");
             lv = new ListView<SourceDocument>("documents",
@@ -275,7 +275,7 @@ public class OpenModalWindowPanel
                         @Override
                         protected List<SourceDocument> load()
                         {
-                            List<SourceDocument> allDocuments = listDocuments(documnetColors);
+                            List<SourceDocument> allDocuments = listDocuments(documentColors);
                             return allDocuments;
                         }
                     })
@@ -298,7 +298,7 @@ public class OpenModalWindowPanel
                                     .getName());
                         }
                     }.add(new AttributeModifier("style", "color:"
-                            + documnetColors.get(item.getModelObject()) + ";")));
+                            + documentColors.get(item.getModelObject()) + ";")));
                 }
             };
             add(documentSelection.add(lv));

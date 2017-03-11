@@ -46,7 +46,7 @@ public interface CorrectionDocumentService
         throws IOException;
 
     JCas readCorrectionCas(SourceDocument document)
-        throws UIMAException, IOException, ClassNotFoundException;
+        throws IOException;
 
     void upgradeCorrectionCas(CAS aCurCas, SourceDocument document)
             throws UIMAException, IOException;

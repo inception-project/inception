@@ -331,21 +331,14 @@ public class SuggestionViewPanel
         }
     }
 
-
-    private JCas getJCas(AnnotatorState aModel, AnnotationDocument aDocument)
-            throws IOException
+    private JCas getJCas(AnnotatorState aState, AnnotationDocument aDocument)
+        throws IOException
     {
-        try {
-            if (aModel.getMode().equals(Mode.AUTOMATION) || aModel.getMode()
-                    .equals(Mode.CORRECTION)) {
-                return repository.readCorrectionCas(aModel.getDocument());
-            }
-            else {
-                return repository.readAnnotationCas(aDocument);
-            }
+        if (aState.getMode().equals(Mode.AUTOMATION) || aState.getMode().equals(Mode.CORRECTION)) {
+            return repository.readCorrectionCas(aState.getDocument());
         }
-        catch (UIMAException | ClassNotFoundException e) {
-            throw new IOException(e);
+        else {
+            return repository.readAnnotationCas(aDocument);
         }
     }
 
