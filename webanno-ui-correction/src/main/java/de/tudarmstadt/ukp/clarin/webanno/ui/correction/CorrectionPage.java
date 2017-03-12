@@ -17,12 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -466,19 +462,8 @@ public class CorrectionPage
         throws UIMAException, ClassNotFoundException, IOException
     {
         AnnotatorState state = getModelObject();
-        
-        final int sentenceAddress = getAddr(selectSentenceAt(aEditorCas,
-                state.getFirstVisibleSentenceBegin(), state.getFirstVisibleSentenceEnd()));
-
-        final Sentence sentence = selectByAddr(aEditorCas, Sentence.class, sentenceAddress);
-        List<Sentence> followingSentences = selectFollowing(aEditorCas, Sentence.class, sentence,
-                state.getPreferences().getWindowSize());
-        // Check also, when getting the last sentence address in the display window, if this is the
-        // last sentence or the ONLY sentence in the document
-        Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
-                : followingSentences.get(followingSentences.size() - 1);
-        curationSegment.setBegin(sentence.getBegin());
-        curationSegment.setEnd(lastSentenceAddressInDisplayWindow.getEnd());
+        curationSegment.setBegin(state.getWindowBeginOffset());
+        curationSegment.setEnd(state.getWindowEndOffset());
     }
 
     private void update(AjaxRequestTarget target)
@@ -551,8 +536,6 @@ public class CorrectionPage
         state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
         state.setFocusSentenceNumber(selectedSentence);        
         
-        aTarget.add(gotoPageTextField);
-        
         SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
@@ -560,6 +543,7 @@ public class CorrectionPage
         curationContainer.setBratAnnotatorModel(state);
         update(aTarget);
         
+        aTarget.add(gotoPageTextField);
         annotationEditor.bratRender(aTarget, editorCas);
     }
 
