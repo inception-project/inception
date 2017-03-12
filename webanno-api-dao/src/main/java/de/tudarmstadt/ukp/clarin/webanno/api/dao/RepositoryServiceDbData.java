@@ -76,11 +76,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.PatternLayout;
+import org.slf4j.MDC;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -114,11 +110,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -231,14 +226,18 @@ public class RepositoryServiceDbData
         else {
             entityManager.merge(aAnnotationDocument);
         }
-
-        createLog(aAnnotationDocument.getProject()).info(
-                " User [" + aAnnotationDocument.getUser()
-                        + "] creates annotation document for source document ["
-                        + aAnnotationDocument.getDocument().getId() + "] in project ["
-                        + aAnnotationDocument.getProject().getId() + "] with id ["
-                        + aAnnotationDocument.getId() + "]");
-        createLog(aAnnotationDocument.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aAnnotationDocument.getProject().getId()))) {
+            log.info(
+                    "Created annotation document [{}] for user [{}] for source document [{}]({}) "
+                    + "in project [{}]({})",
+                    aAnnotationDocument.getId(), aAnnotationDocument.getUser(), 
+                    aAnnotationDocument.getDocument().getName(),
+                    aAnnotationDocument.getDocument().getId(),
+                    aAnnotationDocument.getProject().getName(),
+                    aAnnotationDocument.getProject().getId());
+        }
     }
 
     /**
@@ -293,9 +292,11 @@ public class RepositoryServiceDbData
         entityManager.persist(aProject);
         String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
         FileUtils.forceMkdir(new File(path));
-        createLog(aProject).info(
-                "Created project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
+        }
     }
 
     @Override
@@ -310,11 +311,13 @@ public class RepositoryServiceDbData
     public void createProjectPermission(ProjectPermission aPermission)
     {
         entityManager.persist(aPermission);
-        createLog(aPermission.getProject()).info("Created permission [" + aPermission.getLevel()
-                + "] for user [" + aPermission.getUser() + "] on project ["
-                + aPermission.getProject().getName() + "] with ID ["
-                + aPermission.getProject().getId() + "]");
-        createLog(aPermission.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aPermission.getProject().getId()))) {
+            log.info("Created permission [{}] for user [{}] on project [{}]({})",
+                    aPermission.getLevel(), aPermission.getUser(),
+                    aPermission.getProject().getName(), aPermission.getProject().getId());
+        }
     }
 
     @Override
@@ -524,11 +527,13 @@ public class RepositoryServiceDbData
         File exportFile = exportCasToFile(cas, aDocument, aFileName, aWriter, aStripExtension);
 
         Project project = aDocument.getProject();
-        createLog(project).info(
-                "Exported annotation file [" + aDocument.getName() + "] with ID ["
-                        + aDocument.getId() + "] for user [" + aUser + "] from project ["
-                        + project.getId() + "]");
-        createLog(project).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(project.getId()))) {
+            log.info("Exported annotation document [{}]({}) for user [{}] from project [{}]({})",
+                    aDocument.getName(), aDocument.getId(), aUser, project.getName(),
+                    project.getId());
+        }
 
         return exportFile;
     }
@@ -756,10 +761,11 @@ public class RepositoryServiceDbData
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
                 + aFileName)));
 
-        createLog(aProject).info(
-                " Created Guideline file [" + aFileName + "] for Project [" + aProject.getName()
-                        + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Created guidelines file [{}] in project [{}]({})",
+                    aFileName, aProject.getName(), aProject.getId());
+        }
     }
 
     @Override
@@ -775,7 +781,6 @@ public class RepositoryServiceDbData
     @Transactional(noRollbackFor = NoResultException.class)
     public SourceDocument getSourceDocument(Project aProject, String aDocumentName)
     {
-
         return entityManager
                 .createQuery("FROM SourceDocument WHERE name = :name AND project =:project",
                         SourceDocument.class).setParameter("name", aDocumentName)
@@ -1068,14 +1073,16 @@ public class RepositoryServiceDbData
             FileUtils.deleteDirectory(new File(path));
         }
         catch (FileNotFoundException e) {
-            createLog(aProject).warn(
-                    "Project directory to be deleted was not found: [" + path + "]. Ignoring.");
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aProject.getId()))) {
+                log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
+            }
         }
-        
-        createLog(aProject).info(
-                "Removed Project [" + aProject.getName() + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
 
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Removed project [{}]({})", aProject.getName(), aProject.getId());
+        }
     }
 
     @Override
@@ -1140,10 +1147,12 @@ public class RepositoryServiceDbData
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
                 + GUIDELINE + aFileName));
-        createLog(aProject).info(
-                " Removed Guideline file from [" + aProject.getName() + "] with ID ["
-                        + aProject.getId() + "]");
-        createLog(aProject).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Removed guidelines file [{}] from project [{}]({})", aFileName,
+                    aProject.getName(), aProject.getId());
+        }
     }
 
     @Override
@@ -1155,24 +1164,28 @@ public class RepositoryServiceDbData
             FileUtils.forceDelete(new File(getAnnotationFolder(aSourceDocument),
                     WebAnnoConst.CURATION_USER + ".ser"));
 
-            createLog(aSourceDocument.getProject()).info(
-                    " Removed Curated document from  project [" + aSourceDocument.getProject()
-                            + "] for the source document [" + aSourceDocument.getId());
-            createLog(aSourceDocument.getProject()).removeAllAppenders();
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aSourceDocument.getProject().getId()))) {
+                Project project = aSourceDocument.getProject();
+                log.info("Removed curation of source document [{}]({}) from project [{}]({})", 
+                        aSourceDocument.getName(), aSourceDocument.getId(),
+                        project.getName(), project.getId());
+            }
         }
     }
 
     @Override
     @Transactional
-    public void removeProjectPermission(ProjectPermission projectPermission)
+    public void removeProjectPermission(ProjectPermission aPermission)
     {
-        entityManager.remove(projectPermission);
-        createLog(projectPermission.getProject()).info(
-                " Removed Project Permission [" + projectPermission.getLevel() + "] for the USer ["
-                        + projectPermission.getUser() + "] From project ["
-                        + projectPermission.getProject().getId() + "]");
-        createLog(projectPermission.getProject()).removeAllAppenders();
-
+        entityManager.remove(aPermission);
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aPermission.getProject().getId()))) {
+            log.info("Removed permission [{}] for user [{}] on project [{}]({})",
+                    aPermission.getLevel(), aPermission.getUser(),
+                    aPermission.getProject().getName(), aPermission.getProject().getId());
+        }
     }
 
     @Override
@@ -1193,11 +1206,12 @@ public class RepositoryServiceDbData
             FileUtils.forceDelete(new File(path));
         }
 
-        createLog(aDocument.getProject()).info(
-                " Removed Document [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] from Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject()).removeAllAppenders();
-
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aDocument.getProject().getId()))) {
+            Project project = aDocument.getProject();
+            log.info("Removed source document [{}]({}) from project [{}]({})", aDocument.getName(),
+                    aDocument.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -1225,7 +1239,6 @@ public class RepositoryServiceDbData
             closeQuietly(os);
             closeQuietly(aIs);
         }
-
     }
 
     @Override
@@ -1260,12 +1273,11 @@ public class RepositoryServiceDbData
         property.store(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
 
-        createLog(aProject).info(
-                " Saved preferences file [" + annotationPreferencePropertiesFileName
-                        + "] for project [" + aProject.getName() + "] with ID [" + aProject.getId()
-                        + "] to location: [" + propertiesPath + "]");
-        createLog(aProject).removeAllAppenders();
-
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Saved preferences for user [{}] in project [{}]({})", aUsername,
+                    aProject.getName(), aProject.getId());
+        }
     }
     
     @Override
@@ -1306,10 +1318,12 @@ public class RepositoryServiceDbData
             writeSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         }
 
-        createLog(aDocument.getProject()).info(
-                " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject()).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aDocument.getProject().getId()))) {
+            Project project = aDocument.getProject();
+            log.info("Imported training document [{}]({}) to project [{}]({})", 
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+        }
     }
     
     @Override
@@ -1336,10 +1350,12 @@ public class RepositoryServiceDbData
             throw new IOException(e.getMessage(), e);
         }
 
-        createLog(aDocument.getProject()).info(
-                " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] to project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject()).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aDocument.getProject().getId()))) {
+            Project project = aDocument.getProject();
+            log.info("Imported source document [{}]({}) to project [{}]({})", 
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -1361,10 +1377,12 @@ public class RepositoryServiceDbData
             closeQuietly(aIs);
         }
 
-        createLog(aDocument.getProject()).info(
-                " Imported file [" + aDocument.getName() + "] with ID [" + aDocument.getId()
-                        + "] to Project [" + aDocument.getProject().getId() + "]");
-        createLog(aDocument.getProject()).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aDocument.getProject().getId()))) {
+            Project project = aDocument.getProject();
+            log.info("Imported source document [{}]({}) to project [{}]({})", 
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -1635,7 +1653,7 @@ public class RepositoryServiceDbData
     private void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
-        log.debug("Writing annotation document [{}] ({}) for user [{}] in project [{}] ({})",
+        log.debug("Writing annotation document [{}]({}) for user [{}] in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         // DebugUtils.smallStack();
@@ -1692,11 +1710,14 @@ public class RepositoryServiceDbData
                 File targetPath = getAnnotationFolder(aDocument);
                 writeSerializedCas(aJcas, new File(targetPath, aUserName + ".ser"));
 
-                createLog(aDocument.getProject()).info(
-                        "Updated annotation document [" + aDocument.getName() + "] " + "with ID ["
-                                + aDocument.getId() + "] in project ID ["
-                                + aDocument.getProject().getId() + "]");
-                createLog(aDocument.getProject()).removeAllAppenders();
+                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                        String.valueOf(aDocument.getProject().getId()))) {
+                    Project project = aDocument.getProject();
+                    log.info(
+                            "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
+                            aUserName, aDocument.getName(), aDocument.getId(), project.getName(),
+                            project.getId());
+                }                
 
                 // If the saving was successful, we delete the old version
                 if (oldVersion.exists()) {
@@ -1775,12 +1796,17 @@ public class RepositoryServiceDbData
                         // Remove these old files
                         for (File file : toRemove) {
                             FileUtils.forceDelete(file);
-                            createLog(aDocument.getProject()).info(
-                                    "Removed surplus history file [" + file.getName() + "] "
-                                            + "for document with ID [" + aDocument.getId()
-                                            + "] in project ID [" + aDocument.getProject().getId()
-                                            + "]");
-                            createLog(aDocument.getProject()).removeAllAppenders();
+                            
+                            try (MDC.MDCCloseable closable = MDC.putCloseable(
+                                    Logging.KEY_PROJECT_ID,
+                                    String.valueOf(aDocument.getProject().getId()))) {
+                                Project project = aDocument.getProject();
+                                log.info(
+                                        "Removed surplus history file [{}] of user [{}] for "
+                                                + "document [{}]({}) in project [{}]({})",
+                                        file.getName(), aUserName, aDocument.getName(),
+                                        aDocument.getId(), project.getName(), project.getId());
+                            }
                         }
                     }
 
@@ -1789,12 +1815,17 @@ public class RepositoryServiceDbData
                         for (File file : history) {
                             if ((file.lastModified() + backupKeepTime) < now) {
                                 FileUtils.forceDelete(file);
-                                createLog(aDocument.getProject()).info(
-                                        "Removed outdated history file [" + file.getName() + "] "
-                                                + " for document with ID [" + aDocument.getId()
-                                                + "] in project ID ["
-                                                + aDocument.getProject().getId() + "]");
-                                createLog(aDocument.getProject()).removeAllAppenders();
+                                
+                                try (MDC.MDCCloseable closable = MDC.putCloseable(
+                                        Logging.KEY_PROJECT_ID,
+                                        String.valueOf(aDocument.getProject().getId()))) {
+                                    Project project = aDocument.getProject();
+                                    log.info(
+                                            "Removed outdated history file [{}] of user [{}] for "
+                                                    + "document [{}]({}) in project [{}]({})",
+                                            file.getName(), aUserName, aDocument.getName(),
+                                            aDocument.getId(), project.getName(), project.getId());
+                                }
                             }
                         }
                     }
@@ -1910,12 +1941,17 @@ public class RepositoryServiceDbData
                 // no need to catch, it is acceptable that no curation document
                 // exists to be upgraded while there are annotation documents
             }
-            createLog(aDocument.getProject()).info(
-                    "Upgraded annotation document [" + aDocument.getName() + "] " + "with ID ["
-                            + aDocument.getId() + "] in project ID ["
-                            + aDocument.getProject().getId() + "] for user [" + aUsername
-                            + "] in mode [" + aMode + "]");
-            createLog(aDocument.getProject()).removeAllAppenders();
+            
+            try (MDC.MDCCloseable closable = MDC.putCloseable(
+                    Logging.KEY_PROJECT_ID,
+                    String.valueOf(aDocument.getProject().getId()))) {
+                Project project = aDocument.getProject();
+                log.info(
+                        "Upgraded annotations of user [{}] for "
+                                + "document [{}]({}) in project [{}]({}) in mode [{}]",
+                        user.getUsername(), aDocument.getName(), aDocument.getId(),
+                        project.getName(), project.getId(), aMode);
+            }
         }
     }
 
@@ -1963,10 +1999,16 @@ public class RepositoryServiceDbData
         // Make sure JCas is properly initialized too
         aCas.getJCas();
 
-        createLog(aSourceDocument.getProject()).info(
-                "Upgraded CAS of user [" + aUser + "] for document [" + aSourceDocument.getName()
-                        + "] " + " in project ID [" + aSourceDocument.getProject().getId() + "]");
-        createLog(aSourceDocument.getProject()).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(
+                Logging.KEY_PROJECT_ID,
+                String.valueOf(aSourceDocument.getProject().getId()))) {
+            Project project = aSourceDocument.getProject();
+            log.info(
+                    "Upgraded CAS of user [{}] for "
+                            + "document [{}]({}) in project [{}]({})",
+                    aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
+                    project.getId());
+        }
     }
 
     @Override
@@ -2150,7 +2192,10 @@ public class RepositoryServiceDbData
                     ZipUtils.zipFolder(exportTempDir, exportFile);
                 }
                 catch (Exception e) {
-                    createLog(project).info("Unable to create zip File");
+                    try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                            String.valueOf(project.getId()))) {
+                        log.info("Unable to create zip File");
+                    }
                 }
             }
             else {
@@ -2491,11 +2536,12 @@ public class RepositoryServiceDbData
     public void createConstraintSet(ConstraintSet aSet)
     {
         entityManager.persist(aSet);
-        createLog(aSet.getProject()).info(
-                "Created constraints set [" + aSet.getName() + "] for project ["
-                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
-                        + "]");
-        createLog(aSet.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Created constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
     }
 
     @Override
@@ -2503,11 +2549,12 @@ public class RepositoryServiceDbData
     public void removeConstraintSet(ConstraintSet aSet)
     {
         entityManager.remove(entityManager.merge(aSet));
-        createLog(aSet.getProject()).info(
-                " Removed Curated document from  project [" + aSet.getProject()
-                        + "] for the source document [" + aSet.getId());
-        createLog(aSet.getProject()).removeAllAppenders();
         
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Removed constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
     }
 
     @Override
@@ -2519,12 +2566,12 @@ public class RepositoryServiceDbData
         String filename = aSet.getId() + ".txt";
         String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
 
-        createLog(aSet.getProject()).info(
-                "Read constraints set file [" + filename + "] for project ["
-                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
-                        + "]");
-        createLog(aSet.getProject()).removeAllAppenders();
-
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Read constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
+        
         return data;
     }
 
@@ -2538,12 +2585,14 @@ public class RepositoryServiceDbData
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
 
-        createLog(aSet.getProject()).info(
-                "Created constraints set file [" + filename + "] for project ["
-                        + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
-                        + "]");
-        createLog(aSet.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Saved constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
     }
+    
     /**
      * Provides exporting constraints as a file.
      */
@@ -2555,21 +2604,21 @@ public class RepositoryServiceDbData
         String filename = aSet.getId() + ".txt";
         File constraintsFile = new File(constraintRulesPath, filename);
         if (constraintsFile.exists()) {
-            createLog(aSet.getProject()).info(
-                    "Exported constraints set file [" + filename + "] for project ["
-                            + aSet.getProject().getName() + "] with ID [" + aSet.getProject().getId()
-                            + "]");
-            createLog(aSet.getProject()).removeAllAppenders();
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aSet.getProject().getId()))) {
+                log.info("Exported constraints set [{}] from project [{}]({})",
+                        aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            }
             return constraintsFile;
         }
         else {
-            createLog(aSet.getProject()).error("Unable to read constraint File [" + filename
-                    + "] for project [" + aSet.getProject().getName() + "] with ID ["
-                    + aSet.getProject().getId() + "]");
-            createLog(aSet.getProject()).removeAllAppenders();
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aSet.getProject().getId()))) {
+                log.info("Unable to read constraints set file [{}] in project [{}]({})",
+                        filename, aSet.getProject().getName(), aSet.getProject().getId());
+            }
             return null;
         }
-
     }
 
     /**
@@ -2598,25 +2647,5 @@ public class RepositoryServiceDbData
     public int getNumberOfSentences()
     {
         return numberOfSentences;
-    }
-    
-    private org.apache.log4j.Logger createLog(Project aProject)
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication != null ? authentication.getName() : "SYSTEM";
-
-        org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(getClass());
-        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        Appender apndr;
-        try {
-            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
-                    true);
-        }
-        catch (IOException e) {
-            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
-        }
-        logger.addAppender(apndr);
-        logger.setLevel(Level.ALL);
-        return logger;
     }
 }

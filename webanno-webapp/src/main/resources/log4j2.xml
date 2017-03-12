@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <!--SHORT PATTERN -->
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [${ctx:username}] %logger{1} - %msg%n" />
+      <!--ROBUST PATTERN
+        <PatternLayout pattern="%d{ISO8601} %level{length=5} [%thread] %logger - %msg%n"/> -->
+    </Console>
+
+    <Routing name="ProjectAppender">
+      <Routes pattern="$${ctx:projectId}">
+        <Route>
+          <File name="Project-${ctx:projectId}"
+            fileName="${ctx:repositoryPath}/project/project-${ctx:projectId}.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} [${ctx:username}] %msg%n" />
+          </File>
+        </Route>
+
+        <!-- By having this set to ${ctx:logFileName} it will match when filename
+          is not set in the context -->
+        <!-- <Route ref="consoleAppender" key="${ctx:logFileName}"/> -->
+      </Routes>
+    </Routing>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="de.tudarmstadt" level="INFO"/>
+    <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
+    <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
+    <Root level="warn">
+      <AppenderRef ref="ConsoleAppender" />
+      <AppenderRef ref="ProjectAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

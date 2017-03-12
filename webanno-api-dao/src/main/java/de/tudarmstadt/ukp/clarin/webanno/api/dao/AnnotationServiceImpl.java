@@ -31,21 +31,17 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -64,12 +60,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
 
 /**
  * Implementation of methods defined in the {@link AnnotationService} interface
- *
- *
  */
 public class AnnotationServiceImpl
     implements AnnotationService
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Value(value = "${webanno.repository}")
     private File dir;
 
@@ -91,10 +87,14 @@ public class AnnotationServiceImpl
     {
         entityManager.persist(aTag);
 
-        createLog(aTag.getTagSet().getProject()).info(
-                " Added tag [" + aTag.getName() + "] with ID [" + aTag.getId() + "] to TagSet ["
-                        + aTag.getTagSet().getName() + "]");
-        createLog(aTag.getTagSet().getProject()).removeAllAppenders();
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aTag.getTagSet().getProject().getId()))) {
+            TagSet tagset = aTag.getTagSet();
+            Project project = tagset.getProject();
+            log.info("Created tag [{}]({}) in tagset [{}]({}) in project [{}]({})", aTag.getName(),
+                    aTag.getId(), tagset.getName(), tagset.getId(), project.getName(),
+                    project.getId());
+        }
     }
 
     @Override
@@ -109,9 +109,13 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aTagSet);
         }
-        createLog(aTagSet.getProject()).info(
-                " Added tagset [" + aTagSet.getName() + "] with ID [" + aTagSet.getId() + "]");
-        createLog(aTagSet.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aTagSet.getProject().getId()))) {
+            Project project = aTagSet.getProject();
+            log.info("Created tagset [{}]({}) in project [{}]({})", aTagSet.getName(),
+                    aTagSet.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -125,9 +129,13 @@ public class AnnotationServiceImpl
         else {
             entityManager.merge(aLayer);
         }
-        createLog(aLayer.getProject()).info(
-                " Added layer [" + aLayer.getName() + "] with ID [" + aLayer.getId() + "]");
-        createLog(aLayer.getProject()).removeAllAppenders();
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aLayer.getProject().getId()))) {
+            Project project = aLayer.getProject();
+            log.info("Created layer [{}]({}) in project [{}]({})", aLayer.getName(),
+                    aLayer.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -826,7 +834,6 @@ public class AnnotationServiceImpl
     public void removeAnnotationFeature(AnnotationFeature aFeature)
     {
         entityManager.remove(aFeature);
-
     }
 
     @Override
@@ -834,30 +841,6 @@ public class AnnotationServiceImpl
     public void removeAnnotationLayer(AnnotationLayer aLayer)
     {
         entityManager.remove(aLayer);
-
-    }
-
-    private static final String PROJECT = "/project/";
-
-    private Logger createLog(Project aProject)
-        throws IOException
-    {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication != null ? authentication.getName() : "SYSTEM";
-
-        Logger logger = Logger.getLogger(getClass());
-        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        Appender apndr;
-        try {
-            apndr = new FileAppender(new PatternLayout("%d [" + username + "] %m%n"), targetLog,
-                    true);
-        }
-        catch (IOException e) {
-            apndr = new ConsoleAppender(new PatternLayout("%d [" + username + "] %m%n"));
-        }
-        logger.addAppender(apndr);
-        logger.setLevel(Level.ALL);
-        return logger;
     }
 
 	@Override
@@ -866,6 +849,5 @@ public class AnnotationServiceImpl
 		for (Tag tag : listTags(aTagSet)) {
 			entityManager.remove(tag);
 		}
-
 	}
 }

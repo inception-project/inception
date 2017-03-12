@@ -26,9 +26,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.log4j.MDC;
+import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 
 public class WebAnnoLoggingFilter
     implements Filter
@@ -66,13 +68,13 @@ public class WebAnnoLoggingFilter
     
     public static void setLoggingUsername(String aUsername)
     {
-        MDC.put("username", aUsername);
+        MDC.put(Logging.KEY_USERNAME, aUsername);
         MDC.put("_username", "["+aUsername + "] ");
     }
     
     public static void clearLoggingUsername()
     {
         MDC.remove("_username");
-        MDC.remove("username");
+        MDC.remove(Logging.KEY_USERNAME);
     }
 }

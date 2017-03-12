@@ -31,13 +31,12 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -52,6 +51,8 @@ public class MiraAutomationServiceImpl
     private static final String MIRA = "/mira/";
     private static final String MIRA_TEMPLATE = "/template/";
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     @Value(value = "${webanno.repository}")
     private File dir;
 
@@ -93,15 +94,16 @@ public class MiraAutomationServiceImpl
     }
 
     @Override
-    public void removeTemplate(Project aProject, String aFileName, String username)
+    public void removeTemplate(Project aProject, String aFileName, String aUsername)
         throws IOException
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
                 + MIRA_TEMPLATE + aFileName));
-        createLog(aProject, username).info(
-                " Removed Template file from [" + aProject.getName() + "] with ID ["
-                        + aProject.getId() + "]");
-        createLog(aProject, username).removeAllAppenders();
+        
+        Logging.setMDC(aProject, aUsername);
+        log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
+                aProject.getId());
+        Logging.clearMDC();
     }
 
     @Override
@@ -114,10 +116,10 @@ public class MiraAutomationServiceImpl
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
                 + aFileName)));
 
-        createLog(aProject, aUsername).info(
-                " Created Template file[ " + aFileName + "] for Project [" + aProject.getName()
-                        + "] with ID [" + aProject.getId() + "]");
-        createLog(aProject, aUsername).removeAllAppenders();
+        Logging.setMDC(aProject, aUsername);
+        log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
+                aProject.getId());
+        Logging.clearMDC();
     }
 
     @Override
@@ -138,7 +140,6 @@ public class MiraAutomationServiceImpl
     public void createAutomationStatus(AutomationStatus aStatus)
     {
         entityManager.persist(aStatus);
-
     }
 
     @Override
@@ -153,7 +154,6 @@ public class MiraAutomationServiceImpl
         }
         catch (NoResultException ex) {
             return false;
-
         }
     }
 
@@ -165,7 +165,6 @@ public class MiraAutomationServiceImpl
                 .createQuery("FROM AutomationStatus WHERE template =:template",
                         AutomationStatus.class).setParameter("template", aTemplate)
                 .getSingleResult();
-
     }
 
     @Override
@@ -209,14 +208,12 @@ public class MiraAutomationServiceImpl
         else {
             entityManager.merge(aTemplate);
         }
-
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public MiraTemplate getMiraTemplate(AnnotationFeature aFeature)
     {
-
         return entityManager
                 .createQuery("FROM MiraTemplate WHERE trainFeature =:trainFeature",
                         MiraTemplate.class).setParameter("trainFeature", aFeature)
@@ -235,7 +232,6 @@ public class MiraAutomationServiceImpl
         }
         catch (NoResultException ex) {
             return false;
-
         }
     }
 
@@ -253,17 +249,5 @@ public class MiraAutomationServiceImpl
             }
         }
         return tabSepDocuments;
-    }
-
-    private Logger createLog(Project aProject, String aUser)
-        throws IOException
-    {
-        Logger logger = Logger.getLogger(MiraAutomationServiceImpl.class);
-        String targetLog = dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log";
-        FileAppender apndr = new FileAppender(new PatternLayout("%d [" + aUser + "] %m%n"),
-                targetLog, true);
-        logger.addAppender(apndr);
-        logger.setLevel(Level.ALL);
-        return logger;
     }
 }

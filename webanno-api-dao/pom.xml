@@ -60,13 +60,6 @@
       <artifactId>webanno-dkprocore</artifactId>
     </dependency>
 
-    <!-- LOGGING DEPENDENCIES - LOG4J -->
-
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-
     <!-- Spring dependencies -->
 
     <dependency>

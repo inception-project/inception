@@ -27,15 +27,22 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.ContextRelativeResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.settings.IExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
+import org.jboss.logging.MDC;
+import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
@@ -94,6 +101,23 @@ public class WicketApplication
                         IExceptionSettings.SHOW_EXCEPTION_PAGE);
             }
 
+            getRequestCycleListeners().add(new AbstractRequestCycleListener()
+            {
+                @Override
+                public void onBeginRequest(RequestCycle cycle)
+                {
+                    ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
+                    RepositoryService repo = ctx.getBean(RepositoryService.class);
+                    MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
+                };
+
+                @Override
+                public void onEndRequest(RequestCycle cycle)
+                {
+                    MDC.remove(Logging.KEY_REPOSITORY_PATH);
+                };
+            });
+            
             isInitialized = true;
         }
     }
