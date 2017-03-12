@@ -487,7 +487,7 @@ public class AnnotationPage
     
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((target) -> {
+        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
             AnnotatorState state = getModelObject();
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     state.getDocument(), state.getUser());
@@ -499,10 +499,10 @@ public class AnnotationPage
             // without calling createAnnotationDocument(...)
             repository.createAnnotationDocument(annotationDocument);
             
-            target.add(finishDocumentIcon);
-            target.add(finishDocumentLink);
-            target.add(detailEditor);
-            target.add(createOrGetResetDocumentLink());
+            aCallbackTarget.add(finishDocumentIcon);
+            aCallbackTarget.add(finishDocumentLink);
+            aCallbackTarget.add(detailEditor);
+            aCallbackTarget.add(createOrGetResetDocumentLink());
         });
         finishDocumentDialog.show(aTarget);
     }
