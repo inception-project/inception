@@ -117,61 +117,15 @@ public class CurationPanel
 
     // CurationContainer curationContainer;
 
-    /**
-     * Class for combining an on click ajax call and a label
-     */
-    class AjaxLabel
-        extends Label
-    {
-
-        private static final long serialVersionUID = -4528869530409522295L;
-        private AbstractAjaxBehavior click;
-
-        public AjaxLabel(String id, String label, AbstractAjaxBehavior click)
-        {
-            super(id, label);
-            this.click = click;
-        }
-
-        @Override
-        public void onComponentTag(ComponentTag tag)
-        {
-            // add onclick handler to the browser
-            // if clicked in the browser, the function
-            // click.response(AjaxRequestTarget target) is called on the server side
-            tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
-            tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
-        }
-
-    }
-
-    public void setModel(IModel<CurationContainer> aModel)
-    {
-        setDefaultModel(aModel);
-    }
-
-    public void setModelObject(CurationContainer aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<CurationContainer> getModel()
-    {
-        return (IModel<CurationContainer>) getDefaultModel();
-    }
-
-    public CurationContainer getModelObject()
-    {
-        return (CurationContainer) getDefaultModelObject();
-    }
-
     public CurationPanel(String id, final IModel<CurationContainer> cCModel)
     {
         super(id, cCModel);
+        
+        setOutputMarkupId(true);
+        
         WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
             private static final long serialVersionUID = 1L;
-
+    
             @Override
             protected void onComponentTag(ComponentTag aTag)
             {
@@ -180,10 +134,10 @@ public class CurationPanel
             }
         };
         add(sidebarCell);
-
+    
         WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
             private static final long serialVersionUID = 1L;
-
+    
             @Override
             protected void onComponentTag(ComponentTag aTag)
             {
@@ -197,16 +151,16 @@ public class CurationPanel
         sentencesListView = new WebMarkupContainer("sentencesListView");
         sentencesListView.setOutputMarkupId(true);
         add(sentencesListView);
-
+    
         // add container for the list of sentences where annotations exists crossing multiple
         // sentences
         // outside of the current page
         corssSentAnnoView = new WebMarkupContainer("corssSentAnnoView");
         corssSentAnnoView.setOutputMarkupId(true);
         annotationViewCell.add(corssSentAnnoView);
-
+    
         bModel = getModelObject().getBratAnnotatorModel();
-
+    
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (bModel != null) {
@@ -218,13 +172,13 @@ public class CurationPanel
         // update source list model only first time.
         sourceListModel = sourceListModel == null ? getModelObject().getCurationViews()
                 : sourceListModel;
-
+    
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
                 new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
             CurationContainer curationContainer = cCModel.getObject();
-
+    
             @Override
             public void onChange(AjaxRequestTarget aTarget)
             {
@@ -248,21 +202,21 @@ public class CurationPanel
                 }
             }
         };
-
+    
         suggestionViewPanel.setOutputMarkupId(true);
         annotationViewCell.add(suggestionViewPanel);
-
+    
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
-
+    
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 annotate = true;
-
+    
                 try {
                     updatePanel(aTarget, cCModel.getObject());
                 }
@@ -275,7 +229,7 @@ public class CurationPanel
                     error(e.getMessage());
                 }
             }
-
+    
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
@@ -288,7 +242,7 @@ public class CurationPanel
                     return;
                 }
             }
-
+    
             @Override
             protected void onConfigure()
             {
@@ -300,14 +254,14 @@ public class CurationPanel
             }
         };
         sidebarCell.add(editor);
-
+    
         annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor,
                 () -> { return getEditorCas(); });
         // reset sentenceAddress and lastSentenceAddress to the orginal once
-
+    
         annotator.setOutputMarkupId(true);
         annotationViewCell.add(annotator);
-
+    
         LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
         {
             @Override
@@ -315,7 +269,7 @@ public class CurationPanel
             {
                 int fSN = bModel.getFirstVisibleSentenceNumber();
                 int lSN = bModel.getLastVisibleSentenceNumber();
-
+    
                 List<String> crossSentAnnos = new ArrayList<>();
                 if (SuggestionBuilder.crossSentenceLists != null) {
                     for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
@@ -332,43 +286,43 @@ public class CurationPanel
                         }
                     }
                 }
-
+    
                 return crossSentAnnos;
             }
         };
-
+    
         crossSentAnnoList = new ListView<String>("crossSentAnnoList", sentenceDiffModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
-
+    
             @Override
             protected void populateItem(ListItem<String> item)
             {
                 String crossSentAnno = item.getModelObject();
-
+    
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
                 {
                     private static final long serialVersionUID = 5803814168152098822L;
-
+    
                     @Override
                     protected void respond(AjaxRequestTarget aTarget)
                     {
                         // Expand curation view
                     }
-
+    
                 };
-
+    
                 // add subcomponents to the component
                 item.add(click);
                 Label crossSentAnnoItem = new AjaxLabel("crossAnnoSent", crossSentAnno, click);
                 item.add(crossSentAnnoItem);
             }
-
+    
         };
         crossSentAnnoList.setOutputMarkupId(true);
         corssSentAnnoView.add(crossSentAnnoList);
-
+    
         LoadableDetachableModel sentencesListModel = new LoadableDetachableModel()
         {
             @Override
@@ -377,21 +331,21 @@ public class CurationPanel
                 return getModelObject().getCurationViews();
             }
         };
-
+    
         sentenceList = new ListView<SourceListView>("sentencesList", sentencesListModel)
         {
             private static final long serialVersionUID = 8539162089561432091L;
-
+    
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
                 final SourceListView curationViewItem = item.getModelObject();
-
+    
                 // ajax call when clicking on a sentence on the left side
                 final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
                 {
                     private static final long serialVersionUID = 5803814168152098822L;
-
+    
                     @Override
                     protected void respond(AjaxRequestTarget aTarget)
                     {
@@ -402,7 +356,7 @@ public class CurationPanel
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
                             updatePanel(aTarget, cCModel.getObject());
                             bModel.setFocusSentenceNumber(curationViewItem.getSentenceNumber());
-
+    
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
@@ -417,12 +371,12 @@ public class CurationPanel
                             error(e.getMessage());
                         }
                     }
-
+    
                 };
-
+    
                 // add subcomponents to the component
                 item.add(click);
-
+    
                 // Is in focus?
                 if (curationViewItem.getSentenceNumber() == bModel.getFocusSentenceNumber()) {
                     item.add(AttributeModifier.append("class", "current"));
@@ -454,6 +408,27 @@ public class CurationPanel
         // add subcomponents to the component
         sentenceList.setOutputMarkupId(true);
         sentencesListView.add(sentenceList);
+    }
+
+    public void setModel(IModel<CurationContainer> aModel)
+    {
+        setDefaultModel(aModel);
+    }
+
+    public void setModelObject(CurationContainer aModel)
+    {
+        setDefaultModelObject(aModel);
+    }
+
+    @SuppressWarnings("unchecked")
+    public IModel<CurationContainer> getModel()
+    {
+        return (IModel<CurationContainer>) getDefaultModel();
+    }
+
+    public CurationContainer getModelObject()
+    {
+        return (CurationContainer) getDefaultModelObject();
     }
 
     private void updateCurationView(final CurationContainer curationContainer,
@@ -539,5 +514,35 @@ public class CurationPanel
         CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotator, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
+    }
+
+    // CurationContainer curationContainer;
+    
+    /**
+     * Class for combining an on click ajax call and a label
+     */
+    class AjaxLabel
+        extends Label
+    {
+    
+        private static final long serialVersionUID = -4528869530409522295L;
+        private AbstractAjaxBehavior click;
+    
+        public AjaxLabel(String id, String label, AbstractAjaxBehavior click)
+        {
+            super(id, label);
+            this.click = click;
+        }
+    
+        @Override
+        public void onComponentTag(ComponentTag tag)
+        {
+            // add onclick handler to the browser
+            // if clicked in the browser, the function
+            // click.response(AjaxRequestTarget target) is called on the server side
+            tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
+            tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
+        }
+    
     }
 }

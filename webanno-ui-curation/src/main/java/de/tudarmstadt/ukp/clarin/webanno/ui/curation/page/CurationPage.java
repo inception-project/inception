@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNumberOfPages;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static org.apache.uima.fit.util.JCasUtil.select;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,14 +31,11 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
@@ -66,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
@@ -107,7 +105,6 @@ public class CurationPage
     private UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
     
     private long currentprojectId;
@@ -115,15 +112,10 @@ public class CurationPage
     // Open the dialog window on first load
     private boolean firstLoad = true;
 
-    private int gotoPageAddress;
-
     private ModalWindow openDocumentsModal;
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
-
-    private int totalNumberOfSentence;
-    private List<String> crossAnnoSentList;
 
     private CurationPanel curationPanel;
     private AjaxLink<Void> showreCreateMergeCasModal;
@@ -149,72 +141,36 @@ public class CurationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                JCas mergeJCas = null;
                 try {
-                    mergeJCas = repository.readCurationCas(state.getDocument());
+                    actionRefreshDocument(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    handleException(aTarget, e);
                 }
-                aTarget.add(numberOfPages);
-                gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
-                gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
-                aTarget.add(gotoPageTextField);
-                aTarget.add(curationPanel);
+//                
+//                AnnotatorState state = CurationPage.this.getModelObject();
+//                JCas mergeJCas = null;
+//                try {
+//                    mergeJCas = repository.readCurationCas(state.getDocument());
+//                }
+//                catch (Exception e) {
+//                    aTarget.add(getFeedbackPanel());
+//                    LOG.error("Unable to load data", e);
+//                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+//                }
+//                aTarget.add(numberOfPages);
+//                gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
+//                gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
+//                aTarget.add(gotoPageTextField);
+//                aTarget.add(curationPanel);
             }
         };
-
-        curationPanel.setOutputMarkupId(true);
         add(curationPanel);
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
         documentNamePanel.setOutputMarkupId(true);
 
-        add(numberOfPages = (Label) new Label("numberOfPages",
-                new LoadableDetachableModel<String>()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected String load()
-                    {
-                        AnnotatorState state = CurationPage.this.getModelObject();
-                        if (state.getDocument() != null) {
-
-                            JCas mergeJCas = null;
-                            try {
-                                mergeJCas = repository.readCurationCas(state.getDocument());
-
-                                totalNumberOfSentence = getNumberOfPages(mergeJCas);
-
-                                // If only one page, start displaying from
-                                // sentence 1
-                                if (totalNumberOfSentence == 1) {
-                                    state.setFirstVisibleSentence(
-                                            WebAnnoCasUtil.getFirstSentence(mergeJCas));
-                                }
-                                List<SourceDocument> listofDoc = getListOfDocs();
-                            	
-                            	int docIndex = listofDoc.indexOf(state.getDocument())+1;
-                               
-                                return "showing " + state.getFirstVisibleSentenceNumber() + "-"
-                                        + state.getLastVisibleSentenceNumber() + " of "
-                                        + totalNumberOfSentence + " sentences [document " + docIndex
-                                        + " of " + listofDoc.size() + "]";
-                            }
-                            catch (Exception e) {
-                                return "";
-                            }
-                        }
-                        else {
-                            return "";// no document yet selected
-                        }
-
-                    }
-                }).setOutputMarkupId(true));
+        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -257,46 +213,15 @@ public class CurationPage
             }
         });
 
-        gotoPageTextField = (NumberTextField<Integer>) new NumberTextField<Integer>("gotoPageText",
-                new Model<Integer>(0));
         Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextFieldForm.add(new AjaxFormSubmitBehavior(gotoPageTextFieldForm, "submit")
-        {
-            private static final long serialVersionUID = -4549805321484461545L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionEnterPageNumer(aTarget);
-            }
-        });
-
-        gotoPageTextField.setType(Integer.class);
-        gotoPageTextField.setMinimum(1);
-        gotoPageTextField.setDefaultModelObject(1);
-        add(gotoPageTextFieldForm.add(gotoPageTextField));
-        gotoPageTextField.add(new AjaxFormComponentUpdatingBehavior("change")
-        {
-            private static final long serialVersionUID = 1244526899787707931L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                JCas mergeJCas = null;
-                try {
-                    aTarget.add(getFeedbackPanel());
-                    mergeJCas = repository.readCurationCas(state.getDocument());
-                    gotoPageAddress = getSentenceAddress(mergeJCas,
-                            gotoPageTextField.getModelObject());
-                }
-                catch (Exception e) {
-                    aTarget.add(getFeedbackPanel());
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
-            }
-        });
+        gotoPageTextField = new NumberTextField<Integer>("gotoPageText", Model.of(1), Integer.class);
+        // FIXME minimum and maximum should be obtained from the annotator state
+        gotoPageTextField.setMinimum(1); 
+        gotoPageTextField.setOutputMarkupId(true); 
+        gotoPageTextFieldForm.add(gotoPageTextField);
+        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
+                this::actionGotoPage));
+        add(gotoPageTextFieldForm);
 
         add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
         reCreateMergeCas.setOutputMarkupId(true);
@@ -334,27 +259,25 @@ public class CurationPage
         
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
-        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
-
-        add(new LambdaAjaxLink("gotoPageLink", this::actionGotoPage));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -443,20 +366,18 @@ public class CurationPage
     private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-        JCas mergeJCas = null;
-        try {
-            mergeJCas = repository.readCurationCas(state.getDocument());
-        }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
+//        JCas mergeJCas = null;
+//        try {
+//            mergeJCas = repository.readCurationCas(state.getDocument());
+//        }
+//        catch (Exception e) {
+//            aTarget.add(getFeedbackPanel());
+//            LOG.error("Unable to load data", e);
+//            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+//        }
         gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
-        gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
-        curationPanel.setOutputMarkupId(true);
-        aTarget.add(gotoPageTextField);
         curationPanel.setDefaultModelObject(curationContainer);
+        aTarget.add(gotoPageTextField);
         aTarget.add(curationPanel);
     }
 
@@ -537,63 +458,25 @@ public class CurationPage
         openDocumentsModal.show(aTarget);
     }
 
-    private void actionGotoPage(AjaxRequestTarget aTarget)
+    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
+        throws Exception
     {
         AnnotatorState state = getModelObject();
-        if (gotoPageAddress == 0) {
-            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-            return;
-        }
-        if (state.getDocument() == null) {
-            aTarget.appendJavaScript("alert('Please open a document first!')");
-            return;
-        }
-
-        JCas mergeJCas = null;
-        try {
-            aTarget.add(getFeedbackPanel());
-            mergeJCas = repository.readCurationCas(state.getDocument());
-            if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-
-                updateSentenceNumber(mergeJCas, gotoPageAddress);
-
-                aTarget.add(numberOfPages);
-                curationPanel.updatePanel(aTarget, curationContainer);
-            }
-        }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
+        
+        JCas jcas = getEditorCas();
+        List<Sentence> sentences = new ArrayList<>(select(jcas, Sentence.class));
+        int selectedSentence = gotoPageTextField.getModelObject();
+        selectedSentence = Math.min(selectedSentence, sentences.size());
+        gotoPageTextField.setModelObject(selectedSentence);
+        
+        state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
+        state.setFocusSentenceNumber(selectedSentence);        
+        
+        actionRefreshDocument(aTarget, jcas);
+        
+        curationPanel.updatePanel(aTarget, curationContainer);
     }
 
-    private void actionEnterPageNumer(AjaxRequestTarget aTarget)
-    {
-        if (gotoPageAddress == 0) {
-            aTarget.appendJavaScript("alert('The sentence number entered is not valid')");
-            return;
-        }
-        AnnotatorState state = CurationPage.this.getModelObject();
-        JCas mergeJCas = null;
-        try {
-            aTarget.add(getFeedbackPanel());
-            mergeJCas = repository.readCurationCas(state.getDocument());
-            if (state.getFirstVisibleSentenceAddress() != gotoPageAddress) {
-    
-                updateSentenceNumber(mergeJCas, gotoPageAddress);
-    
-                aTarget.add(numberOfPages);
-                updatePanel(curationContainer, aTarget);
-            }
-        }
-        catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
-    }
-    
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -610,7 +493,7 @@ public class CurationPage
         // Re-render the whole page because the width of the sidebar may have changed
         aTarget.add(CurationPage.this);
         
-        aTarget.add(numberOfPages);
+        aTarget.add(getOrCreatePositionInfoLabel());
         JCas mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
@@ -776,7 +659,7 @@ public class CurationPage
             // Load constraints
             state.setConstraints(repository.loadConstraints(state.getProject()));
     
-            aTarget.add(numberOfPages);
+            aTarget.add(getOrCreatePositionInfoLabel());
             aTarget.add(documentNamePanel);
             aTarget.add(showreCreateMergeCasModal);
             aTarget.add(finishDocumentLink);
@@ -792,7 +675,7 @@ public class CurationPage
     protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
     {
         try {
-            aTarget.add(numberOfPages);
+            aTarget.add(getOrCreatePositionInfoLabel());
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
         }

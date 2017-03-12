@@ -33,12 +33,10 @@ import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -104,7 +102,6 @@ public class AnnotationPage
     private UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
     
     private long currentprojectId;
 
@@ -214,7 +211,7 @@ public class AnnotationPage
 
         add(createDocumentInfoLabel());
 
-        add(numberOfPages = createPositionInfoLabel());
+        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel()) {
             private static final long serialVersionUID = 5474030848589262638L;
@@ -272,24 +269,24 @@ public class AnnotationPage
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
-        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
@@ -336,7 +333,7 @@ public class AnnotationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(numberOfPages);
+                aTarget.add(getOrCreatePositionInfoLabel());
 
                 try {
                     annotationEditor.bratRender(aTarget, getEditorCas());
@@ -360,31 +357,6 @@ public class AnnotationPage
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-            }
-        };
-    }
-
-    private Label createPositionInfoLabel()
-    {
-        return new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
-                this, getModel(), 
-                PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "numberOfSentences"),
-                PropertyModel.of(getModel(), "documentIndex"),
-                PropertyModel.of(getModel(), "numberOfDocuments"))) {
-            private static final long serialVersionUID = 7176610419683776917L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getDocument() != null);
             }
         };
     }
@@ -592,6 +564,6 @@ public class AnnotationPage
         annotationEditor.bratRender(aTarget, aEditorCas);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
         aTarget.add(gotoPageTextField);
-        aTarget.add(numberOfPages);
+        aTarget.add(getOrCreatePositionInfoLabel());
     }
 }

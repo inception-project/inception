@@ -39,12 +39,10 @@ import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -120,7 +118,6 @@ public class AutomationPage
     private UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
     
     private long currentprojectId;
@@ -216,7 +213,7 @@ public class AutomationPage
                             annotationService, userRepository);
                     
                     annotationEditor.bratRender(aTarget, editorCas);
-                    aTarget.add(numberOfPages);
+                    aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
                 catch (Exception e) {
@@ -238,7 +235,7 @@ public class AutomationPage
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
 
-        add(numberOfPages = createPositionInfoLabel());
+        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -292,24 +289,24 @@ public class AutomationPage
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
        
-        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));        
+                        EventType.click)));
 
-        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));        
+                        EventType.click)));
 
-        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
@@ -339,31 +336,6 @@ public class AutomationPage
         finishDocumentIcon = new FinishImage("finishImage", getModel());
         finishDocumentIcon.setOutputMarkupId(true);
         finishDocumentLink.add(finishDocumentIcon);
-    }
-    
-    private Label createPositionInfoLabel()
-    {
-        return new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
-                this, getModel(), 
-                PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "numberOfSentences"),
-                PropertyModel.of(getModel(), "documentIndex"),
-                PropertyModel.of(getModel(), "numberOfDocuments"))) {
-            private static final long serialVersionUID = 7176610419683776917L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getDocument() != null);
-            }
-        };
     }
     
     private AnnotationDetailEditorPanel createDetailEditor()
@@ -571,7 +543,7 @@ public class AutomationPage
 
         target.add(gotoPageTextField);
         target.add(suggestionView);
-        target.add(numberOfPages);
+        target.add(getOrCreatePositionInfoLabel());
     }
 
     
@@ -613,7 +585,7 @@ public class AutomationPage
                 aCallbackTarget.appendJavaScript(
                         "Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 aCallbackTarget.add(documentNamePanel.setOutputMarkupId(true));
-                aCallbackTarget.add(numberOfPages);
+                aCallbackTarget.add(getOrCreatePositionInfoLabel());
             }
         });
         openDocumentsModal.show(aTarget);

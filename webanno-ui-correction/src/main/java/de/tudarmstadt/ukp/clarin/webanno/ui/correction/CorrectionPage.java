@@ -111,7 +111,6 @@ public class CorrectionPage
     private UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
     private DocumentNamePanel documentNamePanel;
     
     private long currentprojectId;
@@ -203,7 +202,7 @@ public class CorrectionPage
                             annotationService, userRepository);
                     
                     annotationEditor.bratRender(aTarget, editorCas);
-                    aTarget.add(numberOfPages);
+                    aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
                 catch (UIMAException e) {
@@ -231,7 +230,7 @@ public class CorrectionPage
 
         add(documentNamePanel = createDocumentInfoLabel());
 
-        add(numberOfPages = createPositionInfoLabel());
+        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
         openDocumentsModal.setOutputMarkupId(true);
@@ -284,24 +283,24 @@ public class CorrectionPage
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
-        add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument)
+        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument)
+        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNext", this::actionShowNextPage)
+        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new LambdaAjaxLink("showPrevious", this::actionShowPreviousPage)
+        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new LambdaAjaxLink("showFirst", this::actionShowFirstPage)
+        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new LambdaAjaxLink("showLast", this::actionShowLastPage)
+        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
@@ -348,7 +347,7 @@ public class CorrectionPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(numberOfPages);
+                aTarget.add(getOrCreatePositionInfoLabel());
                 aTarget.add(suggestionView);
 
                 try {
@@ -477,7 +476,7 @@ public class CorrectionPage
 
         target.add(gotoPageTextField);
         target.add(suggestionView);
-        target.add(numberOfPages);
+        target.add(getOrCreatePositionInfoLabel());
     }
     
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
@@ -516,7 +515,7 @@ public class CorrectionPage
                 aCallbackTarget.appendJavaScript(
                         "Wicket.Window.unloadConfirmation=false;window.location.reload()");
                 aCallbackTarget.add(documentNamePanel);
-                aCallbackTarget.add(numberOfPages);
+                aCallbackTarget.add(getOrCreatePositionInfoLabel());
             }
         });
         openDocumentsModal.show(aTarget);

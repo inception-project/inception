@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
@@ -47,6 +48,7 @@ public abstract class AnnotationPageBase
     
     private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
+    private Label numberOfPages;
     
     protected AnnotationPageBase()
     {
@@ -78,6 +80,34 @@ public abstract class AnnotationPageBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
+    
+    protected Label getOrCreatePositionInfoLabel()
+    {
+        if (numberOfPages == null) {
+            numberOfPages = new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
+                    this, getModel(), 
+                    PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
+                    PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
+                    PropertyModel.of(getModel(), "numberOfSentences"),
+                    PropertyModel.of(getModel(), "documentIndex"),
+                    PropertyModel.of(getModel(), "numberOfDocuments"))) {
+                private static final long serialVersionUID = 7176610419683776917L;
+    
+                {
+                    setOutputMarkupId(true);
+                    setOutputMarkupPlaceholderTag(true);
+                }
+                
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    setVisible(getModelObject().getDocument() != null);
+                }
+            };
+        }
+        return numberOfPages;
+    }    
     
     protected ChallengeResponseDialog createOrGetResetDocumentDialog()
     {
