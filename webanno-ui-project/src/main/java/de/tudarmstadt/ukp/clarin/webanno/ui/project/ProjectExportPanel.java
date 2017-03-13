@@ -38,6 +38,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -58,6 +59,7 @@ import org.wicketstuff.progressbar.ProgressionModel;
 import com.ibm.icu.text.SimpleDateFormat;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
@@ -479,19 +481,26 @@ public class ProjectExportPanel extends Panel {
     public class FileGenerator
         implements Runnable
     {
+        private String username;
         private ProjectExportModel model;
         private AjaxRequestTarget target;
         private Queue<String> messages = new ConcurrentLinkedQueue<>();
 
-        public FileGenerator(ProjectExportModel aModel, AjaxRequestTarget aTarget)
+        public FileGenerator(ProjectExportModel aModel, AjaxRequestTarget aTarget, String aUsername)
         {
             model = aModel;
             target = aTarget;
+            username = aUsername;
         }
 
         @Override
         public void run()
         {
+            // We are in a new thread. Set up thread-specific MDC
+            MDC.put(Logging.KEY_USERNAME, username);
+            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.project.getId()));
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repository.getDir().toString());
+            
             File file;
             try {
                 Thread.sleep(100); // Why do we sleep here?
