@@ -39,6 +39,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -433,7 +435,10 @@ public class ProjectExportPanel extends Panel {
                     ProjectPage.visible = false;
                     target.add(ProjectExportPanel.this.getPage());
                     fileGenerationProgress.start(target);
-                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(), target);
+                    Authentication authentication = SecurityContextHolder.getContext()
+                            .getAuthentication();
+                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(), target,
+                            authentication.getName());
                     thread = new Thread(runnable);
                     thread.start();
                 }
