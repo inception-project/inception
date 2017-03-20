@@ -45,7 +45,7 @@ public class XmiReader
      * In lenient mode, unknown types are ignored and do not cause an exception to be thrown.
      */
     public static final String PARAM_LENIENT = "lenient";
-    @ConfigurationParameter(name=PARAM_LENIENT, mandatory=true, defaultValue="false")
+    @ConfigurationParameter(name=PARAM_LENIENT, mandatory=true, defaultValue="true")
     private boolean lenient;
     
 	@Override
