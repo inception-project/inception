@@ -131,7 +131,9 @@ public class SuggestionBuilder
                     aBModel.getMode());
             mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
-                    CurationPanel.CURATION_USER, 0, mergeJCas.getDocumentText().length());
+                    CurationPanel.CURATION_USER,
+                    WebAnnoCasUtil.getFirstSentence(mergeJCas).getBegin(),
+                    mergeJCas.getDocumentText().length());
 
         }
 
