@@ -138,6 +138,8 @@ public class ChallengeResponseDialog
             return;
         }
         
+        boolean closeOk = true;
+        
         // Invoke callback if one is defined
         if (confirmAction != null) {
             try {
@@ -146,10 +148,14 @@ public class ChallengeResponseDialog
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
                 state.feedback = "Error: " + e.getMessage();
+                aTarget.add(aForm);
+                closeOk = false;
             }
         }
         
-        close(aTarget);
+        if (closeOk) {
+            close(aTarget);
+        }
     }
 
     protected void onCancelInternal(AjaxRequestTarget aTarget, Form<State> aForm)

@@ -518,9 +518,10 @@ public class CurationPage
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((target) -> {
-            AnnotatorState state = getModelObject();
+        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
+            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
             
+            AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();
 
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
@@ -535,10 +536,10 @@ public class CurationPage
             
             repository.createSourceDocument(sourceDocument);
             
-            target.add(finishDocumentIcon);
-            target.add(finishDocumentLink);
-            target.add(curationPanel.editor);
-            target.add(showreCreateMergeCasModal);
+            aCallbackTarget.add(finishDocumentIcon);
+            aCallbackTarget.add(finishDocumentLink);
+            aCallbackTarget.add(curationPanel.editor);
+            aCallbackTarget.add(showreCreateMergeCasModal);
         });
         finishDocumentDialog.show(aTarget);
     }

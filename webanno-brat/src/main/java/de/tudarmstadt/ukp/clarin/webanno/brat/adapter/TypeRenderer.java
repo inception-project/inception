@@ -21,14 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -56,13 +54,12 @@ public interface TypeRenderer
     void render(JCas aJcas, List<AnnotationFeature> features, GetDocumentResponse aResponse,
             AnnotatorState aState, ColoringStrategy aColoringStrategy);
     
-    default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures, FeatureStructure fs,
-            GetDocumentResponse aResponse)
+    default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
+            FeatureStructure aFS, GetDocumentResponse aResponse)
     {
         for (AnnotationFeature f : aFeatures) {
-            if (f.isRequired() && CAS.TYPE_NAME_STRING.equals(f.getType())
-                    && StringUtils.isBlank(FSUtil.getFeature(fs, f.getName(), String.class))) {
-                aResponse.addComment(new Comment(getAddr(fs), Comment.ANNOTATION_ERROR,
+            if (WebAnnoCasUtil.isRequiredFeatureMissing(f, aFS)) {
+                aResponse.addComment(new Comment(getAddr(aFS), Comment.ANNOTATION_ERROR,
                         "Required feature [" + f.getName() + "] not set."));
             }
         }

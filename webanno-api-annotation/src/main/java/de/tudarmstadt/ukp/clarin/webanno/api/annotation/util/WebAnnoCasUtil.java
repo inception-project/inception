@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
@@ -39,6 +40,7 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -310,6 +312,27 @@ public class WebAnnoCasUtil
         for (Sentence sentence : select(aJCas, Sentence.class)) {
             if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin
                     && sentence.getEnd() <= aEnd) {
+                currentSentence = sentence;
+                break;
+            }
+        }
+        return currentSentence;
+    }
+
+    /**
+     * Get the  sentence based on the annotation begin offset
+     *
+     * @param aJCas
+     *            the JCas.
+     * @param aBegin
+     *            the begin offset.
+     * @return the sentence.
+     */
+    public static Sentence getSentence(JCas aJCas, int aBegin)
+    {
+        Sentence currentSentence = null;
+        for (Sentence sentence : select(aJCas, Sentence.class)) {
+            if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin) {
                 currentSentence = sentence;
                 break;
             }
@@ -963,5 +986,11 @@ public class WebAnnoCasUtil
     public static FeatureStructure getFeatureFS(FeatureStructure aFS, String aFeatureName)
     {
         return aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(aFeatureName));
+    }
+    
+    public static boolean isRequiredFeatureMissing(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        return aFeature.isRequired() && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
+                && StringUtils.isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
     }
 }

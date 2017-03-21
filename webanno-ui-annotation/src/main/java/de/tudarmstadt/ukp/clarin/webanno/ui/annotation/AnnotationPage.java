@@ -460,6 +460,8 @@ public class AnnotationPage
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
+            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            
             AnnotatorState state = getModelObject();
             AnnotationDocument annotationDocument = repository.getAnnotationDocument(
                     state.getDocument(), state.getUser());

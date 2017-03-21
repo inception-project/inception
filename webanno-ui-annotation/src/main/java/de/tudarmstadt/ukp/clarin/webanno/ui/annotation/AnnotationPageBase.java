@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static org.apache.uima.fit.util.CasUtil.select;
+
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
@@ -31,18 +35,28 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public abstract class AnnotationPageBase
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
 
+    @SpringBean(name = "annotationService")
+    private AnnotationService annotationService;
+    
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
     
@@ -231,4 +245,45 @@ public abstract class AnnotationPageBase
      * and it does not reset the annotator state.
      */
     protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJcas);
+
+    /**
+     * Checks if all required features on all annotations are set. If a required feature value is
+     * missing, then the method scrolls to that location and schedules a re-rendering. In such
+     * a case, an {@link IllegalStateException} is thrown.
+     */
+    protected void ensureRequiredFeatureValuesSet(AjaxRequestTarget aTarget, JCas aJcas)
+    {
+        AnnotatorState state = getModelObject();
+        JCas editorJCas = aJcas;
+        CAS editorCas = editorJCas.getCas();
+        for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
+            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
+            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            
+            // If no feature is required, then we can skip the whole procedure
+            if (features.stream().allMatch((f) -> !f.isRequired())) {
+                continue;
+            }
+
+            // Check each feature structure of this layer
+            for (AnnotationFS fs : select(editorCas, adapter.getAnnotationType(editorCas))) {
+                for (AnnotationFeature f : features) {
+                    if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
+                        // Find the sentence that contains the annotation with the missing
+                        // required feature value
+                        Sentence s = WebAnnoCasUtil.getSentence(editorJCas, fs.getBegin());
+                        // Put this sentence into the focus
+                        state.setFirstVisibleSentence(s);
+                        actionRefreshDocument(aTarget, editorJCas);
+                        // Inform the user
+                        throw new IllegalStateException(
+                                "Document cannot be marked as finished. Annotation with ID ["
+                                        + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                                        + layer.getUiName() + "] is missing value for feature ["
+                                        + f.getUiName() + "].");
+                    }
+                }
+            }
+        }
+    }
 }
