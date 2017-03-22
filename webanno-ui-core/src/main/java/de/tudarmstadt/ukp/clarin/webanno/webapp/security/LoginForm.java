@@ -19,19 +19,25 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.security;
 
 import java.util.Properties;
 
+import javax.servlet.http.HttpSession;
+
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+
 /**
  * A login form.
- *
  */
 public class LoginForm
     extends StatelessForm<LoginForm>
@@ -67,7 +73,19 @@ public class LoginForm
 
     private void setDefaultResponsePageIfNecessary()
     {
-        continueToOriginalDestination();
-        setResponsePage(getApplication().getHomePage());
+        // This does not work because it was Spring Security that intercepted the access, not Wicket
+        // continueToOriginalDestination();
+        
+        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                .getContainerRequest().getSession(false);
+        SavedRequest savedRequest = (SavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+        if (savedRequest != null) {
+            LOG.debug("Redirecting to saved URL: [{}]", savedRequest.getRedirectUrl());
+            throw new RedirectToUrlException(savedRequest.getRedirectUrl());
+        }
+        else {
+            LOG.debug("Redirecting to welcome page");
+            setResponsePage(getApplication().getHomePage());
+        }
     }
 }

@@ -40,7 +40,7 @@
 			access="hasAnyRole('ROLE_REMOTE')" />
 	</security:http>
 
-	<security:http create-session="never" auto-config="true">
+	<security:http auto-config="true">
         <security:csrf disabled="true"/>
         <security:headers>
             <security:frame-options policy="SAMEORIGIN"/>
@@ -48,7 +48,7 @@
     	<security:remember-me />
 		<security:logout />
 		<security:intercept-url pattern="/login.html*"
-			access="permitAll" />
+			access="isAnonymous()" />
 		<security:intercept-url pattern="/images/**"
             access="permitAll" />
         <security:intercept-url pattern="/js/css_browser_selector.js"
@@ -70,6 +70,9 @@
 		<security:form-login login-page='/login.html' />
 	</security:http>
 
+    <bean id="securityContextPersistenceFilter"
+        class="org.springframework.security.web.context.SecurityContextPersistenceFilter" />
+        
 	<security:global-method-security
 		pre-post-annotations="enabled" />
 
