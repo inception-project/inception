@@ -219,11 +219,17 @@ public class AnnotationPage
             @Override
             public void onDocumentSelected(AjaxRequestTarget aTarget)
             {
-                //actionLoadDocument(aTarget);
-                PageParameters pageParameters = new PageParameters();
-                pageParameters.set(PAGE_PARAM_PROJECT_ID, getModelObject().getProject().getId());
-                pageParameters.set(PAGE_PARAM_DOCUMENT_ID, getModelObject().getDocument().getId());
-                setResponsePage(AnnotationPage.class, pageParameters);
+                // Reload the page using AJAX. This does not add the project/document ID to the URL,
+                // but being AJAX it flickers less.
+                actionLoadDocument(aTarget);
+                
+                // Load the document and add the project/document ID to the URL. This causes a full
+                // page reload. No AJAX.
+                // PageParameters pageParameters = new PageParameters();
+                // pageParameters.set(PAGE_PARAM_PROJECT_ID, getModelObject().getProject().getId());
+                // pageParameters.set(PAGE_PARAM_DOCUMENT_ID,
+                // getModelObject().getDocument().getId());
+                // setResponsePage(AnnotationPage.class, pageParameters);
             }
         });
 
