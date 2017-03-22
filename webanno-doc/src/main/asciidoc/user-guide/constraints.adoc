@@ -34,7 +34,7 @@ A *constraint set* consists of two components:
 
 [source,text]
 ----
-import <fully_qualified_name_of_feature> as <shortName>;
+import <fully_qualified_name_of_layer> as <shortName>;
 ----
 
 It is necessary to declare short names for all fully qualified names because only short names can be used when writing a constraint rule. Short names cannot contain any dots or special characters, only letters, numbers, and the underscore.
