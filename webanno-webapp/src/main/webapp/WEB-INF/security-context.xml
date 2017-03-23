@@ -47,8 +47,8 @@
         </security:headers>
     	<security:remember-me />
 		<security:logout />
-		<security:intercept-url pattern="/login.html*"
-			access="isAnonymous()" />
+        <security:intercept-url pattern="/favicon.ico"
+            access="permitAll" />
 		<security:intercept-url pattern="/images/**"
             access="permitAll" />
         <security:intercept-url pattern="/js/css_browser_selector.js"

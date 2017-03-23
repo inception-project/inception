@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.login;
 
-import org.slf4j.LoggerFactory;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
@@ -44,6 +47,14 @@ public class LoginPage
 
     public LoginPage()
     {
+        // If we are already logged in, redirect to the welcome page. This tries to a void a
+        // situation where the user tries to access the login page directly and thus the
+        // application would redirect the user to the login page after a successful login
+        if (!(SecurityContextHolder.getContext()
+                .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+            throw new RestartResponseException(getApplication().getHomePage());
+        }
+        
         setStatelessHint(true);
         setVersioned(false);
         
