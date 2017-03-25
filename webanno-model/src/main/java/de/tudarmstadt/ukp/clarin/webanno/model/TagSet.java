@@ -53,6 +53,7 @@ public class TagSet
     private String language;
 
     @Lob
+    @Column(length = 64000)
     private String description;
 
     private boolean createTag = true;

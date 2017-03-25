@@ -75,6 +75,7 @@ public class AnnotationFeature
     private String uiName;
 
     @Lob
+    @Column(length = 64000)
     private String description;
 
     private boolean enabled = true;

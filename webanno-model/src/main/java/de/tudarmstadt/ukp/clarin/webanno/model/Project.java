@@ -49,6 +49,7 @@ public class Project
     private String name;
 
     @Lob
+    @Column(length = 64000)
     private String description;
 
     @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ModeType")

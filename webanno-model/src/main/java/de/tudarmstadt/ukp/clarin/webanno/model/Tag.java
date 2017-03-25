@@ -47,6 +47,7 @@ public class Tag
     private String name;
 
     @Lob
+    @Column(length = 64000)
     private String description;
 
     @ManyToOne
