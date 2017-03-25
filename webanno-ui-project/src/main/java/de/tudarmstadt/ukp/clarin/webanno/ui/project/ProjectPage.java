@@ -71,6 +71,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
@@ -89,6 +90,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
@@ -100,6 +103,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */
+@MenuItem(icon="images/setting_tools.png", label="Projects", prio=400)
 @MountPath("/projectsetting.html")
 public class ProjectPage
     extends ApplicationPageBase
@@ -748,5 +752,16 @@ public class ProjectPage
         selectedProjectModel.project = importedProject;
         projectSelectionForm.setModelObject(selectedProjectModel);
         RequestCycle.get().setResponsePage(getPage());
+    }
+    
+    /**
+     * Only admins and project managers can see this page
+     */
+    @MenuItemCondition
+    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aUserRepo.get(username);
+        return SecurityUtil.projectSettingsEnabeled(aRepo, user);
     }
 }

@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Button;
@@ -50,12 +53,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 /**
  * Manage Application wide Users.
  */
+@MenuItem(icon="images/user_add.png", label="Users")
 @MountPath("/users.html")
 public class ManageUsersPage
     extends ApplicationPageBase
@@ -370,5 +378,22 @@ public class ManageUsersPage
     {
         String authedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.get(authedUsername);
+    }
+    
+    /**
+     * Only admins and project managers can see this page
+     */
+    @MenuItemCondition
+    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aUserRepo.get(username);
+
+        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
+                .getEnvironment().getActiveProfiles());
+        Properties settings = SettingsUtil.getSettings();
+        return SecurityUtil.isSuperAdmin(aRepo, user)
+                || (!activeProfiles.contains("auto-mode-preauth") && "true"
+                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS)));
     }
 }

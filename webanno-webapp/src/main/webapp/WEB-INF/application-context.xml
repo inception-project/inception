@@ -66,6 +66,10 @@
 		</property>
 	</bean>
 
+    <bean id="menuItemService"
+        class="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl">
+    </bean>
+
 	<bean id="annotationService"
 		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationServiceImpl">
 	</bean>

@@ -71,6 +71,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -80,6 +82,7 @@ import wicket.contrib.input.events.key.KeyType;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
+@MenuItem(icon="images/categories.png", label="Annotation", prio=100)
 @MountPath(value = "/annotation.html", alt = "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${"
         + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}")
 public class AnnotationPage
@@ -573,5 +576,13 @@ public class AnnotationPage
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
+    }
+    
+    @MenuItemCondition
+    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aUserRepo.get(username);
+        return SecurityUtil.annotationEnabeled(aRepo, user, Mode.ANNOTATION);
     }
 }

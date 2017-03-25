@@ -83,6 +83,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEd
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
@@ -100,6 +102,7 @@ import wicket.contrib.input.events.key.KeyType;
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
  */
+@MenuItem(icon="images/update.png", label="Automation", prio = 110 )
 @MountPath("/automation.html")
 public class AutomationPage
     extends AnnotationPageBase
@@ -800,5 +803,16 @@ public class AutomationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
+    }
+    
+    /**
+     * Only project admins and annotators can see this page
+     */
+    @MenuItemCondition
+    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aUserRepo.get(username);
+        return SecurityUtil.annotationEnabeled(aRepo, user, Mode.AUTOMATION);
     }
 }

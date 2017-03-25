@@ -17,36 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
-import static java.util.Arrays.asList;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.*;
-
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.annotationEnabeled;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.curationEnabeled;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-
 import javax.persistence.NoResultException;
 
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.StatelessLink;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.page.AutomationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.WebAnnoApplicationContextInitializer;
 
 /**
  * A home page for WebAnno: <br>
@@ -67,149 +67,63 @@ public class WelcomePage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    private StatelessLink<Void> projectSettings;
-    private StatelessLink<Void> curation;
-    private StatelessLink<Void> annotation;
-    private StatelessLink<Void> monitoring;
-    private StatelessLink<Void> userManagement;
-    private StatelessLink<Void> correction;
-    private StatelessLink<Void> automation;
+    @SpringBean(name = "menuItemService")
+    private MenuItemService menuItemService;
+
+    private ListView<MenuItem> menu;
 
     public WelcomePage()
     {
         setStatelessHint(true);
         setVersioned(false);
         
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        // if a user is logged recently, session will not expire,
-        // This causes a problem, if the data base is re-created while user's session not expired OR
-        // the user is deleted while the session is not expired
+        // In case we restore a saved session, make sure the user actually still exists in the DB.
         User user = null;
         try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             user = userRepository.get(username);
         }
         // redirect to login page (if no usr is found, admin/admin will be created)
         catch (NoResultException e) {
             setResponsePage(LoginPage.class);
         }
-
-        // Add Project Setting Link
-        // Only Super Admin or Project admins can see this link
-        projectSettings = new StatelessLink<Void>("projectSettings")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(ProjectPage.class);
-            }
-        };
-        add(projectSettings);
-        projectSettings.setVisible(projectSettingsEnabeled(repository, user));
-
-        // Add curation Link
-        // Only project admins or curators can see this link
-        curation = new StatelessLink<Void>("curation")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(CurationPage.class);
-            }
-        };
-        add(curation);
-        curation.setVisible(curationEnabeled(repository, user));
-
-        // Add annotation link
-        // Only project admins and annotators can see this link
-        annotation = new StatelessLink<Void>("annotation")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(AnnotationPage.class);
-            }
-        };
-        add(annotation);
-        annotation.setVisible(annotationEnabeled(repository, user, Mode.ANNOTATION));
-
-        // Add correction Link
-        // Only project admins and annotators can see this link
-        correction = new StatelessLink<Void>("correction")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(CorrectionPage.class);
-            }
-        };
-        add(correction);
-        correction.setVisible(annotationEnabeled(repository, user, Mode.CORRECTION));
-
-        // Add automation Link
-        // Only project admins and annotators can see this link
-        automation = new StatelessLink<Void>("automation")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(AutomationPage.class);
-            }
-        };
-        add(automation);
-        automation.setVisible(annotationEnabeled(repository, user, Mode.AUTOMATION));
         
         // if not either a curator or annotator, display warning message
-        if (!annotation.isVisible() && !correction.isVisible() && !automation.isVisible()
-                && !curation.isVisible()) {
+        if (
+            !annotationEnabeled(repository, user, Mode.ANNOTATION) && 
+            !annotationEnabeled(repository, user, Mode.AUTOMATION) && 
+            !annotationEnabeled(repository, user, Mode.CORRECTION) && 
+            !curationEnabeled(repository, user)) {
             info("You are not member of any projects to annotate or curate");
         }
         
-        // Add monitoring link
-        // Only project admins and curators can see this link
-        monitoring = new StatelessLink<Void>("monitoring")
+        List<MenuItem> menuItems = new ArrayList<>(menuItemService.getMenuItems());
+        
+        menu = new ListView<MenuItem>("menu", menuItems)
         {
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = -5492972164756003552L;
 
             @Override
-            public void onClick()
+            protected void populateItem(ListItem<MenuItem> aItem)
             {
-                setResponsePage(MonitoringPage.class);
+                MenuItem item = aItem.getModelObject();
+                StatelessLink<Void> menulink = new StatelessLink<Void>("menulink") {
+                    private static final long serialVersionUID = 4110674757822252390L;
+
+                    @Override
+                    public void onClick()
+                    {
+                        setResponsePage(item.page);
+                    }
+                };
+                menulink.add(new Image("icon", new UrlResourceReference(Url.parse(item.icon))));
+                menulink.add(new Label("label", PropertyModel.of(item, "label")));
+                if (item.condition != null) {
+                    menulink.setVisible(item.condition.applies());
+                }
+                aItem.add(menulink);
             }
         };
-        add(monitoring);
-        monitoring.setVisible(monitoringEnabeled(repository, user));
-
-        userManagement = new StatelessLink<Void>("userManagement")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onClick()
-            {
-                setResponsePage(ManageUsersPage.class);
-            }
-        };
-        // MetaDataRoleAuthorizationStrategy.authorize(userManagement, Component.RENDER, "ROLE_ADMIN");
-        // Global admins may always access the user management - normal users only if WebAnno
-        // is not running in PREAUTH mode
-        add(userManagement);
-        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
-                .getEnvironment().getActiveProfiles());
-        Properties settings = SettingsUtil.getSettings();
-        userManagement.setVisible(SecurityUtil.isSuperAdmin(repository, user)
-                || (!activeProfiles.contains(WebAnnoApplicationContextInitializer.PROFILE_PREAUTH)
-                        && "true".equals(
-                                settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS))));
+        add(menu);
     }
 }
