@@ -71,10 +71,4 @@ public class NumberFeatureEditor<T extends Number>
     {
         return field;
     }
-
-    @Override
-    public boolean isDropOrchoice()
-    {
-        return false;
-    }
 }

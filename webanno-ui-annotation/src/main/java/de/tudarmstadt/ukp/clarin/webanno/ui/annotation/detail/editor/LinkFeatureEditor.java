@@ -78,7 +78,6 @@ public class LinkFeatureEditor
 
     @SuppressWarnings("rawtypes")
     private final AbstractTextComponent field;
-    private boolean isDrop;
     private boolean hideUnconstraintFeature;
 
     private IModel<AnnotatorState> stateModel;
@@ -244,8 +243,6 @@ public class LinkFeatureEditor
             field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
             
             content.add(field);
-
-            isDrop = true;
         }
         else {
             content.add(field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"))
@@ -437,12 +434,6 @@ public class LinkFeatureEditor
     public Component getFocusComponent()
     {
         return field;
-    }
-
-    @Override
-    public boolean isDropOrchoice()
-    {
-        return isDrop;
     }
 
     /**

@@ -53,6 +53,4 @@ public abstract class FeatureEditor
     }
     
     abstract public Component getFocusComponent();
-
-    abstract public boolean isDropOrchoice();
 }

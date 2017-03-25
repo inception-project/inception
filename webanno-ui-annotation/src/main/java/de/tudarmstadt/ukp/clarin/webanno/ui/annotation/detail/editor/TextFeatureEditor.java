@@ -53,7 +53,6 @@ public class TextFeatureEditor
 
     @SuppressWarnings("rawtypes")
     private final AbstractTextComponent field;
-    private boolean isDrop;
     private boolean hideUnconstraintFeature;
     
 	public TextFeatureEditor(String aId, String aMarkupId, MarkupContainer aItem,
@@ -112,8 +111,6 @@ public class TextFeatureEditor
                     }
                 }
             };
-            
-            isDrop = true;
         }
         else {
             field = new TextField<String>("value");
@@ -175,12 +172,6 @@ public class TextFeatureEditor
         return field;
     }
 
-    @Override
-    public boolean isDropOrchoice()
-    {
-        return isDrop;
-    }
-    
     /**
      * Hides feature if "Hide un-constraint feature" is enabled and constraint rules are applied and
      * feature doesn't match any constraint rule

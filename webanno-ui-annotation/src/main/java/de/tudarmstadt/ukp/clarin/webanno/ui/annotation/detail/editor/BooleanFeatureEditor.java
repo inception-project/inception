@@ -54,10 +54,4 @@ public class BooleanFeatureEditor
     {
         return field;
     }
-
-    @Override
-    public boolean isDropOrchoice()
-    {
-        return true;
-    }
 }
