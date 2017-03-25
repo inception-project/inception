@@ -200,11 +200,13 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = 3635145598405490893L;
         
-        private WebMarkupContainer featureEditorsContainer;
+        // Add "featureEditorPanel" to AjaxRequestTargets instead of "featureEditorPanelContent"
+        private WebMarkupContainer featureEditorPanel;
+        private FeatureEditorPanelContent featureEditorPanelContent;
+        
         private CheckBox forwardAnnotationCheck;
         private AjaxButton deleteButton;
         private AjaxButton reverseButton;
-        private RefreshingView<FeatureState> featureValues;
         private LayerSelector layerSelector;   
         private String selectedTag = "";
         private Label selectedAnnotationLayer;
@@ -372,7 +374,7 @@ public class AnnotationDetailEditorPanel
 
             add(layerSelector = new LayerSelector("defaultAnnotationLayer", annotationLayers));
 
-            featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer")
+            featureEditorPanel = new WebMarkupContainer("featureEditorsContainer")
             {
                 private static final long serialVersionUID = 8908304272310098353L;
 
@@ -386,10 +388,10 @@ public class AnnotationDetailEditorPanel
             };
             // Add placeholder since wmc might start out invisible. Without the placeholder we
             // cannot make it visible in an AJAX call
-            featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
-            featureEditorsContainer.setOutputMarkupId(true);
+            featureEditorPanel.setOutputMarkupPlaceholderTag(true);
+            featureEditorPanel.setOutputMarkupId(true);
             
-            featureEditorsContainer.add(new Label("noFeaturesWarning", "No features available!") {
+            featureEditorPanel.add(new Label("noFeaturesWarning", "No features available!") {
                 private static final long serialVersionUID = 4398704672665066763L;
 
                 @Override
@@ -401,8 +403,8 @@ public class AnnotationDetailEditorPanel
                 }
             });
             
-            featureValues = new FeatureEditorPanelContent("featureValues");
-            featureEditorsContainer.add(featureValues);
+            featureEditorPanelContent = new FeatureEditorPanelContent("featureValues");
+            featureEditorPanel.add(featureEditorPanelContent);
             
 			forwardAnnotationText = new TextField<String>("forwardAnno");
 			forwardAnnotationText.setOutputMarkupId(true);
@@ -460,7 +462,7 @@ public class AnnotationDetailEditorPanel
 					    featureStates.get(0).value = getKeyBindValue(selectedTag, bindTags);
 					}
 					aTarget.add(forwardAnnotationText);
-					aTarget.add(featureValues.get(0));
+					aTarget.add(featureEditorPanelContent.get(0));
 				}
 			});
             forwardAnnotationText.setOutputMarkupId(true);
@@ -472,9 +474,9 @@ public class AnnotationDetailEditorPanel
             selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
                     "selection.text"));
             selectedTextLabel.setOutputMarkupId(true);
-            featureEditorsContainer.add(selectedTextLabel);
+            featureEditorPanel.add(selectedTextLabel);
             
-            featureEditorsContainer.add(new Label("layerName","Layer"){
+            featureEditorPanel.add(new Label("layerName","Layer"){
                 private static final long serialVersionUID = 6084341323607243784L;
                 @Override
                 protected void onConfigure()
@@ -485,7 +487,7 @@ public class AnnotationDetailEditorPanel
                 }
                 
             });
-            featureEditorsContainer.setOutputMarkupId(true);
+            featureEditorPanel.setOutputMarkupId(true);
 
             // the annotation layer for the selected annotation
             selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
@@ -502,9 +504,9 @@ public class AnnotationDetailEditorPanel
 
             };
             selectedAnnotationLayer.setOutputMarkupId(true);
-            featureEditorsContainer.add(selectedAnnotationLayer);
+            featureEditorPanel.add(selectedAnnotationLayer);
             
-            add(featureEditorsContainer);
+            add(featureEditorPanel);
             
             add(deleteModal = new ModalWindow("yesNoModal"));
             deleteModal.setOutputMarkupId(true);
@@ -676,8 +678,7 @@ public class AnnotationDetailEditorPanel
                             state.setSelectedAnnotationLayer(getModelObject());
                         }
                         // If "remember layer" is not set, then changing the layer means that we
-                        // want
-                        // to change the type of the currently selected annotation
+                        // want to change the type of the currently selected annotation
                         else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
                                 && state.getSelection().getAnnotation().isSet()) {
                             if (state.getSelection().isRelationAnno()) {
@@ -711,8 +712,7 @@ public class AnnotationDetailEditorPanel
                             }
                         }
                         // If no annotation is selected, then prime the annotation detail panel for
-                        // the
-                        // new type
+                        // the new type
                         else {
                             state.setSelectedAnnotationLayer(getModelObject());
                             AnnotationFeatureForm.this.selectedAnnotationLayer
@@ -819,7 +819,7 @@ public class AnnotationDetailEditorPanel
                         addAnnotateActionBehavior(frag, "change");
                     }
                     else if (!(frag instanceof LinkFeatureEditor)) {
-                        addRefreshPanelBehavior(frag, "change");
+                        addRefreshFeaturePanelBehavior(frag, "change");
                     }
 
                     // Put focus on hidden input field if we are in forward-mode
@@ -869,7 +869,7 @@ public class AnnotationDetailEditorPanel
                 item.add(frag);
             }
 
-            private void addRefreshPanelBehavior(final FeatureEditor aFrag, String aEvent)
+            private void addRefreshFeaturePanelBehavior(final FeatureEditor aFrag, String aEvent)
             {
                 aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior(aEvent)
                 {
@@ -878,7 +878,7 @@ public class AnnotationDetailEditorPanel
                     @Override
                     protected void onUpdate(AjaxRequestTarget aTarget)
                     {
-                        aTarget.add(AnnotationFeatureForm.this);
+                        aTarget.add(featureEditorPanel);
                     }
                 });
             }
@@ -929,7 +929,7 @@ public class AnnotationDetailEditorPanel
                             if (state.getConstraints() != null) {
                                 // Make sure we update the feature editor panel because due to
                                 // constraints the contents may have to be re-rendered
-                                aTarget.add(AnnotationFeatureForm.this);
+                                aTarget.add(AnnotationFeatureForm.this.featureEditorPanel);
                             }
                             actionAnnotate(aTarget);
                         }
@@ -1348,7 +1348,7 @@ public class AnnotationDetailEditorPanel
         }
         
         // #186 - After filling a slot, the annotation detail panel is not updated 
-        aTarget.add(annotationFeatureForm);
+        aTarget.add(annotationFeatureForm.featureEditorPanel);
     
         TypeAdapter adapter = getAdapter(annotationService, state.getSelectedAnnotationLayer());
         
