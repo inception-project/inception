@@ -1,0 +1,2 @@
+ServerDetector.java
+Copyright (c) 2000-2008 Liferay, Inc. All rights reserved.

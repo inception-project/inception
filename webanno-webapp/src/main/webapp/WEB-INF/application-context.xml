@@ -83,7 +83,7 @@
 		class="de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider"></bean>
 
 	<bean id="standaloneShutdownDialog"
-		class="de.tudarmstadt.ukp.clarin.webanno.webapp.standalone.StandaloneShutdownDialog"
+		class="de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneShutdownDialog"
 		lazy-init="false"></bean>
 
     <bean id="casDoctor"
@@ -91,7 +91,7 @@
 
     <!-- Poor man's database migration -->
     <bean id="fixCoreferenceMigration"
-        class="de.tudarmstadt.ukp.clarin.webanno.webapp.migration.FixCoreferenceFeatures"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.migration.FixCoreferenceFeatures"
         lazy-init="false"></bean>
 
 	<bean id="systemPrereqs"

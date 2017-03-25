@@ -1,3 +1,0 @@
-Two file is a second file
-It will be ziped again
-It has three lines

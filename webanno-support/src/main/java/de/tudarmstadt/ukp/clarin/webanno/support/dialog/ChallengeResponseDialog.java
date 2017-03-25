@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;

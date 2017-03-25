@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp;
 import java.io.File;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
@@ -29,30 +29,29 @@ import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.resource.ContextRelativeResourceReference;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.settings.IExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.SpringAuthenticatedWebSession;
 
 /**
- * The wicket application class. Sets up pages, authentication, theme, and other application-wide
+ * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
  * configuration.
- *
  */
 public class WicketApplication
     extends AuthenticatedWebApplication
@@ -88,11 +87,11 @@ public class WicketApplication
             String logoValue = settings.getProperty(SettingsUtil.CFG_STYLE_LOGO);
             if (StringUtils.isNotBlank(logoValue) && new File(logoValue).canRead()) {
                 getSharedResources().add("logo", new FileSystemResource(new File(logoValue)));
-                mountResource("/images/logo.png", new SharedResourceReference("logo"));
+                mountResource("/assets/logo.png", new SharedResourceReference("logo"));
             }
             else {
-                mountResource("/images/logo.png", new ContextRelativeResourceReference(
-                        "images/logo.png", false));
+                mountResource("/assets/logo.png", new PackageResourceReference(
+                        "/de/tudarmstadt/ukp/clarin/webanno/ui/core/logo/logo.png"));
             }
             
             // Display stack trace instead of internal error

@@ -28,7 +28,7 @@
 			/WEB-INF/application-context.xml
 			/WEB-INF/rest-context.xml
 			/WEB-INF/database-context.xml
-            /WEB-INF/docs-context.xml
+            /WEB-INF/static-resources-context.xml
 		</param-value>
 	</context-param>
 
@@ -82,7 +82,7 @@
     -->
     <filter>
       <filter-name>logging</filter-name>
-      <filter-class>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter</filter-class>
+      <filter-class>de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter</filter-class>
     </filter>
 
     <!--
@@ -90,7 +90,7 @@
     -->
     <filter>
       <filter-name>performance</filter-name>
-      <filter-class>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoPerformanceFilter</filter-class>
+      <filter-class>de.tudarmstadt.ukp.clarin.webanno.support.logging.RequestTimerFilter</filter-class>
     </filter>
 
 	<!--

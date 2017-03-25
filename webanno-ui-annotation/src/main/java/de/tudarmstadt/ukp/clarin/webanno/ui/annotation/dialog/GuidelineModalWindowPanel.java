@@ -37,7 +37,7 @@ import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.WebAnnoCssReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoCssReference;
 
 /**
  * Modal window to display annotation guidelines

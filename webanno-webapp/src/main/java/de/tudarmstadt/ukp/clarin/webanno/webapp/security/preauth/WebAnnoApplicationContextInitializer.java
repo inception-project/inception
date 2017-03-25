@@ -29,7 +29,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoLoggingFilter;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 public class WebAnnoApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
@@ -44,7 +44,7 @@ public class WebAnnoApplicationContextInitializer
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
-        WebAnnoLoggingFilter.setLoggingUsername("SYSTEM");
+        LoggingFilter.setLoggingUsername("SYSTEM");
         
         log.info("  _      __    __   ___                ");
         log.info(" | | /| / /__ / /  / _ | ___  ___  ___ ");

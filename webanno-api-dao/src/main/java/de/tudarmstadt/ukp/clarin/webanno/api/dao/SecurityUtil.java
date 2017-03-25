@@ -23,7 +23,7 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -225,4 +226,59 @@ public class SecurityUtil
 
         return user;
     }
+    
+    public static boolean projectSettingsEnabeled(RepositoryService repository, User user)
+    {
+        if (SecurityUtil.isSuperAdmin(repository, user)) {
+            return true;
+        }
+
+        if (SecurityUtil.isProjectCreator(repository, user)) {
+            return true;
+        }
+
+        for (Project project : repository.listProjects()) {
+            if (SecurityUtil.isProjectAdmin(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public static boolean curationEnabeled(RepositoryService repository, User user)
+    {
+        for (Project project : repository.listProjects()) {
+            if (SecurityUtil.isCurator(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public static boolean annotationEnabeled(RepositoryService repository, User user, Mode mode)
+    {
+        for (Project project : repository.listProjects()) {
+            if (SecurityUtil.isAnnotator(project, repository, user)
+                    && mode.equals(project.getMode())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean monitoringEnabeled(RepositoryService repository, User user)
+    {
+        for (Project project : repository.listProjects()) {
+            if (SecurityUtil.isCurator(project, repository, user)
+                    || SecurityUtil.isProjectAdmin(project, repository, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
 }

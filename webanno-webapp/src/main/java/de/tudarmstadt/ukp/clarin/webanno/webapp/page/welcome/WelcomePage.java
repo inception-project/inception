@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
 
 import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.*;
 
 import java.util.List;
 import java.util.Properties;
@@ -33,27 +34,24 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.page.AutomationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.correction.CorrectionPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.core.app.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.security.page.ManageUsersPage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.WebAnnoApplicationContextInitializer;
 
 /**
  * A home page for WebAnno: <br>
- * Based on the user's permission, it displays either {@link ProjectPage}, d {@link AnnotationPage}
- * , {@link CurationPage} or {@link MonitoringPage }(since v.2.0)
- *
- *
+ * Based on the user's permission, it displays either {@link ProjectPage}, d {@link AnnotationPage},
+ * {@link CurationPage} or {@link MonitoringPage }(since v.2.0)
  */
 public class WelcomePage
     extends ApplicationPageBase
@@ -109,7 +107,7 @@ public class WelcomePage
             }
         };
         add(projectSettings);
-        projectSettings.setVisible(projectSettingsEnabeled(user));
+        projectSettings.setVisible(projectSettingsEnabeled(repository, user));
 
         // Add curation Link
         // Only project admins or curators can see this link
@@ -124,7 +122,7 @@ public class WelcomePage
             }
         };
         add(curation);
-        curation.setVisible(curationEnabeled(user));
+        curation.setVisible(curationEnabeled(repository, user));
 
         // Add annotation link
         // Only project admins and annotators can see this link
@@ -139,7 +137,7 @@ public class WelcomePage
             }
         };
         add(annotation);
-        annotation.setVisible(annotationEnabeled(user, Mode.ANNOTATION));
+        annotation.setVisible(annotationEnabeled(repository, user, Mode.ANNOTATION));
 
         // Add correction Link
         // Only project admins and annotators can see this link
@@ -154,7 +152,7 @@ public class WelcomePage
             }
         };
         add(correction);
-        correction.setVisible(annotationEnabeled(user, Mode.CORRECTION));
+        correction.setVisible(annotationEnabeled(repository, user, Mode.CORRECTION));
 
         // Add automation Link
         // Only project admins and annotators can see this link
@@ -169,7 +167,7 @@ public class WelcomePage
             }
         };
         add(automation);
-        automation.setVisible(annotationEnabeled(user, Mode.AUTOMATION));
+        automation.setVisible(annotationEnabeled(repository, user, Mode.AUTOMATION));
         
         // if not either a curator or annotator, display warning message
         if (!annotation.isVisible() && !correction.isVisible() && !automation.isVisible()
@@ -190,7 +188,7 @@ public class WelcomePage
             }
         };
         add(monitoring);
-        monitoring.setVisible(monitoringEnabeled(user));
+        monitoring.setVisible(monitoringEnabeled(repository, user));
 
         userManagement = new StatelessLink<Void>("userManagement")
         {
@@ -214,57 +212,4 @@ public class WelcomePage
                         && "true".equals(
                                 settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS))));
     }
-
-    private boolean projectSettingsEnabeled(User user)
-    {
-        if (SecurityUtil.isSuperAdmin(repository, user)) {
-            return true;
-        }
-
-        if (SecurityUtil.isProjectCreator(repository, user)) {
-            return true;
-        }
-
-        for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isProjectAdmin(project, repository, user)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private boolean curationEnabeled(User user)
-    {
-        for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isCurator(project, repository, user)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private boolean annotationEnabeled(User user, Mode mode)
-    {
-        for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isAnnotator(project, repository, user)
-                    && mode.equals(project.getMode())) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    private boolean monitoringEnabeled(User user)
-    {
-        for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isCurator(project, repository, user)
-                    || SecurityUtil.isProjectAdmin(project, repository, user)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }}
+}
