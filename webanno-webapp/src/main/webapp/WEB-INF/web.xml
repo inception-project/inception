@@ -54,7 +54,7 @@
 	-->
 	<context-param>
 		<param-name>contextInitializerClasses</param-name>
-		<param-value>de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.WebAnnoApplicationContextInitializer</param-value>
+		<param-value>de.tudarmstadt.ukp.clarin.webanno.webapp.WebAnnoApplicationContextInitializer</param-value>
 	</context-param>
   
 	<!-- Make sure the Spring context is always available -->

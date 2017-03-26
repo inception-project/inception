@@ -27,6 +27,7 @@
 
   <mvc:annotation-driven />
   <mvc:default-servlet-handler />
+  <mvc:resources mapping="/favicon.ico" location="classpath:/de/tudarmstadt/ukp/clarin/webanno/webapp/resources/favicon.ico" />
   <mvc:resources mapping="/doc/**" location="classpath:/de/tudarmstadt/ukp/clarin/webanno/doc/" />
   <mvc:resources mapping="/images/**" location="classpath:/de/tudarmstadt/ukp/clarin/webanno/ui/core/images/" />
 </beans>
