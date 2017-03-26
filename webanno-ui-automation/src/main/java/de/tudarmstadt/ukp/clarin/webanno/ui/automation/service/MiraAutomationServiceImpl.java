@@ -53,7 +53,7 @@ public class MiraAutomationServiceImpl
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Value(value = "${webanno.repository}")
+    @Value(value = "${repository.path}")
     private File dir;
 
     @PersistenceContext

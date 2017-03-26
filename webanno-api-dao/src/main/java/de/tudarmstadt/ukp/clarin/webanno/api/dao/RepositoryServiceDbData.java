@@ -175,7 +175,7 @@ public class RepositoryServiceDbData
     @Value(value = "${ui.brat.sentences.number}")
     private int numberOfSentences;
 
-    @Value(value = "${webanno.repository}")
+    @Value(value = "${repository.path}")
     private File dir;
 
     @Resource(name = "formats")
