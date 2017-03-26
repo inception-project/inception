@@ -21,6 +21,7 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
@@ -30,8 +31,8 @@ import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,17 +65,12 @@ public class LoginPage
 
     public LoginPage()
     {
-        // If we are already logged in, redirect to the welcome page. This tries to a void a
-        // situation where the user tries to access the login page directly and thus the
-        // application would redirect the user to the login page after a successful login
-        if (!(SecurityContextHolder.getContext()
-                .getAuthentication() instanceof AnonymousAuthenticationToken)) {
-            throw new RestartResponseException(getApplication().getHomePage());
-        }
-
         setStatelessHint(true);
         setVersioned(false);
+        
+        redirectIfAlreadyLoggedIn();
 
+        // Create admin user if there is no user yet
         if (userRepository.list().isEmpty()) {
             User admin = new User();
             admin.setUsername(ADMIN_DEFAULT_USERNAME);
@@ -86,9 +82,38 @@ public class LoginPage
             String msg = "No user accounts have been found. An admin account has been created: "
                     + ADMIN_DEFAULT_USERNAME + "/" + ADMIN_DEFAULT_PASSWORD;
             info(msg);
-            LoggerFactory.getLogger(getClass()).info(msg);
+            log.info(msg);
         }
+        
         add(new LoginForm("loginForm"));
+    }
+    
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        
+        redirectIfAlreadyLoggedIn();
+    }
+    
+    private void redirectIfAlreadyLoggedIn()
+    {
+        // If we are already logged in, redirect to the welcome page. This tries to a void a
+        // situation where the user tries to access the login page directly and thus the
+        // application would redirect the user to the login page after a successful login
+        if (!(SecurityContextHolder.getContext()
+                .getAuthentication() instanceof AnonymousAuthenticationToken)) {
+            log.debug("Already logged in, forwarding to home page");
+            throw new RestartResponseException(getApplication().getHomePage());
+        }
+        
+        String redirectUrl = getRedirectUrl();
+        if (redirectUrl != null) {
+            log.debug("Authentication required");
+        }
+        else {
+            log.debug("Authentication required (original URL: [{}])", redirectUrl);
+        }
     }
 
     private class LoginForm
@@ -114,6 +139,7 @@ public class LoginPage
         {
             AuthenticatedWebSession session = AuthenticatedWebSession.get();
             if (session.signIn(username, password)) {
+                log.debug("Login successful");
                 setDefaultResponsePageIfNecessary();
             }
             else {
@@ -124,21 +150,43 @@ public class LoginPage
         private void setDefaultResponsePageIfNecessary()
         {
             // This does not work because it was Spring Security that intercepted the access, not
-            // Wicket
-            // continueToOriginalDestination();
+            // Wicket continueToOriginalDestination();
 
-            HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
-                    .getContainerRequest().getSession(false);
-            SavedRequest savedRequest = (SavedRequest) session
-                    .getAttribute("SPRING_SECURITY_SAVED_REQUEST");
-            if (savedRequest != null) {
-                log.debug("Redirecting to saved URL: [{}]", savedRequest.getRedirectUrl());
-                throw new RedirectToUrlException(savedRequest.getRedirectUrl());
+            String redirectUrl = getRedirectUrl();
+            if (redirectUrl != null) {
+                log.debug("Redirecting to saved URL: [{}]", redirectUrl);
+                throw new NonResettingRestartException(redirectUrl);
             }
             else {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
             }
         }
+    }
+    
+    private String getRedirectUrl()
+    {
+        String redirectUrl = null;
+        
+        HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
+                .getContainerRequest().getSession(false);
+        if (session != null) {
+            SavedRequest savedRequest = (SavedRequest) session
+                    .getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+            if (savedRequest != null) {
+                redirectUrl = savedRequest.getRedirectUrl();
+            }
+        }
+        
+        // There is some kind of bug that logs the user out again if the redirect page is
+        // the context root and if that does not end in a slash. To avoid this, we add a slash
+        // here. This is rather a hack, but I have no idea why this problem occurs. Figured this
+        // out through trial-and-error rather then by in-depth debugging.
+        String baseUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(""));
+        if (baseUrl.equals(redirectUrl)) {
+            redirectUrl += "/";
+        }
+        
+        return redirectUrl;
     }
 }

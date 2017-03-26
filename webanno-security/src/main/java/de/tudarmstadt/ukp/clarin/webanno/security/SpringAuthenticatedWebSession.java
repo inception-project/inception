@@ -30,17 +30,19 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+
 /**
  *  An {@link AuthenticatedWebSession} based on {@link Authentication}
- *
  */
 public class SpringAuthenticatedWebSession
     extends AuthenticatedWebSession
@@ -75,30 +77,37 @@ public class SpringAuthenticatedWebSession
     public boolean authenticate(String username, String password)
     {
         // If already signed in (in Spring Security), then sign out there first
-        signOut();
+        // signOut();
         
-        boolean authenticated = false;
         try {
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
+
+            MDC.put(Logging.KEY_USERNAME, username);
+            
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("Stored authentication for user [{}] in security context",
+                    authentication.getName());
+            
             HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                     .getContainerRequest().getSession();
             session.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     SecurityContextHolder.getContext());
-            authenticated = authentication.isAuthenticated();
+            log.debug("Stored security context in session");
+            
+            return true;
         }
         catch (AuthenticationException e) {
-            log.warn(format("User '%s' failed to login. Reason: %s", username, e.getMessage()));
-            authenticated = false;
+            log.warn(format("User [{}} failed to login. Reason: {}", username, e.getMessage()));
+            return false;
         }
-        return authenticated;
     }
 
     @Override
     public void signOut()
     {
+        log.debug("Logging out");
         super.signOut();
         SecurityContextHolder.clearContext();
     }
@@ -106,28 +115,11 @@ public class SpringAuthenticatedWebSession
     @Override
     public Roles getRoles()
     {
-        SecurityContext ctx = SecurityContextHolder.getContext();
-        
         Roles roles = new Roles();
-        if (ctx.getAuthentication().isAuthenticated()) {
-            boolean isAnonymous = false;
-            
-            Authentication authentication = ctx.getAuthentication();
+        if (isSignedIn()) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             for (GrantedAuthority authority : authentication.getAuthorities()) {
                 roles.add(authority.getAuthority());
-                if ("ROLE_ANONYMOUS".equals(authority.getAuthority())) {
-                    isAnonymous = true;
-                }
-            }
-            
-            // In case we are already signed in through Spring Security but never signed in to Wicket
-            // make sure we also sign in to Wicket - unless we are authenticated as anonymous!
-            if (!isSignedIn() && !isAnonymous) {
-                signIn(true);
-            }
-            else if (isSignedIn() && isAnonymous) {
-                signOut();
-                roles = new Roles();
             }
         }
         return roles;
