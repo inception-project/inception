@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.curationEnabeled;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.markup.html.basic.Label;
@@ -39,21 +41,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 
 /**
- * A home page for WebAnno: <br>
- * Based on the user's permission, it displays either {@link ProjectPage}, d {@link AnnotationPage},
- * {@link CurationPage} or {@link MonitoringPage }(since v.2.0)
+ * Main menu page.
  */
-public class WelcomePage
+public class MainMenuPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -2487663821276301436L;
@@ -72,7 +68,7 @@ public class WelcomePage
 
     private ListView<MenuItem> menu;
 
-    public WelcomePage()
+    public MainMenuPage()
     {
         setStatelessHint(true);
         setVersioned(false);

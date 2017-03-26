@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.page.welcome.WelcomePage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.page.MainMenuPage;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -77,7 +77,7 @@ public class WicketApplication
             mountPage("/welcome.html", getHomePage());
 
             // Mount the other pages via @MountPath annotation on the page classes
-            new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp.clarin.webanno").mount(this);
+            new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp").mount(this);
 
             // FIXME Handling brat font/css resources should be moved to brat module
             mountResource("/style-vis.css", BratCssVisReference.get());
@@ -127,7 +127,7 @@ public class WicketApplication
     @Override
     public Class<? extends Page> getHomePage()
     {
-        return WelcomePage.class;
+        return MainMenuPage.class;
     }
 
     @Override

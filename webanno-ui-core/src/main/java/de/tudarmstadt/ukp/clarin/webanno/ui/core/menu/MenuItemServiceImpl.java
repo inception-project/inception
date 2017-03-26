@@ -99,7 +99,7 @@ public class MenuItemServiceImpl
         scanner.addIncludeFilter(new AnnotationTypeFilter(
                 de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem.class));
 
-        for (BeanDefinition bd : scanner.findCandidateComponents("")) {
+        for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
             try {
                 @SuppressWarnings("unchecked")
                 Class<? extends Page> pageClass = (Class<? extends Page>) Class

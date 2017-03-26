@@ -76,10 +76,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-dao</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-monitoring</artifactId>
     </dependency>
     <dependency>
@@ -159,10 +155,6 @@
     -->
 
     <!-- SPRING SECURITY -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
@@ -265,10 +257,6 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.hibernate.javax.persistence</groupId>
-      <artifactId>hibernate-jpa-2.1-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>commons-dbcp</groupId>
       <artifactId>commons-dbcp</artifactId>
       <version>1.4</version>
@@ -335,16 +323,18 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies>
-              <!-- JDBC drivers and database stuff - used via reflection -->
-              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
-              <usedDependency>mysql:mysql-connector-java</usedDependency>
-              <usedDependency>org.hsqldb:hsqldb</usedDependency>
-              <!-- Documentation module - needed but no Java dependency -->
+              <!-- WebAnno UI Modules - they auto-register via reflection -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-automation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-correction</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
+              <!-- WebAnno Documentation module - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
-              <!-- Remote API - used via Spring -->
+              <!-- WebAnno Remote API - used via Spring -->
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
-              <!-- IO Modules - they are required via the formats.properties file -->
+              <!-- WebAnno IO Modules - they are required via the formats.properties file -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tei</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
@@ -354,6 +344,11 @@
               <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.conll-asl</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.bincas-asl</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.text-asl</usedDependency>
+              <!-- JDBC drivers and database stuff - used via reflection -->
+              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
+              <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
+              <usedDependency>mysql:mysql-connector-java</usedDependency>
+              <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <!-- Logging - used via reflection / optional -->
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
