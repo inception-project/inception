@@ -948,7 +948,29 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
     }
-    
+
+    @Test
+    public void testTwoSentencesWithNoSpaceInBetween() throws Exception
+    {
+        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        TypeSystemDescription local = TypeSystemDescriptionFactory
+                .createTypeSystemDescriptionFromPath(
+                        "src/test/resources/desc/type/webannoTestTypes.xml");
+       
+        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
+        
+        JCas jcas = JCasFactory.createJCas(merged);
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("onetwo");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Sentence(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 3, 6).addToIndexes();
+        new Sentence(jcas, 3, 6).addToIndexes();
+        
+        writeAndAssertEquals(jcas);
+    }
+
     @Test
     public void testEscaping() throws Exception
     {

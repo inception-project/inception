@@ -158,6 +158,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				lastSent = sentLineSb.toString();
 				continue;
 			}
+			
 			if (line.startsWith("#FORMAT=")) {
 			    if ("#FORMAT=WebAnno TSV 3".equals(line)) {
 			        format = 3;
@@ -167,6 +168,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 			    }
 				continue;
 			}
+			
             if (line.trim().isEmpty()) {
                 if (!sentLineSb.toString().isEmpty()) {
                     createSentence(aJCas, sentLineSb.toString(), sentBegin, sentEnd, prevSentEnd);
@@ -660,8 +662,20 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 	}
 
-	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd, int aPrevEnd) {		
+	private void createSentence(JCas aJCas, String aLine, int aBegin, int aEnd, int aPrevEnd) {
+	    // If the next sentence immediately follows the last one without any space or line break
+	    // in between, then we need to chop off again the linebreak that we added at the end of the
+	    // last sentence - otherwise offsets will be off on a round-trip.
+	    if (
+	            aPrevEnd == aBegin && 
+	            coveredText.length() > 0 && 
+	            (coveredText.charAt(coveredText.length()-1) == '\n')
+	    ) {
+	        coveredText.deleteCharAt(coveredText.length()-1);
+	    }
+	    
 		if (aPrevEnd + 1 < aBegin) {
+		    // FIXME This is very slow. Better use StringUtils.repeat()		    
 			String pad = ""; // if there is plenty of spaces between sentences
 			for (int i = aPrevEnd + 1; i < aBegin; i++) {
 				pad = pad + " ";
