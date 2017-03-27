@@ -168,7 +168,7 @@ public class ProjectExportPanel extends Panel {
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
      */
-    private void exportCuratedDocuments(ProjectExportModel aModel, File aCopyDir)
+    private void exportCuratedDocuments(ProjectExportModel aModel, File aCopyDir, boolean aIncludeInProgress)
         throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException, ProjectExportException
     {
         // Get all the source documents from the project
@@ -198,8 +198,13 @@ public class ProjectExportPanel extends Panel {
             File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationDir);
 
-            // If the curation document is finished
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+            // If depending on aInProgress, include only the the curation documents that are
+            // finished or also the ones that are in progress
+            if (
+                (aIncludeInProgress && 
+                    SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
+                SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
+            ) {
                 File curationCasFile = repository.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
@@ -276,7 +281,7 @@ public class ProjectExportPanel extends Panel {
                             error("No curation document created yet for this document");
                         } else {
                             exportCuratedDocuments(ProjectExportForm.this.getModelObject(),
-                                    exportTempDir);
+                                    exportTempDir, false);
                             ZipUtils.zipFolder(exportTempDir, new File(
                                     exportTempDir.getAbsolutePath() + ".zip"));
                             exportFile = new File(exportTempDir.getAbsolutePath()
@@ -564,7 +569,7 @@ public class ProjectExportPanel extends Panel {
             exportProjectConstraints(aModel.project, exportTempDir);
             progress = 90;
             try {
-				exportCuratedDocuments(aModel, exportTempDir);
+				exportCuratedDocuments(aModel, exportTempDir, true);
 			} catch (ProjectExportException e) {
 				//cancel export operation here
 			    error(e.getMessage());
