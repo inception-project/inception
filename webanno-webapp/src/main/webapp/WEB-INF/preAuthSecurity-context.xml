@@ -42,9 +42,11 @@
     </beans:bean>
 
     <http use-expressions="false" entry-point-ref="http403EntryPoint">
+        <csrf disabled="true" />
         <intercept-url pattern="/**" access="ROLE_ADMIN, ROLE_USER" />
         <custom-filter ref="ShibbolethHeaderFilter" position="PRE_AUTH_FILTER" />
     </http>
+    
     <beans:bean id="http403EntryPoint"
         class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint">
 
