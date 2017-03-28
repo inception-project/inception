@@ -23,6 +23,7 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -338,28 +339,6 @@ public class WebAnnoCasUtil
             }
         }
         return currentSentence;
-    }
-
-    /**
-     * get a sentence at the end of an annotation
-     *
-     * @param aJCas
-     * @param aEnd
-     * @return
-     */
-    public static Sentence getSentenceByAnnoEnd(JCas aJCas, int aEnd)
-    {
-
-        int prevEnd = 0;
-        Sentence sent = null;
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
-            if (prevEnd >= aEnd) {
-                return sent;
-            }
-            sent = sentence;
-            prevEnd = sent.getEnd();
-        }
-        return sent;
     }
 
     public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
@@ -680,6 +659,12 @@ public class WebAnnoCasUtil
     public static int getSentenceNumber(JCas aJcas, int aBeginOffset)
     {
         int sentenceNumber = 0;
+        
+        Collection<Sentence> sentences = select(aJcas, Sentence.class);
+        if (sentences.isEmpty()) {
+            throw new IndexOutOfBoundsException("No sentences");
+        }
+        
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (sentence.getBegin() <= aBeginOffset && aBeginOffset <= sentence.getEnd()) {
                 sentenceNumber++;
@@ -690,7 +675,7 @@ public class WebAnnoCasUtil
         return sentenceNumber;
     }
 
-    public static int getSentenceSize(JCas aJcas)
+    public static int getSentenceCount(JCas aJcas)
     {
         return select(aJcas, Sentence.class).size();
     }

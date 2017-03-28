@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.IOException;
@@ -35,6 +36,8 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
@@ -73,6 +76,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class SuggestionBuilder
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());    
+    
     private final AnnotationService annotationService;
     private final RepositoryService repository;
     private final UserDao userRepository;
@@ -151,44 +156,60 @@ public class SuggestionBuilder
 
         // for cross-sentences annotation, update the end of the segment
         if (firstload) {
-            updateCrossSentAnnoList(segmentBeginEnd, jCases, entryTypes);
+            long start = System.currentTimeMillis();
+            log.debug("Updating cross sentence annotation list...");
+            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, jCases, entryTypes);
             firstload = false;
+            log.debug("Cross sentence annotation list complete in {}ms",
+                    (System.currentTimeMillis() - start));
         }
 
+        long diffStart = System.currentTimeMillis();
+        log.debug("Calculating differences...");
+        int count = 0;
         for (Integer begin : segmentBeginEnd.keySet()) {
             Integer end = segmentBeginEnd.get(begin);
 
+            count ++;
+            if (count % 100 == 0) {
+                log.debug("Processing differences: {} of {} sentences...", count,
+                        segmentBeginEnd.size());
+            }
+
             DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
                     entryTypes, LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, begin, end);
+            
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
-			curationSegment.setEnd(end);
-			if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
-				// Is this confSet a diff due to stacked annotations (with same configuration)?
-				boolean stackedDiff = false;
+            curationSegment.setEnd(end);
+            curationSegment.setSentenceNumber(segmentNumber.get(begin));
+            if (diff.hasDifferences() || !diff.getIncompleteConfigurationSets().isEmpty()) {
+                // Is this confSet a diff due to stacked annotations (with same configuration)?
+                boolean stackedDiff = false;
 
-				stackedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets().values()) {
-					for (Configuration c : d.getConfigurations()) {
-						if (c.getCasGroupIds().size() != d.getCasGroupIds().size()) {
-							stackedDiff = true;
-							break stackedDiffSet;
-						}
-					}
-				}
+                stackedDiffSet: for (ConfigurationSet d : diff.getDifferingConfigurationSets()
+                        .values()) {
+                    for (Configuration c : d.getConfigurations()) {
+                        if (c.getCasGroupIds().size() != d.getCasGroupIds().size()) {
+                            stackedDiff = true;
+                            break stackedDiffSet;
+                        }
+                    }
+                }
 
-				if (stackedDiff) {
-					curationSegment.setSentenceState(SentenceState.DISAGREE);
-				}
-
-				else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-					curationSegment.setSentenceState(SentenceState.DISAGREE);
-				} else {
-					curationSegment.setSentenceState(SentenceState.AGREE);
-				}
-			} else {
-				curationSegment.setSentenceState(SentenceState.AGREE);
-			}
-			curationSegment.setSentenceNumber(segmentNumber.get(begin));
+                if (stackedDiff) {
+                    curationSegment.setSentenceState(SentenceState.DISAGREE);
+                }
+                else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
+                    curationSegment.setSentenceState(SentenceState.DISAGREE);
+                }
+                else {
+                    curationSegment.setSentenceState(SentenceState.AGREE);
+                }
+            }
+            else {
+                curationSegment.setSentenceState(SentenceState.AGREE);
+            }
 
 			for (String username : segmentAdress.keySet()) {
 				curationSegment.getSentenceAddress().put(username,
@@ -196,52 +217,97 @@ public class SuggestionBuilder
             }
             curationContainer.getCurationViewByBegin().put(begin, curationSegment);
         }
+        log.debug("Difference calculation completed in {}ms",
+                (System.currentTimeMillis() - diffStart));
+        
         return curationContainer;
     }
 
-    private void updateCrossSentAnnoList(Map<Integer, Integer> segmentBeginEnd,
-            Map<String, JCas> jCases, List<Type> entryTypes)
+    private void updateCrossSentAnnoList(Map<Integer, Integer> aSegmentBeginEnd,
+            Map<Integer, Integer> aSegmentNumber, Map<String, JCas> aJCases, List<Type> aEntryTypes)
     {
+        // FIXME Remove this side-effect and instead return this hashmap
         crossSentenceLists = new HashMap<>();
-        for (Integer begin : segmentBeginEnd.keySet()) {
-            int thisSent = -1;
+        
+        // Extract the sentences for all the CASes
+        Map<JCas, List<Sentence>> idxSentences = new HashMap<>();
+        for (JCas c : aJCases.values()) {
+            idxSentences.put(c, new ArrayList<>(select(c, Sentence.class)));
+        }
+        
+        Set<Integer> sentenceBegins = aSegmentBeginEnd.keySet();
+        int count = 0;
+        for (int sentBegin : sentenceBegins) {
+            count ++;
+
+            if (count % 100 == 0) {
+                log.debug("Updating cross-sentence annoations: {} of {} sentences...", count,
+                        sentenceBegins.size());
+            }
+
+            int sentEnd = aSegmentBeginEnd.get(sentBegin);
+            int currentSentenceNumber = -1;
+            
             Set<Integer> crossSents = new HashSet<>();
-            for (Type t : entryTypes) {
-                for (JCas c : jCases.values()) {
-                    if (thisSent == -1) {
-                        thisSent = WebAnnoCasUtil.getSentenceNumber(c, begin);
+            
+            for (Type t : aEntryTypes) {
+                for (JCas c : aJCases.values()) {
+                    // Determine sentence number for the current segment begin. This takes quite
+                    // a while, so we only do it for the first CAS in the batch. Will be the
+                    // same for all others anyway.
+                    if (currentSentenceNumber == -1) {
+                        currentSentenceNumber = aSegmentNumber.get(sentBegin);
                     }
+                    
                     // update cross-sentence annotation lists
-                    for (AnnotationFS fs : selectCovered(c.getCas(), t, this.diffRangeBegin, diffRangeEnd)) {
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, diffRangeBegin,
+                            diffRangeEnd)) {
                         // CASE 1. annotation begins here
-                        if (fs.getBegin() >= begin && fs.getBegin() <= segmentBeginEnd.get(begin)) {
-                            if (fs.getEnd() > segmentBeginEnd.get(begin) || fs.getEnd() < begin) {
-                                Sentence s = WebAnnoCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
-                                int thatSent = WebAnnoCasUtil.getSentenceNumber(c, s.getBegin());
+                        if (sentBegin <= fs.getBegin() && fs.getBegin() <= sentEnd) {
+                            if (fs.getEnd() < sentBegin || sentEnd < fs.getEnd()) {
+                                Sentence s = getSentenceByAnnoEnd(idxSentences.get(c), fs.getEnd());
+                                int thatSent = idxSentences.get(c).indexOf(s) + 1;
                                 crossSents.add(thatSent);
                             }
                         }
                         // CASE 2. Annotation ends here
-                        else if (fs.getEnd() >= begin && fs.getEnd() <= segmentBeginEnd.get(begin)) {
-                            if (fs.getBegin() > segmentBeginEnd.get(begin) || fs.getBegin() < begin) {
+                        else if (sentBegin <= fs.getEnd() && fs.getEnd() <= sentEnd) {
+                            if (fs.getBegin() < sentBegin || sentEnd < fs.getBegin()) {
                                 int thatSent = WebAnnoCasUtil.getSentenceNumber(c, fs.getBegin());
                                 crossSents.add(thatSent);
                             }
                         }
                     }
 
-                    for (AnnotationFS fs : selectCovered(c.getCas(), t, begin, diffRangeEnd)) {
-                        if (fs.getBegin() <= segmentBeginEnd.get(begin)
-                                && fs.getEnd() > segmentBeginEnd.get(begin)) {
-                            Sentence s = WebAnnoCasUtil.getSentenceByAnnoEnd(c, fs.getEnd());
-                            segmentBeginEnd.put(begin, s.getEnd());
+                    for (AnnotationFS fs : selectCovered(c.getCas(), t, sentBegin, diffRangeEnd)) {
+                        if (fs.getBegin() <= sentEnd && fs.getEnd() > sentEnd) {
+                            Sentence s = getSentenceByAnnoEnd(idxSentences.get(c), fs.getEnd());
+                            aSegmentBeginEnd.put(sentBegin, s.getEnd());
                         }
                     }
                 }
             }
-            crossSentenceLists.put(thisSent, crossSents);
+            crossSentenceLists.put(currentSentenceNumber, crossSents);
         }
     }
+    
+    /**
+     * Get a sentence at the end of an annotation
+     */
+    private static Sentence getSentenceByAnnoEnd(List<Sentence> aSentences, int aEnd)
+    {
+        int prevEnd = 0;
+        Sentence sent = null;
+        for (Sentence sentence : aSentences) {
+            if (prevEnd >= aEnd) {
+                return sent;
+            }
+            sent = sentence;
+            prevEnd = sent.getEnd();
+        }
+        return sent;
+    }
+
 
     public Map<String, JCas> listJcasesforCorrection(AnnotationDocument randomAnnotationDocument,
             SourceDocument aDocument, Mode aMode)
@@ -354,26 +420,26 @@ public class SuggestionBuilder
     /**
      * Puts JCases into a list and get a random annotation document that will be used as a base for
      * the diff.
-     *
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws UIMAException
      */
     private void updateSegment(AnnotatorState aBratAnnotatorModel,
-            Map<Integer, Integer> segmentBeginEnd, Map<Integer, Integer> segmentNumber,
-            Map<String, Map<Integer, Integer>> segmentAdress, JCas jCas, String username,
+            Map<Integer, Integer> aIdxSentenceBeginEnd,
+            Map<Integer, Integer> aIdxSentenceBeginNumber,
+            Map<String, Map<Integer, Integer>> aSegmentAdress, JCas aJCas, String aUsername,
             int aWindowStart, int aWindowEnd)
-        throws UIMAException, ClassNotFoundException, IOException
     {
         diffRangeBegin = aWindowStart;
         diffRangeEnd = aWindowEnd;
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aWindowStart);
-        
-        segmentAdress.put(username, new HashMap<Integer, Integer>());
-        for (Sentence sentence : selectCovered(jCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
-            segmentBeginEnd.put(sentence.getBegin(), sentence.getEnd());
-            segmentNumber.put(sentence.getBegin(), sentenceNumber);
-            segmentAdress.get(username).put(sentence.getBegin(), getAddr(sentence));
+
+        // Get the number of the first sentence - instead of fetching the number over and over
+        // we can just increment this one.
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aJCas, diffRangeBegin);
+
+        aSegmentAdress.put(aUsername, new HashMap<Integer, Integer>());
+        for (Sentence sentence : selectCovered(aJCas, Sentence.class, diffRangeBegin,
+                diffRangeEnd)) {
+            aIdxSentenceBeginEnd.put(sentence.getBegin(), sentence.getEnd());
+            aIdxSentenceBeginNumber.put(sentence.getBegin(), sentenceNumber);
+            aSegmentAdress.get(aUsername).put(sentence.getBegin(), getAddr(sentence));
             sentenceNumber += 1;
         }
     }
