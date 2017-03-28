@@ -148,6 +148,7 @@ public class CasDoctor
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(repair);
                 }
+                log.info("CasDoctor repair [" + repairClass.getSimpleName() + "] running...");
                 repair.repair(aProject, aCas, aMessages);
                 log.info("CasDoctor repair [" + repairClass.getSimpleName() + "] completed in "
                         + (System.currentTimeMillis() - tStartTask) + "ms");
@@ -199,6 +200,7 @@ public class CasDoctor
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(check);
                 }
+                log.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] running...");
                 ok &= check.check(aProject, aCas, aMessages);
                 log.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
                         + (System.currentTimeMillis() - tStartTask) + "ms");
