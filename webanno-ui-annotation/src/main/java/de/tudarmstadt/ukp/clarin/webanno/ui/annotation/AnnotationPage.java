@@ -108,11 +108,11 @@ public class AnnotationPage
     @SpringBean(name = "documentRepository")
     private ConstraintsService constraintsService;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    @SpringBean(name = "documentRepository")
+    private SettingsService settingsService;
 
     @SpringBean(name = "annotationService")
-    private SettingsService settingsService;
+    private AnnotationService annotationService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;

@@ -101,11 +101,11 @@ public class RemoteApiController
     @Resource(name = "documentRepository")
     private DocumentService documentRepository;
 
-    @Resource(name = "annotationService")
-    private AnnotationService annotationService;
+    @Resource(name = "documentRepository")
+    private ImportExportService importExportService;
 
     @Resource(name = "annotationService")
-    private ImportExportService importExportService;
+    private AnnotationService annotationService;
 
     @Resource(name = "userRepository")
     private UserDao userRepository;

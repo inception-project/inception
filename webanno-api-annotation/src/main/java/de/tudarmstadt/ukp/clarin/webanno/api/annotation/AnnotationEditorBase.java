@@ -94,7 +94,7 @@ public abstract class AnnotationEditorBase
      * that causes the browser-side code to request the data structures from the server.
      * <p>
      * This entails that the CAS is loaded again when the async rendering request from the browser
-     * is triggered. Thus, it is preferred to use {@link #render(AjaxRequestTarget, JCas) because
+     * is triggered. Thus, it is preferred to use {@link #render(AjaxRequestTarget, JCas)} because
      * here we already have the CAS available.
      */
     public abstract void renderLater(AjaxRequestTarget aTarget);
