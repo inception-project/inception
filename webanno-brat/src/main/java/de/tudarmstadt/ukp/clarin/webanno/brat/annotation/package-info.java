@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * Provides a wicket component for the BRAT specific implementations. The {@link de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator} wicket panel
+ * Provides a wicket component for the BRAT specific implementations. The {@link de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor} wicket panel
  * encapsulates a response that will be rendered to the Brat annotation SVG tag as well as other
  * Wicket components used to manage the Brat annotation page behaviour (for now displaying Page Number)
  */

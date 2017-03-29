@@ -56,12 +56,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -150,7 +151,7 @@ public class AutomationPage
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
 
-    private BratAnnotator annotationEditor;
+    private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
     
@@ -231,7 +232,7 @@ public class AutomationPage
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
                             annotationService, userRepository);
                     
-                    annotationEditor.bratRender(aTarget, editorCas);
+                    annotationEditor.render(aTarget, editorCas);
                     aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
@@ -245,7 +246,7 @@ public class AutomationPage
 
         sidebarCell.add(detailEditor = createDetailEditor());
 
-        annotationEditor = new BratAnnotator("mergeView", getModel(), detailEditor, 
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor, 
                 () -> { return getEditorCas(); });
         annotationViewCell.add(annotationEditor);
 
@@ -371,8 +372,8 @@ public class AutomationPage
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 try {
-                    annotationEditor.bratRender(aTarget, getEditorCas());
-                    annotationEditor.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
+                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
@@ -460,7 +461,7 @@ public class AutomationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.bratRender(aTarget, getEditorCas());
+                    annotationEditor.render(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
@@ -632,14 +633,14 @@ public class AutomationPage
         update(aTarget);
         
         aTarget.add(gotoPageTextField);
-        annotationEditor.bratRender(aTarget, editorCas);
+        annotationEditor.render(aTarget, editorCas);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.bratRenderLater(aTarget);
+        annotationEditor.renderLater(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
         CuratorUtil.updatePanel(aTarget, suggestionView, curationContainer, annotationEditor,
@@ -814,7 +815,7 @@ public class AutomationPage
             setCurationSegmentBeginEnd(aEditorCas);
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
-            annotationEditor.bratRender(aTarget, aEditorCas);
+            annotationEditor.render(aTarget, aEditorCas);
         }
         catch (Exception e) {
             handleException(aTarget, e);

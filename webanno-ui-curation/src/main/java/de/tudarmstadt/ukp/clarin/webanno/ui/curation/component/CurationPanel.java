@@ -53,10 +53,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -91,7 +92,7 @@ public class CurationPanel
     public final static String CURATION_USER = "CURATION_USER";
 
     public SuggestionViewPanel suggestionViewPanel;
-    private BratAnnotator annotator;
+    private AnnotationEditorBase annotationEditor;
     public AnnotationDetailEditorPanel editor;
 
     private final WebMarkupContainer sentencesListView;
@@ -234,7 +235,7 @@ public class CurationPanel
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotator.bratRender(aTarget, getEditorCas());
+                    annotationEditor.render(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage(), e);
@@ -255,12 +256,10 @@ public class CurationPanel
         };
         sidebarCell.add(editor);
     
-        annotator = new BratAnnotator("mergeView", new Model<AnnotatorState>(bModel), editor,
+        annotationEditor = new BratAnnotationEditor("mergeView", new Model<AnnotatorState>(bModel), editor,
                 () -> { return getEditorCas(); });
         // reset sentenceAddress and lastSentenceAddress to the orginal once
-    
-        annotator.setOutputMarkupId(true);
-        annotationViewCell.add(annotator);
+        annotationViewCell.add(annotationEditor);
     
         LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
         {
@@ -504,14 +503,14 @@ public class CurationPanel
          */
         aTarget.add(suggestionViewPanel);
         if (annotate) {
-            annotator.bratRender(aTarget, editor.getEditorCas());
-            annotator.bratSetHighlight(aTarget, bModel.getSelection().getAnnotation());
+            annotationEditor.render(aTarget, editor.getEditorCas());
+            annotationEditor.setHighlight(aTarget, bModel.getSelection().getAnnotation());
         }
         else {
-            annotator.bratRenderLater(aTarget);
+            annotationEditor.renderLater(aTarget);
         }
         annotate = false;
-        CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotator, repository,
+        CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotationEditor, repository,
                 annotationSelectionByUsernameAndAddress, curationView, annotationService,
                 userRepository);
     }

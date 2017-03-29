@@ -54,12 +54,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -142,7 +143,7 @@ public class CorrectionPage
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
 
-    private BratAnnotator annotationEditor;
+    private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
 
@@ -219,7 +220,7 @@ public class CorrectionPage
                             repository, annotationSelectionByUsernameAndAddress, curationSegment,
                             annotationService, userRepository);
                     
-                    annotationEditor.bratRender(aTarget, editorCas);
+                    annotationEditor.render(aTarget, editorCas);
                     aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
@@ -239,7 +240,7 @@ public class CorrectionPage
 
         sidebarCell.add(detailEditor = createDetailEditor());
         
-        annotationEditor = new BratAnnotator("mergeView", getModel(), detailEditor,
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 () -> { return getEditorCas(); });
         annotationViewCell.add(annotationEditor);
 
@@ -372,8 +373,8 @@ public class CorrectionPage
                     AnnotatorState state = getModelObject();
                     JCas editorCas = getEditorCas();
                     //JCas correctionCas = repository.readCorrectionCas(state.getDocument());
-                    annotationEditor.bratRender(aTarget, editorCas);
-                    annotationEditor.bratSetHighlight(aTarget, state.getSelection().getAnnotation());
+                    annotationEditor.render(aTarget, editorCas);
+                    annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
 
                     // info(bratAnnotatorModel.getMessage());
                     SuggestionBuilder builder = new SuggestionBuilder(repository,
@@ -397,7 +398,7 @@ public class CorrectionPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.bratRender(aTarget, getEditorCas());
+                    annotationEditor.render(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
@@ -561,14 +562,14 @@ public class CorrectionPage
         update(aTarget);
         
         aTarget.add(gotoPageTextField);
-        annotationEditor.bratRender(aTarget, editorCas);
+        annotationEditor.render(aTarget, editorCas);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.bratRenderLater(aTarget);
+        annotationEditor.renderLater(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
         CuratorUtil.updatePanel(aTarget, suggestionView, curationContainer, annotationEditor,
@@ -760,7 +761,7 @@ public class CorrectionPage
             setCurationSegmentBeginEnd(aEditorCas);
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
-            annotationEditor.bratRender(aTarget, aEditorCas);
+            annotationEditor.render(aTarget, aEditorCas);
         }
         catch (Exception e) {
             handleException(aTarget, e);

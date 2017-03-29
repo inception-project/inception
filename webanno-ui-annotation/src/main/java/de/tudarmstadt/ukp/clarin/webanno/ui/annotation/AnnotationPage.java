@@ -51,11 +51,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -129,7 +130,7 @@ public class AnnotationPage
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
     
-    private BratAnnotator annotationEditor;
+    private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
 
     public AnnotationPage()
@@ -220,7 +221,7 @@ public class AnnotationPage
 
         sidebarCell.add(detailEditor = createDetailEditor());
         
-        annotationEditor = new BratAnnotator("embedder1", getModel(), detailEditor,
+        annotationEditor = new BratAnnotationEditor("embedder1", getModel(), detailEditor,
                 () -> { return getEditorCas(); });
         annotationViewCell.add(annotationEditor);
 
@@ -357,8 +358,8 @@ public class AnnotationPage
                 aTarget.add(getOrCreatePositionInfoLabel());
 
                 try {
-                    annotationEditor.bratRender(aTarget, getEditorCas());
-                    annotationEditor.bratSetHighlight(aTarget,
+                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.setHighlight(aTarget,
                             getModelObject().getSelection().getAnnotation());
                 }
                 catch (Exception e) {
@@ -371,7 +372,7 @@ public class AnnotationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.bratRender(aTarget, getEditorCas());
+                    annotationEditor.render(aTarget, getEditorCas());
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
@@ -452,7 +453,7 @@ public class AnnotationPage
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.bratRenderLater(aTarget);
+        annotationEditor.renderLater(aTarget);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
@@ -584,7 +585,7 @@ public class AnnotationPage
     @Override
     protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
     {
-        annotationEditor.bratRender(aTarget, aEditorCas);
+        annotationEditor.render(aTarget, aEditorCas);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());

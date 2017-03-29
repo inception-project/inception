@@ -36,7 +36,6 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
@@ -47,6 +46,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -77,10 +77,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * Brat annotator component.
  */
-public class BratAnnotator
-    extends Panel
+public class BratAnnotationEditor
+    extends AnnotationEditorBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
     private static final long serialVersionUID = -1537506294440056609L;
 
     private static final String PARAM_ACTION = "action";
@@ -97,28 +97,12 @@ public class BratAnnotator
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
-    private AnnotationActionHandler actionHandler;
-    private JCasProvider jcasProvider;
 
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
-    public BratAnnotator(String id, IModel<AnnotatorState> aModel,
+    public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
     {
-        super(id, aModel);
-        actionHandler = aActionHandler;
-        jcasProvider = aJCasProvider;
+        super(id, aModel, aActionHandler, aJCasProvider);
         
-        // Allow AJAX updates.
-        setOutputMarkupId(true);
-
-        // The annotator is invisible when no document has been selected. Make sure that we can
-        // make it visible via AJAX once the document has been selected.
-        setOutputMarkupPlaceholderTag(true);
-
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
         add(vis);
@@ -165,7 +149,7 @@ public class BratAnnotator
                     @Override
                     public void onEndRequest(RequestCycle aCycle)
                     {
-                        BratAnnotator.this.getModelObject().getAction().clearUserAction();
+                        BratAnnotationEditor.this.getModelObject().getAction().clearUserAction();
                     }
                 });
 
@@ -176,7 +160,7 @@ public class BratAnnotator
                 JCas jCas = null;
                 if (requiresCasLoading) {
                     try {
-                        jCas = getCas(getModelObject());
+                        jCas = getJCasProvider().get();
                     }
                     catch (Exception e) {
                         LOG.error("Unable to load data", e);
@@ -205,7 +189,7 @@ public class BratAnnotator
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        actionHandler.actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
+                        getActionHandler().actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
                                 offsets.getEnd(), paramId);
                         result = new SpanAnnotationResponse();
                     }
@@ -214,7 +198,7 @@ public class BratAnnotator
                         int originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
                         String targetType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
                         int targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt();
-                        actionHandler.actionArcAnnotation(aTarget, jCas, paramId, originType,
+                        getActionHandler().actionArcAnnotation(aTarget, jCas, paramId, originType,
                                 originSpanId, targetType, targetSpanId);
                         result = new ArcAnnotationResponse();
                     }
@@ -425,7 +409,7 @@ public class BratAnnotator
     }
 
     /**
-     * Reload {@link BratAnnotator} when the Correction/Curation page is opened
+     * Reload {@link BratAnnotationEditor} when the Correction/Curation page is opened
      *
      * @param aResponse
      *            the response.
@@ -442,7 +426,8 @@ public class BratAnnotator
      * @param aTarget
      *            the AJAX target.
      */
-    public void bratRenderLater(AjaxRequestTarget aTarget)
+    @Override
+    public void renderLater(AjaxRequestTarget aTarget)
     {
         aTarget.appendJavaScript(bratRenderLaterCommand());
     }
@@ -455,7 +440,8 @@ public class BratAnnotator
      * @param aJCas
      *            the CAS to render.
      */
-    public void bratRender(AjaxRequestTarget aTarget, JCas aJCas)
+    @Override
+    public void render(AjaxRequestTarget aTarget, JCas aJCas)
     {
         aTarget.appendJavaScript(bratRenderCommand(aJCas));
     }
@@ -468,7 +454,8 @@ public class BratAnnotator
      * @param aAnnotationId
      *            the annotation ID to highlight.
      */
-    public void bratSetHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
+    @Override
+    public void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
     {
         if (!aAnnotationId.isSet()) {
             aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
@@ -502,11 +489,5 @@ public class BratAnnotator
             error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
         }
         return json;
-    }
-
-    private JCas getCas(AnnotatorState aState)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        return jcasProvider.get();
     }    
 }
