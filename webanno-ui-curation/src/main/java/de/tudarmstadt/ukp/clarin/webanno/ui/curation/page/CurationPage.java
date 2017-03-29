@@ -638,7 +638,7 @@ public class CurationPage
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();
-            state.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceSize(mergeJCas));
+            state.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
             // Initialize the visible content
             state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(mergeJCas));
