@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
@@ -34,6 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
@@ -105,6 +108,10 @@ public abstract class BratVisualizer
 	{
 		super.renderHead(aResponse);
 
+        // CSS
+        aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
+        aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
+        
         // Libraries
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));

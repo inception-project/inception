@@ -23,13 +23,13 @@ import java.util.Locale;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -65,6 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
@@ -293,6 +295,11 @@ public class BratAnnotationEditor
     {
         super.renderHead(aResponse);
 
+        // CSS
+        aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
+        aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
+        
+        // Override CSS
         double textFontSize = getModelObject().getPreferences().getFontSize();
         double spanFontSize = 10 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
         double arcFontSize = 9 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
@@ -322,7 +329,7 @@ public class BratAnnotationEditor
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
         //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
-
+        
         StringBuilder script = new StringBuilder();
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as

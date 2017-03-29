@@ -39,8 +39,6 @@ import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
@@ -78,10 +76,6 @@ public class WicketApplication
 
             // Mount the other pages via @MountPath annotation on the page classes
             new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp").mount(this);
-
-            // FIXME Handling brat font/css resources should be moved to brat module
-            mountResource("/style-vis.css", BratCssVisReference.get());
-            mountResource("/style-ui.css", BratCssUiReference.get());
 
             Properties settings = SettingsUtil.getSettings();
             String logoValue = settings.getProperty(SettingsUtil.CFG_STYLE_LOGO);

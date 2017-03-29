@@ -16,23 +16,13 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-<wicket:head>
-	<!--
-        Cannot use head.js because then onLoad event fires before all JS has been loaded causing errors.
-      -->
-	<link rel="stylesheet" type="text/css" href="style-vis.css" />
-	<link rel="stylesheet" type="text/css" href="style-ui.css" />
-</wicket:head>
-</head>
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-	<wicket:panel>	
-			<div wicket:id="vis"></div>
-		<div id="messagepullup" class="messages" style="display: none"></div>
-		<div id="commentpopup"></div>
-		<div id="document_name">
-		</div>
-	</wicket:panel>
+  <wicket:panel>
+    <div wicket:id="vis"></div>
+    <div id="messagepullup" class="messages" style="display: none"></div>
+    <div id="commentpopup"></div>
+    <div id="document_name"></div>
+  </wicket:panel>
 </body>
 </html>
