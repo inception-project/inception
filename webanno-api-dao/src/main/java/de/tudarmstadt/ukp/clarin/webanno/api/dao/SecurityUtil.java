@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -40,14 +40,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * This class contains Utility methods that can be used in Project settings
- *
- *
  */
 public class SecurityUtil
 {
     private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
-    public static Set<String> getRoles(RepositoryService aProjectRepository, User aUser)
+    public static Set<String> getRoles(ProjectService aProjectRepository, User aUser)
     {
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we as the database.
@@ -74,7 +72,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is a global admin.
      */
-    public static boolean isSuperAdmin(RepositoryService aProjectRepository, User aUser)
+    public static boolean isSuperAdmin(ProjectService aProjectRepository, User aUser)
     {
         boolean roleAdmin = false;
         for (String role : getRoles(aProjectRepository, aUser)) {
@@ -93,7 +91,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is a project creator
      */
-    public static boolean isProjectCreator(RepositoryService aProjectRepository, User aUser)
+    public static boolean isProjectCreator(ProjectService aProjectRepository, User aUser)
     {
         boolean roleAdmin = false;
         for (String role : getRoles(aProjectRepository, aUser)) {
@@ -113,7 +111,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user may update a project.
      */
-    public static boolean isProjectAdmin(Project aProject, RepositoryService aProjectRepository,
+    public static boolean isProjectAdmin(Project aProject, ProjectService aProjectRepository,
             User aUser)
     {
         boolean projectAdmin = false;
@@ -143,7 +141,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is a curator.
      */
-    public static boolean isCurator(Project aProject, RepositoryService aProjectRepository,
+    public static boolean isCurator(Project aProject, ProjectService aProjectRepository,
             User aUser)
     {
         boolean curator = false;
@@ -173,7 +171,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is a member.
      */
-    public static boolean isAnnotator(Project aProject, RepositoryService aProjectRepository,
+    public static boolean isAnnotator(Project aProject, ProjectService aProjectRepository,
             User aUser)
     {
         boolean user = false;
@@ -204,7 +202,7 @@ public class SecurityUtil
      * @param aUser the user.
      * @return if the user is an admin.
      */
-    public static boolean isAdmin(Project aProject, RepositoryService aProjectRepository,
+    public static boolean isAdmin(Project aProject, ProjectService aProjectRepository,
             User aUser)
     {
         boolean user = false;
@@ -227,7 +225,7 @@ public class SecurityUtil
         return user;
     }
     
-    public static boolean projectSettingsEnabeled(RepositoryService repository, User user)
+    public static boolean projectSettingsEnabeled(ProjectService repository, User user)
     {
         if (SecurityUtil.isSuperAdmin(repository, user)) {
             return true;
@@ -246,7 +244,7 @@ public class SecurityUtil
         return false;
     }
 
-    public static boolean curationEnabeled(RepositoryService repository, User user)
+    public static boolean curationEnabeled(ProjectService repository, User user)
     {
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isCurator(project, repository, user)) {
@@ -257,7 +255,7 @@ public class SecurityUtil
         return false;
     }
 
-    public static boolean annotationEnabeled(RepositoryService repository, User user, Mode mode)
+    public static boolean annotationEnabeled(ProjectService repository, User user, Mode mode)
     {
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isAnnotator(project, repository, user)
@@ -269,7 +267,7 @@ public class SecurityUtil
         return false;
     }
     
-    public static boolean monitoringEnabeled(RepositoryService repository, User user)
+    public static boolean monitoringEnabeled(ProjectService repository, User user)
     {
         for (Project project : repository.listProjects()) {
             if (SecurityUtil.isCurator(project, repository, user)

@@ -53,7 +53,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -94,10 +96,16 @@ public class RemoteApiController
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Resource(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private ProjectService projectRepository;
+
+    @Resource(name = "documentRepository")
+    private DocumentService documentRepository;
 
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
+
+    @Resource(name = "annotationService")
+    private ImportExportService importExportService;
 
     @Resource(name = "userRepository")
     private UserDao userRepository;
@@ -372,7 +380,7 @@ public class RemoteApiController
                     .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
         }
             
-        List<SourceDocument> srcDocumentList = projectRepository.listSourceDocuments(project);
+        List<SourceDocument> srcDocumentList = documentRepository.listSourceDocuments(project);
         JSONArray sourceDocumentJSONArr = new JSONArray();
         for (SourceDocument s : srcDocumentList) { 
             JSONObject sourceDocumentJSONObj = new JSONObject();                 
@@ -444,7 +452,7 @@ public class RemoteApiController
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = projectRepository.getSourceDocument(aProjectId,
+            srcDocument = documentRepository.getSourceDocument(aProjectId,
                     aSourceDocumentId);
         }
         catch (NoResultException e) {
@@ -454,7 +462,7 @@ public class RemoteApiController
                             aProjectId + "] not found.");
         }
 
-        projectRepository.removeSourceDocument(srcDocument);
+        documentRepository.removeSourceDocument(srcDocument);
         
         LOG.info("Successfully deleted project : [" + aProjectId + "]");
         
@@ -521,7 +529,7 @@ public class RemoteApiController
         }
         
         // Existing project
-        if (projectRepository.existsSourceDocument(project, aFile.getOriginalFilename())) {
+        if (documentRepository.existsSourceDocument(project, aFile.getOriginalFilename())) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body("A document with name [" + aFile.getOriginalFilename() + "] already exists");
@@ -534,7 +542,8 @@ public class RemoteApiController
         
         // add id of added source document in return json string
         JSONObject returnJSON = new JSONObject();
-        returnJSON.put("id", projectRepository.getSourceDocument(project, aFile.getOriginalFilename()).getId());
+        returnJSON.put("id",
+                documentRepository.getSourceDocument(project, aFile.getOriginalFilename()).getId());
         return ResponseEntity.ok(returnJSON.toString());
     }
 
@@ -595,7 +604,7 @@ public class RemoteApiController
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = projectRepository.getSourceDocument(aProjectId,
+            srcDocument = documentRepository.getSourceDocument(aProjectId,
                     aSourceDocumentId);
         }
         catch (NoResultException e) {
@@ -605,7 +614,7 @@ public class RemoteApiController
                             aProjectId + "] not found.");
         }
 
-        List<AnnotationDocument> annList = projectRepository
+        List<AnnotationDocument> annList = documentRepository
                 .listAllAnnotationDocuments(srcDocument);
         JSONArray annDocArr = new JSONArray();
         for (AnnotationDocument annDoc : annList) {
@@ -701,7 +710,7 @@ public class RemoteApiController
         // Get source document
         SourceDocument srcDoc;
         try {
-            srcDoc = projectRepository.getSourceDocument(aProjectId, aSourceDocumentId);
+            srcDoc = documentRepository.getSourceDocument(aProjectId, aSourceDocumentId);
         }
         catch (NoResultException e) {
             response.sendError(HttpStatus.NOT_FOUND.value(),
@@ -712,7 +721,7 @@ public class RemoteApiController
         // Get annotation document
         AnnotationDocument annDoc;
         try {
-            annDoc = projectRepository.getAnnotationDocument(srcDoc, annotator);
+            annDoc = documentRepository.getAnnotationDocument(srcDoc, annotator);
         }
         catch (NoResultException e) {
             response.sendError(HttpStatus.NOT_FOUND.value(),
@@ -729,7 +738,7 @@ public class RemoteApiController
             formatId = format;
         }
         
-        Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+        Class<?> writer = importExportService.getWritableFormats().get(formatId);
         if (writer == null) {
             String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
                     + "] - exporting as WebAnno TSV instead.";
@@ -738,7 +747,7 @@ public class RemoteApiController
         }
 
         // Temporary file of annotation document
-        File downloadableFile = projectRepository.exportAnnotationDocument(srcDoc,
+        File downloadableFile = importExportService.exportAnnotationDocument(srcDoc,
                 annotatorName, writer, annDoc.getName(), Mode.ANNOTATION);
 
         try {
@@ -835,7 +844,7 @@ public class RemoteApiController
         // Get source document
         SourceDocument srcDocument;
         try {
-            srcDocument = projectRepository.getSourceDocument(aProjectId,
+            srcDocument = documentRepository.getSourceDocument(aProjectId,
                     aSourceDocumentId);
         }
         catch (NoResultException e) {
@@ -862,7 +871,7 @@ public class RemoteApiController
             formatId = format;
         }
         
-        Class<?> writer = projectRepository.getWritableFormats().get(formatId);
+        Class<?> writer = importExportService.getWritableFormats().get(formatId);
         if (writer == null) {
             LOG.info("[" + srcDocument.getName() + "] No writer found for format ["
                     + formatId + "] - exporting as WebAnno TSV instead.");
@@ -870,7 +879,7 @@ public class RemoteApiController
         }
 
         // Temporary file of annotation document
-        File downloadableFile = projectRepository.exportAnnotationDocument(srcDocument,
+        File downloadableFile = importExportService.exportAnnotationDocument(srcDocument,
                 WebAnnoConst.CURATION_USER, writer, srcDocument.getName(), Mode.CURATION);
 
         try {
@@ -916,9 +925,9 @@ public class RemoteApiController
             document.setProject(project);
             document.setFormat(aFileType);
             // Meta data entry to the database
-            projectRepository.createSourceDocument(document);
+            documentRepository.createSourceDocument(document);
             // Import source document to the project repository folder
-            projectRepository.uploadSourceDocument(is, document);
+            documentRepository.uploadSourceDocument(is, document);
         }
     }
 
@@ -934,8 +943,8 @@ public class RemoteApiController
         document.setProject(project);
         document.setFormat(aFileType);
         // Meta data entry to the database
-        projectRepository.createSourceDocument(document);
+        documentRepository.createSourceDocument(document);
         // Import source document to the project repository folder
-        projectRepository.uploadSourceDocument(zipStream, document);
+        documentRepository.uploadSourceDocument(zipStream, document);
     }
 }

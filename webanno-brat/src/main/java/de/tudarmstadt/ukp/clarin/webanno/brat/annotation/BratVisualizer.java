@@ -30,7 +30,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -61,7 +61,7 @@ public abstract class BratVisualizer
 	protected AbstractAjaxBehavior docProvider;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService repository;
 
 	public BratVisualizer(String id, IModel<?> aModel)
 	{

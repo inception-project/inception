@@ -49,7 +49,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -113,9 +117,21 @@ public class AutomationPage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
+    @SpringBean(name = "documentRepository")
+    private CorrectionDocumentService correctionDocumentService;
+
+    @SpringBean(name = "documentRepository")
+    private ProjectService projectService;
+
+    @SpringBean(name = "documentRepository")
+    private ConstraintsService constraintsService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "annotationService")
+    private SettingsService settingsService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -275,7 +291,7 @@ public class AutomationPage
                 super.onConfigure();
                 AnnotatorState state = AutomationPage.this.getModelObject();
                 setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), repository, state.getUser())
+                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
                                 || !state.getProject().isDisableExport()));
             }
         });
@@ -704,8 +720,8 @@ public class AutomationPage
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
             JCas correctionCas;
-            if (repository.existsCorrectionCas(state.getDocument())) {
-                correctionCas = repository.readCorrectionCas(state.getDocument());
+            if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
+                correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
             else {
                 correctionCas = repository.createOrReadInitialCas(state.getDocument());
@@ -726,22 +742,22 @@ public class AutomationPage
 
             // Update the CASes
             repository.upgradeCas(editorCas.getCas(), annotationDocument);
-            repository.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             repository.writeAnnotationCas(editorCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
-            repository.writeCorrectionCas(correctionCas, state.getDocument(), user);
+            correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();
 
             // Load constraints
-            state.setConstraints(repository.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, repository, annotationService, state,
-                    state.getMode());
+            PreferencesUtil.loadPreferences(username, settingsService, projectService,
+                    annotationService, state, state.getMode());
 
             // Initialize the visible content
             state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(editorCas));

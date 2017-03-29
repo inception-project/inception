@@ -30,7 +30,7 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratAnnotatorUtility
 {
 
-    public static boolean isDocumentFinished(RepositoryService aRepository,
+    public static boolean isDocumentFinished(DocumentService aRepository,
             AnnotatorState aBratAnnotatorModel)
     {
         // if annotationDocument is finished, disable editing
@@ -77,7 +77,7 @@ public class BratAnnotatorUtility
     }
 
     public static JCas clearJcasAnnotations(JCas aJCas, SourceDocument aSourceDocument, User aUser,
-            RepositoryService repository)
+            DocumentService repository)
         throws IOException
     {
         JCas target;

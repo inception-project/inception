@@ -33,7 +33,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -69,8 +71,8 @@ public class PreferencesUtil
      * @throws BeansException hum?
      * @throws IOException hum?
      */
-    public static void loadPreferences(String aUsername,
-            RepositoryService aRepositoryService, AnnotationService aAnnotationService,
+    public static void loadPreferences(String aUsername, SettingsService aSettingsService,
+            ProjectService aRepositoryService, AnnotationService aAnnotationService,
             AnnotatorState aBModel, Mode aMode)
         throws BeansException, IOException
     {
@@ -120,7 +122,7 @@ public class PreferencesUtil
             List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
                     .getProject());
             aBModel.setAnnotationLayers(layers);
-            preference.setWindowSize(aRepositoryService.getNumberOfSentences());
+            preference.setWindowSize(aSettingsService.getNumberOfSentences());
         }
         
         aBModel.setPreferences(preference);

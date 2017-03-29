@@ -47,7 +47,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -100,9 +104,21 @@ public class CurationPage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
+
+    @SpringBean(name = "documentRepository")
+    private ProjectService projectService;
+
+    @SpringBean(name = "documentRepository")
+    private ConstraintsService constraintsService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "annotationService")
+    private SettingsService settingsService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -604,9 +620,8 @@ public class CurationPage
             }
     
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, repository, annotationService, state,
-                    state.getMode());
-            
+            PreferencesUtil.loadPreferences(username, settingsService, repository,
+                    annotationService, state, state.getMode());            
             
             // Re-render whole page as sidebar size preference may have changed
             aTarget.add(CurationPage.this);

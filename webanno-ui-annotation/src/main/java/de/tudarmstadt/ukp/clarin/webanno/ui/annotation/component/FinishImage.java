@@ -24,6 +24,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -102,7 +103,7 @@ public class FinishImage
     }
 
     public static boolean isFinished(final IModel<AnnotatorState> aModel, User user,
-            RepositoryService aRepository)
+            DocumentService aRepository)
     {
         return aRepository.existsAnnotationDocument(aModel.getObject().getDocument(), user)
                 && aRepository.getAnnotationDocument(aModel.getObject().getDocument(), user)

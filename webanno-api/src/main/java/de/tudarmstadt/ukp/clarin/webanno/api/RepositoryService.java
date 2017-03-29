@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * This interface contains methods that are related to accessing/creating/deleting... documents,
@@ -33,19 +31,6 @@ public interface RepositoryService
     extends ProjectService, ImportExportService, ConstraintsService, DocumentService,
     CorrectionDocumentService, CurationDocumentService, SettingsService
 {
-    // --------------------------------------------------------------------------------------------
-    // Methods related to permissions
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
-     *
-     * @param user
-     *            the {@link User} object
-     * @return the roles.
-     */
-    List<Authority> listAuthorities(User user);
-    
     void uploadTrainingDocument(File aFile, SourceDocument aDocument)
             throws IOException;
 }

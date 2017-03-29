@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -381,4 +382,17 @@ public interface ProjectService
      */
     void removeGuideline(Project project, String fileName, String username)
         throws IOException;
+    
+    // --------------------------------------------------------------------------------------------
+    // Methods related to permissions
+    // --------------------------------------------------------------------------------------------
+
+    /**
+     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
+     *
+     * @param user
+     *            the {@link User} object
+     * @return the roles.
+     */
+    List<Authority> listAuthorities(User user);
 }

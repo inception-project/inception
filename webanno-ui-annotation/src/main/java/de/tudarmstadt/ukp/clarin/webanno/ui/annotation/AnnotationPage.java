@@ -46,7 +46,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -96,10 +99,19 @@ public class AnnotationPage
     public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService repository;
+
+    @SpringBean(name = "documentRepository")
+    private ProjectService projectService;
+
+    @SpringBean(name = "documentRepository")
+    private ConstraintsService constraintsService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
+
+    @SpringBean(name = "annotationService")
+    private SettingsService settingsService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -137,7 +149,7 @@ public class AnnotationPage
         long projectId = aPageParameters.get("projectId").toLong();
         Project project;
         try {
-            project = repository.getProject(projectId);
+            project = projectService.getProject(projectId);
         }
         catch (NoResultException e) {
             error("Project [" + projectId + "] does not exist");
@@ -157,7 +169,7 @@ public class AnnotationPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         
-        if (!SecurityUtil.isAnnotator(project, repository, user)) {
+        if (!SecurityUtil.isAnnotator(project, projectService, user)) {
             error("You have no permission to access document [" + documentId + "] in project ["
                     + projectId + "]");
             return;
@@ -261,7 +273,7 @@ public class AnnotationPage
                 super.onConfigure();
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), repository, state.getUser())
+                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
                                 || !state.getProject().isDisableExport()));
             }
         });
@@ -522,11 +534,11 @@ public class AnnotationPage
             state.clearAllSelections();
 
             // Load constraints
-            state.setConstraints(repository.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, repository, annotationService, state,
-                    state.getMode());
+            PreferencesUtil.loadPreferences(username, settingsService, projectService,
+                    annotationService, state, state.getMode());
 
             // Initialize the visible content
             state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(editorCas));
@@ -579,7 +591,7 @@ public class AnnotationPage
     }
     
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);

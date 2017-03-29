@@ -47,7 +47,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -92,9 +91,6 @@ public class BratAnnotator
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_TYPE = "originType";
-
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -512,15 +508,5 @@ public class BratAnnotator
         throws UIMAException, IOException, ClassNotFoundException
     {
         return jcasProvider.get();
-//        if (aState.getMode().equals(Mode.ANNOTATION)
-//                || aState.getMode().equals(Mode.AUTOMATION)
-//                || aState.getMode().equals(Mode.CORRECTION)) {
-//
-//            return repository.readAnnotationCas(aState.getDocument(),
-//                    aState.getUser());
-//        }
-//        else {
-//            return repository.readCurationCas(aState.getDocument());
-//        }
     }    
 }
