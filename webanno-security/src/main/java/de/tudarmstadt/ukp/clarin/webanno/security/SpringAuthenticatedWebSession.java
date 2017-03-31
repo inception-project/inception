@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static java.lang.String.format;
-
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
@@ -99,7 +97,7 @@ public class SpringAuthenticatedWebSession
             return true;
         }
         catch (AuthenticationException e) {
-            log.warn(format("User [{}} failed to login. Reason: {}", username, e.getMessage()));
+            log.warn("User [{}] failed to login. Reason: {}", username, e.getMessage());
             return false;
         }
     }
