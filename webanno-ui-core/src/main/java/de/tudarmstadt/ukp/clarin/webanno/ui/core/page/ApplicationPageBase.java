@@ -22,8 +22,6 @@ import java.util.MissingResourceException;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.Application;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RuntimeConfigurationType;
@@ -46,13 +44,15 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
@@ -73,7 +73,7 @@ public abstract class ApplicationPageBase
     private ExternalLink helpLink;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private SettingsService settingsService;
 
     protected ApplicationPageBase()
     {
@@ -140,7 +140,7 @@ public abstract class ApplicationPageBase
                 + "AN EMBEDDED DATABASE IS NOT RECOMMENDED FOR PRODUCTION USE");
         embeddedDbWarning.setVisible(false);
         try {
-            String driver = repository.getDatabaseDriverName();
+            String driver = settingsService.getDatabaseDriverName();
             embeddedDbWarning.setVisible(StringUtils.contains(driver.toLowerCase(Locale.US),
                     "hsql"));
         }

@@ -48,8 +48,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -59,10 +57,15 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -292,20 +295,23 @@ public class AutomationUtil
                 throw e;
             }
             catch (DataRetrievalFailureException e) {
-
-                jCas = aRepository.readAnnotationCas(aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                jCas = aRepository.readAnnotationCas(
+                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aRepository.upgradeCas(jCas.getCas(), aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));             
+                aRepository.upgradeCas(jCas.getCas(),
+                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
                 aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
             catch (NoResultException e) {
-                jCas = aRepository.readAnnotationCas(aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                jCas = aRepository.readAnnotationCas(
+                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aRepository.upgradeCas(jCas.getCas(), aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));      
+                aRepository.upgradeCas(jCas.getCas(),
+                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
                 aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
         }
-        else{
+        else {
             jCas = aRepository.readCorrectionCas(aDocument);
             // upgrade this automation cas
             aRepository.upgradeCorrectionCas(jCas.getCas(), aDocument);
@@ -406,7 +412,7 @@ public class AutomationUtil
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository, AnnotationService aAnnotationService,
+            DocumentService aRepository, AnnotationService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
         throws IOException, UIMAException, ClassNotFoundException
     {
@@ -457,7 +463,7 @@ public class AutomationUtil
      * UIMA annotation and add it as a feature - no need to train and predict for this "other layer"
      */
     private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature,
-            RepositoryService aRepository, AnnotationService aAnnotationService, UserDao aUserDao,
+            DocumentService aRepository, AnnotationService aAnnotationService, UserDao aUserDao,
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -507,7 +513,7 @@ public class AutomationUtil
     }
 
     public static void addTabSepTrainDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository, AutomationService aAutomationService)
+            DocumentService aRepository, AutomationService aAutomationService)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
@@ -561,9 +567,9 @@ public class AutomationUtil
 
     }
 
-    public static void generateTrainDocument(MiraTemplate aTemplate, RepositoryService aRepository,
-            AnnotationService aAnnotationService, AutomationService aAutomationService,
-            UserDao aUserDao, boolean aBase)
+    public static void generateTrainDocument(MiraTemplate aTemplate, DocumentService aRepository,
+            CurationDocumentService aCurationDocumentService, AnnotationService aAnnotationService,
+            AutomationService aAutomationService, UserDao aUserDao, boolean aBase)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         LOG.info("Starting to generate training document");
@@ -652,7 +658,7 @@ public class AutomationUtil
                 }
             }
             else if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                JCas jCas = aRepository.readCurationCas(sourceDocument);
+                JCas jCas = aCurationDocumentService.readCurationCas(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
                         trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
@@ -708,9 +714,10 @@ public class AutomationUtil
         LOG.info("Completed generating training document");
     }
 
-    public static void generatePredictDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository, AnnotationService aAnnotationService,
-            AutomationService aAutomationService, UserDao aUserDao)
+    public static void generatePredictDocument(MiraTemplate aTemplate, DocumentService aRepository,
+            CorrectionDocumentService aCorrectionDocumentService,
+            AnnotationService aAnnotationService, AutomationService aAutomationService,
+            UserDao aUserDao)
         throws IOException, UIMAException, ClassNotFoundException
     {
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
@@ -739,7 +746,7 @@ public class AutomationUtil
                 BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
                 JCas jCas;
                 try {
-                    jCas = aRepository.readCorrectionCas(document);
+                    jCas = aCorrectionDocumentService.readCorrectionCas(document);
                 }
                 catch (Exception e) {
                     jCas = aRepository.readAnnotationCas(document, user);
@@ -881,7 +888,7 @@ public class AutomationUtil
      *             hum?
      */
     public static void otherFeatureClassifiers(MiraTemplate aTemplate,
-            RepositoryService aRepository, AutomationService aAutomationService)
+            DocumentService aRepository, AutomationService aAutomationService)
         throws IOException, ClassNotFoundException
     {
         Mira mira = new Mira();
@@ -945,14 +952,12 @@ public class AutomationUtil
      *
      * @param aTemplate
      *            the template.
-     * @param aRepository
-     *            the repository.
      * @throws IOException
      *             hum?
      * @throws ClassNotFoundException
      *             hum?
      */
-    public static void tabSepClassifiers(MiraTemplate aTemplate, RepositoryService aRepository,
+    public static void tabSepClassifiers(MiraTemplate aTemplate,
             AutomationService aAutomationService)
         throws IOException, ClassNotFoundException
     {
@@ -1188,8 +1193,9 @@ public class AutomationUtil
      *             if an error occurs.
      */
     public static String generateFinalClassifier(MiraTemplate aTemplate,
-            RepositoryService aRepository, AnnotationService aAnnotationService,
-            AutomationService aAutomationService, UserDao aUserDao)
+            DocumentService aRepository, CurationDocumentService aCurationDocumentService,
+            AnnotationService aAnnotationService, AutomationService aAutomationService,
+            UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException
     {
@@ -1266,11 +1272,11 @@ public class AutomationUtil
         getFeatureOtherLayer(aTemplate, aRepository, aAnnotationService, aAutomationService,
                 aUserDao, beamSize, maxPosteriors, predictions, mira, predFile, predcitedFile, null);
 
-        getFeaturesTabSep(aTemplate, aRepository, aAutomationService, beamSize, maxPosteriors,
+        getFeaturesTabSep(aTemplate, aAutomationService, beamSize, maxPosteriors,
                 layerFeature, predictions, mira, predFile, predcitedFile);
 
-        generateTrainDocument(aTemplate, aRepository, aAnnotationService, aAutomationService,
-                aUserDao, false);
+        generateTrainDocument(aTemplate, aRepository, aCurationDocumentService, aAnnotationService,
+                aAutomationService, aUserDao, false);
 
         String trainTemplate;
         if (predictions.size() == 0) {
@@ -1315,7 +1321,7 @@ public class AutomationUtil
         return trainResult;
     }
 
-    private static void getFeatureOtherLayer(MiraTemplate aTemplate, RepositoryService aRepository,
+    private static void getFeatureOtherLayer(MiraTemplate aTemplate, DocumentService aRepository,
             AnnotationService aAnnotationService, AutomationService aAutomationService,
             UserDao aUserDao, int beamSize, boolean maxPosteriors, List<List<String>> predictions,
             Mira mira, File predFtFile, File predcitedFile, SourceDocument document)
@@ -1364,7 +1370,7 @@ public class AutomationUtil
         }
     }
 
-    private static void getFeaturesTabSep(MiraTemplate aTemplate, RepositoryService aRepository,
+    private static void getFeaturesTabSep(MiraTemplate aTemplate,
             AutomationService aAutomationService, int beamSize, boolean maxPosteriors,
             AnnotationFeature layerFeature, List<List<String>> predictions, Mira mira,
             File predFile, File predcitedFile)
@@ -1436,7 +1442,7 @@ public class AutomationUtil
      *             hum?
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
-            RepositoryService aRepository, AnnotationService aAnnotationService,
+            DocumentService aRepository, AnnotationService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException
@@ -1457,7 +1463,7 @@ public class AutomationUtil
                         aAutomationService, aUserDao, beamSize, maxPosteriors, predictions, mira,
                         predFtFile, predcitedFile, document);
 
-                getFeaturesTabSep(aTemplate, aRepository, aAutomationService, beamSize,
+                getFeaturesTabSep(aTemplate, aAutomationService, beamSize,
                         maxPosteriors, layerFeature, predictions, mira, predFtFile, predcitedFile);
 
                 File basePredFile = new File(miraDir, document.getId() + ".pred");
@@ -1664,10 +1670,10 @@ public class AutomationUtil
         }
     }
 
-    public static void predict(MiraTemplate aTemplate, RepositoryService aRepository,
+    public static void predict(MiraTemplate aTemplate, DocumentService aRepository,
+            CorrectionDocumentService aCorrectionDocumentService,
             AutomationService aAutomationService, UserDao aUserDao)
-        throws CASException, UIMAException, ClassNotFoundException, IOException,
-        AnnotationException
+        throws CASException, UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 
@@ -1729,7 +1735,7 @@ public class AutomationUtil
                 }
                 automate(jCas, layerFeature, annotations);
                 LOG.info("Predictions found are written to the CAS");
-                aRepository.writeCorrectionCas(jCas, document, user);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, document, user);
                 document.setProcessed(true);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }

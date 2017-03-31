@@ -37,7 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -55,7 +55,7 @@ public class MainMenuPage
     private static final long serialVersionUID = -2487663821276301436L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService repository;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;

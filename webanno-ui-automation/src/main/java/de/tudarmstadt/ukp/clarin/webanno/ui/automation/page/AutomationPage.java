@@ -51,6 +51,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
@@ -117,8 +118,11 @@ public class AutomationPage
     private static final long serialVersionUID = 1378872465851908515L;
 
     @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    
+
     @SpringBean(name = "documentRepository")
     private CorrectionDocumentService correctionDocumentService;
 
@@ -350,7 +354,7 @@ public class AutomationPage
                 super.onConfigure();
                 AnnotatorState state = AutomationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+                        && !documentService.isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -507,7 +511,7 @@ public class AutomationPage
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(
-                repository.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
+                documentService.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -537,11 +541,11 @@ public class AutomationPage
 
         SourceDocument aDocument = getModelObject().getDocument();
 
-        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aDocument,
+        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
                 state.getUser());
 
         // If there is no CAS yet for the annotation document, create one.
-        return repository.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(annotationDocument);
     }
     
     private void setCurationSegmentBeginEnd(JCas aEditorCas)
@@ -594,7 +598,7 @@ public class AutomationPage
                     actionLoadDocument(aCallbackTarget);
                     User user = userRepository.get(username);
                     detailEditor.setEnabled(!FinishImage.isFinished(new Model<AnnotatorState>(state),
-                            user, repository));
+                            user, documentService));
                     detailEditor.loadFeatureEditorModels(aCallbackTarget);
                 }
                 catch (Exception e) {
@@ -681,7 +685,7 @@ public class AutomationPage
             ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
             annotationDocument.setState(AnnotationDocumentStateTransition.transition(
@@ -689,7 +693,7 @@ public class AutomationPage
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
-            repository.createAnnotationDocument(annotationDocument);
+            documentService.createAnnotationDocument(annotationDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -716,7 +720,7 @@ public class AutomationPage
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
-            AnnotationDocument annotationDocument = repository
+            AnnotationDocument annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), user);
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
@@ -725,28 +729,28 @@ public class AutomationPage
                 correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
             else {
-                correctionCas = repository.createOrReadInitialCas(state.getDocument());
+                correctionCas = documentService.createOrReadInitialCas(state.getDocument());
             }
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
             JCas editorCas;
-            if (repository.existsCas(state.getDocument(), user.getUsername())) {
-                editorCas = repository.readAnnotationCas(annotationDocument);
+            if (documentService.existsCas(state.getDocument(), user.getUsername())) {
+                editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
-                editorCas = repository.createOrReadInitialCas(state.getDocument());
+                editorCas = documentService.createOrReadInitialCas(state.getDocument());
                 // In automation mode, we do not remove the existing annotations from the documents
                 // annotationCas = BratAnnotatorUtility.clearJcasAnnotations(annotationCas,
                 //        state.getDocument(), user, repository);
             }
 
             // Update the CASes
-            repository.upgradeCas(editorCas.getCas(), annotationDocument);
+            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
             correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            repository.writeAnnotationCas(editorCas.getCas().getJCas(),
+            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument(), user);
 
@@ -789,7 +793,7 @@ public class AutomationPage
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
                 state.getDocument().setState(SourceDocumentStateTransition
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                repository.createSourceDocument(state.getDocument());
+                documentService.createSourceDocument(state.getDocument());
             }
             
             // Reset the editor
@@ -826,7 +830,7 @@ public class AutomationPage
      * Only project admins and annotators can see this page
      */
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);

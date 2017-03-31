@@ -88,7 +88,9 @@ import org.apache.wicket.util.time.Duration;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
@@ -141,7 +143,13 @@ public class AnnotationDetailEditorPanel
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService repository;
+
+    @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -191,7 +199,7 @@ public class AnnotationDetailEditorPanel
             return state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
         }
         else {
-            return repository.isAnnotationFinished(state.getDocument(), state.getUser());
+            return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
         }
     }
 
@@ -1370,7 +1378,7 @@ public class AnnotationDetailEditorPanel
         state.getDocument().setSentenceAccessed(sentenceNumber);
     
         // persist changes
-        repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
+        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
     
         // Remember the current feature values independently for spans and relations
         LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
@@ -1547,7 +1555,7 @@ public class AnnotationDetailEditorPanel
         adapter.delete(jCas, state.getSelection().getAnnotation());
 
         // Store CAS again
-        repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
+        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
@@ -1613,7 +1621,7 @@ public class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
+        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         state.setFocusSentenceNumber(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
@@ -1649,10 +1657,10 @@ public class AnnotationDetailEditorPanel
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
                 || state.getMode().equals(Mode.CORRECTION)) {
 
-            return repository.readAnnotationCas(state.getDocument(), state.getUser());
+            return documentService.readAnnotationCas(state.getDocument(), state.getUser());
         }
         else {
-            return repository.readCurationCas(state.getDocument());
+            return curationDocumentService.readCurationCas(state.getDocument());
         }
     }
 

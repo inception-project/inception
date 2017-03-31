@@ -47,7 +47,9 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -83,7 +85,13 @@ public class ProjectMiraTemplatePanel
     private AutomationService automationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
+
+    @SpringBean(name = "documentRepository")
+    private CorrectionDocumentService correctionDocumentService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -453,7 +461,7 @@ public class ProjectMiraTemplatePanel
                     if (template.getId() == 0) {
 
                         // Since the layer is changed, new classifier is needed
-                        for (SourceDocument sd : repository
+                        for (SourceDocument sd : documentService
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
                             sd.setProcessed(false);
                         }
@@ -647,7 +655,7 @@ public class ProjectMiraTemplatePanel
                     try {
                         // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
-                        for (SourceDocument document : repository
+                        for (SourceDocument document : documentService
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
                             if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
                                     || (document.isTrainingDocument() && template.getTrainFeature()
@@ -677,7 +685,7 @@ public class ProjectMiraTemplatePanel
 
                         // no need to re-train if no new document is added
                         boolean existUnprocessedDocument = false;
-                        for (SourceDocument document : repository
+                        for (SourceDocument document : documentService
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
@@ -699,7 +707,7 @@ public class ProjectMiraTemplatePanel
 
                         int annodoc = 0, trainDoc = 0;
 
-                        for (SourceDocument document : repository
+                        for (SourceDocument document : documentService
                                 .listSourceDocuments(selectedProjectModel.getObject())) {
                             if ((document.isTrainingDocument() || document.getState().equals(
                                     SourceDocumentState.CURATION_FINISHED))
@@ -727,29 +735,32 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
                         template.setResult("---");
 
-                        AutomationUtil.addOtherFeatureTrainDocument(template, repository,
+                        AutomationUtil.addOtherFeatureTrainDocument(template, documentService,
                                 annotationService, automationService, userRepository);
-                        AutomationUtil.otherFeatureClassifiers(template, repository,
+                        AutomationUtil.otherFeatureClassifiers(template, documentService,
                                 automationService);
 
-                        AutomationUtil.addTabSepTrainDocument(template, repository,
+                        AutomationUtil.addTabSepTrainDocument(template, documentService,
                                 automationService);
-                        AutomationUtil.tabSepClassifiers(template, repository, automationService);
+                        AutomationUtil.tabSepClassifiers(template, automationService);
 
-                        AutomationUtil.generateTrainDocument(template, repository,
+                        AutomationUtil.generateTrainDocument(template, documentService, curationDocumentService,
                                 annotationService, automationService, userRepository, true);
-                        AutomationUtil.generatePredictDocument(template, repository,
-                                annotationService, automationService, userRepository);
+                        AutomationUtil.generatePredictDocument(template, documentService,
+                                correctionDocumentService, annotationService, automationService,
+                                userRepository);
 
                         automationStatus.setStatus(Status.GENERATE_CLASSIFIER);
                         miraTemplateDetailForm.getModelObject().setResult(
-                                AutomationUtil.generateFinalClassifier(template, repository,
-                                        annotationService, automationService, userRepository));
-                        AutomationUtil.addOtherFeatureToPredictDocument(template, repository,
+                                AutomationUtil.generateFinalClassifier(template, documentService,
+                                        curationDocumentService, annotationService,
+                                        automationService, userRepository));
+                        AutomationUtil.addOtherFeatureToPredictDocument(template, documentService,
                                 annotationService, automationService, userRepository);
 
                         automationStatus.setStatus(Status.PREDICTION);
-                        AutomationUtil.predict(template, repository, automationService, userRepository);
+                        AutomationUtil.predict(template, documentService, correctionDocumentService,
+                                automationService, userRepository);
 
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.COMPLETED);

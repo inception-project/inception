@@ -60,6 +60,8 @@ import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
@@ -85,26 +87,28 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- *
  */
-public class ProjectExportPanel extends Panel {
-	private static final long serialVersionUID = 2116717853865353733L;
+public class ProjectExportPanel
+    extends Panel
+{
+    private static final long serialVersionUID = 2116717853865353733L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
-    
+
     private static final String FORMAT_AUTO = "AUTO";
 
-	private static final String META_INF = "/" + ImportUtil.META_INF;
-	public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
-	private static final String SOURCE_FOLDER = "/"+ImportUtil.SOURCE;
-	private static final String CURATION_AS_SERIALISED_CAS = "/"+ImportUtil.CURATION_AS_SERIALISED_CAS+"/";
-	private static final String CURATION_FOLDER = "/curation/";
-	private static final String LOG_FOLDER = "/" + ImportUtil.LOG_DIR;
-	private static final String GUIDELINES_FOLDER = "/"+ImportUtil.GUIDELINE;
-	private static final String ANNOTATION_CAS_FOLDER = "/"+ImportUtil.ANNOTATION_AS_SERIALISED_CAS+"/";
-	private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
-   private static final String CONSTRAINTS = "/constraints/";
-
+    private static final String META_INF = "/" + ImportUtil.META_INF;
+    public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
+    private static final String SOURCE_FOLDER = "/" + ImportUtil.SOURCE;
+    private static final String CURATION_AS_SERIALISED_CAS = "/"
+            + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
+    private static final String CURATION_FOLDER = "/curation/";
+    private static final String LOG_FOLDER = "/" + ImportUtil.LOG_DIR;
+    private static final String GUIDELINES_FOLDER = "/" + ImportUtil.GUIDELINE;
+    private static final String ANNOTATION_CAS_FOLDER = "/"
+            + ImportUtil.ANNOTATION_AS_SERIALISED_CAS + "/";
+    private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
+    private static final String CONSTRAINTS = "/constraints/";
 
 	private static final String CURATION_USER = "CURATION_USER";
 	private static final String CORRECTION_USER = "CORRECTION_USER";
@@ -117,6 +121,12 @@ public class ProjectExportPanel extends Panel {
 
 	@SpringBean(name = "documentRepository")
 	private RepositoryService repository;
+
+    @SpringBean(name = "documentRepository")
+    private ProjectService projectService;
+    
+    @SpringBean(name = "documentRepository")
+    private ImportExportService importExportService;
 
 	@SpringBean(name = "userRepository")
 	private UserDao userRepository;
@@ -181,8 +191,8 @@ public class ProjectExportPanel extends Panel {
             writer = WebannoTsv3Writer.class;
         }
         else {
-            writer = repository.getWritableFormats().get(
-                    repository.getWritableFormatId(aModel.format));
+            writer = importExportService.getWritableFormats().get(
+                    importExportService.getWritableFormatId(aModel.format));
             if (writer == null) {
                 writer = WebannoTsv3Writer.class;
             }
@@ -212,7 +222,7 @@ public class ProjectExportPanel extends Panel {
                     
                     // Copy secondary export format for convenience - not used during import
                     try {
-						File curationFile = repository.exportAnnotationDocument(sourceDocument,
+						File curationFile = importExportService.exportAnnotationDocument(sourceDocument,
 						        CURATION_USER, writer, CURATION_USER, Mode.CURATION);
 						FileUtils.copyFileToDirectory(curationFile, curationDir);
 						FileUtils.forceDelete(curationFile);
@@ -246,7 +256,7 @@ public class ProjectExportPanel extends Panel {
                 protected List<String> load()
                 {                    
                     List<String> formats = new ArrayList<String>(
-                            repository.getWritableFormatLabels());
+                            importExportService.getWritableFormatLabels());
                     formats.add(0, FORMAT_AUTO);
                     return formats;
                 }
@@ -795,9 +805,9 @@ public class ProjectExportPanel extends Panel {
                     formatId = sourceDocument.getFormat();
                 }
                 else {
-                    formatId = repository.getWritableFormatId(aModel.format);
+                    formatId = importExportService.getWritableFormatId(aModel.format);
                 }
-                Class<?> writer = repository.getWritableFormats().get(formatId);
+                Class<?> writer = importExportService.getWritableFormats().get(formatId);
                 if (writer == null) {
                     String msg = "[" + sourceDocument.getName()
                             + "] No writer found for format [" + formatId
@@ -832,7 +842,7 @@ public class ProjectExportPanel extends Panel {
 
                         File annotationFile = null;
                         if (annotationFileAsSerialisedCas.exists() && writer != null) {
-                            annotationFile = repository.exportAnnotationDocument(sourceDocument,
+                            annotationFile = importExportService.exportAnnotationDocument(sourceDocument,
                                     annotationDocument.getUser(), writer,
                                     annotationDocument.getUser(), Mode.ANNOTATION, false);
                         }
@@ -865,7 +875,7 @@ public class ProjectExportPanel extends Panel {
                         // Copy secondary export format for convenience - not used during import
                         File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
                         FileUtils.forceMkdir(curationDir);
-                        File correctionFile = repository.exportAnnotationDocument(sourceDocument,
+                        File correctionFile = importExportService.exportAnnotationDocument(sourceDocument,
                                 CORRECTION_USER, writer, CORRECTION_USER, Mode.CORRECTION);
                         FileUtils.copyFileToDirectory(correctionFile, curationDir);
                         FileUtils.forceDelete(correctionFile);
@@ -886,8 +896,8 @@ public class ProjectExportPanel extends Panel {
         {
             File logDir = new File(aCopyDir + LOG_FOLDER);
             FileUtils.forceMkdir(logDir);
-            if (repository.getProjectLogFile(aProject).exists()) {
-                FileUtils.copyFileToDirectory(repository.getProjectLogFile(aProject), logDir);
+            if (projectService.getProjectLogFile(aProject).exists()) {
+                FileUtils.copyFileToDirectory(projectService.getProjectLogFile(aProject), logDir);
             }
         }
 

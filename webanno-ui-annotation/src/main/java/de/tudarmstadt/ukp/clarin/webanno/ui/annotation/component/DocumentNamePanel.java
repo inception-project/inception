@@ -22,9 +22,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
@@ -37,9 +35,6 @@ public class DocumentNamePanel
     extends Panel
 {
     private static final long serialVersionUID = 3584950105138069924L;
-
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
 
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {

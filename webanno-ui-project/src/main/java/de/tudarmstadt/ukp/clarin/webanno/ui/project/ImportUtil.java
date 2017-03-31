@@ -40,6 +40,7 @@ import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -571,7 +572,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createSourceDocumentContent(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            DocumentService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
@@ -606,7 +607,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createAnnotationDocumentContent(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            DocumentService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
@@ -649,7 +650,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createCurationDocumentContent(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            DocumentService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {

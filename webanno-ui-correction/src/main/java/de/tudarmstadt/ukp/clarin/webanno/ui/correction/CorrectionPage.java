@@ -19,15 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.JCasUtil.select;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -44,12 +44,15 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
@@ -110,7 +113,10 @@ public class CorrectionPage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
-    
+
+    @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
+
     @SpringBean(name = "documentRepository")
     private CorrectionDocumentService correctionDocumentService;
 
@@ -342,8 +348,8 @@ public class CorrectionPage
             {
                 super.onConfigure();
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+                setEnabled(state.getDocument() != null && !documentService
+                        .isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -438,8 +444,8 @@ public class CorrectionPage
     protected List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
-        return new ArrayList<>(
-                repository.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
+        return new ArrayList<>(documentService
+                .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -469,7 +475,7 @@ public class CorrectionPage
 
         SourceDocument aDocument = getModelObject().getDocument();
 
-        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aDocument,
+        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
                 state.getUser());
 
         // If there is no CAS yet for the annotation document, create one.
@@ -487,9 +493,9 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        CuratorUtil.updatePanel(target, suggestionView, curationContainer, annotationEditor, repository,
-                annotationSelectionByUsernameAndAddress, curationSegment, annotationService,
-                userRepository);
+        CuratorUtil.updatePanel(target, suggestionView, curationContainer, annotationEditor,
+                repository, annotationSelectionByUsernameAndAddress, curationSegment,
+                annotationService, userRepository);
 
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
 
@@ -523,7 +529,8 @@ public class CorrectionPage
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = userRepository.get(username);
-                    detailEditor.setEnabled(!FinishImage.isFinished(getModel(), user, repository));
+                    detailEditor
+                            .setEnabled(!FinishImage.isFinished(getModel(), user, documentService));
                     detailEditor.loadFeatureEditorModels(aCallbackTarget);
                 }
                 catch (Exception e) {
@@ -618,7 +625,7 @@ public class CorrectionPage
         JCas editorCas = repository.createOrReadInitialCas(state.getDocument());
         editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas, state.getDocument(),
                 state.getUser(), repository);
-        repository.writeAnnotationCas(editorCas, state.getDocument(), state.getUser());
+        documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
     
@@ -628,7 +635,7 @@ public class CorrectionPage
             ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
             annotationDocument.setState(AnnotationDocumentStateTransition.transition(
@@ -636,7 +643,7 @@ public class CorrectionPage
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
-            repository.createAnnotationDocument(annotationDocument);
+            documentService.createAnnotationDocument(annotationDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -663,7 +670,7 @@ public class CorrectionPage
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
-            AnnotationDocument annotationDocument = repository
+            AnnotationDocument annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), user);
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
@@ -672,27 +679,27 @@ public class CorrectionPage
                 correctionCas = repository.readCorrectionCas(state.getDocument());
             }
             else {
-                correctionCas = repository.createOrReadInitialCas(state.getDocument());
+                correctionCas = documentService.createOrReadInitialCas(state.getDocument());
             }
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
             JCas editorCas;
             if (repository.existsCas(state.getDocument(), user.getUsername())) {
-                editorCas = repository.readAnnotationCas(annotationDocument);
+                editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
-                editorCas = repository.createOrReadInitialCas(state.getDocument());
+                editorCas = documentService.createOrReadInitialCas(state.getDocument());
                 editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas,
                         state.getDocument(), user, repository);
             }
 
             // Update the CASes
-            repository.upgradeCas(editorCas.getCas(), annotationDocument);
+            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
             repository.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            repository.writeAnnotationCas(editorCas.getCas().getJCas(),
+            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
             repository.writeCorrectionCas(correctionCas, state.getDocument(), user);
 

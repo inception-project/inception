@@ -35,7 +35,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -44,8 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
  * A Panel used to add user permissions to a selected {@link Project}
- *
- *
  */
 public class ProjectUsersPanel
     extends Panel
@@ -53,7 +51,7 @@ public class ProjectUsersPanel
     private static final long serialVersionUID = 875749625429630464L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private ProjectService projectRepository;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;

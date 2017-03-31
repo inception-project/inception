@@ -41,6 +41,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -72,14 +75,15 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Secondly, the class creates an instance of {@link CurationContainer}, which is the wicket model
  * for the curation panel. The {@link CurationContainer} contains the text for all sentences, which
  * are displayed at a specific page.
- *
  */
 public class SuggestionBuilder
 {
     private final Logger log = LoggerFactory.getLogger(getClass());    
     
     private final AnnotationService annotationService;
-    private final RepositoryService repository;
+    private final DocumentService documentService;
+    private final CorrectionDocumentService correctionDocumentService;
+    private final CurationDocumentService curationDocumentService;
     private final UserDao userRepository;
 
     int diffRangeBegin, diffRangeEnd;
@@ -91,7 +95,9 @@ public class SuggestionBuilder
     public SuggestionBuilder(RepositoryService repository, AnnotationService aAnnotationService,
             UserDao aUserDao)
     {
-        this.repository = repository;
+        this.documentService = repository;
+        this.correctionDocumentService = repository;
+        this.curationDocumentService = repository;
         this.annotationService = aAnnotationService;
         userRepository = aUserDao;
     }
@@ -109,7 +115,7 @@ public class SuggestionBuilder
 
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
 
-        for (AnnotationDocument annotationDocument : repository.listAnnotationDocuments(aBModel
+        for (AnnotationDocument annotationDocument : documentService.listAnnotationDocuments(aBModel
                 .getDocument())) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
@@ -316,13 +322,13 @@ public class SuggestionBuilder
         Map<String, JCas> jCases = new HashMap<String, JCas>();
         User user = userRepository.get(SecurityContextHolder.getContext().getAuthentication()
                 .getName());
-        randomAnnotationDocument = repository.getAnnotationDocument(aDocument, user);
+        randomAnnotationDocument = documentService.getAnnotationDocument(aDocument, user);
 
         // Upgrading should be an explicit action during the opening of a document at the end
         // of the open dialog - it must not happen during editing because the CAS addresses
         // are used as IDs in the UI
         // repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
-        JCas jCas = repository.readAnnotationCas(randomAnnotationDocument);
+        JCas jCas = documentService.readAnnotationCas(randomAnnotationDocument);
         jCases.put(user.getUsername(), jCas);
         return jCases;
     }
@@ -347,7 +353,7 @@ public class SuggestionBuilder
             // of the open dialog - it must not happen during editing because the CAS addresses
             // are used as IDs in the UI
             // repository.upgradeCasAndSave(annotationDocument.getDocument(), aMode, username);
-            JCas jCas = repository.readAnnotationCas(annotationDocument);
+            JCas jCas = documentService.readAnnotationCas(annotationDocument);
             jCases.put(username, jCas);
         }
         return jCases;
@@ -389,7 +395,7 @@ public class SuggestionBuilder
                 // are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
-                mergeJCas = repository.readCorrectionCas(aDocument);
+                mergeJCas = correctionDocumentService.readCorrectionCas(aDocument);
             }
             else {
                 // Upgrading should be an explicit action during the opening of a document at the
@@ -398,7 +404,7 @@ public class SuggestionBuilder
                 // are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
-                mergeJCas = repository.readCurationCas(aDocument);
+                mergeJCas = curationDocumentService.readCurationCas(aDocument);
             }
         }
         // Create jcas, if it could not be loaded from the file system
@@ -487,7 +493,7 @@ public class SuggestionBuilder
         User userLoggedIn = userRepository
                 .get(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        JCas mergeJCas = repository.readAnnotationCas(randomAnnotationDocument);
+        JCas mergeJCas = documentService.readAnnotationCas(randomAnnotationDocument);
         jCases.put(CurationPanel.CURATION_USER, mergeJCas);
 
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
@@ -498,7 +504,7 @@ public class SuggestionBuilder
 
         mergeJCas = MergeCas.geMergeCas(diff, jCases);
 
-        repository.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
+        curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 userLoggedIn);
         return mergeJCas;
     }
@@ -509,8 +515,8 @@ public class SuggestionBuilder
     {
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
-        mergeJCas = repository.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
-        repository.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument(),
+        mergeJCas = documentService.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
+        correctionDocumentService.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 userLoggedIn);
         return mergeJCas;
     }

@@ -25,7 +25,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -43,7 +42,7 @@ public class FinishImage
     private static final long serialVersionUID = -4931039843586219625L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -87,7 +86,7 @@ public class FinishImage
 
                 if (aModel.getObject().getProject() != null
                         && aModel.getObject().getDocument() != null) {
-                    if (isFinished(aModel, user, repository)) {
+                    if (isFinished(aModel, user, documentService)) {
                         return "images/accept.png";
                     }
                     else {
