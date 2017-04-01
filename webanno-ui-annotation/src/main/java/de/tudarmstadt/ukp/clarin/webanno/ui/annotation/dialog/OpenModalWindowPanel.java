@@ -44,7 +44,9 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
@@ -66,7 +68,13 @@ public class OpenModalWindowPanel
     private static final long serialVersionUID = 1299869948010875439L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService repository;
+
+    @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -351,7 +359,7 @@ public class OpenModalWindowPanel
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
-            Map<SourceDocument, AnnotationDocument> docs = repository
+            Map<SourceDocument, AnnotationDocument> docs = documentService
                     .listAnnotatableDocuments(selectedProject, user);
 
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
@@ -371,7 +379,7 @@ public class OpenModalWindowPanel
             break;
         }
         case CURATION: {
-            allSourceDocuments = repository.listCuratableSourceDocuments(selectedProject);
+            allSourceDocuments = curationDocumentService.listCuratableSourceDocuments(selectedProject);
             
             for (SourceDocument sourceDocument : allSourceDocuments) {
                 if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
@@ -412,7 +420,7 @@ public class OpenModalWindowPanel
                                                                                       // at all
                     }
                     else if (selectedDocument == null) {
-                        if (repository.existsFinishedAnnotation(selectedProject)) {
+                        if (documentService.existsFinishedAnnotation(selectedProject)) {
                             aTarget.appendJavaScript("alert('Please select a document for project: "
                                     + selectedProject.getName() + "')");
                         }

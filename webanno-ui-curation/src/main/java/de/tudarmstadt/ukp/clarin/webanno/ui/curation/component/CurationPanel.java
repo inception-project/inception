@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUse
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CuratorUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -187,7 +186,7 @@ public class CurationPanel
                     // update begin/end of the curationsegment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    updatePanel(aTarget, curationContainer);
+                    CurationPanel.this.updatePanel(aTarget, curationContainer);
                 }
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
@@ -510,9 +509,7 @@ public class CurationPanel
             annotationEditor.renderLater(aTarget);
         }
         annotate = false;
-        CuratorUtil.updatePanel(aTarget, suggestionViewPanel, aCC, annotationEditor, repository,
-                annotationSelectionByUsernameAndAddress, curationView, annotationService,
-                userRepository);
+        suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor, annotationSelectionByUsernameAndAddress, curationView);
     }
 
     // CurationContainer curationContainer;

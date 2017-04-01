@@ -60,9 +60,10 @@ import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -119,14 +120,20 @@ public class ProjectExportPanel
     @SpringBean(name = "automationService")
     private AutomationService automationService;
 
-	@SpringBean(name = "documentRepository")
-	private RepositoryService repository;
+//	@SpringBean(name = "documentRepository")
+//	private RepositoryService repository;
 
+    @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
+    
     @SpringBean(name = "documentRepository")
     private ProjectService projectService;
     
     @SpringBean(name = "documentRepository")
     private ImportExportService importExportService;
+
+    @SpringBean(name = "documentRepository")
+    private ConstraintsService constraintsService;
 
 	@SpringBean(name = "userRepository")
 	private UserDao userRepository;
@@ -154,7 +161,7 @@ public class ProjectExportPanel
 
 	private boolean existsCurationDocument(Project aProject) {
 		boolean curationDocumentExist = false;
-		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
+		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
 				.listSourceDocuments(aProject);
 
 		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -182,7 +189,7 @@ public class ProjectExportPanel
         throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException, ProjectExportException
     {
         // Get all the source documents from the project
-        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(aModel.project);
 
         // Determine which format to use for export.
@@ -215,7 +222,7 @@ public class ProjectExportPanel
                     SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
                 SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
             ) {
-                File curationCasFile = repository.getCasFile(sourceDocument, CURATION_USER);
+                File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
@@ -518,7 +525,7 @@ public class ProjectExportPanel
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(Logging.KEY_USERNAME, username);
             MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.project.getId()));
-            MDC.put(Logging.KEY_REPOSITORY_PATH, repository.getDir().toString());
+            MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
             
             File file;
             try {
@@ -667,7 +674,7 @@ public class ProjectExportPanel
             // Store map of source document and exSourceDocument
             Map<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, SourceDocument> exDocuments = new HashMap<>();
             // add source documents to a project
-            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
+            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                     .listSourceDocuments(aProject);
             documents.addAll(automationService.listTabSepDocuments(aProject));
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -687,14 +694,15 @@ public class ProjectExportPanel
                 }
 
                 // add annotation document to Project
-                for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
+                for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : documentService
                         .listAnnotationDocuments(sourceDocument)) {
                     AnnotationDocument annotationDocumentToExport = new AnnotationDocument();
                     annotationDocumentToExport.setName(annotationDocument.getName());
                     annotationDocumentToExport.setState(annotationDocument.getState());
                     annotationDocumentToExport.setUser(annotationDocument.getUser());
                     annotationDocumentToExport.setTimestamp(annotationDocument.getTimestamp());
-                    annotationDocumentToExport.setSentenceAccessed(annotationDocument.getSentenceAccessed());
+                    annotationDocumentToExport
+                            .setSentenceAccessed(annotationDocument.getSentenceAccessed());
                     annotationDocuments.add(annotationDocumentToExport);
                 }
                 sourceDocuments.add(exDocument);
@@ -707,8 +715,8 @@ public class ProjectExportPanel
             List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
             // add project permissions to the project
-            for (User user : repository.listProjectUsersWithPermissions(aProject)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : repository
+            for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
+                for (de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission permission : projectService
                         .listProjectPermissionLevel(user, aProject)) {
                     ProjectPermission permissionToExport = new ProjectPermission();
                     permissionToExport.setLevel(permission.getLevel());
@@ -759,13 +767,13 @@ public class ProjectExportPanel
             File sourceDocumentDir = new File(aCopyDir + SOURCE_FOLDER);
             FileUtils.forceMkdir(sourceDocumentDir);
             // Get all the source documents from the project
-            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
+            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                     .listSourceDocuments(aProject);
             documents.addAll(automationService.listTabSepDocuments(aProject));
             int i = 1;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
                 try {
-					FileUtils.copyFileToDirectory(repository.getSourceDocumentFile(sourceDocument),
+					FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
 					        sourceDocumentDir);
 					progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
 					i++;
@@ -794,7 +802,7 @@ public class ProjectExportPanel
         private void exportAnnotationDocuments(ProjectExportModel aModel, File aCopyDir)
             throws IOException, UIMAException, ClassNotFoundException
         {
-            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = repository
+            List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                     .listSourceDocuments(aModel.project);
             int i = 1;
             int initProgress = progress;
@@ -820,7 +828,7 @@ public class ProjectExportPanel
                 }
 
                 // Export annotations from regular users
-                for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : repository
+                for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : documentService
                         .listAnnotationDocuments(sourceDocument)) {
                     // copy annotation document only for ACTIVE users and the state of the 
                     // annotation document is not NEW/IGNORE
@@ -837,7 +845,7 @@ public class ProjectExportPanel
                         FileUtils.forceMkdir(annotationDocumentAsSerialisedCasDir);
                         FileUtils.forceMkdir(annotationDocumentDir);
 
-                        File annotationFileAsSerialisedCas = repository.getCasFile(
+                        File annotationFileAsSerialisedCas = documentService.getCasFile(
                                 sourceDocument, annotationDocument.getUser());
 
                         File annotationFile = null;
@@ -863,7 +871,7 @@ public class ProjectExportPanel
                 // folder as CURATION_FOLDER
                 if (aModel.project.getMode().equals(Mode.AUTOMATION)
                         || aModel.project.getMode().equals(Mode.CORRECTION)) {
-                    File correctionCasFile = repository.getCasFile(sourceDocument,
+                    File correctionCasFile = documentService.getCasFile(sourceDocument,
                             CORRECTION_USER);
                     if (correctionCasFile.exists()) {
                         // Copy CAS - this is used when importing the project again
@@ -909,7 +917,7 @@ public class ProjectExportPanel
         {
             File guidelineDir = new File(aCopyDir + GUIDELINES_FOLDER);
             FileUtils.forceMkdir(guidelineDir);
-            File annotationGuidlines = repository.getGuidelinesFile(aProject);
+            File annotationGuidlines = projectService.getGuidelinesFile(aProject);
             if (annotationGuidlines.exists()) {
                 for (File annotationGuideline : annotationGuidlines.listFiles()) {
                     FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
@@ -925,7 +933,7 @@ public class ProjectExportPanel
         {
             File metaInfDir = new File(aCopyDir + META_INF);
             FileUtils.forceMkdir(metaInfDir);
-            File metaInf = repository.getMetaInfFolder(aProject);
+            File metaInf = projectService.getMetaInfFolder(aProject);
             if (metaInf.exists()) {
                 FileUtils.copyDirectory(metaInf, metaInfDir);
             }
@@ -940,12 +948,12 @@ public class ProjectExportPanel
             File constraintsDir = new File(exportTempDir + CONSTRAINTS);
             FileUtils.forceMkdir(constraintsDir);
             String fileName;
-            for (ConstraintSet set : repository.listConstraintSets(project)) {
+            for (ConstraintSet set : constraintsService.listConstraintSets(project)) {
                 fileName = set.getName();
              /*
               * Copying with file's original name to save ConstraintSet's name
               */
-                FileUtils.copyFile(repository.exportConstraintAsFile(set),
+                FileUtils.copyFile(constraintsService.exportConstraintAsFile(set),
                         new File(constraintsDir, fileName));
             }
 

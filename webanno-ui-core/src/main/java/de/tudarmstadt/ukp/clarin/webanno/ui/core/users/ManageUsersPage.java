@@ -48,7 +48,7 @@ import org.apache.wicket.validation.ValidationError;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
@@ -74,7 +74,7 @@ public class ManageUsersPage
     private UserDao userRepository;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private ProjectService projectRepository;
 
     boolean isCreate = false;
     private class SelectionForm
@@ -384,7 +384,7 @@ public class ManageUsersPage
      * Only admins and project managers can see this page
      */
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);

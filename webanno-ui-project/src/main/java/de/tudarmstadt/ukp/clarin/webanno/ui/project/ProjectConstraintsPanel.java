@@ -47,7 +47,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
@@ -67,7 +67,7 @@ public class ProjectConstraintsPanel
     private static final Logger LOG = LoggerFactory.getLogger(ProjectConstraintsPanel.class);
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private ConstraintsService constraintsService;
 
     private SelectionForm selectionForm;
     
@@ -105,7 +105,7 @@ public class ProjectConstraintsPanel
                 @Override
                 protected List<ConstraintSet> load()
                 {
-                    return projectRepository.listConstraintSets(ProjectConstraintsPanel.this
+                    return constraintsService.listConstraintSets(ProjectConstraintsPanel.this
                             .getModelObject());
                 }
             };
@@ -160,7 +160,7 @@ public class ProjectConstraintsPanel
                 protected String load()
                 {
                     try {
-                        return projectRepository.readConstrainSet(DetailForm.this.getModelObject());
+                        return constraintsService.readConstrainSet(DetailForm.this.getModelObject());
                     }
                     catch (IOException e) {
                         // Cannot call "Component.error()" here - it causes a 
@@ -188,7 +188,7 @@ public class ProjectConstraintsPanel
                         // Use the name of the constraints set instead of the ID under which the
                         // file is saved internally.
                         exportFilenameModel.setObject(DetailForm.this.getModelObject().getName());
-                        return projectRepository.exportConstraintAsFile(DetailForm.this
+                        return constraintsService.exportConstraintAsFile(DetailForm.this
                                 .getModelObject());
                     }
                     catch (IOException e) {
@@ -205,7 +205,7 @@ public class ProjectConstraintsPanel
                 @Override
                 public void onSubmit()
                 {
-                    projectRepository.removeConstraintSet(DetailForm.this.getModelObject());
+                    constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
                     DetailForm.this.setModelObject(null);
                     selectionForm.setModelObject(null);
                 }
@@ -237,7 +237,7 @@ public class ProjectConstraintsPanel
 				public void validate() {
 					super.validate();
 					//Checking if the name provided already exists or not
-					if(projectRepository.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())
+					if(constraintsService.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())
 							&& !constraintNameTextField.getInput().equals(constraintNameTextField.getModelObject())){
 						error("Provided name for Constraint already exists, please choose a different name");
 					}
@@ -338,12 +338,12 @@ public class ProjectConstraintsPanel
                         constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
                         //Check if ConstraintSet already exists or not
                         String constraintFilename = constraintRulesFile.getClientFileName();
-                        if(projectRepository.existConstraintSet(constraintFilename, project)){
-                            constraintFilename = copyConstraintName(projectRepository,constraintFilename);
+                        if(constraintsService.existConstraintSet(constraintFilename, project)){
+                            constraintFilename = copyConstraintName(constraintsService,constraintFilename);
                         }
                         constraintSet.setName(constraintFilename);
-                        projectRepository.createConstraintSet(constraintSet);
-                        projectRepository.writeConstraintSet(constraintSet,
+                        constraintsService.createConstraintSet(constraintSet);
+                        constraintsService.writeConstraintSet(constraintSet,
                                 constraintRulesFile.getInputStream());
                         detailForm.setModelObject(constraintSet);
                         selectionForm.setModelObject(constraintSet);
@@ -356,18 +356,22 @@ public class ProjectConstraintsPanel
                 }
             }
         }
+        
         /**
          * Checks if name exists, if yes, creates an alternate name for ConstraintSet
-         * @param projectRepository
+         * 
+         * @param aConstraintsService
          * @param constraintFilename
          * @return
          */
-        private String copyConstraintName(RepositoryService projectRepository, String constraintFilename)
+        private String copyConstraintName(ConstraintsService aConstraintsService,
+                String constraintFilename)
         {
             String betterConstraintName = "copy_of_" + constraintFilename;
             int i = 1;
             while (true) {
-                if (projectRepository.existConstraintSet(betterConstraintName, ProjectConstraintsPanel.this.getModelObject())) {
+                if (aConstraintsService.existConstraintSet(betterConstraintName,
+                        ProjectConstraintsPanel.this.getModelObject())) {
                     betterConstraintName = "copy_of_" + constraintFilename + "(" + i + ")";
                     i++;
                 }

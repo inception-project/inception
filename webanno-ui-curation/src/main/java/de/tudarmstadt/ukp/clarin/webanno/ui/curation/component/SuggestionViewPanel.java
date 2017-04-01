@@ -17,17 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
@@ -40,26 +50,52 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationOption;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A {@link MarkupContainer} for either curation users' sentence annotation (for the lower panel) or
@@ -69,12 +105,19 @@ public class SuggestionViewPanel
         extends WebMarkupContainer
 {
     private static final long serialVersionUID = 8736268179612831795L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
+    
     private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
-    @SpringBean(name = "documentRepository") private RepositoryService repository;
+    
+    @SpringBean(name = "documentRepository")
+    private RepositoryService repository;
 
-    @SpringBean(name = "annotationService") private AnnotationService annotationService;
+    @SpringBean(name = "annotationService")
+    private AnnotationService annotationService;
 
-    @SpringBean(name = "userRepository") private UserDao userRepository;
+    @SpringBean(name = "userRepository")
+    private UserDao userRepository;
 
     /**
      * Data models for the annotation editor
@@ -91,12 +134,14 @@ public class SuggestionViewPanel
         setDefaultModelObject(aModel);
     }
 
-    @SuppressWarnings("unchecked") public IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> getModel()
+    @SuppressWarnings("unchecked")
+    public IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> getModel()
     {
         return (IModel<LinkedList<CurationUserSegmentForAnnotationDocument>>) getDefaultModel();
     }
 
-    @SuppressWarnings("unchecked") public LinkedList<CurationUserSegmentForAnnotationDocument> getModelObject()
+    @SuppressWarnings("unchecked")
+    public LinkedList<CurationUserSegmentForAnnotationDocument> getModelObject()
     {
         return (LinkedList<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
     }
@@ -163,8 +208,7 @@ public class SuggestionViewPanel
                         StringValue action = request.getParameterValue("action");
                         // check if clicked on a span
                         if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {                    
-                            mergeSpan(request, curationUserSegment, annotationJCas, repository,
-                                    annotationService);
+                            mergeSpan(request, curationUserSegment, annotationJCas);
                         }
                         // check if clicked on an arc
                         else if (!action.isEmpty() && action.toString()
@@ -204,8 +248,7 @@ public class SuggestionViewPanel
     }
 
     private void mergeSpan(IRequestParameters aRequest,
-            CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas,
-            RepositoryService aRepository, AnnotationService aAnnotationService)
+            CurationUserSegmentForAnnotationDocument aCurationUserSegment, JCas aJcas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         Integer address = aRequest.getParameterValue("id").toInteger();
@@ -216,7 +259,7 @@ public class SuggestionViewPanel
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;
-        List<AnnotationDocument> annotationDocuments = aRepository
+        List<AnnotationDocument> annotationDocuments = repository
                 .listAnnotationDocuments(sourceDocument);
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getUser().equals(username)) {
@@ -351,5 +394,355 @@ public class SuggestionViewPanel
                 .replace("_(" + AnnotationState.DISAGREE.name() + ")", "")
                 .replace("_(" + AnnotationState.DO_NOT_USE.name() + ")", "")
                 .replace("_(" + AnnotationState.NOT_SUPPORTED.name() + ")", "");
+    }
+    
+    public final static String CURATION_USER = "CURATION_USER";
+
+    private void populateCurationSentences(
+            Map<String, JCas> aJCases,
+            List<CurationUserSegmentForAnnotationDocument> aSentences,
+            AnnotatorState aBratAnnotatorModel,
+            final List<AnnotationOption> aAnnotationOptions,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            AnnotationService aAnnotationService, CurationContainer aCurationContainer,
+            final Map<String, AnnotationState> aStates)
+        throws IOException
+    {
+        List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
+        Collections.sort(usernamesSorted);
+
+        final Mode mode = aBratAnnotatorModel.getMode();
+        boolean isAutomationMode = mode.equals(Mode.AUTOMATION);
+        boolean isCorrectionMode = mode.equals(Mode.CORRECTION);
+        boolean isCurationMode = mode.equals(Mode.CURATION);
+
+        String annotatorCasUser;
+        switch (mode) {
+        case AUTOMATION: // fall-through
+        case CORRECTION:
+            annotatorCasUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            break;
+        case CURATION:
+            annotatorCasUser = CURATION_USER;
+            break;
+        default:
+            throw new IllegalStateException("Illegal mode [" + mode + "]");
+        }
+
+        LOG.debug("mode = [" + mode + "]");
+        LOG.debug("all users is  " + usernamesSorted);
+        LOG.debug("annotator CAS is for user [" + annotatorCasUser + "]");
+
+        for (String username : usernamesSorted) {
+            if ((!username.equals(CURATION_USER) && isCurationMode)
+                    || (username.equals(CURATION_USER) && (isAutomationMode || isCorrectionMode))) {
+
+                JCas jCas = aJCases.get(username);
+                // Set up coloring strategy
+                ColoringStrategy curationColoringStrategy = new ColoringStrategy()
+                {
+                    @Override
+                    public String getColor(Object aObj, String aLabel)
+                    {
+                        if (aStates.get(aObj.toString())==null){
+                            return AnnotationState.NOT_SUPPORTED.getColorCode();
+                        }
+                        return aStates.get(aObj.toString()).getColorCode();
+                    }
+                };
+
+                // Create curation view for the current user
+                CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
+                curationUserSegment2.setCollectionData(getCollectionInformation(aAnnotationService,
+                        aCurationContainer));
+                curationUserSegment2.setDocumentResponse(render(jCas, aBratAnnotatorModel,
+                        curationColoringStrategy));
+                curationUserSegment2.setUsername(username);
+                curationUserSegment2.setBratAnnotatorModel(aBratAnnotatorModel);
+                curationUserSegment2
+                        .setAnnotationSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
+                aSentences.add(curationUserSegment2);
+            }
+        }
+    }
+
+    private String render(JCas aJcas, AnnotatorState aBratAnnotatorModel,
+            ColoringStrategy aCurationColoringStrategy)
+        throws IOException
+    {
+        AnnotationService aAnnotationService = annotationService;
+        
+        GetDocumentResponse response = new GetDocumentResponse();
+        response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
+
+        // Render invisible baseline annotations (sentence, tokens)
+        BratRenderer.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
+
+        // Render visible (custom) layers
+        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
+            if (layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName())
+                    || WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
+            for (AnnotationFeature feature : features) {
+                if (!feature.isVisible()) {
+                    invisibleFeatures.add(feature);
+                }
+            }
+            features.removeAll(invisibleFeatures);
+            TypeAdapter adapter = getAdapter(aAnnotationService, layer);
+            TypeRenderer renderer = BratRenderer.getRenderer(adapter);
+            renderer.render(aJcas, features, response, aBratAnnotatorModel,
+                    aCurationColoringStrategy);
+        }
+
+        return JSONUtil.toInterpretableJsonString(response);
+    }
+
+    private String getCollectionInformation(AnnotationService aAnnotationService,
+            CurationContainer aCurationContainer)
+        throws IOException
+    {
+        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+        info.setEntityTypes(BratRenderer.buildEntityTypes(aCurationContainer
+                .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService));
+
+        StringWriter out = new StringWriter();
+        JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
+                .getFactory().createGenerator(out);
+        jsonGenerator.writeObject(info);
+        return out.toString();
+    }
+
+    /**
+     * @param aTarget
+     *            the AJAX target.
+     * @param aCurationContainer
+     *            the container.
+     * @param aMergeVisualizer
+     *            the annotator component.
+     * @param aAnnotationSelectionByUsernameAndAddress
+     *            selections by user.
+     * @param aCurationSegment
+     *            the segment.
+     * @param aAnnotationService
+     *            the annotation service.
+     * @param aRepository
+     *            the repository.
+     * @throws UIMAException
+     *             hum?
+     * @throws ClassNotFoundException
+     *             hum?
+     * @throws IOException
+     *             hum?
+     * @throws AnnotationException
+     *             hum?
+     */
+    public void updatePanel(
+            AjaxRequestTarget aTarget,
+            CurationContainer aCurationContainer,
+            AnnotationEditorBase aMergeVisualizer,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            SourceListView aCurationSegment)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        AnnotatorState bModel = aCurationContainer.getBratAnnotatorModel();
+        SourceDocument sourceDocument = bModel.getDocument();
+        Map<String, JCas> jCases = new HashMap<String, JCas>();
+
+        // This is the CAS that the user can actively edit
+        JCas annotatorCas = getAnnotatorCas(bModel, aAnnotationSelectionByUsernameAndAddress,
+                sourceDocument, jCases);
+
+        // We store the CAS that the user will edit as the "CURATION USER"
+        jCases.put(CURATION_USER, annotatorCas);
+
+        // get differing feature structures
+        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
+                bModel.getAnnotationLayers(), annotationService);
+        List<AnnotationOption> annotationOptions = null;
+
+        Map<String, AnnotationState> annoStates = new HashMap<>();
+
+        DiffResult diff;
+
+        if (bModel.getMode().equals(Mode.CURATION)) {
+            diff = CasDiff2.doDiffSingle(annotationService, bModel.getProject(), entryTypes,
+                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+        }
+        else {
+            diff = CasDiff2.doDiffSingle(annotationService, bModel.getProject(), entryTypes,
+                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd());
+        }
+
+        Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
+
+        Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
+        for (ConfigurationSet cfgSet : d) {
+            if (i.contains(cfgSet)) {
+                i.remove(cfgSet);
+            }
+        }
+
+        addSuggestionColor(bModel.getMode(), jCases, annoStates, d, false, false);
+        addSuggestionColor(bModel.getMode(), jCases, annoStates, i, true, false);
+
+        List<ConfigurationSet> all = new ArrayList<>();
+
+        for (ConfigurationSet a : diff.getConfigurationSets()) {
+            all.add(a);
+        }
+        for (ConfigurationSet cfgSet : d) {
+            all.remove(cfgSet);
+        }
+        for (ConfigurationSet cfgSet : i) {
+            all.remove(cfgSet);
+        }
+
+        addSuggestionColor(bModel.getMode(), jCases, annoStates, all, false, true);
+
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+
+        populateCurationSentences(jCases, sentences, bModel, annotationOptions,
+                aAnnotationSelectionByUsernameAndAddress, annotationService, aCurationContainer,
+                annoStates);
+
+        // update sentence list on the right side
+        this.setModelObject(sentences);
+
+        aTarget.add(this);
+    }
+
+    /**
+     * For each {@link ConfigurationSet}, where there are some differences in users annotation and
+     * the curation annotation.
+     * @param aCasMap
+     * @param aSuggestionColors
+     * @param aCfgSet
+     * @param aAnnotationService
+     * @param aProj
+     */
+    private void addSuggestionColor(Mode aMode, Map<String, JCas> aCasMap,
+            Map<String, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,
+            boolean aI, boolean aAgree)
+    {
+        for (ConfigurationSet cs : aCfgSet) {
+            boolean use = false;
+            for (String u : cs.getCasGroupIds()) {
+                for (Configuration c : cs.getConfigurations(u)) {
+
+                    FeatureStructure fs = c.getFs(u, aCasMap);
+                    Object key = fs;
+                    // link FS
+                    if (c.getPosition().getFeature() != null) {
+                        ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType()
+                                .getFeatureByBaseName(c.getPosition().getFeature()));
+                        FeatureStructure link = links.get(c.getAID(u).index);
+                        fs = (AnnotationFS) link.getFeatureValue(link.getType()
+                                .getFeatureByBaseName("target"));
+                        key = key + "-" + fs + "-" + link;
+                    }
+                    if (aAgree) {
+                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                        continue;
+                    }
+                    // automation and correction projects
+                    if (!aMode.equals(Mode.CURATION) && !aAgree) {
+                        if (cs.getCasGroupIds().size() == 2) {
+                            aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                        }
+                        else {
+                            aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                        }
+                        continue;
+                    }
+
+                    // this set agree with the curation annotation
+                    if (c.getCasGroupIds().contains(CURATION_USER)) {
+                        use = true;
+                    }
+                    else {
+                        use = false;
+                    }
+                    // this curation view
+                    if (u.equals(CURATION_USER)) {
+                        continue;
+                    }
+
+                    if (aAgree) {
+                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                    }
+                    else if (use) {
+                        aSuggestionColors.put(key.toString(), AnnotationState.USE);
+                    }
+                    else if (aI) {
+                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                    }
+                    else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
+                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                    }
+                    else {
+                        aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                    }
+                }
+            }
+        }
+    }
+
+    private JCas getAnnotatorCas(
+            AnnotatorState aBModel,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            SourceDocument sourceDocument,
+            Map<String, JCas> jCases)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        JCas annotatorCas;
+        if (aBModel.getMode().equals(Mode.AUTOMATION) || aBModel.getMode().equals(Mode.CORRECTION)) {
+            // If this is a CORRECTION or AUTOMATION project, then we get the CORRECTION document
+            // and put it in as the single document to compare with. Basically what we do is that
+            // we treat consider this scenario as a curation scenario where the CORRECTION document
+            // is the only document we compare with.
+
+            // The CAS the user can edit is the one from the virtual CORRECTION USER
+            annotatorCas = repository.readCorrectionCas(sourceDocument);
+
+            User user = userRepository.get(SecurityContextHolder.getContext().getAuthentication()
+                    .getName());
+            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+                    sourceDocument, user);
+            jCases.put(user.getUsername(), repository.readAnnotationCas(annotationDocument));
+            aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER,
+                    new HashMap<Integer, AnnotationSelection>());
+        }
+        else {
+            // If this is a true CURATION then we get all the annotation documents from all the
+            // active users.
+
+            // The CAS the user can edit is the one from the virtual CURATION USER
+            annotatorCas = repository.readCurationCas(sourceDocument);
+
+            // Now we get all the other CASes from the repository
+            List<AnnotationDocument> annotationDocuments = repository
+                    .listAnnotationDocuments(sourceDocument);
+            for (AnnotationDocument annotationDocument : annotationDocuments) {
+                String username = annotationDocument.getUser();
+                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
+                        || username.equals(CURATION_USER)) {
+                    JCas jCas = repository.readAnnotationCas(annotationDocument);
+                    jCases.put(username, jCas);
+
+                    // cleanup annotationSelections
+                    aAnnotationSelectionByUsernameAndAddress.put(username,
+                            new HashMap<Integer, AnnotationSelection>());
+                }
+            }
+        }
+        return annotatorCas;
     }
 }

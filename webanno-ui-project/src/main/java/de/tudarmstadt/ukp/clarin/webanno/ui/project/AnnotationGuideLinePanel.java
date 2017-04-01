@@ -39,13 +39,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
- *
- *
  */
 public class AnnotationGuideLinePanel
     extends Panel
@@ -56,7 +54,7 @@ public class AnnotationGuideLinePanel
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService projectRepository;
+    private ProjectService projectRepository;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();

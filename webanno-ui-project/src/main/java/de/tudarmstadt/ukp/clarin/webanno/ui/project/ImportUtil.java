@@ -40,8 +40,9 @@ import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
@@ -386,7 +387,7 @@ public class ImportUtil
      */
     public static Project createProject(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aProject,
-            RepositoryService aRepository, UserDao aUserDao)
+            ProjectService aRepository, UserDao aUserDao)
         throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -416,10 +417,8 @@ public class ImportUtil
     /**
      * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
      * conflicts
-     *
-     * @return
      */
-    private static String copyProjectName(RepositoryService aRepository, String aProjectName)
+    private static String copyProjectName(ProjectService aRepository, String aProjectName)
     {
         String projectName = "copy_of_" + aProjectName;
         int i = 1;
@@ -431,7 +430,6 @@ public class ImportUtil
             else {
                 return projectName;
             }
-
         }
     }
 
@@ -446,8 +444,7 @@ public class ImportUtil
      */
     public static void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject,
-            RepositoryService aRepository, UserDao aUserDao,
+            Project aImportedProject, DocumentService aRepository, UserDao aUserDao,
             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> aFeatureMap)
         throws IOException
     {
@@ -505,7 +502,7 @@ public class ImportUtil
      */
     public static void createAnnotationDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject, RepositoryService aRepository)
+            Project aImportedProject, DocumentService aRepository)
         throws IOException
     {
         for (AnnotationDocument importedAnnotationDocument : aImportedProjectSetting
@@ -534,7 +531,7 @@ public class ImportUtil
      */
     public static void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject, RepositoryService aRepository, boolean aGenerateUsers,
+            Project aImportedProject, ProjectService aRepository, boolean aGenerateUsers,
             UserDao aUserDao)
         throws IOException
     {
@@ -692,7 +689,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createProjectGuideline(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            ProjectService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
@@ -726,7 +723,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createProjectMetaInf(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            ProjectService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
@@ -757,7 +754,7 @@ public class ImportUtil
      * @throws IOException if an I/O error occurs.
      */
     @SuppressWarnings("rawtypes")
-    public static void createProjectLog(ZipFile zip, Project aProject, RepositoryService aRepository)
+    public static void createProjectLog(ZipFile zip, Project aProject, ProjectService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
@@ -784,7 +781,7 @@ public class ImportUtil
      */
     @SuppressWarnings("rawtypes")
     public static void createProjectConstraint(ZipFile zip, Project aProject,
-            RepositoryService aRepository)
+            ConstraintsService aRepository)
         throws IOException
     {
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {

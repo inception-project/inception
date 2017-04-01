@@ -36,7 +36,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -58,7 +58,7 @@ public abstract class AnnotationPageBase
     private AnnotationService annotationService;
     
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
@@ -150,7 +150,7 @@ public abstract class AnnotationPageBase
                 {
                     super.onConfigure();
                     AnnotatorState state = AnnotationPageBase.this.getModelObject();
-                    setEnabled(state.getDocument() != null && !repository
+                    setEnabled(state.getDocument() != null && !documentService
                             .isAnnotationFinished(state.getDocument(), state.getUser()));
                 }
             };
@@ -213,8 +213,8 @@ public abstract class AnnotationPageBase
         throws Exception
     {
         AnnotatorState state = getModelObject();
-        JCas jcas = repository.createOrReadInitialCas(state.getDocument());
-        repository.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+        JCas jcas = documentService.createOrReadInitialCas(state.getDocument());
+        documentService.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
 

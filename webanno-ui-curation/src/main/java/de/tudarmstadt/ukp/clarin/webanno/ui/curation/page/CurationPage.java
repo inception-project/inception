@@ -49,6 +49,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
@@ -104,6 +105,9 @@ public class CurationPage
 
     @SpringBean(name = "documentRepository")
     private RepositoryService repository;
+    
+    @SpringBean(name = "documentRepository")
+    private DocumentService documentService;
     
     @SpringBean(name = "documentRepository")
     private CurationDocumentService curationDocumentService;
@@ -377,7 +381,7 @@ public class CurationPage
     @Override
     protected List<SourceDocument> getListOfDocs()
     {
-        return repository.listCuratableSourceDocuments(getModelObject().getProject());
+        return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
     }
 
     // Update the curation panel.
@@ -426,7 +430,7 @@ public class CurationPage
             throw new IllegalStateException("Please open a document first!");
         }
 
-        return repository.readCurationCas(state.getDocument());
+        return curationDocumentService.readCurationCas(state.getDocument());
     }
 
     private void updateSentenceNumber(JCas aJCas, int aAddress)
@@ -516,7 +520,7 @@ public class CurationPage
         JCas mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
-            mergeCas = repository.readCurationCas(state.getDocument());
+            mergeCas = curationDocumentService.readCurationCas(state.getDocument());
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
@@ -578,7 +582,7 @@ public class CurationPage
                 if (reMerge.isReMerege()) {
                     try {
                         aCallbackTarget.add(getFeedbackPanel());
-                        repository.removeCurationDocumentContent(state.getDocument(),
+                        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
                                 state.getUser().getUsername());
                         actionLoadDocument(aCallbackTarget);
 
@@ -707,7 +711,7 @@ public class CurationPage
      * Only project admins and curators can see this page
      */
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);

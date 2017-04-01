@@ -69,7 +69,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
@@ -119,7 +121,13 @@ public class ProjectPage
     private AutomationService automationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private ProjectService projectService;
+    
+    @SpringBean(name = "documentRepository")
+    private ConstraintsService constraintsService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -212,7 +220,7 @@ public class ProjectPage
                             String username = SecurityContextHolder.getContext().getAuthentication()
                                     .getName();
                             User user = userRepository.get(username);
-                            return repository.listAccessibleProjects(user);
+                            return projectService.listAccessibleProjects(user);
                         }
                     });
                     setChoiceRenderer(new ChoiceRenderer<Project>("name"));
@@ -537,7 +545,7 @@ public class ProjectPage
 							error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
 							LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
 						}
-						if (projectNameTextField.getModelObject()!=null && repository.existsProject(projectNameTextField.getInput())
+						if (projectNameTextField.getModelObject()!=null && projectService.existsProject(projectNameTextField.getInput())
 								&& !projectNameTextField.getInput().equals(projectNameTextField.getModelObject())) {
 							error("Another project with same name exists. Please try a different name");
 						} 
@@ -567,7 +575,7 @@ public class ProjectPage
 //                        return;
 //                    }
 
-                    if (repository.existsProject(project.getName()) && project.getId() != 0) {
+                    if (projectService.existsProject(project.getName()) && project.getId() != 0) {
                         error("project updated with name [" + project.getName() + "]");
                         return;
                     }
@@ -576,13 +584,13 @@ public class ProjectPage
                         try {
                             String username = SecurityContextHolder.getContext().getAuthentication()
                                     .getName();
-                            repository.createProject(project);
+                            projectService.createProject(project);
 
-                            repository.createProjectPermission(new ProjectPermission(project,
+                            projectService.createProjectPermission(new ProjectPermission(project,
                                     username, PermissionLevel.ADMIN));
-                            repository.createProjectPermission(new ProjectPermission(project,
+                            projectService.createProjectPermission(new ProjectPermission(project,
                                     username, PermissionLevel.CURATOR));
-                            repository.createProjectPermission(
+                            projectService.createProjectPermission(
                                     new ProjectPermission(project, username, PermissionLevel.USER));
 
                             annotationService.initializeTypesForProject(project);
@@ -597,7 +605,7 @@ public class ProjectPage
                         }
                     }
                     else {
-                        repository.updateProject(project);
+                        projectService.updateProject(project);
                     }
                 }
             });
@@ -651,11 +659,11 @@ public class ProjectPage
 
                     for (SourceDocument document : automationService
                             .listTabSepDocuments(project)) {
-                        repository.removeSourceDocument(document);
+                        documentService.removeSourceDocument(document);
                     }
                     // END: Remove automation stuff
 
-                    repository.removeProject(project);
+                    projectService.removeProject(project);
                     projectDetailForm.setModelObject(null);
                     projectSelectionForm.getModelObject().project = null;
                     target.add(ProjectPage.this);
@@ -708,39 +716,39 @@ public class ProjectPage
                         .readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
-                importedProject = ImportUtil.createProject(importedProjectSetting, repository,
+                importedProject = ImportUtil.createProject(importedProjectSetting, projectService,
                         userRepository);
 
                 Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
                         .createLayer(importedProject, importedProjectSetting, userRepository,
                                 annotationService);
                 ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
-                        repository, userRepository, featuresMap);
+                        documentService, userRepository, featuresMap);
                 ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
                         featuresMap);
                 ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
-                        repository);
+                        documentService);
                 ImportUtil.createProjectPermission(importedProjectSetting, importedProject,
-                        repository, aGenerateUsers, userRepository);
+                        projectService, aGenerateUsers, userRepository);
                 /*
                  * for (TagSet tagset : importedProjectSetting.getTagSets()) {
                  * ImportUtil.createTagset(importedProject, tagset, projectRepository,
                  * annotationService); }
                  */
                 // add source document content
-                ImportUtil.createSourceDocumentContent(zip, importedProject, repository);
+                ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
                 // add annotation document content
-                ImportUtil.createAnnotationDocumentContent(zip, importedProject, repository);
+                ImportUtil.createAnnotationDocumentContent(zip, importedProject, documentService);
                 // create curation document content
-                ImportUtil.createCurationDocumentContent(zip, importedProject, repository);
+                ImportUtil.createCurationDocumentContent(zip, importedProject, documentService);
                 // create project log
-                ImportUtil.createProjectLog(zip, importedProject, repository);
+                ImportUtil.createProjectLog(zip, importedProject, projectService);
                 // create project guideline
-                ImportUtil.createProjectGuideline(zip, importedProject, repository);
+                ImportUtil.createProjectGuideline(zip, importedProject, projectService);
                 // create project META-INF
-                ImportUtil.createProjectMetaInf(zip, importedProject, repository);
+                ImportUtil.createProjectMetaInf(zip, importedProject, projectService);
                 // create project constraint
-                ImportUtil.createProjectConstraint(zip, importedProject, repository);
+                ImportUtil.createProjectConstraint(zip, importedProject, constraintsService);
             }
             catch (Exception e) {
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
@@ -758,7 +766,7 @@ public class ProjectPage
      * Only admins and project managers can see this page
      */
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);

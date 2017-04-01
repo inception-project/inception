@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -39,10 +37,13 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -64,7 +65,10 @@ public class ProjectDocumentsPanel
     private AnnotationService annotationService;
     
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private ImportExportService importExportService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -85,7 +89,7 @@ public class ProjectDocumentsPanel
     {
         super(id);
         this.selectedProjectModel = aProjectModel;
-        readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
+        readableFormats = new ArrayList<String>(importExportService.getReadableFormatLabels());
         selectedFormat = readableFormats.get(0);
         
         add(fileUpload = new FileUploadField("content", new Model()));
@@ -114,7 +118,7 @@ public class ProjectDocumentsPanel
                 for (FileUpload documentToUpload : uploadedFiles) {
                     String fileName = documentToUpload.getClientFileName();
 
-                    if (repository.existsSourceDocument(project, fileName)) {
+                    if (documentService.existsSourceDocument(project, fileName)) {
                         error("Document " + fileName + " already uploaded ! Delete "
                                 + "the document if you want to upload again");
                         continue;
@@ -123,15 +127,15 @@ public class ProjectDocumentsPanel
                     try {
                         File uploadFile = documentToUpload.writeToTempFile();
 
-                        String format = repository.getReadableFormatId(readableFormatsChoice
-                                .getModelObject());
+                        String format = importExportService
+                                .getReadableFormatId(readableFormatsChoice.getModelObject());
 
                         SourceDocument document = new SourceDocument();
                         document.setName(fileName);
                         document.setProject(project);
                         document.setFormat(format);
                         
-                        repository.uploadSourceDocument(uploadFile, document);
+                        documentService.uploadSourceDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (Exception e) {
@@ -159,7 +163,7 @@ public class ProjectDocumentsPanel
                         Project project = selectedProjectModel.getObject();
                         documents.clear();
                         if (project.getId() != 0) {
-                            for (SourceDocument document : repository
+                            for (SourceDocument document : documentService
                                     .listSourceDocuments(project)) {
                                 if (!document.isTrainingDocument()) {
                                     documents.add(document.getName());
@@ -186,8 +190,8 @@ public class ProjectDocumentsPanel
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = userRepository.get(username);
-                        repository.removeSourceDocument(
-                                repository.getSourceDocument(project, document));
+                        documentService.removeSourceDocument(
+                                documentService.getSourceDocument(project, document));
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "

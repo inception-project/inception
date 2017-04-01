@@ -35,14 +35,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoCssReference;
 
 /**
  * Modal window to display annotation guidelines
- *
- *
  */
 public class GuidelineModalWindowPanel
     extends Panel
@@ -50,36 +48,59 @@ public class GuidelineModalWindowPanel
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService projectService;
+
+    private GuidelineForm guidelineForm;
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // Loading WebAnno CSS because this doesn't inherit from ApplicationPageBase
+        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
+    }
+
+    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow,
+            final IModel<AnnotatorState> aModel)
+    {
+        super(aId);
+        guidelineForm = new GuidelineForm("guidelineForm", modalWindow, aModel);
+        add(guidelineForm);
+    }
 
     private class GuidelineForm
         extends Form<AnnotatorState>
     {
         private static final long serialVersionUID = -4104665452144589457L;
 
-        public GuidelineForm(String id, final ModalWindow modalWindow, final IModel<AnnotatorState> aModel)
+        public GuidelineForm(String id, final ModalWindow modalWindow,
+                final IModel<AnnotatorState> aModel)
         {
             super(id, aModel);
 
             // Overall progress by Projects
             RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
             add(guidelineRepeater);
-                for (String guidelineFileName : repository.listGuidelines(getModelObject().getProject())) {
-                    AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
+            for (String guidelineFileName : projectService
+                    .listGuidelines(getModelObject().getProject())) {
+                AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
 
-                    guidelineRepeater.add(item);
+                guidelineRepeater.add(item);
 
-                 // Add a popup window link to display annotation guidelines
-                    PopupSettings popupSettings = new PopupSettings(PopupSettings.RESIZABLE
-                            | PopupSettings.SCROLLBARS).setHeight(500).setWidth(700);
+                // Add a popup window link to display annotation guidelines
+                PopupSettings popupSettings = new PopupSettings(
+                        PopupSettings.RESIZABLE | PopupSettings.SCROLLBARS).setHeight(500)
+                                .setWidth(700);
 
-                    IResourceStream stream = new FileResourceStream(repository.getGuideline(getModelObject().getProject(), guidelineFileName));
-                    ResourceStreamResource resource = new ResourceStreamResource(stream);
-                    ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
-                    rlink.setPopupSettings(popupSettings);
-                    item.add(new Label("guidelineName", guidelineFileName));
-                    item.add(rlink);
-                }
+                IResourceStream stream = new FileResourceStream(projectService
+                        .getGuideline(getModelObject().getProject(), guidelineFileName));
+                ResourceStreamResource resource = new ResourceStreamResource(stream);
+                ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
+                rlink.setPopupSettings(popupSettings);
+                item.add(new Label("guidelineName", guidelineFileName));
+                item.add(rlink);
+            }
             add(new AjaxLink<Void>("close")
             {
                 private static final long serialVersionUID = 7202600912406469768L;
@@ -92,23 +113,4 @@ public class GuidelineModalWindowPanel
             });
         }
     }
-    
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        // Loading WebAnno CSS because this doesn't inherit from ApplicationPageBase
-        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
-    }
-
-    private GuidelineForm guidelineForm;
-
-    public GuidelineModalWindowPanel(String aId, final ModalWindow modalWindow, final IModel<AnnotatorState> aModel)
-    {
-        super(aId);
-        guidelineForm = new GuidelineForm("guidelineForm", modalWindow, aModel);
-        add(guidelineForm);
-    }
-
 }

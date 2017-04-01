@@ -29,22 +29,15 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 
 /**
- * A panel that is used to display a {@link TextField} or {@link Label} to add/display help contents
- *
- *
+ * A panel that is used to display a {@link TextField} or {@link Label} to add/display help
+ * contents.
  */
 public class HelpModalWindowPanel
     extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
-
-    @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
 
     private class HelpDialogForm
         extends Form<SelectionModel>
@@ -55,8 +48,10 @@ public class HelpModalWindowPanel
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
             add(new MultiLineLabel("helpContent", helpDataModel).setEscapeModelStrings(false));
-          /*  add(new TextArea<String>("helpContent", helpDataModel)
-                    .setOutputMarkupPlaceholderTag(true));*/
+            /*
+             * add(new TextArea<String>("helpContent", helpDataModel)
+             * .setOutputMarkupPlaceholderTag(true));
+             */
             add(new AjaxButton("close")
             {
                 private static final long serialVersionUID = 8922161039500097566L;

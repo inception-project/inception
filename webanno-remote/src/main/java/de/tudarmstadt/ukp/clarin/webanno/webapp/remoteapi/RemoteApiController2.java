@@ -71,7 +71,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -128,7 +130,13 @@ public class RemoteApiController2
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Resource(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @Resource(name = "documentRepository")
+    private ProjectService projectService;
+
+    @Resource(name = "documentRepository")
+    private ImportExportService importExportService;
 
     @Resource(name = "annotationService")
     private AnnotationService annotationService;
@@ -185,7 +193,7 @@ public class RemoteApiController2
         // Get project
         Project project;
         try {
-            project = repository.getProject(aProjectId);
+            project = projectService.getProject(aProjectId);
         }
         catch (NoResultException e) {
             throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
@@ -195,8 +203,8 @@ public class RemoteApiController2
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                isProjectAdmin(project, repository, user)
-                        || isSuperAdmin(repository, user));
+                isProjectAdmin(project, projectService, user)
+                        || isSuperAdmin(projectService, user));
         
         return project;
     }
@@ -205,7 +213,7 @@ public class RemoteApiController2
         throws ObjectNotFoundException
     {
         try {
-            return repository.getSourceDocument(aProject.getId(), aDocumentId);
+            return documentService.getSourceDocument(aProject.getId(), aDocumentId);
         }
         catch (NoResultException e) {
             throw new ObjectNotFoundException(
@@ -219,10 +227,10 @@ public class RemoteApiController2
     {
         try {
             if (aCreateIfMissing) {
-                return repository.createOrGetAnnotationDocument(aDocument, getUser(aUser));
+                return documentService.createOrGetAnnotationDocument(aDocument, getUser(aUser));
             }
             else {
-                return repository.getAnnotationDocument(aDocument, getUser(aUser));
+                return documentService.getAnnotationDocument(aDocument, getUser(aUser));
             }
         }
         catch (NoResultException e) {
@@ -252,7 +260,7 @@ public class RemoteApiController2
         User user = getCurrentUser();
 
         // Get projects with permission
-        List<Project> accessibleProjects = repository.listAccessibleProjects(user);
+        List<Project> accessibleProjects = projectService.listAccessibleProjects(user);
 
         // Collect all the projects
         List<RProject> projectList = new ArrayList<>();
@@ -279,17 +287,17 @@ public class RemoteApiController2
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to create projects",
-                isProjectCreator(repository, user) || isSuperAdmin(repository, user));
+                isProjectCreator(projectService, user) || isSuperAdmin(projectService, user));
         
         // Check if the user can create projects for another user
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to create projects for user ["
                         + aCreator.orElse("<unspecified>") + "]",
-                isSuperAdmin(repository, user)
+                isSuperAdmin(projectService, user)
                         || (aCreator.isPresent() && aCreator.equals(user.getUsername())));
         
         // Existing project
-        if (repository.existsProject(aName)) {
+        if (projectService.existsProject(aName)) {
             throw new ObjectExistsException("A project with name [" + aName + "] already exists");
         }
 
@@ -297,16 +305,16 @@ public class RemoteApiController2
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
-        repository.createProject(project);
+        projectService.createProject(project);
         annotationService.initializeTypesForProject(project);
         
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
-        repository.createProjectPermission(
+        projectService.createProjectPermission(
                 new ProjectPermission(project, owner, PermissionLevel.ADMIN));
-        repository.createProjectPermission(
+        projectService.createProjectPermission(
                 new ProjectPermission(project, owner, PermissionLevel.CURATOR));
-        repository.createProjectPermission(
+        projectService.createProjectPermission(
                 new ProjectPermission(project, owner, PermissionLevel.USER));
         
         RProject response = new RProject(project);
@@ -342,7 +350,7 @@ public class RemoteApiController2
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        repository.removeProject(project);
+        projectService.removeProject(project);
         return ResponseEntity.ok("Project [" + aProjectId + "] deleted.");
     }
 
@@ -358,7 +366,7 @@ public class RemoteApiController2
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        List<SourceDocument> documents = repository.listSourceDocuments(project);
+        List<SourceDocument> documents = documentService.listSourceDocuments(project);
         
         List<RDocument> documentList = new ArrayList<>();
         for (SourceDocument document : documents) { 
@@ -386,7 +394,8 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
 
         // Check if the format is supported
-        Map<String, Class<CollectionReader>> readableFormats = repository.getReadableFormats();
+        Map<String, Class<CollectionReader>> readableFormats = importExportService
+                .getReadableFormats();
         if (readableFormats.get(aFormat) == null) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", aFormat,
@@ -398,11 +407,11 @@ public class RemoteApiController2
         document.setProject(project);
         document.setName(aName);
         document.setFormat(aFormat);
-        repository.createSourceDocument(document);
+        documentService.createSourceDocument(document);
         
         // Import source document to the project repository folder
         try (InputStream is = aFile.getInputStream()) {
-            repository.uploadSourceDocument(is, document);
+            documentService.uploadSourceDocument(is, document);
         }
         
         RDocument rDocument = new RDocument(document);
@@ -450,7 +459,7 @@ public class RemoteApiController2
         if (originalFile) {
             // Export the original file - no temporary file created here, we export directly from
             // the file system
-            File docFile = repository.getSourceDocumentFile(doc);
+            File docFile = documentService.getSourceDocumentFile(doc);
             FileSystemResource resource = new FileSystemResource(docFile);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.contentLength());
@@ -463,7 +472,7 @@ public class RemoteApiController2
             // send that back to the client
             
             // Check if the format is supported
-            Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = repository
+            Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = importExportService
                     .getWritableFormats();
             Class<JCasAnnotator_ImplBase> writer = writableFormats.get(format);
             if (writer == null) {
@@ -473,13 +482,13 @@ public class RemoteApiController2
             }
             
             // Create a temporary export file from the annotations
-            JCas jcas = repository.createOrReadInitialCas(doc);
+            JCas jcas = documentService.createOrReadInitialCas(doc);
             
             File exportedFile = null;
             try {
                 // Load the converted file into memory
-                exportedFile = repository.exportCasToFile(jcas.getCas(), doc, doc.getName(),
-                        writer, true);
+                exportedFile = importExportService.exportCasToFile(jcas.getCas(), doc,
+                        doc.getName(), writer, true);
                 byte[] resource = FileUtils.readFileToByteArray(exportedFile);
                 
                 // Send it back to the client
@@ -512,7 +521,7 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
         
         SourceDocument doc = getDocument(project, aDocumentId);
-        repository.removeSourceDocument(doc);
+        documentService.removeSourceDocument(doc);
         
         return ResponseEntity
                 .ok("Document [" + aDocumentId + "] deleted from project [" + aProjectId + "].");
@@ -534,7 +543,7 @@ public class RemoteApiController2
         
         SourceDocument doc = getDocument(project, aDocumentId);
         
-        List<AnnotationDocument> annotations = repository.listAnnotationDocuments(doc);
+        List<AnnotationDocument> annotations = documentService.listAnnotationDocuments(doc);
 
         List<RAnnotation> annotationList = new ArrayList<>();
         for (AnnotationDocument annotation : annotations) { 
@@ -567,7 +576,8 @@ public class RemoteApiController2
     
         // Check if the format is supported
         String format = aFormat.orElse(FORMAT_DEFAULT);
-        Map<String, Class<CollectionReader>> readableFormats = repository.getReadableFormats();
+        Map<String, Class<CollectionReader>> readableFormats = importExportService
+                .getReadableFormats();
         if (readableFormats.get(format) == null) {
             throw new UnsupportedFormatException(
                     "Format [%s] not supported. Acceptable formats are %s.", format,
@@ -580,7 +590,7 @@ public class RemoteApiController2
         try {
             tmpFile = File.createTempFile("upload", ".bin");
             aFile.transferTo(tmpFile);
-            annotationCas = repository.importCasFromFile(tmpFile, project, format);
+            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
         }
         finally {
             if (tmpFile != null) {
@@ -591,7 +601,7 @@ public class RemoteApiController2
         // Check if the uploaded file is compatible with the source document. They are compatible
         // if the text is the same and if all the token and sentence annotations have the same
         // offsets.
-        JCas initialCas = repository.createOrReadInitialCas(document);
+        JCas initialCas = documentService.createOrReadInitialCas(document);
         String initialText = initialCas.getDocumentText();
         String annotationText = annotationCas.getDocumentText();
         
@@ -640,7 +650,7 @@ public class RemoteApiController2
         assertCompatibleOffsets(initialTokens, annotationTokens);
         
         // If they are compatible, then we can store the new annotations
-        repository.writeCas(Mode.ANNOTATION, document, annotator, annotationCas);
+        documentService.writeCas(Mode.ANNOTATION, document, annotator, annotationCas);
         
         RAnnotation response = new RAnnotation(anno);
         return ResponseEntity.created(aUcb
@@ -683,7 +693,7 @@ public class RemoteApiController2
         }
         
         // Determine the format
-        Class<?> writer = repository.getWritableFormats().get(format);
+        Class<?> writer = importExportService.getWritableFormats().get(format);
         if (writer == null) {
             String msg = "[" + doc.getName() + "] No writer found for format [" + format
                     + "] - exporting as WebAnno TSV instead.";
@@ -699,8 +709,8 @@ public class RemoteApiController2
         File exportedAnnoFile = null;
         byte[] resource;
         try {
-            exportedAnnoFile = repository.exportAnnotationDocument(doc, anno.getUser(), writer,
-                    doc.getName(), Mode.ANNOTATION);
+            exportedAnnoFile = importExportService.exportAnnotationDocument(doc, anno.getUser(),
+                    writer, doc.getName(), Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
         }
         finally {

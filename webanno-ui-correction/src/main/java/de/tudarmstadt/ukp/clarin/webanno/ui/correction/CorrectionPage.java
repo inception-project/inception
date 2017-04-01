@@ -92,7 +92,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUse
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CuratorUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -222,9 +221,8 @@ public class CorrectionPage
                     JCas editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    CuratorUtil.updatePanel(aTarget, this, curationContainer, annotationEditor,
-                            repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, userRepository);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
+                            curationSegment);
                     
                     annotationEditor.render(aTarget, editorCas);
                     aTarget.add(getOrCreatePositionInfoLabel());
@@ -389,9 +387,8 @@ public class CorrectionPage
                     setCurationSegmentBeginEnd(editorCas);
                     curationContainer.setBratAnnotatorModel(state);
 
-                    CuratorUtil.updatePanel(aTarget, suggestionView, curationContainer, annotationEditor,
-                            repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                            annotationService, userRepository);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
+                            curationSegment);
                     
                     update(aTarget);
                 }
@@ -493,9 +490,8 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        CuratorUtil.updatePanel(target, suggestionView, curationContainer, annotationEditor,
-                repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                annotationService, userRepository);
+        suggestionView.updatePanel(target, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
+                curationSegment);
 
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
 
@@ -579,9 +575,8 @@ public class CorrectionPage
         annotationEditor.renderLater(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
-        CuratorUtil.updatePanel(aTarget, suggestionView, curationContainer, annotationEditor,
-                repository, annotationSelectionByUsernameAndAddress, curationSegment,
-                annotationService, userRepository);
+        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
+                curationSegment);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)

@@ -315,7 +315,7 @@ public class SuggestionBuilder
     }
 
 
-    public Map<String, JCas> listJcasesforCorrection(AnnotationDocument randomAnnotationDocument,
+    private Map<String, JCas> listJcasesforCorrection(AnnotationDocument randomAnnotationDocument,
             SourceDocument aDocument, Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {

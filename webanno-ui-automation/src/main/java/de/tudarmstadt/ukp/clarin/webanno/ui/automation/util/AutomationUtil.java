@@ -117,7 +117,7 @@ public class AutomationUtil
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aBModel.getUser());
+            loadDocument(d, aRepository, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
@@ -146,7 +146,7 @@ public class AutomationUtil
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aBModel.getUser());
+            loadDocument(d, aRepository, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
 
             ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
@@ -278,43 +278,43 @@ public class AutomationUtil
      * Repeat annotation will repeat annotations of same pattern to all documents on the project
      * load CAS from document in case no initial CORRECTION_CAS is not created before
      */
-    public static void loadDocument(SourceDocument aDocument, RepositoryService aRepository,
-            User logedInUser)
-                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    public static void loadDocument(SourceDocument aDocument, DocumentService aDocumentService,
+            CorrectionDocumentService aCorrectionDocumentService, User logedInUser)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas jCas = null;
-        if (!aRepository.existsCorrectionCas(aDocument)) {
+        if (!aCorrectionDocumentService.existsCorrectionCas(aDocument)) {
             try {
-                AnnotationDocument logedInUserAnnotationDocument = aRepository
+                AnnotationDocument logedInUserAnnotationDocument = aDocumentService
                         .getAnnotationDocument(aDocument, logedInUser);
-                jCas = aRepository.readAnnotationCas(logedInUserAnnotationDocument);
-                aRepository.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
-                aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
+                jCas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
+                aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
             catch (IOException e) {
                 throw e;
             }
             catch (DataRetrievalFailureException e) {
-                jCas = aRepository.readAnnotationCas(
-                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                jCas = aDocumentService.readAnnotationCas(
+                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aRepository.upgradeCas(jCas.getCas(),
-                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
+                aDocumentService.upgradeCas(jCas.getCas(),
+                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
             catch (NoResultException e) {
-                jCas = aRepository.readAnnotationCas(
-                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
+                jCas = aDocumentService.readAnnotationCas(
+                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aRepository.upgradeCas(jCas.getCas(),
-                        aRepository.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aRepository.writeCorrectionCas(jCas, aDocument, logedInUser);
+                aDocumentService.upgradeCas(jCas.getCas(),
+                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
             }
         }
         else {
-            jCas = aRepository.readCorrectionCas(aDocument);
+            jCas = aCorrectionDocumentService.readCorrectionCas(aDocument);
             // upgrade this automation cas
-            aRepository.upgradeCorrectionCas(jCas.getCas(), aDocument);
+            aCorrectionDocumentService.upgradeCorrectionCas(jCas.getCas(), aDocument);
         }
     }
 
@@ -334,7 +334,7 @@ public class AutomationUtil
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aBModel.getUser());
+            loadDocument(d, aRepository, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
 
             AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
@@ -356,20 +356,16 @@ public class AutomationUtil
         }
     }
 
-    /**
-     * 
-     */
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
             RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
             AnnotationFeature aFeature, String aValue)
                 throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-
         for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aBModel.getUser());
+            loadDocument(d, aRepository, aRepository, aBModel.getUser());
             JCas jCas = aRepository.readCorrectionCas(d);
             ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
