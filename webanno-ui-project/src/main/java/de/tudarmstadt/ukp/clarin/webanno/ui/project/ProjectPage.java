@@ -120,13 +120,13 @@ public class ProjectPage
     @SpringBean(name = "automationService")
     private AutomationService automationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
     
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
     @SpringBean(name = "userRepository")

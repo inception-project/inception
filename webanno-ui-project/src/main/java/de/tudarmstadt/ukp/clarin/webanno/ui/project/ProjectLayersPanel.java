@@ -103,7 +103,7 @@ public class ProjectLayersPanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService repository;
 
     @SpringBean(name = "userRepository")

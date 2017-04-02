@@ -79,7 +79,7 @@ public class CurationPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(CurationPanel.class);
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")

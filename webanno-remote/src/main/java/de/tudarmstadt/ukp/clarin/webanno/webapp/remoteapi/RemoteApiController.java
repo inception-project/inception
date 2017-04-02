@@ -95,13 +95,13 @@ public class RemoteApiController
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "projectService")
     private ProjectService projectRepository;
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "documentService")
     private DocumentService documentRepository;
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "importExportService")
     private ImportExportService importExportService;
 
     @Resource(name = "annotationService")

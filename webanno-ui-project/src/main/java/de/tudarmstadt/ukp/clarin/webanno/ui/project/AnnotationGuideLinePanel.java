@@ -53,7 +53,7 @@ public class AnnotationGuideLinePanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectRepository;
 
     private ArrayList<String> documents = new ArrayList<String>();

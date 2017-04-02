@@ -505,7 +505,7 @@ public class SuggestionBuilder
         mergeJCas = MergeCas.geMergeCas(diff, jCases);
 
         curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn);
+                userLoggedIn, false);
         return mergeJCas;
     }
     

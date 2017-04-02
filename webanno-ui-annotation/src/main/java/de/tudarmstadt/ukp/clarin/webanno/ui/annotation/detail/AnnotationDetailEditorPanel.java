@@ -142,10 +142,10 @@ public class AnnotationDetailEditorPanel
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
 
-    @SpringBean(name = "documentRepository")
-    private ProjectService repository;
+    @SpringBean(name = "projectService")
+    private ProjectService projectService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
@@ -1378,7 +1378,7 @@ public class AnnotationDetailEditorPanel
         state.getDocument().setSentenceAccessed(sentenceNumber);
     
         // persist changes
-        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
+        writeEditorCas(aJCas);
     
         // Remember the current feature values independently for spans and relations
         LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
@@ -1555,7 +1555,7 @@ public class AnnotationDetailEditorPanel
         adapter.delete(jCas, state.getSelection().getAnnotation());
 
         // Store CAS again
-        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
+        writeEditorCas(jCas);
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
@@ -1621,7 +1621,7 @@ public class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        documentService.writeCas(state.getMode(), state.getDocument(), state.getUser(), jCas);
+        writeEditorCas(jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         state.setFocusSentenceNumber(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
@@ -1661,6 +1661,20 @@ public class AnnotationDetailEditorPanel
         }
         else {
             return curationDocumentService.readCurationCas(state.getDocument());
+        }
+    }
+    
+    public void writeEditorCas(JCas aJCas)
+        throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
+                || state.getMode().equals(Mode.CORRECTION)) {
+            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
+        }
+        else if (state.getMode().equals(Mode.CURATION)) {
+            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), state.getUser(),
+                    true);
         }
     }
 

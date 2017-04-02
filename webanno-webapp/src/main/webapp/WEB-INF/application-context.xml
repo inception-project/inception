@@ -70,17 +70,36 @@
         class="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl">
     </bean>
 
-	<bean id="annotationService"
-		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationServiceImpl">
-	</bean>
+    <bean id="annotationService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationServiceImpl">
+    </bean>
+  
+    <bean id="casStorageService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl">
+    </bean>
+
+    <bean id="projectService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ProjectServiceImpl">
+    </bean>
+
+    <bean id="importExportService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl">
+    </bean>
 
     <bean id="automationService"
         class="de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.MiraAutomationServiceImpl">
     </bean>
 
+    <bean id="constraintsService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ConstraintsServiceImpl">
+    </bean>
+
+    <bean id="documentService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl">
+    </bean>
+
 	<bean id="documentRepository"
 		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryServiceDbData">
-		<property name="annotationPreferencePropertiesFileName" value="annotation.properties" />
 	</bean>
 
 	<bean id="applicationContextProvider"

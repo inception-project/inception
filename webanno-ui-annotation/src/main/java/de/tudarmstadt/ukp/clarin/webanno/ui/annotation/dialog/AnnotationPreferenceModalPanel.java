@@ -63,7 +63,7 @@ public class AnnotationPreferenceModalPanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
     private final AnnotationLayerDetailForm tagSelectionForm;

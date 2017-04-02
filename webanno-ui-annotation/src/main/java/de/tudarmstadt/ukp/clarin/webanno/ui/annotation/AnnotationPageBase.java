@@ -57,7 +57,7 @@ public abstract class AnnotationPageBase
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
     
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
     
     private ChallengeResponseDialog resetDocumentDialog;
@@ -214,7 +214,7 @@ public abstract class AnnotationPageBase
     {
         AnnotatorState state = getModelObject();
         JCas jcas = documentService.createOrReadInitialCas(state.getDocument());
-        documentService.writeAnnotationCas(jcas, state.getDocument(), state.getUser());
+        documentService.writeAnnotationCas(jcas, state.getDocument(), state.getUser(), false);
         actionLoadDocument(aTarget);
     }
 

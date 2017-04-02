@@ -112,7 +112,7 @@ public class SuggestionViewPanel
     
     private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
     
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
@@ -292,8 +292,7 @@ public class SuggestionViewPanel
 
         MergeCas.addSpanAnnotation(aMergeJCas, fsClicked, annotationService.getLayer(layerId).isAllowStacking());
 
-        documentService
-                .writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), aMergeJCas);
+        writeEditorCas(aBModel, aMergeJCas);
 
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, fsClicked.getBegin());
@@ -359,7 +358,7 @@ public class SuggestionViewPanel
         MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
                 clickedJCas, annotationService.listAnnotationFeature(layer), clickedFS,
                 layer.getAttachType()!=null, layer.isAllowStacking());
-        documentService.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
+        writeEditorCas(bModel, aJcas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
         bModel.setFocusSentenceNumber(sentenceNumber);
@@ -385,6 +384,19 @@ public class SuggestionViewPanel
         }
         else {
             return documentService.readAnnotationCas(aDocument);
+        }
+    }
+    
+    private void writeEditorCas(AnnotatorState aState, JCas aJCas)
+        throws IOException
+    {
+        if (aState.getMode().equals(Mode.ANNOTATION) || aState.getMode().equals(Mode.AUTOMATION)
+                || aState.getMode().equals(Mode.CORRECTION)) {
+            documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
+        }
+        else if (aState.getMode().equals(Mode.CURATION)) {
+            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), aState.getUser(),
+                    true);
         }
     }
 

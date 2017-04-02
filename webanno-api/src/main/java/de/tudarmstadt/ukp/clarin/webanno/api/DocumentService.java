@@ -64,27 +64,10 @@ public interface DocumentService
      *             if an I/O error occurs.
      * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
      *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
-     *             {@link #writeAnnotationCas(JCas, SourceDocument, User)}
+     *             {@link #writeAnnotationCas(JCas, SourceDocument, User, boolean)}
      */
     @Deprecated
     void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
-        throws IOException;
-
-    /**
-     * Save the modified CAS in the file system as Serialized CAS
-     *
-     * @param mode
-     *            the mode.
-     * @param document
-     *            the source document.
-     * @param user
-     *            the user.
-     * @param jCas
-     *            the JCas.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void writeCas(Mode mode, SourceDocument document, User user, JCas jCas)
         throws IOException;
 
     // --------------------------------------------------------------------------------------------
@@ -238,7 +221,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, SourceDocument document, User user)
+    void writeAnnotationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**

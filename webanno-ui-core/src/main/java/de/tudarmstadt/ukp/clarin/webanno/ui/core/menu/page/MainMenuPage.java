@@ -54,8 +54,8 @@ public class MainMenuPage
 {
     private static final long serialVersionUID = -2487663821276301436L;
 
-    @SpringBean(name = "documentRepository")
-    private ProjectService repository;
+    @SpringBean(name = "projectService")
+    private ProjectService projectService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -86,10 +86,10 @@ public class MainMenuPage
         
         // if not either a curator or annotator, display warning message
         if (
-            !annotationEnabeled(repository, user, Mode.ANNOTATION) && 
-            !annotationEnabeled(repository, user, Mode.AUTOMATION) && 
-            !annotationEnabeled(repository, user, Mode.CORRECTION) && 
-            !curationEnabeled(repository, user)) {
+            !annotationEnabeled(projectService, user, Mode.ANNOTATION) && 
+            !annotationEnabeled(projectService, user, Mode.AUTOMATION) && 
+            !annotationEnabeled(projectService, user, Mode.CORRECTION) && 
+            !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }
         

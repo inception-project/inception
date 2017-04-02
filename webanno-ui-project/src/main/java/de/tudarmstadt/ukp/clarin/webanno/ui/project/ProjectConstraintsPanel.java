@@ -55,9 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 
 /**
- * A Panel used to add Project Constraints Rules in a selected {@link Project}
- *
- *
+ * A Panel used to add Project Constraints Rules in a selected {@link Project}.
  */
 public class ProjectConstraintsPanel
     extends Panel
@@ -66,7 +64,7 @@ public class ProjectConstraintsPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectConstraintsPanel.class);
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
     private SelectionForm selectionForm;

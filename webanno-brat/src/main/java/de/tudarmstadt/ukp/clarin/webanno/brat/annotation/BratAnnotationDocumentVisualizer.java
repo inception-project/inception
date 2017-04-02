@@ -69,7 +69,7 @@ public class BratAnnotationDocumentVisualizer
 
     private String docData = EMPTY_DOC;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService repository;
 
     @Resource(name = "annotationService")

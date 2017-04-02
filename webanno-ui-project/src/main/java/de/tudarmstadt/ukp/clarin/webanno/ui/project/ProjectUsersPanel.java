@@ -50,7 +50,7 @@ public class ProjectUsersPanel
 {
     private static final long serialVersionUID = 875749625429630464L;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectRepository;
 
     @SpringBean(name = "userRepository")

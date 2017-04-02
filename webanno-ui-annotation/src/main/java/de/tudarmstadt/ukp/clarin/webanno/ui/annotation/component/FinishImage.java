@@ -41,7 +41,7 @@ public class FinishImage
 
     private static final long serialVersionUID = -4931039843586219625L;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "userRepository")

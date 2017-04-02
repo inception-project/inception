@@ -1,0 +1,228 @@
+package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Map.Entry;
+
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
+import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+
+public class ConstraintsServiceImpl
+    implements ConstraintsService
+{
+    private static final String CONSTRAINTS = "/constraints/";
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Value(value = "${repository.path}")
+    private File dir;
+
+    public ConstraintsServiceImpl()
+    {
+        // Nothing to do
+    }
+
+    @Override
+    @Transactional
+    public List<ConstraintSet> listConstraintSets(Project aProject)
+    {
+        return entityManager
+                .createQuery("FROM ConstraintSet WHERE project = :project ORDER BY name ASC ",
+                        ConstraintSet.class).setParameter("project", aProject).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public void createConstraintSet(ConstraintSet aSet)
+    {
+        entityManager.persist(aSet);
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Created constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeConstraintSet(ConstraintSet aSet)
+    {
+        entityManager.remove(entityManager.merge(aSet));
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Removed constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
+    }
+
+    @Override
+    public String readConstrainSet(ConstraintSet aSet)
+        throws IOException
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
+        String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Read constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
+        
+        return data;
+    }
+
+    @Override
+    public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
+        throws IOException
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
+        FileUtils.forceMkdir(new File(constraintRulesPath));
+        FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
+
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aSet.getProject().getId()))) {
+            log.info("Saved constraints set [{}] in project [{}]({})",
+                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+        }
+    }
+    
+    /**
+     * Provides exporting constraints as a file.
+     */
+    @Override
+    public File exportConstraintAsFile(ConstraintSet aSet)
+    {
+        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
+                + CONSTRAINTS;
+        String filename = aSet.getId() + ".txt";
+        File constraintsFile = new File(constraintRulesPath, filename);
+        if (constraintsFile.exists()) {
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aSet.getProject().getId()))) {
+                log.info("Exported constraints set [{}] from project [{}]({})",
+                        aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            }
+            return constraintsFile;
+        }
+        else {
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aSet.getProject().getId()))) {
+                log.info("Unable to read constraints set file [{}] in project [{}]({})",
+                        filename, aSet.getProject().getName(), aSet.getProject().getId());
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Checks if there's a constraint set already with the name
+     * @param constraintSetName The name of constraint set
+     * @return true if exists
+     */
+    @Override
+    public boolean existConstraintSet(String constraintSetName, Project aProject){
+        
+        try {
+            entityManager.createQuery("FROM ConstraintSet WHERE project = :project" 
+                            + " AND name = :name ", ConstraintSet.class)
+                    .setParameter("project", aProject).
+                    setParameter("name", constraintSetName)
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+        
+    }
+    
+    @Override
+    public ParsedConstraints loadConstraints(Project aProject)
+            throws IOException, ParseException
+    {
+        ParsedConstraints merged = null;
+
+        for (ConstraintSet set : listConstraintSets(aProject)) {
+            String script = readConstrainSet(set);
+            ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
+            Parse p = parser.Parse();
+            ParsedConstraints constraints = p.accept(new ParserVisitor());
+
+            if (merged == null) {
+                merged = constraints;
+            }
+            else {
+                // Merge imports
+                for (Entry<String, String> e : constraints.getImports().entrySet()) {
+                    // Check if the value already points to some other feature in previous
+                    // constraint file(s).
+                    if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
+                            .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
+                        // If detected, notify user with proper message and abort merging
+                        StringBuffer errorMessage = new StringBuffer();
+                        errorMessage.append("Conflict detected in imports for key \"");
+                        errorMessage.append(e.getKey());
+                        errorMessage.append("\", conflicting values are \"");
+                        errorMessage.append(e.getValue());
+                        errorMessage.append("\" & \"");
+                        errorMessage.append(merged.getImports().get(e.getKey()));
+                        errorMessage.append(
+                                "\". Please contact Project Admin for correcting this. Constraints feature may not work.");
+                        errorMessage.append("\nAborting Constraint rules merge!");
+                        throw new ParseException(errorMessage.toString());
+                    }
+                }
+                merged.getImports().putAll(constraints.getImports());
+
+                // Merge scopes
+                for (Scope scope : constraints.getScopes()) {
+                    Scope target = merged.getScopeByName(scope.getScopeName());
+                    if (target == null) {
+                        // Scope does not exist yet
+                        merged.getScopes().add(scope);
+                    }
+                    else {
+                        // Scope already exists
+                        target.getRules().addAll(scope.getRules());
+                    }
+                }
+            }
+        }
+
+        return merged;
+    }
+}

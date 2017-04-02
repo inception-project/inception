@@ -62,10 +62,10 @@ public class ProjectTrainingDocumentsPanel
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
     
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "importExportService")
     private ImportExportService importExportService;
 
     @SpringBean(name = "automationService")

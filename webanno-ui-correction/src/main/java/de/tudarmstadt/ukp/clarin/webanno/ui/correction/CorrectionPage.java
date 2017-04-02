@@ -110,7 +110,7 @@ public class CorrectionPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
@@ -119,10 +119,10 @@ public class CorrectionPage
     @SpringBean(name = "documentRepository")
     private CorrectionDocumentService correctionDocumentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
     @SpringBean(name = "documentRepository")
@@ -622,7 +622,7 @@ public class CorrectionPage
         JCas editorCas = documentService.createOrReadInitialCas(state.getDocument());
         editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas, state.getDocument(),
                 state.getUser(), documentService);
-        documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser());
+        documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser(), false);
         actionLoadDocument(aTarget);
     }
     
@@ -697,7 +697,7 @@ public class CorrectionPage
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), user);
+                    annotationDocument.getDocument(), user, false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS

@@ -103,7 +103,7 @@ public class CurationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
     
     @SpringBean(name = "documentRepository")
@@ -112,10 +112,10 @@ public class CurationPage
     @SpringBean(name = "documentRepository")
     private CurationDocumentService curationDocumentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
     @SpringBean(name = "documentRepository")

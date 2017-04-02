@@ -129,13 +129,13 @@ public class RemoteApiController2
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "documentService")
     private DocumentService documentService;
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "projectService")
     private ProjectService projectService;
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "importExportService")
     private ImportExportService importExportService;
 
     @Resource(name = "annotationService")
@@ -650,7 +650,7 @@ public class RemoteApiController2
         assertCompatibleOffsets(initialTokens, annotationTokens);
         
         // If they are compatible, then we can store the new annotations
-        documentService.writeCas(Mode.ANNOTATION, document, annotator, annotationCas);
+        documentService.writeAnnotationCas(annotationCas, document, annotator, false);
         
         RAnnotation response = new RAnnotation(anno);
         return ResponseEntity.created(aUcb

@@ -47,7 +47,7 @@ public class GuidelineModalWindowPanel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
     private GuidelineForm guidelineForm;

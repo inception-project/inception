@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
@@ -384,4 +387,9 @@ public interface AnnotationService
     TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
             String[] aTagDescription, Project aProject)
                 throws IOException;
+    
+    List<TypeSystemDescription> getProjectTypes(Project aProject);
+    
+    void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
+            throws UIMAException, IOException;
 }

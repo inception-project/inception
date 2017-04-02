@@ -45,7 +45,7 @@ public class MenuItemServiceImpl
 
     private List<MenuItem> menuItems;
 
-    @Resource(name = "documentRepository")
+    @Resource(name = "projectService")
     private ProjectService projectService;
 
     @Resource(name = "userRepository")

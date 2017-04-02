@@ -115,7 +115,7 @@ public class BratAnnotatorUtility
         }
 
         
-        repository.writeAnnotationCas(target, aSourceDocument, aUser);
+        repository.writeAnnotationCas(target, aSourceDocument, aUser, false);
         return target;
     }
 }

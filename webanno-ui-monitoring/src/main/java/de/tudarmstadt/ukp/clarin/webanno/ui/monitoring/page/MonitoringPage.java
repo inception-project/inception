@@ -179,10 +179,10 @@ public class MonitoringPage
     @SpringBean(name = "automationService")
     private AutomationService automationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
     @SpringBean(name = "userRepository")

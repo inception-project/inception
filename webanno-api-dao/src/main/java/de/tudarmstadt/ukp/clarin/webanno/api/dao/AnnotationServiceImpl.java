@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +33,18 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.impl.Serialization;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
+import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -40,10 +53,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -845,4 +860,129 @@ public class AnnotationServiceImpl
 			entityManager.remove(tag);
 		}
 	}
+	
+    @Override
+    public List<TypeSystemDescription> getProjectTypes(Project aProject)
+    {
+        // Create a new type system from scratch
+        List<TypeSystemDescription> types = new ArrayList<TypeSystemDescription>();
+        for (AnnotationLayer type : listAnnotationLayer(aProject)) {
+            if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
+                TypeSystemDescription tsd = new TypeSystemDescription_impl();
+                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+                List<AnnotationFeature> features = listAnnotationFeature(type);
+                for (AnnotationFeature feature : features) {
+                    generateFeature(tsd, td, feature);
+                }
+
+                types.add(tsd);
+            }
+            else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
+                TypeSystemDescription tsd = new TypeSystemDescription_impl();
+                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+                AnnotationLayer attachType = type.getAttachType();
+
+                td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
+                td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
+
+                List<AnnotationFeature> features = listAnnotationFeature(type);
+                for (AnnotationFeature feature : features) {
+                    generateFeature(tsd, td, feature);
+                }
+
+                types.add(tsd);
+            }
+            else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
+                TypeSystemDescription tsdchains = new TypeSystemDescription_impl();
+                TypeDescription tdChains = tsdchains.addType(type.getName() + "Chain", "",
+                        CAS.TYPE_NAME_ANNOTATION);
+                tdChains.addFeature("first", "", type.getName() + "Link");
+                types.add(tsdchains);
+
+                TypeSystemDescription tsdLink = new TypeSystemDescription_impl();
+                TypeDescription tdLink = tsdLink.addType(type.getName() + "Link", "",
+                        CAS.TYPE_NAME_ANNOTATION);
+                tdLink.addFeature("next", "", type.getName() + "Link");
+                tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
+                tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+                types.add(tsdLink);
+            }
+        }
+
+        return types;
+    }
+    
+    private void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature)
+    {
+        switch (aFeature.getMultiValueMode()) {
+        case NONE:
+            aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+            break;
+        case ARRAY: {
+            switch (aFeature.getLinkMode()) {
+            case WITH_ROLE: {
+                // Link type
+                TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
+                        CAS.TYPE_NAME_TOP);
+                linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
+                linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+                // Link feature
+                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
+                        false);
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported link mode ["
+                        + aFeature.getLinkMode() + "] on feature [" + aFeature.getName() + "]");
+            }
+            break;
+        }
+        default:
+            throw new IllegalArgumentException("Unsupported multi-value mode ["
+                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
+        }
+    }
+
+    public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
+                .createTypeSystemDescription();
+        List<TypeSystemDescription> projectTypes = getProjectTypes(aSourceDocument.getProject());
+        projectTypes.add(builtInTypes);
+        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(projectTypes);
+
+        // Prepare template for new CAS
+        CAS newCas = JCasFactory.createJCas(allTypes).getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
+
+        // Save old type system
+        TypeSystem oldTypeSystem = aCas.getTypeSystem();
+
+        // Save old CAS contents
+        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
+
+        // Prepare CAS with new type system
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
+
+        // Restore CAS data to new type system
+        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
+                oldTypeSystem, null);
+
+        // Make sure JCas is properly initialized too
+        aCas.getJCas();
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(
+                Logging.KEY_PROJECT_ID,
+                String.valueOf(aSourceDocument.getProject().getId()))) {
+            Project project = aSourceDocument.getProject();
+            log.info(
+                    "Upgraded CAS of user [{}] for "
+                            + "document [{}]({}) in project [{}]({})",
+                    aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
+                    project.getId());
+        }
+    }
 }

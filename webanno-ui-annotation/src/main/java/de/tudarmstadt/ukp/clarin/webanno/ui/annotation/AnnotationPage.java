@@ -99,13 +99,13 @@ public class AnnotationPage
     public static final String PAGE_PARAM_PROJECT_ID = "projectId";
     public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
 
-    @SpringBean(name = "documentRepository")
-    private DocumentService repository;
+    @SpringBean(name = "documentService")
+    private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
     @SpringBean(name = "documentRepository")
@@ -160,7 +160,7 @@ public class AnnotationPage
         long documentId = aPageParameters.get("documentId").toLong();
         SourceDocument document;
         try {
-            document = repository.getSourceDocument(projectId, documentId);
+            document = documentService.getSourceDocument(projectId, documentId);
         }
         catch (NoResultException e) {
             error("Document [" + documentId + "] does not exist in project [" + projectId + "]");
@@ -332,7 +332,7 @@ public class AnnotationPage
                 super.onConfigure();
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null
-                        && !repository.isAnnotationFinished(state.getDocument(), state.getUser()));
+                        && !documentService.isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -388,7 +388,7 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(
-                repository.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
+                documentService.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -419,11 +419,11 @@ public class AnnotationPage
         
         SourceDocument aDocument = getModelObject().getDocument();
 
-        AnnotationDocument annotationDocument = repository.getAnnotationDocument(aDocument,
+        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
                 state.getUser());
 
         // If there is no CAS yet for the annotation document, create one.
-        return repository.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(annotationDocument);
     }
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
@@ -485,7 +485,7 @@ public class AnnotationPage
             ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
             annotationDocument.setState(AnnotationDocumentStateTransition.transition(
@@ -493,7 +493,7 @@ public class AnnotationPage
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
-            repository.createAnnotationDocument(annotationDocument);
+            documentService.createAnnotationDocument(annotationDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -518,18 +518,18 @@ public class AnnotationPage
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
-            AnnotationDocument annotationDocument = repository
+            AnnotationDocument annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), user);
 
             // Read the CAS
-            JCas editorCas = repository.readAnnotationCas(annotationDocument);
+            JCas editorCas = documentService.readAnnotationCas(annotationDocument);
 
             // Update the annotation document CAS
-            repository.upgradeCas(editorCas.getCas(), annotationDocument);
+            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            repository.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), user);
+            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
+                    annotationDocument.getDocument(), user, false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();
@@ -567,7 +567,7 @@ public class AnnotationPage
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
                 state.getDocument().setState(SourceDocumentStateTransition
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                repository.createSourceDocument(state.getDocument());
+                documentService.createSourceDocument(state.getDocument());
             }
             
             // Reset the editor

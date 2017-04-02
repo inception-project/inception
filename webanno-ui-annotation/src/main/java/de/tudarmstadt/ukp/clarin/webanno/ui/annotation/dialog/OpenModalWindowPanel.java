@@ -67,10 +67,10 @@ public class OpenModalWindowPanel
 {
     private static final long serialVersionUID = 1299869948010875439L;
 
-    @SpringBean(name = "documentRepository")
-    private ProjectService repository;
+    @SpringBean(name = "projectService")
+    private ProjectService projectService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
@@ -109,7 +109,7 @@ public class OpenModalWindowPanel
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = userRepository.get(username);
         if (mode.equals(Mode.CURATION)) {
-            projectesWithFinishedAnnos = repository.listProjectsWithFinishedAnnos();
+            projectesWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
         }
         if (getAllowedProjects().size() > 0) {
             selectedProject = getAllowedProjects().get(0);
@@ -209,16 +209,16 @@ public class OpenModalWindowPanel
         List<Project> allowedProject = new ArrayList<Project>();
         switch (mode) {
         case ANNOTATION:
-            for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, repository, user)
+            for (Project project : projectService.listProjects()) {
+                if (SecurityUtil.isAnnotator(project, projectService, user)
                         && project.getMode().equals(Mode.ANNOTATION)) {
                     allowedProject.add(project);
                 }
             }
             break;
         case CURATION:
-            for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isCurator(project, repository, user)) {
+            for (Project project : projectService.listProjects()) {
+                if (SecurityUtil.isCurator(project, projectService, user)) {
                     allowedProject.add(project);
                     if (projectesWithFinishedAnnos.contains(project)) {
                         projectColors.put(project, "#008000");
@@ -230,16 +230,16 @@ public class OpenModalWindowPanel
             }
             break;
         case CORRECTION:
-            for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, repository, user)
+            for (Project project : projectService.listProjects()) {
+                if (SecurityUtil.isAnnotator(project, projectService, user)
                         && project.getMode().equals(Mode.CORRECTION)) {
                     allowedProject.add(project);
                 }
             }
             break;
         case AUTOMATION:
-            for (Project project : repository.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, repository, user)
+            for (Project project : projectService.listProjects()) {
+                if (SecurityUtil.isAnnotator(project, projectService, user)
                         && project.getMode().equals(Mode.AUTOMATION)) {
                     allowedProject.add(project);
                 }

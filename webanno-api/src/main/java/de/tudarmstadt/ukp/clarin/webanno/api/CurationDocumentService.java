@@ -46,7 +46,7 @@ public interface CurationDocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCurationCas(JCas jCas, SourceDocument document, User user)
+    void writeCurationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**

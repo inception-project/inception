@@ -35,6 +35,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public interface ProjectService
 {
+    public static final String PROJECT = "/project/";
+    public static final String DOCUMENT = "/document/";
+    public static final String SOURCE = "/source";
+    public static final String GUIDELINE = "/guideline/";
+    public static final String ANNOTATION = "/annotation";
+    public static final String SETTINGS = "/settings/";
+    public static final String META_INF = "/META-INF/";
+
+    public static final String HELP_FILE = "/help.properties";
+    
     /**
      * creates a project permission, adding permission level for the user in the given project
      *

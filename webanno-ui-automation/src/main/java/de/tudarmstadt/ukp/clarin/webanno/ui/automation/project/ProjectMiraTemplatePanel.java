@@ -84,7 +84,7 @@ public class ProjectMiraTemplatePanel
     @SpringBean(name = "automationService")
     private AutomationService automationService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "documentService")
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")

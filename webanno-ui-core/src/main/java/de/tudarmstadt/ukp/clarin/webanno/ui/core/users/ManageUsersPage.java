@@ -73,7 +73,7 @@ public class ManageUsersPage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "projectService")
     private ProjectService projectRepository;
 
     boolean isCreate = false;
