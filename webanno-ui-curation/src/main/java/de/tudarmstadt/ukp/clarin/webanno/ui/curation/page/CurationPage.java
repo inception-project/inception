@@ -48,10 +48,10 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -104,11 +104,11 @@ public class CurationPage
     private static final long serialVersionUID = 1378872465851908515L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
-    
-    @SpringBean(name = "documentRepository")
     private DocumentService documentService;
     
+    @SpringBean(name = "documentRepository")
+    private CorrectionDocumentService correctionDocumentService;
+
     @SpringBean(name = "documentRepository")
     private CurationDocumentService curationDocumentService;
 
@@ -231,7 +231,7 @@ public class CurationPage
                 super.onConfigure();
                 AnnotatorState state = CurationPage.this.getModelObject();
                 setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), repository, state.getUser())
+                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
                                 || !state.getProject().isDisableExport()));
             }
         });
@@ -318,7 +318,7 @@ public class CurationPage
                 super.onConfigure();
                 AnnotatorState state = CurationPage.this.getModelObject();
                 setEnabled(state.getProject() != null && state.getDocument() != null
-                        && !repository
+                        && !documentService
                                 .getSourceDocument(state.getDocument().getProject(),
                                         state.getDocument().getName())
                                 .getState().equals(SourceDocumentState.CURATION_FINISHED));
@@ -335,7 +335,7 @@ public class CurationPage
             {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 if (state.getProject() != null && state.getDocument() != null) {
-                    if (repository
+                    if (documentService
                             .getSourceDocument(state.getDocument().getProject(),
                                     state.getDocument().getName()).getState()
                             .equals(SourceDocumentState.CURATION_FINISHED)) {
@@ -465,8 +465,8 @@ public class CurationPage
                 }
                 if (state.getDocument() != null) {
                     try {
-                        repository.createSourceDocument(state.getDocument());
-                        repository.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
+                        documentService.createSourceDocument(state.getDocument());
+                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
 
                         actionLoadDocument(aCallbackTarget);
                         curationPanel.editor.loadFeatureEditorModels(aCallbackTarget);
@@ -557,7 +557,7 @@ public class CurationPage
                 sourceDocument.setProcessed(false);
             }
             
-            repository.createSourceDocument(sourceDocument);
+            documentService.createSourceDocument(sourceDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -620,11 +620,11 @@ public class CurationPage
             if (!state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                 state.getDocument().setState(SourceDocumentStateTransition.transition(
                         SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
-                repository.createSourceDocument(state.getDocument());
+                documentService.createSourceDocument(state.getDocument());
             }
     
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, repository,
+            PreferencesUtil.loadPreferences(username, settingsService, projectService,
                     annotationService, state, state.getMode());            
             
             // Re-render whole page as sidebar size preference may have changed
@@ -632,14 +632,15 @@ public class CurationPage
     
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
     
-            for (AnnotationDocument annotationDocument : repository
+            for (AnnotationDocument annotationDocument : documentService
                     .listAnnotationDocuments(state.getDocument())) {
                 if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                     finishedAnnotationDocuments.add(annotationDocument);
                 }
             }
     
-            SuggestionBuilder cb = new SuggestionBuilder(repository, annotationService, userRepository);
+            SuggestionBuilder cb = new SuggestionBuilder(documentService, correctionDocumentService,
+                    curationDocumentService, annotationService, userRepository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -648,7 +649,7 @@ public class CurationPage
             // upgrade CASes for each user, what if new type is added once the user finished
             // annotation
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                repository.upgradeCasAndSave(ad.getDocument(), state.getMode(), ad.getUser());
+                documentService.upgradeCasAndSave(ad.getDocument(), state.getMode(), ad.getUser());
             }
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
@@ -669,7 +670,8 @@ public class CurationPage
     
             currentprojectId = state.getProject().getId();
     
-            SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
@@ -680,7 +682,7 @@ public class CurationPage
     
             
             // Load constraints
-            state.setConstraints(repository.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
     
             aTarget.add(getOrCreatePositionInfoLabel());
             aTarget.add(documentNamePanel);

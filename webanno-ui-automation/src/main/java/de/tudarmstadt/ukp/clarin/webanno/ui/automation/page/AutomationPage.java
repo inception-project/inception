@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.JCasUtil.select;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -45,15 +45,17 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -120,7 +122,7 @@ public class AutomationPage
     private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "documentRepository")
     private CorrectionDocumentService correctionDocumentService;
@@ -383,8 +385,9 @@ public class AutomationPage
                 }
 
                 try {
-                    SuggestionBuilder builder = new SuggestionBuilder(repository,
-                            annotationService, userRepository);
+                    SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                            correctionDocumentService, curationDocumentService, annotationService,
+                            userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(getEditorCas());
                     curationContainer.setBratAnnotatorModel(state);
@@ -436,16 +439,17 @@ public class AutomationPage
                         }
                         if (automationService.getMiraTemplate(f) != null && isRepeatable) {
 
-                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {                               
-                                AutomationUtil.repeateRelationAnnotation(state, repository,
-                                        annotationService, fs, f, fs.getFeatureValueAsString(feat));
+                            if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
+                                AutomationUtil.repeateRelationAnnotation(state, documentService,
+                                        correctionDocumentService, annotationService, fs, f,
+                                        fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
                             }
                             else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
-                                AutomationUtil.repeateSpanAnnotation(state, repository,
-                                        annotationService, fs.getBegin(), fs.getEnd(), f,
-                                        fs.getFeatureValueAsString(feat));
+                                AutomationUtil.repeateSpanAnnotation(state, documentService,
+                                        correctionDocumentService, annotationService, fs.getBegin(),
+                                        fs.getEnd(), f, fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
                             }
@@ -485,13 +489,14 @@ public class AutomationPage
                         Type type = CasUtil.getType(aFS.getCAS(), layer.getName());
                         Feature feat = type.getFeatureByBaseName(f.getName());
                         if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
-                            AutomationUtil.deleteRelationAnnotation(state, repository,
-                                    annotationService, aFS, f, aFS.getFeatureValueAsString(feat));
+                            AutomationUtil.deleteRelationAnnotation(state, documentService,
+                                    correctionDocumentService, annotationService, aFS, f,
+                                    aFS.getFeatureValueAsString(feat));
                         }
                         else {
-                            AutomationUtil.deleteSpanAnnotation(state, repository,
-                                    annotationService, aFS.getBegin(), aFS.getEnd(), f,
-                                    aFS.getFeatureValueAsString(feat));
+                            AutomationUtil.deleteSpanAnnotation(state, documentService,
+                                    correctionDocumentService, annotationService, aFS.getBegin(),
+                                    aFS.getEnd(), f, aFS.getFeatureValueAsString(feat));
                         }
                         update(aTarget);
                     }
@@ -624,7 +629,8 @@ public class AutomationPage
         state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
         state.setFocusSentenceNumber(selectedSentence);        
         
-        SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+        SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
         setCurationSegmentBeginEnd(editorCas);
@@ -807,7 +813,8 @@ public class AutomationPage
     {
         try {
             AnnotatorState state = getModelObject();
-            SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(aEditorCas);

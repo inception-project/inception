@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
@@ -45,9 +43,11 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoCssReference;
@@ -63,7 +63,7 @@ public class ExportModalWindowPanel
     private static final Logger LOG = LoggerFactory.getLogger(ExportModalWindowPanel.class);
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ImportExportService importExportService;
 
     private class ExportDetailsForm
         extends Form<DefaultModel>
@@ -81,7 +81,7 @@ public class ExportModalWindowPanel
         public ExportDetailsForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<DefaultModel>(new DefaultModel()));
-            writeableFormats = (ArrayList<String>) repository.getWritableFormatLabels();
+            writeableFormats = (ArrayList<String>) importExportService.getWritableFormatLabels();
             selectedFormat = writeableFormats.get(0);
             add(writeableFormatsChoice = new DropDownChoice<String>("writeableFormats", new Model(
                     selectedFormat), writeableFormats));
@@ -156,11 +156,11 @@ public class ExportModalWindowPanel
                     }
                     else {
                         try {
-                            downloadFile = repository.exportAnnotationDocument(
+                            downloadFile = importExportService.exportAnnotationDocument(
                                     bratAnnotatorModel.getDocument(),
                                     username,
-                                    repository.getWritableFormats().get(
-                                            repository.getWritableFormatId(selectedFormat)),
+                                    importExportService.getWritableFormats().get(
+                                            importExportService.getWritableFormatId(selectedFormat)),
                                     bratAnnotatorModel.getDocument().getName(), bratAnnotatorModel
                                             .getMode());
                         }

@@ -33,7 +33,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 
 public class MenuItemServiceImpl
@@ -46,7 +46,7 @@ public class MenuItemServiceImpl
     private List<MenuItem> menuItems;
 
     @Resource(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService projectService;
 
     @Resource(name = "userRepository")
     private UserDao userRepository;
@@ -120,7 +120,7 @@ public class MenuItemServiceImpl
                     Method m = methods.get(0);
                     item.condition = () -> {
                         try {
-                            return (boolean) m.invoke(null, repository, userRepository);
+                            return (boolean) m.invoke(null, projectService, userRepository);
                         }
                         catch (Exception e) {
                             log.error("Unable to invoke menu item condition method", e);

@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -49,9 +47,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -70,7 +71,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Main Panel for the curation page. It displays a box with the complete text on the left side and a
  * box for a selected sentence on the right side.
- *
  */
 public class CurationPanel
     extends Panel
@@ -80,7 +80,10 @@ public class CurationPanel
     private static final Logger LOG = LoggerFactory.getLogger(CurationPanel.class);
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -247,7 +250,7 @@ public class CurationPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(bModel.getDocument()!=null && !repository
+                setEnabled(bModel.getDocument()!=null && !documentService
                         .getSourceDocument(bModel.getDocument().getProject(),
                                 bModel.getDocument().getName()).getState()
                         .equals(SourceDocumentState.CURATION_FINISHED));
@@ -350,11 +353,12 @@ public class CurationPanel
                         curationView = curationViewItem;
                         fSn = 0;
                         try {
-                            JCas jCas = repository.readCurationCas(bModel.getDocument());
-                            updateCurationView(cCModel.getObject(), curationViewItem, aTarget, jCas);
+                            JCas jCas = curationDocumentService
+                                    .readCurationCas(bModel.getDocument());
+                            updateCurationView(cCModel.getObject(), curationViewItem, aTarget,
+                                    jCas);
                             updatePanel(aTarget, cCModel.getObject());
                             bModel.setFocusSentenceNumber(curationViewItem.getSentenceNumber());
-    
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
@@ -369,7 +373,6 @@ public class CurationPanel
                             error(e.getMessage());
                         }
                     }
-    
                 };
     
                 // add subcomponents to the component
@@ -453,7 +456,7 @@ public class CurationPanel
             throw new IllegalStateException("Please open a document first!");
         }
 
-        return repository.readCurationCas(bModel.getDocument());
+        return curationDocumentService.readCurationCas(bModel.getDocument());
     }
 
     @Override
@@ -469,7 +472,7 @@ public class CurationPanel
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jCas = repository.readCurationCas(bModel.getDocument());
+        JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
 
         final Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
                 bModel.getFirstVisibleSentenceEnd());

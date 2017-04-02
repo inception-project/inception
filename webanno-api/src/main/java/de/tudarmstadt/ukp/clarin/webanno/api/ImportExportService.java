@@ -151,4 +151,7 @@ public interface ImportExportService
     File exportAnnotationDocument(SourceDocument document, String user, Class writer,
             String fileName, Mode mode, boolean stripExtension)
         throws UIMAException, IOException, ClassNotFoundException;
+    
+    void uploadTrainingDocument(File aFile, SourceDocument aDocument)
+            throws IOException;
 }

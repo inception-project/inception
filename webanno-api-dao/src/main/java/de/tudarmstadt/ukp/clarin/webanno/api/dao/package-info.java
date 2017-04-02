@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 /**
- * Provides Implementations of the {@link de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService} and
- * {@link de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService} Interfaces
+ * Provides implementations of the backend services.
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;

@@ -57,7 +57,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -111,7 +113,13 @@ public class SuggestionViewPanel
     private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
     
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private CurationDocumentService curationDocumentService;
+
+    @SpringBean(name = "documentRepository")
+    private CorrectionDocumentService correctionDocumentService;
 
     @SpringBean(name = "annotationService")
     private AnnotationService annotationService;
@@ -179,7 +187,7 @@ public class SuggestionViewPanel
                         // TODO: chain the error from this component up in the
                         // CurationPage
                         // or CorrectionPage
-                        if (BratAnnotatorUtility.isDocumentFinished(repository,
+                        if (BratAnnotatorUtility.isDocumentFinished(documentService,
                                 curationUserSegment.getBratAnnotatorModel())) {
                             aTarget.appendJavaScript("alert('This document is already closed."
                                     + " Please ask admin to re-open')");
@@ -198,9 +206,9 @@ public class SuggestionViewPanel
                         annotationJCas = (curationUserSegment.getBratAnnotatorModel().getMode()
                                 .equals(Mode.AUTOMATION) || curationUserSegment
                                 .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) ?
-                                repository.readAnnotationCas(
-                                        repository.getAnnotationDocument(sourceDocument, user)) :
-                                repository.readCurationCas(sourceDocument);
+                                documentService.readAnnotationCas(
+                                        documentService.getAnnotationDocument(sourceDocument, user)) :
+                                            curationDocumentService.readCurationCas(sourceDocument);
                         StringValue action = request.getParameterValue("action");
                         // check if clicked on a span
                         if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {                    
@@ -255,7 +263,7 @@ public class SuggestionViewPanel
         SourceDocument sourceDocument = aCurationUserSegment.getBratAnnotatorModel().getDocument();
 
         AnnotationDocument clickedAnnotationDocument = null;
-        List<AnnotationDocument> annotationDocuments = repository
+        List<AnnotationDocument> annotationDocuments = documentService
                 .listAnnotationDocuments(sourceDocument);
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             if (annotationDocument.getUser().equals(username)) {
@@ -284,7 +292,7 @@ public class SuggestionViewPanel
 
         MergeCas.addSpanAnnotation(aMergeJCas, fsClicked, annotationService.getLayer(layerId).isAllowStacking());
 
-        repository
+        documentService
                 .writeCas(aBModel.getMode(), aBModel.getDocument(), aBModel.getUser(), aMergeJCas);
 
         // update timestamp
@@ -321,10 +329,10 @@ public class SuggestionViewPanel
         
         // for correction and automation, the lower panel is the clickedJcase, from the suggestions
         if (!aCurationUserSegment.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
-        	clickedJCas = repository.readCorrectionCas(sourceDocument);
+        	clickedJCas = correctionDocumentService.readCorrectionCas(sourceDocument);
         }
         else{
-        AnnotationDocument clickedAnnotationDocument = repository
+        AnnotationDocument clickedAnnotationDocument = documentService
                 .listAnnotationDocuments(sourceDocument).stream()
                 .filter(an -> an.getUser().equals(username)).findFirst().get();
 
@@ -351,7 +359,7 @@ public class SuggestionViewPanel
         MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
                 clickedJCas, annotationService.listAnnotationFeature(layer), clickedFS,
                 layer.getAttachType()!=null, layer.isAllowStacking());
-        repository.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
+        documentService.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
         bModel.setFocusSentenceNumber(sentenceNumber);
@@ -373,10 +381,10 @@ public class SuggestionViewPanel
         throws IOException
     {
         if (aState.getMode().equals(Mode.AUTOMATION) || aState.getMode().equals(Mode.CORRECTION)) {
-            return repository.readCorrectionCas(aState.getDocument());
+            return correctionDocumentService.readCorrectionCas(aState.getDocument());
         }
         else {
-            return repository.readAnnotationCas(aDocument);
+            return documentService.readAnnotationCas(aDocument);
         }
     }
 
@@ -697,13 +705,13 @@ public class SuggestionViewPanel
             // is the only document we compare with.
 
             // The CAS the user can edit is the one from the virtual CORRECTION USER
-            annotatorCas = repository.readCorrectionCas(sourceDocument);
+            annotatorCas = correctionDocumentService.readCorrectionCas(sourceDocument);
 
             User user = userRepository.get(SecurityContextHolder.getContext().getAuthentication()
                     .getName());
-            AnnotationDocument annotationDocument = repository.getAnnotationDocument(
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     sourceDocument, user);
-            jCases.put(user.getUsername(), repository.readAnnotationCas(annotationDocument));
+            jCases.put(user.getUsername(), documentService.readAnnotationCas(annotationDocument));
             aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER,
                     new HashMap<Integer, AnnotationSelection>());
         }
@@ -712,16 +720,16 @@ public class SuggestionViewPanel
             // active users.
 
             // The CAS the user can edit is the one from the virtual CURATION USER
-            annotatorCas = repository.readCurationCas(sourceDocument);
+            annotatorCas = curationDocumentService.readCurationCas(sourceDocument);
 
             // Now we get all the other CASes from the repository
-            List<AnnotationDocument> annotationDocuments = repository
+            List<AnnotationDocument> annotationDocuments = documentService
                     .listAnnotationDocuments(sourceDocument);
             for (AnnotationDocument annotationDocument : annotationDocuments) {
                 String username = annotationDocument.getUser();
                 if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
                         || username.equals(CURATION_USER)) {
-                    JCas jCas = repository.readAnnotationCas(annotationDocument);
+                    JCas jCas = documentService.readAnnotationCas(annotationDocument);
                     jCases.put(username, jCas);
 
                     // cleanup annotationSelections

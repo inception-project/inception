@@ -16,12 +16,6 @@
  * limitations under the License.
  */
 /**
- * Provides Interfaces for different dao method implementations. Currently there are two Interfaces,
- * {@link de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService}  and {@link de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService} .
- * {@link de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService} conatins mehtods related to {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer}
- * ,{@link de.tudarmstadt.ukp.clarin.webanno.model.TagSet}, and {@link de.tudarmstadt.ukp.clarin.webanno.model.Tag}
- * . The {@link de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService} contains methods related to persistent Objects
- * {@link de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument}, {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument},
- * {@link de.tudarmstadt.ukp.clarin.webanno.model.User}, {@link de.tudarmstadt.ukp.clarin.webanno.model.Project} and so on
+ * Provides Interfaces for different dao method implementations. 
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;

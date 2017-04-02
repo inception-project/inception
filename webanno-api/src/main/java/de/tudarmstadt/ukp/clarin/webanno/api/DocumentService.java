@@ -121,7 +121,7 @@ public interface DocumentService
     /**
      * Get meta data information about {@link SourceDocument} from the database. This method is
      * called either for {@link AnnotationDocument} object creation or
-     * {@link RepositoryService#createSourceDocument(SourceDocument)}
+     * {@link #createSourceDocument(SourceDocument)}
      *
      * @param project
      *            the {@link Project} where the {@link SourceDocument} belongs

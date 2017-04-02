@@ -34,7 +34,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -128,7 +127,7 @@ public class PreferencesUtil
         aBModel.setPreferences(preference);
     }
 
-    public static void savePreference(AnnotatorState aBModel, RepositoryService aRepository)
+    public static void savePreference(AnnotatorState aBModel, ProjectService aRepository)
         throws FileNotFoundException, IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();

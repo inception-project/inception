@@ -40,7 +40,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -51,9 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 
 /**
- * A Panel used to add Documents to the selected {@link Project}
- *
- *
+ * A Panel used to add Documents to the selected {@link Project}.
  */
 public class ProjectTrainingDocumentsPanel
     extends Panel
@@ -64,7 +63,10 @@ public class ProjectTrainingDocumentsPanel
     private AnnotationService annotationService;
     
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
+
+    @SpringBean(name = "documentRepository")
+    private ImportExportService importExportService;
 
     @SpringBean(name = "automationService")
     private AutomationService automationService;
@@ -97,7 +99,7 @@ public class ProjectTrainingDocumentsPanel
             selectedFormat = WebAnnoConst.TAB_SEP;
         }
         else {
-            readableFormats = new ArrayList<String>(repository.getReadableFormatLabels());
+            readableFormats = new ArrayList<String>(importExportService.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
         }
         add(fileUpload = new FileUploadField("content", new Model()));
@@ -136,7 +138,7 @@ public class ProjectTrainingDocumentsPanel
                 for (FileUpload documentToUpload : uploadedFiles) {
                     String fileName = documentToUpload.getClientFileName();
 
-                    if (repository.existsSourceDocument(project, fileName)) {
+                    if (documentService.existsSourceDocument(project, fileName)) {
                         error("Document " + fileName + " already uploaded ! Delete "
                                 + "the document if you want to upload again");
                         continue;
@@ -153,7 +155,7 @@ public class ProjectTrainingDocumentsPanel
                         // Since new training document is added, all
                         // non-tarining document should be
                         // re-annotated
-                        for (SourceDocument sd : repository.listSourceDocuments(project)) {
+                        for (SourceDocument sd : documentService.listSourceDocuments(project)) {
                             if (!sd.isTrainingDocument()) {
                                 sd.setProcessed(false);
                             }
@@ -174,12 +176,12 @@ public class ProjectTrainingDocumentsPanel
                             document.setFormat(selectedFormat);
                         }
                         else {
-                            String reader = repository.getReadableFormatId(readableFormatsChoice
+                            String reader = importExportService.getReadableFormatId(readableFormatsChoice
                                     .getModelObject());
                             document.setFormat(reader);
                         }
-                        repository.createSourceDocument(document);
-                        repository.uploadTrainingDocument(uploadFile, document);
+                        documentService.createSourceDocument(document);
+                        importExportService.uploadTrainingDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (IOException e) {
@@ -226,7 +228,7 @@ public class ProjectTrainingDocumentsPanel
 
                             }
                             else {
-                                for (SourceDocument document : repository
+                                for (SourceDocument document : documentService
                                         .listSourceDocuments(project)) {
                                     if (document.getFeature() != null
                                             && document.getFeature().equals(feature)) {
@@ -255,11 +257,11 @@ public class ProjectTrainingDocumentsPanel
                         String username = SecurityContextHolder.getContext().getAuthentication()
                                 .getName();
                         User user = userRepository.get(username);
-                        SourceDocument srDoc = repository.getSourceDocument(project, document);
+                        SourceDocument srDoc = documentService.getSourceDocument(project, document);
                         if(srDoc.isTrainingDocument()){
                         	isTrain = true;
                         }
-                        repository.removeSourceDocument(srDoc);
+                        documentService.removeSourceDocument(srDoc);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "
@@ -269,7 +271,7 @@ public class ProjectTrainingDocumentsPanel
                 }
                 // If the deleted document is training document, re-training an automation should be possible again
                 if(isTrain){
-                	List<SourceDocument> docs = repository.listSourceDocuments(project);
+                	List<SourceDocument> docs = documentService.listSourceDocuments(project);
                 		docs.addAll(automationService.listTabSepDocuments(project));
                 	for(SourceDocument srDoc:docs){
                 		srDoc.setProcessed(false);

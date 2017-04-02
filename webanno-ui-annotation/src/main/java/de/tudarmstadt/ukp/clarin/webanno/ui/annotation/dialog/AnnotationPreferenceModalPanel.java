@@ -39,7 +39,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -64,7 +64,7 @@ public class AnnotationPreferenceModalPanel
     private AnnotationService annotationService;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private ProjectService projectService;
 
     private final AnnotationLayerDetailForm tagSelectionForm;
 
@@ -193,7 +193,7 @@ public class AnnotationPreferenceModalPanel
                             getModelObject().curationWindowSize);*/
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
                     try {
-                        PreferencesUtil.savePreference(bModel, repository);
+                        PreferencesUtil.savePreference(bModel, projectService);
                         aEditor.loadFeatureEditorModels(aTarget);
                     }
                     catch (FileNotFoundException e) {

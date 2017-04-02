@@ -66,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
@@ -101,24 +100,25 @@ public class AutomationUtil
     private static final String NILL = "__nill__";
 
     public static void repeateSpanAnnotation(AnnotatorState aBModel,
-            RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
-            int aEnd, AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
+            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            String aValue)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(aBModel.getDocument(),
+        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aBModel.getDocument(),
                 aBModel.getUser());
-        JCas annoCas = aRepository.readAnnotationCas(annoDoc);
+        JCas annoCas = aDocumentService.readAnnotationCas(annoDoc);
 
         // get selected text, concatenations of tokens
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
         SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
                 aFeature.getLayer());
-        for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aRepository, aBModel.getUser());
-            JCas jCas = aRepository.readCorrectionCas(d);
+            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -133,21 +133,22 @@ public class AutomationUtil
                     }
                 }
             }
-            aRepository.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
         }
     }
 
     public static void repeateRelationAnnotation(AnnotatorState aBModel,
-            RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
-            AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
+            AnnotationService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
+            String aValue)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aRepository, aBModel.getUser());
-            JCas jCas = aRepository.readCorrectionCas(d);
+            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
@@ -190,7 +191,7 @@ public class AutomationUtil
 
             }
 
-            aRepository.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
         }
     }
 
@@ -319,23 +320,23 @@ public class AutomationUtil
     }
 
     public static void deleteSpanAnnotation(AnnotatorState aBModel,
-            RepositoryService aRepository, AnnotationService aAnnotationService, int aStart,
-            int aEnd, AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
+            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            String aValue)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-
-        AnnotationDocument annoDoc = aRepository.getAnnotationDocument(aBModel.getDocument(),
+        AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aBModel.getDocument(),
                 aBModel.getUser());
-        JCas annoCas = aRepository.readAnnotationCas(annoDoc);
+        JCas annoCas = aDocumentService.readAnnotationCas(annoDoc);
         // get selected text, concatenations of tokens
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
-        for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aRepository, aBModel.getUser());
-            JCas jCas = aRepository.readCorrectionCas(d);
+            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
                     aFeature.getLayer());
@@ -352,21 +353,22 @@ public class AutomationUtil
                     }
                 }
             }
-            aRepository.writeCorrectionCas(jCas,d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas,d, aBModel.getUser());
         }
     }
 
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
-            RepositoryService aRepository, AnnotationService aAnnotationService, AnnotationFS fs,
-            AnnotationFeature aFeature, String aValue)
-                throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
+            AnnotationService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
+            String aValue)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        for (SourceDocument d : aRepository.listSourceDocuments(aBModel.getProject())) {
+        for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             if (d.isTrainingDocument()) {
                 continue;
             }
-            loadDocument(d, aRepository, aRepository, aBModel.getUser());
-            JCas jCas = aRepository.readCorrectionCas(d);
+            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
             ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
@@ -401,7 +403,7 @@ public class AutomationUtil
 
             adapter.delete(jCas, aFeature, beginOffset, endOffset, depCoveredText, govCoveredText,
                     aValue);
-            aRepository.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
         }
     }
 

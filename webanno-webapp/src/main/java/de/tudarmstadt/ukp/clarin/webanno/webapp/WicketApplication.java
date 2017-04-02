@@ -38,7 +38,7 @@ import org.slf4j.MDC;
 import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.SpringAuthenticatedWebSession;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
@@ -100,7 +100,7 @@ public class WicketApplication
                 public void onBeginRequest(RequestCycle cycle)
                 {
                     ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                    RepositoryService repo = ctx.getBean(RepositoryService.class);
+                    DocumentService repo = ctx.getBean(DocumentService.class);
                     MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
                 };
 

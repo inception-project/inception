@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -92,13 +91,15 @@ public class SuggestionBuilder
     //
     Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
 
-    public SuggestionBuilder(RepositoryService repository, AnnotationService aAnnotationService,
+    public SuggestionBuilder(DocumentService aDocumentService,
+            CorrectionDocumentService aCorrectionDocumentService,
+            CurationDocumentService aCurationDocumentService, AnnotationService aAnnotationService,
             UserDao aUserDao)
     {
-        this.documentService = repository;
-        this.correctionDocumentService = repository;
-        this.curationDocumentService = repository;
-        this.annotationService = aAnnotationService;
+        documentService = aDocumentService;
+        correctionDocumentService = aCorrectionDocumentService;
+        curationDocumentService = aCurationDocumentService;
+        annotationService = aAnnotationService;
         userRepository = aUserDao;
     }
 

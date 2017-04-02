@@ -52,9 +52,9 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -111,10 +111,10 @@ public class CorrectionPage
     private static final long serialVersionUID = 1378872465851908515L;
 
     @SpringBean(name = "documentRepository")
-    private RepositoryService repository;
+    private DocumentService documentService;
 
     @SpringBean(name = "documentRepository")
-    private DocumentService documentService;
+    private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "documentRepository")
     private CorrectionDocumentService correctionDocumentService;
@@ -289,7 +289,7 @@ public class CorrectionPage
                 super.onConfigure();
                 AnnotatorState state = CorrectionPage.this.getModelObject();
                 setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), repository, state.getUser())
+                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
                                 || !state.getProject().isDisableExport()));
             }
         });
@@ -381,8 +381,9 @@ public class CorrectionPage
                     annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
 
                     // info(bratAnnotatorModel.getMessage());
-                    SuggestionBuilder builder = new SuggestionBuilder(repository,
-                            annotationService, userRepository);
+                    SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                            correctionDocumentService, curationDocumentService, annotationService,
+                            userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(editorCas);
                     curationContainer.setBratAnnotatorModel(state);
@@ -476,7 +477,7 @@ public class CorrectionPage
                 state.getUser());
 
         // If there is no CAS yet for the annotation document, create one.
-        return repository.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(annotationDocument);
     }
 
     private void setCurationSegmentBeginEnd(JCas aEditorCas)
@@ -490,8 +491,8 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        suggestionView.updatePanel(target, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                curationSegment);
+        suggestionView.updatePanel(target, curationContainer, annotationEditor,
+                annotationSelectionByUsernameAndAddress, curationSegment);
 
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
 
@@ -557,7 +558,8 @@ public class CorrectionPage
         state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
         state.setFocusSentenceNumber(selectedSentence);        
         
-        SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+        SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
         setCurationSegmentBeginEnd(editorCas);
@@ -617,9 +619,9 @@ public class CorrectionPage
         throws Exception
     {
         AnnotatorState state = getModelObject();
-        JCas editorCas = repository.createOrReadInitialCas(state.getDocument());
+        JCas editorCas = documentService.createOrReadInitialCas(state.getDocument());
         editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas, state.getDocument(),
-                state.getUser(), repository);
+                state.getUser(), documentService);
         documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
@@ -670,8 +672,8 @@ public class CorrectionPage
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
             JCas correctionCas;
-            if (repository.existsCorrectionCas(state.getDocument())) {
-                correctionCas = repository.readCorrectionCas(state.getDocument());
+            if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
+                correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
             else {
                 correctionCas = documentService.createOrReadInitialCas(state.getDocument());
@@ -680,32 +682,32 @@ public class CorrectionPage
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
             JCas editorCas;
-            if (repository.existsCas(state.getDocument(), user.getUsername())) {
+            if (documentService.existsCas(state.getDocument(), user.getUsername())) {
                 editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
                 editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas,
-                        state.getDocument(), user, repository);
+                        state.getDocument(), user, documentService);
             }
 
             // Update the CASes
             documentService.upgradeCas(editorCas.getCas(), annotationDocument);
-            repository.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user);
-            repository.writeCorrectionCas(correctionCas, state.getDocument(), user);
+            correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument(), user);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();
 
             // Load constraints
-            state.setConstraints(repository.loadConstraints(state.getProject()));
+            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, repository,
+            PreferencesUtil.loadPreferences(username, settingsService, projectService,
                     annotationService, state, state.getMode());
 
             // Initialize the visible content
@@ -737,7 +739,7 @@ public class CorrectionPage
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
                 state.getDocument().setState(SourceDocumentStateTransition
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                repository.createSourceDocument(state.getDocument());
+                documentService.createSourceDocument(state.getDocument());
             }
             
             // Reset the editor
@@ -757,7 +759,8 @@ public class CorrectionPage
     {
         try {
             AnnotatorState state = getModelObject();
-            SuggestionBuilder builder = new SuggestionBuilder(repository, annotationService,
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(aEditorCas);
@@ -774,7 +777,7 @@ public class CorrectionPage
      * Only project admins and annotators can see this page
      */
     @MenuItemCondition
-    public static boolean menuItemCondition(RepositoryService aRepo, UserDao aUserRepo)
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);
