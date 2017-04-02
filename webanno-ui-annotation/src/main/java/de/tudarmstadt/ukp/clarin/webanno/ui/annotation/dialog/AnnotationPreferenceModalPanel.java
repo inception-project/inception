@@ -38,7 +38,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -61,7 +61,7 @@ public class AnnotationPreferenceModalPanel
     private static final long serialVersionUID = -2102136855109258306L;
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "projectService")
     private ProjectService projectService;

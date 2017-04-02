@@ -68,7 +68,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -115,7 +115,7 @@ public class ProjectPage
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "automationService")
     private AutomationService automationService;

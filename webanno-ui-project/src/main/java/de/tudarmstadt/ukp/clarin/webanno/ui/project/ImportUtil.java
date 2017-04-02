@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -157,7 +157,7 @@ public class ImportUtil
     public static Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> createLayer(
             Project aProjecct,
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            UserDao aRepository, AnnotationService aAnnotationService)
+            UserDao aRepository, AnnotationSchemaService aAnnotationService)
                 throws IOException
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -174,7 +174,7 @@ public class ImportUtil
 
     private static void createV0TagSet(Project aProject,
             List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> importedTagSets,
-            AnnotationService aAnnotationService, User user)
+            AnnotationSchemaService aAnnotationService, User user)
         throws IOException
     {
         List<String> posTags = new ArrayList<String>();
@@ -226,7 +226,7 @@ public class ImportUtil
     private static Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> createV1Layer(
             Project aProject,
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            AnnotationService aAnnotationService, User aUser)
+            AnnotationSchemaService aAnnotationService, User aUser)
         throws IOException
     {
         Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = new HashMap<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature>();
@@ -302,7 +302,7 @@ public class ImportUtil
 
     public static void createTagSet(TagSet aTagSet,
             de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet aExTagSet, Project aProject,
-            User aUser, AnnotationService aAnnotationService)
+            User aUser, AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         aTagSet.setCreateTag(aExTagSet.isCreateTag());
@@ -325,7 +325,7 @@ public class ImportUtil
         }
     }
 
-    public static void setLayer(AnnotationService aAnnotationService, AnnotationLayer aLayer,
+    public static void setLayer(AnnotationSchemaService aAnnotationService, AnnotationLayer aLayer,
             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer aExLayer,
             Project aProject, User aUser)
         throws IOException
@@ -346,7 +346,7 @@ public class ImportUtil
         aAnnotationService.createLayer(aLayer);
     }
 
-    public static void setFeature(AnnotationService aAnnotationService, AnnotationFeature aFeature,
+    public static void setFeature(AnnotationSchemaService aAnnotationService, AnnotationFeature aFeature,
             de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature aExFeature,
             Project aProject, User aUser)
     {
@@ -810,7 +810,7 @@ public class ImportUtil
     public static de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> aLayerToExLayer,
             Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> aFeatureToExFeature,
-            AnnotationLayer aLayer, AnnotationService aAnnotationService)
+            AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService)
     {
         de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = new de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
@@ -890,7 +890,7 @@ public class ImportUtil
 
     private static TagSet createTagSet(Project project, User user,
             de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
                 throws IOException
     {
         String importedTagSetName = importedTagSet.getName();

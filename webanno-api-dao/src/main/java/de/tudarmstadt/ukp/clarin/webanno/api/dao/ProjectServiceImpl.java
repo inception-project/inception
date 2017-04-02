@@ -32,7 +32,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -63,7 +63,7 @@ public class ProjectServiceImpl
     private UserDao userRepository;
 
     @Resource(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @Resource(name = "documentService")
     private DocumentService documentService;

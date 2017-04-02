@@ -50,7 +50,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
@@ -86,7 +86,7 @@ public class CurationPanel
     private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;

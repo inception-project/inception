@@ -28,7 +28,7 @@ import javax.annotation.Resource;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
@@ -39,7 +39,7 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     implements Check
 {
     @Resource(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)

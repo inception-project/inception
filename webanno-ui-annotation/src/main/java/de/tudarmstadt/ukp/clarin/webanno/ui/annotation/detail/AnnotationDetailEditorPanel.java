@@ -87,7 +87,7 @@ import org.apache.wicket.util.time.Duration;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -152,7 +152,7 @@ public class AnnotationDetailEditorPanel
     private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     private AnnotationFeatureForm annotationFeatureForm;
 

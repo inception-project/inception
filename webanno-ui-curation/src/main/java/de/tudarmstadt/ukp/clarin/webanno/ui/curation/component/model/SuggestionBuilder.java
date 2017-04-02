@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -79,7 +79,7 @@ public class SuggestionBuilder
 {
     private final Logger log = LoggerFactory.getLogger(getClass());    
     
-    private final AnnotationService annotationService;
+    private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
     private final CorrectionDocumentService correctionDocumentService;
     private final CurationDocumentService curationDocumentService;
@@ -93,7 +93,7 @@ public class SuggestionBuilder
 
     public SuggestionBuilder(DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService,
-            CurationDocumentService aCurationDocumentService, AnnotationService aAnnotationService,
+            CurationDocumentService aCurationDocumentService, AnnotationSchemaService aAnnotationService,
             UserDao aUserDao)
     {
         documentService = aDocumentService;
@@ -452,7 +452,7 @@ public class SuggestionBuilder
     }
 
     public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
     {
         List<Type> entryTypes = new LinkedList<Type>();
 

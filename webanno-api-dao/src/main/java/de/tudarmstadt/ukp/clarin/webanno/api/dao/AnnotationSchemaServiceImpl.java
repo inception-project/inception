@@ -52,7 +52,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -72,10 +72,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
 
 /**
- * Implementation of methods defined in the {@link AnnotationService} interface
+ * Implementation of methods defined in the {@link AnnotationSchemaService} interface
  */
-public class AnnotationServiceImpl
-    implements AnnotationService
+public class AnnotationSchemaServiceImpl
+    implements AnnotationSchemaService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -85,7 +85,7 @@ public class AnnotationServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
-    public AnnotationServiceImpl()
+    public AnnotationSchemaServiceImpl()
     {
 
     }

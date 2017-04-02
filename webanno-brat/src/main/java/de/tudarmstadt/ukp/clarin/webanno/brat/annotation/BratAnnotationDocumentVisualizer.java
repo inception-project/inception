@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataRetrievalFailureException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
@@ -73,7 +73,7 @@ public class BratAnnotationDocumentVisualizer
     private DocumentService repository;
 
     @Resource(name = "annotationService")
-    private static AnnotationService annotationService;
+    private static AnnotationSchemaService annotationService;
 
     public BratAnnotationDocumentVisualizer(String id, IModel<AnnotationDocument> aModel)
     {

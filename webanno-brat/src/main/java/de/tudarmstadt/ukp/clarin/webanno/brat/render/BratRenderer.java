@@ -34,7 +34,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -79,7 +79,7 @@ public class BratRenderer
      *            the annotation service.s
      */
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            JCas aJCas, AnnotationService aAnnotationService)
+            JCas aJCas, AnnotationSchemaService aAnnotationService)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
 
@@ -158,7 +158,7 @@ public class BratRenderer
      * @return the brat type definitions
      */
     public static Set<EntityType> buildEntityTypes(List<AnnotationLayer> aAnnotationLayers,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
     {
         // Sort layers
         List<AnnotationLayer> layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
@@ -210,7 +210,7 @@ public class BratRenderer
      * Scan through the layers once to remember which layers attach to which layers.
      */
     private static List<AnnotationLayer> getAttachingLayers(AnnotationLayer aTarget,
-            List<AnnotationLayer> aLayers, AnnotationService aAnnotationService)
+            List<AnnotationLayer> aLayers, AnnotationSchemaService aAnnotationService)
     {
         List<AnnotationLayer> attachingLayers = new ArrayList<>();
 

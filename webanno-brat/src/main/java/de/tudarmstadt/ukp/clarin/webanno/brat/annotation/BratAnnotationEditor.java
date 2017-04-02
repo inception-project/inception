@@ -45,7 +45,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
@@ -95,7 +95,7 @@ public class BratAnnotationEditor
     private static final String PARAM_ORIGIN_TYPE = "originType";
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;

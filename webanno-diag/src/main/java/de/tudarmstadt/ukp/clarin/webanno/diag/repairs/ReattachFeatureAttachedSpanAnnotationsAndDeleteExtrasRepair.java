@@ -29,7 +29,7 @@ import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
@@ -40,7 +40,7 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
     implements Repair
 {
     @Resource(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)

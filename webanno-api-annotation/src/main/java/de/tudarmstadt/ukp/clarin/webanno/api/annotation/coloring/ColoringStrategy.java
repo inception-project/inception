@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -66,7 +66,7 @@ public abstract class ColoringStrategy
         };
     }
 
-    public static ColoringStrategy getBestStrategy(AnnotationService aService, AnnotationLayer aLayer,
+    public static ColoringStrategy getBestStrategy(AnnotationSchemaService aService, AnnotationLayer aLayer,
             AnnotationPreference aPreferences, Map<String[], Queue<String>> aColorQueues)
     {
         // Decide on coloring strategy for the current layer
@@ -107,7 +107,7 @@ public abstract class ColoringStrategy
         return coloringStrategy;
     }
 
-    private static boolean hasLinkFeature(AnnotationService aService, AnnotationLayer aLayer)
+    private static boolean hasLinkFeature(AnnotationSchemaService aService, AnnotationLayer aLayer)
     {
         for (AnnotationFeature feature : aService.listAnnotationFeature(aLayer)) {
             if (!LinkMode.NONE.equals(feature.getLinkMode())) {

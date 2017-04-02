@@ -37,7 +37,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -67,7 +67,7 @@ public class CasToBratJsonTest
      */
 
     @Resource(name = "annotationService")
-    private static AnnotationService annotationService;
+    private static AnnotationSchemaService annotationService;
 
     private Logger LOG = LoggerFactory.getLogger(getClass());
 

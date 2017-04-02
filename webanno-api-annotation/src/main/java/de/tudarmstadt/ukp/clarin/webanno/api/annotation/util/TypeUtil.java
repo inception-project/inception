@@ -28,7 +28,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
@@ -50,7 +50,7 @@ public final class TypeUtil
 		// No instances
 	}
 	
-	public static AnnotationLayer getLayer(AnnotationService aRepo, Project aProject, 
+	public static AnnotationLayer getLayer(AnnotationSchemaService aRepo, Project aProject, 
 	        FeatureStructure aFS)
 	{
         String layerName = aFS.getType().getName();
@@ -71,7 +71,7 @@ public final class TypeUtil
         return layer;
 	}
 
-    public static TypeAdapter getAdapter(AnnotationService aRepo, AnnotationLayer aLayer)
+    public static TypeAdapter getAdapter(AnnotationSchemaService aRepo, AnnotationLayer aLayer)
     {
         if (aLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
             SpanAdapter adapter = new SpanAdapter(aLayer, aRepo.listAnnotationFeature(aLayer));

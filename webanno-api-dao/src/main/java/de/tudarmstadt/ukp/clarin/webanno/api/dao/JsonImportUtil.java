@@ -25,7 +25,7 @@ import org.apache.commons.io.IOUtils;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -38,7 +38,7 @@ public class JsonImportUtil
      * otherwise works normally
      */
     public static TagSet importTagSetFromJsonWithOverwrite(Project project,
-            InputStream tagInputStream, AnnotationService aAnnotationService)
+            InputStream tagInputStream, AnnotationSchemaService aAnnotationService)
         throws IOException, JsonParseException, JsonMappingException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
@@ -59,7 +59,7 @@ public class JsonImportUtil
 
     private static TagSet replaceTagSet(Project project,
             de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String importedTagSetName = importedTagSet.getName();
@@ -86,7 +86,7 @@ public class JsonImportUtil
     }
     
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
         throws IOException, JsonParseException, JsonMappingException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
@@ -99,7 +99,7 @@ public class JsonImportUtil
     
     public static TagSet createTagSet(Project project,
             de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
-            AnnotationService aAnnotationService)
+            AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String importedTagSetName = importedTagSet.getName();
@@ -130,7 +130,7 @@ public class JsonImportUtil
     /**
      * Provides a new name if TagSet already exists.
      */
-    public static String copyTagSetName(AnnotationService aAnnotationService,
+    public static String copyTagSetName(AnnotationSchemaService aAnnotationService,
             String importedTagSetName, Project project)
     {
         String betterTagSetName = "copy_of_" + importedTagSetName;

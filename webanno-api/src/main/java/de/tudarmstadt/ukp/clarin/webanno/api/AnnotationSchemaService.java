@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
  * project.
  */
-public interface AnnotationService
+public interface AnnotationSchemaService
 {
     /**
      * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and

@@ -46,7 +46,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -79,7 +79,7 @@ public class ProjectMiraTemplatePanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "automationService")
     private AutomationService automationService;

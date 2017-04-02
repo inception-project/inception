@@ -57,7 +57,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.TOP;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -190,7 +190,7 @@ public class CasDiff2
      *            end of the span for which differences should be calculated.
      * @return a diff result.
      */
-    public static DiffResult doDiffSingle(AnnotationService aService, Project aProject,
+    public static DiffResult doDiffSingle(AnnotationSchemaService aService, Project aProject,
             List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, JCas> aCasMap, int aBegin, int aEnd)
     {
@@ -1779,7 +1779,7 @@ public class CasDiff2
         }
     }
 
-    public static List<DiffAdapter> getAdapters(AnnotationService annotationService, Project project)
+    public static List<DiffAdapter> getAdapters(AnnotationSchemaService annotationService, Project project)
     {
         List<DiffAdapter> adapters = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {

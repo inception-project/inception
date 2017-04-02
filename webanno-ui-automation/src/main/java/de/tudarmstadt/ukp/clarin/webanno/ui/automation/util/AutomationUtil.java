@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -101,7 +101,7 @@ public class AutomationUtil
 
     public static void repeateSpanAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            AnnotationSchemaService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
             String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -139,7 +139,7 @@ public class AutomationUtil
 
     public static void repeateRelationAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
+            AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
             String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -321,7 +321,7 @@ public class AutomationUtil
 
     public static void deleteSpanAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
+            AnnotationSchemaService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
             String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -359,7 +359,7 @@ public class AutomationUtil
 
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
+            AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
             String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -410,7 +410,7 @@ public class AutomationUtil
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
-            DocumentService aRepository, AnnotationService aAnnotationService,
+            DocumentService aRepository, AnnotationSchemaService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
         throws IOException, UIMAException, ClassNotFoundException
     {
@@ -461,7 +461,7 @@ public class AutomationUtil
      * UIMA annotation and add it as a feature - no need to train and predict for this "other layer"
      */
     private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature,
-            DocumentService aRepository, AnnotationService aAnnotationService, UserDao aUserDao,
+            DocumentService aRepository, AnnotationSchemaService aAnnotationService, UserDao aUserDao,
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -566,7 +566,7 @@ public class AutomationUtil
     }
 
     public static void generateTrainDocument(MiraTemplate aTemplate, DocumentService aRepository,
-            CurationDocumentService aCurationDocumentService, AnnotationService aAnnotationService,
+            CurationDocumentService aCurationDocumentService, AnnotationSchemaService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao, boolean aBase)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
@@ -714,7 +714,7 @@ public class AutomationUtil
 
     public static void generatePredictDocument(MiraTemplate aTemplate, DocumentService aRepository,
             CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationService aAnnotationService, AutomationService aAutomationService,
+            AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
             UserDao aUserDao)
         throws IOException, UIMAException, ClassNotFoundException
     {
@@ -1192,7 +1192,7 @@ public class AutomationUtil
      */
     public static String generateFinalClassifier(MiraTemplate aTemplate,
             DocumentService aRepository, CurationDocumentService aCurationDocumentService,
-            AnnotationService aAnnotationService, AutomationService aAutomationService,
+            AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
             UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException
@@ -1320,7 +1320,7 @@ public class AutomationUtil
     }
 
     private static void getFeatureOtherLayer(MiraTemplate aTemplate, DocumentService aRepository,
-            AnnotationService aAnnotationService, AutomationService aAutomationService,
+            AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
             UserDao aUserDao, int beamSize, boolean maxPosteriors, List<List<String>> predictions,
             Mira mira, File predFtFile, File predcitedFile, SourceDocument document)
         throws FileNotFoundException, IOException, ClassNotFoundException, UIMAException
@@ -1440,7 +1440,7 @@ public class AutomationUtil
      *             hum?
      */
     public static void addOtherFeatureToPredictDocument(MiraTemplate aTemplate,
-            DocumentService aRepository, AnnotationService aAnnotationService,
+            DocumentService aRepository, AnnotationSchemaService aAnnotationService,
             AutomationService aAutomationService, UserDao aUserDao)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException,
         AutomationException

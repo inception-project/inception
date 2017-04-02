@@ -28,7 +28,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -41,7 +41,7 @@ public class CorrectionDocumentServiceImpl
     private CasStorageService casStorageService;
     
     @Resource(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;

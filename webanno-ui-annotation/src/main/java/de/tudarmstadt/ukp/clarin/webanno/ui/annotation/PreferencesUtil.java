@@ -32,7 +32,7 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -71,7 +71,7 @@ public class PreferencesUtil
      * @throws IOException hum?
      */
     public static void loadPreferences(String aUsername, SettingsService aSettingsService,
-            ProjectService aRepositoryService, AnnotationService aAnnotationService,
+            ProjectService aRepositoryService, AnnotationSchemaService aAnnotationService,
             AnnotatorState aBModel, Mode aMode)
         throws BeansException, IOException
     {

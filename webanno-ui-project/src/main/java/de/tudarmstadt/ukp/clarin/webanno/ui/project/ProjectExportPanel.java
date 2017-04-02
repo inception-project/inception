@@ -59,7 +59,7 @@ import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -115,7 +115,7 @@ public class ProjectExportPanel
 	private static final String CORRECTION_USER = "CORRECTION_USER";
 
 	@SpringBean(name = "annotationService")
-	private AnnotationService annotationService;
+	private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "automationService")
     private AutomationService automationService;

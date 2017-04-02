@@ -56,7 +56,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -122,7 +122,7 @@ public class SuggestionViewPanel
     private CorrectionDocumentService correctionDocumentService;
 
     @SpringBean(name = "annotationService")
-    private AnnotationService annotationService;
+    private AnnotationSchemaService annotationService;
 
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
@@ -421,7 +421,7 @@ public class SuggestionViewPanel
             AnnotatorState aBratAnnotatorModel,
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
-            AnnotationService aAnnotationService, CurationContainer aCurationContainer,
+            AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
             final Map<String, AnnotationState> aStates)
         throws IOException
     {
@@ -487,7 +487,7 @@ public class SuggestionViewPanel
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
-        AnnotationService aAnnotationService = annotationService;
+        AnnotationSchemaService aAnnotationService = annotationService;
         
         GetDocumentResponse response = new GetDocumentResponse();
         response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
@@ -520,7 +520,7 @@ public class SuggestionViewPanel
         return JSONUtil.toInterpretableJsonString(response);
     }
 
-    private String getCollectionInformation(AnnotationService aAnnotationService,
+    private String getCollectionInformation(AnnotationSchemaService aAnnotationService,
             CurationContainer aCurationContainer)
         throws IOException
     {
