@@ -106,10 +106,10 @@ public class CurationPage
     @SpringBean(name = "documentService")
     private DocumentService documentService;
     
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "correctionDocumentService")
     private CorrectionDocumentService correctionDocumentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "curationDocumentService")
     private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "projectService")
@@ -118,7 +118,7 @@ public class CurationPage
     @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "settingsService")
     private SettingsService settingsService;
 
     @SpringBean(name = "annotationService")

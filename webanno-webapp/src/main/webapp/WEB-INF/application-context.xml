@@ -78,29 +78,37 @@
         class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl">
     </bean>
 
-    <bean id="projectService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ProjectServiceImpl">
+    <bean id="constraintsService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ConstraintsServiceImpl">
+    </bean>
+
+    <bean id="curationDocumentService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CurationDocumentServiceImpl">
+    </bean>
+
+    <bean id="correctionDocumentService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CorrectionDocumentServiceImpl">
     </bean>
 
     <bean id="importExportService"
         class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl">
     </bean>
 
-    <bean id="automationService"
-        class="de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.MiraAutomationServiceImpl">
+    <bean id="projectService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ProjectServiceImpl">
     </bean>
 
-    <bean id="constraintsService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ConstraintsServiceImpl">
+    <bean id="automationService"
+        class="de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.MiraAutomationServiceImpl">
     </bean>
 
     <bean id="documentService"
         class="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl">
     </bean>
 
-	<bean id="documentRepository"
-		class="de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryServiceDbData">
-	</bean>
+    <bean id="settingsService"
+        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsServiceImpl">
+    </bean>
 
 	<bean id="applicationContextProvider"
 		class="de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider"></bean>

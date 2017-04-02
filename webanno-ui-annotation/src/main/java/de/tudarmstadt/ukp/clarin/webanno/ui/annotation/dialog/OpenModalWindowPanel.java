@@ -73,7 +73,7 @@ public class OpenModalWindowPanel
     @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "curationDocumentService")
     private CurationDocumentService curationDocumentService;
 
     @SpringBean(name = "userRepository")

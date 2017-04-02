@@ -57,7 +57,7 @@ public class JsonImportUtil
         }
     }
 
-    static TagSet replaceTagSet(Project project,
+    private static TagSet replaceTagSet(Project project,
             de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
             AnnotationService aAnnotationService)
         throws IOException

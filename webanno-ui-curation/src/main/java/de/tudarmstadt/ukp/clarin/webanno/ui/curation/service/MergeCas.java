@@ -528,14 +528,16 @@ public class MergeCas
     {
         Feature[] features = getAllFeatures(aOldFs);
         Type type = aOldFs.getType();
-        AnnotationFS newFs = aJCas.getCas()
-                .createAnnotation(type, aOldFs.getBegin(), aOldFs.getEnd());
+        AnnotationFS newFs = aJCas.getCas().createAnnotation(type, aOldFs.getBegin(),
+                aOldFs.getEnd());
         for (Feature f : features) {
             if (isLinkOrBasicFeatures(aOldFs, f)) {
                 continue;
             }
             setFeatureValue(newFs, f, getFeatureValue(aOldFs, f));
         }
+        
+        // FIXME #488
         if (type.getName().equals(POS.class.getName())) {
             updateToken(newFs);
         }
@@ -544,14 +546,12 @@ public class MergeCas
 
     private static void updateToken(AnnotationFS aPos)
     {
-
         Type type = CasUtil.getType(aPos.getCAS(), Token.class.getTypeName());
         Feature attachFeature = type.getFeatureByBaseName("pos");
-        if (CasUtil.selectCovered(aPos.getCAS(), type, aPos.getBegin(), aPos.getEnd()).size() >0){
+        if (CasUtil.selectCovered(aPos.getCAS(), type, aPos.getBegin(), aPos.getEnd()).size() > 0) {
             CasUtil.selectCovered(aPos.getCAS(), type, aPos.getBegin(), aPos.getEnd()).get(0)
                     .setFeatureValue(attachFeature, aPos);
         }
-
     }
 
     public static void copyRelationAnnotation(AnnotationFS aOldFs, AnnotationFS asourceFS,
@@ -647,7 +647,7 @@ public class MergeCas
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
             throw new AnnotationException(
-                    "Same Annotation exists on the mergeview." + " Please add it manually. ");
+                    "Same Annotation exists on the mergeview. Please add it manually.");
         }
 
         // a) if stacking allowed add this new annotation to the mergeview

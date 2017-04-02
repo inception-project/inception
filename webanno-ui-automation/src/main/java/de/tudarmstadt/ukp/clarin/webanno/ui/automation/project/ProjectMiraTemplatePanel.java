@@ -87,10 +87,10 @@ public class ProjectMiraTemplatePanel
     @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "curationDocumentService")
     private CurationDocumentService curationDocumentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "correctionDocumentService")
     private CorrectionDocumentService correctionDocumentService;
 
     @SpringBean(name = "userRepository")

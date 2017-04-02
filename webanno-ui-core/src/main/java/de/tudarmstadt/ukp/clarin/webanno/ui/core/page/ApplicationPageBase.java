@@ -72,7 +72,7 @@ public abstract class ApplicationPageBase
     private Label browserWarning;
     private ExternalLink helpLink;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "settingsService")
     private SettingsService settingsService;
 
     protected ApplicationPageBase()

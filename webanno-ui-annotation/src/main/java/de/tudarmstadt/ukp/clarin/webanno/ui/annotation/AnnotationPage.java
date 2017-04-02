@@ -108,7 +108,7 @@ public class AnnotationPage
     @SpringBean(name = "constraintsService")
     private ConstraintsService constraintsService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "settingsService")
     private SettingsService settingsService;
 
     @SpringBean(name = "annotationService")

@@ -115,10 +115,10 @@ public class SuggestionViewPanel
     @SpringBean(name = "documentService")
     private DocumentService documentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "curationDocumentService")
     private CurationDocumentService curationDocumentService;
 
-    @SpringBean(name = "documentRepository")
+    @SpringBean(name = "correctionDocumentService")
     private CorrectionDocumentService correctionDocumentService;
 
     @SpringBean(name = "annotationService")
@@ -290,7 +290,8 @@ public class SuggestionViewPanel
     	}
         long layerId = TypeUtil.getLayerId(spanType);
 
-        MergeCas.addSpanAnnotation(aMergeJCas, fsClicked, annotationService.getLayer(layerId).isAllowStacking());
+        MergeCas.addSpanAnnotation(aMergeJCas, fsClicked,
+                annotationService.getLayer(layerId).isAllowStacking());
 
         writeEditorCas(aBModel, aMergeJCas);
 

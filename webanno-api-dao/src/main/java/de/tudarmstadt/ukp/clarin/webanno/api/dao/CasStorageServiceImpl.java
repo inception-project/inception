@@ -1,10 +1,25 @@
+/*
+ * Copyright 2012
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -92,7 +107,7 @@ public class CasStorageServiceImpl
         catch (CasDoctorException e) {
             StringBuilder detailMsg = new StringBuilder();
             detailMsg.append("CAS Doctor found problems for user ["
-                    + INITIAL_CAS_PSEUDO_USER + "] in source document [" + aDocument.getName() + "] ("
+                    + aUserName + "] in source document [" + aDocument.getName() + "] ("
                     + aDocument.getId() + ") in project["
                     + aDocument.getProject().getName() + "] ("
                     + aDocument.getProject().getId() + ")\n");
@@ -310,6 +325,7 @@ public class CasStorageServiceImpl
         }
     }
     
+    @Override
     public void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
     {
         // Check if repairs are active - if this is the case, we only need to run the repairs

@@ -31,8 +31,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.IOUtils;
 
 /**
- * A utility class for {@link RepositoryServiceDbData} and {@link AnnotationServiceImpl} classes
- *
+ * A utility class.
  */
 public class ZipUtils
 {
