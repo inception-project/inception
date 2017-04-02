@@ -31,8 +31,6 @@ public interface ConstraintsService
 {
     /**
      * Creates Constraint Set
-     * 
-     * @param aSet
      */
     void createConstraintSet(ConstraintSet aSet);
 
@@ -47,8 +45,6 @@ public interface ConstraintsService
 
     /**
      * Remove a constraint
-     * 
-     * @param aSet
      */
     void removeConstraintSet(ConstraintSet aSet);
 
@@ -64,7 +60,6 @@ public interface ConstraintsService
      * @param aSet
      *            The Constraint Set
      * @return File pointing to Constraint
-     * @throws IOException
      */
     File exportConstraintAsFile(ConstraintSet aSet)
         throws IOException;

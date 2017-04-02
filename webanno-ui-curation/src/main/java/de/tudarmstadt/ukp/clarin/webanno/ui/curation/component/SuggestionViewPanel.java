@@ -171,10 +171,6 @@ public class SuggestionViewPanel
                      * Method is called, if user has clicked on a span or an arc in the sentence
                      * panel. The span or arc respectively is identified and copied to the merge
                      * cas.
-                     * @throws IOException
-                     * @throws ClassNotFoundException
-                     * @throws UIMAException
-                     * @throws AnnotationException
                      */
                     @Override protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
                             throws UIMAException, ClassNotFoundException, IOException,
@@ -529,10 +525,6 @@ public class SuggestionViewPanel
      *            selections by user.
      * @param aCurationSegment
      *            the segment.
-     * @param aAnnotationService
-     *            the annotation service.
-     * @param aRepository
-     *            the repository.
      * @throws UIMAException
      *             hum?
      * @throws ClassNotFoundException
@@ -622,11 +614,6 @@ public class SuggestionViewPanel
     /**
      * For each {@link ConfigurationSet}, where there are some differences in users annotation and
      * the curation annotation.
-     * @param aCasMap
-     * @param aSuggestionColors
-     * @param aCfgSet
-     * @param aAnnotationService
-     * @param aProj
      */
     private void addSuggestionColor(Mode aMode, Map<String, JCas> aCasMap,
             Map<String, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,

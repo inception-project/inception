@@ -112,7 +112,6 @@ public interface ImportExportService
      *             if a conversion error occurs.
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws ClassNotFoundException 
      */
     JCas importCasFromFile(File aFile, Project aProject, String aFormat)
         throws UIMAException, IOException, ClassNotFoundException;

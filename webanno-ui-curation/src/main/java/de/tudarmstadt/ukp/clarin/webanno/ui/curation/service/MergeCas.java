@@ -294,10 +294,7 @@ public class MergeCas
     }
 
     /**
-     * Returns list of Annotations on this particular position (basically when
-     * stacking is allowed)
-     *
-     * @return
+     * Returns list of Annotations on this particular position (basically when stacking is allowed).
      */
     private static List<FeatureStructure> getFSAtPosition(Map<String, JCas> aJCases,
             FeatureStructure fs, String aUser)

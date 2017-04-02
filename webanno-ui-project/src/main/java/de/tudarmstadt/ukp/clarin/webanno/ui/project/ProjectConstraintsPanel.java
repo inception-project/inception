@@ -359,10 +359,6 @@ public class ProjectConstraintsPanel
         
         /**
          * Checks if name exists, if yes, creates an alternate name for ConstraintSet
-         * 
-         * @param aConstraintsService
-         * @param constraintFilename
-         * @return
          */
         private String copyConstraintName(ConstraintsService aConstraintsService,
                 String constraintFilename)

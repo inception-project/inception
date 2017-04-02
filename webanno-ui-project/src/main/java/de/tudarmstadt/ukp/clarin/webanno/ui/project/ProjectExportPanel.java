@@ -177,11 +177,7 @@ public class ProjectExportPanel
 	
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
-     *
-     * @param aProject
-     *            The {@link Project}
-     * @param aCurationDocumentExist
-     *            Check if Curation document exists
+     * 
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
      */
@@ -794,10 +790,7 @@ public class ProjectExportPanel
 
         /**
          * Copy annotation document as Serialized CAS from the file system of this project to the
-         * export folder
-         *
-         * @throws ClassNotFoundException
-         * @throws UIMAException
+         * export folder.
          */
         private void exportAnnotationDocuments(ProjectExportModel aModel, File aCopyDir)
             throws IOException, UIMAException, ClassNotFoundException

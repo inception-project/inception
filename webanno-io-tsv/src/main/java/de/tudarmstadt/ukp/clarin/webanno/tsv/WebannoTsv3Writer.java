@@ -564,15 +564,10 @@ public class WebannoTsv3Writer
 		return aSTABegin;
 	}
 
-	/**
-	 * If there is at least one non-sub-token annotation whose begin is larger
-	 * than this one, it is a multiple tokens (or crossing multiple tokens)
-	 * annotation
-	 * 
-	 * @param aBegin
-	 * @param aEnd
-	 * @return
-	 */
+    /**
+     * If there is at least one non-sub-token annotation whose begin is larger than this one, it is
+     * a multiple tokens (or crossing multiple tokens) annotation.
+     */
 	private boolean isMultipleTokenAnnotation(int aBegin, int aEnd) {
 		for (AnnotationUnit unit : units) {
 			if (unit.begin > aBegin && unit.begin < aEnd && !unit.isSubtoken) {

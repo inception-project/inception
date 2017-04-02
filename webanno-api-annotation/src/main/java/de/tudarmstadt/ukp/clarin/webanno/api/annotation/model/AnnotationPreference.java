@@ -85,8 +85,7 @@ public class AnnotationPreference
     }
 
     /**
-     * get the number of sentences curation window display at the left side
-     * @return
+     * Get the number of sentences curation window display at the left side.
      */
     public int getCurationWindowSize()
     {

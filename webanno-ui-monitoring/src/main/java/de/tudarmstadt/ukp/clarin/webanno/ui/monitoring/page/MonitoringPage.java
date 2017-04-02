@@ -1537,9 +1537,6 @@ public class MonitoringPage
         /**
          * Helper method to get the cell value for the user-annotation document status as
          * <b>username:documentName</b>
-         *
-         * @param aValue
-         * @return
          */
         private String getCellValue(String aValue)
         {
@@ -1567,10 +1564,6 @@ public class MonitoringPage
 
         /**
          * change the state of an annotation document. used to re-open closed documents
-         *
-         * @param aSourceDocument
-         * @param aUser
-         * @param aAnnotationDocumentStateTransition
          */
         private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
                 AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
@@ -1584,10 +1577,6 @@ public class MonitoringPage
 
         /**
          * change source document state when curation document state is changed.
-         *
-         * @param aSourceDocument
-         * @param aSourceDocumentStateTransition
-         * @throws IOException
          */
         private void changeSourceDocumentState(SourceDocument aSourceDocument,
                 SourceDocumentStateTransition aSourceDocumentStateTransition)

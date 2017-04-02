@@ -26,25 +26,21 @@ import org.apache.uima.cas.FeatureStructure;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 
 /***
- * Interface for getting values from rules
- * 
- *
+ * Interface for getting values from rules.
  */
 public interface Evaluator
 {
     /**
-     * 
-     * @param aContext
      * @param aFeature
      *            the target feature
      * @param parsedConstraints
      *            the object containing object generated after parsing rules
      * @return list of possible values based on rules
-     * @throws UIMAException
      */
     List<PossibleValue> generatePossibleValues(FeatureStructure aContext, String aFeature,
             ParsedConstraints parsedConstraints)
         throws UIMAException;
+    
 //    /**
 //     * 
 //     * @param aContext The feature structure /Scope in the rules

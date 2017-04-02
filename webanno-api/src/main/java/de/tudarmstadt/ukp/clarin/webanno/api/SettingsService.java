@@ -29,8 +29,6 @@ public interface SettingsService
     /**
      * Get default number of sentences to display per page, set by administrator, which is read from
      * settings.properties file
-     *
-     * @return
      */
     int getNumberOfSentences();
 }

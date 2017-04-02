@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * This interface contains methods which are related to TagSet, Tag and Type for the annotation
- * project .
+ * project.
  */
 public interface AnnotationService
 {
@@ -361,9 +361,9 @@ public interface AnnotationService
      * @param tagset the tagset.
      */
     void removeTagSet(TagSet tagset);
+    
     /**
      * Removes all tags linked to a tagset
-     * @param tagSet 
      */
     void removeAllTags(TagSet tagSet);
 

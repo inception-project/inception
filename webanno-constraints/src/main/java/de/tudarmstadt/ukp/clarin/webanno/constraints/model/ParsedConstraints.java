@@ -26,9 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /***
- * Serialized Class containing objects after parsing and creating objects based on rules file
- * 
- *
+ * Serialized Class containing objects after parsing and creating objects based on rules file.
  */
 public class ParsedConstraints
     implements Serializable
@@ -44,10 +42,6 @@ public class ParsedConstraints
     //Contains possible scenarios for which rules are available.
     private Set<FSFPair> rulesSet = null;
 
-    /**
-     * @param imports
-     * @param scopes
-     */
     public ParsedConstraints(Map<String, String> imports, List<Scope> scopes)
     {
         this.imports = imports;

@@ -215,15 +215,11 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		addChainAnnotations(aJCas);
 	}
 
-	/**
-	 * The individual link annotations are stored in a {@link TreeMap}
-	 * (chainAnnosPerTye) with chain number and link number references, sorted
-	 * in an ascending order <br>
-	 * Iterate over each chain number and link number references and construct
-	 * the chain
-	 * 
-	 * @param aJCas
-	 */
+    /**
+     * The individual link annotations are stored in a {@link TreeMap} (chainAnnosPerTye) with chain
+     * number and link number references, sorted in an ascending order <br>
+     * Iterate over each chain number and link number references and construct the chain.
+     */
 	private void addChainAnnotations(JCas aJCas) {
 		for (Type linkType : chainAnnosPerTyep.keySet()) {
 			for (int chainNo : chainAnnosPerTyep.get(linkType).keySet()) {
@@ -246,15 +242,12 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 		}
 	}
 
-	/**
-	 * Importing span annotations including slot annotations
-	 * 
-	 * @param aJCas
-	 * @param aAnnosPerTypePerUnit
-	 */
-
-	private void addAnnotations(JCas aJCas, Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit) {
-
+    /**
+     * Importing span annotations including slot annotations.
+     */
+    private void addAnnotations(JCas aJCas,
+            Map<Type, Map<AnnotationUnit, List<AnnotationFS>>> aAnnosPerTypePerUnit)
+    {
 		for (Type type : annotationsPerPostion.keySet()) {
 			Map<AnnotationUnit, Map<Integer, AnnotationFS>> multiTokUnits = new HashMap<>();
             int ref = 1;
@@ -691,7 +684,6 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	/**
 	 * Get the type and feature information from the TSV file header
 	 * 
-	 * @param aJcas
 	 * @param header
 	 *            the header line
 	 * @throws IOException

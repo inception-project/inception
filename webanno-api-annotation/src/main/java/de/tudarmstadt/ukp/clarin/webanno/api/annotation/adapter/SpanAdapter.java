@@ -54,8 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
- * A class that is used to create Brat Span to CAS and vice-versa
- *
+ * A class that is used to create Brat Span to CAS and vice-versa.
  */
 public class SpanAdapter
     implements TypeAdapter, AutomationTypeAdapter
@@ -298,7 +297,6 @@ public class SpanAdapter
 
     /**
      * A Helper method to add annotation to a Curation CAS
-     * @throws AnnotationException 
      */
     public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)

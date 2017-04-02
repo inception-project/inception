@@ -167,16 +167,15 @@ public class ArcAdapter
     }
 
     /**
-     * A Helper method to {@link #addToCas(String, BratAnnotatorUIData)}
-     * 
      * @param aWindowBegin
      *            begin offset of the first visible sentence
      * @param aWindowEnd
      *            end offset of the last visible sentence
      */
-    private AnnotationFS interalAddToCas(JCas aJCas, int aWindowBegin, int aWindowEnd, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, Object aValue, AnnotationFeature aFeature) 
-                throws AnnotationException
+    private AnnotationFS interalAddToCas(JCas aJCas, int aWindowBegin, int aWindowEnd,
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs, Object aValue,
+            AnnotationFeature aFeature)
+        throws AnnotationException
     {
         Type type = getType(aJCas.getCas(), annotationTypeName);
         Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);

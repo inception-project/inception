@@ -484,7 +484,6 @@ public class SuggestionBuilder
      * @return the JCas.
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws UIMAException 
      */
     public JCas createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, List<AnnotationLayer> aAnnotationLayers)

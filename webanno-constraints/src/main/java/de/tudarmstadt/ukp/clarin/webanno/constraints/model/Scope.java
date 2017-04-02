@@ -22,8 +22,6 @@ import java.util.List;
 
 /**
  * Class representating "Scope" (name) and list of "Rules" for a particular "Scope".
- * 
- *
  */
 public class Scope
     implements Serializable
@@ -32,10 +30,6 @@ public class Scope
     private final String scopeName;
     private final List<Rule> rules;
 
-    /**
-     * @param scopeName
-     * @param rules
-     */
     public Scope(String scopeName, List<Rule> rules)
     {
         this.scopeName = scopeName;
