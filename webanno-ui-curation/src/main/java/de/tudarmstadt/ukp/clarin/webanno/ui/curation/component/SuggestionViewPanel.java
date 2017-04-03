@@ -91,11 +91,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionB
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.MergeCas;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -349,6 +349,7 @@ public class SuggestionViewPanel
         long layerId = TypeUtil.getLayerId(arcType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
+        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
         AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
 
@@ -357,9 +358,8 @@ public class SuggestionViewPanel
     		throw new AnnotationException(" Coreference Annotation not supported in curation");
     	}
      	
-        MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
-                clickedJCas, annotationService.listAnnotationFeature(layer), clickedFS,
-                layer.getAttachType()!=null, layer.isAllowStacking());
+        MergeCas.addArcAnnotation(adapter, aJcas, addressOriginClicked, addressTargetClicked,
+                fsArcaddress, clickedJCas, clickedFS);
         writeEditorCas(bModel, aJcas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
