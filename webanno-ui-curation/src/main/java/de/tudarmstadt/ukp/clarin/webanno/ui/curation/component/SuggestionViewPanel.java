@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -304,6 +305,7 @@ public class SuggestionViewPanel
         long layerId = TypeUtil.getLayerId(arcType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
+        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
         AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
 
@@ -312,9 +314,8 @@ public class SuggestionViewPanel
     		throw new AnnotationException(" Coreference Annotation not supported in curation");
     	}
      	
-        MergeCas.addArcAnnotation(aJcas, addressOriginClicked, addressTargetClicked, fsArcaddress,
-                clickedJCas, annotationService.listAnnotationFeature(layer), clickedFS,
-                layer.getAttachType()!=null, layer.isAllowStacking());
+        MergeCas.addArcAnnotation(adapter, aJcas, addressOriginClicked, addressTargetClicked,
+                fsArcaddress, clickedJCas, clickedFS);
         repository.writeCas(bModel.getMode(), bModel.getDocument(), bModel.getUser(), aJcas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
