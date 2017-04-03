@@ -862,9 +862,9 @@ public class WebAnnoCasUtil
         case NONE: {
             // Sanity check
             if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
-                throw new IllegalArgumentException("Actual feature type ["
-                        + feature.getRange().getName() + "]does not match expected feature type ["
-                        + aFeature.getType() + "].");
+                throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
+                        + aFeature.getName() + "] actual type [" + feature.getRange().getName()
+                        + "] does not match expected feature type [" + aFeature.getType() + "].");
             }
 
             switch (aFeature.getType()) {
