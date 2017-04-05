@@ -79,7 +79,7 @@
     </bean>
 
     <bean id="constraintsService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ConstraintsServiceImpl">
+        class="de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsServiceImpl">
     </bean>
 
     <bean id="curationDocumentService"
