@@ -32,10 +32,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-automation</artifactId>
     </dependency>
     <dependency>
@@ -49,10 +45,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-project</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -192,18 +184,9 @@
     </dependency>
 
 
-    <!-- Wicket 7 -->
-    <!--
-      <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <scope>provided</scope>
-      </dependency>
-    -->
-    <!-- Wicket 6 -->
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <groupId>${servlet.api.groupId}</groupId>
+      <artifactId>${servlet.api.artifactId}</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -372,7 +355,7 @@
               <usedDependency>org.springframework.security:spring-security-config</usedDependency>
               <usedDependency>org.springframework.security:spring-security-web</usedDependency>
               <!-- Servlet API -->
-              <usedDependency>javax.servlet:servlet-api</usedDependency>
+              <usedDependency>${servlet.api.groupId}:${servlet.api.artifactId}</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

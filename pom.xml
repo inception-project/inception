@@ -56,13 +56,15 @@
     <slf4j.version>1.7.24</slf4j.version>
     <log4j.version>2.8.1</log4j.version>
     <jboss.logging.version>3.3.0.Final</jboss.logging.version>
-    <!-- wicket.version>7.6.0</wicket.version -->
-    <wicket.version>6.26.0</wicket.version>
+    <wicket.version>7.6.0</wicket.version>
+    <!-- wicket.version>6.26.0</wicket.version -->
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <hibernate.version>4.3.11.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
+    <servlet.api.groupId>javax.servlet</servlet.api.groupId>
+    <servlet.api.artifactId>javax.servlet-api</servlet.api.artifactId>
   </properties>
   <repositories>
     <repository>
@@ -288,11 +290,27 @@
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-input-events</artifactId>
         <version>${wicketstuff.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-progressbar</artifactId>
         <version>${wicketstuff.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -374,19 +392,10 @@
         <version>${log4j.version}</version>
       </dependency>
 
-      <!-- Wicket 7 -->
-      <!--
-        <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.0.1</version>
-        </dependency>
-      -->
-      <!-- Wicket 6 -->
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>servlet-api</artifactId>
-        <version>2.5</version>
+        <groupId>${servlet.api.groupId}</groupId>
+        <artifactId>${servlet.api.artifactId}</artifactId>
+        <version>3.0.1</version>
       </dependency>
 
       <dependency>
@@ -776,4 +785,26 @@
       </build>
     </profile>
   </profiles>
+  <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-annotation</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
 </project>

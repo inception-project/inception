@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
@@ -50,7 +51,7 @@ public abstract class OpenDocumentDialog extends ModalWindow
     }
     
     @Override
-    public void show(AjaxRequestTarget aTarget)
+    public void show(IPartialPageRequestHandler aTarget)
     {
         closeButtonClicked = false;
         

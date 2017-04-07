@@ -613,9 +613,9 @@ public class ProjectPage
             IModel<String> projectNameModel = PropertyModel.of(projectDetailForm.getModel(),
                     "name");
             add(deleteProjectDialog = new ChallengeResponseDialog("deleteProjectDialog",
-                    new StringResourceModel("DeleteProjectDialog.title", this, null),
-                    new StringResourceModel("DeleteProjectDialog.text", this, projectDetailForm.getModel(),
-                            projectNameModel),
+                    new StringResourceModel("DeleteProjectDialog.title", this),
+                    new StringResourceModel("DeleteProjectDialog.text", this)
+                            .setModel(projectDetailForm.getModel()).setParameters(projectNameModel),
                     projectNameModel));
             add(deleteProjectLink = new LambdaAjaxLink("deleteProjectLink",
                     this::actionDeleteProject) {

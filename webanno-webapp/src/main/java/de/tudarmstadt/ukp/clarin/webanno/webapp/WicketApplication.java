@@ -32,7 +32,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
-import org.apache.wicket.settings.IExceptionSettings;
+import org.apache.wicket.settings.ExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationContext;
@@ -91,7 +91,7 @@ public class WicketApplication
             // Display stack trace instead of internal error
             if ("true".equalsIgnoreCase(settings.getProperty("debug.showExceptionPage"))) {
                 getExceptionSettings().setUnexpectedExceptionDisplay(
-                        IExceptionSettings.SHOW_EXCEPTION_PAGE);
+                        ExceptionSettings.SHOW_EXCEPTION_PAGE);
             }
 
             getRequestCycleListeners().add(new AbstractRequestCycleListener()

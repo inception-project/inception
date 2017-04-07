@@ -36,12 +36,10 @@ import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -409,31 +407,6 @@ public class CorrectionPage
                     error("Error reading CAS " + e.getMessage());
                     return;
                 }
-            }
-        };
-    }
-
-    private Label createPositionInfoLabel()
-    {
-        return new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
-                this, getModel(), 
-                PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
-                PropertyModel.of(getModel(), "numberOfSentences"),
-                PropertyModel.of(getModel(), "documentIndex"),
-                PropertyModel.of(getModel(), "numberOfDocuments"))) {
-            private static final long serialVersionUID = 7176610419683776917L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getDocument() != null);
             }
         };
     }

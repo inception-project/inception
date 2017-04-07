@@ -98,20 +98,22 @@ public abstract class AnnotationPageBase
     protected Label getOrCreatePositionInfoLabel()
     {
         if (numberOfPages == null) {
-            numberOfPages = new Label("numberOfPages", new StringResourceModel("PositionInfo.text", 
-                    this, getModel(), 
-                    PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
-                    PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
-                    PropertyModel.of(getModel(), "numberOfSentences"),
-                    PropertyModel.of(getModel(), "documentIndex"),
-                    PropertyModel.of(getModel(), "numberOfDocuments"))) {
+            numberOfPages = new Label("numberOfPages",
+                    new StringResourceModel("PositionInfo.text", this).setModel(getModel())
+                            .setParameters(
+                                    PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
+                                    PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
+                                    PropertyModel.of(getModel(), "numberOfSentences"),
+                                    PropertyModel.of(getModel(), "documentIndex"),
+                                    PropertyModel.of(getModel(), "numberOfDocuments")))
+            {
                 private static final long serialVersionUID = 7176610419683776917L;
-    
+
                 {
                     setOutputMarkupId(true);
                     setOutputMarkupPlaceholderTag(true);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
@@ -128,9 +130,9 @@ public abstract class AnnotationPageBase
         if (resetDocumentDialog == null) {
             IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
             resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                    new StringResourceModel("ResetDocumentDialog.title", this, null),
-                    new StringResourceModel("ResetDocumentDialog.text", this, getModel(),
-                            documentNameModel),
+                    new StringResourceModel("ResetDocumentDialog.title", this),
+                    new StringResourceModel("ResetDocumentDialog.text", this).setModel(getModel())
+                            .setParameters(documentNameModel),
                     documentNameModel);
             resetDocumentDialog.setConfirmAction(this::actionResetDocument);
         }

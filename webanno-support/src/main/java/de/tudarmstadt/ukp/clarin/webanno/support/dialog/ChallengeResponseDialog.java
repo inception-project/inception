@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -89,8 +90,10 @@ public class ChallengeResponseDialog
         return (State) getDefaultModelObject();
     }    
     
+    
+    
     @Override
-    public void show(AjaxRequestTarget aTarget)
+    public void show(IPartialPageRequestHandler aTarget)
     {
         challengeModel.detach();
         expectedResponseModel.detach();
