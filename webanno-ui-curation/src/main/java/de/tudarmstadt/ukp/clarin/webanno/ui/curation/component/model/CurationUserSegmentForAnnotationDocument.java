@@ -22,7 +22,6 @@ import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AnnotationSelection;
 
 /**
  * A Model comprises of document and collection brat responses togehter with the username that will

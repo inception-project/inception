@@ -44,12 +44,12 @@ import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage.AgreementFormModel;
 
 public class AgreementTable

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
+package de.tudarmstadt.ukp.clarin.webanno.curation.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
 import static java.util.Arrays.asList;
@@ -47,12 +47,12 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ArcPosition;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.service.CasDiff2.Position;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcPosition;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Position;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;

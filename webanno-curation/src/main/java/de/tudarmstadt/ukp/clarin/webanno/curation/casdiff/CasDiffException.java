@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2013
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,21 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.service;
+package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * An exception when {@code org.apache.uima.cas.Feature#getRange().getName()} is not either
- *  uima.cas.Integer or uima.cas.String
- *
+ * throw an exception if there is a problem during cas diff computation
  */
-public class RangeNameNotCheckedException extends AnnotationException{
+public class CasDiffException
+    extends AnnotationException
+{
+    private static final long serialVersionUID = 1280015349963924638L;
 
-    private static final long serialVersionUID = 9006025257536279474L;
-
-    public RangeNameNotCheckedException(String message)
+    public CasDiffException(String message)
     {
         super(message);
     }
+
+    public CasDiffException()
+    {
+        super();
+    }
+
+    public CasDiffException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public CasDiffException(Throwable aCause)
+    {
+        super(aCause);
+    }
+    
 }

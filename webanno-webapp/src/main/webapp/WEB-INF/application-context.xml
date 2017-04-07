@@ -83,7 +83,7 @@
     </bean>
 
     <bean id="curationDocumentService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CurationDocumentServiceImpl">
+        class="de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl">
     </bean>
 
     <bean id="correctionDocumentService"
