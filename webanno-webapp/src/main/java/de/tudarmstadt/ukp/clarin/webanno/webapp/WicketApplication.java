@@ -18,7 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Page;
@@ -32,6 +35,8 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.DynamicJQueryResourceReference;
+import org.apache.wicket.resource.loader.IStringResourceLoader;
+import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
 import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.slf4j.MDC;
@@ -66,6 +71,14 @@ public class WicketApplication
         }
         
         if (!isInitialized) {
+            // Allow nested string resource resolving using "#(key)"
+            List<IStringResourceLoader> loaders = new ArrayList<>(
+                    getResourceSettings().getStringResourceLoaders());
+            NestedStringResourceLoader nestedLoader = new NestedStringResourceLoader(loaders,
+                    Pattern.compile("#\\(([^ ]*?)\\)"));
+            getResourceSettings().getStringResourceLoaders().clear();
+            getResourceSettings().getStringResourceLoaders().add(nestedLoader);
+            
             // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
             // identification. 
             getJavaScriptLibrarySettings().setJQueryReference(
