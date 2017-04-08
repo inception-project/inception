@@ -768,6 +768,7 @@
                     <exclude>NOTICE.txt</exclude>
                     <exclude>README.txt</exclude>
                     <exclude>README.md</exclude>
+                    <exclude>src/main/java/**/*.properties</exclude>
                     <exclude>src/main/resources/**/*</exclude>
                     <exclude>src/test/resources/**/*</exclude>
                     <exclude>src/main/filter/**/*</exclude>
