@@ -76,14 +76,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
@@ -362,7 +360,6 @@ public class ProjectPage
                         try {
                             ProjectSettingsPanelBase panel = (ProjectSettingsPanelBase) ConstructorUtils
                                     .invokeConstructor(psp.panel, aPanelId, ProjectDetailForm.this.getModel());
-                            //panel.setModel(ProjectDetailForm.this.getModel());
                             return panel;
                         }
                         catch (Exception e) {
@@ -380,151 +377,6 @@ public class ProjectPage
                 };
                 tabs.add(tab);
             }
-
-//            tabs.add(new AbstractTab(Model.of("Users"))
-//            {
-//                private static final long serialVersionUID = 7160734867954315366L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectUsersPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Documents"))
-//            {
-//                private static final long serialVersionUID = 1170760600317199418L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectDocumentsPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Layers"))
-//            {
-//                private static final long serialVersionUID = 3274065112505097898L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectLayersPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Tagsets"))
-//            {
-//                private static final long serialVersionUID = -3205723896786674220L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectTagSetsPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Guidelines"))
-//            {
-//                private static final long serialVersionUID = 7887973231065189200L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new AnnotationGuideLinePanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Constraints"))
-//            {
-//                private static final long serialVersionUID = 8910455936756021733L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectConstraintsPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(Model.of("Export"))
-//            {
-//                private static final long serialVersionUID = 788812791376373350L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectExportPanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0;
-//                }
-//            });
-
-//            tabs.add(new AbstractTab(new Model<String>("Automation"))
-//            {
-//                private static final long serialVersionUID = 788812791376373350L;
-//
-//                @Override
-//                public Panel getPanel(String panelId)
-//                {
-//                    return new ProjectMiraTemplatePanel(panelId, ProjectDetailForm.this.getModel());
-//                }
-//
-//                @Override
-//                public boolean isVisible()
-//                {
-//                    IModel<Project> model = ProjectDetailForm.this.getModel();
-//                    return model.getObject() != null && model.getObject().getId() != 0
-//                            && model.getObject().getMode().equals(Mode.AUTOMATION) && visible;
-//                }
-//            });
             
             AjaxTabbedPanel<ITab> tabsPanel = new AjaxTabbedPanel<ITab>("tabs", tabs);
             tabsPanel.setOutputMarkupPlaceholderTag(true);
@@ -688,17 +540,6 @@ public class ProjectPage
             deleteProjectDialog.setConfirmAction((target) -> {
                 Project project = projectDetailForm.getModelObject();
                 try {
-                    // BEGIN: Remove automation stuff
-                    for (MiraTemplate template : automationService.listMiraTemplates(project)) {
-                        automationService.removeMiraTemplate(template);
-                    }
-
-                    for (SourceDocument document : automationService
-                            .listTabSepDocuments(project)) {
-                        documentService.removeSourceDocument(document);
-                    }
-                    // END: Remove automation stuff
-
                     projectService.removeProject(project);
                     projectDetailForm.setModelObject(null);
                     projectSelectionForm.getModelObject().project = null;

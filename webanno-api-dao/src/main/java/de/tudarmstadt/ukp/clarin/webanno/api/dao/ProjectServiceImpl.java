@@ -45,31 +45,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.Phased;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Authority;
-import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class ProjectServiceImpl
-    implements ProjectService
+    implements ProjectService, BeanPostProcessor
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -79,24 +75,52 @@ public class ProjectServiceImpl
     @Resource(name = "userRepository")
     private UserDao userRepository;
 
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @Resource(name = "documentService")
-    private DocumentService documentService;
-
-    @Resource(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
     @Value(value = "${repository.path}")
     private File dir;
 
+    private List<ProjectLifecycleAware> projectLifecycleAwareBeans;
+    private boolean projectLifecycleAwareBeansSorted = false;
+    
     // The annotation preference properties File name
     private static final String annotationPreferencePropertiesFileName = "annotation.properties";
 
     public ProjectServiceImpl()
     {
         // Nothing to do
+    }
+    
+    @Override
+    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
+        throws BeansException
+    {
+        log.error(aBeanName);
+        
+        // Collect the beans that need to be notified about the project lifecycle
+        projectLifecycleAwareBeans = new ArrayList<>();
+        if (aBean instanceof ProjectLifecycleAware) {
+            projectLifecycleAwareBeans.add((ProjectLifecycleAware) aBean);
+        }
+        
+        return aBean;
+    }
+    
+    private List<ProjectLifecycleAware> getProjectLifecycleAwareBeans()
+    {
+        if (!projectLifecycleAwareBeansSorted) {
+            projectLifecycleAwareBeans.sort((a,b) -> {
+                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
+                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
+                return phaseB - phaseA;
+            });
+        }
+        return projectLifecycleAwareBeans;
+    }
+    
+    @Override
+    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
+        throws BeansException
+    {
+        return aBean;
     }
     
     @Override
@@ -111,6 +135,19 @@ public class ProjectServiceImpl
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
+        }
+        
+        // Notify all relevant service so that they can initialize themselves for the given project
+        for (ProjectLifecycleAware bean : getProjectLifecycleAwareBeans()) {
+            try {
+                bean.afterProjectCreate(aProject);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -414,32 +451,24 @@ public class ProjectServiceImpl
     public void removeProject(Project aProject)
         throws IOException
     {
-        for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
-            documentService.removeSourceDocument(document);
-        }
-
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aProject)) {
-            annotationService.removeAnnotationFeature(feature);
-        }
-
-        // remove the layers too
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            annotationService.removeAnnotationLayer(layer);
-        }
-
-        for (TagSet tagSet : annotationService.listTagSets(aProject)) {
-            annotationService.removeTagSet(tagSet);
+        // Notify all relevant service so that they can clean up themselves before we remove the
+        // project
+        for (ProjectLifecycleAware bean : getProjectLifecycleAwareBeans()) {
+            try {
+                bean.beforeProjectRemove(aProject);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
 
         for (ProjectPermission permissions : getProjectPermissions(aProject)) {
             entityManager.remove(permissions);
         }
-        
-        //Remove Constraints
-        for (ConstraintSet set: constraintsService.listConstraintSets(aProject) ){
-            constraintsService.removeConstraintSet(set);
-        }
-        
+                
         // remove metadata from DB
         Project project = aProject;
         if (!entityManager.contains(project)) {

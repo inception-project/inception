@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -69,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean
+    implements DocumentService, InitializingBean, ProjectLifecycleAware
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -791,5 +792,20 @@ public class DocumentServiceImpl
         users.removeAll(notInUsers);
 
         return users;
+    }
+    
+    @Override
+    public void afterProjectCreate(Project aProject)
+    {
+        // Nothing to do
+    }
+    
+    @Override
+    public void beforeProjectRemove(Project aProject)
+        throws IOException
+    {
+        for (SourceDocument document : listSourceDocuments(aProject)) {
+            removeSourceDocument(document);
+        }
     }
 }

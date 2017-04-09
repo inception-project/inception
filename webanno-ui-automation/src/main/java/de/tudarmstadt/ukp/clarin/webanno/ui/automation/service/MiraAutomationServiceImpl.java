@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -36,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
@@ -45,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class MiraAutomationServiceImpl
-    implements AutomationService
+    implements AutomationService, ProjectLifecycleAware
 {
     private static final String PROJECT = "/project/";
     private static final String MIRA = "/mira/";
@@ -55,6 +58,9 @@ public class MiraAutomationServiceImpl
     
     @Value(value = "${repository.path}")
     private File dir;
+
+    @Resource(name = "documentService")
+    private DocumentService documentService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -249,5 +255,25 @@ public class MiraAutomationServiceImpl
             }
         }
         return tabSepDocuments;
+    }
+    
+    @Override
+    public void afterProjectCreate(Project aProject)
+        throws Exception
+    {
+        // Nothing to do
+    }
+    
+    @Override
+    public void beforeProjectRemove(Project aProject)
+        throws Exception
+    {
+        for (MiraTemplate template : listMiraTemplates(aProject)) {
+            removeMiraTemplate(template);
+        }
+
+        for (SourceDocument document : listTabSepDocuments(aProject)) {
+            documentService.removeSourceDocument(document);
+        }
     }
 }

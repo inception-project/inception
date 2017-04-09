@@ -37,6 +37,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -48,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class ConstraintsServiceImpl
-    implements ConstraintsService
+    implements ConstraintsService, ProjectLifecycleAware
 {
     private static final String CONSTRAINTS = "/constraints/";
 
@@ -240,5 +241,22 @@ public class ConstraintsServiceImpl
         }
 
         return merged;
+    }
+    
+    @Override
+    public void afterProjectCreate(Project aProject)
+        throws Exception
+    {
+        // Nothing to do
+    }
+    
+    @Override
+    public void beforeProjectRemove(Project aProject)
+        throws Exception
+    {
+        //Remove Constraints
+        for (ConstraintSet set: listConstraintSets(aProject) ){
+            removeConstraintSet(set);
+        }
     }
 }

@@ -53,6 +53,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -75,7 +76,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
  * Implementation of methods defined in the {@link AnnotationSchemaService} interface
  */
 public class AnnotationSchemaServiceImpl
-    implements AnnotationSchemaService
+    implements AnnotationSchemaService, ProjectLifecycleAware
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -87,7 +88,7 @@ public class AnnotationSchemaServiceImpl
 
     public AnnotationSchemaServiceImpl()
     {
-
+        // Nothing to do
     }
 
     @Override
@@ -944,6 +945,7 @@ public class AnnotationSchemaServiceImpl
         }
     }
 
+    @Override
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
@@ -983,6 +985,31 @@ public class AnnotationSchemaServiceImpl
                             + "document [{}]({}) in project [{}]({})",
                     aUser, aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
                     project.getId());
+        }
+    }
+
+    @Override
+    public void afterProjectCreate(Project aProject)
+        throws Exception
+    {
+        // Nothing to do
+    }
+
+    @Override
+    public void beforeProjectRemove(Project aProject)
+        throws Exception
+    {
+        for (AnnotationFeature feature : listAnnotationFeature(aProject)) {
+            removeAnnotationFeature(feature);
+        }
+
+        // remove the layers too
+        for (AnnotationLayer layer : listAnnotationLayer(aProject)) {
+            removeAnnotationLayer(layer);
+        }
+
+        for (TagSet tagSet : listTagSets(aProject)) {
+            removeTagSet(tagSet);
         }
     }
 }

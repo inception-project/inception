@@ -93,7 +93,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
     {
         panels = new ArrayList<>();
 
-        // Scan menu items from page class annotations
+        // Scan project settings using annotation
         ClassPathScanningCandidateComponentProvider scanner = 
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(
