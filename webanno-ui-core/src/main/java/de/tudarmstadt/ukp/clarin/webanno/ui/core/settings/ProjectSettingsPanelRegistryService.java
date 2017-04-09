@@ -15,32 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.wicket.Page;
+import org.apache.wicket.markup.html.panel.Panel;
 
-public interface MenuItemService
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public interface ProjectSettingsPanelRegistryService
 {
-    List<MenuItemService.MenuItem> getMenuItems();
+    List<ProjectSettingsPanelRegistryService.SettingsPanel> getPanels();
 
-    public static class MenuItem
+    public static class SettingsPanel
         implements Serializable
     {
-        private static final long serialVersionUID = -6839143167407389149L;
+        private static final long serialVersionUID = -2464913342442260640L;
         
         public Condition condition;
-        public String icon;
         public String label;
-        public Class<? extends Page> page;
+        public Class<? extends Panel> panel;
         public int prio;
     }
-    
+
     @FunctionalInterface
-    public static interface Condition extends Serializable
+    public static interface Condition
+        extends Serializable
     {
-        boolean applies();
+        boolean applies(Project aProject);
     }
 }

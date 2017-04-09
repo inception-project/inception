@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
@@ -38,14 +36,15 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
@@ -53,12 +52,15 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}.
  */
+@ProjectSettingsPanel(label="Constraints", prio=500)
 public class ProjectConstraintsPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 8910455936756021733L;
 
@@ -80,11 +82,6 @@ public class ProjectConstraintsPanel
         add(selectionForm = new SelectionForm("selectionForm"));
         add(detailForm = new DetailForm("detailForm"));
         add(importForm = new ImportForm("importForm"));
-    }
-
-    public Project getModelObject()
-    {
-        return (Project) getDefaultModelObject();
     }
 
     public class SelectionForm
@@ -196,7 +193,7 @@ public class ProjectConstraintsPanel
             }; 
             add(new DownloadLink("export", exportFileModel, exportFilenameModel).setDeleteAfterDownload(true));
             
-            Button deleteButton = new Button("delete", new ResourceModel("label")) {
+            Button deleteButton = new Button("delete", new StringResourceModel("label")) {
 
                 private static final long serialVersionUID = -1195565364207114557L;
 
@@ -221,7 +218,7 @@ public class ProjectConstraintsPanel
 
             add(deleteButton);
 
-            add(new Button("save", new ResourceModel("label")) {
+            add(new Button("save", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 @Override
@@ -241,7 +238,7 @@ public class ProjectConstraintsPanel
 					}
 				}
             });
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -279,7 +276,7 @@ public class ProjectConstraintsPanel
             super(aId);
 
             add(new FileUploadField("uploads", PropertyModel.<List<FileUpload>> of(this, "uploads")));
-            add(new Button("import", new ResourceModel("label"))
+            add(new Button("import", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 

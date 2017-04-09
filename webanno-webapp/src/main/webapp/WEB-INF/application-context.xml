@@ -70,6 +70,10 @@
         class="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl">
     </bean>
 
+    <bean id="projectSettingsPanelRegistryService"
+        class="de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryServiceImpl">
+    </bean>
+
     <bean id="annotationService"
         class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl">
     </bean>

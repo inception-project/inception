@@ -31,11 +31,10 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +47,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Documents to the selected {@link Project}
- * 
- * 
  */
+@ProjectSettingsPanel(label="Documents", prio=200)
 public class ProjectDocumentsPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private final static Logger LOG = LoggerFactory.getLogger(ProjectDocumentsPanel.class);
     
@@ -81,14 +81,12 @@ public class ProjectDocumentsPanel
 
     private ArrayList<String> readableFormats;
     private String selectedFormat;
-    private IModel<Project> selectedProjectModel;
     private DropDownChoice<String> readableFormatsChoice;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public ProjectDocumentsPanel(String id, IModel<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
+        super(id, aProjectModel);
         readableFormats = new ArrayList<String>(importExportService.getReadableFormatLabels());
         selectedFormat = readableFormats.get(0);
         
@@ -97,54 +95,14 @@ public class ProjectDocumentsPanel
         add(readableFormatsChoice = new DropDownChoice<String>("readableFormats", new Model(
                 selectedFormat), readableFormats));
 
-        add(new Button("import", new ResourceModel("label"))
+        add(new Button("import", new StringResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
             public void onSubmit()
             {
-                uploadedFiles = fileUpload.getFileUploads();
-                Project project = selectedProjectModel.getObject();
-                if (isEmpty(uploadedFiles)) {
-                    error("No document is selected to upload, please select a document first");
-                    return;
-                }
-                if (project.getId() == 0) {
-                    error("Project not yet created, please save project Details!");
-                    return;
-                }
-
-                for (FileUpload documentToUpload : uploadedFiles) {
-                    String fileName = documentToUpload.getClientFileName();
-
-                    if (documentService.existsSourceDocument(project, fileName)) {
-                        error("Document " + fileName + " already uploaded ! Delete "
-                                + "the document if you want to upload again");
-                        continue;
-                    }
-
-                    try {
-                        File uploadFile = documentToUpload.writeToTempFile();
-
-                        String format = importExportService
-                                .getReadableFormatId(readableFormatsChoice.getModelObject());
-
-                        SourceDocument document = new SourceDocument();
-                        document.setName(fileName);
-                        document.setProject(project);
-                        document.setFormat(format);
-                        
-                        documentService.uploadSourceDocument(uploadFile, document);
-                        info("File [" + fileName + "] has been imported successfully!");
-                    }
-                    catch (Exception e) {
-                        error("Error while uploading document " + fileName + ": "
-                            + ExceptionUtils.getRootCauseMessage(e));
-                        LOG.error(fileName + ": " + e.getMessage(), e);
-                    }
-                }
-
+                actionImport();
             }
         });
 
@@ -160,7 +118,7 @@ public class ProjectDocumentsPanel
                     @Override
                     protected List<String> load()
                     {
-                        Project project = selectedProjectModel.getObject();
+                        Project project = ProjectDocumentsPanel.this.getModelObject();
                         documents.clear();
                         if (project.getId() != 0) {
                             for (SourceDocument document : documentService
@@ -176,29 +134,14 @@ public class ProjectDocumentsPanel
             }
         });
         
-        Button removeDocumentButton = new Button("remove", new ResourceModel("label"))
+        Button removeDocumentButton = new Button("remove", new StringResourceModel("label"))
         {
-
             private static final long serialVersionUID = 4053376790104708784L;
 
             @Override
             public void onSubmit()
             {
-                Project project = selectedProjectModel.getObject();
-                for (String document : selectedDocuments) {
-                    try {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-                        documentService.removeSourceDocument(
-                                documentService.getSourceDocument(project, document));
-                    }
-                    catch (IOException e) {
-                        error("Error while removing a document document "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    documents.remove(document);
-                }
+                actionRemove();
             }
         };
         // Add check to prevent accidental delete operation
@@ -231,4 +174,70 @@ public class ProjectDocumentsPanel
 //            }
 //        });
     }
+    
+    private void actionImport()
+    {
+        uploadedFiles = fileUpload.getFileUploads();
+        Project project = ProjectDocumentsPanel.this.getModelObject();
+        if (isEmpty(uploadedFiles)) {
+            error("No document is selected to upload, please select a document first");
+            return;
+        }
+        if (project.getId() == 0) {
+            error("Project not yet created, please save project Details!");
+            return;
+        }
+
+        for (FileUpload documentToUpload : uploadedFiles) {
+            String fileName = documentToUpload.getClientFileName();
+
+            if (documentService.existsSourceDocument(project, fileName)) {
+                error("Document " + fileName + " already uploaded ! Delete "
+                        + "the document if you want to upload again");
+                continue;
+            }
+
+            try {
+                File uploadFile = documentToUpload.writeToTempFile();
+
+                String format = importExportService
+                        .getReadableFormatId(readableFormatsChoice.getModelObject());
+
+                SourceDocument document = new SourceDocument();
+                document.setName(fileName);
+                document.setProject(project);
+                document.setFormat(format);
+                
+                documentService.uploadSourceDocument(uploadFile, document);
+                info("File [" + fileName + "] has been imported successfully!");
+            }
+            catch (Exception e) {
+                error("Error while uploading document " + fileName + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error(fileName + ": " + e.getMessage(), e);
+            }
+        }
+
+    }
+
+    private void actionRemove()
+    {
+        Project project = ProjectDocumentsPanel.this.getModelObject();
+        for (String document : selectedDocuments) {
+            try {
+                String username = SecurityContextHolder.getContext().getAuthentication()
+                        .getName();
+                User user = userRepository.get(username);
+                documentService.removeSourceDocument(
+                        documentService.getSourceDocument(project, document));
+            }
+            catch (IOException e) {
+                error("Error while removing a document document "
+                        + ExceptionUtils.getRootCauseMessage(e));
+            }
+            documents.remove(document);
+        }
+    }
 }
+
+

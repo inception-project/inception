@@ -34,6 +34,7 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.wicket.Component;
@@ -61,7 +62,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -90,12 +90,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.project.ProjectMiraTemplatePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.SettingsPanel;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
@@ -132,9 +134,12 @@ public class ProjectPage
     @SpringBean(name = "userRepository")
     private UserDao userRepository;
 
+    @SpringBean(name = "projectSettingsPanelRegistryService")
+    private ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
+
     public static ProjectSelectionForm projectSelectionForm;
     public static ProjectDetailForm projectDetailForm;
-    private final ImportProjectForm importProjectForm;
+    private ImportProjectForm importProjectForm;
 
     public static boolean visible = true;
 
@@ -187,7 +192,7 @@ public class ProjectPage
         {
             super(id, CompoundPropertyModel.of(aModel));
 
-            add(createProject = new Button("create", new ResourceModel("label"))
+            add(createProject = new Button("create", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -260,7 +265,6 @@ public class ProjectPage
         public Project project;
         public List<String> documents;
         public List<String> permissionLevels;
-        public User user;
     }
 
     private class ImportProjectForm
@@ -276,7 +280,7 @@ public class ProjectPage
             add(new CheckBox("generateUsers"));
             add(fileUpload = new FileUploadField("content", new Model()));
 
-            add(new Button("importProject", new ResourceModel("label"))
+            add(new Button("importProject", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -329,6 +333,7 @@ public class ProjectPage
         private AjaxTabbedPanel<ITab> makeTabs()
         {
             List<ITab> tabs = new ArrayList<>();
+            
             tabs.add(new AbstractTab(Model.of("Details"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
@@ -345,151 +350,182 @@ public class ProjectPage
                     return visible;
                 }
             });
+            
+            // Add the project settings panels from the registry
+            for (SettingsPanel psp : projectSettingsPanelRegistryService.getPanels()) {
+                AbstractTab tab = new AbstractTab(Model.of(psp.label)) {
+                    private static final long serialVersionUID = -1503555976570640065L;
 
-            tabs.add(new AbstractTab(Model.of("Users"))
-            {
-                private static final long serialVersionUID = 7160734867954315366L;
+                    @Override
+                    public Panel getPanel(String aPanelId)
+                    {
+                        try {
+                            ProjectSettingsPanelBase panel = (ProjectSettingsPanelBase) ConstructorUtils
+                                    .invokeConstructor(psp.panel, aPanelId, ProjectDetailForm.this.getModel());
+                            //panel.setModel(ProjectDetailForm.this.getModel());
+                            return panel;
+                        }
+                        catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectUsersPanel(panelId, ProjectDetailForm.this.getModel());
-                }
+                    @Override
+                    public boolean isVisible()
+                    {
+                        IModel<Project> model = ProjectDetailForm.this.getModel();
+                        return model.getObject() != null && model.getObject().getId() != 0
+                                && visible && psp.condition.applies(model.getObject());
+                    }
+                };
+                tabs.add(tab);
+            }
 
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
+//            tabs.add(new AbstractTab(Model.of("Users"))
+//            {
+//                private static final long serialVersionUID = 7160734867954315366L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectUsersPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-            tabs.add(new AbstractTab(Model.of("Documents"))
-            {
-                private static final long serialVersionUID = 1170760600317199418L;
+//            tabs.add(new AbstractTab(Model.of("Documents"))
+//            {
+//                private static final long serialVersionUID = 1170760600317199418L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectDocumentsPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectDocumentsPanel(panelId, ProjectDetailForm.this.getModel());
-                }
+//            tabs.add(new AbstractTab(Model.of("Layers"))
+//            {
+//                private static final long serialVersionUID = 3274065112505097898L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectLayersPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
+//            tabs.add(new AbstractTab(Model.of("Tagsets"))
+//            {
+//                private static final long serialVersionUID = -3205723896786674220L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectTagSetsPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-            tabs.add(new AbstractTab(Model.of("Layers"))
-            {
-                private static final long serialVersionUID = 3274065112505097898L;
+//            tabs.add(new AbstractTab(Model.of("Guidelines"))
+//            {
+//                private static final long serialVersionUID = 7887973231065189200L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new AnnotationGuideLinePanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectLayersPanel(panelId, ProjectDetailForm.this.getModel());
-                }
+//            tabs.add(new AbstractTab(Model.of("Constraints"))
+//            {
+//                private static final long serialVersionUID = 8910455936756021733L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectConstraintsPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
+//                }
+//            });
 
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
+//            tabs.add(new AbstractTab(Model.of("Export"))
+//            {
+//                private static final long serialVersionUID = 788812791376373350L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectExportPanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0;
+//                }
+//            });
 
-            tabs.add(new AbstractTab(Model.of("Tagsets"))
-            {
-                private static final long serialVersionUID = -3205723896786674220L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectTagSetsPanel(panelId, ProjectDetailForm.this.getModel());
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
-
-            tabs.add(new AbstractTab(Model.of("Guidelines"))
-            {
-                private static final long serialVersionUID = 7887973231065189200L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new AnnotationGuideLinePanel(panelId, ProjectDetailForm.this.getModel());
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
-
-            tabs.add(new AbstractTab(Model.of("Constraints"))
-            {
-                private static final long serialVersionUID = 8910455936756021733L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectConstraintsPanel(panelId, ProjectDetailForm.this.getModel());
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0 && visible;
-                }
-            });
-
-            tabs.add(new AbstractTab(Model.of("Export"))
-            {
-                private static final long serialVersionUID = 788812791376373350L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectExportPanel(panelId, ProjectDetailForm.this.getModel());
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0;
-                }
-            });
-
-            tabs.add(new AbstractTab(new Model<String>("Automation"))
-            {
-                private static final long serialVersionUID = 788812791376373350L;
-
-                @Override
-                public Panel getPanel(String panelId)
-                {
-                    return new ProjectMiraTemplatePanel(panelId, ProjectDetailForm.this.getModel());
-                }
-
-                @Override
-                public boolean isVisible()
-                {
-                    IModel<Project> model = ProjectDetailForm.this.getModel();
-                    return model.getObject() != null && model.getObject().getId() != 0
-                            && model.getObject().getMode().equals(Mode.AUTOMATION) && visible;
-                }
-            });
+//            tabs.add(new AbstractTab(new Model<String>("Automation"))
+//            {
+//                private static final long serialVersionUID = 788812791376373350L;
+//
+//                @Override
+//                public Panel getPanel(String panelId)
+//                {
+//                    return new ProjectMiraTemplatePanel(panelId, ProjectDetailForm.this.getModel());
+//                }
+//
+//                @Override
+//                public boolean isVisible()
+//                {
+//                    IModel<Project> model = ProjectDetailForm.this.getModel();
+//                    return model.getObject() != null && model.getObject().getId() != 0
+//                            && model.getObject().getMode().equals(Mode.AUTOMATION) && visible;
+//                }
+//            });
+            
             AjaxTabbedPanel<ITab> tabsPanel = new AjaxTabbedPanel<ITab>("tabs", tabs);
             tabsPanel.setOutputMarkupPlaceholderTag(true);
             tabsPanel.setOutputMarkupId(true);
@@ -534,7 +570,7 @@ public class ProjectPage
             
             add(new CheckBox("disableExport"));
 
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
                 
@@ -630,7 +666,7 @@ public class ProjectPage
                 }
             });
  
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {

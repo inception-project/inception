@@ -20,10 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 /**
  * Exception thrown while exporting the whole project
- *
- *
  */
-public class ProjectExportException    extends Exception
+public class ProjectExportException
+    extends Exception
 {
     private static final long serialVersionUID = -4242850260003049868L;
 
@@ -31,5 +30,4 @@ public class ProjectExportException    extends Exception
     {
         super(message);
     }
-
 }

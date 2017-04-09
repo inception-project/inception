@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-import org.apache.wicket.Page;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -36,14 +36,14 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 
-public class MenuItemServiceImpl
-    implements SmartLifecycle, MenuItemService
+public class ProjectSettingsPanelRegistryServiceImpl
+    implements SmartLifecycle, ProjectSettingsPanelRegistryService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private boolean running = false;
 
-    private List<MenuItem> menuItems;
+    private List<SettingsPanel> panels;
 
     @Resource(name = "projectService")
     private ProjectService projectService;
@@ -91,63 +91,65 @@ public class MenuItemServiceImpl
 
     private void scan()
     {
-        menuItems = new ArrayList<>();
+        panels = new ArrayList<>();
 
         // Scan menu items from page class annotations
         ClassPathScanningCandidateComponentProvider scanner = 
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(
-                de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem.class));
+                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel.class));
 
         for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
             try {
                 @SuppressWarnings("unchecked")
-                Class<? extends Page> pageClass = (Class<? extends Page>) Class
+                Class<? extends Panel> panelClass = (Class<? extends Panel>) Class
                         .forName(bd.getBeanClassName());
-                de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem mia = pageClass
+                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel mia = panelClass
                         .getAnnotation(
-                                de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem.class);
+                                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel.class);
 
-                MenuItem item = new MenuItem();
-                item.icon = mia.icon();
-                item.label = mia.label();
-                item.prio = mia.prio();
-                item.page = pageClass;
-
-                log.debug("Found menu item: {} ({})", item.label, item.prio);
+                SettingsPanel panel = new SettingsPanel();
+                panel.label = mia.label();
+                panel.prio = mia.prio();
+                panel.panel = panelClass;
                 
-                List<Method> methods = MethodUtils.getMethodsListWithAnnotation(pageClass,
-                        MenuItemCondition.class);
+                log.debug("Found settings panel: {} ({})", panel.label, panel.prio);
+
+                List<Method> methods = MethodUtils.getMethodsListWithAnnotation(panelClass,
+                        ProjectSettingsPanelCondition.class);
                 if (!methods.isEmpty()) {
-                    Method m = methods.get(0);
-                    item.condition = () -> {
+                    panel.condition = (aProject) -> {
                         try {
-                            return (boolean) m.invoke(null, projectService, userRepository);
+                            // Need to look the method up again here because methods are not
+                            // serializable
+                            Method m = MethodUtils.getMethodsListWithAnnotation(panelClass,
+                                    ProjectSettingsPanelCondition.class).get(0);
+                            return (boolean) m.invoke(null, aProject);
                         }
                         catch (Exception e) {
-                            LoggerFactory.getLogger(MenuItemServiceImpl.class)
-                                    .error("Unable to invoke menu item condition method", e);
+                            LoggerFactory.getLogger(ProjectSettingsPanelRegistryServiceImpl.class)
+                                    .error("Unable to invoke settings panel condition method", e);
                             return false;
                         }
                     };
                 }
                 else {
-                    item.condition = () -> { return true; };
+                    panel.condition = (aProject) -> { return true; };
                 }
                 
-                menuItems.add(item);
+                panels.add(panel);
             }
             catch (ClassNotFoundException e) {
-                log.error("Menu item class [{}] not found", bd.getBeanClassName(), e);
+                log.error("Settings panel class [{}] not found", bd.getBeanClassName(), e);
             }
         }
         
-        Collections.sort(menuItems, (a, b) -> { return a.prio - b.prio; });
+        Collections.sort(panels, (a, b) -> { return a.prio - b.prio; });
     }
 
     @Override
-    public List<MenuItemService.MenuItem> getMenuItems()
+    public List<SettingsPanel> getPanels()
     {
-        return Collections.unmodifiableList(menuItems);
+        return Collections.unmodifiableList(panels);
     }
 }

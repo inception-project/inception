@@ -35,7 +35,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -117,7 +117,7 @@ public class ProjectTrainingDocumentsPanel
             }
         });
 
-        add(new Button("import", new ResourceModel("label"))
+        add(new Button("import", new StringResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
 
@@ -243,7 +243,7 @@ public class ProjectTrainingDocumentsPanel
             }
         });
 
-        add(new Button("remove", new ResourceModel("label"))
+        add(new Button("remove", new StringResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
 

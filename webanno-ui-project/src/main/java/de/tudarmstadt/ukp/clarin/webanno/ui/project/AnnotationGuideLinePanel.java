@@ -30,23 +30,25 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
+@ProjectSettingsPanel(label="Guidelines", prio=600)
 public class AnnotationGuideLinePanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
@@ -62,49 +64,20 @@ public class AnnotationGuideLinePanel
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
-    private IModel<Project> selectedProjectModel;
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public AnnotationGuideLinePanel(String id, IModel<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
+        super(id, aProjectModel);
         add(fileUpload = new FileUploadField("content", new Model()));
 
-        add(new Button("importGuideline", new ResourceModel("label"))
+        add(new Button("importGuideline", new StringResourceModel("label"))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
             public void onSubmit()
             {
-                uploadedFiles = fileUpload.getFileUploads();
-                Project project = selectedProjectModel.getObject();
-
-                if (project.getId() == 0) {
-                    error("Project not yet created, please save project Details!");
-                    return;
-                }
-                if (isEmpty(uploadedFiles)) {
-                    error("No document is selected to upload, please select a document first");
-                    return;
-                }
-
-                for (FileUpload guidelineFile : uploadedFiles) {
-
-                    try {
-                        File tempFile = guidelineFile.writeToTempFile();
-                        String fileName = guidelineFile.getClientFileName();
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        projectRepository.createGuideline(project, tempFile, fileName, username);
-                    }
-                    catch (Exception e) {
-                        error("Unable to write guideline file "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-
+                actionImport();
             }
         });
 
@@ -120,7 +93,7 @@ public class AnnotationGuideLinePanel
                     @Override
                     protected List<String> load()
                     {
-                        Project project = selectedProjectModel.getObject();
+                        Project project = AnnotationGuideLinePanel.this.getModelObject();
                         documents.clear();
                         if (project.getId() != 0) {
                             documents.addAll(projectRepository.listGuidelines(project));
@@ -131,27 +104,14 @@ public class AnnotationGuideLinePanel
             }
         });
         
-        Button removeGuidelineButton =new Button("remove", new ResourceModel("label"))
+        Button removeGuidelineButton = new Button("remove", new StringResourceModel("label"))
         {
-
             private static final long serialVersionUID = -5021618538109114902L;
 
             @Override
             public void onSubmit()
             {
-                Project project = selectedProjectModel.getObject();
-                for (String document : selectedDocuments) {
-                    try {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        projectRepository.removeGuideline(project, document, username);
-                    }
-                    catch (IOException e) {
-                        error("Error while removing a document document "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    documents.remove(document);
-                }
+                actionRemove();
             }
         };
         
@@ -183,5 +143,52 @@ public class AnnotationGuideLinePanel
 //                }
 //            }
 //        });
+    }
+    
+    private void actionImport()
+    {
+        uploadedFiles = fileUpload.getFileUploads();
+        Project project = AnnotationGuideLinePanel.this.getModelObject();
+
+        if (project.getId() == 0) {
+            error("Project not yet created, please save project Details!");
+            return;
+        }
+        if (isEmpty(uploadedFiles)) {
+            error("No document is selected to upload, please select a document first");
+            return;
+        }
+
+        for (FileUpload guidelineFile : uploadedFiles) {
+
+            try {
+                File tempFile = guidelineFile.writeToTempFile();
+                String fileName = guidelineFile.getClientFileName();
+                String username = SecurityContextHolder.getContext().getAuthentication()
+                        .getName();
+                projectRepository.createGuideline(project, tempFile, fileName, username);
+            }
+            catch (Exception e) {
+                error("Unable to write guideline file "
+                        + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+    }
+    
+    private void actionRemove()
+    {
+        Project project = AnnotationGuideLinePanel.this.getModelObject();
+        for (String document : selectedDocuments) {
+            try {
+                String username = SecurityContextHolder.getContext().getAuthentication()
+                        .getName();
+                projectRepository.removeGuideline(project, document, username);
+            }
+            catch (IOException e) {
+                error("Error while removing a document document "
+                        + ExceptionUtils.getRootCauseMessage(e));
+            }
+            documents.remove(document);
+        }
     }
 }

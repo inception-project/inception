@@ -37,8 +37,6 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -53,13 +51,14 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -73,13 +72,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel user to manage Tagsets.
- *
  */
+@ProjectSettingsPanel(label="Tagsets", prio=400)
 public class ProjectTagSetsPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 7004037105647505760L;
 
@@ -103,12 +104,9 @@ public class ProjectTagSetsPanel
     private final TagDetailForm tagDetailForm;
     private final ImportTagSetForm importTagSetForm;
 
-    private final IModel<Project> selectedProjectModel;
-
     public ProjectTagSetsPanel(String id, final IModel<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
+        super(id, aProjectModel);
         tagSetSelectionForm = new TagSetSelectionForm("tagSetSelectionForm");
 
         tagSelectionForm = new TagSelectionForm("tagSelectionForm");
@@ -138,14 +136,14 @@ public class ProjectTagSetsPanel
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(new Button("create", new ResourceModel("label"))
+            add(new Button("create", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 public void onSubmit()
                 {
-                    if (selectedProjectModel.getObject().getId() == 0) {
+                    if (ProjectTagSetsPanel.this.getModelObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -171,7 +169,7 @@ public class ProjectTagSetsPanel
                         @Override
                         protected List<de.tudarmstadt.ukp.clarin.webanno.model.TagSet> load()
                         {
-                            Project project = selectedProjectModel.getObject();
+                            Project project = ProjectTagSetsPanel.this.getModelObject();
                             if (project.getId() != 0) {
                                 return annotationService.listTagSets(project);
                             }
@@ -243,7 +241,7 @@ public class ProjectTagSetsPanel
                             ExportedTagSetConstant.TAB_FORMAT })));
             overwriteTagsetFlag = new CheckBox("overwriteTagset", Model.of(Boolean.FALSE));
             add(overwriteTagsetFlag);
-            add(new Button("import", new ResourceModel("label"))
+            add(new Button("import", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -251,7 +249,7 @@ public class ProjectTagSetsPanel
                 public void onSubmit()
                 {
                     uploadedFiles = fileUpload.getFileUploads();
-                    Project project = selectedProjectModel.getObject();
+                    Project project = ProjectTagSetsPanel.this.getModelObject();
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = userRepository.get(username);
@@ -387,7 +385,7 @@ public class ProjectTagSetsPanel
             super(id, new CompoundPropertyModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
                     new EntityModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
                             new de.tudarmstadt.ukp.clarin.webanno.model.TagSet())));
-            final Project project = selectedProjectModel.getObject();
+            final Project project = ProjectTagSetsPanel.this.getModelObject();
             TextField<String> tagSetName = new TextField<String>("name");
             tagSetName.setRequired(true);
             add(tagSetName);
@@ -396,7 +394,7 @@ public class ProjectTagSetsPanel
 
             add(new TextField<String>("language"));
             add(new CheckBox("createTag"));
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -427,7 +425,7 @@ public class ProjectTagSetsPanel
                                     .getAuthentication().getName();
                             User user = userRepository.get(username);
 
-                            tagSet.setProject(selectedProjectModel.getObject());
+                            tagSet.setProject(ProjectTagSetsPanel.this.getModelObject());
                             try {
                                 annotationService.createTagSet(tagSet);
                                 tagSelectionForm.setVisible(true);
@@ -445,7 +443,7 @@ public class ProjectTagSetsPanel
                 }
             });
             
-            Button removeTagSetButton =new Button("remove", new ResourceModel("label"))
+            Button removeTagSetButton =new Button("remove", new StringResourceModel("label"))
             {
 
                 private static final long serialVersionUID = -3794689234509984031L;
@@ -508,7 +506,7 @@ public class ProjectTagSetsPanel
 //                }
 //            });
             
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -565,7 +563,7 @@ public class ProjectTagSetsPanel
                             error("Unable to create temporary File!!");
 
                         }
-                        if (selectedProjectModel.getObject().getId() == 0) {
+                        if (ProjectTagSetsPanel.this.getModelObject().getId() == 0) {
                             error("Project not yet created. Please save project details first!");
                         }
                         else {
@@ -658,7 +656,7 @@ public class ProjectTagSetsPanel
             add(new TextField<String>("name").setRequired(true));
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -696,7 +694,7 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(new Button("remove", new ResourceModel("label"))
+            add(new Button("remove", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -715,7 +713,7 @@ public class ProjectTagSetsPanel
                 }
             });
             
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -800,7 +798,7 @@ public class ProjectTagSetsPanel
                 }
             }).setOutputMarkupId(true);
 
-            add(new Button("new", new ResourceModel("label"))
+            add(new Button("new", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 

@@ -65,12 +65,11 @@ import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -87,17 +86,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
- *
- *
  */
-
+@ProjectSettingsPanel(label="Layers", prio=300)
 public class ProjectLayersPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = -7870526462864489252L;
     @SpringBean(name = "annotationService")
@@ -119,8 +118,6 @@ public class ProjectLayersPanel
     private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
 
-    private final IModel<Project> selectedProjectModel;
-
     private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
 
@@ -131,8 +128,7 @@ public class ProjectLayersPanel
 
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
+        super(id, aProjectModel);
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm");
 
         featureSelectionForm = new FeatureSelectionForm("featureSelectionForm");
@@ -165,14 +161,14 @@ public class ProjectLayersPanel
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(new Button("create", new ResourceModel("label"))
+            add(new Button("create", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = -4482428496358679571L;
 
                 @Override
                 public void onSubmit()
                 {
-                    if (selectedProjectModel.getObject().getId() == 0) {
+                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -196,7 +192,7 @@ public class ProjectLayersPanel
                         @Override
                         protected List<AnnotationLayer> load()
                         {
-                            Project project = selectedProjectModel.getObject();
+                            Project project = ProjectLayersPanel.this.getModelObject();
 
                             if (project.getId() != 0) {
                                 List<AnnotationLayer> layers = annotationService
@@ -281,7 +277,7 @@ public class ProjectLayersPanel
         {
             super(id);
             add(fileUpload = new FileUploadField("content", new Model()));
-            add(new Button("import", new ResourceModel("label"))
+            add(new Button("import", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -289,7 +285,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     uploadedFiles = fileUpload.getFileUploads();
-                    Project project = selectedProjectModel.getObject();
+                    Project project = ProjectLayersPanel.this.getModelObject();
                     String username = SecurityContextHolder.getContext().getAuthentication()
                             .getName();
                     User user = userRepository.get(username);
@@ -342,12 +338,11 @@ public class ProjectLayersPanel
                         User aUser, AnnotationLayer aAttachLayer)
                     throws IOException
                 {
-                    Project project = selectedProjectModel.getObject();
+                    Project project = ProjectLayersPanel.this.getModelObject();
                     AnnotationLayer layer;
                     if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(),
                             project)) {
-                        layer = annotationService.getLayer(aExLayer.getName(),
-                                selectedProjectModel.getObject());
+                        layer = annotationService.getLayer(aExLayer.getName(), project);
                         ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
                     else {
@@ -432,7 +427,7 @@ public class ProjectLayersPanel
             super(id, new CompoundPropertyModel<AnnotationLayer>(new EntityModel<AnnotationLayer>(
                     new AnnotationLayer())));
 
-            final Project project = selectedProjectModel.getObject();
+            final Project project = ProjectLayersPanel.this.getModelObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
             uiName.add(new AjaxFormComponentUpdatingBehavior("keyup")
             {
@@ -814,7 +809,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -903,7 +898,7 @@ public class ProjectLayersPanel
                         error("Unable to create temporary File!!");
 
                     }
-                    if (selectedProjectModel.getObject().getId() == 0) {
+                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");
                         return null;
                     }
@@ -929,7 +924,7 @@ public class ProjectLayersPanel
                     return exportFile;
                 }
             }).setDeleteAfterDownload(true).setOutputMarkupId(true));
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -1078,7 +1073,8 @@ public class ProjectLayersPanel
                         @Override
                         protected List<TagSet> load()
                         {
-                            return annotationService.listTagSets(selectedProjectModel.getObject());
+                            return annotationService
+                                    .listTagSets(ProjectLayersPanel.this.getModelObject());
                         }
                     });
                 }
@@ -1104,7 +1100,7 @@ public class ProjectLayersPanel
                         spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
                         //Add layers of type SPAN available in the project
                         for (AnnotationLayer spanLayer : annotationService
-                                .listAnnotationLayer(selectedProjectModel.getObject())) {
+                                .listAnnotationLayer(ProjectLayersPanel.this.getModelObject())) {
                             if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
                                 types.add(spanLayer.getName());
                             }
@@ -1113,7 +1109,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -1146,7 +1142,7 @@ public class ProjectLayersPanel
                     }
                     if (feature.getId() == 0) {
                         feature.setLayer(layerDetailForm.getModelObject());
-                        feature.setProject(selectedProjectModel.getObject());
+                        feature.setProject(ProjectLayersPanel.this.getModelObject());
 
                         if (annotationService.existsFeature(feature.getName(), feature.getLayer())) {
                             error("This feature is already added for this layer!");
@@ -1165,7 +1161,7 @@ public class ProjectLayersPanel
                     }
                 }
             });
-            add(new Button("cancel", new ResourceModel("label")) {
+            add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -1261,7 +1257,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Button("new", new ResourceModel("label"))
+            add(new Button("new", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 

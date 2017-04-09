@@ -40,7 +40,7 @@ import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -86,7 +86,7 @@ public class ManageUsersPage
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
-            add(new Button("create", new ResourceModel("label"))
+            add(new Button("create", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -99,7 +99,7 @@ public class ManageUsersPage
             });
             // not used in the 1.0.0 release
             Button delete;
-            add(delete = new Button("delete", new ResourceModel("label"))
+            add(delete = new Button("delete", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -235,7 +235,7 @@ public class ManageUsersPage
             adminOnly.setVisible(isAdmin());
             add(adminOnly);
 
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -256,7 +256,7 @@ public class ManageUsersPage
                     }
                 }
             });
-            add(new Button("cancel", new ResourceModel("label"))
+            add(new Button("cancel", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 

@@ -15,32 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
-import java.io.Serializable;
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.wicket.Page;
-
-public interface MenuItemService
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface ProjectSettingsPanel
 {
-    List<MenuItemService.MenuItem> getMenuItems();
-
-    public static class MenuItem
-        implements Serializable
-    {
-        private static final long serialVersionUID = -6839143167407389149L;
-        
-        public Condition condition;
-        public String icon;
-        public String label;
-        public Class<? extends Page> page;
-        public int prio;
-    }
-    
-    @FunctionalInterface
-    public static interface Condition extends Serializable
-    {
-        boolean applies();
-    }
+    String label();
+    int prio() default Integer.MAX_VALUE;
 }

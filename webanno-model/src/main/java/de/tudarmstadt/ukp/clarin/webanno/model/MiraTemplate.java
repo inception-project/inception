@@ -33,8 +33,6 @@ import javax.persistence.UniqueConstraint;
 
 /**
  * A persistence object for MIRA template configurations
- *
- *
  */
 @Entity
 @Table(name = "mira_template", uniqueConstraints = { @UniqueConstraint(columnNames = { "trainFeature" }) })
@@ -55,6 +53,7 @@ public class MiraTemplate
     @ManyToOne
     @JoinColumn(name = "trainFeature")
     private AnnotationFeature trainFeature;
+    
     /**
      * {@link TagSet} used as a feature for the trainFeature
      */

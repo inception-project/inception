@@ -43,7 +43,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -65,16 +66,18 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A Panel used to define automation properties for the {@code MIRA} machine learning algorithm
- *
- *
  */
+@ProjectSettingsPanel(label="Automation", prio=700)
 public class ProjectMiraTemplatePanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
@@ -104,8 +107,6 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
     private TargetLaerDetailForm targetLayerDetailForm;
 
-    private final IModel<Project> selectedProjectModel;
-
     private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
 
     private AnnotationFeature selectedFeature;
@@ -119,10 +120,10 @@ public class ProjectMiraTemplatePanel
 
     public ProjectMiraTemplatePanel(String id, final IModel<Project> aProjectModel)
     {
-        super(id);
-        this.selectedProjectModel = aProjectModel;
+        super(id, aProjectModel);
 
-        for (MiraTemplate template : automationService.listMiraTemplates(selectedProjectModel.getObject())) {
+        for (MiraTemplate template : automationService
+                .listMiraTemplates(ProjectMiraTemplatePanel.this.getModelObject())) {
             if (template.isCurrentLayer()) {
                 this.template = template;
                 selectedFeature = template.getTrainFeature();
@@ -172,7 +173,7 @@ public class ProjectMiraTemplatePanel
         public MiraTrainLayerSelectionForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            final Project project = selectedProjectModel.getObject();
+            final Project project = ProjectMiraTemplatePanel.this.getModelObject();
 
             add(features = new DropDownChoice<AnnotationFeature>("features")
             {
@@ -331,7 +332,7 @@ public class ProjectMiraTemplatePanel
             miraTemplateDetailForm.setModelObject(template);
 
             add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "targetLayerTarinDocumentsPanel", selectedProjectModel,
+                    "targetLayerTarinDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
                     new Model<TabSepDocModel>(new TabSepDocModel(false, false)), featureModel)
             {
 
@@ -372,7 +373,7 @@ public class ProjectMiraTemplatePanel
             otherLayerDetailForm.setModelObject(selectedOtherModel);
 
             add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "otherLayerTarinDocumentsPanel", selectedProjectModel,
+                    "otherLayerTarinDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
                     new Model<TabSepDocModel>(new TabSepDocModel(false, false)),
                     Model.of(otherLayerDetailForm.getModelObject().selectedFeatures))
             {
@@ -397,7 +398,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTabSepAsFeatureDocumentsPanel", selectedProjectModel,
+                    "freeTabSepAsFeatureDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
                     new Model<TabSepDocModel>(new TabSepDocModel(false, true)), featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
@@ -422,7 +423,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
-                    "freeTabSepAsTargetDocumentsPanel", selectedProjectModel,
+                    "freeTabSepAsTargetDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
                     new Model<TabSepDocModel>(new TabSepDocModel(true, true)), featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
@@ -450,7 +451,7 @@ public class ProjectMiraTemplatePanel
 
             add(new CheckBox("annotateAndRepeat"));
 
-            add(new Button("save", new ResourceModel("label"))
+            add(new Button("save", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -461,18 +462,18 @@ public class ProjectMiraTemplatePanel
                     if (template.getId() == 0) {
 
                         // Since the layer is changed, new classifier is needed
-                        for (SourceDocument sd : documentService
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                        for (SourceDocument sd : documentService.listSourceDocuments(
+                                ProjectMiraTemplatePanel.this.getModelObject())) {
                             sd.setProcessed(false);
                         }
                         template.setTrainFeature(selectedFeature);
                         automationService.createTemplate(template);
-                        featureModel.setObject(MiraTemplateDetailForm.this.getModelObject()
-                                .getTrainFeature());
+                        featureModel.setObject(
+                                MiraTemplateDetailForm.this.getModelObject().getTrainFeature());
                     }
                     template.setCurrentLayer(true);
-                    for (MiraTemplate tmp : automationService.listMiraTemplates(selectedProjectModel
-                            .getObject())) {
+                    for (MiraTemplate tmp : automationService
+                            .listMiraTemplates(ProjectMiraTemplatePanel.this.getModelObject())) {
                         if (tmp.equals(template)) {
                             continue;
                         }
@@ -512,14 +513,15 @@ public class ProjectMiraTemplatePanel
                         @Override
                         protected List<AnnotationFeature> load()
                         {
+                            Project project = ProjectMiraTemplatePanel.this.getModelObject();
                             List<AnnotationFeature> features = annotationService
-                                    .listAnnotationFeature(selectedProjectModel.getObject());
+                                    .listAnnotationFeature(project);
                             features.remove(miraTemplateDetailForm.getModelObject()
                                     .getTrainFeature());
                             features.removeAll(miraTemplateDetailForm.getModelObject()
                                     .getOtherFeatures());
                             for (AnnotationFeature feature : annotationService
-                                    .listAnnotationFeature(selectedProjectModel.getObject())) {
+                                    .listAnnotationFeature(project)) {
                                 if (!feature.getLayer().isEnabled()
                                         || !feature.getLayer().getType()
                                                 .equals(WebAnnoConst.SPAN_TYPE)
@@ -636,7 +638,7 @@ public class ProjectMiraTemplatePanel
         {
             super(id);
 
-            add(new IndicatingAjaxButton("apply", new ResourceModel("label"))
+            add(new IndicatingAjaxButton("apply", new StringResourceModel("label"))
             {
 
                 private static final long serialVersionUID = 1L;
@@ -653,10 +655,12 @@ public class ProjectMiraTemplatePanel
                     }
                     AutomationStatus automationStatus = new AutomationStatus();
                     try {
+                        Project project = ProjectMiraTemplatePanel.this.getModelObject();
+                        
                         // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
                         for (SourceDocument document : documentService
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                                .listSourceDocuments(project)) {
                             if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
                                     || (document.isTrainingDocument() && template.getTrainFeature()
                                             .equals(document.getFeature()))) {
@@ -666,7 +670,7 @@ public class ProjectMiraTemplatePanel
                         }
 
                         for (SourceDocument document : automationService
-                                .listTabSepDocuments(selectedProjectModel.getObject())) {
+                                .listTabSepDocuments(project)) {
                             if (document.isTrainingDocument()) {
                                 existsTrainDocument = true;
                                 break;
@@ -686,14 +690,14 @@ public class ProjectMiraTemplatePanel
                         // no need to re-train if no new document is added
                         boolean existUnprocessedDocument = false;
                         for (SourceDocument document : documentService
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                                .listSourceDocuments(project)) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
                                 break;
                             }
                         }
                         for (SourceDocument document : automationService
-                                .listTabSepDocuments(selectedProjectModel.getObject())) {
+                                .listTabSepDocuments(project)) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
                                 break;
@@ -708,7 +712,7 @@ public class ProjectMiraTemplatePanel
                         int annodoc = 0, trainDoc = 0;
 
                         for (SourceDocument document : documentService
-                                .listSourceDocuments(selectedProjectModel.getObject())) {
+                                .listSourceDocuments(project)) {
                             if ((document.isTrainingDocument() || document.getState().equals(
                                     SourceDocumentState.CURATION_FINISHED))
                                     && !document.isProcessed()) {
@@ -838,5 +842,11 @@ public class ProjectMiraTemplatePanel
         public AnnotationFeature features = new AnnotationFeature();
         public AnnotationFeature selectedFeatures = new AnnotationFeature();
 
+    }
+    
+    @ProjectSettingsPanelCondition
+    public static boolean settingsPanelCondition(Project aProject)
+    {
+        return Mode.AUTOMATION.equals(aProject.getMode());
     }
 }

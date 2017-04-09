@@ -45,7 +45,6 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -85,12 +84,16 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
+@ProjectSettingsPanel(label="Export")
 public class ProjectExportPanel
-    extends Panel
+    extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
@@ -152,7 +155,7 @@ public class ProjectExportPanel
 	private boolean canceled = false;
 
 	public ProjectExportPanel(String id, final IModel<Project> aProjectModel) {
-		super(id);
+		super(id, aProjectModel);
 		add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
 	}
 
