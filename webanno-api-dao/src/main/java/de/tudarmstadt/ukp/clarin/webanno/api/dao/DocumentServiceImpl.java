@@ -32,6 +32,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.ZipFile;
+
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -807,5 +809,15 @@ public class DocumentServiceImpl
         for (SourceDocument document : listSourceDocuments(aProject)) {
             removeSourceDocument(document);
         }
+    }
+
+    @Override
+    @Transactional
+    public void onProjectImport(ZipFile aZip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception
+    {
+        // Nothing at the moment
     }
 }

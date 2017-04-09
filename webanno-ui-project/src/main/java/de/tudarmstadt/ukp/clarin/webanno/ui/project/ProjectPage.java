@@ -70,10 +70,10 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
@@ -139,7 +140,7 @@ public class ProjectPage
     public static ProjectDetailForm projectDetailForm;
     private ImportProjectForm importProjectForm;
 
-    public static boolean visible = true;
+    public static boolean exportInProgress = false;
 
     public ProjectPage()
     {
@@ -345,7 +346,7 @@ public class ProjectPage
                 @Override
                 public boolean isVisible()
                 {
-                    return visible;
+                    return !exportInProgress;
                 }
             });
             
@@ -372,7 +373,7 @@ public class ProjectPage
                     {
                         IModel<Project> model = ProjectDetailForm.this.getModel();
                         return model.getObject() != null && model.getObject().getId() != 0
-                                && visible && psp.condition.applies(model.getObject());
+                                && psp.condition.applies(model.getObject(), exportInProgress);
                     }
                 };
                 tabs.add(tab);
@@ -584,8 +585,7 @@ public class ProjectPage
                     }
                 }
 
-                // projectInputStream =
-                // uploadedFile.getInputStream();
+                // Load the project model from the JSON file
                 String text = IOUtils.toString(projectInputStream, "UTF-8");
                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = JSONUtil
                         .getJsonConverter()
@@ -593,42 +593,62 @@ public class ProjectPage
                         .readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
 
-                importedProject = ImportUtil.createProject(importedProjectSetting, projectService,
-                        userRepository);
+                // Import the project itself
+                importedProject = ImportUtil.createProject(importedProjectSetting, projectService);
+                
+                // Import additional project things
+                projectService.onProjectImport(zip, importedProjectSetting, importedProject);
 
+                // Import missing users
+                if (aGenerateUsers) {
+                    ImportUtil.createMissingUsers(importedProjectSetting, userRepository);
+                }
+                
+                // Notify all relevant service so that they can initialize themselves for the given project
+                for (ProjectLifecycleAware bean : projectService.getProjectLifecycleAwareBeans()) {
+                    try {
+                        bean.onProjectImport(zip, importedProjectSetting, importedProject);
+                    }
+                    catch (IOException e) {
+                        throw e;
+                    }
+                    catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+
+                // Import layers
                 Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
                         .createLayer(importedProject, importedProjectSetting, userRepository,
                                 annotationService);
-                ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
-                        documentService, userRepository, featuresMap);
-                ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
-                        featuresMap);
-                ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
-                        documentService);
-                ImportUtil.createProjectPermission(importedProjectSetting, importedProject,
-                        projectService, aGenerateUsers, userRepository);
                 /*
                  * for (TagSet tagset : importedProjectSetting.getTagSets()) {
                  * ImportUtil.createTagset(importedProject, tagset, projectRepository,
                  * annotationService); }
                  */
-                // add source document content
+                
+                // Import source document 
+                ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
+                        documentService, featuresMap);
+                // Import source document content
                 ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
-                // add annotation document content
+                
+                // Import automation settings
+                ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
+                        featuresMap);
+                
+                // Import annotation document content
+                ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
+                        documentService);
+                // Import annotation document content
                 ImportUtil.createAnnotationDocumentContent(zip, importedProject, documentService);
-                // create curation document content
+                
+                // Import curation document content
                 ImportUtil.createCurationDocumentContent(zip, importedProject, documentService);
-                // create project log
-                ImportUtil.createProjectLog(zip, importedProject, projectService);
-                // create project guideline
-                ImportUtil.createProjectGuideline(zip, importedProject, projectService);
-                // create project META-INF
-                ImportUtil.createProjectMetaInf(zip, importedProject, projectService);
-                // create project constraint
-                ImportUtil.createProjectConstraint(zip, importedProject, constraintsService);
             }
             catch (Exception e) {
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Error importing project", e);
             }
         }
         

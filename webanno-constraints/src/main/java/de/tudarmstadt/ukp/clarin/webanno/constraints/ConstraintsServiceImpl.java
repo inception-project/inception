@@ -23,14 +23,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -46,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class ConstraintsServiceImpl
@@ -257,6 +262,35 @@ public class ConstraintsServiceImpl
         //Remove Constraints
         for (ConstraintSet set: listConstraintSets(aProject) ){
             removeConstraintSet(set);
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void onProjectImport(ZipFile aZip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception
+    {
+        for (Enumeration zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = ZipUtils.normalizeEntryName(entry);
+            
+            if (entryName.startsWith(CONSTRAINTS)) {
+                String fileName = FilenameUtils.getName(entry.getName());
+                if(fileName.trim().isEmpty()){
+                    continue;
+                }
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.setProject(aProject);
+                constraintSet.setName(fileName);
+                createConstraintSet(constraintSet);
+                writeConstraintSet(constraintSet, aZip.getInputStream(entry));
+                log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
         }
     }
 }

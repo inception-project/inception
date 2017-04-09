@@ -54,10 +54,6 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-dkprocore</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-constraints</artifactId>
-    </dependency>
 
     <!-- Spring dependencies -->
 

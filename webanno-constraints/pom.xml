@@ -241,11 +241,6 @@
           <configuration>
             <usedDependencies>
               <!-- 
-                - Maven does not detect these as used because we only use inlined constants atm.
-                -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-api</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-support</usedDependency>
-              <!-- 
                 - The logging is used via reflection and cannot be detected by Maven
                 -->
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>

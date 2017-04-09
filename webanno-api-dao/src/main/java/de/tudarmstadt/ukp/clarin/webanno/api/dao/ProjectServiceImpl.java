@@ -29,10 +29,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -62,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class ProjectServiceImpl
@@ -93,8 +98,6 @@ public class ProjectServiceImpl
     public Object postProcessAfterInitialization(Object aBean, String aBeanName)
         throws BeansException
     {
-        log.error(aBeanName);
-        
         // Collect the beans that need to be notified about the project lifecycle
         projectLifecycleAwareBeans = new ArrayList<>();
         if (aBean instanceof ProjectLifecycleAware) {
@@ -104,7 +107,8 @@ public class ProjectServiceImpl
         return aBean;
     }
     
-    private List<ProjectLifecycleAware> getProjectLifecycleAwareBeans()
+    @Override
+    public List<ProjectLifecycleAware> getProjectLifecycleAwareBeans()
     {
         if (!projectLifecycleAwareBeansSorted) {
             projectLifecycleAwareBeans.sort((a,b) -> {
@@ -452,8 +456,10 @@ public class ProjectServiceImpl
         throws IOException
     {
         // Notify all relevant service so that they can clean up themselves before we remove the
-        // project
-        for (ProjectLifecycleAware bean : getProjectLifecycleAwareBeans()) {
+        // project - notification happens in reverse order
+        List<ProjectLifecycleAware> beans = new ArrayList<>(getProjectLifecycleAwareBeans());
+        Collections.reverse(beans);
+        for (ProjectLifecycleAware bean : beans) {
             try {
                 bean.beforeProjectRemove(aProject);
             }
@@ -599,5 +605,134 @@ public class ProjectServiceImpl
             }
         }
         return allowedProject;
+    }
+    
+    @Override
+    @Transactional
+    public void onProjectImport(ZipFile aZip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception
+    {
+        // create project log
+        createProjectLog(aZip, aProject);
+        
+        // create project guideline
+        createProjectGuideline(aZip, aProject);
+        
+        // create project META-INF
+        createProjectMetaInf(aZip, aProject);
+
+        // Import project permissions
+        createProjectPermission(aExportedProject, aProject);
+    }
+
+    /**
+     * copy project log files from the exported project
+     * @param zip the ZIP file.
+     * @param aProject the project.
+     * @throws IOException if an I/O error occurs.
+     */
+    @SuppressWarnings("rawtypes")
+    private void createProjectLog(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = ZipUtils.normalizeEntryName(entry);
+            
+            if (entryName.startsWith(LOG_DIR)) {
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
+                        getProjectLogFile(aProject));
+                log.info("Imported log for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
+            }
+        }
+    }
+    
+    /**
+     * copy guidelines from the exported project
+     * @param zip the ZIP file.
+     * @param aProject the project.
+     * @throws IOException if an I/O error occurs.
+     */
+    @SuppressWarnings("rawtypes")
+    private void createProjectGuideline(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = ZipUtils.normalizeEntryName(entry);
+            
+            if (entryName.startsWith(GUIDELINE)) {
+                String fileName = FilenameUtils.getName(entry.getName());
+                if(fileName.trim().isEmpty()){
+                    continue;
+                }
+                File guidelineDir = getGuidelinesFile(aProject);
+                FileUtils.forceMkdir(guidelineDir);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
+                        fileName));
+                
+                log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
+        }
+    }
+    
+    /**
+     * copy Project META_INF from the exported project
+     * @param zip the ZIP file.
+     * @param aProject the project.
+     * @throws IOException if an I/O error occurs.
+     */
+    @SuppressWarnings("rawtypes")
+    private void createProjectMetaInf(ZipFile zip, Project aProject)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = ZipUtils.normalizeEntryName(entry);
+
+            if (entryName.startsWith(META_INF)) {
+                File metaInfDir = new File(getMetaInfFolder(aProject),
+                        FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
+                // where the file reside in the META-INF/... directory
+                FileUtils.forceMkdir(metaInfDir);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
+                        FilenameUtils.getName(entry.getName())));
+                
+                log.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
+                        + aProject.getId() + "]");
+            }
+        }
+    }
+
+    /**
+     * Create {@link ProjectPermission} from the exported
+     * {@link de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission}
+     * @param aImportedProjectSetting the imported project.
+     * @param aImportedProject the project.
+     * @throws IOException if an I/O error occurs.
+     */
+    private void createProjectPermission(
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
+            Project aImportedProject)
+        throws IOException
+    {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission importedPermission : aImportedProjectSetting
+                .getProjectPermissions()) {
+            ProjectPermission permission = new ProjectPermission();
+            permission.setLevel(importedPermission.getLevel());
+            permission.setProject(aImportedProject);
+            permission.setUser(importedPermission.getUser());
+            createProjectPermission(permission);
+        }
     }
 }

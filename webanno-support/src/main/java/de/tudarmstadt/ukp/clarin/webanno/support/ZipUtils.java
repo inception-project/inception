@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+package de.tudarmstadt.ukp.clarin.webanno.support;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -114,5 +114,16 @@ public class ZipUtils
                 closeQuietly(in);
             }
         }
+    }
+
+    public static String normalizeEntryName(ZipEntry aEntry)
+    {
+        // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+        String entryName = aEntry.toString();
+        if (entryName.startsWith("/")) {
+            entryName = entryName.substring(1);
+        }
+       
+        return entryName;
     }
 }

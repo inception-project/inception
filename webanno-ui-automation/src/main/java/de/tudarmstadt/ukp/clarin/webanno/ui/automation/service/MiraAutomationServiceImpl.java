@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -32,11 +33,13 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -61,6 +64,9 @@ public class MiraAutomationServiceImpl
 
     @Resource(name = "documentService")
     private DocumentService documentService;
+
+    @SpringBean(name = "annotationService")
+    private AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -275,5 +281,15 @@ public class MiraAutomationServiceImpl
         for (SourceDocument document : listTabSepDocuments(aProject)) {
             documentService.removeSourceDocument(document);
         }
+    }
+    
+    @Override
+    @Transactional
+    public void onProjectImport(ZipFile aZip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception
+    {
+        // Nothing at the moment
     }
 }

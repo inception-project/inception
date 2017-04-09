@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -44,6 +45,8 @@ public interface ProjectService
     public static final String META_INF = "/META-INF/";
 
     public static final String HELP_FILE = "/help.properties";
+
+    public static final String LOG_DIR = "log";
     
     /**
      * creates a project permission, adding permission level for the user in the given project
@@ -405,4 +408,15 @@ public interface ProjectService
      * @return the roles.
      */
     List<Authority> listAuthorities(User user);
+    
+    // --------------------------------------------------------------------------------------------
+    // Methods related to other things
+    // --------------------------------------------------------------------------------------------
+
+    List<ProjectLifecycleAware> getProjectLifecycleAwareBeans();
+    
+    void onProjectImport(ZipFile zip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception;
 }

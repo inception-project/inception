@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -81,11 +80,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 
 /**
@@ -107,7 +108,7 @@ public class ProjectExportPanel
     private static final String CURATION_AS_SERIALISED_CAS = "/"
             + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
     private static final String CURATION_FOLDER = "/curation/";
-    private static final String LOG_FOLDER = "/" + ImportUtil.LOG_DIR;
+    private static final String LOG_FOLDER = "/" + ProjectService.LOG_DIR;
     private static final String GUIDELINES_FOLDER = "/" + ImportUtil.GUIDELINE;
     private static final String ANNOTATION_CAS_FOLDER = "/"
             + ImportUtil.ANNOTATION_AS_SERIALISED_CAS + "/";
@@ -415,7 +416,7 @@ public class ProjectExportPanel
                         }
 
                         enabled = true;
-                        ProjectPage.visible = true;
+                        ProjectPage.exportInProgress = false;
                         target.add(ProjectPage.projectSelectionForm.setEnabled(true));
                         target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
@@ -423,7 +424,7 @@ public class ProjectExportPanel
                     }
                     else if (canceled) {
                         enabled = true;
-                        ProjectPage.visible = true;
+                        ProjectPage.exportInProgress = false;
                         target.add(ProjectPage.projectSelectionForm.setEnabled(true));
                         target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
@@ -449,7 +450,7 @@ public class ProjectExportPanel
                     canceled = true;
                     progress = 0;
                     ProjectPage.projectSelectionForm.setEnabled(false);
-                    ProjectPage.visible = false;
+                    ProjectPage.exportInProgress = true;
                     target.add(ProjectExportPanel.this.getPage());
                     fileGenerationProgress.start(target);
                     Authentication authentication = SecurityContextHolder.getContext()
@@ -951,5 +952,11 @@ public class ProjectExportPanel
             }
 
         }
+    }
+    
+    @ProjectSettingsPanelCondition
+    public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
+    {
+        return true;
     }
 }

@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -1011,5 +1012,14 @@ public class AnnotationSchemaServiceImpl
         for (TagSet tagSet : listTagSets(aProject)) {
             removeTagSet(tagSet);
         }
+    }
+
+    @Override
+    public void onProjectImport(ZipFile aZip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
+        throws Exception
+    {
+        // Nothing at the moment
     }
 }

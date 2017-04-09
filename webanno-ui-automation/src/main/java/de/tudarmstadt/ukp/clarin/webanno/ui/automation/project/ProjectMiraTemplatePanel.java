@@ -845,8 +845,8 @@ public class ProjectMiraTemplatePanel
     }
     
     @ProjectSettingsPanelCondition
-    public static boolean settingsPanelCondition(Project aProject)
+    public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
     {
-        return Mode.AUTOMATION.equals(aProject.getMode());
+        return !aExportInProgress && Mode.AUTOMATION.equals(aProject.getMode());
     }
 }

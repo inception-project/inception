@@ -118,13 +118,13 @@ public class ProjectSettingsPanelRegistryServiceImpl
                 List<Method> methods = MethodUtils.getMethodsListWithAnnotation(panelClass,
                         ProjectSettingsPanelCondition.class);
                 if (!methods.isEmpty()) {
-                    panel.condition = (aProject) -> {
+                    panel.condition = (aProject, aExportInProgress) -> {
                         try {
                             // Need to look the method up again here because methods are not
                             // serializable
                             Method m = MethodUtils.getMethodsListWithAnnotation(panelClass,
                                     ProjectSettingsPanelCondition.class).get(0);
-                            return (boolean) m.invoke(null, aProject);
+                            return (boolean) m.invoke(null, aProject, aExportInProgress);
                         }
                         catch (Exception e) {
                             LoggerFactory.getLogger(ProjectSettingsPanelRegistryServiceImpl.class)
@@ -134,7 +134,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
                     };
                 }
                 else {
-                    panel.condition = (aProject) -> { return true; };
+                    panel.condition = (aProject, aExportInProgress) -> { return !aExportInProgress; };
                 }
                 
                 panels.add(panel);

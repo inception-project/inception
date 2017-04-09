@@ -45,12 +45,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -73,7 +70,6 @@ public class ImportUtil
     public static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     public static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
     public static final String GUIDELINE = "guideline";
-    public static final String LOG_DIR = "log";
     public static final String EXPORTED_PROJECT = "exportedproject";
     public static final String CONSTRAINTS = "constraints";
 
@@ -387,11 +383,9 @@ public class ImportUtil
      */
     public static Project createProject(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aProject,
-            ProjectService aRepository, UserDao aUserDao)
+            ProjectService aRepository)
         throws IOException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
         Project project = new Project();
         String projectName = aProject.getName();
         if (aRepository.existsProject(projectName)) {
@@ -444,7 +438,7 @@ public class ImportUtil
      */
     public static void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject, DocumentService aRepository, UserDao aUserDao,
+            Project aImportedProject, DocumentService aRepository, 
             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> aFeatureMap)
         throws IOException
     {
@@ -456,13 +450,17 @@ public class ImportUtil
             sourceDocument.setState(importedSourceDocument.getState());
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
+            sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
+            
+            // BEGIN AUTOMATION - THIS MUST SOMEHOW BE REMOVED HERE...
             if (aFeatureMap.size() > 0) {
                 sourceDocument.setFeature(aFeatureMap.get(importedSourceDocument.getFeature()));
             }
             sourceDocument.setProcessed(false);// automation re-start in the new
                                                // project settings
             sourceDocument.setTrainingDocument(importedSourceDocument.isTrainingDocument());
-            sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
+            // END AUTOMATION - THIS MUST SOMEHOW BE REMOVED HERE...
+            
             aRepository.createSourceDocument(sourceDocument);
         }
     }
@@ -521,41 +519,23 @@ public class ImportUtil
         }
     }
 
-    /**
-     * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission}
-     * @param aImportedProjectSetting the imported project.
-     * @param aImportedProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
-     */
-    public static void createProjectPermission(
+    public static void createMissingUsers(
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
-            Project aImportedProject, ProjectService aRepository, boolean aGenerateUsers,
             UserDao aUserDao)
-        throws IOException
     {
         Set<String> users = new HashSet<>();
         
         for (de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission importedPermission : aImportedProjectSetting
                 .getProjectPermissions()) {
-            ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(importedPermission.getLevel());
-            permission.setProject(aImportedProject);
-            permission.setUser(importedPermission.getUser());
-            aRepository.createProjectPermission(permission);
-            
             users.add(importedPermission.getUser());
         }
         
-        if (aGenerateUsers) {
-            for (String user : users) {
-                if (!aUserDao.exists(user)) {
-                    User u = new User();
-                    u.setUsername(user);
-                    u.setEnabled(false);
-                    aUserDao.create(u);
-                }
+        for (String user : users) {
+            if (!aUserDao.exists(user)) {
+                User u = new User();
+                u.setUsername(user);
+                u.setEnabled(false);
+                aUserDao.create(u);
             }
         }
     }
@@ -679,133 +659,6 @@ public class ImportUtil
             }
         }
     }
-
-    /**
-     * copy guidelines from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    public static void createProjectGuideline(ZipFile zip, Project aProject,
-            ProjectService aRepository)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = normalizeEntryName(entry);
-            
-            if (entryName.startsWith(GUIDELINE)) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if(fileName.trim().isEmpty()){
-                	continue;
-                }
-                File guidelineDir = aRepository.getGuidelinesFile(aProject);
-                FileUtils.forceMkdir(guidelineDir);
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
-                        fileName));
-                
-                LOG.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
-            }
-        }
-    }
-
-    /**
-     * copy Project META_INF from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    public static void createProjectMetaInf(ZipFile zip, Project aProject,
-            ProjectService aRepository)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = normalizeEntryName(entry);
-
-            if (entryName.startsWith(META_INF)) {
-                File metaInfDir = new File(aRepository.getMetaInfFolder(aProject),
-                        FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
-                // where the file reside in the META-INF/... directory
-                FileUtils.forceMkdir(metaInfDir);
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
-                        FilenameUtils.getName(entry.getName())));
-                
-                LOG.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
-                        + aProject.getId() + "]");
-            }
-        }
-    }
-
-    /**
-     * copy project log files from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    public static void createProjectLog(ZipFile zip, Project aProject, ProjectService aRepository)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = normalizeEntryName(entry);
-            
-            if (entryName.startsWith(LOG_DIR)) {
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
-                        aRepository.getProjectLogFile(aProject));
-                LOG.info("Imported log for project [" + aProject.getName() + "] with id ["
-                        + aProject.getId() + "]");
-            }
-        }
-    }
-
-    /**
-     * copy constraints from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @param aRepository the repository service.
-     * @throws IOException if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    public static void createProjectConstraint(ZipFile zip, Project aProject,
-            ConstraintsService aRepository)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = normalizeEntryName(entry);
-            
-            if (entryName.startsWith(CONSTRAINTS)) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if(fileName.trim().isEmpty()){
-                	continue;
-                }
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.setProject(aProject);
-                constraintSet.setName(fileName);
-                aRepository.createConstraintSet(constraintSet);
-                aRepository.writeConstraintSet(constraintSet, zip.getInputStream(entry));
-                LOG.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
-            }
-        }
-    }
-
 
     public static de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> aLayerToExLayer,

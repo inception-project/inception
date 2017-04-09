@@ -17,13 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
+import java.util.zip.ZipFile;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectLifecycleAware
 {
-    public void afterProjectCreate(Project aProject)
+    void afterProjectCreate(Project aProject)
         throws Exception;
 
-    public void beforeProjectRemove(Project aProject)
+    void beforeProjectRemove(Project aProject)
+        throws Exception;
+
+    void onProjectImport(ZipFile zip,
+            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            Project aProject)
         throws Exception;
 }

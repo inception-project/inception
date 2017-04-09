@@ -42,6 +42,11 @@
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryServiceImpl" level="DEBUG"/>
+    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl" level="DEBUG"/>
+    <!--
+    <Logger name="org.apache.wicket.Localizer" level="DEBUG"/>
+    -->
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />
