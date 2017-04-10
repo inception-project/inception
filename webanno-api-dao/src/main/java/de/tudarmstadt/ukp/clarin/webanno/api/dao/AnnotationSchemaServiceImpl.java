@@ -1015,6 +1015,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public void onProjectImport(ZipFile aZip,
             de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
             Project aProject)
