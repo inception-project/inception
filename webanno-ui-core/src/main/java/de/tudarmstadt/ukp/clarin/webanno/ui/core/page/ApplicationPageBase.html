@@ -20,7 +20,7 @@
 <head>
   <link rel="icon" href="favicon.ico" type="image/x-icon"/>
   <meta name="google" content="notranslate">
-  <title>WebAnno - Web-based general-purpose annotation tool <wicket:message key="page.title" /></title>
+  <title><wicket:message key="product.name" /> - <wicket:message key="page.title" /></title>
 </head>
 <body>
   <div><img id="spinner" src="images/spinner.gif" /></div>
@@ -31,7 +31,7 @@
   </div>
   
   <div class="menubar">
-    WebAnno | <a href="welcome.html"> Home </a>
+    <wicket:message key="product.name" /> | <a href="welcome.html"> Home </a>
     <span style="float: right;">
       <a wicket:id="helpLink"></a>
       <wicket:enclosure child="logoutPanel">
@@ -51,7 +51,7 @@
       [Feedback]
     </div>
     <div>
-      Technische Universität Darmstadt -- Computer Science Department -- WebAnno --
+      Technische Universität Darmstadt -- Computer Science Department -- <wicket:message key="product.name" /> --
       <span wicket:id="version">
         [Copyright]
       </span>
