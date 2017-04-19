@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -174,6 +175,15 @@ public class AnnotationPage
             error("You have no permission to access document [" + documentId + "] in project ["
                     + projectId + "]");
             return;
+        }
+        
+        if (documentService.existsAnnotationDocument(document, user)) {
+            AnnotationDocument adoc = documentService.getAnnotationDocument(document, user);
+            if (AnnotationDocumentState.IGNORE.equals(adoc.getState())) {
+                error("Document [" + documentId + "] in project [" + projectId
+                        + "] is locked for you");
+                return;
+            }
         }
 
         firstLoad = false;
