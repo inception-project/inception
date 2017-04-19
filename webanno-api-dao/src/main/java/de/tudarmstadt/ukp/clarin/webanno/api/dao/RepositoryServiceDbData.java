@@ -2465,28 +2465,33 @@ public class RepositoryServiceDbData
                 .setParameter("project", aProject)
                 .getResultList();
 
-        // Next check if we have any annotation document records that state that the document
-        // is ignored for the given user
+        // Next we get all the annotation document records. We can use these to filter out
+        // documents which are IGNOREed for given users.
         List<AnnotationDocument> annotationDocuments = entityManager
                 .createQuery(
                         "FROM AnnotationDocument " +
-                        "WHERE user = (:username) AND state != (:state) AND project = (:project)",
+                        "WHERE user = (:username) AND project = (:project)",
                         AnnotationDocument.class)
                 .setParameter("username", aUser.getUsername())
                 .setParameter("project", aProject)
-                .setParameter("state", AnnotationDocumentState.IGNORE)
                 .getResultList();
 
-        // First we add all the source documents for which we have an annotation document
+        // First we add all the source documents
         Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
-        for (AnnotationDocument adoc : annotationDocuments) {
-            map.put(adoc.getDocument(), adoc);
+        for (SourceDocument doc : sourceDocuments) {
+            map.put(doc, null);
         }
 
-        // Then we also add all the source documents for which we do not have an annoation document
-        for (SourceDocument doc : sourceDocuments) {
-            if (!map.containsKey(doc)) {
-                map.put(doc, null);
+        // Now we link the source documents to the annotation documents and remove IGNOREed
+        // documents
+        for (AnnotationDocument adoc : annotationDocuments) {
+            switch (adoc.getState()) {
+            case IGNORE:
+                map.remove(adoc.getDocument());
+                break;
+            default:
+                map.put(adoc.getDocument(), adoc);
+                break;
             }
         }
 
