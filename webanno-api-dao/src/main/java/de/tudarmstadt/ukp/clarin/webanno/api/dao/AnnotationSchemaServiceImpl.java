@@ -997,6 +997,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public void beforeProjectRemove(Project aProject)
         throws Exception
     {
