@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
  * configuration.
  */
+@Component("wicketApplication")
 public class WicketApplication
     extends WicketApplicationBase
 {

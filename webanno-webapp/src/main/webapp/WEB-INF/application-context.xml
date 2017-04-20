@@ -27,10 +27,6 @@
     <!-- Scan components and Java configuration -->
     <context:component-scan base-package="de.tudarmstadt.ukp.clarin.webanno" />
 
-	<!-- setup wicket application -->
-	<bean id="wicketApplication"
-		class="de.tudarmstadt.ukp.clarin.webanno.webapp.WicketApplication" />
-
 	<bean id="formats"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		<property name="ignoreResourceNotFound">
