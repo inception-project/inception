@@ -62,8 +62,7 @@ public class ExportModalWindowPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ExportModalWindowPanel.class);
 
-    @SpringBean(name = "importExportService")
-    private ImportExportService importExportService;
+    private @SpringBean ImportExportService importExportService;
 
     private class ExportDetailsForm
         extends Form<DefaultModel>

@@ -115,26 +115,13 @@ public class ProjectPage
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "automationService")
-    private AutomationService automationService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-    
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
-
-    @SpringBean(name = "projectSettingsPanelRegistryService")
-    private ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AutomationService automationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean ConstraintsService constraintsService;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
 
     public static ProjectSelectionForm projectSelectionForm;
     public static ProjectDetailForm projectDetailForm;

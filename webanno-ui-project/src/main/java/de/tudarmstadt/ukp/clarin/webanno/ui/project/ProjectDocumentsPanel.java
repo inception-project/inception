@@ -61,17 +61,10 @@ public class ProjectDocumentsPanel
     
     private static final long serialVersionUID = 2116717853865353733L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-    
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "importExportService")
-    private ImportExportService importExportService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ImportExportService importExportService;
+    private @SpringBean UserDao userRepository;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();

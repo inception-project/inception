@@ -52,11 +52,8 @@ public class ProjectUsersPanel
 {
     private static final long serialVersionUID = 875749625429630464L;
 
-    @SpringBean(name = "projectService")
-    private ProjectService projectRepository;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean ProjectService projectRepository;
+    private @SpringBean UserDao userRepository;
 
     private User selectedUser;
 

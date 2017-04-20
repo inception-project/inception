@@ -108,29 +108,14 @@ public class CorrectionPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "correctionDocumentService")
-    private CorrectionDocumentService correctionDocumentService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
-    @SpringBean(name = "settingsService")
-    private SettingsService settingsService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CorrectionDocumentService correctionDocumentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean ConstraintsService constraintsService;
+    private @SpringBean SettingsService settingsService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
     private DocumentNamePanel documentNamePanel;

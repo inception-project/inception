@@ -99,14 +99,10 @@ public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = -7870526462864489252L;
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService repository;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ProjectService repository;
+    private @SpringBean UserDao userRepository;
 
     private final String FIRST = "first";
     private final String NEXT = "next";

@@ -100,23 +100,12 @@ public class AnnotationPage
     public static final String PAGE_PARAM_PROJECT_ID = "projectId";
     public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
 
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
-    @SpringBean(name = "settingsService")
-    private SettingsService settingsService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean ConstraintsService constraintsService;
+    private @SpringBean SettingsService settingsService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
     

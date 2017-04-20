@@ -81,23 +81,12 @@ public class ProjectMiraTemplatePanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "automationService")
-    private AutomationService automationService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "correctionDocumentService")
-    private CorrectionDocumentService correctionDocumentService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AutomationService automationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CorrectionDocumentService correctionDocumentService;
+    private @SpringBean UserDao userRepository;
 
     private MiraTrainLayerSelectionForm miraTrainLayerSelectionForm;
     private MiraTemplateDetailForm miraTemplateDetailForm;

@@ -118,26 +118,13 @@ public class ProjectExportPanel
 	private static final String CURATION_USER = "CURATION_USER";
 	private static final String CORRECTION_USER = "CORRECTION_USER";
 
-	@SpringBean(name = "annotationService")
-	private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "automationService")
-    private AutomationService automationService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-    
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-    
-    @SpringBean(name = "importExportService")
-    private ImportExportService importExportService;
-
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
-	@SpringBean(name = "userRepository")
-	private UserDao userRepository;
+	private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AutomationService automationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean ImportExportService importExportService;
+    private @SpringBean ConstraintsService constraintsService;
+	private @SpringBean UserDao userRepository;
 
 	private int progress = 0;
 	private ProgressBar fileGenerationProgress;

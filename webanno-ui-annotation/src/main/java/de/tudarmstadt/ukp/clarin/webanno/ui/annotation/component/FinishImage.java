@@ -31,9 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 /**
- * show closed/not closed images on annoataion/correction pages
- *
- *
+ * Show closed/not closed images on annoataion/correction pages
  */
 public class FinishImage
     extends WebMarkupContainer
@@ -41,13 +39,10 @@ public class FinishImage
 
     private static final long serialVersionUID = -4931039843586219625L;
 
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean UserDao userRepository;
 
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
-
-    WebMarkupContainer finish;
+    private WebMarkupContainer finish;
 
     public void setModel(IModel<AnnotatorState> aModel)
     {

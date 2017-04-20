@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.model.IModel;
@@ -56,7 +54,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * not use a CAS as model object because the CAS is large and does not serialize well. It is easier
  * to drive this component using a reference to the CAS (here an {@link AnnotationDocument}) and let
  * the component fetch the associated CAS itself when necessary.
- *
  */
 public class BratAnnotationDocumentVisualizer
     extends BratVisualizer
@@ -69,11 +66,8 @@ public class BratAnnotationDocumentVisualizer
 
     private String docData = EMPTY_DOC;
 
-    @SpringBean(name = "documentService")
-    private DocumentService repository;
-
-    @Resource(name = "annotationService")
-    private static AnnotationSchemaService annotationService;
+    private @SpringBean DocumentService repository;
+    private @SpringBean AnnotationSchemaService annotationService;
 
     public BratAnnotationDocumentVisualizer(String id, IModel<AnnotationDocument> aModel)
     {

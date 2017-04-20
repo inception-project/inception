@@ -70,13 +70,11 @@ public class ManageUsersPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectRepository;
 
-    @SpringBean(name = "projectService")
-    private ProjectService projectRepository;
-
-    boolean isCreate = false;
+    private boolean isCreate = false;
+    
     private class SelectionForm
         extends Form<SelectionModel>
     {

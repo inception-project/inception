@@ -173,20 +173,11 @@ public class MonitoringPage
     public static final String LAST_ACCESS = "last access:";
     public static final String LAST_ACCESS_ROW = "last access";
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "automationService")
-    private AutomationService automationService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AutomationService automationService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userRepository;
     
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;

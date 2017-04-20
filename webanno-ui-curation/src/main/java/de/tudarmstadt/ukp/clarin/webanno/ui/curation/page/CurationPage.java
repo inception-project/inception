@@ -103,29 +103,14 @@ public class CurationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-    
-    @SpringBean(name = "correctionDocumentService")
-    private CorrectionDocumentService correctionDocumentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
-
-    @SpringBean(name = "settingsService")
-    private SettingsService settingsService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CorrectionDocumentService correctionDocumentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean ConstraintsService constraintsService;
+    private @SpringBean SettingsService settingsService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
 
     private NumberTextField<Integer> gotoPageTextField;
     private DocumentNamePanel documentNamePanel;

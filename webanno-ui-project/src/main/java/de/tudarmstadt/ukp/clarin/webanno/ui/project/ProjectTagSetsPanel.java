@@ -86,11 +86,8 @@ public class ProjectTagSetsPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectTagSetsPanel.class);
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;

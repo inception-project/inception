@@ -52,11 +52,8 @@ public class AnnotationGuideLinePanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectRepository;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ProjectService projectRepository;
 
     private ArrayList<String> documents = new ArrayList<String>();
     private ArrayList<String> selectedDocuments = new ArrayList<String>();

@@ -54,17 +54,10 @@ public class MainMenuPage
 {
     private static final long serialVersionUID = -2487663821276301436L;
 
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
-
-    @SpringBean(name = "menuItemService")
-    private MenuItemService menuItemService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean MenuItemService menuItemService;
 
     private ListView<MenuItem> menu;
 

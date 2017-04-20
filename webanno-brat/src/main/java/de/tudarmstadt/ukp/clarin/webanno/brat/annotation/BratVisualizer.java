@@ -63,8 +63,7 @@ public abstract class BratVisualizer
 
 	protected AbstractAjaxBehavior docProvider;
 
-    @SpringBean(name = "documentService")
-    private DocumentService repository;
+    private @SpringBean DocumentService repository;
 
 	public BratVisualizer(String id, IModel<?> aModel)
 	{

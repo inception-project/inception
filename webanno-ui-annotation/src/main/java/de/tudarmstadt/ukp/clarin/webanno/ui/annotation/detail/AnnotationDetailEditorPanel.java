@@ -142,17 +142,10 @@ public class AnnotationDetailEditorPanel
     private static final long serialVersionUID = 7324241992353693848L;
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
 
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean AnnotationSchemaService annotationService;
 
     private AnnotationFeatureForm annotationFeatureForm;
 

@@ -66,8 +66,7 @@ public class ProjectConstraintsPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectConstraintsPanel.class);
 
-    @SpringBean(name = "constraintsService")
-    private ConstraintsService constraintsService;
+    private @SpringBean ConstraintsService constraintsService;
 
     private SelectionForm selectionForm;
     

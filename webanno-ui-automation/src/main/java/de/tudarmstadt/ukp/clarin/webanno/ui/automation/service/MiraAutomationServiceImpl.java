@@ -33,7 +33,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,11 +63,8 @@ public class MiraAutomationServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
-    @Resource(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
+    private @Resource DocumentService documentService;
+    private @Resource AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;

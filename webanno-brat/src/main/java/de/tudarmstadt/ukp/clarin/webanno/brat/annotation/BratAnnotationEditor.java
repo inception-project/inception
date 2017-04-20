@@ -94,8 +94,7 @@ public class BratAnnotationEditor
     private static final String PARAM_TARGET_TYPE = "targetType";
     private static final String PARAM_ORIGIN_TYPE = "originType";
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService annotationService;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;

@@ -54,11 +54,8 @@ public abstract class AnnotationPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-    
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean DocumentService documentService;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;

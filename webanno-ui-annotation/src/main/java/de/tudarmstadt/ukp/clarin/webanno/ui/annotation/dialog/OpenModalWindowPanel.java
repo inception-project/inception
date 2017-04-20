@@ -67,17 +67,10 @@ public class OpenModalWindowPanel
 {
     private static final long serialVersionUID = 1299869948010875439L;
 
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
-
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean UserDao userRepository;
 
     // Project list, Document List and buttons List, contained in separet forms
     private final ProjectSelectionForm projectSelectionForm;

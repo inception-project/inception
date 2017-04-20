@@ -112,20 +112,11 @@ public class SuggestionViewPanel
     
     private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
     
-    @SpringBean(name = "documentService")
-    private DocumentService documentService;
-
-    @SpringBean(name = "curationDocumentService")
-    private CurationDocumentService curationDocumentService;
-
-    @SpringBean(name = "correctionDocumentService")
-    private CorrectionDocumentService correctionDocumentService;
-
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "userRepository")
-    private UserDao userRepository;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CorrectionDocumentService correctionDocumentService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserDao userRepository;
 
     /**
      * Data models for the annotation editor

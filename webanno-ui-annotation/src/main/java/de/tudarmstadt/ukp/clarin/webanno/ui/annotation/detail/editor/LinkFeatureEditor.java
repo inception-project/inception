@@ -68,8 +68,7 @@ public class LinkFeatureEditor
     
     private static final long serialVersionUID = 7469241620229001983L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService annotationService;
     
     private WebMarkupContainer content;
 

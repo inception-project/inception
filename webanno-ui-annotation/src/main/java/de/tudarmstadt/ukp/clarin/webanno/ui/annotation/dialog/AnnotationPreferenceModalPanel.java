@@ -60,11 +60,8 @@ public class AnnotationPreferenceModalPanel
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    @SpringBean(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @SpringBean(name = "projectService")
-    private ProjectService projectService;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ProjectService projectService;
 
     private final AnnotationLayerDetailForm tagSelectionForm;
 
