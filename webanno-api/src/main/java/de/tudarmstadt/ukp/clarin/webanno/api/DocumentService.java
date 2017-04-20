@@ -421,4 +421,10 @@ public interface DocumentService
      * value. The annotation document may be {@code null}.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
+
+    // --------------------------------------------------------------------------------------------
+    // Methods related to other things
+    // --------------------------------------------------------------------------------------------
+    
+    List<DocumentLifecycleAware> getDocumentLifecycleAwareBeans();
 }

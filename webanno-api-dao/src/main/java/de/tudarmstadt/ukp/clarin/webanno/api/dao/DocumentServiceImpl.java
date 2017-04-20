@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -50,12 +51,16 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.Phased;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
@@ -72,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean, ProjectLifecycleAware
+    implements DocumentService, InitializingBean, ProjectLifecycleAware, BeanPostProcessor
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -94,11 +99,47 @@ public class DocumentServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
+    private List<DocumentLifecycleAware> documentLifecycleAwareBeans;
+    private boolean documentLifecycleAwareBeansSorted = false;
+    
     @Override
     public void afterPropertiesSet()
         throws Exception
     {
         log.info("Repository: " + dir);
+    }
+    
+    @Override
+    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
+        throws BeansException
+    {
+        // Collect the beans that need to be notified about the document lifecycle
+        documentLifecycleAwareBeans = new ArrayList<>();
+        if (aBean instanceof DocumentLifecycleAware) {
+            documentLifecycleAwareBeans.add((DocumentLifecycleAware) aBean);
+        }
+        
+        return aBean;
+    }
+    
+    @Override
+    public List<DocumentLifecycleAware> getDocumentLifecycleAwareBeans()
+    {
+        if (!documentLifecycleAwareBeansSorted) {
+            documentLifecycleAwareBeans.sort((a,b) -> {
+                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
+                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
+                return phaseB - phaseA;
+            });
+        }
+        return documentLifecycleAwareBeans;
+    }
+    
+    @Override
+    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
+        throws BeansException
+    {
+        return aBean;
     }
     
     @Override
@@ -127,6 +168,19 @@ public class DocumentServiceImpl
         }
         else {
             entityManager.merge(aDocument);
+        }
+        
+        // Notify all relevant service so that they can initialize themselves for the given document
+        for (DocumentLifecycleAware bean : getDocumentLifecycleAwareBeans()) {
+            try {
+                bean.afterDocumentCreate(aDocument);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -361,6 +415,22 @@ public class DocumentServiceImpl
             removeAnnotationDocument(annotationDocument);
         }
         
+        // Notify all relevant service so that they can clean up themselves before we remove the
+        // document - notification happens in reverse order
+        List<DocumentLifecycleAware> beans = new ArrayList<>(getDocumentLifecycleAwareBeans());
+        Collections.reverse(beans);
+        for (DocumentLifecycleAware bean : beans) {
+            try {
+                bean.beforeDocumentRemove(aDocument);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        
         entityManager.remove(aDocument);
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
@@ -556,12 +626,26 @@ public class DocumentServiceImpl
         throws IOException
     {
         casStorageService.writeCas(aDocument, aJcas, aUser.getUsername());
+        
+        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
         if (aUpdateTimestamp) {
-            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
             annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
             annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
             entityManager.merge(annotationDocument);
+        }
+        
+        // Notify all relevant service so that they can update themselves for the given document
+        for (DocumentLifecycleAware bean : getDocumentLifecycleAwareBeans()) {
+            try {
+                bean.afterAnnotationUpdate(annotationDocument, aJcas);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
