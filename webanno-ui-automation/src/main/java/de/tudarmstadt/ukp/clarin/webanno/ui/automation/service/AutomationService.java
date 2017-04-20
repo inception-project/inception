@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface AutomationService
 {
+    static final String SERVICE_NAME = "automationService";
+    
     /**
      * Return list of training documents that are in the TOKEN TAB FEAURE formats
      *

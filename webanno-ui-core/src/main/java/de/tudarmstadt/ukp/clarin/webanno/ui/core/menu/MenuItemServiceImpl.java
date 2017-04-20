@@ -32,10 +32,12 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 
+@Component(MenuItemService.SERVICE_NAME)
 public class MenuItemServiceImpl
     implements SmartLifecycle, MenuItemService
 {

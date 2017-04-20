@@ -38,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
  */
 public interface AnnotationSchemaService
 {
+    static final String SERVICE_NAME = "annotationService";
+    
     /**
      * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and
      * {@code tagset name} should be unique

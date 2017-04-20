@@ -36,6 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public interface ProjectService
 {
+    static final String SERVICE_NAME = "projectService";
+    
     public static final String PROJECT = "/project/";
     public static final String DOCUMENT = "/document/";
     public static final String SOURCE = "/source";

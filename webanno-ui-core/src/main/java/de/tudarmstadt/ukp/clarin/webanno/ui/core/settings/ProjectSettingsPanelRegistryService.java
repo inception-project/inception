@@ -26,6 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectSettingsPanelRegistryService
 {
+    static final String SERVICE_NAME = "projectSettingsPanelRegistryService";
+    
     List<ProjectSettingsPanelRegistryService.SettingsPanel> getPanels();
 
     public static class SettingsPanel

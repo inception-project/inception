@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 public interface SettingsService
 {
+    static final String SERVICE_NAME = "settingsService";
+    
     /**
      * Get the name of the database driver in use.
      *

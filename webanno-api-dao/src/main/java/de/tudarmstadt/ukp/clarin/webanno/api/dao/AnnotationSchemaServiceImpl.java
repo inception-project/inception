@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -76,6 +77,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
 /**
  * Implementation of methods defined in the {@link AnnotationSchemaService} interface
  */
+@Component(AnnotationSchemaService.SERVICE_NAME)
 public class AnnotationSchemaServiceImpl
     implements AnnotationSchemaService, ProjectLifecycleAware
 {

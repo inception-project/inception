@@ -32,7 +32,11 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
+@Component("standaloneShutdownDialog")
+@Lazy(false)
 public class StandaloneShutdownDialog
     implements SmartLifecycle
 {

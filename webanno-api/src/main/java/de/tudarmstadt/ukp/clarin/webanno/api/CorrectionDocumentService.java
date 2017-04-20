@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public interface CorrectionDocumentService
 {
+    static final String SERVICE_NAME = "correctionDocumentService";
+    
     /**
      * Create an annotation document under a special user named "CORRECTION_USER"
      *

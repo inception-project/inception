@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ConstraintsService
 {
+    static final String SERVICE_NAME = "constraintsService";
+    
     /**
      * Creates Constraint Set
      */

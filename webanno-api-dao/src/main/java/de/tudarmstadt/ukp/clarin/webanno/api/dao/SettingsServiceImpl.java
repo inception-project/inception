@@ -25,8 +25,11 @@ import javax.persistence.PersistenceContext;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 
+@Component(SettingsService.SERVICE_NAME)
 public class SettingsServiceImpl
     implements SettingsService
 {

@@ -24,6 +24,9 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd 
 		http://www.springframework.org/schema/util  http://www.springframework.org/schema/util/spring-util-4.2.xsd">
 
+    <!-- Scan components and Java configuration -->
+    <context:component-scan base-package="de.tudarmstadt.ukp.clarin.webanno" />
+
 	<!-- setup wicket application -->
 	<bean id="wicketApplication"
 		class="de.tudarmstadt.ukp.clarin.webanno.webapp.WicketApplication" />
@@ -65,64 +68,6 @@
 			</list>
 		</property>
 	</bean>
-
-    <bean id="menuItemService"
-        class="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl">
-    </bean>
-
-    <bean id="projectSettingsPanelRegistryService"
-        class="de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryServiceImpl">
-    </bean>
-
-    <bean id="annotationService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl">
-    </bean>
-  
-    <bean id="casStorageService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl">
-    </bean>
-
-    <bean id="constraintsService"
-        class="de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsServiceImpl">
-    </bean>
-
-    <bean id="curationDocumentService"
-        class="de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl">
-    </bean>
-
-    <bean id="correctionDocumentService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.CorrectionDocumentServiceImpl">
-    </bean>
-
-    <bean id="importExportService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl">
-    </bean>
-
-    <bean id="projectService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.ProjectServiceImpl">
-    </bean>
-
-    <bean id="automationService"
-        class="de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.MiraAutomationServiceImpl">
-    </bean>
-
-    <bean id="documentService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl">
-    </bean>
-
-    <bean id="settingsService"
-        class="de.tudarmstadt.ukp.clarin.webanno.api.dao.SettingsServiceImpl">
-    </bean>
-
-	<bean id="applicationContextProvider"
-		class="de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider"></bean>
-
-	<bean id="standaloneShutdownDialog"
-		class="de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneShutdownDialog"
-		lazy-init="false"></bean>
-
-    <bean id="casDoctor"
-        class="de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor"></bean>
 
     <!-- Poor man's database migration -->
     <bean id="fixCoreferenceMigration"

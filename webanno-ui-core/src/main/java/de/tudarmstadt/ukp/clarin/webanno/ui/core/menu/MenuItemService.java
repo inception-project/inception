@@ -24,6 +24,8 @@ import org.apache.wicket.Page;
 
 public interface MenuItemService
 {
+    static final String SERVICE_NAME = "menuItemService";
+
     List<MenuItemService.MenuItem> getMenuItems();
 
     public static class MenuItem

@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 public interface CurationDocumentService
 {
+    static final String SERVICE_NAME = "curationDocumentService";
+    
     // --------------------------------------------------------------------------------------------
     // Methods related to curation
     // --------------------------------------------------------------------------------------------
