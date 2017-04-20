@@ -74,17 +74,6 @@
         class="de.tudarmstadt.ukp.clarin.webanno.api.dao.migration.FixCoreferenceFeatures"
         lazy-init="false"></bean>
 
-	<bean id="systemPrereqs"
-		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-		<property name="targetObject" value="#{@systemProperties}" />
-		<property name="targetMethod" value="putAll" />
-		<property name="arguments">
-			<util:properties>
-				<prop key="org.apache.uima.logger.class">org.apache.uima.util.impl.Log4jLogger_impl</prop>
-			</util:properties>
-		</property>
-	</bean>
-	
 	<beans profile="auto-mode-builtin">
 		<import resource="security-context.xml"/>
 	</beans>
