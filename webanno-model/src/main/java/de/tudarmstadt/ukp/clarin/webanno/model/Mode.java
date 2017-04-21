@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+
 /**
  * Subjects of interest, either annotation or curation.
  */
