@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.isProjectAdmin;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.isProjectCreator;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.isSuperAdmin;
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectCreator;
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;

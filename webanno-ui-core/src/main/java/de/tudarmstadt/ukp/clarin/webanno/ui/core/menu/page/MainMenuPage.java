@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.annotationEnabeled;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.SecurityUtil.curationEnabeled;
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 
 import java.util.ArrayList;
 import java.util.List;
