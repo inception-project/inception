@@ -60,6 +60,11 @@
 		<property name="jpaDialect">
 			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect" />
 		</property>
+        <property name="packagesToScan">
+            <list>
+                <value>de.tudarmstadt.ukp.clarin.webanno</value>
+            </list>
+        </property>
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
 				<property name="showSql" value="false" />
@@ -87,13 +92,11 @@
 			value="#{ T(java.sql.Connection).TRANSACTION_READ_COMMITTED}" />
 	</bean>
 
-	<!-- <bean id="tcfDbMetaDataRepository" class="de.tudarmstadt.ukp.clarin.webanno.brat.dao.impl.RepositoryServiceDbMetaData">
-		<property name="dir" value="/srv/dkpro/repository/"></property> </bean> -->
 	<bean id="sessionFactory"
 		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
 	
-	<bean id="userRepository" class="de.tudarmstadt.ukp.clarin.webanno.api.dao.UserDaoImpl" />
+	<bean id="userRepository" class="de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl" />
 	<bean id="passwordEncoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder" />
 </beans>

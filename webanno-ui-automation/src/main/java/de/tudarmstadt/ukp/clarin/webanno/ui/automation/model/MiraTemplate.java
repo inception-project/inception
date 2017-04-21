@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.automation.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -30,6 +30,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * A persistence object for MIRA template configurations

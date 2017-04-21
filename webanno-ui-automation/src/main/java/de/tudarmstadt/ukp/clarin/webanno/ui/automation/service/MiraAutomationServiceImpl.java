@@ -44,11 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AutomationStatus;
-import de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.AutomationStatus;
+import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate;
 
 @Component(AutomationService.SERVICE_NAME)
 public class MiraAutomationServiceImpl
@@ -110,7 +110,7 @@ public class MiraAutomationServiceImpl
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
                 + MIRA_TEMPLATE + aFileName));
         
-        Logging.setMDC(aProject, aUsername);
+        Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
                 aProject.getId());
         Logging.clearMDC();
@@ -126,7 +126,7 @@ public class MiraAutomationServiceImpl
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
                 + aFileName)));
 
-        Logging.setMDC(aProject, aUsername);
+        Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
                 aProject.getId());
         Logging.clearMDC();

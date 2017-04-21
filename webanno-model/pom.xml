@@ -31,22 +31,6 @@
       <artifactId>jackson-annotations</artifactId>
     </dependency>
 
-    <!-- Spring dependencies -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-beans</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
-    </dependency>
-
-    <!-- Spring Security dependencies -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
-
     <!-- Hibernate Dependencies -->
     <dependency>
       <groupId>org.hibernate</groupId>

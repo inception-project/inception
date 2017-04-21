@@ -42,7 +42,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -52,9 +51,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 
 /**
@@ -471,7 +471,7 @@ public class ImportUtil
             Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> aFeatureMaps)
     {
         for (MiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
-            de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.model.MiraTemplate();
+            de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate();
             template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
             template.setAutomationStarted(false);
             template.setCurrentLayer(exTemplate.isCurrentLayer());

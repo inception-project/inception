@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -37,7 +37,7 @@ import javax.persistence.Transient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
 /**
  * User entity corresponding to the Spring standard schema. Conformance to this schema is the reason

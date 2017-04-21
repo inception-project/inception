@@ -30,8 +30,6 @@ import org.hibernate.proxy.HibernateProxyHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.DirectFieldAccessor;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
-
 /**
  * Wicket model implementation which makes sure that s persistent model object is always attached to
  * an entity manager. Requires Hibernate and requires that the {@link ApplicationContextProvider}

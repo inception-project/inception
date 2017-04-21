@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.automation.model;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -31,6 +31,8 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 
 /**
  * Different Automation statistics such as number of training documents, state of the automation

@@ -29,8 +29,6 @@ import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.SerializedString;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.support.spring.ApplicationContextProvider;
-
 public class JSONUtil
 {
     /**

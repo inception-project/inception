@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model.support.spring;
+package de.tudarmstadt.ukp.clarin.webanno.support;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
