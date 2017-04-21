@@ -24,11 +24,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * All required contents of a {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ui.automation.model.MiraTemplate}  to be exported.
- *
- *
+ * All required contents of a MiraTemplate to be exported.
  */
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MiraTemplate
 {
