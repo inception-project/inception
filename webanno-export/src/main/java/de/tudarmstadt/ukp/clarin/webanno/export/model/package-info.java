@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 /**
- * Spring related support
+ * Provides classes for TagSet exporting data models.
+ * The content of these data models are populated from the persistence data model selecting
+ * only needed attributes.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model.support.spring;
+package de.tudarmstadt.ukp.clarin.webanno.export.model;

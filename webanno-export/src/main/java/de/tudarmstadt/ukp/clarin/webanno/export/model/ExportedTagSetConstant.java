@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model.export;
+package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 /**
  * Constants to Improt/export tagsets in the json and tabbed text format

@@ -24,8 +24,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of

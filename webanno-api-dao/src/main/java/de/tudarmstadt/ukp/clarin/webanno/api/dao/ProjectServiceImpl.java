@@ -613,7 +613,7 @@ public class ProjectServiceImpl
     @Override
     @Transactional
     public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
             Project aProject)
         throws Exception
     {
@@ -719,17 +719,17 @@ public class ProjectServiceImpl
 
     /**
      * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission}
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
      * @param aImportedProjectSetting the imported project.
      * @param aImportedProject the project.
      * @throws IOException if an I/O error occurs.
      */
     private void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aImportedProjectSetting,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             Project aImportedProject)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission importedPermission : aImportedProjectSetting
+        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission : aImportedProjectSetting
                 .getProjectPermissions()) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());

@@ -63,11 +63,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.ExportedTagSetConstant;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
@@ -571,9 +571,9 @@ public class ProjectTagSetsPanel
                             exTagSet.setLanguage(tagSet.getLanguage());
                             exTagSet.setName(tagSet.getName());
 
-                            List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag>();
+                            List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
                             for (Tag tag : annotationService.listTags(tagSet)) {
-                                de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
                                 exportedTag.setDescription(tag.getDescription());
                                 exportedTag.setName(tag.getName());
                                 exportedTags.add(exportedTag);

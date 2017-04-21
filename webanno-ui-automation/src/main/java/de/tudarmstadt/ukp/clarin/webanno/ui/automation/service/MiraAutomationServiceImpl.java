@@ -284,7 +284,7 @@ public class MiraAutomationServiceImpl
     @Override
     @Transactional
     public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.model.export.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
             Project aProject)
         throws Exception
     {

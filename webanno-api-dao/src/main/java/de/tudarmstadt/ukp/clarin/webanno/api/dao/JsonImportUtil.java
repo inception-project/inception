@@ -43,9 +43,9 @@ public class JsonImportUtil
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-        de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet = JSONUtil
+        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet = JSONUtil
                 .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet.class);
+                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet.class);
 
         if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
             // A tagset exists so we'll have to replace it
@@ -58,7 +58,7 @@ public class JsonImportUtil
     }
 
     private static TagSet replaceTagSet(Project project,
-            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -74,7 +74,7 @@ public class JsonImportUtil
         tagsetInUse.setProject(project);
         aAnnotationService.createTagSet(tagsetInUse);
         // Add all tags from imported tagset
-        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
+        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());
@@ -91,14 +91,14 @@ public class JsonImportUtil
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
     
-        de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet = JSONUtil
+        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet = JSONUtil
                 .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet.class);
+                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
     
     public static TagSet createTagSet(Project project,
-            de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet importedTagSet,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -116,7 +116,7 @@ public class JsonImportUtil
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
         aAnnotationService.createTagSet(newTagSet);
-        for (de.tudarmstadt.ukp.clarin.webanno.model.export.Tag tag : importedTagSet.getTags()) {
+        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());

@@ -63,6 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -72,9 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.export.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
@@ -598,7 +598,7 @@ public class ProjectExportPanel
         private void exportProjectSettings(Project aProject, File aProjectSettings,
                 File aExportTempDir)
         {
-            de.tudarmstadt.ukp.clarin.webanno.model.export.Project exProjekt = new de.tudarmstadt.ukp.clarin.webanno.model.export.Project();
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
             exProjekt.setDescription(aProject.getDescription());
             exProjekt.setName(aProject.getName());
             exProjekt.setMode(aProject.getMode());
@@ -606,14 +606,14 @@ public class ProjectExportPanel
             exProjekt.setVersion(aProject.getVersion());
             exProjekt.setDisableExport(aProject.isDisableExport());
 
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> exLayers = new ArrayList<>();
+            List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> exLayers = new ArrayList<>();
             // Store map of layer and its equivalent exLayer so that the attach type
             // is attached later
-            Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer> layerToExLayers = new HashMap<>();
+            Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> layerToExLayers = new HashMap<>();
             // Store map of feature and its equivalent exFeature so that the attach
             // feature is attached
             // later
-            Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> featureToExFeatures = new HashMap<>();
+            Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> featureToExFeatures = new HashMap<>();
             for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
                 exLayers.add(ImportUtil.exportLayerDetails(layerToExLayers, featureToExFeatures,
                         layer, annotationService));
@@ -633,16 +633,16 @@ public class ProjectExportPanel
             }
             exProjekt.setLayers(exLayers);
 
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet> extTagSets = new ArrayList<>();
+            List<de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet> extTagSets = new ArrayList<>();
             for (TagSet tagSet : annotationService.listTagSets(aProject)) {
-                de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet();
+                de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet exTagSet = new de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet();
                 exTagSet.setCreateTag(tagSet.isCreateTag());
                 exTagSet.setDescription(tagSet.getDescription());
                 exTagSet.setLanguage(tagSet.getLanguage());
                 exTagSet.setName(tagSet.getName());
-                List<de.tudarmstadt.ukp.clarin.webanno.model.export.Tag> exTags = new ArrayList<>();
+                List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exTags = new ArrayList<>();
                 for (Tag tag : annotationService.listTags(tagSet)) {
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.model.export.Tag();
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
                     exTag.setDescription(tag.getDescription());
                     exTag.setName(tag.getName());
                     exTags.add(exTag);
@@ -712,9 +712,9 @@ public class ProjectExportPanel
             exProjekt.setProjectPermissions(projectPermissions);
 
             // export automation Mira template
-            List<de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate> exTemplates = new ArrayList<>();
+            List<de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate> exTemplates = new ArrayList<>();
             for (MiraTemplate template : automationService.listMiraTemplates(aProject)) {
-                de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate exTemplate = new de.tudarmstadt.ukp.clarin.webanno.model.export.MiraTemplate();
+                de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate exTemplate = new de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate();
                 exTemplate.setAnnotateAndPredict(template.isAnnotateAndRepeat());
                 exTemplate.setAutomationStarted(template.isAutomationStarted());
                 exTemplate.setCurrentLayer(template.isCurrentLayer());
@@ -722,7 +722,7 @@ public class ProjectExportPanel
                 exTemplate.setTrainFeature(featureToExFeatures.get(template.getTrainFeature()));
 
                 if (template.getOtherFeatures().size() > 0) {
-                    Set<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature> exOtherFeatures = new HashSet<>();
+                    Set<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> exOtherFeatures = new HashSet<>();
                     for (AnnotationFeature feature : template.getOtherFeatures()) {
                         exOtherFeatures.add(featureToExFeatures.get(feature));
                     }

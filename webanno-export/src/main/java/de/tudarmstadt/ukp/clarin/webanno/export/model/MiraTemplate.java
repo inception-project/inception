@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.model.export;
+package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * All required contents of a {@link de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate}  to be exported.
+ * All required contents of a {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ui.automation.model.MiraTemplate}  to be exported.
  *
  *
  */

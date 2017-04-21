@@ -574,11 +574,11 @@ public class ProjectPage
 
                 // Load the project model from the JSON file
                 String text = IOUtils.toString(projectInputStream, "UTF-8");
-                de.tudarmstadt.ukp.clarin.webanno.model.export.Project importedProjectSetting = JSONUtil
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = JSONUtil
                         .getJsonConverter()
                         .getObjectMapper()
                         .readValue(text,
-                                de.tudarmstadt.ukp.clarin.webanno.model.export.Project.class);
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
 
                 // Import the project itself
                 importedProject = ImportUtil.createProject(importedProjectSetting, projectService);
@@ -605,7 +605,7 @@ public class ProjectPage
                 }
 
                 // Import layers
-                Map<de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
+                Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
                         .createLayer(importedProject, importedProjectSetting, userRepository,
                                 annotationService);
                 /*

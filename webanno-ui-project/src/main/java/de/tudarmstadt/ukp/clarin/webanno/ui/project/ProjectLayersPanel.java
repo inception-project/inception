@@ -300,16 +300,16 @@ public class ProjectLayersPanel
                             tagInputStream = tagFile.getInputStream();
                             String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = JSONUtil
+                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = JSONUtil
                                     .getJsonConverter()
                                     .getObjectMapper()
                                     .readValue(
                                             text,
-                                            de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer.class);
+                                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer.class);
 
                             AnnotationLayer attachLayer = null;
                             if (exLayer.getAttachType() != null) {
-                                de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = exLayer
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exAttachLayer = exLayer
                                         .getAttachType();
                                 createLayer(exAttachLayer, user, null);
                                 attachLayer = annotationService.getLayer(exAttachLayer.getName(),
@@ -330,7 +330,7 @@ public class ProjectLayersPanel
                 }
 
                 private void createLayer(
-                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer aExLayer,
+                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer aExLayer,
                         User aUser, AnnotationLayer aAttachLayer)
                     throws IOException
                 {
@@ -346,10 +346,10 @@ public class ProjectLayersPanel
                         ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
                     layer.setAttachType(aAttachLayer);
-                    for (de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationFeature exfeature : aExLayer
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exfeature : aExLayer
                             .getFeatures()) {
 
-                        de.tudarmstadt.ukp.clarin.webanno.model.export.TagSet exTagset = exfeature
+                        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet exTagset = exfeature
                                 .getTagSet();
                         TagSet tagSet = null;
                         if (exTagset != null
@@ -900,11 +900,11 @@ public class ProjectLayersPanel
                     }
                     AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                    de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exLayer = ImportUtil
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = ImportUtil
                             .exportLayerDetails(null, null, layer, annotationService);
                     if (layer.getAttachType() != null) {
                         AnnotationLayer attachLayer = layer.getAttachType();
-                        de.tudarmstadt.ukp.clarin.webanno.model.export.AnnotationLayer exAttachLayer = ImportUtil
+                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exAttachLayer = ImportUtil
                                 .exportLayerDetails(null, null, attachLayer, annotationService);
                         exLayer.setAttachType(exAttachLayer);
                     }
