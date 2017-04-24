@@ -84,8 +84,6 @@ public class CurationPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    public final static String CURATION_USER = "CURATION_USER";
-
     public SuggestionViewPanel suggestionViewPanel;
     private AnnotationEditorBase annotationEditor;
     public AnnotationDetailEditorPanel editor;

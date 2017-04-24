@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
@@ -105,17 +104,17 @@ public class MergeCas
 
             ConfigurationSet cfgs = aDiff.getConfigurtionSet(position);
 
-            if (cfgs.getConfigurations(CurationPanel.CURATION_USER).size() == 0) { // incomplete
+            if (cfgs.getConfigurations(WebAnnoConst.CURATION_USER).size() == 0) { // incomplete
                 // annotations
                 continue;
             }
-            FeatureStructure mergeAnno = cfgs.getConfigurations(CurationPanel.CURATION_USER).get(0)
-                    .getFs(CurationPanel.CURATION_USER, aJCases);
+            FeatureStructure mergeAnno = cfgs.getConfigurations(WebAnnoConst.CURATION_USER).get(0)
+                    .getFs(WebAnnoConst.CURATION_USER, aJCases);
 
             // Get Annotations per user in this position
             getAllAnnosOnPosition(aJCases, annosPerUser, users, mergeAnno);
 
-            for (FeatureStructure mergeFs : annosPerUser.get(CurationPanel.CURATION_USER)) {
+            for (FeatureStructure mergeFs : annosPerUser.get(WebAnnoConst.CURATION_USER)) {
                 // incomplete annotations
                 if (aJCases.size() != annosPerUser.size()) {
                     annotationsToDelete.add(mergeFs);
@@ -169,7 +168,7 @@ public class MergeCas
         for (FeatureStructure fs : annotationsToDelete) {
 
             if (!slotFeaturesToReset.contains(fs)) {
-                JCas megerCas = aJCases.get(CurationPanel.CURATION_USER);
+                JCas megerCas = aJCases.get(WebAnnoConst.CURATION_USER);
                 // Check if this difference is on POS, STEM and LEMMA (so remove from the token too)
                 Type type = fs.getType();
                 int fsBegin = ((AnnotationFS) fs).getBegin();
@@ -245,7 +244,7 @@ public class MergeCas
             }
         }
 
-        return aJCases.get(CurationPanel.CURATION_USER);
+        return aJCases.get(WebAnnoConst.CURATION_USER);
     }
 
     /**

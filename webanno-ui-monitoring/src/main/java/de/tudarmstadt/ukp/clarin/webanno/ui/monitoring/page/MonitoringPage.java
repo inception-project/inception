@@ -108,11 +108,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.ConcreteAgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
@@ -132,12 +134,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
@@ -457,7 +456,7 @@ public class MonitoringPage
                         userAnnotationDocuments.add(DOCUMENT + document.getName());
 
                         // Curation Document status
-                        userAnnotationDocuments.add(CurationPanel.CURATION_USER + "-" + DOCUMENT
+                        userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT
                                 + document.getName());
 
                         for (User user : users) {
@@ -1336,7 +1335,7 @@ public class MonitoringPage
                 aCellItem.add(new Label(componentId, value.substring(value.indexOf(":") + 1)));
                 aCellItem.add(AttributeModifier.append("class", "centering"));
             }
-            else if (value.substring(0, value.indexOf(":")).equals(CurationPanel.CURATION_USER)) {
+            else if (value.substring(0, value.indexOf(":")).equals(WebAnnoConst.CURATION_USER)) {
                 SourceDocument document = documentService.getSourceDocument(project,
                         value.substring(value.indexOf(":") + 1));
                 SourceDocumentState state = document.getState();

@@ -234,6 +234,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-automation</artifactId>
+        <version>3.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-project</artifactId>
         <version>3.3.0-SNAPSHOT</version>
       </dependency>
@@ -564,6 +569,7 @@
     <module>webanno-curation</module>
     <module>webanno-constraints</module>
     <module>webanno-export</module>
+    <module>webanno-automation</module>
     <!-- UI -->
     <module>webanno-brat</module>
     <module>webanno-ui-core</module>

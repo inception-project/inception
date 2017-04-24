@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -55,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -471,7 +471,7 @@ public class ImportUtil
             Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> aFeatureMaps)
     {
         for (MiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
-            de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate();
+            de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate();
             template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
             template.setAutomationStarted(false);
             template.setCurrentLayer(exTemplate.isCurrentLayer());

@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBe
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -79,25 +78,25 @@ public class TwoPairedKappaTest
         kappatestCas = JCasFactory.createJCas().getCas();
         CollectionReader reader1 = createReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
-                TcfReader.PARAM_PATTERNS, "kappatest.tsv");
+                WebannoTsv2Reader.PARAM_PATTERNS, "kappatest.tsv");
         reader1.getNext(kappatestCas);
 
         kappaspandiff = JCasFactory.createJCas().getCas();
         CollectionReader reader2 = createReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
-                TcfReader.PARAM_PATTERNS, "kappaspandiff.tsv");
+                WebannoTsv2Reader.PARAM_PATTERNS, "kappaspandiff.tsv");
         reader2.getNext(kappaspandiff);
 
         kappaarcdiff = JCasFactory.createJCas().getCas();
         CollectionReader reader3 = createReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
-                TcfReader.PARAM_PATTERNS, "kappaarcdiff.tsv");
+                WebannoTsv2Reader.PARAM_PATTERNS, "kappaarcdiff.tsv");
         reader3.getNext(kappaarcdiff);
 
         kappaspanarcdiff = JCasFactory.createJCas().getCas();
         CollectionReader reader4 = createReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/",
-                TcfReader.PARAM_PATTERNS, "kappaspanarcdiff.tsv");
+                WebannoTsv2Reader.PARAM_PATTERNS, "kappaspanarcdiff.tsv");
         reader4.getNext(kappaspanarcdiff);
     }
 

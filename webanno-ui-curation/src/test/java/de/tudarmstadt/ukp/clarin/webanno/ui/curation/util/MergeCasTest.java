@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
@@ -42,14 +43,12 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.MergeCas;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -569,7 +568,7 @@ public class MergeCasTest {
 		casByUser.put("user1", asList(jcasA));
 		casByUser.put("user2", asList(jcasB));
 
-		casByUser.put(CurationPanel.CURATION_USER, asList(jcasA));
+		casByUser.put(CURATION_USER, asList(jcasA));
 
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
@@ -607,7 +606,7 @@ public class MergeCasTest {
 		Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
 		casByUser.put("user1", asList(jcasA));
 		casByUser.put("user2", asList(jcasB));
-		casByUser.put(CurationPanel.CURATION_USER, asList(jcasA));
+		casByUser.put(CURATION_USER, asList(jcasA));
 
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
@@ -645,7 +644,7 @@ public class MergeCasTest {
 		casByUser.put("user1", asList(jcasA));
 		casByUser.put("user2", asList(jcasB));
 
-		casByUser.put(CurationPanel.CURATION_USER, asList(jcasA));
+		casByUser.put(CURATION_USER, asList(jcasA));
 
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
@@ -683,7 +682,7 @@ public class MergeCasTest {
 		casByUser.put("user1", asList(jcasA));
 		casByUser.put("user2", asList(jcasB));
 
-		casByUser.put(CurationPanel.CURATION_USER, asList(jcasB));
+		casByUser.put(CURATION_USER, asList(jcasB));
 
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
@@ -720,7 +719,7 @@ public class MergeCasTest {
 		casByUser.put("user1", asList(jcasA));
 		casByUser.put("user2", asList(jcasB));
 
-		casByUser.put(CurationPanel.CURATION_USER, asList(jcasA));
+		casByUser.put(CURATION_USER, asList(jcasA));
 
 		List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
 
@@ -755,7 +754,7 @@ public class MergeCasTest {
 		String randomUser = casByUser.keySet().stream().findFirst().orElse(null);
 		assert (randomUser != null);
 		JCas randomCas = casByUser.get(randomUser).get(0);
-		casByUser.put(CurationPanel.CURATION_USER, asList(randomCas));
+		casByUser.put(CURATION_USER, asList(randomCas));
 	}
 
 	@Rule

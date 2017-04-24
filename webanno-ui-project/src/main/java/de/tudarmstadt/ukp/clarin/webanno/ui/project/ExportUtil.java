@@ -37,6 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission;
@@ -53,8 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
@@ -78,8 +79,6 @@ public class ExportUtil
     private static final String CURATION_AS_SERIALISED_CAS = "/"
             + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
     private static final String CURATION_FOLDER = "/curation/";
-
-    private static final String CURATION_USER = "CURATION_USER";
 
     public ExportUtil()
     {
@@ -478,7 +477,7 @@ public class ExportUtil
                     SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
                 SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
             ) {
-                File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
+                File curationCasFile = documentService.getCasFile(sourceDocument, WebAnnoConst.CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
@@ -486,7 +485,7 @@ public class ExportUtil
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(sourceDocument,
-                                CURATION_USER, writer, CURATION_USER, Mode.CURATION);
+                                WebAnnoConst.CURATION_USER, writer, WebAnnoConst.CURATION_USER, Mode.CURATION);
                         FileUtils.copyFileToDirectory(curationFile, curationDir);
                         FileUtils.forceDelete(curationFile);
                     } catch (Exception e) {

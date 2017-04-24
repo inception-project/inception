@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.MergeCas;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -143,7 +142,7 @@ public class SuggestionBuilder
                     aBModel.getMode());
             mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
-                    CurationPanel.CURATION_USER,
+                    WebAnnoConst.CURATION_USER,
                     WebAnnoCasUtil.getFirstSentence(mergeJCas).getBegin(),
                     mergeJCas.getDocumentText().length());
 
@@ -151,9 +150,9 @@ public class SuggestionBuilder
 
         List<Type> entryTypes = null;
 
-        segmentAdress.put(CurationPanel.CURATION_USER, new HashMap<Integer, Integer>());
+        segmentAdress.put(WebAnnoConst.CURATION_USER, new HashMap<Integer, Integer>());
         for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
-            segmentAdress.get(CurationPanel.CURATION_USER).put(sentence.getBegin(),
+            segmentAdress.get(WebAnnoConst.CURATION_USER).put(sentence.getBegin(),
                     getAddr(sentence));
         }
 
@@ -494,7 +493,7 @@ public class SuggestionBuilder
                 .get(SecurityContextHolder.getContext().getAuthentication().getName());
 
         JCas mergeJCas = documentService.readAnnotationCas(randomAnnotationDocument);
-        jCases.put(CurationPanel.CURATION_USER, mergeJCas);
+        jCases.put(WebAnnoConst.CURATION_USER, mergeJCas);
 
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
 

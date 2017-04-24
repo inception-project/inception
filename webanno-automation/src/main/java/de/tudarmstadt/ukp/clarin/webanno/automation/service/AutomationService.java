@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.automation.service;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.AutomationStatus;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.model.MiraTemplate;
 
 public interface AutomationService
 {
