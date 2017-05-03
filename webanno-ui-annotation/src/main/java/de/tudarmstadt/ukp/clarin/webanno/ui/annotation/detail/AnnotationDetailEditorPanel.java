@@ -2159,7 +2159,7 @@ public class AnnotationDetailEditorPanel
             return false;
         }
 
-		if (selectedLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+		if (!selectedLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
             return false;
         }
 		
