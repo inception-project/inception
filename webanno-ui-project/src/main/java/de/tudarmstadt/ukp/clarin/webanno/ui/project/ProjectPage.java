@@ -73,10 +73,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -380,7 +380,7 @@ public class ProjectPage
 
         private ChallengeResponseDialog deleteProjectDialog;
         private LambdaAjaxLink deleteProjectLink;
-        private RadioChoice<Mode> projectType;
+        private RadioChoice<String> projectType;
         
         public ProjectDetailsPanel(String id)
         {
@@ -391,8 +391,10 @@ public class ProjectPage
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
-            add(projectType = new RadioChoice<Mode>("mode",
-                    Arrays.asList(Mode.ANNOTATION, Mode.AUTOMATION, Mode.CORRECTION))
+            add(projectType = new RadioChoice<String>("mode",
+                    Arrays.asList(WebAnnoConst.PROJECT_TYPE_ANNOTATION,
+                            WebAnnoConst.PROJECT_TYPE_AUTOMATION,
+                            WebAnnoConst.PROJECT_TYPE_CORRECTION))
             {
                 private static final long serialVersionUID = -8268365384613932108L;
 

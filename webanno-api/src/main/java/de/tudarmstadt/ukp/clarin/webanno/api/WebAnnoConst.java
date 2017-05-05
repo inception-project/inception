@@ -51,6 +51,10 @@ public class WebAnnoConst
     public static final String CORRECTION_USER = "CORRECTION_USER";
     public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
     
+    public static final String PROJECT_TYPE_ANNOTATION = "annotation";
+    public static final String PROJECT_TYPE_AUTOMATION = "automation";
+    public static final String PROJECT_TYPE_CORRECTION = "correction";
+    
     public static final List<String> RESTRICTED_FEATURE_NAMES = new ArrayList<String>(Arrays.asList(
             "address", "begin", "end", "coveredText", "booleanValue", "doubleValue", "byteValue",
             "CAS", "CASImpl", "class", "featureValue", "floatValue", "longValue", "lowLevelCas",

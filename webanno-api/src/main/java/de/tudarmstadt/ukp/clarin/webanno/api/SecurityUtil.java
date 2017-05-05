@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -254,11 +253,11 @@ public class SecurityUtil
         return false;
     }
 
-    public static boolean annotationEnabeled(ProjectService repository, User user, Mode mode)
+    public static boolean annotationEnabeled(ProjectService aRepository, User aUser, String aMode)
     {
-        for (Project project : repository.listProjects()) {
-            if (SecurityUtil.isAnnotator(project, repository, user)
-                    && mode.equals(project.getMode())) {
+        for (Project project : aRepository.listProjects()) {
+            if (SecurityUtil.isAnnotator(project, aRepository, aUser)
+                    && aMode.equals(project.getMode())) {
                 return true;
             }
         }

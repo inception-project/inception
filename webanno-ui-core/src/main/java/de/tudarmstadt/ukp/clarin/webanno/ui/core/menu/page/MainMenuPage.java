@@ -38,7 +38,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
@@ -79,9 +79,9 @@ public class MainMenuPage
         
         // if not either a curator or annotator, display warning message
         if (
-            !annotationEnabeled(projectService, user, Mode.ANNOTATION) && 
-            !annotationEnabeled(projectService, user, Mode.AUTOMATION) && 
-            !annotationEnabeled(projectService, user, Mode.CORRECTION) && 
+            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION) && 
+            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION) && 
+            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION) && 
             !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }

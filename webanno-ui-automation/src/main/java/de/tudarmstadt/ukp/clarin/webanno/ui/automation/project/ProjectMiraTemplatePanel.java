@@ -56,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -836,6 +835,6 @@ public class ProjectMiraTemplatePanel
     @ProjectSettingsPanelCondition
     public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
     {
-        return !aExportInProgress && Mode.AUTOMATION.equals(aProject.getMode());
+        return !aExportInProgress && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
     }
 }

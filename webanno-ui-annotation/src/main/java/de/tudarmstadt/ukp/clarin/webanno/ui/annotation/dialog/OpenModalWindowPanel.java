@@ -47,6 +47,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -204,7 +205,7 @@ public class OpenModalWindowPanel
         case ANNOTATION:
             for (Project project : projectService.listProjects()) {
                 if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && project.getMode().equals(Mode.ANNOTATION)) {
+                        && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
                     allowedProject.add(project);
                 }
             }
@@ -225,7 +226,7 @@ public class OpenModalWindowPanel
         case CORRECTION:
             for (Project project : projectService.listProjects()) {
                 if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && project.getMode().equals(Mode.CORRECTION)) {
+                        && WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                     allowedProject.add(project);
                 }
             }
@@ -233,7 +234,7 @@ public class OpenModalWindowPanel
         case AUTOMATION:
             for (Project project : projectService.listProjects()) {
                 if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && project.getMode().equals(Mode.AUTOMATION)) {
+                        && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
                     allowedProject.add(project);
                 }
             }

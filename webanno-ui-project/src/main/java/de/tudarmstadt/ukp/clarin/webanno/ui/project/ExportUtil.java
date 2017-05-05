@@ -24,10 +24,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -93,17 +95,17 @@ public class ExportUtil
         de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = new de.tudarmstadt.ukp.clarin.webanno.export.model.Project();
         exProjekt.setDescription(aProject.getDescription());
         exProjekt.setName(aProject.getName());
-        exProjekt.setMode(aProject.getMode());
+        // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
+        // during export but as lower-case in the database. This is compensating for this case.
+        exProjekt.setMode(StringUtils.upperCase(aProject.getMode(), Locale.US));
         exProjekt.setScriptDirection(aProject.getScriptDirection());
         exProjekt.setVersion(aProject.getVersion());
         exProjekt.setDisableExport(aProject.isDisableExport());
 
         List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> exLayers = new ArrayList<>();
-        // Store map of layer and its equivalent exLayer so that the attach type
-        // is attached later
+        // Store map of layer and its equivalent exLayer so that the attach type is attached later
         Map<AnnotationLayer, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> layerToExLayers = new HashMap<>();
-        // Store map of feature and its equivalent exFeature so that the attach
-        // feature is attached
+        // Store map of feature and its equivalent exFeature so that the attach feature is attached
         // later
         Map<AnnotationFeature, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> featureToExFeatures = new HashMap<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
@@ -340,8 +342,8 @@ public class ExportUtil
             // BEGIN FIXME #1224 CURATION_USER and CORRECTION_USER files should be exported in annotation_ser
             // If this project is a correction project, add the auto-annotated  CAS to same 
             // folder as CURATION_FOLDER
-            if (aModel.project.getMode().equals(Mode.AUTOMATION)
-                    || aModel.project.getMode().equals(Mode.CORRECTION)) {
+            if (WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aModel.project.getMode())
+                    || WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(aModel.project.getMode())) {
                 File correctionCasFile = documentService.getCasFile(sourceDocument,
                         CORRECTION_USER);
                 if (correctionCasFile.exists()) {

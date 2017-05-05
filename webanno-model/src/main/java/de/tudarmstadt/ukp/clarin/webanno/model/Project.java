@@ -52,8 +52,7 @@ public class Project
     @Column(length = 64000)
     private String description;
 
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ModeType")
-    private Mode mode = Mode.ANNOTATION;
+    private String mode;
 
     // version of the project
     private int version = 1;
@@ -168,14 +167,14 @@ public class Project
         return true;
     }
 
-    public Mode getMode()
+    public String getMode()
     {
         return mode;
     }
 
-    public void setMode(Mode mode)
+    public void setMode(String aMode)
     {
-        this.mode = mode;
+        this.mode = aMode;
     }
 
 }

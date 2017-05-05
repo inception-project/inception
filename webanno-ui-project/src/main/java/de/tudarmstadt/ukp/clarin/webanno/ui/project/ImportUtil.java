@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -34,6 +35,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
@@ -393,7 +395,9 @@ public class ImportUtil
         }
         project.setName(projectName);
         project.setDescription(aProject.getDescription());
-        project.setMode(aProject.getMode());
+        // In older versions of WebAnno, the mode was an enum which was serialized as upper-case
+        // during export but as lower-case in the database. This is compensating for this case.
+        project.setMode(StringUtils.lowerCase(aProject.getMode(), Locale.US));
         project.setDisableExport(aProject.isDisableExport());
         
         // Set default to LTR on import from old WebAnno versions

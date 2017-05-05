@@ -818,6 +818,6 @@ public class AutomationPage
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserRepo.get(username);
-        return SecurityUtil.annotationEnabeled(aRepo, user, Mode.AUTOMATION);
+        return SecurityUtil.annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION);
     }
 }

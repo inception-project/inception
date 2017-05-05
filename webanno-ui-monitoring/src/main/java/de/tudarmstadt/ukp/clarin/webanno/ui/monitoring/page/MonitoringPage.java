@@ -124,7 +124,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -941,7 +940,7 @@ public class MonitoringPage
     	trainingResultForm.remove();
     	 trainingResultForm = new TrainingResultForm("trainingResultForm");
     	 add(trainingResultForm);
-         trainingResultForm.setVisible(aProject.getMode().equals(Mode.AUTOMATION));
+         trainingResultForm.setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
     }
 
     private class TrainingResultForm
