@@ -26,9 +26,9 @@ public interface MenuItemService
 {
     static final String SERVICE_NAME = "menuItemService";
 
-    List<MenuItemService.MenuItem> getMenuItems();
+    List<MenuItemService.MenuItemDecl> getMenuItems();
 
-    public static class MenuItem
+    public static class MenuItemDecl
         implements Serializable
     {
         private static final long serialVersionUID = -6839143167407389149L;

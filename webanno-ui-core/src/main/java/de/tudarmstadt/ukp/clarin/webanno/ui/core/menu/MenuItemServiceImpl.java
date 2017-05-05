@@ -45,7 +45,7 @@ public class MenuItemServiceImpl
 
     private boolean running = false;
 
-    private List<MenuItem> menuItems;
+    private List<MenuItemDecl> menuItems;
 
     @Resource(name = "projectService")
     private ProjectService projectService;
@@ -106,11 +106,9 @@ public class MenuItemServiceImpl
                 @SuppressWarnings("unchecked")
                 Class<? extends Page> pageClass = (Class<? extends Page>) Class
                         .forName(bd.getBeanClassName());
-                de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem mia = pageClass
-                        .getAnnotation(
-                                de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem.class);
+                MenuItem mia = pageClass.getAnnotation(MenuItem.class);
 
-                MenuItem item = new MenuItem();
+                MenuItemDecl item = new MenuItemDecl();
                 item.icon = mia.icon();
                 item.label = mia.label();
                 item.prio = mia.prio();
@@ -148,7 +146,7 @@ public class MenuItemServiceImpl
     }
 
     @Override
-    public List<MenuItemService.MenuItem> getMenuItems()
+    public List<MenuItemService.MenuItemDecl> getMenuItems()
     {
         return Collections.unmodifiableList(menuItems);
     }

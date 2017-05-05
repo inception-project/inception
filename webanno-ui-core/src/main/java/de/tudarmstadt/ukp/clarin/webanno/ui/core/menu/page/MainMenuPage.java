@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService.MenuItemDecl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -59,7 +59,7 @@ public class MainMenuPage
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemService menuItemService;
 
-    private ListView<MenuItem> menu;
+    private ListView<MenuItemDecl> menu;
 
     public MainMenuPage()
     {
@@ -86,16 +86,16 @@ public class MainMenuPage
             info("You are not member of any projects to annotate or curate");
         }
         
-        List<MenuItem> menuItems = new ArrayList<>(menuItemService.getMenuItems());
+        List<MenuItemDecl> menuItems = new ArrayList<>(menuItemService.getMenuItems());
         
-        menu = new ListView<MenuItem>("menu", menuItems)
+        menu = new ListView<MenuItemDecl>("menu", menuItems)
         {
             private static final long serialVersionUID = -5492972164756003552L;
 
             @Override
-            protected void populateItem(ListItem<MenuItem> aItem)
+            protected void populateItem(ListItem<MenuItemDecl> aItem)
             {
-                MenuItem item = aItem.getModelObject();
+                MenuItemDecl item = aItem.getModelObject();
                 StatelessLink<Void> menulink = new StatelessLink<Void>("menulink") {
                     private static final long serialVersionUID = 4110674757822252390L;
 

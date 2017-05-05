@@ -96,7 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.SettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
@@ -338,7 +338,7 @@ public class ProjectPage
             });
             
             // Add the project settings panels from the registry
-            for (SettingsPanel psp : projectSettingsPanelRegistryService.getPanels()) {
+            for (ProjectSettingsPanelDecl psp : projectSettingsPanelRegistryService.getPanels()) {
                 AbstractTab tab = new AbstractTab(Model.of(psp.label)) {
                     private static final long serialVersionUID = -1503555976570640065L;
 

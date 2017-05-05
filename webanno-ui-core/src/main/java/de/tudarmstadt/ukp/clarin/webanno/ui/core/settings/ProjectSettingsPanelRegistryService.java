@@ -28,9 +28,9 @@ public interface ProjectSettingsPanelRegistryService
 {
     static final String SERVICE_NAME = "projectSettingsPanelRegistryService";
     
-    List<ProjectSettingsPanelRegistryService.SettingsPanel> getPanels();
+    List<ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl> getPanels();
 
-    public static class SettingsPanel
+    public static class ProjectSettingsPanelDecl
         implements Serializable
     {
         private static final long serialVersionUID = -2464913342442260640L;

@@ -36,7 +36,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService;
 
 @Component(ProjectSettingsPanelRegistryService.SERVICE_NAME)
 public class ProjectSettingsPanelRegistryServiceImpl
@@ -46,7 +45,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
 
     private boolean running = false;
 
-    private List<SettingsPanel> panels;
+    private List<ProjectSettingsPanelDecl> panels;
 
     @Resource(name = "projectService")
     private ProjectService projectService;
@@ -99,23 +98,21 @@ public class ProjectSettingsPanelRegistryServiceImpl
         // Scan project settings using annotation
         ClassPathScanningCandidateComponentProvider scanner = 
                 new ClassPathScanningCandidateComponentProvider(false);
-        scanner.addIncludeFilter(new AnnotationTypeFilter(
-                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel.class));
+        scanner.addIncludeFilter(new AnnotationTypeFilter(ProjectSettingsPanel.class));
 
         for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
             try {
                 @SuppressWarnings("unchecked")
                 Class<? extends Panel> panelClass = (Class<? extends Panel>) Class
                         .forName(bd.getBeanClassName());
-                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel mia = panelClass
-                        .getAnnotation(
-                                de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel.class);
+                ProjectSettingsPanel mia = panelClass.getAnnotation(ProjectSettingsPanel.class);
 
-                SettingsPanel panel = new SettingsPanel();
+                ProjectSettingsPanelDecl panel = new ProjectSettingsPanelDecl();
                 panel.label = mia.label();
                 panel.prio = mia.prio();
                 panel.panel = panelClass;
-                
+                panels.add(panel);
+               
                 log.debug("Found settings panel: {} ({})", panel.label, panel.prio);
 
                 List<Method> methods = MethodUtils.getMethodsListWithAnnotation(panelClass,
@@ -139,8 +136,6 @@ public class ProjectSettingsPanelRegistryServiceImpl
                 else {
                     panel.condition = (aProject, aExportInProgress) -> { return !aExportInProgress; };
                 }
-                
-                panels.add(panel);
             }
             catch (ClassNotFoundException e) {
                 log.error("Settings panel class [{}] not found", bd.getBeanClassName(), e);
@@ -151,7 +146,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
     }
 
     @Override
-    public List<SettingsPanel> getPanels()
+    public List<ProjectSettingsPanelDecl> getPanels()
     {
         return Collections.unmodifiableList(panels);
     }
