@@ -52,13 +52,18 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.Phased;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -73,7 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ProjectService.SERVICE_NAME)
 public class ProjectServiceImpl
-    implements ProjectService, BeanPostProcessor
+    implements ProjectService, BeanPostProcessor, SmartLifecycle
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -92,6 +97,13 @@ public class ProjectServiceImpl
     // The annotation preference properties File name
     private static final String annotationPreferencePropertiesFileName = "annotation.properties";
 
+    private boolean running = false;
+
+    private List<ProjectType> projectTypes;
+
+    @Resource(name = "projectService")
+    private ProjectService projectService;
+    
     public ProjectServiceImpl()
     {
         // Nothing to do
@@ -737,5 +749,79 @@ public class ProjectServiceImpl
             permission.setUser(importedPermission.getUser());
             createProjectPermission(permission);
         }
+    }
+    
+    @Override
+    public boolean isRunning()
+    {
+        return running;
+    }
+
+    @Override
+    public void start()
+    {
+        running = true;
+        scanProjectTypes();
+    }
+
+    @Override
+    public void stop()
+    {
+        running = false;
+    }
+
+    @Override
+    public int getPhase()
+    {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
+    public boolean isAutoStartup()
+    {
+        return true;
+    }
+
+    @Override
+    public void stop(Runnable aCallback)
+    {
+        stop();
+        aCallback.run();
+    }
+
+    private void scanProjectTypes()
+    {
+        projectTypes = new ArrayList<>();
+
+        // Scan for project type annotations
+        ClassPathScanningCandidateComponentProvider scanner = 
+                new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(ProjectType.class));
+
+        for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
+            try {
+                Class<?> clazz = (Class<?>) Class.forName(bd.getBeanClassName());
+                ProjectType pt = clazz.getAnnotation(ProjectType.class);
+
+                if (projectTypes.stream().anyMatch(t -> t.id().equals(pt.id()))) {
+                    log.debug("Ignoring duplicate project type: {} ({})", pt.id(), pt.prio());
+                }
+                else {
+                    log.debug("Found project type: {} ({})", pt.id(), pt.prio());
+                    projectTypes.add(pt);
+                }
+            }
+            catch (ClassNotFoundException e) {
+                log.error("Class [{}] not found", bd.getBeanClassName(), e);
+            }
+        }
+        
+        Collections.sort(projectTypes, (a, b) -> { return a.prio() - b.prio(); });
+    }
+
+    @Override
+    public List<ProjectType> listProjectTypes()
+    {
+        return Collections.unmodifiableList(projectTypes);
     }
 }

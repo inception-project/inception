@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -73,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -185,7 +185,9 @@ public class ProjectPage
                 @Override
                 public void onSubmit()
                 {
-                    projectDetailForm.setModelObject(new Project());
+                    Project project = new Project();
+                    project.setMode(projectService.listProjectTypes().get(0).id());
+                    projectDetailForm.setModelObject(project);
                     ProjectSelectionForm.this.getModelObject().project = null;
                 }
             });
@@ -391,10 +393,8 @@ public class ProjectPage
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
-            add(projectType = new RadioChoice<String>("mode",
-                    Arrays.asList(WebAnnoConst.PROJECT_TYPE_ANNOTATION,
-                            WebAnnoConst.PROJECT_TYPE_AUTOMATION,
-                            WebAnnoConst.PROJECT_TYPE_CORRECTION))
+            add(projectType = new RadioChoice<String>("mode", projectService.listProjectTypes()
+                    .stream().map(t -> t.id()).collect(Collectors.toList()))
             {
                 private static final long serialVersionUID = -8268365384613932108L;
 

@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -39,6 +41,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -46,8 +49,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -87,29 +88,27 @@ public class OpenModalWindowPanel
     private final String username;
     private final User user;
 
-    // Dialog is for annotation or curation
-
     private final Mode mode;
     private final AnnotatorState bModel;
-
-    private List<Project> projectesWithFinishedAnnos;
-    private Map<Project, String> projectColors = new HashMap<Project, String>();
+    
+    private IModel<List<Pair<Project, String>>> projects;
 
     public OpenModalWindowPanel(String aId, AnnotatorState aBModel,
-            ModalWindow aModalWindow, Mode aSubject)
+            ModalWindow aModalWindow, Mode aSubject, IModel<List<Pair<Project, String>>> aProjects)
     {
         super(aId);
-        this.mode = aSubject;
+        
+        mode = aSubject;
+        bModel = aBModel;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = userRepository.get(username);
-        if (mode.equals(Mode.CURATION)) {
-            projectesWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
-        }
-        if (getAllowedProjects().size() > 0) {
-            selectedProject = getAllowedProjects().get(0);
+        projects = aProjects;
+        
+        List<Pair<Project, String>> allowedProjects = projects.getObject();
+        if (!allowedProjects.isEmpty()) {
+            selectedProject = allowedProjects.get(0).getKey();
         }
 
-        this.bModel = aBModel;
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
@@ -130,29 +129,20 @@ public class OpenModalWindowPanel
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
 
             projectSelection = new Select<Project>("projectSelection");
-            ListView<Project> lv = new ListView<Project>("projects",
-                    new LoadableDetachableModel<List<Project>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<Project> load()
-                        {
-                            return getAllowedProjects();
-                        }
-                    })
+            
+            ListView<Pair<Project, String>> lv = new ListView<Pair<Project, String>>("projects", projects)
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected void populateItem(final ListItem<Project> item)
+                protected void populateItem(final ListItem<Pair<Project, String>> item)
                 {
-                    String color = projectColors.get(item.getModelObject());
+                    String color = item.getModelObject().getValue();
                     if (color == null) {
-                        color = "#008000";// not in curation
+                        color = "#008000";
                     }
                     item.add(new SelectOption<Project>("project", new Model<Project>(item
-                            .getModelObject()))
+                            .getModelObject().getKey()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
 
@@ -160,8 +150,8 @@ public class OpenModalWindowPanel
                         public void onComponentTagBody(MarkupStream markupStream,
                                 ComponentTag openTag)
                         {
-                            replaceComponentTagBody(markupStream, openTag, item.getModelObject()
-                                    .getName());
+                            replaceComponentTagBody(markupStream, openTag,
+                                    item.getModelObject().getKey().getName());
                         }
                     }.add(new AttributeModifier("style", "color:" + color + ";")));
                 }
@@ -196,54 +186,6 @@ public class OpenModalWindowPanel
                 }
             });
         }
-    }
-
-    public List<Project> getAllowedProjects()
-    {
-        List<Project> allowedProject = new ArrayList<Project>();
-        switch (mode) {
-        case ANNOTATION:
-            for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
-                    allowedProject.add(project);
-                }
-            }
-            break;
-        case CURATION:
-            for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isCurator(project, projectService, user)) {
-                    allowedProject.add(project);
-                    if (projectesWithFinishedAnnos.contains(project)) {
-                        projectColors.put(project, "#008000");
-                    }
-                    else {
-                        projectColors.put(project, "#99cc99");
-                    }
-                }
-            }
-            break;
-        case CORRECTION:
-            for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
-                    allowedProject.add(project);
-                }
-            }
-            break;
-        case AUTOMATION:
-            for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, projectService, user)
-                        && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
-                    allowedProject.add(project);
-                }
-            }
-            break;
-        default:
-            break;
-        }
-
-        return allowedProject;
     }
 
     private class SelectionModel

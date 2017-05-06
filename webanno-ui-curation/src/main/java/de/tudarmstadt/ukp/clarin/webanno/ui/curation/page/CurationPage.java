@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -75,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPrefe
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
@@ -180,14 +182,39 @@ public class CurationPage
 
         add(getOrCreatePositionInfoLabel());
 
-        add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
-        openDocumentsModal.setOutputMarkupId(true);
-        openDocumentsModal.setInitialWidth(620);
-        openDocumentsModal.setInitialHeight(440);
-        openDocumentsModal.setResizable(true);
-        openDocumentsModal.setWidthUnit("px");
-        openDocumentsModal.setHeightUnit("px");
-        openDocumentsModal.setTitle("Open document");
+        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
+                getAllowedProjects())
+        {
+            private static final long serialVersionUID = 5474030848589262638L;
+
+            @Override
+            public void onDocumentSelected(AjaxRequestTarget aTarget)
+            {
+                AnnotatorState state = getModelObject();
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                /*
+                 * Changed for #152, getDocument was returning null even after opening a document
+                 * Also, surrounded following code into if block to avoid error.
+                 */
+                if (state.getProject() == null) {
+                    setResponsePage(getApplication().getHomePage());
+                    return;
+                }
+                if (state.getDocument() != null) {
+                    try {
+                        documentService.createSourceDocument(state.getDocument());
+                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
+
+                        actionLoadDocument(aTarget);
+                        curationPanel.editor.loadFeatureEditorModels(aTarget);
+                    }
+                    catch (Exception e) {
+                        LOG.error("Unable to load data", e);
+                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                }
+            }
+        });        
 
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
                 curationPanel.editor)
@@ -338,6 +365,34 @@ public class CurationPage
         finishDocumentLink.add(finishDocumentIcon);
     }
     
+    private IModel<List<Pair<Project, String>>> getAllowedProjects()
+    {
+        return new LoadableDetachableModel<List<Pair<Project, String>>>()
+        {
+            private static final long serialVersionUID = -2518743298741342852L;
+
+            @Override
+            protected List<Pair<Project, String>> load()
+            {
+                User user = userRepository.get(
+                        SecurityContextHolder.getContext().getAuthentication().getName());
+                List<Pair<Project, String>> allowedProject = new ArrayList<>();
+                List<Project> projectsWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
+                for (Project project : projectService.listProjects()) {
+                    if (SecurityUtil.isCurator(project, projectService, user)) {
+                        if (projectsWithFinishedAnnos.contains(project)) {
+                            allowedProject.add(Pair.of(project, "#008000"));
+                        }
+                        else {
+                            allowedProject.add(Pair.of(project, "#99cc99"));
+                        }
+                    }
+                }
+               return allowedProject;
+            }
+        };
+    }
+
     @Override
     public void setModel(IModel<AnnotatorState> aModel)
     {
@@ -428,41 +483,7 @@ public class CurationPage
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
-        state.getSelection().clear();
-        openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
-                state, openDocumentsModal, state.getMode()));
-        openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = -1746088901018629567L;
-
-            @Override
-            public void onClose(AjaxRequestTarget aCallbackTarget)
-            {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                /*
-                 * Changed for #152, getDocument was returning null even after opening a document
-                 * Also, surrounded following code into if block to avoid error.
-                 */
-                if (state.getProject() == null) {
-                    setResponsePage(getApplication().getHomePage());
-                    return;
-                }
-                if (state.getDocument() != null) {
-                    try {
-                        documentService.createSourceDocument(state.getDocument());
-                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
-
-                        actionLoadDocument(aCallbackTarget);
-                        curationPanel.editor.loadFeatureEditorModels(aCallbackTarget);
-                    }
-                    catch (Exception e) {
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        });
+        getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
     }
 

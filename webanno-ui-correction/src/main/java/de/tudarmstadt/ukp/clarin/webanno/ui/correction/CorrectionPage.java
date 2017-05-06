@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -39,6 +40,8 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -51,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -66,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -82,7 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPane
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenModalWindowPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
@@ -100,8 +105,9 @@ import wicket.contrib.input.events.key.KeyType;
  * This is the main class for the correction page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the corrected annotation
  */
-@MenuItem(icon="images/check_box.png", label="Correction", prio = 120)
+@MenuItem(icon = "images/check_box.png", label = "Correction", prio = 120)
 @MountPath("/correction.html")
+@ProjectType(id = WebAnnoConst.PROJECT_TYPE_CORRECTION, prio = 120)
 public class CorrectionPage
     extends AnnotationPageBase
 {
@@ -239,14 +245,40 @@ public class CorrectionPage
 
         add(getOrCreatePositionInfoLabel());
 
-        add(openDocumentsModal = new ModalWindow("openDocumentsModal"));
-        openDocumentsModal.setOutputMarkupId(true);
-        openDocumentsModal.setInitialWidth(620);
-        openDocumentsModal.setInitialHeight(440);
-        openDocumentsModal.setResizable(true);
-        openDocumentsModal.setWidthUnit("px");
-        openDocumentsModal.setHeightUnit("px");
-        openDocumentsModal.setTitle("Open document");
+        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
+                getAllowedProjects())
+        {
+            private static final long serialVersionUID = 5474030848589262638L;
+
+            @Override
+            public void onDocumentSelected(AjaxRequestTarget aTarget)
+            {
+                // Reload the page using AJAX. This does not add the project/document ID to the URL,
+                // but being AJAX it flickers less.
+                actionLoadDocument(aTarget);
+                
+//                aCallbackTarget.addChildren(getPage(), FeedbackPanel.class);
+//                try {
+//                    actionLoadDocument(aCallbackTarget);
+//
+//                    String username = SecurityContextHolder.getContext().getAuthentication()
+//                            .getName();
+//                    User user = userRepository.get(username);
+//                    detailEditor
+//                            .setEnabled(!FinishImage.isFinished(getModel(), user, documentService));
+//                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
+//                }
+//                catch (Exception e) {
+//                    LOG.error("Unable to load data", e);
+//                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+//                }
+//                aCallbackTarget.add(finishDocumentIcon);
+//                aCallbackTarget.appendJavaScript(
+//                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
+//                aCallbackTarget.add(documentNamePanel);
+//                aCallbackTarget.add(getOrCreatePositionInfoLabel());
+            }
+        });
 
         add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(), detailEditor)
         {
@@ -339,6 +371,29 @@ public class CorrectionPage
         finishDocumentLink.add(finishDocumentIcon);
     }
     
+    private IModel<List<Pair<Project, String>>> getAllowedProjects()
+    {
+        return new LoadableDetachableModel<List<Pair<Project, String>>>()
+        {
+            private static final long serialVersionUID = -2518743298741342852L;
+
+            @Override
+            protected List<Pair<Project, String>> load()
+            {
+                User user = userRepository.get(
+                        SecurityContextHolder.getContext().getAuthentication().getName());
+                List<Pair<Project, String>> allowedProject = new ArrayList<>();
+                for (Project project : projectService.listProjects()) {
+                    if (SecurityUtil.isAnnotator(project, projectService, user)
+                            && WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
+                        allowedProject.add(Pair.of(project, null));
+                    }
+                }
+                return allowedProject;
+            }
+        };
+    }
+
     private DocumentNamePanel createDocumentInfoLabel()
     {
         return new DocumentNamePanel("documentNamePanel", getModel());
@@ -419,7 +474,7 @@ public class CorrectionPage
             firstLoad = false;
         }
     }
-    
+
     @Override
     protected JCas getEditorCas()
         throws IOException
@@ -429,7 +484,7 @@ public class CorrectionPage
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
-
+        
         SourceDocument aDocument = getModelObject().getDocument();
 
         AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
@@ -462,44 +517,7 @@ public class CorrectionPage
     
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
-        state.getSelection().clear();
-        openDocumentsModal.setContent(new OpenModalWindowPanel(openDocumentsModal.getContentId(),
-                state, openDocumentsModal, state.getMode()));
-        openDocumentsModal.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = -1746088901018629567L;
-
-            @Override
-            public void onClose(AjaxRequestTarget aCallbackTarget)
-            {
-                if (state.getDocument() == null) {
-                    setResponsePage(getApplication().getHomePage());
-                    return;
-                }
-
-                aCallbackTarget.addChildren(getPage(), FeedbackPanel.class);
-                try {
-                    actionLoadDocument(aCallbackTarget);
-
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    User user = userRepository.get(username);
-                    detailEditor
-                            .setEnabled(!FinishImage.isFinished(getModel(), user, documentService));
-                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
-                }
-                catch (Exception e) {
-                    LOG.error("Unable to load data", e);
-                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                }
-                aCallbackTarget.add(finishDocumentIcon);
-                aCallbackTarget.appendJavaScript(
-                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
-                aCallbackTarget.add(documentNamePanel);
-                aCallbackTarget.add(getOrCreatePositionInfoLabel());
-            }
-        });
+        getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
     }
 

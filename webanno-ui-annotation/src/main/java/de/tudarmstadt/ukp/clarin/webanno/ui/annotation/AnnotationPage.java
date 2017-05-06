@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -36,6 +37,8 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -48,6 +51,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -88,9 +92,10 @@ import wicket.contrib.input.events.key.KeyType;
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
  * annotation layer configuration, and Exporting document
  */
-@MenuItem(icon="images/categories.png", label="Annotation", prio=100)
-@MountPath(value = "/annotation.html", alt = "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${"
-        + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}")
+@MenuItem(icon = "images/categories.png", label = "Annotation", prio = 100)
+@MountPath(value = "/annotation.html", alt = "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID
+        + "}/${" + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}")
+@ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
 {
@@ -190,7 +195,7 @@ public class AnnotationPage
         setVersioned(false);
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-        
+
         WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
             private static final long serialVersionUID = 1L;
 
@@ -229,7 +234,9 @@ public class AnnotationPage
 
         add(getOrCreatePositionInfoLabel());
 
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel()) {
+        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
+                getAllowedProjects())
+        {
             private static final long serialVersionUID = 5474030848589262638L;
 
             @Override
@@ -331,8 +338,8 @@ public class AnnotationPage
             {
                 super.onConfigure();
                 AnnotatorState state = AnnotationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !documentService.isAnnotationFinished(state.getDocument(), state.getUser()));
+                setEnabled(state.getDocument() != null && !documentService
+                        .isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -340,6 +347,29 @@ public class AnnotationPage
         finishDocumentLink.add(finishDocumentIcon);
     }
     
+    private IModel<List<Pair<Project, String>>> getAllowedProjects()
+    {
+        return new LoadableDetachableModel<List<Pair<Project, String>>>()
+        {
+            private static final long serialVersionUID = -2518743298741342852L;
+
+            @Override
+            protected List<Pair<Project, String>> load()
+            {
+                User user = userRepository.get(
+                        SecurityContextHolder.getContext().getAuthentication().getName());
+                List<Pair<Project, String>> allowedProject = new ArrayList<>();
+                for (Project project : projectService.listProjects()) {
+                    if (SecurityUtil.isAnnotator(project, projectService, user)
+                            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
+                        allowedProject.add(Pair.of(project, null));
+                    }
+                }
+                return allowedProject;
+            }
+        };
+    }
+
     private DocumentNamePanel createDocumentInfoLabel()
     {
         return new DocumentNamePanel("documentNamePanel", getModel());
@@ -387,8 +417,8 @@ public class AnnotationPage
     protected List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
-        return new ArrayList<>(
-                documentService.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
+        return new ArrayList<>(documentService
+                .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -560,7 +590,7 @@ public class AnnotationPage
 
             // Re-render the whole page because the font size
             if (aTarget != null) {
-                aTarget.add(AnnotationPage.this);
+                aTarget.add(this);
             }
 
             // Update document state

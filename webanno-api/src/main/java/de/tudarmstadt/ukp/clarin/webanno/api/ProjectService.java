@@ -421,4 +421,6 @@ public interface ProjectService
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
             Project aProject)
         throws Exception;
+    
+    List<ProjectType> listProjectTypes();
 }
