@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -49,12 +49,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.Phased;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -62,6 +59,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
@@ -78,7 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ProjectService.SERVICE_NAME)
 public class ProjectServiceImpl
-    implements ProjectService, BeanPostProcessor, SmartLifecycle
+    implements ProjectService, SmartLifecycle
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -88,58 +86,22 @@ public class ProjectServiceImpl
     @Resource(name = "userRepository")
     private UserDao userRepository;
 
+    @Resource
+    private ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
+
     @Value(value = "${repository.path}")
     private File dir;
 
-    private List<ProjectLifecycleAware> projectLifecycleAwareBeans;
-    private boolean projectLifecycleAwareBeansSorted = false;
-    
     // The annotation preference properties File name
     private static final String annotationPreferencePropertiesFileName = "annotation.properties";
 
     private boolean running = false;
 
     private List<ProjectType> projectTypes;
-
-    @Resource(name = "projectService")
-    private ProjectService projectService;
     
     public ProjectServiceImpl()
     {
         // Nothing to do
-    }
-    
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        // Collect the beans that need to be notified about the project lifecycle
-        projectLifecycleAwareBeans = new ArrayList<>();
-        if (aBean instanceof ProjectLifecycleAware) {
-            projectLifecycleAwareBeans.add((ProjectLifecycleAware) aBean);
-        }
-        
-        return aBean;
-    }
-    
-    @Override
-    public List<ProjectLifecycleAware> getProjectLifecycleAwareBeans()
-    {
-        if (!projectLifecycleAwareBeansSorted) {
-            projectLifecycleAwareBeans.sort((a,b) -> {
-                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
-                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
-                return phaseB - phaseA;
-            });
-        }
-        return projectLifecycleAwareBeans;
-    }
-    
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
     }
     
     @Override
@@ -157,7 +119,7 @@ public class ProjectServiceImpl
         }
         
         // Notify all relevant service so that they can initialize themselves for the given project
-        for (ProjectLifecycleAware bean : getProjectLifecycleAwareBeans()) {
+        for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
             try {
                 bean.afterProjectCreate(aProject);
             }
@@ -470,9 +432,16 @@ public class ProjectServiceImpl
     public void removeProject(Project aProject)
         throws IOException
     {
+        // remove metadata from DB
+        Project project = aProject;
+        if (!entityManager.contains(project)) {
+            project = entityManager.merge(project);
+        }
+        
         // Notify all relevant service so that they can clean up themselves before we remove the
         // project - notification happens in reverse order
-        List<ProjectLifecycleAware> beans = new ArrayList<>(getProjectLifecycleAwareBeans());
+        List<ProjectLifecycleAware> beans = new ArrayList<>(
+                projectLifecycleAwareRegistry.getBeans());
         Collections.reverse(beans);
         for (ProjectLifecycleAware bean : beans) {
             try {
@@ -490,11 +459,6 @@ public class ProjectServiceImpl
             entityManager.remove(permissions);
         }
                 
-        // remove metadata from DB
-        Project project = aProject;
-        if (!entityManager.contains(project)) {
-            project = entityManager.merge(project);
-        }
         entityManager.remove(project);
         
         // remove the project directory from the file system

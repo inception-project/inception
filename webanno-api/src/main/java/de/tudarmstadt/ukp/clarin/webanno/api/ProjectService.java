@@ -415,8 +415,6 @@ public interface ProjectService
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
 
-    List<ProjectLifecycleAware> getProjectLifecycleAwareBeans();
-    
     void onProjectImport(ZipFile zip,
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
             Project aProject)

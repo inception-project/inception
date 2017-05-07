@@ -72,6 +72,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -122,6 +123,7 @@ public class ProjectPage
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
+    private @SpringBean ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
 
     public static ProjectSelectionForm projectSelectionForm;
     public static ProjectDetailForm projectDetailForm;
@@ -594,7 +596,7 @@ public class ProjectPage
                 }
                 
                 // Notify all relevant service so that they can initialize themselves for the given project
-                for (ProjectLifecycleAware bean : projectService.getProjectLifecycleAwareBeans()) {
+                for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
                     try {
                         bean.onProjectImport(zip, importedProjectSetting, importedProject);
                     }

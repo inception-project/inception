@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.*;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,17 +55,15 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.Phased;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAware;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
@@ -79,7 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean, ProjectLifecycleAware, BeanPostProcessor
+    implements DocumentService, InitializingBean, ProjectLifecycleAware
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -98,50 +100,18 @@ public class DocumentServiceImpl
     @Resource(name = "importExportService")
     private ImportExportService importExportService;
 
+    @Resource
+    private DocumentLifecycleAwareRegistry documentLifecycleAwareRegistry;
+
     @Value(value = "${repository.path}")
     private File dir;
 
-    private List<DocumentLifecycleAware> documentLifecycleAwareBeans;
-    private boolean documentLifecycleAwareBeansSorted = false;
-    
+
     @Override
     public void afterPropertiesSet()
         throws Exception
     {
         log.info("Repository: " + dir);
-    }
-    
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        // Collect the beans that need to be notified about the document lifecycle
-        documentLifecycleAwareBeans = new ArrayList<>();
-        if (aBean instanceof DocumentLifecycleAware) {
-            documentLifecycleAwareBeans.add((DocumentLifecycleAware) aBean);
-        }
-        
-        return aBean;
-    }
-    
-    @Override
-    public List<DocumentLifecycleAware> getDocumentLifecycleAwareBeans()
-    {
-        if (!documentLifecycleAwareBeansSorted) {
-            documentLifecycleAwareBeans.sort((a,b) -> {
-                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
-                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
-                return phaseB - phaseA;
-            });
-        }
-        return documentLifecycleAwareBeans;
-    }
-    
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
     }
     
     @Override
@@ -173,7 +143,8 @@ public class DocumentServiceImpl
         }
         
         // Notify all relevant service so that they can initialize themselves for the given document
-        for (DocumentLifecycleAware bean : getDocumentLifecycleAwareBeans()) {
+        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
+                .getBeans()) {
             try {
                 bean.afterDocumentCreate(aDocument);
             }
@@ -419,7 +390,8 @@ public class DocumentServiceImpl
         
         // Notify all relevant service so that they can clean up themselves before we remove the
         // document - notification happens in reverse order
-        List<DocumentLifecycleAware> beans = new ArrayList<>(getDocumentLifecycleAwareBeans());
+        List<DocumentLifecycleAware> beans = new ArrayList<>(
+                documentLifecycleAwareRegistry.getBeans());
         Collections.reverse(beans);
         for (DocumentLifecycleAware bean : beans) {
             try {
@@ -638,7 +610,8 @@ public class DocumentServiceImpl
         }
         
         // Notify all relevant service so that they can update themselves for the given document
-        for (DocumentLifecycleAware bean : getDocumentLifecycleAwareBeans()) {
+        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
+                .getBeans()) {
             try {
                 bean.afterAnnotationUpdate(annotationDocument, aJcas);
             }
