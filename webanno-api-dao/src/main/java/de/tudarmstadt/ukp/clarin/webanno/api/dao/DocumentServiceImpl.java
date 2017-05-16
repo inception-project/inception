@@ -22,10 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,20 +140,6 @@ public class DocumentServiceImpl
         }
         else {
             entityManager.merge(aDocument);
-        }
-        
-        // Notify all relevant service so that they can initialize themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
-            try {
-                bean.afterDocumentCreate(aDocument);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
         }
     }
 
@@ -434,18 +420,37 @@ public class DocumentServiceImpl
     public void uploadSourceDocument(File aFile, SourceDocument aDocument)
         throws IOException
     {
+        try (InputStream is = new FileInputStream(aFile)) {
+            uploadSourceDocument(is, aDocument);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
+        throws IOException
+    {
         // Create the metadata record - this also assigns the ID to the document
         createSourceDocument(aDocument);
-
-        // Copy the original file into the repository
-        File targetFile = getSourceDocumentFile(aDocument);
-        FileUtils.forceMkdir(targetFile.getParentFile());
-        FileUtils.copyFile(aFile, targetFile);
         
-        // Check if the file has a valid format / can be converted without error
-        // This requires that the document ID has already been assigned
+        // Import the actual content
+        File targetFile = getSourceDocumentFile(aDocument);
+        JCas jcas;
         try {
-            createInitialCas(aDocument);
+            FileUtils.forceMkdir(targetFile.getParentFile());
+            
+            try (OutputStream os = new FileOutputStream(targetFile)) {
+                copyLarge(aIs, os);
+            }
+            
+            // Check if the file has a valid format / can be converted without error
+            // This requires that the document ID has already been assigned
+            jcas = createInitialCas(aDocument);
+        }
+        catch (IOException e) {
+            FileUtils.forceDelete(targetFile);
+            removeSourceDocument(aDocument);
+            throw e;
         }
         catch (Exception e) {
             FileUtils.forceDelete(targetFile);
@@ -453,33 +458,20 @@ public class DocumentServiceImpl
             throw new IOException(e.getMessage(), e);
         }
 
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
-            Project project = aDocument.getProject();
-            log.info("Imported source document [{}]({}) to project [{}]({})", 
-                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+        // Notify all relevant service so that they can initialize themselves for the given document
+        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
+                .getBeans()) {
+            try {
+                bean.afterDocumentCreate(aDocument, jcas);
+            }
+            catch (IOException e) {
+                throw e;
+            }
+            catch (Exception e) {
+                throw new IOException(e.getMessage(), e);
+            }
         }
-    }
-
-    @Override
-    @Transactional
-    @Deprecated
-    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
-        throws IOException
-    {
-        File targetFile = getSourceDocumentFile(aDocument);
-        FileUtils.forceMkdir(targetFile.getParentFile());
-
-        OutputStream os = null;
-        try {
-            os = new FileOutputStream(targetFile);
-            copyLarge(aIs, os);
-        }
-        finally {
-            closeQuietly(os);
-            closeQuietly(aIs);
-        }
-
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
             Project project = aDocument.getProject();

@@ -925,7 +925,6 @@ public class RemoteApiController
             document.setProject(project);
             document.setFormat(aFileType);
             // Meta data entry to the database
-            documentRepository.createSourceDocument(document);
             // Import source document to the project repository folder
             documentRepository.uploadSourceDocument(is, document);
         }
@@ -943,7 +942,6 @@ public class RemoteApiController
         document.setProject(project);
         document.setFormat(aFileType);
         // Meta data entry to the database
-        documentRepository.createSourceDocument(document);
         // Import source document to the project repository folder
         documentRepository.uploadSourceDocument(zipStream, document);
     }

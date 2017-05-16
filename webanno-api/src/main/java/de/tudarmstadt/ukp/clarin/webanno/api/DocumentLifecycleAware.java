@@ -24,7 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface DocumentLifecycleAware
 {
-    void afterDocumentCreate(SourceDocument aDocument)
+    void afterDocumentCreate(SourceDocument aDocument, JCas aJCas)
         throws Exception;
 
     void beforeDocumentRemove(SourceDocument aDocument)

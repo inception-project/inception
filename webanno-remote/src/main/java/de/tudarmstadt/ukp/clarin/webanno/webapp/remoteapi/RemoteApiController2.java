@@ -407,7 +407,6 @@ public class RemoteApiController2
         document.setProject(project);
         document.setName(aName);
         document.setFormat(aFormat);
-        documentService.createSourceDocument(document);
         
         // Import source document to the project repository folder
         try (InputStream is = aFile.getInputStream()) {
