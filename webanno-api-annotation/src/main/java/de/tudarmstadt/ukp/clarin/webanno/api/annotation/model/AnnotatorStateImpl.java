@@ -124,25 +124,10 @@ public class AnnotatorStateImpl
      */
     private ParsedConstraints constraints;
 
-    // Annotation preferences, to be saved in a file system
     /**
      * The annotation layers available in the current project.
      */
     private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
-
-    // /**
-    // * The number of sentences to be displayed at a time
-    // */
-    // private int windowSize = 5;
-    //
-    // /**
-    // * Used to enable/disable auto-scrolling while annotation
-    // */
-    // private boolean scrollPage = true;
-    //
-    // // determine if static color for annotations will be used or we shall
-    // // dynamically generate one
-    // private boolean staticColor = true;
 
     private AnnotationPreference preferences = new AnnotationPreference();
 
@@ -165,8 +150,9 @@ public class AnnotatorStateImpl
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;
 
-    // Text field to capture key-bindings for forward annoatations
+    // Text field to capture key-bindings for forward annotations
     private String forwardAnno;
+    
     // the default annotation layer
     private AnnotationLayer defaultAnnotationLayer;
 
