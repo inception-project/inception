@@ -1,0 +1,3 @@
+docker run -v /path/on/host/webanno/repository:/srv/webanno/repository -p 18080:18080 webanno/webanno:latest
+
+-v /my/own/datadir:/var/lib/mysql

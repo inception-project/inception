@@ -427,5 +427,38 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>docker</id>
+      <activation>
+        <property>
+          <name>enable-docker</name>
+        </property>
+      </activation>
+      <properties>
+        <docker.warfile>maven/webanno-webapp-${project.version}.war</docker.warfile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>webanno/webanno</name>
+                  <build>
+                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                    <filter>@</filter>
+                    <assembly>
+                      <descriptorRef>artifact</descriptorRef>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
