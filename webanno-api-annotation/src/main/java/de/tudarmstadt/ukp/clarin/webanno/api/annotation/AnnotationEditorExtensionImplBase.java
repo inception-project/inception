@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import org.springframework.beans.factory.BeanNameAware;
 
-public class AnnotationEditorExtensionImplBase
+public abstract class AnnotationEditorExtensionImplBase
     implements BeanNameAware
 {
     private String beanName;
