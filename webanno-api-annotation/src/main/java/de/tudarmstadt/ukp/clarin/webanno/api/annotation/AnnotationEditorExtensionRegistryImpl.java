@@ -18,105 +18,64 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.context.Phased;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AnnotationEditorExtensionRegistryImpl
-    implements AnnotationEditorExtensionRegistry, SmartLifecycle
+    implements AnnotationEditorExtensionRegistry, BeanPostProcessor
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private boolean running = false;
-    
-    private List<Class<? extends AnnotationEditorExtension>> editorExtensions;
-
-    public AnnotationEditorExtensionRegistryImpl()
-    {
-        // TODO Auto-generated constructor stub
-    }
+    private final Map<String, AnnotationEditorExtension> beans = new HashMap<>();
+    private final List<AnnotationEditorExtension> sortedBeans = new ArrayList<>();
+    private boolean sorted = false;
 
     @Override
-    public boolean isRunning()
+    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
+        throws BeansException
     {
-        return running;
-    }
-
-    @Override
-    public void start()
-    {
-        running = true;
-        scan();
-    }
-
-    @Override
-    public void stop()
-    {
-        running = false;
-    }
-
-    @Override
-    public int getPhase()
-    {
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public boolean isAutoStartup()
-    {
-        return true;
-    }
-
-    @Override
-    public void stop(Runnable aCallback)
-    {
-        stop();
-        aCallback.run();
-    }
-
-    private void scan()
-    {
-        editorExtensions = new ArrayList<>();
-
-        // Scan menu items from page class annotations
-        ClassPathScanningCandidateComponentProvider scanner = 
-                new ClassPathScanningCandidateComponentProvider(false);
-        scanner.addIncludeFilter(new AssignableTypeFilter(AnnotationEditorExtension.class));
-
-        for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends AnnotationEditorExtension> editorClass = (Class<? extends AnnotationEditorExtension>) Class
-                        .forName(bd.getBeanClassName());
-
-                log.debug("Found annotation editor: {}", bd.getBeanClassName());
-
-                editorExtensions.add(editorClass);
-            }
-            catch (ClassNotFoundException e) {
-                log.error("Menu item class [{}] not found", bd.getBeanClassName(), e);
-            }
+        // Collect annotation editor extensions
+        if (aBean instanceof AnnotationEditorExtension) {
+            beans.put(aBeanName, (AnnotationEditorExtension) aBean);
+            log.debug("Found annotation editor extension: {}", aBeanName);
         }
+        
+        return aBean;
     }
 
     @Override
-    public List<Class<? extends AnnotationEditorExtension>> getEditorsExtension()
+    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
+        throws BeansException
     {
-        return Collections.unmodifiableList(editorExtensions);
+        return aBean;
     }
 
+    @Override
+    public List<AnnotationEditorExtension> getExtensions()
+    {
+        if (!sorted) {
+            sortedBeans.addAll(beans.values());
+            sortedBeans.sort((a, b) -> {
+                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
+                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
+                return phaseB - phaseA;
+            });
+        }
+        return sortedBeans;
+    }
+    
     @Override
     public AnnotationEditorExtension getExtension(String aName)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return beans.get(aName);
     }
 }

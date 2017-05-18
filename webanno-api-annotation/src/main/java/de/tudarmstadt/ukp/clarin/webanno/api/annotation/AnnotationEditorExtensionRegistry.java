@@ -21,7 +21,7 @@ import java.util.List;
 
 public interface AnnotationEditorExtensionRegistry
 {
-    List<Class<? extends AnnotationEditorExtension>> getEditorsExtension();
+    List<AnnotationEditorExtension> getExtensions();
     
     AnnotationEditorExtension getExtension(String aName);
 }

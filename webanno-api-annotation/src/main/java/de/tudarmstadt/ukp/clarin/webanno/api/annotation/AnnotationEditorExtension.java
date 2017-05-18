@@ -20,11 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 public interface AnnotationEditorExtension
 {
     /**
-     * @return an ID for the extension. It can e.g. be used in the ID of synthetic annotations.
-     */
-    String getId();
-    
-    /**
      * @return {@code true} if the extension should handle the given action.
      */
     boolean applies(/*...*/);
