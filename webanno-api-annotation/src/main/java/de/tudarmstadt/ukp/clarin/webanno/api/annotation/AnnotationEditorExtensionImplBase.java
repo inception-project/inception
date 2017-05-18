@@ -17,25 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-public interface AnnotationEditorExtension
+import org.springframework.beans.factory.BeanNameAware;
+
+public class AnnotationEditorExtensionImplBase
+    implements BeanNameAware
 {
-    /**
-     * @return get the bean name.
-     */
-    String getBeanName();
+    private String beanName;
+
+    @Override
+    public void setBeanName(String aName)
+    {
+         beanName = aName;
+    }
     
-    /**
-     * @return {@code true} if the extension should handle the given action.
-     */
-    boolean applies(/*...*/);
-    
-    /**
-     * Handle an action.
-     */
-    void handleAction(/*...*/);
-    
-    /**
-     * Post-process the output during rendering.
-     */
-    void render(/*...*/);
+    public String getBeanName()
+    {
+        return beanName;
+    }
 }
