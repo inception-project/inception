@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 import org.springframework.beans.factory.BeanNameAware;
 
 public abstract class AnnotationEditorExtensionImplBase
-    implements BeanNameAware
+    implements BeanNameAware, AnnotationEditorExtension
 {
     private String beanName;
 
@@ -30,6 +30,7 @@ public abstract class AnnotationEditorExtensionImplBase
          beanName = aName;
     }
     
+    @Override
     public String getBeanName()
     {
         return beanName;
