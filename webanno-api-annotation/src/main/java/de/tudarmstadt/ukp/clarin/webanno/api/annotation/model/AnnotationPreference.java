@@ -57,6 +57,8 @@ public class AnnotationPreference
     
     private int sidebarSize;
     private int fontSize;
+    
+    private String editor;
 
     public List<Long> getAnnotationLayers()
     {
@@ -170,7 +172,6 @@ public class AnnotationPreference
         }
     }
 
-
     public void setFontSize(int aFontSize)
     {
         if (aFontSize > FONT_SIZE_MAX) {
@@ -182,5 +183,15 @@ public class AnnotationPreference
         else {
             fontSize = aFontSize;
         }
+    }
+    
+    public String getEditor()
+    {
+        return editor;
+    }
+    
+    public void setEditor(String aEditor)
+    {
+        editor = aEditor;
     }
 }

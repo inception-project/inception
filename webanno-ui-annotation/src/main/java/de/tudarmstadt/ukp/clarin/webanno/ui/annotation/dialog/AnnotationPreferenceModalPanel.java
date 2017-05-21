@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
@@ -31,6 +33,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -41,6 +44,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -62,6 +67,7 @@ public class AnnotationPreferenceModalPanel
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
 
     private final AnnotationLayerDetailForm tagSelectionForm;
 
@@ -92,9 +98,18 @@ public class AnnotationPreferenceModalPanel
             getModelObject().scrollPage = bModel.getPreferences().isScrollPage();
             getModelObject().staticColor = bModel.getPreferences().isStaticColor();
             getModelObject().rememberLayer = bModel.getPreferences().isRememberLayer();
+
+            String editorId = bModel.getPreferences().getEditor();
+            AnnotationEditorFactory editorFactory = annotationEditorRegistry.getEditorFactory(editorId);
+            if (editorFactory == null) {
+                editorFactory = annotationEditorRegistry.getDefaultEditorFactory();
+            }
+            getModelObject().editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+            
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
             }
+            
             windowSizeField = new NumberTextField<Integer>("windowSize");
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
@@ -119,6 +134,23 @@ public class AnnotationPreferenceModalPanel
                 curationWindowSizeField.setEnabled(false);
             }
            // add(curationWindowSizeField);
+
+            List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
+                    .stream().map(f -> {
+                        return Pair.of(f.getBeanName(), f.getDisplayName());
+                    }).collect(Collectors.toList());
+            
+            add(new DropDownChoice<Pair<String, String>>("editor", editorChoices,
+                    new ChoiceRenderer<>("value"))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onConfigure()
+                {
+                    setVisible(getChoices().size() > 1);
+                }
+            });
 
             add(new CheckBoxMultipleChoice<AnnotationLayer>("annotationLayers")
             {
@@ -189,6 +221,7 @@ public class AnnotationPreferenceModalPanel
                   /*  bModel.getPreferences().setCurationWindowSize(
                             getModelObject().curationWindowSize);*/
                     bModel.getPreferences().setStaticColor(getModelObject().staticColor);
+                    bModel.getPreferences().setEditor(getModelObject().editor.getKey());
                     try {
                         PreferencesUtil.savePreference(bModel, projectService);
                         aEditor.loadFeatureEditorModels(aTarget);
@@ -235,6 +268,7 @@ public class AnnotationPreferenceModalPanel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
+        public Pair<String, String> editor;
         public Project project;
         public SourceDocument document;
         public int windowSize;
@@ -244,7 +278,7 @@ public class AnnotationPreferenceModalPanel
         public boolean scrollPage;
         public boolean rememberLayer;
         public boolean staticColor;
-        public List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
+        public List<AnnotationLayer> annotationLayers = new ArrayList<>();
     }
 
     public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,

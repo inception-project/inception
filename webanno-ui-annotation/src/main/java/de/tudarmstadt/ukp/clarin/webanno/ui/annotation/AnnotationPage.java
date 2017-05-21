@@ -56,10 +56,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -112,6 +113,7 @@ public class AnnotationPage
     private @SpringBean SettingsService settingsService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean AnnotationEditorRegistry editorRegistry;
 
     private NumberTextField<Integer> gotoPageTextField;
     
@@ -140,7 +142,7 @@ public class AnnotationPage
     {
         super(aPageParameters);
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
-
+        
         commonInit();
 
         long projectId = aPageParameters.get("projectId").toLong();
@@ -186,7 +188,7 @@ public class AnnotationPage
         getModelObject().setUser(user);
         getModelObject().setProject(project);
         getModelObject().setDocument(document, getListOfDocs());
-
+        
         actionLoadDocument(null);
     }
     
@@ -226,8 +228,7 @@ public class AnnotationPage
 
         sidebarCell.add(detailEditor = createDetailEditor());
         
-        annotationEditor = new BratAnnotationEditor("embedder1", getModel(), detailEditor,
-                () -> { return getEditorCas(); });
+        annotationEditor = createAnnotationEditor();
         annotationViewCell.add(annotationEditor);
 
         add(createDocumentInfoLabel());
@@ -412,6 +413,23 @@ public class AnnotationPage
             }
         };
     }
+    
+    private AnnotationEditorBase createAnnotationEditor()
+    {
+        String editorId = getModelObject().getPreferences().getEditor();
+        
+        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        if (factory == null) {
+            factory = editorRegistry.getDefaultEditorFactory();
+        }
+        
+        AnnotationEditorBase editor = factory.create("embedder1", getModel(),
+                detailEditor, () -> {
+                    return getEditorCas();
+                });
+        
+        return editor;
+    }
 
     @Override
     protected List<SourceDocument> getListOfDocs()
@@ -499,6 +517,10 @@ public class AnnotationPage
                     state.getFirstVisibleSentenceAddress());
             state.setFirstVisibleSentence(sentence);
             
+            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
+            annotationEditor.replaceWith(newAnnotationEditor);
+            annotationEditor = newAnnotationEditor;
+            
             // Re-render the whole page because the width of the sidebar may have changed
             aTarget.add(AnnotationPage.this);
         }
@@ -537,7 +559,7 @@ public class AnnotationPage
     protected void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
-
+        
         AnnotatorState state = getModelObject();
         
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -608,6 +630,10 @@ public class AnnotationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
+        
+        AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
+        annotationEditor.replaceWith(newAnnotationEditor);
+        annotationEditor = newAnnotationEditor;
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
