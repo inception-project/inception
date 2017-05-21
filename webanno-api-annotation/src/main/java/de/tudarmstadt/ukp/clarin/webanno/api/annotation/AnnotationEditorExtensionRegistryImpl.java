@@ -26,10 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.Phased;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AnnotationEditorExtensionRegistryImpl
     implements AnnotationEditorExtensionRegistry, BeanPostProcessor
 {
@@ -65,10 +67,11 @@ public class AnnotationEditorExtensionRegistryImpl
         if (!sorted) {
             sortedBeans.addAll(beans.values());
             sortedBeans.sort((a, b) -> {
-                int phaseA = (a instanceof Phased) ? ((Phased) a).getPhase() : 0;
-                int phaseB = (b instanceof Phased) ? ((Phased) b).getPhase() : 0;
+                int phaseA = (a instanceof Ordered) ? ((Ordered) a).getOrder() : 0;
+                int phaseB = (b instanceof Ordered) ? ((Ordered) b).getOrder() : 0;
                 return phaseB - phaseA;
             });
+            sorted = true;
         }
         return sortedBeans;
     }
