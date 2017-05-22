@@ -522,12 +522,12 @@
         <artifactId>spring-test</artifactId>
         <version>${spring.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
       </dependency>
+      
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>
