@@ -42,27 +42,27 @@ public class UserDaoImpl
 
 	@Override
 	@Transactional
-	public boolean exists(final String aUsername)
-	{
-		return entityManager
-				.createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username")
-				.setParameter("username", aUsername).getResultList().size() > 0;
-	}
+    public boolean exists(final String aUsername)
+    {
+        return entityManager
+                .createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username")
+                .setParameter("username", aUsername).getResultList().size() > 0;
+    }
 
-	   @Override
+    @Override
     @Transactional
-	    public void create(User aUser)
-	    {
-	        entityManager.persist(aUser);
-	        entityManager.flush();
-	    }
+    public void create(User aUser)
+    {
+        entityManager.persist(aUser);
+        entityManager.flush();
+    }
 
-	    @Override
-        @Transactional
-	    public User update(User aUser)
-	    {
-	        return entityManager.merge(aUser);
-	    }
+    @Override
+    @Transactional
+    public User update(User aUser)
+    {
+        return entityManager.merge(aUser);
+    }
 
 	@Override
 	@Transactional

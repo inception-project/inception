@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,6 +33,8 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.springframework.context.ApplicationContext;
@@ -51,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 @Table(name = "users")
 public class User
     implements Serializable
-
 {
     private static final long serialVersionUID = -5668208834434334005L;
 
@@ -65,6 +67,10 @@ public class User
     private String password;
 
     private boolean enabled;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date lastLogin;
 
     @Column(nullable = true)
     private String email;
@@ -168,5 +174,13 @@ public class User
         this.roles = roles;
     }
 
+    public Date getLastLogin()
+    {
+        return lastLogin;
+    }
 
+    public void setLastLogin(Date aLastLogin)
+    {
+        lastLogin = aLastLogin;
+    }
 }
