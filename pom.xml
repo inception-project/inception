@@ -56,7 +56,7 @@
     <slf4j.version>1.7.24</slf4j.version>
     <log4j.version>2.8.1</log4j.version>
     <jboss.logging.version>3.3.0.Final</jboss.logging.version>
-    <wicket.version>7.6.0</wicket.version>
+    <wicket.version>7.7.0</wicket.version>
     <!-- wicket.version>6.26.0</wicket.version -->
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
