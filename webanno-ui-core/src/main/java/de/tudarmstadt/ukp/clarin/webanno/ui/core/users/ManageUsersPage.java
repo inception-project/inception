@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -190,6 +191,7 @@ public class ManageUsersPage
             add(new TextField<String>("username").setOutputMarkupId(true));
             add(new PasswordTextField("password", passwordModel).setRequired(false));
             add(new PasswordTextField("repeatPassword", repeatPasswordModel).setRequired(false));
+            add(new Label("lastLogin"));
             add(new EmailTextField("email"));
             WebMarkupContainer adminOnly = new WebMarkupContainer("adminOnly");
             adminOnly.add(new ListMultipleChoice<Role>("roles",
