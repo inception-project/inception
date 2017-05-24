@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.menu;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;

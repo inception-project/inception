@@ -224,6 +224,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-ui-menu</artifactId>
+        <version>3.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-annotation</artifactId>
         <version>3.3.0-SNAPSHOT</version>
       </dependency>
@@ -573,6 +578,7 @@
     <!-- UI -->
     <module>webanno-brat</module>
     <module>webanno-ui-core</module>
+    <module>webanno-ui-menu</module>
     <module>webanno-ui-project</module>
     <module>webanno-ui-curation</module>
     <module>webanno-ui-correction</module>

@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
+import org.apache.wicket.Page;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.menu.MainMenuPage;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -29,5 +31,12 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 public class WicketApplication
     extends WicketApplicationBase
 {
-    // Nothing to do
+    /**
+     * @see org.apache.wicket.Application#getHomePage()
+     */
+    @Override
+    public Class<? extends Page> getHomePage()
+    {
+        return MainMenuPage.class;
+    }
 }
