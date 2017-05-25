@@ -631,7 +631,7 @@ public class WebAnnoCasUtil
      * @param aSentenceAddress
      *            the sentence ID.
      * @return the sentence number.
-     * @deprecated use {@link AnnotatorState#getFirstVisibleSentenceNumber()} instead
+     * @deprecated use {@link AnnotatorState#getFirstVisibleUnitIndex()} instead
      */
     @Deprecated
     public static int getFirstSentenceNumber(JCas aJcas, int aSentenceAddress)

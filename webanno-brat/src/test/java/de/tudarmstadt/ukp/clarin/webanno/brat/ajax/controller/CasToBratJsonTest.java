@@ -180,7 +180,7 @@ public class CasToBratJsonTest
 
         AnnotatorState bratannotatorModel = new AnnotatorStateImpl(Mode.ANNOTATION);
         bratannotatorModel.getPreferences().setWindowSize(10);
-        bratannotatorModel.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(jCas));
+        bratannotatorModel.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
 
         Project project = new Project();
         bratannotatorModel.setProject(project);

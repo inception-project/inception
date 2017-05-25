@@ -1367,7 +1367,7 @@ public class AnnotationDetailEditorPanel
         // Update progress information
         LOG.trace(String.format("actionAnnotate() updating progress information"));
         int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
-        state.setFocusSentenceNumber(sentenceNumber);
+        state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
     
         // persist changes
@@ -1386,7 +1386,7 @@ public class AnnotationDetailEditorPanel
     
     	// Handle auto-forward if it is enabled
     	if (state.isForwardAnnotation() && !aIsForwarded && featureStates.get(0).value != null) {
-    		if (state.getSelection().getEnd() >= state.getFirstVisibleSentenceEnd()) {
+    		if (state.getSelection().getEnd() >= state.getFirstVisibleUnitEnd()) {
     			autoScroll(aJCas, true);
     		}
     
@@ -1552,7 +1552,7 @@ public class AnnotationDetailEditorPanel
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
-        state.setFocusSentenceNumber(sentenceNumber);
+        state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // Auto-scroll
@@ -1616,7 +1616,7 @@ public class AnnotationDetailEditorPanel
         // persist changes
         writeEditorCas(jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
-        state.setFocusSentenceNumber(sentenceNumber);
+        state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (state.getPreferences().isScrollPage()) {
@@ -1684,23 +1684,23 @@ public class AnnotationDetailEditorPanel
         if (aForward) {
             // Fetch the first sentence on screen
             Sentence sentence = selectByAddr(jCas, Sentence.class,
-                    state.getFirstVisibleSentenceAddress());
+                    state.getFirstVisibleUnitAddress());
             // Find the following one
             int address = getNextSentenceAddress(jCas, sentence);
             // Move to it
-            state.setFirstVisibleSentence(selectByAddr(jCas, Sentence.class, address));
+            state.setFirstVisibleUnit(selectByAddr(jCas, Sentence.class, address));
         }
         else {
             // Fetch the first sentence on screen
             Sentence sentence = selectByAddr(jCas, Sentence.class,
-                    state.getFirstVisibleSentenceAddress());
+                    state.getFirstVisibleUnitAddress());
             // Calculate the first sentence in the window in such a way that the annotation
             // currently selected is in the center of the window
             sentence = findWindowStartCenteringOnSelection(jCas, sentence,
                     state.getSelection().getBegin(), state.getProject(), state.getDocument(),
                     state.getPreferences().getWindowSize());
             // Move to it
-            state.setFirstVisibleSentence(sentence);
+            state.setFirstVisibleUnit(sentence);
         }
     }
 

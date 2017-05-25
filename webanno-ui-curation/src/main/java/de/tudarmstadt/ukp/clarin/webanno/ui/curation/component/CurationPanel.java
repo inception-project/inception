@@ -259,8 +259,8 @@ public class CurationPanel
             @Override
             protected Object load()
             {
-                int fSN = bModel.getFirstVisibleSentenceNumber();
-                int lSN = bModel.getLastVisibleSentenceNumber();
+                int fSN = bModel.getFirstVisibleUnitIndex();
+                int lSN = bModel.getLastVisibleUnitIndex();
     
                 List<String> crossSentAnnos = new ArrayList<>();
                 if (SuggestionBuilder.crossSentenceLists != null) {
@@ -349,7 +349,7 @@ public class CurationPanel
                             updateCurationView(cCModel.getObject(), curationViewItem, aTarget,
                                     jCas);
                             updatePanel(aTarget, cCModel.getObject());
-                            bModel.setFocusSentenceNumber(curationViewItem.getSentenceNumber());
+                            bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
                         }
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
@@ -370,7 +370,7 @@ public class CurationPanel
                 item.add(click);
     
                 // Is in focus?
-                if (curationViewItem.getSentenceNumber() == bModel.getFocusSentenceNumber()) {
+                if (curationViewItem.getSentenceNumber() == bModel.getFocusUnitIndex()) {
                     item.add(AttributeModifier.append("class", "current"));
                 }
                 
@@ -428,7 +428,7 @@ public class CurationPanel
     {
         Sentence currentSent = WebAnnoCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
                 curationViewItem.getEnd());
-        bModel.setFirstVisibleSentence(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
+        bModel.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
                 currentSent, curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(),
                 bModel.getPreferences().getWindowSize()));
         curationContainer.setBratAnnotatorModel(bModel);
@@ -465,9 +465,9 @@ public class CurationPanel
     {
         JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
 
-        final Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
-                bModel.getFirstVisibleSentenceEnd());
-        bModel.setFirstVisibleSentence(sentence);
+        final Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleUnitBegin(),
+                bModel.getFirstVisibleUnitEnd());
+        bModel.setFirstVisibleUnit(sentence);
 
         List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel
                 .getPreferences().getWindowSize());
@@ -482,8 +482,8 @@ public class CurationPanel
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
 
         int ws = bModel.getPreferences().getWindowSize();
-        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleSentenceBegin(),
-                bModel.getFirstVisibleSentenceEnd());
+        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleUnitBegin(),
+                bModel.getFirstVisibleUnitEnd());
         Sentence ls = WebAnnoCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());

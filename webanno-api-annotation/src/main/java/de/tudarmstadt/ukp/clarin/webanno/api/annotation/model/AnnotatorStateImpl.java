@@ -76,17 +76,17 @@ public class AnnotatorStateImpl
     /**
      * The sentence address where the display window starts with, in its UIMA annotation
      */
-    private int displayWindowStartSentenceAddress = -1;
+    private int firstVisibleUnitAddress = -1;
 
     /**
-     * The begin offset of a sentence
+     * The begin offset of the first visible unit in the display window.
      */
-    private int sentenceBeginOffset;
+    private int firstVisibleUnitBegin;
 
     /**
-     * The end offset of a sentence
+     * The end offset of the first visible unit in the display window.
      */
-    private int sentenceEndOffset;
+    private int firstVisibleUnitEnd;
 
     /**
      * The begin offset of the first visible sentence.
@@ -99,24 +99,24 @@ public class AnnotatorStateImpl
     private int windowEndOffset;
 
     /**
-     * the sentence number where an action occured (selection, modification, clicking)
+     * The index of the unit an action occurred (selection, modification, clicking).
      */
-    private int focusSentenceNumber;
+    private int focusUnitIndex;
     
     /**
-     * The first sentence number in the display window
+     * The index of the first visible unit in the display window.
      */
-    private int firstVisibleSentenceNumber;
+    private int firstVisibleUnitIndex;
     
     /**
-     * The last sentence number in the display window
+     * The index of the last visible unit in the display window.
      */
-    private int lastVisibleSentenceNumber;
+    private int lastVisibleUnitIndex;
 
     /**
-     * The total number of sentences in the document
+     * The total number of units in the document.
      */
-    private int numberOfSentences;
+    private int unitCount;
 
     private List<FeatureState> featureModels = new ArrayList<>();          
     
@@ -302,32 +302,36 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setFirstVisibleSentence(Sentence aSentence)
+    public void setFirstVisibleUnit(Sentence aFirstVisibleUnit)
     {
         JCas jcas;
         try {
-            jcas = aSentence.getCAS().getJCas();
+            jcas = aFirstVisibleUnit.getCAS().getJCas();
         }
         catch (CASException e) {
             throw new IllegalStateException("Unable to fetch JCas from CAS", e);
         }
 
-        displayWindowStartSentenceAddress = WebAnnoCasUtil.getAddr(aSentence);
-        sentenceBeginOffset = aSentence.getBegin();
-        sentenceEndOffset = aSentence.getEnd();
+        firstVisibleUnitAddress = WebAnnoCasUtil.getAddr(aFirstVisibleUnit);
+        firstVisibleUnitBegin = aFirstVisibleUnit.getBegin();
+        firstVisibleUnitEnd = aFirstVisibleUnit.getEnd();
 
-        Sentence lastVisibleSentence = getLastSentenceInDisplayWindow(jcas, getAddr(aSentence),
+        Sentence lastVisibleUnit = getLastSentenceInDisplayWindow(jcas, getAddr(aFirstVisibleUnit),
                 getPreferences().getWindowSize());
-        firstVisibleSentenceNumber = WebAnnoCasUtil.getSentenceNumber(jcas,
-                aSentence.getBegin());
-        lastVisibleSentenceNumber = WebAnnoCasUtil.getSentenceNumber(jcas,
-                lastVisibleSentence.getBegin());
-        numberOfSentences = select(jcas, Sentence.class).size();
+        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, aFirstVisibleUnit.getBegin());
+        lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, lastVisibleUnit.getBegin());
+        unitCount = select(jcas, Sentence.class).size();
         
-        windowBeginOffset = aSentence.getBegin();
-        windowEndOffset = lastVisibleSentence.getEnd();
+        windowBeginOffset = aFirstVisibleUnit.getBegin();
+        windowEndOffset = lastVisibleUnit.getEnd();
     }
 
+    @Override
+    public int getFirstVisibleUnitAddress()
+    {
+        return firstVisibleUnitAddress;
+    }
+    
     @Override
     public int getWindowBeginOffset()
     {
@@ -340,12 +344,6 @@ public class AnnotatorStateImpl
         return windowEndOffset;
     }
     
-    @Override
-    public int getFirstVisibleSentenceAddress()
-    {
-        return displayWindowStartSentenceAddress;
-    }
-
     @Override
     public List<AnnotationLayer> getAnnotationLayers()
     {
@@ -439,45 +437,45 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public int getFirstVisibleSentenceBegin()
+    public int getFirstVisibleUnitBegin()
     {
-        return sentenceBeginOffset;
+        return firstVisibleUnitBegin;
     }
 
     @Override
-    public int getFirstVisibleSentenceEnd()
+    public int getFirstVisibleUnitEnd()
     {
-        return sentenceEndOffset;
+        return firstVisibleUnitEnd;
     }
 
     @Override
-    public int getFocusSentenceNumber()
+    public int getFocusUnitIndex()
     {
-        return focusSentenceNumber;
+        return focusUnitIndex;
     }
 
     @Override
-    public void setFocusSentenceNumber(int aSentenceNumber)
+    public void setFocusUnitIndex(int aSentenceNumber)
     {
-        focusSentenceNumber = aSentenceNumber;
+        focusUnitIndex = aSentenceNumber;
     }
 
     @Override
-    public int getFirstVisibleSentenceNumber()
+    public int getFirstVisibleUnitIndex()
     {
-        return firstVisibleSentenceNumber;
+        return firstVisibleUnitIndex;
     }
 
     @Override
-    public int getLastVisibleSentenceNumber()
+    public int getLastVisibleUnitIndex()
     {
-        return lastVisibleSentenceNumber;
+        return lastVisibleUnitIndex;
     }
     
     @Override
-    public int getNumberOfSentences()
+    public int getUnitCount()
     {
-        return numberOfSentences;
+        return unitCount;
     }
 
     @Override

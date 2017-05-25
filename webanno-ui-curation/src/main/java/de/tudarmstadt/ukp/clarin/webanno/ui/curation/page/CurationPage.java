@@ -438,7 +438,7 @@ public class CurationPage
 //            LOG.error("Unable to load data", e);
 //            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
 //        }
-        gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
+        gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
         aTarget.add(gotoPageTextField);
         aTarget.add(curationPanel);
@@ -477,8 +477,8 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
-        state.setFirstVisibleSentence(sentence);
-        state.setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        state.setFirstVisibleUnit(sentence);
+        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
@@ -498,8 +498,8 @@ public class CurationPage
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
         
-        state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
-        state.setFocusSentenceNumber(selectedSentence);        
+        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
+        state.setFocusUnitIndex(selectedSentence);        
         
         actionRefreshDocument(aTarget, jcas);
         
@@ -531,12 +531,12 @@ public class CurationPage
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
             Sentence sentence = selectByAddr(mergeCas, Sentence.class,
-                    state.getFirstVisibleSentenceAddress());
-            state.setFirstVisibleSentence(sentence);
+                    state.getFirstVisibleUnitAddress());
+            state.setFirstVisibleUnit(sentence);
             
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeCas, state.getFirstVisibleSentenceAddress());
+            updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
         }
         catch (Exception e) {
             aTarget.add(getFeedbackPanel());
@@ -667,7 +667,7 @@ public class CurationPage
             state.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
             // Initialize the visible content
-            state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(mergeJCas));
+            state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(mergeJCas));
     
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -684,7 +684,7 @@ public class CurationPage
             curationPanel.editor.reset(aTarget);
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeJCas, state.getFirstVisibleSentenceAddress());
+            updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
     
             
             // Load constraints

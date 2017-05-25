@@ -53,31 +53,58 @@ public interface AnnotatorState
     // firstSentenceNumber/firstSentenceAddress?
 
     /**
-     * Get the number of the sentence in focus (curation view)
+     * @param aUnit the first unit in the display window.
      */
-    int getFocusSentenceNumber();
+    void setFirstVisibleUnit(Sentence aUnit);
 
     /**
-     * Set the number of the sentence in focus (curation view)
+     * @param aIndex the index of the focus unit (curation view)
      */
-    void setFocusSentenceNumber(int sentenceNumber);
+    void setFocusUnitIndex(int aIndex);
 
-    void setFirstVisibleSentence(Sentence aSentence);
+    /**
+     * @return the index of the focus unit (curation view)
+     */
+    int getFocusUnitIndex();
 
-    int getFirstVisibleSentenceAddress();
+    /**
+     * @return the UIMA address of the first unit in the display window.
+     */
+    int getFirstVisibleUnitAddress();
 
-    int getFirstVisibleSentenceBegin();
+    /**
+     * @return the begin character offset of the first unit in the display window.
+     */
+    int getFirstVisibleUnitBegin();
 
-    int getFirstVisibleSentenceEnd();
+    /**
+     * @return the end character offset of the first unit in the display window.
+     */
+    int getFirstVisibleUnitEnd();
 
-    int getFirstVisibleSentenceNumber();
+    /**
+     * @return the index of the first unit in the display window.
+     */
+    int getFirstVisibleUnitIndex();
 
-    int getLastVisibleSentenceNumber();
+    /**
+     * @return the index of the last unit in the display window.
+     */
+    int getLastVisibleUnitIndex();
 
-    int getNumberOfSentences();
+    /**
+     * @return the total number of units in the document.
+     */
+    int getUnitCount();
 
+    /**
+     * @return the begin character offset of the first unit in the display window.
+     */
     int getWindowBeginOffset();
 
+    /**
+     * @return the end character offset of the last unit in the display window.
+     */
     int getWindowEndOffset();
 
     // ---------------------------------------------------------------------------------------------
@@ -247,63 +274,63 @@ public interface AnnotatorState
         int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
 
         int previousSentenceAddress = WebAnnoCasUtil.getPreviousDisplayWindowSentenceBeginAddress(
-                aJCas, getFirstVisibleSentenceAddress(), getPreferences().getWindowSize());
+                aJCas, getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
         // Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same
         // address
         // if there are not much sentences to go back to as defined in windowSize
-        if (previousSentenceAddress == getFirstVisibleSentenceAddress() &&
+        if (previousSentenceAddress == getFirstVisibleUnitAddress() &&
         // Check whether it's not the beginning of document
-                getFirstVisibleSentenceAddress() != firstSentenceAddress) {
+                getFirstVisibleUnitAddress() != firstSentenceAddress) {
             previousSentenceAddress = firstSentenceAddress;
         }
 
-        if (getFirstVisibleSentenceAddress() == previousSentenceAddress) {
+        if (getFirstVisibleUnitAddress() == previousSentenceAddress) {
             throw new IllegalStateException("This is First Page!");
         }
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, previousSentenceAddress);
-        setFirstVisibleSentence(sentence);
-        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        setFirstVisibleUnit(sentence);
+        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     default void moveToNextPage(JCas aJCas)
     {
         int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(aJCas,
-                getFirstVisibleSentenceAddress(), getPreferences().getWindowSize());
+                getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
 
-        if (getFirstVisibleSentenceAddress() == nextSentenceAddress) {
+        if (getFirstVisibleUnitAddress() == nextSentenceAddress) {
             throw new IllegalStateException("This is last page!");
         }
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, nextSentenceAddress);
-        setFirstVisibleSentence(sentence);
-        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        setFirstVisibleUnit(sentence);
+        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     default void moveToFirstPage(JCas aJCas)
     {
         int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
 
-        if (firstSentenceAddress == getFirstVisibleSentenceAddress()) {
+        if (firstSentenceAddress == getFirstVisibleUnitAddress()) {
             throw new IllegalStateException("This is first page!");
         }
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class, firstSentenceAddress);
-        setFirstVisibleSentence(sentence);
-        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        setFirstVisibleUnit(sentence);
+        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
     default void moveToLastPage(JCas aJCas)
     {
         int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                 .getLastDisplayWindowFirstSentenceAddress(aJCas, getPreferences().getWindowSize());
-        if (lastDisplayWindowBeginingSentenceAddress == getFirstVisibleSentenceAddress()) {
+        if (lastDisplayWindowBeginingSentenceAddress == getFirstVisibleUnitAddress()) {
             throw new IllegalStateException("This is last page!");
         }
 
         Sentence sentence = selectByAddr(aJCas, Sentence.class,
                 lastDisplayWindowBeginingSentenceAddress);
-        setFirstVisibleSentence(sentence);
-        setFocusSentenceNumber(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        setFirstVisibleUnit(sentence);
+        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 }

@@ -289,16 +289,16 @@ public class SuggestionViewPanel
 
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedJCas, fsClicked.getBegin());
-        aBModel.setFocusSentenceNumber(sentenceNumber);
+        aBModel.setFocusUnitIndex(sentenceNumber);
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(aMergeJCas, aBModel.getFirstVisibleSentenceBegin(),
-                    aBModel.getFirstVisibleSentenceEnd());
+            Sentence sentence = selectSentenceAt(aMergeJCas, aBModel.getFirstVisibleUnitBegin(),
+                    aBModel.getFirstVisibleUnitEnd());
             sentence = findWindowStartCenteringOnSelection(aMergeJCas, sentence,
                     fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
                     aBModel.getPreferences().getWindowSize());
-            aBModel.setFirstVisibleSentence(sentence);
+            aBModel.setFirstVisibleUnit(sentence);
         }
     }
 
@@ -354,18 +354,18 @@ public class SuggestionViewPanel
         writeEditorCas(bModel, aJcas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
-        bModel.setFocusSentenceNumber(sentenceNumber);
+        bModel.setFocusUnitIndex(sentenceNumber);
         
         // Update timestamp
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleSentenceBegin(),
-                    bModel.getFirstVisibleSentenceEnd());
+            Sentence sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleUnitBegin(),
+                    bModel.getFirstVisibleUnitEnd());
             sentence = findWindowStartCenteringOnSelection(aJcas, sentence,
                     clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
                     bModel.getPreferences().getWindowSize());
-            bModel.setFirstVisibleSentence(sentence);
+            bModel.setFirstVisibleUnit(sentence);
         }
     }
 

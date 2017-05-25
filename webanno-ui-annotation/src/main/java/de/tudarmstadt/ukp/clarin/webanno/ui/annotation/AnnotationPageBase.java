@@ -98,9 +98,9 @@ public abstract class AnnotationPageBase
             numberOfPages = new Label("numberOfPages",
                     new StringResourceModel("PositionInfo.text", this).setModel(getModel())
                             .setParameters(
-                                    PropertyModel.of(getModel(), "firstVisibleSentenceNumber"),
-                                    PropertyModel.of(getModel(), "lastVisibleSentenceNumber"),
-                                    PropertyModel.of(getModel(), "numberOfSentences"),
+                                    PropertyModel.of(getModel(), "firstVisibleUnitIndex"),
+                                    PropertyModel.of(getModel(), "lastVisibleUnitIndex"),
+                                    PropertyModel.of(getModel(), "unitCount"),
                                     PropertyModel.of(getModel(), "documentIndex"),
                                     PropertyModel.of(getModel(), "numberOfDocuments")))
             {
@@ -272,7 +272,7 @@ public abstract class AnnotationPageBase
                         // required feature value
                         Sentence s = WebAnnoCasUtil.getSentence(editorJCas, fs.getBegin());
                         // Put this sentence into the focus
-                        state.setFirstVisibleSentence(s);
+                        state.setFirstVisibleUnit(s);
                         actionRefreshDocument(aTarget, editorJCas);
                         // Inform the user
                         throw new IllegalStateException(

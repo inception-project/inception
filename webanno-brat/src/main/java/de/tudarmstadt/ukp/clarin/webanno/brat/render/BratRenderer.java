@@ -123,7 +123,7 @@ public class BratRenderer
         int windowBegin = aState.getWindowBeginOffset();
         int windowEnd = aState.getWindowEndOffset();
         
-        aResponse.setSentenceNumberOffset(aState.getFirstVisibleSentenceNumber());
+        aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
         // Render token + texts
         for (AnnotationFS fs : selectCovered(aJcas, Token.class, windowBegin, windowEnd)) {

@@ -505,8 +505,8 @@ public class AnnotationPage
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
         
-        state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
-        state.setFocusSentenceNumber(selectedSentence);        
+        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
+        state.setFocusUnitIndex(selectedSentence);        
         
         actionRefreshDocument(aTarget, jcas);
     }
@@ -528,8 +528,8 @@ public class AnnotationPage
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
             Sentence sentence = selectByAddr(jCas, Sentence.class,
-                    state.getFirstVisibleSentenceAddress());
-            state.setFirstVisibleSentence(sentence);
+                    state.getFirstVisibleUnitAddress());
+            state.setFirstVisibleUnit(sentence);
             
             AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
             annotationEditor.replaceWith(newAnnotationEditor);
@@ -608,7 +608,7 @@ public class AnnotationPage
                     annotationService, state, state.getMode());
 
             // Initialize the visible content
-            state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(editorCas));
+            state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
             
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -618,9 +618,9 @@ public class AnnotationPage
             currentprojectId = state.getProject().getId();
 
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
-                    + state.getFirstVisibleSentenceNumber() + "] l:["
-                    + state.getLastVisibleSentenceNumber() + "] s:["
-                    + state.getFocusSentenceNumber() + "]");
+                    + state.getFirstVisibleUnitIndex() + "] l:["
+                    + state.getLastVisibleUnitIndex() + "] s:["
+                    + state.getFocusUnitIndex() + "]");
 
             gotoPageTextField.setModelObject(1);
 
@@ -656,7 +656,7 @@ public class AnnotationPage
     protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
     {
         annotationEditor.render(aTarget, aEditorCas);
-        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
+        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
     }

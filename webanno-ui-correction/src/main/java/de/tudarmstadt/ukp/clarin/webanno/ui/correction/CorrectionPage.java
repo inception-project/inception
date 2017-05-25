@@ -508,7 +508,7 @@ public class CorrectionPage
         suggestionView.updatePanel(target, curationContainer, annotationEditor,
                 annotationSelectionByUsernameAndAddress, curationSegment);
 
-        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleSentenceNumber());
+        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
 
         target.add(gotoPageTextField);
         target.add(suggestionView);
@@ -532,8 +532,8 @@ public class CorrectionPage
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
         
-        state.setFirstVisibleSentence(sentences.get(selectedSentence - 1));
-        state.setFocusSentenceNumber(selectedSentence);        
+        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
+        state.setFocusUnitIndex(selectedSentence);        
         
         SuggestionBuilder builder = new SuggestionBuilder(documentService,
                 correctionDocumentService, curationDocumentService, annotationService,
@@ -570,8 +570,8 @@ public class CorrectionPage
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
             Sentence sentence = selectByAddr(editorCas, Sentence.class,
-                    state.getFirstVisibleSentenceAddress());
-            state.setFirstVisibleSentence(sentence);
+                    state.getFirstVisibleUnitAddress());
+            state.setFirstVisibleUnit(sentence);
             
             update(aTarget);
             aTarget.appendJavaScript(
@@ -688,7 +688,7 @@ public class CorrectionPage
                     annotationService, state, state.getMode());
 
             // Initialize the visible content
-            state.setFirstVisibleSentence(WebAnnoCasUtil.getFirstSentence(editorCas));
+            state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
             
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -698,9 +698,9 @@ public class CorrectionPage
             currentprojectId = state.getProject().getId();
 
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
-                    + state.getFirstVisibleSentenceNumber() + "] l:["
-                    + state.getLastVisibleSentenceNumber() + "] s:["
-                    + state.getFocusSentenceNumber() + "]");
+                    + state.getFirstVisibleUnitIndex() + "] l:["
+                    + state.getLastVisibleUnitIndex() + "] s:["
+                    + state.getFocusUnitIndex() + "]");
 
             gotoPageTextField.setModelObject(1);
 
