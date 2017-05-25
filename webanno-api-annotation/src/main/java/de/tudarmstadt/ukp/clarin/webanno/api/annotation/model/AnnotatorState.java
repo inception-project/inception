@@ -148,6 +148,14 @@ public interface AnnotatorState
     Project getProject();
 
     void setProject(Project aProject);
+    
+    /**
+     * Set whether the user should be allowed to switch projects in the annotation editor
+     * "open documents" dialog.
+     */
+    void setProjectLocked(boolean aFlag);
+    
+    boolean isProjectLocked();
 
     // REC: we cache the constraints when a document is opened because parsing them takes some time
     ParsedConstraints getConstraints();

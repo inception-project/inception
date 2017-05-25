@@ -110,6 +110,12 @@ public class OpenModalWindowPanel
         }
 
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
+        
+        if (aBModel.isProjectLocked()) {
+            projectSelectionForm.getModelObject().projectSelection = aBModel.getProject();
+            projectSelectionForm.setVisible(false);
+        }
+        
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
 

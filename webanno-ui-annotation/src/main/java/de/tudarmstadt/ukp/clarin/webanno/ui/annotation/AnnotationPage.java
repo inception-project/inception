@@ -43,6 +43,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -94,8 +95,9 @@ import wicket.contrib.input.events.key.KeyType;
  * annotation layer configuration, and Exporting document
  */
 @MenuItem(icon = "images/categories.png", label = "Annotation", prio = 100)
-@MountPath(value = "/annotation.html", alt = "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID
-        + "}/${" + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}")
+@MountPath(value = "/annotation.html", alt =  { 
+    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}",
+    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${" + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}" })
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
@@ -120,8 +122,8 @@ public class AnnotationPage
     private long currentprojectId;
 
     // Open the dialog window on first load
-    private boolean firstLoad = true;
-
+    private boolean showOpenDocumentSelectionDialog = true;
+    
     private ModalWindow openDocumentsModal;
 
     private FinishImage finishDocumentIcon;
@@ -145,51 +147,63 @@ public class AnnotationPage
         
         commonInit();
 
-        long projectId = aPageParameters.get("projectId").toLong();
-        Project project;
-        try {
-            project = projectService.getProject(projectId);
-        }
-        catch (NoResultException e) {
-            error("Project [" + projectId + "] does not exist");
-            return;
-        }
-       
-        long documentId = aPageParameters.get("documentId").toLong();
-        SourceDocument document;
-        try {
-            document = documentService.getSourceDocument(projectId, documentId);
-        }
-        catch (NoResultException e) {
-            error("Document [" + documentId + "] does not exist in project [" + projectId + "]");
-            return;
-        }
-
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
-        
-        if (!SecurityUtil.isAnnotator(project, projectService, user)) {
-            error("You have no permission to access document [" + documentId + "] in project ["
-                    + projectId + "]");
-            return;
-        }
-        
-        if (documentService.existsAnnotationDocument(document, user)) {
-            AnnotationDocument adoc = documentService.getAnnotationDocument(document, user);
-            if (AnnotationDocumentState.IGNORE.equals(adoc.getState())) {
-                error("Document [" + documentId + "] in project [" + projectId
-                        + "] is locked for you");
+        getModelObject().setUser(user);
+
+        // Project has been specified when the page was opened
+        Project project = null;
+        StringValue projectParam = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        if (!projectParam.isEmpty()) {
+            long projectId = projectParam.toLong();
+            try {
+                project = projectService.getProject(projectId);
+                
+                // Check access to project
+                if (!SecurityUtil.isAnnotator(project, projectService, user)) {
+                    error("You have no permission to access project [" + project.getId() + "]");
+                    return;
+                }
+                
+                getModelObject().setProject(project);
+                getModelObject().setProjectLocked(true);
+                showOpenDocumentSelectionDialog = true;
+            }
+            catch (NoResultException e) {
+                error("Project [" + projectId + "] does not exist");
                 return;
             }
         }
-
-        firstLoad = false;
         
-        getModelObject().setUser(user);
-        getModelObject().setProject(project);
-        getModelObject().setDocument(document, getListOfDocs());
-        
-        actionLoadDocument(null);
+        // Document has been specified when the page was opened
+        SourceDocument document = null;
+        StringValue documentParam = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
+        if (project != null && !documentParam.isEmpty()) {
+            long documentId = documentParam.toLong();
+            try {
+                document = documentService.getSourceDocument(project.getId(), documentId);
+                
+                // Check access to document
+                if (documentService.existsAnnotationDocument(document, user)) {
+                    AnnotationDocument adoc = documentService.getAnnotationDocument(document, user);
+                    if (AnnotationDocumentState.IGNORE.equals(adoc.getState())) {
+                        error("Document [" + document.getId() + "] in project [" + project.getId()
+                                + "] is locked for you");
+                        return;
+                    }
+                }
+                
+                getModelObject().setDocument(document, getListOfDocs());
+                
+                showOpenDocumentSelectionDialog = false;
+                actionLoadDocument(null);
+            }
+            catch (NoResultException e) {
+                error("Document [" + documentId + "] does not exist in project [" + project.getId()
+                        + "]");
+                return;
+            }
+        }
     }
     
     private void commonInit()
@@ -448,9 +462,9 @@ public class AnnotationPage
         super.renderHead(response);
 
         String jQueryString = "";
-        if (firstLoad) {
+        if (showOpenDocumentSelectionDialog) {
             jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
-            firstLoad = false;
+            showOpenDocumentSelectionDialog = false;
         }
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
