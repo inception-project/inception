@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -61,6 +62,7 @@ public class LoginPage
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @SpringBean UserDao userRepository;
+    private @SpringBean(required=false) SessionRegistry sessionRegistry;
 
     public LoginPage()
     {
@@ -139,6 +141,13 @@ public class LoginPage
             AuthenticatedWebSession session = AuthenticatedWebSession.get();
             if (session.signIn(username, password)) {
                 log.debug("Login successful");
+                if (sessionRegistry != null) {
+                    // Form-based login isn't detected by SessionManagementFilter. Thus handling
+                    // session registration manually here.
+                    HttpSession containerSession = ((ServletWebRequest) RequestCycle.get()
+                            .getRequest()).getContainerRequest().getSession(false);
+                    sessionRegistry.registerNewSession(containerSession.getId(), username);
+                }
                 setDefaultResponsePageIfNecessary();
             }
             else {
