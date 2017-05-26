@@ -23,6 +23,7 @@ $(document).ready(
 
 						var initialPos = shadow.position();
 						$(sticker).css("position", "fixed");
+						$(sticker).css("z-index", "99");
 
 						function adjustSticker(e) {
 							shadow.css("height", sticker.offsetHeight + "px");
