@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.TypeRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;

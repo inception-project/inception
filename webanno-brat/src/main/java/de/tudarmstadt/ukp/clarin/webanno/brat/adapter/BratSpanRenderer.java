@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * Render spans.
  */
 public class BratSpanRenderer
-    implements TypeRenderer
+    implements BratTypeRenderer
 {
     private SpanAdapter typeAdapter;
     

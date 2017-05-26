@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * Render
  */
 public class BratChainRenderer
-    implements TypeRenderer
+    implements BratTypeRenderer
 {
     private ChainAdapter typeAdapter;
 
