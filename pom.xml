@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>14</version>
+    <version>15</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -28,7 +28,7 @@
   <version>3.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>WebAnno</name>
-  <url>http://code.google.com/p/webanno/</url>
+  <url>https://webanno.github.io/</url>
   <inceptionYear>2012</inceptionYear>
   <licenses>
     <license>
