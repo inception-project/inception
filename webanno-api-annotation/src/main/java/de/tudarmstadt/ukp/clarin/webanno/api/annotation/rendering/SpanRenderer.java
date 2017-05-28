@@ -49,12 +49,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * Render spans.
  */
-public class BratSpanRenderer
+public class SpanRenderer
     implements Renderer
 {
     private SpanAdapter typeAdapter;
     
-    public BratSpanRenderer(SpanAdapter aTypeAdapter)
+    public SpanRenderer(SpanAdapter aTypeAdapter)
     {
         typeAdapter = aTypeAdapter;
     }

@@ -58,13 +58,13 @@ public class PreRenderer
 
     public static Renderer getRenderer(TypeAdapter aTypeAdapter) {
         if (aTypeAdapter instanceof SpanAdapter) {
-            return new BratSpanRenderer((SpanAdapter) aTypeAdapter);
+            return new SpanRenderer((SpanAdapter) aTypeAdapter);
         }
         else if (aTypeAdapter instanceof ArcAdapter) {
-            return new BratArcRenderer((ArcAdapter) aTypeAdapter);
+            return new RelationRenderer((ArcAdapter) aTypeAdapter);
         }
         else if (aTypeAdapter instanceof ChainAdapter) {
-            return new BratChainRenderer((ChainAdapter) aTypeAdapter);
+            return new ChainRenderer((ChainAdapter) aTypeAdapter);
         }
         else {
             throw new IllegalArgumentException(

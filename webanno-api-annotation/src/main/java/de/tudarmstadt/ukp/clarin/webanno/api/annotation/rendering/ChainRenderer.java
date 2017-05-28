@@ -42,12 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public class BratChainRenderer
+public class ChainRenderer
     implements Renderer
 {
     private ChainAdapter typeAdapter;
 
-    public BratChainRenderer(ChainAdapter aTypeAdapter)
+    public ChainRenderer(ChainAdapter aTypeAdapter)
     {
         typeAdapter = aTypeAdapter;
     }

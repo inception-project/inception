@@ -51,14 +51,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
-public class BratArcRenderer
+public class RelationRenderer
     implements Renderer
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private ArcAdapter typeAdapter;
     
-    public BratArcRenderer(ArcAdapter aTypeAdapter)
+    public RelationRenderer(ArcAdapter aTypeAdapter)
     {
         typeAdapter = aTypeAdapter;
     }
