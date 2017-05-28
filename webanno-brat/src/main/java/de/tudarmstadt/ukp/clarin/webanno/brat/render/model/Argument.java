@@ -48,8 +48,13 @@ public class Argument
         // spans can be the target of an argument. However, we internally wrap this as a VID
         // in order to always use the same identifier type when talking with brat (VID renders as
         // as String value, while "int" would render as a numeric value).
+        this(aLabel, new VID(aTarget));
+    }
+
+    public Argument(String aLabel, VID aTarget)
+    {
         label = aLabel;
-        target = new VID(aTarget);
+        target = aTarget;
     }
 
     public String getLabel()

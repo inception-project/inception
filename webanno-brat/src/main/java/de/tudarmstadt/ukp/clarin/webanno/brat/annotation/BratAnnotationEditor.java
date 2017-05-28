@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -41,6 +43,8 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
@@ -74,7 +78,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -217,7 +225,8 @@ public class BratAnnotationEditor
                     else if (GetDocumentResponse.is(action)) {
                         GetDocumentResponse response = new GetDocumentResponse();
                         if (getModelObject().getProject() != null) {
-                            BratRenderer.render(response, getModelObject(), jCas, annotationService);
+                            BratRenderer.render(response, getModelObject(), jCas,
+                                    annotationService, getLayersToRender());
                         }
                         result = response;
                     }
@@ -384,13 +393,33 @@ public class BratAnnotationEditor
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
+        BratRenderer.render(response, getModelObject(), aJCas, annotationService,
+                getLayersToRender());
         String json = toJson(response);
         LOG.info("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
 
+    private List<AnnotationLayer> getLayersToRender()
+    {
+        AnnotatorState state = getModelObject();
+        List<AnnotationLayer> layersToRender = new ArrayList<>();
+        for (AnnotationLayer layer : state.getAnnotationLayers()) {
+            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName());
+            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
+                    && (state.getMode().equals(Mode.AUTOMATION)
+                            || state.getMode().equals(Mode.CORRECTION)
+                            || state.getMode().equals(Mode.CURATION));
+            
+            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+                layersToRender.add(layer);
+            }
+        }
+        return layersToRender;
+    }
+    
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
      *

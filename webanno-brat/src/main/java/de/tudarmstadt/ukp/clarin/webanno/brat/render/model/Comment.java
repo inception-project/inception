@@ -32,6 +32,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 public class Comment
 {
     public static final String ANNOTATION_ERROR = "AnnotationError";
+    public static final String ANNOTATION_INCOMPLETE = "AnnotationIncomplete";
+    public static final String ANNOTATION_UNCONFIRMED = "AnnotationUnconfirmed";
+    public static final String ANNOTATION_WARNING = "AnnotationWarning";
+    public static final String ANNOTATOR_NOTES = "AnnotatorNotes";
+    public static final String MISSING_ANNOTATION = "MissingAnnotation";
+    public static final String CHANGED_ANNOTATION = "ChangedAnnotation";
+    public static final String NORMALIZED = "Normalized";
+    public static final String TRUE_POSITIVE = "True_positive";
+    public static final String FALSE_POSITIVE = "False_positive";
+    public static final String FALSE_NEGATIVE = "False_negative";
     
     private VID vid;
     private String commentType;

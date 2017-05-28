@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
-import java.util.Collections;
 import java.util.List;
+
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -33,20 +35,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-/**
- * Render
- */
 public class BratChainRenderer
-    implements BratTypeRenderer
+    implements Renderer
 {
     private ChainAdapter typeAdapter;
 
@@ -55,22 +52,9 @@ public class BratChainRenderer
         typeAdapter = aTypeAdapter;
     }
 
-    /**
-     * Add annotations from the CAS, which is controlled by the window size, to the brat response
-     * {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aState
-     *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer (ignored)
-     */
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures, GetDocumentResponse aResponse,
-            AnnotatorState aState, ColoringStrategy aColoringStrategy)
+    public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+            AnnotatorState aState)
     {
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
@@ -129,14 +113,12 @@ public class BratChainRenderer
                 // Render span
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature)
-                                    : Collections.EMPTY_LIST);
-                    Offsets offsets = new Offsets(linkFs.getBegin() - aState.getWindowBeginOffset(),
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
+                    VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
                             linkFs.getEnd() - aState.getWindowBeginOffset());
 
-                    VID vid = new VID(WebAnnoCasUtil.getAddr(linkFs), VID.NONE, VID.NONE, VID.NONE);
-                    aResponse.addEntity(
-                            new Entity(vid, bratTypeName, offsets, bratLabelText, color));
+                    aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
+                            singletonMap("label", bratLabelText)));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -152,16 +134,12 @@ public class BratChainRenderer
                     else {
                         // Render only chain type
                         bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
-                                Collections.EMPTY_LIST);
+                                EMPTY_LIST);
                     }
 
-                    List<Argument> argumentList = asList(
-                            new Argument("Arg1", WebAnnoCasUtil.getAddr(prevLinkFs)),
-                            new Argument("Arg2", WebAnnoCasUtil.getAddr(linkFs)));
-
-                    VID vid = new VID(WebAnnoCasUtil.getAddr(prevLinkFs), 1, VID.NONE, VID.NONE);
-                    aResponse.addRelation(
-                            new Relation(vid, bratTypeName, argumentList, bratLabelText, color));
+                    aResponse.add(new VArc(typeAdapter.getLayer(),
+                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
+                            linkFs, singletonMap("label", bratLabelText)));
                 }
 
                 // Render errors if required features are missing

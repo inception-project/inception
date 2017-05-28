@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -66,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -85,7 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -481,35 +478,21 @@ public class SuggestionViewPanel
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
-        AnnotationSchemaService aAnnotationService = annotationService;
+        List<AnnotationLayer> layersToRender = new ArrayList<>();
+        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
+            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName());
+            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
+            
+            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+                layersToRender.add(layer);
+            }
+        }
         
         GetDocumentResponse response = new GetDocumentResponse();
-        response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
-
-        // Render invisible baseline annotations (sentence, tokens)
-        BratRenderer.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
-
-        // Render visible (custom) layers
-        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
-                continue;
-            }
-
-            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
-            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
-            for (AnnotationFeature feature : features) {
-                if (!feature.isVisible()) {
-                    invisibleFeatures.add(feature);
-                }
-            }
-            features.removeAll(invisibleFeatures);
-            TypeAdapter adapter = getAdapter(aAnnotationService, layer);
-            TypeRenderer renderer = BratRenderer.getRenderer(adapter);
-            renderer.render(aJcas, features, response, aBratAnnotatorModel,
-                    aCurationColoringStrategy);
-        }
+        
+        BratRenderer.render(response, aBratAnnotatorModel, aJcas, annotationService,
+                layersToRender);
 
         return JSONUtil.toInterpretableJsonString(response);
     }

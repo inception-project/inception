@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.persistence.NoResultException;
 
@@ -107,6 +109,36 @@ public final class TypeUtil
                     + "]");
         }
     }
+    
+    /**
+     * Construct the label text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aFeatures the features.
+     * @return the label.
+     */
+    public static String getUiLabelText(TypeAdapter aAdapter, Map<String, String> aFeatures)
+    {
+        StringBuilder bratLabelText = new StringBuilder();
+        for (Entry<String, String> feature : aFeatures.entrySet()) {
+            String label = StringUtils.defaultString(feature.getValue());
+            
+            if (bratLabelText.length() > 0 && label.length() > 0) {
+                bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratLabelText.append(label);
+        }
+
+        if (bratLabelText.length() > 0) {
+            return bratLabelText.toString();
+        }
+        else {
+            // If there are no label features at all, then use the layer UI name
+            return "(" + aAdapter.getLayer().getUiName() + ")";
+        }
+    }
+    
     /**
      * Construct the label text used in the brat user interface.
      *

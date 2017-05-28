@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -32,30 +31,28 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
 public class BratArcRenderer
-    implements BratTypeRenderer
+    implements Renderer
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -66,23 +63,9 @@ public class BratArcRenderer
         typeAdapter = aTypeAdapter;
     }
     
-    /**
-     * Add arc annotations from the CAS, which is controlled by the window size, to the brat
-     * response {@link GetDocumentResponse}
-     *
-     * @param aJcas
-     *            The JCAS object containing annotations
-     * @param aResponse
-     *            A brat response containing annotations in brat protocol
-     * @param aBratAnnotatorModel
-     *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer
-     */
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
-            GetDocumentResponse aResponse, AnnotatorState aBratAnnotatorModel,
-            ColoringStrategy aColoringStrategy)
+            VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
@@ -114,9 +97,8 @@ public class BratArcRenderer
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
-            String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, fs, aFeatures);
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            String color = aColoringStrategy.getColor(new VID(fs), bratLabelText);
+            Map<String, String> features = getFeatures(typeAdapter, fs, aFeatures);
             
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
@@ -131,10 +113,8 @@ public class BratArcRenderer
                 continue;
             }
 
-            List<Argument> argumentList = getArgument(governorFs, dependentFs);
-
-            aResponse.addRelation(new Relation(getAddr(fs), bratTypeName, argumentList,
-                    bratLabelText, color));
+            aResponse.add(new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs,
+                    dependentFs, features));
 
             // Render errors if required features are missing
             renderRequiredFeatureErrors(aFeatures, fs, aResponse);
@@ -155,26 +135,17 @@ public class BratArcRenderer
                     }
                 });
 
-                StringBuffer cm = getYieldMessage(aJcas, sortedDepFs);
-                aResponse.addComment(new Comment(getAddr(governorFs), "Yield of relation", cm
-                        .toString()));
+                String cm = getYieldMessage(aJcas, sortedDepFs);
+                aResponse.add(
+                        new VComment(governorFs, VCommentType.YIELD, "Yield of relation:" + cm));
             }
         }
     }
     
     /**
-     * Argument lists for the arc annotation
-     */
-    private List<Argument> getArgument(FeatureStructure aGovernorFs, FeatureStructure aDependentFs)
-    {
-        return asList(new Argument("Arg1", getAddr(aGovernorFs)), new Argument("Arg2",
-                getAddr(aDependentFs)));
-    }
-
-    /**
      * The relations yield message
      */
-    private StringBuffer getYieldMessage(JCas aJCas, List<Integer> sortedDepFs)
+    private String getYieldMessage(JCas aJCas, List<Integer> sortedDepFs)
     {
         StringBuffer cm = new StringBuffer();
         int end = -1;
@@ -198,7 +169,7 @@ public class BratArcRenderer
             }
 
         }
-        return cm;
+        return cm.toString();
     }
 
     /**
