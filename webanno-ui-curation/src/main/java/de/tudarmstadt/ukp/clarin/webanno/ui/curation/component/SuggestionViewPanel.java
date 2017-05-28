@@ -491,7 +491,7 @@ public class SuggestionViewPanel
         
         GetDocumentResponse response = new GetDocumentResponse();
         
-        BratRenderer.render(response, aBratAnnotatorModel, aJcas, annotationService,
+        BratRenderer.renderFully(response, aBratAnnotatorModel, aJcas, annotationService,
                 layersToRender);
 
         return JSONUtil.toInterpretableJsonString(response);

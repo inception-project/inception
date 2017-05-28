@@ -56,6 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -225,8 +227,7 @@ public class BratAnnotationEditor
                     else if (GetDocumentResponse.is(action)) {
                         GetDocumentResponse response = new GetDocumentResponse();
                         if (getModelObject().getProject() != null) {
-                            BratRenderer.render(response, getModelObject(), jCas,
-                                    annotationService, getLayersToRender());
+                            render(response, jCas);
                         }
                         result = response;
                     }
@@ -393,12 +394,19 @@ public class BratAnnotationEditor
     {
         LOG.info("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, getModelObject(), aJCas, annotationService,
-                getLayersToRender());
+        render(response, aJCas);
         String json = toJson(response);
         LOG.info("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
+    }
+    
+    private void render(GetDocumentResponse response, JCas aJCas)
+    {
+        VDocument vdoc = new VDocument();
+        PreRenderer.render(vdoc, getModelObject(), aJCas, annotationService, getLayersToRender());
+        
+        BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
     }
 
     private List<AnnotationLayer> getLayersToRender()

@@ -74,6 +74,15 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratRenderer
 {
+    public static void renderFully(GetDocumentResponse aResponse, AnnotatorState aState,
+            JCas aJCas, AnnotationSchemaService aAnnotationService, List<AnnotationLayer> aLayersToRender)
+    {
+        VDocument vdoc = new VDocument();
+        PreRenderer.render(vdoc, aState, aJCas, aAnnotationService, aLayersToRender);
+        
+        render(aResponse, aState, vdoc, aJCas, aAnnotationService);
+    }
+    
     /**
      * wrap JSON responses to BRAT visualizer
      *
@@ -87,25 +96,22 @@ public class BratRenderer
      *            the annotation service.s
      */
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            JCas aJCas, AnnotationSchemaService aAnnotationService, List<AnnotationLayer> aLayersToRender)
+            VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
 
         // Render invisible baseline annotations (sentence, tokens)
         renderTokenAndSentence(aJCas, aResponse, aState);
 
-        VDocument vdoc = new VDocument();
-        PreRenderer.render(vdoc, aState, aJCas, aAnnotationService, aLayersToRender);
-        
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : vdoc.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
                     aAnnotationService, layer, aState.getPreferences(), colorQueues);
 
             TypeAdapter typeAdapter = getAdapter(aAnnotationService, layer);
             
-            for (VSpan vspan : vdoc.spans(layer.getId())) {
+            for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
                 String color = coloringStrategy.getColor(vspan.getVid(), bratLabelText);
                 List<Offsets> offsets = toOffsets(vspan.getRanges());
@@ -113,7 +119,7 @@ public class BratRenderer
                         color));
             }
 
-            for (VArc varc : vdoc.arcs(layer.getId())) {
+            for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
                 String color = coloringStrategy.getColor(varc.getVid(), bratLabelText);
                 aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
@@ -121,7 +127,7 @@ public class BratRenderer
             }
         }
         
-        for (VComment vcomment : vdoc.comments()) {
+        for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
             case ERROR:
