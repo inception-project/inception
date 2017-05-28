@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -54,17 +56,32 @@ public class VID
     private final int attribute;
     private final int slot;
     private final String extensionId;
-    
+
+    public VID(AnnotationFS aFS)
+    {
+        this(null, getAddr(aFS), NONE, NONE, NONE);
+    }
+
     public VID(int aAnnotationID)
     {
         this(null, aAnnotationID, NONE, NONE, NONE);
+    }
+
+    public VID(AnnotationFS aFS, int aAttribute)
+    {
+        this(null, getAddr(aFS), NONE, aAttribute, NONE);
     }
 
     public VID(int aAnnotationID, int aAttribute)
     {
         this(null, aAnnotationID, NONE, aAttribute, NONE);
     }
-    
+
+    public VID(AnnotationFS aFS, int aAttribute, int aSlot)
+    {
+        this(null, getAddr(aFS), NONE, aAttribute, aSlot);
+    }
+
     public VID(int aAnnotationID, int aAttribute, int aSlot)
     {
         this(null, aAnnotationID, NONE, aAttribute, aSlot);
@@ -73,6 +90,11 @@ public class VID
     public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+    }
+
+    public VID(AnnotationFS aFS, int aSubAnnotationId, int aAttribute, int aSlot)
+    {
+        this(null, getAddr(aFS), aSubAnnotationId, aAttribute, aSlot);
     }
 
     public VID(String aExtensionId, int aAnnotationID)
@@ -217,5 +239,54 @@ public class VID
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + annotationId;
+        result = prime * result + attribute;
+        result = prime * result + ((extensionId == null) ? 0 : extensionId.hashCode());
+        result = prime * result + slot;
+        result = prime * result + subAnnotationId;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        VID other = (VID) obj;
+        if (annotationId != other.annotationId) {
+            return false;
+        }
+        if (attribute != other.attribute) {
+            return false;
+        }
+        if (extensionId == null) {
+            if (other.extensionId != null) {
+                return false;
+            }
+        }
+        else if (!extensionId.equals(other.extensionId)) {
+            return false;
+        }
+        if (slot != other.slot) {
+            return false;
+        }
+        if (subAnnotationId != other.subAnnotationId) {
+            return false;
+        }
+        return true;
     }
 }
