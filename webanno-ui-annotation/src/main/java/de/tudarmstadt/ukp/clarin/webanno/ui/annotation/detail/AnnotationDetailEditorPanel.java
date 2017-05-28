@@ -1666,8 +1666,7 @@ public class AnnotationDetailEditorPanel
             documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
         }
         else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), state.getUser(),
-                    true);
+            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
         }
     }
 

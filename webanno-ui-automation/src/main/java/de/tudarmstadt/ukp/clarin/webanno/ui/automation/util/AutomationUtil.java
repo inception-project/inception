@@ -133,7 +133,7 @@ public class AutomationUtil
                     }
                 }
             }
-            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }
 
@@ -191,7 +191,7 @@ public class AutomationUtil
 
             }
 
-            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }
 
@@ -290,7 +290,7 @@ public class AutomationUtil
                         .getAnnotationDocument(aDocument, logedInUser);
                 jCas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
                 aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
-                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
             catch (IOException e) {
                 throw e;
@@ -301,7 +301,7 @@ public class AutomationUtil
                 // upgrade this cas
                 aDocumentService.upgradeCas(jCas.getCas(),
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
             catch (NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
@@ -309,7 +309,7 @@ public class AutomationUtil
                 // upgrade this cas
                 aDocumentService.upgradeCas(jCas.getCas(),
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument, logedInUser);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
         }
         else {
@@ -353,7 +353,7 @@ public class AutomationUtil
                     }
                 }
             }
-            aCorrectionDocumentService.writeCorrectionCas(jCas,d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas,d);
         }
     }
 
@@ -403,7 +403,7 @@ public class AutomationUtil
 
             adapter.delete(jCas, aFeature, beginOffset, endOffset, depCoveredText, govCoveredText,
                     aValue);
-            aCorrectionDocumentService.writeCorrectionCas(jCas, d, aBModel.getUser());
+            aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }
 
@@ -1733,7 +1733,7 @@ public class AutomationUtil
                 }
                 automate(jCas, layerFeature, annotations);
                 LOG.info("Predictions found are written to the CAS");
-                aCorrectionDocumentService.writeCorrectionCas(jCas, document, user);
+                aCorrectionDocumentService.writeCorrectionCas(jCas, document);
                 document.setProcessed(true);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }

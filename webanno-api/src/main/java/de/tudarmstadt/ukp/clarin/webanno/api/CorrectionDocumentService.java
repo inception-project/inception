@@ -25,7 +25,6 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CorrectionDocumentService
 {
@@ -38,13 +37,11 @@ public interface CorrectionDocumentService
      *            the JCas.
      * @param document
      *            the source document.
-     * @param user
-     *            the user.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCorrectionCas(JCas jCas, SourceDocument document, User user)
+    void writeCorrectionCas(JCas jCas, SourceDocument document)
         throws IOException;
 
     JCas readCorrectionCas(SourceDocument document)

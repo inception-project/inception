@@ -504,7 +504,7 @@ public class SuggestionBuilder
         mergeJCas = MergeCas.geMergeCas(diff, jCases);
 
         curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn, false);
+                false);
         return mergeJCas;
     }
     
@@ -515,8 +515,7 @@ public class SuggestionBuilder
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         mergeJCas = documentService.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
-        correctionDocumentService.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn);
+        correctionDocumentService.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument());
         return mergeJCas;
     }
 }

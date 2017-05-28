@@ -30,6 +30,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +40,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(CurationDocumentService.SERVICE_NAME)
@@ -52,8 +54,8 @@ public class CurationDocumentServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Resource(name = "casStorageService")
-    private CasStorageService casStorageService;
+    private @Resource CasStorageService casStorageService;
+    private @Resource AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -85,8 +87,7 @@ public class CurationDocumentServiceImpl
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     @Transactional
-    public void writeCurationCas(JCas aJcas, SourceDocument aDocument, User aUser,
-            boolean aUpdateTimestamp)
+    public void writeCurationCas(JCas aJcas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
         casStorageService.writeCas(aDocument, aJcas, CURATION_USER);
@@ -101,6 +102,13 @@ public class CurationDocumentServiceImpl
         throws IOException
     {
         return casStorageService.readCas(aDocument, CURATION_USER);
+    }
+
+    @Override
+    public void upgradeCurationCas(CAS aCas, SourceDocument aDocument)
+        throws UIMAException, IOException
+    {
+        annotationService.upgradeCas(aCas, aDocument, CURATION_USER);
     }
 
     @Override

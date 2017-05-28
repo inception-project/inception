@@ -755,7 +755,7 @@ public class AutomationPage
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
                     annotationDocument.getDocument(), user, false);
-            correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument(), user);
+            correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();

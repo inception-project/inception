@@ -388,8 +388,7 @@ public class SuggestionViewPanel
             documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), aState.getUser(),
-                    true);
+            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
         }
     }
 
