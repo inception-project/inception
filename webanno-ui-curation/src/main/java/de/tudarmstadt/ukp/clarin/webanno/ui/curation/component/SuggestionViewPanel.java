@@ -65,8 +65,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TypeRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -413,7 +416,7 @@ public class SuggestionViewPanel
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
-            final Map<String, AnnotationState> aStates)
+            final Map<VID, AnnotationState> aStates)
         throws IOException
     {
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
@@ -450,12 +453,12 @@ public class SuggestionViewPanel
                 ColoringStrategy curationColoringStrategy = new ColoringStrategy()
                 {
                     @Override
-                    public String getColor(Object aObj, String aLabel)
+                    public String getColor(VID aVid, String aLabel)
                     {
-                        if (aStates.get(aObj.toString())==null){
+                        if (aStates.get(aVid)==null){
                             return AnnotationState.NOT_SUPPORTED.getColorCode();
                         }
-                        return aStates.get(aObj.toString()).getColorCode();
+                        return aStates.get(aVid).getColorCode();
                     }
                 };
 
@@ -570,7 +573,7 @@ public class SuggestionViewPanel
                 bModel.getAnnotationLayers(), annotationService);
         List<AnnotationOption> annotationOptions = null;
 
-        Map<String, AnnotationState> annoStates = new HashMap<>();
+        Map<VID, AnnotationState> annoStates = new HashMap<>();
 
         DiffResult diff;
 
@@ -594,8 +597,8 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, d, false, false);
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, i, true, false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, d, false, false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, i, true, false);
 
         List<ConfigurationSet> all = new ArrayList<>();
 
@@ -609,7 +612,7 @@ public class SuggestionViewPanel
             all.remove(cfgSet);
         }
 
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, all, false, true);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false, true);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
@@ -627,8 +630,8 @@ public class SuggestionViewPanel
      * For each {@link ConfigurationSet}, where there are some differences in users annotation and
      * the curation annotation.
      */
-    private void addSuggestionColor(Mode aMode, Map<String, JCas> aCasMap,
-            Map<String, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,
+    private void addSuggestionColor(Project aProject, Mode aMode, Map<String, JCas> aCasMap,
+            Map<VID, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,
             boolean aI, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
@@ -637,27 +640,38 @@ public class SuggestionViewPanel
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
-                    Object key = fs;
+                    
+                    AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(), aProject);
+                    TypeAdapter typeAdapter = TypeUtil.getAdapter(annotationService, layer);
+                    
+                    VID vid;
                     // link FS
                     if (c.getPosition().getFeature() != null) {
-                        ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType()
-                                .getFeatureByBaseName(c.getPosition().getFeature()));
-                        FeatureStructure link = links.get(c.getAID(u).index);
-                        fs = (AnnotationFS) link.getFeatureValue(link.getType()
-                                .getFeatureByBaseName("target"));
-                        key = key + "-" + fs + "-" + link;
+                        int fi = 0;
+                        for (AnnotationFeature f : typeAdapter.listFeatures()) {
+                            if (f.getName().equals(c.getPosition().getFeature())) {
+                                break;
+                            }
+                            fi++;
+                        }
+                        
+                        vid = new VID(WebAnnoCasUtil.getAddr(fs), fi, c.getAID(u).index);
                     }
+                    else {
+                        vid = new VID(WebAnnoCasUtil.getAddr(fs));
+                    }
+                    
                     if (aAgree) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                        aSuggestionColors.put(vid, AnnotationState.AGREE);
                         continue;
                     }
                     // automation and correction projects
                     if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                            aSuggestionColors.put(vid, AnnotationState.DO_NOT_USE);
                         }
                         else {
-                            aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                            aSuggestionColors.put(vid, AnnotationState.DISAGREE);
                         }
                         continue;
                     }
@@ -675,19 +689,19 @@ public class SuggestionViewPanel
                     }
 
                     if (aAgree) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                        aSuggestionColors.put(vid, AnnotationState.AGREE);
                     }
                     else if (use) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.USE);
+                        aSuggestionColors.put(vid, AnnotationState.USE);
                     }
                     else if (aI) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                        aSuggestionColors.put(vid, AnnotationState.DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                        aSuggestionColors.put(vid, AnnotationState.DISAGREE);
                     }
                     else {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                        aSuggestionColors.put(vid, AnnotationState.DO_NOT_USE);
                     }
                 }
             }

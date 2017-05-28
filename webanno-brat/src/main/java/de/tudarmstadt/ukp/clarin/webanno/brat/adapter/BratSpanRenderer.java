@@ -28,7 +28,6 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -92,7 +91,7 @@ public class BratSpanRenderer
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, fs, aFeatures);
-            String color = aColoringStrategy.getColor(fs, bratLabelText);
+            String color = aColoringStrategy.getColor(new VID(fs), bratLabelText);
 
             Sentence beginSent = null;
             Sentence endSent = null;
@@ -160,14 +159,11 @@ public class BratSpanRenderer
                 if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
                         && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
                     List<LinkWithRoleModel> links = getFeature(fs, feat);
-                    ArrayFS linksFS = (ArrayFS) fs.getFeatureValue(fs.getType()
-                            .getFeatureByBaseName(feat.getName()));
                     for (int li = 0; li < links.size(); li++) {
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
-                        FeatureStructure linkFS = linksFS.get(li);
                         // get the color of the link for suggestion annotations
-                        color = aColoringStrategy.getColor(fs + "-" + targetFS + "-" + linkFS,
+                        color = aColoringStrategy.getColor(new VID(getAddr(fs), fi, li),
                                 bratLabelText);
                         aResponse.addRelation(new Relation(new VID(getAddr(fs), fi, li),
                                 bratTypeName, getArgument(fs, targetFS), link.role, color));
