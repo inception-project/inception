@@ -660,7 +660,7 @@ public class CurationPage
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
             JCas mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
-                    randomAnnotationDocument);
+                    randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();
