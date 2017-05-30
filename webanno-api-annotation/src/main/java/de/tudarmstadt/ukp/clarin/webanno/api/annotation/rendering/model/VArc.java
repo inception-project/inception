@@ -46,6 +46,14 @@ public class VArc
                 aFeatures);
     }
 
+    public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
+            FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
+    {
+        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
+        source = new VID(getAddr(aSourceFS));
+        target = new VID(getAddr(aTargetFS));
+    }
+
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
             Map<String, String> aFeatures)
     {

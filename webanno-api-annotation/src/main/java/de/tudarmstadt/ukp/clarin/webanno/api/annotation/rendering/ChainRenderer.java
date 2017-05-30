@@ -32,7 +32,6 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
@@ -80,14 +79,6 @@ public class ChainRenderer
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 
-            // Every chain is supposed to have a different color
-            String color = ColoringStrategy.PALETTE_NORMAL_FILTERED[colorIndex
-                    % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
-            // The color index is updated even for chains that have no visible links in the current
-            // window because we would like the chain color to be independent of visibility. In
-            // particular the color of a chain should not change when switching pages/scrolling.
-            colorIndex++;
-
             // Iterate over the links of the chain
             while (linkFs != null) {
                 Feature linkNext = linkFs.getType()
@@ -118,7 +109,7 @@ public class ChainRenderer
                             linkFs.getEnd() - aState.getWindowBeginOffset());
 
                     aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            singletonMap("label", bratLabelText)));
+                            colorIndex, singletonMap("label", bratLabelText)));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -139,7 +130,7 @@ public class ChainRenderer
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
                             new VID(prevLinkFs, 1, VID.NONE, VID.NONE), bratTypeName, prevLinkFs,
-                            linkFs, singletonMap("label", bratLabelText)));
+                            linkFs, colorIndex, singletonMap("label", bratLabelText)));
                 }
 
                 // Render errors if required features are missing
@@ -153,6 +144,11 @@ public class ChainRenderer
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
+            
+            // The color index is updated even for chains that have no visible links in the current
+            // window because we would like the chain color to be independent of visibility. In
+            // particular the color of a chain should not change when switching pages/scrolling.
+            colorIndex++;
         }
     }
 }

@@ -491,7 +491,7 @@ public class LinkFeatureEditor
         
         // Commit change
         try {
-            owner.actionCreateOrUpdate(aTarget, owner.getEditorCas(), state.getSelection());
+            owner.actionCreateOrUpdate(aTarget, owner.getEditorCas());
         }
         catch (Exception e) {
             AnnotationDetailEditorPanel.handleException(this, aTarget, e);
@@ -513,7 +513,7 @@ public class LinkFeatureEditor
         // Auto-commit if working on existing annotation
         if (state.getSelection().getAnnotation().isSet()) {
             try {
-                owner.actionCreateOrUpdate(aTarget, owner.getEditorCas(), state.getSelection());
+                owner.actionCreateOrUpdate(aTarget, owner.getEditorCas());
             }
             catch (Exception e) {
                 AnnotationDetailEditorPanel.handleException(this, aTarget, e);

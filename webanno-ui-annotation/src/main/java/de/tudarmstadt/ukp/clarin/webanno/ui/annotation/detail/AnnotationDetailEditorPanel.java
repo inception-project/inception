@@ -175,7 +175,7 @@ public class AnnotationDetailEditorPanel
             protected void onSubmit(AjaxRequestTarget aTarget) { 
                 try {
                     JCas jCas = getEditorCas();
-                    actionCreateOrUpdate(aTarget, jCas, getModelObject().getSelection());
+                    actionCreateOrUpdate(aTarget, jCas);
                 }
                 catch (Exception e) {
                     handleException(annotationFeatureForm, aTarget, e);
@@ -445,7 +445,7 @@ public class AnnotationDetailEditorPanel
 		            if (jsKeycode.equals("32")){
                         try {
                             JCas jCas = getEditorCas();
-                            actionCreateOrUpdate(aTarget, jCas, getModelObject().getSelection());
+                            actionCreateOrUpdate(aTarget, jCas);
                             selectedTag = "";
                         }
                         catch (Exception e) {
@@ -935,7 +935,7 @@ public class AnnotationDetailEditorPanel
                                 aTarget.add(AnnotationFeatureForm.this.featureEditorPanel);
                             }
                             JCas jCas = getEditorCas();
-                            actionCreateOrUpdate(aTarget, jCas, state.getSelection());
+                            actionCreateOrUpdate(aTarget, jCas);
                         }
                         catch (Exception e) {
                             handleException(FeatureEditorPanelContent.this, aTarget, e);
@@ -1102,61 +1102,49 @@ public class AnnotationDetailEditorPanel
     }
     
     @Override
-    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection,
-            int aBegin, int aEnd, VID paramId)
+    public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
+            VID aVID)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        assert aJCas != null;                        
-    
+        assert aJCas != null;
+
         AnnotatorState state = getModelObject();
-    
-        if (state.isSlotArmed()) {
-            if (paramId.isSet()) {
-                // Fill slot with existing annotation
-                setSlot(aTarget, aJCas, paramId.getId());
-            }
-            else if (!CAS.TYPE_NAME_ANNOTATION
-                    .equals(state.getArmedFeature().getType())) {
-                // Fill slot with new annotation (only works if a concrete type is
-                // set for the link feature!
-                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService,
-                        annotationService.getLayer(state.getArmedFeature().getType(),
-                                state.getProject()));
-    
-                try {
-                    int id = adapter.add(aJCas, aBegin, aEnd, null, null);
-                    setSlot(aTarget, aJCas, id);
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
+
+        // If this method is called when no slot is armed, it must be a bug!
+        if (!state.isSlotArmed()) {
+            throw new IllegalStateException("No slot is armed.");
+        }
+        
+        // Fill slot with new annotation (only works if a concrete type is set for the link feature!
+        int id;
+        if (aVID.isNotSet()) {
+            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().getType())) {
+                SpanAdapter adapter = (SpanAdapter) getAdapter(annotationService, annotationService
+                        .getLayer(state.getArmedFeature().getType(), state.getProject()));
+
+                id = adapter.add(aJCas, aBegin, aEnd, null, null);
             }
             else {
-              throw new AnnotationException("Unable to create annotation of type ["+
-                CAS.TYPE_NAME_ANNOTATION+"]. Please click an annotation in stead of selecting new text.");
-            }
+                throw new AnnotationException(
+                        "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
+                                + "]. Please click an annotation in stead of selecting new text.");
+            } 
         }
         else {
-            // Doing anything but filling an armed slot will unarm it
-            clearArmedSlotModel();
-            state.clearArmedSlot();
-    
-            aSelection.selectSpan(paramId, aJCas, aBegin, aEnd);
-
-            if (aSelection.getAnnotation().isNotSet()) {
-                // Create new annotation
-                state.getAction().setAnnotate(true);
-                actionCreateOrUpdate(aTarget, aJCas, aSelection);
-            }
-            else {
-                state.getAction().setAnnotate(false);
-                actionSelect(aTarget, aJCas, aSelection);
-            }
+            id = aVID.getId();
+        }
+        
+        // Fill the annotation into the slow
+        try {
+            setSlot(aTarget, aJCas, id);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
         }
     }
     
     @Override
-    public void actionSelect(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
+    public void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
         throws AnnotationException
     {
         // Edit existing annotation
@@ -1166,9 +1154,8 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
 
-
     @Override
-    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
+    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         actionCreateOrUpdate(aTarget, aJCas, false);
@@ -1404,6 +1391,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    @Override
     public void actionDelete(AjaxRequestTarget aTarget)
         throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
         AnnotationException
@@ -1526,7 +1514,8 @@ public class AnnotationDetailEditorPanel
         onDelete(aTarget, fs);
     }
 
-    private void actionReverse(AjaxRequestTarget aTarget)
+    @Override
+    public void actionReverse(AjaxRequestTarget aTarget)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         JCas jCas = getEditorCas();
@@ -1544,7 +1533,7 @@ public class AnnotationDetailEditorPanel
         
         TypeAdapter adapter = getAdapter(annotationService, state.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
-            if (featureStates.size() == 0) {
+            if (featureStates.isEmpty()) {
                 // If no features, still create arc #256
                 AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
                         state.getWindowBeginOffset(), state.getWindowEndOffset(), null, null);
@@ -1583,6 +1572,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
 
+    @Override
     public void actionClear(AjaxRequestTarget aTarget)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
@@ -1664,7 +1654,6 @@ public class AnnotationDetailEditorPanel
             LinkWithRoleModel link = links.get(state.getArmedSlot());
             link.targetAddr = aAnnotationId;
             link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
-            state.clearArmedSlot();
         }
 
         // Auto-commit if working on existing annotation
@@ -1676,6 +1665,8 @@ public class AnnotationDetailEditorPanel
                 handleException(this, aTarget, e);
             }
         }
+        
+        state.clearArmedSlot();
     }
     
     public void loadFeatureEditorModels(AjaxRequestTarget aTarget) 
@@ -1698,10 +1689,17 @@ public class AnnotationDetailEditorPanel
     {
         LOG.trace(String.format("loadFeatureEditorModels()"));
         
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+
+        List<FeatureState> featureStates = state.getFeatureStates();
+        for (FeatureState featureState : featureStates) {
+            if (StringUtils.isNotBlank(featureState.feature.getLinkTypeName())) {
+                featureState.value = new ArrayList<>();
+            }
+        }
+        
         try {
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-            
             if (selection.isSpan()) {
                 annotationFeatureForm.updateLayersDropdown();
             }
@@ -2027,19 +2025,6 @@ public class AnnotationDetailEditorPanel
         clearFeatureEditorModels(aTarget);
     }
     
-    /**
-     * remove this model, if new annotation is to be created
-     */
-    public void clearArmedSlotModel()
-    {
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            if (StringUtils.isNotBlank(featureState.feature.getLinkTypeName())) {
-                featureState.value = new ArrayList<>();
-            }
-        }
-    }
-
     private Set<AnnotationFS> getAttachedRels(JCas aJCas, AnnotationFS aFs, AnnotationLayer aLayer)
         throws UIMAException, ClassNotFoundException, IOException
     {

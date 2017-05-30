@@ -20,22 +20,48 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 import java.io.IOException;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection,
-            int aBegin, int aEnd, VID paramId)
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
 
-    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
-
-    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
+    /**
+     * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
+     */
+    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
         throws AnnotationException;
+
+    /**
+     * Delete currently selected annotation.
+     */
+    void actionDelete(AjaxRequestTarget aTarget)
+        throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
+        AnnotationException;
+
+    /**
+     * Clear the currently selected annotation from the editor panel.
+     */
+    void actionClear(AjaxRequestTarget aTarget)
+        throws IOException, UIMAException, ClassNotFoundException, AnnotationException;
+
+    /**
+     * Reverse the currently selected relation.
+     */
+    void actionReverse(AjaxRequestTarget aTarget)
+        throws IOException, UIMAException, ClassNotFoundException, AnnotationException;
+    
+    /**
+     * Fill the currently armed slot with the given annotation.
+     */
+    public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
+            VID paramId)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
 }

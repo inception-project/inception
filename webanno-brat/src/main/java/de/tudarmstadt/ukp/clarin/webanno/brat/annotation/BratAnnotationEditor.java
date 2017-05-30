@@ -103,8 +103,6 @@ public class BratAnnotationEditor
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    private static final String PARAM_TARGET_TYPE = "targetType";
-    private static final String PARAM_ORIGIN_TYPE = "originType";
 
     private @SpringBean AnnotationSchemaService annotationService;
 
@@ -189,7 +187,8 @@ public class BratAnnotationEditor
                     paramId = new VID(paramId.getId());
                 }
 
-                // Doing anything but a span annotation when a slot is armed will unarm it
+                // Doing anything but selecting or creating a span annotation when a slot is armed
+                // will unarm it
                 if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
                     getModelObject().clearArmedSlot();
                 }
@@ -202,9 +201,32 @@ public class BratAnnotationEditor
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        Selection selection = getModelObject().getSelection();
-                        getActionHandler().actionSpanAnnotation(aTarget, jCas, selection,
-                                offsets.getBegin(), offsets.getEnd(), paramId);
+                        
+                        AnnotatorState state = getModelObject();
+                        Selection selection = state.getSelection();
+                        
+                        if (state.isSlotArmed()) {
+                            // When filling a slot, the current selection is *NOT* changed. The
+                            // Span annotation which owns the slot that is being filled remains
+                            // selected!
+                            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(),
+                                    offsets.getEnd(), paramId);
+                        }
+                        else {
+                            selection.selectSpan(paramId, jCas, offsets.getBegin(),
+                                    offsets.getEnd());
+
+                            if (selection.getAnnotation().isNotSet()) {
+                                // Create new annotation
+                                state.getAction().setAnnotate(true);
+                                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                            }
+                            else {
+                                state.getAction().setAnnotate(false);
+                                getActionHandler().actionSelect(aTarget, jCas);
+                            }
+                        }
+                        
                         result = new SpanAnnotationResponse();
                     }
                     else if (ArcAnnotationResponse.is(action)) {
@@ -216,14 +238,15 @@ public class BratAnnotationEditor
                         AnnotatorState state = getModelObject();
                         Selection selection = state.getSelection();
                         selection.selectArc(paramId, originFs, targetFs);
-                        state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
                         
                         if (selection.getAnnotation().isNotSet()) {
                             // Create new annotation
-                            getActionHandler().actionCreateOrUpdate(aTarget, jCas, selection);
+                            state.getAction().setAnnotate(true);
+                            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
                         }
                         else {
-                            getActionHandler().actionSelect(aTarget, jCas, selection);
+                            state.getAction().setAnnotate(false);
+                            getActionHandler().actionSelect(aTarget, jCas);
                         }
 
                         result = new ArcAnnotationResponse();

@@ -28,20 +28,28 @@ public abstract class VObject
     private VID vid;
     private String type;
     private Map<String, String> features;
+    private int equivalenceSet;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
+    {
+        this(aLayer, aVid, aType, -1, aFeatures);
+    }
+
+    public VObject(AnnotationLayer aLayer, VID aVid, String aType, int aEquivalenceSet,
+            Map<String, String> aFeatures)
     {
         layer = aLayer;
         vid = aVid;
         type = aType;
         features = aFeatures;
+        equivalenceSet = aEquivalenceSet;
     }
 
     public VID getVid()
     {
         return vid;
     }
-    
+
     public AnnotationLayer getLayer()
     {
         return layer;
@@ -51,8 +59,13 @@ public abstract class VObject
     {
         return type;
     }
+    
+    public int getEquivalenceSet()
+    {
+        return equivalenceSet;
+    }
 
-     public Map<String, String> getFeatures()
+    public Map<String, String> getFeatures()
     {
         return features;
     }

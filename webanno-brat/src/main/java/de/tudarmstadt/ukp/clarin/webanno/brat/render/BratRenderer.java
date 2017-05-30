@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -112,16 +113,16 @@ public class BratRenderer
             TypeAdapter typeAdapter = getAdapter(aAnnotationService, layer);
             
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
-                String color = coloringStrategy.getColor(vspan.getVid(), bratLabelText);
                 List<Offsets> offsets = toOffsets(vspan.getRanges());
+                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
+                String color = getColor(vspan, coloringStrategy, bratLabelText);
                 aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets, bratLabelText,
                         color));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
-                String color = coloringStrategy.getColor(varc.getVid(), bratLabelText);
+                String color = getColor(varc, coloringStrategy, bratLabelText);
                 aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
                         getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
             }
@@ -143,6 +144,21 @@ public class BratRenderer
             
             aResponse.addComment(new Comment(vcomment.getVid(), type, vcomment.getComment()));
         }
+    }
+    
+    private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
+            String aLabelText)
+    {
+        String color;
+        if (aVObject.getEquivalenceSet() >= 0) {
+            // Every chain is supposed to have a different color
+            color = ColoringStrategy.PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
+                    % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
+        }
+        else {
+            color = aColoringStrategy.getColor(aVObject.getVid(), aLabelText);
+        }
+        return color;
     }
     
     private static List<Offsets> toOffsets(List<VRange> aRanges)

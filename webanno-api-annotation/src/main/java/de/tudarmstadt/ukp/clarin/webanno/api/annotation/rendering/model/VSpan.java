@@ -42,6 +42,13 @@ public class VSpan
     {
         this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures);
     }
+    
+    public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
+            int aEquivalenceClass, Map<String, String> aFeatures)
+    {
+        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures);
+        ranges = asList(aOffsets);
+   }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
             Map<String, String> aFeatures)
@@ -51,6 +58,12 @@ public class VSpan
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
             Map<String, String> aFeatures)
+    {
+        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
+    }
+
+    public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
+            int aEquivalenceClass, Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
     }
