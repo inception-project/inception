@@ -24,18 +24,18 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId, String aOriginType,
-            int aOriginSpanId, String aTargetType, int aTargetSpanId)
-        throws AnnotationException, UIMAException, ClassNotFoundException, IOException;
-
-    void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas, int aBegin, int aEnd,
-            VID paramId)
+    void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection,
+            int aBegin, int aEnd, VID paramId)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
 
-    void actionAnnotate(AjaxRequestTarget aTarget)
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
+
+    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
+        throws AnnotationException;
 }

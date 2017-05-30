@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -135,7 +137,7 @@ public class BratAnnotationEditor
                 
                 // Get action from the request
                 String action = request.getParameterValue(PARAM_ACTION).toString();
-                LOG.info("AJAX-RPC CALLED: [{}]", action);
+                LOG.debug("AJAX-RPC CALLED: [{}]", action);
                 
                 // Parse annotation ID if present in request
                 VID paramId;
@@ -200,17 +202,30 @@ public class BratAnnotationEditor
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        getActionHandler().actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
-                                offsets.getEnd(), paramId);
+                        Selection selection = getModelObject().getSelection();
+                        getActionHandler().actionSpanAnnotation(aTarget, jCas, selection,
+                                offsets.getBegin(), offsets.getEnd(), paramId);
                         result = new SpanAnnotationResponse();
                     }
                     else if (ArcAnnotationResponse.is(action)) {
-                        String originType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
-                        int originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
-                        String targetType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
-                        int targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt();
-                        getActionHandler().actionArcAnnotation(aTarget, jCas, paramId, originType,
-                                originSpanId, targetType, targetSpanId);
+                        AnnotationFS originFs = selectByAddr(jCas,
+                                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
+                        AnnotationFS targetFs = selectByAddr(jCas,
+                                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+                        
+                        AnnotatorState state = getModelObject();
+                        Selection selection = state.getSelection();
+                        selection.selectArc(paramId, originFs, targetFs);
+                        state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
+                        
+                        if (selection.getAnnotation().isNotSet()) {
+                            // Create new annotation
+                            getActionHandler().actionCreateOrUpdate(aTarget, jCas, selection);
+                        }
+                        else {
+                            getActionHandler().actionSelect(aTarget, jCas, selection);
+                        }
+
                         result = new ArcAnnotationResponse();
                     }
                     else if (LoadConfResponse.is(action)) {
@@ -255,7 +270,7 @@ public class BratAnnotationEditor
                             + json + ";");
                 }
                 
-                LOG.info("AJAX-RPC DONE: [{}] completed in {}ms", action,
+                LOG.debug("AJAX-RPC DONE: [{}] completed in {}ms", action,
                         (System.currentTimeMillis() - timerStart));
             }
         };
@@ -392,11 +407,11 @@ public class BratAnnotationEditor
 
     private String bratRenderCommand(JCas aJCas)
     {
-        LOG.info("BEGIN bratRenderCommand");
+        LOG.debug("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aJCas);
         String json = toJson(response);
-        LOG.info("END bratRenderCommand");
+        LOG.debug("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }

@@ -174,7 +174,8 @@ public class AnnotationDetailEditorPanel
 			@Override 
             protected void onSubmit(AjaxRequestTarget aTarget) { 
                 try {
-                    actionAnnotate(aTarget);
+                    JCas jCas = getEditorCas();
+                    actionCreateOrUpdate(aTarget, jCas, getModelObject().getSelection());
                 }
                 catch (Exception e) {
                     handleException(annotationFeatureForm, aTarget, e);
@@ -323,8 +324,8 @@ public class AnnotationDetailEditorPanel
 
                     AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
                     
-                    setVisible(state.getSelection().isRelationAnno()
-                            && state.getSelection().getAnnotation().isSet()
+                    setVisible(state.getSelection().getAnnotation().isSet()
+                            && state.getSelection().isArc()
                             && state.getSelectedAnnotationLayer().getType()
                                     .equals(WebAnnoConst.RELATION_TYPE));
 
@@ -443,7 +444,8 @@ public class AnnotationDetailEditorPanel
 		                            .getParameterValue("keycode").toString("");
 		            if (jsKeycode.equals("32")){
                         try {
-                            actionAnnotate(aTarget);
+                            JCas jCas = getEditorCas();
+                            actionCreateOrUpdate(aTarget, jCas, getModelObject().getSelection());
                             selectedTag = "";
                         }
                         catch (Exception e) {
@@ -642,7 +644,7 @@ public class AnnotationDetailEditorPanel
                     state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
                 }
             } 
-            else if (!state.getSelection().isRelationAnno()) {
+            else if (!state.getSelection().isArc()) {
                 state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
             }
             
@@ -682,7 +684,7 @@ public class AnnotationDetailEditorPanel
                         // want to change the type of the currently selected annotation
                         else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
                                 && state.getSelection().getAnnotation().isSet()) {
-                            if (state.getSelection().isRelationAnno()) {
+                            if (state.getSelection().isArc()) {
                                 try {
                                     actionClear(aTarget);
                                 }
@@ -932,7 +934,8 @@ public class AnnotationDetailEditorPanel
                                 // constraints the contents may have to be re-rendered
                                 aTarget.add(AnnotationFeatureForm.this.featureEditorPanel);
                             }
-                            actionAnnotate(aTarget);
+                            JCas jCas = getEditorCas();
+                            actionCreateOrUpdate(aTarget, jCas, state.getSelection());
                         }
                         catch (Exception e) {
                             handleException(FeatureEditorPanelContent.this, aTarget, e);
@@ -966,7 +969,7 @@ public class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
 
-        if (state.getSelection().isRelationAnno()) {
+        if (state.getSelection().isArc()) {
             if (aAdapter instanceof SpanAdapter) {
                 error("Layer [" + aAdapter.getLayer().getUiName()
                         + "] does not support arc annotation.");
@@ -1013,16 +1016,7 @@ public class AnnotationDetailEditorPanel
         // Creating a relation
         AnnotationFS arc = aAdapter.add(originFs, targetFs, aJCas, state.getWindowBeginOffset(),
                 state.getWindowEndOffset(), null, null);
-        selection.setAnnotation(new VID(getAddr(arc)));
-        if (selection.getAnnotation().isSet()) {
-            selection.setText("[" + originFs.getCoveredText() + "] - ["
-                    + targetFs.getCoveredText() + "]");
-        }
-        else {
-            selection.setText("");
-        }
-        
-        selection.setBegin(originFs.getBegin());
+        selection.selectArc(new VID(arc), originFs, targetFs);
     }
     
     private void createNewSpanAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter,
@@ -1055,10 +1049,9 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-        Integer annoId = aAdapter.add(aJCas, selection.getBegin(), selection.getEnd(), null, null);
-        selection.setAnnotation(new VID(annoId));
+        int annoId = aAdapter.add(aJCas, selection.getBegin(), selection.getEnd(), null, null);
         AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
-        selection.set(aJCas, annoFs.getBegin(), annoFs.getEnd());
+        selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
     
     private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter,
@@ -1104,65 +1097,23 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
         
         // Creating a new chain link
-        selection.setAnnotation(new VID(aAdapter.addArc(aJCas, originFs, targetFs, null, null)));
-        if (selection.getAnnotation().isSet()) {
-            selection.setText(originFs.getCoveredText());
-        }
-        else {
-            selection.setText("");
-        }
-        
-        selection.setBegin(originFs.getBegin());
+        int addr = aAdapter.addArc(aJCas, originFs, targetFs, null, null);
+        selection.selectArc(new VID(addr), originFs, targetFs);
     }
     
     @Override
-    public void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId,
-            String aOriginType, int aOriginSpanId, String aTargetType, int aTargetSpanId)
-        throws AnnotationException, UIMAException, ClassNotFoundException, IOException
-    {
-        assert jCas != null;
-        
-        AnnotatorState state = getModelObject();
-        
-        Selection selection = state.getSelection();
-        selection.setRelationAnno(true);
-        selection.setAnnotation(paramId);
-        selection.setOriginType(aOriginType);
-        selection.setOrigin(aOriginSpanId);
-        selection.setTargetType(aTargetType);
-        selection.setTarget(aTargetSpanId);
-        state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
-        
-        if (selection.getAnnotation().isNotSet()) {
-            // Create new annotation
-            actionAnnotate(aTarget);
-        }
-        else {
-            // Edit existing annotation
-            AnnotationFS originFs = selectByAddr(jCas, selection.getOrigin());
-            AnnotationFS targetFs = selectByAddr(jCas, selection.getTarget());
-            selection.setText("[" + originFs.getCoveredText() + "] - [" + 
-                    targetFs.getCoveredText() + "]");
-            loadFeatureEditorModels(jCas, aTarget);
-            
-            // Ensure we re-render and update the highlight
-            onChange(aTarget);
-        }
-    }
-
-    @Override
-    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas,
+    public void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection,
             int aBegin, int aEnd, VID paramId)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        assert jCas != null;                        
+        assert aJCas != null;                        
     
         AnnotatorState state = getModelObject();
     
         if (state.isSlotArmed()) {
             if (paramId.isSet()) {
                 // Fill slot with existing annotation
-                setSlot(aTarget, jCas, paramId.getId());
+                setSlot(aTarget, aJCas, paramId.getId());
             }
             else if (!CAS.TYPE_NAME_ANNOTATION
                     .equals(state.getArmedFeature().getType())) {
@@ -1173,8 +1124,8 @@ public class AnnotationDetailEditorPanel
                                 state.getProject()));
     
                 try {
-                    int id = adapter.add(jCas, aBegin, aEnd, null, null);
-                    setSlot(aTarget, jCas, id);
+                    int id = adapter.add(aJCas, aBegin, aEnd, null, null);
+                    setSlot(aTarget, aJCas, id);
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
@@ -1190,42 +1141,43 @@ public class AnnotationDetailEditorPanel
             clearArmedSlotModel();
             state.clearArmedSlot();
     
-            Selection selection = state.getSelection();
-            selection.setRelationAnno(false);
-            selection.setAnnotation(paramId);
-            selection.set(jCas, aBegin, aEnd);
-            state.getAction().setAnnotate(selection.getAnnotation().isNotSet());
-            
-            if (selection.getAnnotation().isNotSet()) {
+            aSelection.selectSpan(paramId, aJCas, aBegin, aEnd);
+
+            if (aSelection.getAnnotation().isNotSet()) {
                 // Create new annotation
-                actionAnnotate(aTarget);
+                state.getAction().setAnnotate(true);
+                actionCreateOrUpdate(aTarget, aJCas, aSelection);
             }
             else {
-                // Edit existing annotation
-                loadFeatureEditorModels(jCas, aTarget);
-                
-                // Ensure we re-render and update the highlight
-                onChange(aTarget);
+                state.getAction().setAnnotate(false);
+                actionSelect(aTarget, aJCas, aSelection);
             }
         }
     }
-
-    @Override
-    public void actionAnnotate(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        // If there is no annotation yet, create one. During creation, the adapter
-        // may notice that it would create a duplicate and return the address of
-        // an existing annotation instead of a new one.
-        JCas jCas = getEditorCas();
     
-        actionAnnotate(aTarget, jCas, false);
+    @Override
+    public void actionSelect(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
+        throws AnnotationException
+    {
+        // Edit existing annotation
+        loadFeatureEditorModels(aJCas, aTarget);
+
+        // Ensure we re-render and update the highlight
+        onChange(aTarget);
     }
 
-    private void actionAnnotate(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
+
+    @Override
+    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, Selection aSelection)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace(String.format("actionAnnotate(isForwarded: %b)", aIsForwarded));
+        actionCreateOrUpdate(aTarget, aJCas, false);
+    }
+
+    private void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        LOG.trace("actionAnnotate(isForwarded: {})", aIsForwarded);
     
         if (isAnnotationFinished()) {
             throw new AnnotationException("This document is already closed. Please ask your "
@@ -1237,15 +1189,15 @@ public class AnnotationDetailEditorPanel
         
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
-        if (state.getSelection().isRelationAnno()) {
-            LOG.trace(String
-                    .format("actionAnnotate() relation annotation - looking for attached layer"));
+        if (state.getSelection().isArc()) {
+            LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
     
             // FIXME REC I think this whole section which meddles around with the selected annotation
             // layer should be moved out of there to the place where we originally set the annotation
             // layer...!
-            long layerId = TypeUtil.getLayerId(state.getSelection().getOriginType());
-            AnnotationLayer spanLayer = annotationService.getLayer(layerId);
+            AnnotationFS originFS = selectByAddr(aJCas, state.getSelection().getOrigin());
+            AnnotationLayer spanLayer = TypeUtil.getLayer(annotationService, state.getProject(),
+                    originFS);
             if (
                     state.getPreferences().isRememberLayer() && 
                     state.getAction().isAnnotate() && 
@@ -1287,11 +1239,11 @@ public class AnnotationDetailEditorPanel
             }
             // Otherwise, look up the possible relation layer(s) in the database.
             else {
-                for (AnnotationLayer layer : annotationService.listAnnotationLayer(state
+                for (AnnotationLayer l : annotationService.listAnnotationLayer(state
                         .getProject())) {
-                    if (layer.getAttachType() != null && layer.getAttachType().equals(spanLayer)) {
-                        if (state.getAnnotationLayers().contains(layer)) {
-                            state.setSelectedAnnotationLayer(layer);
+                    if (l.getAttachType() != null && l.getAttachType().equals(spanLayer)) {
+                        if (state.getAnnotationLayers().contains(l)) {
+                            state.setSelectedAnnotationLayer(l);
                         }
                         else {
                             state.setSelectedAnnotationLayer(null);
@@ -1309,10 +1261,10 @@ public class AnnotationDetailEditorPanel
             }
         }
     
-        LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
-                state.getSelectedAnnotationLayer().getUiName()));
-        LOG.trace(String.format("actionAnnotate() defaultLayer: %s",
-                state.getDefaultAnnotationLayer().getUiName()));
+        LOG.trace("actionAnnotate() selectedLayer: {}",
+                state.getSelectedAnnotationLayer().getUiName());
+        LOG.trace("actionAnnotate() defaultLayer: {}",
+                state.getDefaultAnnotationLayer().getUiName());
         
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
@@ -1327,7 +1279,7 @@ public class AnnotationDetailEditorPanel
         }
         
         // Verify if input is valid according to tagset
-        LOG.trace(String.format("actionAnnotate() verifying feature values in editors"));
+        LOG.trace("actionAnnotate() verifying feature values in editors");
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
         for (int i = 0; i < featureStates.size(); i++) {
             AnnotationFeature feature = featureStates.get(i).feature;
@@ -1365,7 +1317,7 @@ public class AnnotationDetailEditorPanel
     	writeFeatureEditorModelsToCas(adapter, aJCas);
     
         // Update progress information
-        LOG.trace(String.format("actionAnnotate() updating progress information"));
+        LOG.trace("actionAnnotate() updating progress information");
         int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
@@ -1374,14 +1326,14 @@ public class AnnotationDetailEditorPanel
         writeEditorCas(aJCas);
     
         // Remember the current feature values independently for spans and relations
-        LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
+        LOG.trace("actionAnnotate() remembering feature editor values");
         state.rememberFeatures();
     
     	// Loading feature editor values from CAS
     	loadFeatureEditorModels(aJCas, aTarget);
     	
     	// onAnnotate callback
-        LOG.trace(String.format("onAnnotate()"));
+        LOG.trace("onAnnotate()");
     	onAnnotate(aTarget);
     
     	// Handle auto-forward if it is enabled
@@ -1396,13 +1348,12 @@ public class AnnotationDetailEditorPanel
                     state.getSelection().getEnd());
             if (nextToken != null) {
                 if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                    state.getSelection().clear();
-                    state.getSelection().set(aJCas, nextToken.getBegin(), nextToken.getEnd());
-                    actionAnnotate(aTarget, aJCas, true);
+                    state.getSelection().selectSpan(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                    actionCreateOrUpdate(aTarget, aJCas, true);
                 }
             }
     
-            LOG.trace(String.format("onAutoForward()"));
+            LOG.trace("onAutoForward()");
     		onAutoForward(aTarget);
     		
             LOG.info("END auto-forward annotation");
@@ -1414,7 +1365,7 @@ public class AnnotationDetailEditorPanel
     	
     	annotationFeatureForm.forwardAnnotationText.setModelObject(null);
     	
-        LOG.trace(String.format("onChange()"));
+        LOG.trace("onChange()");
     	onChange(aTarget);
     	
     	if (state.isForwardAnnotation() && state.getFeatureStates().get(0).value != null) {
@@ -1428,8 +1379,8 @@ public class AnnotationDetailEditorPanel
             // here again
             // annotationFeatureForm.updateLayersDropdown();
             
-            LOG.trace(String.format("actionAnnotate() setting selected layer (not sure why)"));
-            if (annotationFeatureForm.annotationLayers.size() == 0) {
+            LOG.trace("actionAnnotate() setting selected layer (not sure why)");
+            if (annotationFeatureForm.annotationLayers.isEmpty()) {
                 state.setSelectedAnnotationLayer(new AnnotationLayer());
             }
             else if (state.getSelectedAnnotationLayer() == null) {
@@ -1440,8 +1391,8 @@ public class AnnotationDetailEditorPanel
                     state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
                 }
             }
-            LOG.trace(String.format("actionAnnotate() selectedLayer: %s",
-                    state.getSelectedAnnotationLayer().getUiName()));
+            LOG.trace("actionAnnotate() selectedLayer: {}",
+                    state.getSelectedAnnotationLayer().getUiName());
             
             // Actually not sure why we would want to clear these here - in fact, they should
             // still be around for the rendering phase of the feature editors...
@@ -1627,9 +1578,7 @@ public class AnnotationDetailEditorPanel
         state.rememberFeatures();
 
         // in case the user re-reverse it
-        int temp = state.getSelection().getOrigin();
-        state.getSelection().setOrigin(state.getSelection().getTarget());
-        state.getSelection().setTarget(temp);
+        state.getSelection().reverseArc();
 
         onChange(aTarget);
     }
@@ -1709,7 +1658,7 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         
         // Set an armed slot
-        if (!state.getSelection().isRelationAnno() && state.isSlotArmed()) {
+        if (!state.getSelection().isArc() && state.isSlotArmed()) {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getFeatureState(state
                     .getArmedFeature()).value;
             LinkWithRoleModel link = links.get(state.getArmedSlot());
@@ -1721,7 +1670,7 @@ public class AnnotationDetailEditorPanel
         // Auto-commit if working on existing annotation
         if (state.getSelection().getAnnotation().isSet()) {
             try {
-                actionAnnotate(aTarget, aJCas, false);
+                actionCreateOrUpdate(aTarget, aJCas, false);
             }
             catch (Exception e) {
                 handleException(this, aTarget, e);
@@ -1753,7 +1702,7 @@ public class AnnotationDetailEditorPanel
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
             
-            if (!selection.isRelationAnno()) {
+            if (selection.isSpan()) {
                 annotationFeatureForm.updateLayersDropdown();
             }
             
@@ -1782,7 +1731,7 @@ public class AnnotationDetailEditorPanel
                 // This is only relevant for span annotations because we only have these in the 
                 // dropdown - relation annotations are automatically determined based on the 
                 // selected span annotation
-                if (!selection.isRelationAnno() && !state.getPreferences().isRememberLayer()) {
+                if (!selection.isArc() && !state.getPreferences().isRememberLayer()) {
                     state.setSelectedAnnotationLayer(layer);
                 }
                 
@@ -1792,7 +1741,7 @@ public class AnnotationDetailEditorPanel
                 // If a new annotation is being created, populate the feature editors from the
                 // remembered values (if any)
                 
-                if (selection.isRelationAnno()) {
+                if (selection.isArc()) {
                     // Avoid creation of arcs on locked layers
                     if (state.getSelectedAnnotationLayer() != null
                             && state.getSelectedAnnotationLayer().isReadonly()) {
@@ -1846,7 +1795,7 @@ public class AnnotationDetailEditorPanel
             
             FeatureState featureState = null;
             if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                if (state.getSelection().isRelationAnno()) {
+                if (state.getSelection().isArc()) {
                     if (feature.getLayer().isLinkedListBehavior()
                             && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
                                     .getName())) {
@@ -2075,8 +2024,6 @@ public class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
         state.getSelection().clear();
-        state.getSelection().setBegin(0);
-        state.getSelection().setEnd(0);
         clearFeatureEditorModels(aTarget);
     }
     
