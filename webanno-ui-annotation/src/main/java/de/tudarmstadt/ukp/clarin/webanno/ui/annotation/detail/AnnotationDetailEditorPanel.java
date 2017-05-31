@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -957,7 +956,7 @@ public class AnnotationDetailEditorPanel
     }
 
     private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, JCas aJCas)
-        throws AnnotationException, UIMAException, ClassNotFoundException, IOException
+        throws AnnotationException, IOException
     {
         AnnotatorState state = getModelObject();
 
@@ -1012,7 +1011,7 @@ public class AnnotationDetailEditorPanel
     
     private void createNewSpanAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter,
             JCas aJCas)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws IOException, AnnotationException
     {
         LOG.trace("createNewSpanAnnotation()");
 
@@ -1093,7 +1092,7 @@ public class AnnotationDetailEditorPanel
     @Override
     public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
             VID aVID)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws AnnotationException
     {
         assert aJCas != null;
 
@@ -1145,13 +1144,13 @@ public class AnnotationDetailEditorPanel
 
     @Override
     public void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws IOException, AnnotationException
     {
         actionCreateOrUpdate(aTarget, aJCas, false);
     }
 
     private void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate(isForwarded: {})", aIsForwarded);
     
@@ -1382,8 +1381,7 @@ public class AnnotationDetailEditorPanel
 
     @Override
     public void actionDelete(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
-        AnnotationException
+        throws IOException, AnnotationException
     {
         JCas jCas = getEditorCas();
         
@@ -1505,7 +1503,7 @@ public class AnnotationDetailEditorPanel
 
     @Override
     public void actionReverse(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
+        throws IOException, AnnotationException
     {
         JCas jCas = getEditorCas();
 
@@ -1563,7 +1561,7 @@ public class AnnotationDetailEditorPanel
 
     @Override
     public void actionClear(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
+        throws AnnotationException
     {
         reset(aTarget);
         aTarget.add(annotationFeatureForm);

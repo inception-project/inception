@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
 import java.io.IOException;
 
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
@@ -31,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public interface AnnotationActionHandler
 {
     void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
+        throws IOException, AnnotationException;
 
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
@@ -43,25 +41,24 @@ public interface AnnotationActionHandler
      * Delete currently selected annotation.
      */
     void actionDelete(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, CASRuntimeException,
-        AnnotationException;
+        throws IOException, AnnotationException;
 
     /**
      * Clear the currently selected annotation from the editor panel.
      */
     void actionClear(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, AnnotationException;
+        throws AnnotationException;
 
     /**
      * Reverse the currently selected relation.
      */
     void actionReverse(AjaxRequestTarget aTarget)
-        throws IOException, UIMAException, ClassNotFoundException, AnnotationException;
+        throws IOException, AnnotationException;
     
     /**
      * Fill the currently armed slot with the given annotation.
      */
     public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
             VID paramId)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
+        throws IOException, AnnotationException;
 }

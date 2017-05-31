@@ -271,10 +271,6 @@ public class BratAnnotationEditor
                     }
 
                 }
-                catch (ClassNotFoundException e) {
-                    LOG.error("Invalid reader: " + e.getMessage(), e);
-                    error("Invalid reader: " + e.getMessage());
-                }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
                     LOG.error("Error: " + e.getMessage(), e);
