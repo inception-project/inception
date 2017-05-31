@@ -1,6 +1,8 @@
 .settings
 .classpath
 .project
+.idea
+*.iml
 target
 /db/
 /repository/
