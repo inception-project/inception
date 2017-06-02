@@ -52,7 +52,7 @@
 
     </beans:bean>
     <beans:bean id="ShibbolethHeaderFilter"
-        class="de.tudarmstadt.ukp.clarin.webanno.webapp.security.preauth.ShibbolethRequestHeaderAuthenticationFilter">
+        class="de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter">
 
         <beans:property name="principalRequestHeader" value="${auth.preauth.header.principal}" />
         <beans:property name="authenticationManager" ref="authenticationManager" />
