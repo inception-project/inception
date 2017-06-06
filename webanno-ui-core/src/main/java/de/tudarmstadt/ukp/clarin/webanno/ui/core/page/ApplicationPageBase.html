@@ -16,7 +16,9 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html
+    xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <head>
   <link rel="icon" href="favicon.ico" type="image/x-icon"/>
   <meta name="google" content="notranslate">
@@ -25,27 +27,26 @@
 <body>
   <div><img id="spinner" src="images/spinner.gif" /></div>
   <div class="pageheader">
-    <img class="pageicon" wicket:message="src:page.icon" />
-    <img class="logo" src="assets/logo.png"  />
-    <wicket:message key="page.title"></wicket:message>
+    <div class="pagetitle">
+      <img class="pageicon" wicket:message="src:page.icon" />
+      <img class="logo" src="assets/logo.png"  />
+      <wicket:message key="page.title"></wicket:message>
+    </div>
+    <div class="menubar">
+      <wicket:message key="product.name" /> | <a href="welcome.html"> Home </a>
+      <span style="float: right;">
+        <a wicket:id="helpLink"></a>
+        <wicket:enclosure child="logoutPanel">
+        | <span wicket:id="logoutPanel"></span>
+        </wicket:enclosure>
+      </span>
+    </div>
   </div>
-  
-  <div class="menubar">
-    <wicket:message key="product.name" /> | <a href="welcome.html"> Home </a>
-    <span style="float: right;">
-      <a wicket:id="helpLink"></a>
-      <wicket:enclosure child="logoutPanel">
-      | <span wicket:id="logoutPanel"></span>
-      </wicket:enclosure>
-    </span>
-  </div>
-  
   <div class="pagecontent" style="padding-bottom: 38px; ">
     <wicket:child>
       [CONTENT]
     </wicket:child>
   </div>
-
   <div class="pagefooter" >
     <div wicket:id="feedbackPanel">
       [Feedback]

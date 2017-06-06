@@ -25,10 +25,15 @@ table{
 
 html,
 body{
-    margin:0;
-    padding:0;
+    margin: 0px; 
+    padding: 0px;
     min-height:100%;
     height:100%;
+    width:100%;
+}
+
+body {
+	display: table;
 }
 
 .top-sticker {
@@ -176,21 +181,32 @@ ul.vcheckboxgroup{
 }
 
 .pageheader{
-    font-weight:bold;
-    font-size:39px;
-    vertical-align:middle;
-    background-color:#B90F22;
+	display: table-row;
+	width:100%;
     content:'<div style="clear:both"/>';
     position: relative;
     z-index:99;
+    background-color: #4D4D4D;
+}
+
+.pagetitle {
+	width:100%;
+    font-size:39px;
+    font-weight:bold;
+    vertical-align:middle;
+    background-color:#B90F22;
 }
 
 .pagecontent{
-    padding-bottom:1.5em;
+    padding-bottom: 1.5em;
+    display: table-row;
+    width: 100%;
+    height: 100%;
 }
 
 .pagefooter{
     clear:both;
+    display: table-row;
     width:100%;
     position:fixed;
     bottom:0px;
@@ -216,10 +232,11 @@ ul.feedbackPanel {
 /* -------------------------------------------------------------------------------------------------
  * Menu
  */
-.menubar{
-    vertical-align:middle;
-    background-color:#4D4D4D;
-    color:yellow;
+.menubar {
+    vertical-align: middle;
+    background-color: #4D4D4D;
+    color: yellow;
+    width: 100%;
 }
 
 .menubar a{
@@ -231,8 +248,6 @@ ul.feedbackPanel {
     /*color: maroon;*/
     padding-left: 1em;
     padding-right: 1em;
-    /*border-top: 1px black solid;*/
-    border-bottom: 1px black solid;
     margin-top: 0.2em;
 }
 
