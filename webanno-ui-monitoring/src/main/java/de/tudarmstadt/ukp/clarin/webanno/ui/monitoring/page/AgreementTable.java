@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.Agree
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage.AgreementFormModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPage.AgreementFormModel;
 
 public class AgreementTable
     extends Panel
