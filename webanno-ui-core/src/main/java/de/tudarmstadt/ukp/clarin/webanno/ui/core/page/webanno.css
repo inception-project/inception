@@ -180,13 +180,22 @@ ul.vcheckboxgroup{
     height:64px;
 }
 
-.pageheader{
+.pageheader {
 	display: table-row;
 	width:100%;
     content:'<div style="clear:both"/>';
     position: relative;
     z-index:99;
     background-color: #4D4D4D;
+}
+
+.headerlink {
+	float: right;
+    margin-right: 0.2em;
+}
+
+.headerlink img {
+	height: 40px;
 }
 
 .pagetitle {
