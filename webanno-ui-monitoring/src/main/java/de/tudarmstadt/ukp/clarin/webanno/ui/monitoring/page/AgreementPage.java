@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -632,5 +633,16 @@ public class AgreementPage
         public Project project;
         public Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
+    }
+    
+    /**
+     * Only admins and project managers can see this page
+     */
+    @MenuItemCondition
+    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = aUserRepo.get(username);
+        return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }
