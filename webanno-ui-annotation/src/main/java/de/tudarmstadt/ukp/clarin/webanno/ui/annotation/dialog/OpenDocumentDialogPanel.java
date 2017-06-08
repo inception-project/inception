@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
+import static org.apache.commons.lang3.StringUtils.*;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
@@ -91,10 +93,10 @@ public class OpenDocumentDialogPanel
     private final Mode mode;
     private final AnnotatorState bModel;
     
-    private IModel<List<Pair<Project, String>>> projects;
+    private IModel<List<DecoratedObject<Project>>> projects;
 
-    public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel,
-            ModalWindow aModalWindow, Mode aSubject, IModel<List<Pair<Project, String>>> aProjects)
+    public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
+            Mode aSubject, IModel<List<DecoratedObject<Project>>> aProjects)
     {
         super(aId);
         
@@ -104,9 +106,9 @@ public class OpenDocumentDialogPanel
         user = userRepository.get(username);
         projects = aProjects;
         
-        List<Pair<Project, String>> allowedProjects = projects.getObject();
+        List<DecoratedObject<Project>> allowedProjects = projects.getObject();
         if (!allowedProjects.isEmpty()) {
-            selectedProject = allowedProjects.get(0).getKey();
+            selectedProject = allowedProjects.get(0).get();
         }
 
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
@@ -136,19 +138,19 @@ public class OpenDocumentDialogPanel
 
             projectSelection = new Select<Project>("projectSelection");
             
-            ListView<Pair<Project, String>> lv = new ListView<Pair<Project, String>>("projects", projects)
+            ListView<DecoratedObject<Project>> lv = new ListView<DecoratedObject<Project>>(
+                    "projects", projects)
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected void populateItem(final ListItem<Pair<Project, String>> item)
+                protected void populateItem(final ListItem<DecoratedObject<Project>> item)
                 {
-                    String color = item.getModelObject().getValue();
-                    if (color == null) {
-                        color = "#008000";
-                    }
-                    item.add(new SelectOption<Project>("project", new Model<Project>(item
-                            .getModelObject().getKey()))
+                    DecoratedObject<Project> dp = item.getModelObject();
+                    
+                    String color = defaultIfEmpty(dp.getColor(), "#008000");
+                    
+                    item.add(new SelectOption<Project>("project", new Model<Project>(dp.get()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
 
@@ -157,7 +159,7 @@ public class OpenDocumentDialogPanel
                                 ComponentTag openTag)
                         {
                             replaceComponentTagBody(markupStream, openTag,
-                                    item.getModelObject().getKey().getName());
+                                    defaultIfEmpty(dp.getLabel(), dp.get().getName()));
                         }
                     }.add(new AttributeModifier("style", "color:" + color + ";")));
                 }
