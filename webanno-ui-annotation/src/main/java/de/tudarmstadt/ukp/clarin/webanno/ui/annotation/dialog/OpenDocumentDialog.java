@@ -65,7 +65,7 @@ public abstract class OpenDocumentDialog
     {
         closeButtonClicked = false;
         
-        setContent(new OpenModalWindowPanel(getContentId(),
+        setContent(new OpenDocumentDialogPanel(getContentId(),
                 getModelObject(), this, Mode.ANNOTATION, projects)
         {
             private static final long serialVersionUID = -3434069761864809703L;

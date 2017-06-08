@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
  * and associated documents
  */
-public class OpenModalWindowPanel
+public class OpenDocumentDialogPanel
     extends Panel
 {
     private static final long serialVersionUID = 1299869948010875439L;
@@ -93,7 +93,7 @@ public class OpenModalWindowPanel
     
     private IModel<List<Pair<Project, String>>> projects;
 
-    public OpenModalWindowPanel(String aId, AnnotatorState aBModel,
+    public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel,
             ModalWindow aModalWindow, Mode aSubject, IModel<List<Pair<Project, String>>> aProjects)
     {
         super(aId);
