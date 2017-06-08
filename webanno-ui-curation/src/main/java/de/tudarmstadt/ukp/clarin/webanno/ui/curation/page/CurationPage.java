@@ -383,10 +383,10 @@ public class CurationPage
                     if (SecurityUtil.isCurator(project, projectService, user)) {
                         DecoratedObject<Project> dp = DecoratedObject.of(project);
                         if (projectsWithFinishedAnnos.contains(project)) {
-                            dp.setColor("#008000");
+                            dp.setColor("green");
                         }
                         else {
-                            dp.setColor("#99cc99");
+                            dp.setColor("red");
                         }
                         allowedProject.add(dp);
                     }

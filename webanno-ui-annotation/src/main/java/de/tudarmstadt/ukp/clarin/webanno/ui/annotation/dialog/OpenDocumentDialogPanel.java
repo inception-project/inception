@@ -17,14 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -53,11 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -90,17 +88,15 @@ public class OpenDocumentDialogPanel
     private final String username;
     private final User user;
 
-    private final Mode mode;
     private final AnnotatorState bModel;
     
     private IModel<List<DecoratedObject<Project>>> projects;
 
     public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
-            Mode aSubject, IModel<List<DecoratedObject<Project>>> aProjects)
+            IModel<List<DecoratedObject<Project>>> aProjects)
     {
         super(aId);
         
-        mode = aSubject;
         bModel = aBModel;
         username = SecurityContextHolder.getContext().getAuthentication().getName();
         user = userRepository.get(username);
@@ -210,35 +206,33 @@ public class OpenDocumentDialogPanel
     {
         private static final long serialVersionUID = -1L;
 
-        ListView<SourceDocument> lv;
+        ListView<DecoratedObject<SourceDocument>> lv;
         
         public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
 
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            final Map<SourceDocument, String> documentColors = new HashMap<SourceDocument, String>();
 
             documentSelection = new Select<SourceDocument>("documentSelection");
-            lv = new ListView<SourceDocument>("documents",
-                    new LoadableDetachableModel<List<SourceDocument>>()
+            lv = new ListView<DecoratedObject<SourceDocument>>("documents",
+                    new LoadableDetachableModel<List<DecoratedObject<SourceDocument>>>()
                     {
                         private static final long serialVersionUID = 1L;
 
                         @Override
-                        protected List<SourceDocument> load()
+                        protected List<DecoratedObject<SourceDocument>> load()
                         {
-                            List<SourceDocument> allDocuments = listDocuments(documentColors);
-                            return allDocuments;
+                            return listDocuments();
                         }
                     })
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected void populateItem(final ListItem<SourceDocument> item)
+                protected void populateItem(final ListItem<DecoratedObject<SourceDocument>> aItem)
                 {
-                    item.add(new SelectOption<SourceDocument>("document",
-                            new Model<SourceDocument>(item.getModelObject()))
+                    SourceDocument sdoc = aItem.getModelObject().get();
+                    aItem.add(new SelectOption<SourceDocument>("document", Model.of(sdoc))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
 
@@ -246,11 +240,12 @@ public class OpenDocumentDialogPanel
                         public void onComponentTagBody(MarkupStream markupStream,
                                 ComponentTag openTag)
                         {
-                            replaceComponentTagBody(markupStream, openTag, item.getModelObject()
-                                    .getName());
+                            String label = defaultIfEmpty(aItem.getModelObject().getLabel(),
+                                    sdoc.getName());
+                            replaceComponentTagBody(markupStream, openTag, label);
                         }
-                    }.add(new AttributeModifier("style", "color:"
-                            + documentColors.get(item.getModelObject()) + ";")));
+                    }.add(new AttributeModifier("style",
+                            "color:" + aItem.getModelObject().getColor() + ";")));
                 }
             };
             add(documentSelection.add(lv));
@@ -280,7 +275,8 @@ public class OpenDocumentDialogPanel
                     }
                     if (selectedProject != null && selectedDocument != null) {
                         bModel.setProject(selectedProject);
-                        bModel.setDocument(selectedDocument, lv.getModelObject());
+                        bModel.setDocument(selectedDocument, lv.getModelObject().stream()
+                                .map(t -> t.get()).collect(Collectors.toList()));
                         modalWindow.close(aTarget);
                     }
                 }
@@ -288,18 +284,18 @@ public class OpenDocumentDialogPanel
         }
     }
 
-    private List<SourceDocument> listDocuments(final Map<SourceDocument, String> states)
+    private List<DecoratedObject<SourceDocument>> listDocuments()
     {
         if (selectedProject == null) {
-            return new ArrayList<SourceDocument>();
+            return new ArrayList<>();
         }
         
-        List<SourceDocument> allSourceDocuments = new ArrayList<>();
+        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
         // finished for curation dialog
-        switch (mode) {
+        switch (bModel.getMode()) {
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
@@ -307,31 +303,24 @@ public class OpenDocumentDialogPanel
                     .listAnnotatableDocuments(selectedProject, user);
 
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+                DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
                 if (e.getValue() != null) {
-                    SourceDocument sourceDocument = e.getKey();
                     AnnotationDocument adoc = e.getValue();
-                    if (AnnotationDocumentState.FINISHED.equals(adoc.getState())) {
-                        states.put(sourceDocument, "red");
-                    }
-                    else if (AnnotationDocumentState.IN_PROGRESS.equals(adoc.getState())) {
-                        states.put(sourceDocument, "blue");
-                    }
+                    dsd.setColor(adoc.getState().getColor());
                 }
+                allSourceDocuments.add(dsd);
             }
-
-            allSourceDocuments = new ArrayList<>(docs.keySet());
             break;
         }
         case CURATION: {
-            allSourceDocuments = curationDocumentService.listCuratableSourceDocuments(selectedProject);
+            List<SourceDocument> sdocs = curationDocumentService
+                    .listCuratableSourceDocuments(selectedProject);
             
-            for (SourceDocument sourceDocument : allSourceDocuments) {
-                if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                    states.put(sourceDocument, "red");
-                }
-                else if (SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) {
-                    states.put(sourceDocument, "blue");
-                }
+            for (SourceDocument sourceDocument : sdocs) {
+                DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
+                dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
+                dsd.setColor(sourceDocument.getState().getColor());
+                allSourceDocuments.add(dsd);
             }
 
             break;
@@ -383,7 +372,8 @@ public class OpenDocumentDialogPanel
                         
                         bModel.setProject(selectedProject);
                         bModel.setDocument(selectedDocument,
-                                documentSelectionForm.lv.getModelObject());
+                                documentSelectionForm.lv.getModelObject().stream().map(t -> t.get())
+                                        .collect(Collectors.toList()));
                         modalWindow.close(aTarget);
                     }
                 }
@@ -404,7 +394,7 @@ public class OpenDocumentDialogPanel
                 {
                     projectSelectionForm.detach();
                     documentSelectionForm.detach();
-                    if (mode.equals(Mode.CURATION)) {
+                    if (Mode.CURATION.equals(bModel.getMode())) {
                         bModel.setDocument(null, null); // on cancel, go welcomePage
                     }
                     onCancel(aTarget);

@@ -45,6 +45,11 @@ public class DecoratedObject<T>
         label = aLabel;
     }
 
+    public void setLabel(String aFormat, Object... aValues)
+    {
+        label = String.format(aFormat, aValues);
+    }
+
     public String getColor()
     {
         return color;

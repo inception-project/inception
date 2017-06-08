@@ -28,12 +28,12 @@ public enum SourceDocumentState
     /**
      * No annotation document has been created for this document
      */
-    NEW("NEW"),
+    NEW("NEW", "black"),
     
     /**
      * At least one annotation document has been created for the document
      */
-    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS"),
+    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
     
     /**
      * All annotations have marked their annotation document as finished
@@ -44,40 +44,47 @@ public enum SourceDocumentState
      *             marked their annotation documents as done. This is nothing we can record
      *             statically in the source document.
      */
-    ANNOTATION_FINISHED("ANNOTATION_FINISHED"),
+    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
     
     /**
      * curator claims to have curated all annotations
      */
-    CURATION_FINISHED("CURATION_FINISHED"),
+    CURATION_FINISHED("CURATION_FINISHED", "red"),
     
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS");
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
+    
+    private final String id;
+    private final String color;
 
+    SourceDocumentState(String aId, String aColor)
+    {
+        id = aId;
+        color = aColor;
+    }
+    
     public String getName()
     {
         return getId();
     }
 
     @Override
-    public String toString()
-    {
-        return getId();
-    }
-
-    SourceDocumentState(String aId)
-    {
-        this.id = aId;
-    }
-
-    private final String id;
-
-    @Override
     public String getId()
     {
         return id;
+    }
+    
+    public String getColor()
+    {
+        return color;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return getId();
     }
 }

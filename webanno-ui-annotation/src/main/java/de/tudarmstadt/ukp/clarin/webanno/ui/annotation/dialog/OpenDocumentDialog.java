@@ -25,7 +25,6 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
@@ -65,8 +64,7 @@ public abstract class OpenDocumentDialog
     {
         closeButtonClicked = false;
         
-        setContent(new OpenDocumentDialogPanel(getContentId(),
-                getModelObject(), this, Mode.ANNOTATION, projects)
+        setContent(new OpenDocumentDialogPanel(getContentId(), getModelObject(), this, projects)
         {
             private static final long serialVersionUID = -3434069761864809703L;
 
