@@ -65,6 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -413,7 +415,7 @@ public class SuggestionViewPanel
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
-            final Map<VID, AnnotationState> aStates)
+            final Map<String, Map<VID, AnnotationState>> aStates)
         throws IOException
     {
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
@@ -452,10 +454,11 @@ public class SuggestionViewPanel
                     @Override
                     public String getColor(VID aVid, String aLabel)
                     {
-                        if (aStates.get(aVid)==null){
+                        Map<VID, AnnotationState> colors = aStates.get(username);
+                        if (colors.get(aVid)==null){
                             return AnnotationState.NOT_SUPPORTED.getColorCode();
                         }
-                        return aStates.get(aVid).getColorCode();
+                        return colors.get(aVid).getColorCode();
                     }
                 };
 
@@ -491,8 +494,11 @@ public class SuggestionViewPanel
         
         GetDocumentResponse response = new GetDocumentResponse();
         
-        BratRenderer.renderFully(response, aBratAnnotatorModel, aJcas, annotationService,
-                layersToRender);
+        VDocument vdoc = new VDocument();
+        PreRenderer.render(vdoc, aBratAnnotatorModel, aJcas, annotationService, layersToRender);
+        
+        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,
+                aCurationColoringStrategy);
 
         return JSONUtil.toInterpretableJsonString(response);
     }
@@ -556,7 +562,7 @@ public class SuggestionViewPanel
                 bModel.getAnnotationLayers(), annotationService);
         List<AnnotationOption> annotationOptions = null;
 
-        Map<VID, AnnotationState> annoStates = new HashMap<>();
+        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
         DiffResult diff;
 
@@ -614,12 +620,18 @@ public class SuggestionViewPanel
      * the curation annotation.
      */
     private void addSuggestionColor(Project aProject, Mode aMode, Map<String, JCas> aCasMap,
-            Map<VID, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,
-            boolean aI, boolean aAgree)
+            Map<String, Map<VID, AnnotationState>> aSuggestionColors,
+            Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
             boolean use = false;
             for (String u : cs.getCasGroupIds()) {
+                Map<VID, AnnotationState> colors = aSuggestionColors.get(u);
+                if (colors == null) {
+                    colors = new HashMap<>();
+                    aSuggestionColors.put(u, colors);
+                }
+                
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
@@ -645,16 +657,16 @@ public class SuggestionViewPanel
                     }
                     
                     if (aAgree) {
-                        aSuggestionColors.put(vid, AnnotationState.AGREE);
+                        colors.put(vid, AnnotationState.AGREE);
                         continue;
                     }
                     // automation and correction projects
                     if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            aSuggestionColors.put(vid, AnnotationState.DO_NOT_USE);
+                            colors.put(vid, AnnotationState.DO_NOT_USE);
                         }
                         else {
-                            aSuggestionColors.put(vid, AnnotationState.DISAGREE);
+                            colors.put(vid, AnnotationState.DISAGREE);
                         }
                         continue;
                     }
@@ -672,19 +684,19 @@ public class SuggestionViewPanel
                     }
 
                     if (aAgree) {
-                        aSuggestionColors.put(vid, AnnotationState.AGREE);
+                        colors.put(vid, AnnotationState.AGREE);
                     }
                     else if (use) {
-                        aSuggestionColors.put(vid, AnnotationState.USE);
+                        colors.put(vid, AnnotationState.USE);
                     }
                     else if (aI) {
-                        aSuggestionColors.put(vid, AnnotationState.DISAGREE);
+                        colors.put(vid, AnnotationState.DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        aSuggestionColors.put(vid, AnnotationState.DISAGREE);
+                        colors.put(vid, AnnotationState.DISAGREE);
                     }
                     else {
-                        aSuggestionColors.put(vid, AnnotationState.DO_NOT_USE);
+                        colors.put(vid, AnnotationState.DO_NOT_USE);
                     }
                 }
             }

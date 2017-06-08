@@ -75,13 +75,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratRenderer
 {
-    public static void renderFully(GetDocumentResponse aResponse, AnnotatorState aState,
-            JCas aJCas, AnnotationSchemaService aAnnotationService, List<AnnotationLayer> aLayersToRender)
+    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
+            VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
     {
-        VDocument vdoc = new VDocument();
-        PreRenderer.render(vdoc, aState, aJCas, aAnnotationService, aLayersToRender);
-        
-        render(aResponse, aState, vdoc, aJCas, aAnnotationService);
+        render(aResponse, aState, aVDoc, aJCas, aAnnotationService, null);
     }
     
     /**
@@ -96,8 +93,9 @@ public class BratRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
+    public static void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
+            JCas aJCas, AnnotationSchemaService aAnnotationService,
+            ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
 
@@ -107,8 +105,9 @@ public class BratRenderer
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
-                    aAnnotationService, layer, aState.getPreferences(), colorQueues);
+            ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
+                    : ColoringStrategy.getBestStrategy(aAnnotationService, layer,
+                            aState.getPreferences(), colorQueues);
 
             TypeAdapter typeAdapter = getAdapter(aAnnotationService, layer);
             
