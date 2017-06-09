@@ -50,7 +50,7 @@ public interface AutomationService
     /**
      * Get the directory of this {@link TrainingDocument} usually to read the content of the document
      *
-     * @param aDocument
+     * @param trainingDocument
      *            the Training document.
      * @return the training document folder.
      * @throws IOException

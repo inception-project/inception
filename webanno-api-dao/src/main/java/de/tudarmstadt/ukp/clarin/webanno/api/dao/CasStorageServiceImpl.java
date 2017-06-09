@@ -111,7 +111,7 @@ public class CasStorageServiceImpl
      * Creates a CAS for the Automation documents
      *
      * @param aDocument
-     *            the {@link TrainingDocumentDocument}
+     *            the {@link TrainingDocument}
      * @param aJcas
      *            The annotated CAS object
      */
