@@ -150,12 +150,6 @@ public class AgreementPage
 
         List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
 
-        // Filter training documents out from the source documents. Training documents are not
-        // being annotated
-        // FIXME actually, listSourceDocuments() shouldn return training documents in the first
-        // place. Cf. https://github.com/webanno/webanno/issues/23
-        List<SourceDocument> trainingDoc = new ArrayList<SourceDocument>();
-
         cachedCASes = new LinkedHashMap<>();
         for (User user : users) {
             List<JCas> cases = new ArrayList<>();

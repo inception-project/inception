@@ -1676,12 +1676,11 @@ public class AutomationUtil
                 jCas = aRepository.readAnnotationCas(annoDocument);
             }
             catch (DataRetrievalFailureException e) {
-
-            }
             automate(jCas, layerFeature, annotations);
             LOG.info("Predictions found are written to the CAS");
             aCorrectionDocumentService.writeCorrectionCas(jCas, document);
             status.setAnnoDocs(status.getAnnoDocs() - 1);
+            }
         }
     }
     
