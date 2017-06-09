@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
- * Variables for the different states of a {@link TrainDocument} workflow.
+ * Variables for the different states of a {@link TrainingDocument} workflow.
  */
 public enum TrainDocumentState
     implements PersistentEnum
