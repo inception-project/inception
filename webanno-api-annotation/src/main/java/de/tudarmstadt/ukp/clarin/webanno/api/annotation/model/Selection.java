@@ -17,26 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+
 import java.io.Serializable;
 
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Selection
     implements Serializable
 {
+    private static final Logger LOG = LoggerFactory.getLogger(Selection.class);
+    
     private static final long serialVersionUID = 2257223261821341371L;
 
     // is the annotation span or arc annotation
-    private boolean isRelationAnno;
+    private boolean arc;
 
     // the span id of the dependent in arc annotation
     private int originSpanId;
-
-    // The type of the dependent in the arc annotation
-    private String originSpanType;
-
-    // The type of the governor in the arc annotation
-    private String targetSpanType;
 
     // The span id of the governor in arc annotation
     private int targetSpanId;
@@ -53,54 +54,83 @@ public class Selection
     // selected span text
     private String text;
 
-    public boolean isRelationAnno()
+    public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
-        return isRelationAnno;
+        arc = true;
+        selectedAnnotationId = aVid;
+        text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
+        beginOffset = Math.min(aOriginFs.getBegin(), aTargetFs.getBegin());
+        endOffset = Math.max(aOriginFs.getEnd(), aTargetFs.getEnd());
+        
+        // Properties used when an arc is selected
+        originSpanId = getAddr(aOriginFs);
+        targetSpanId = getAddr(aTargetFs);
+        
+        LOG.debug("Arc: {}", this);
+    }
+    
+    public void selectSpan(VID aVid, JCas aJCas, int aBegin, int aEnd)
+    {
+        arc = false;
+        selectedAnnotationId = aVid;
+        text = aJCas.getDocumentText().substring(aBegin, aEnd);
+        beginOffset = aBegin;
+        endOffset = aEnd;
+        
+        // Properties used when an arc is selected
+        originSpanId = -1;
+        targetSpanId = -1;
+        
+        
+        LOG.debug("Span: {}", this);
     }
 
-    public void setRelationAnno(boolean isRelationAnno)
+    public void selectSpan(JCas aJCas, int aBegin, int aEnd)
     {
-        this.isRelationAnno = isRelationAnno;
+        selectSpan(VID.NONE_ID, aJCas, aBegin, aEnd);
+    }
+    
+    public void clear()
+    {
+        arc = false;
+        selectedAnnotationId = VID.NONE_ID;
+        beginOffset = -1;
+        endOffset = -1;
+        text = "";
+        
+        // Properties used when an arc is selected
+        originSpanId = -1;
+        targetSpanId = -1;
+        
+        LOG.debug("Clear: {}", this);
+    }
+
+    public boolean isSpan()
+    {
+        return !arc;
+    }
+
+    public boolean isArc()
+    {
+        return arc;
     }
 
     public int getOrigin()
     {
+        if (!arc) {
+            throw new IllegalStateException("Selected annotation is not an arc");
+        }
+        
         return originSpanId;
-    }
-
-    public void setOrigin(int originSpanId)
-    {
-        this.originSpanId = originSpanId;
-    }
-
-    public String getOriginType()
-    {
-        return originSpanType;
-    }
-
-    public void setOriginType(String originSpanType)
-    {
-        this.originSpanType = originSpanType;
-    }
-
-    public String getTargetType()
-    {
-        return targetSpanType;
-    }
-
-    public void setTargetType(String targetSpanType)
-    {
-        this.targetSpanType = targetSpanType;
     }
 
     public int getTarget()
     {
+        if (!arc) {
+            throw new IllegalStateException("Selected annotation is not an arc");
+        }
+        
         return targetSpanId;
-    }
-
-    public void setTarget(int targetSpanId)
-    {
-        this.targetSpanId = targetSpanId;
     }
 
     public int getBegin()
@@ -108,19 +138,9 @@ public class Selection
         return beginOffset;
     }
 
-    public void setBegin(int beginOffset)
-    {
-        this.beginOffset = beginOffset;
-    }
-
     public int getEnd()
     {
         return endOffset;
-    }
-
-    public void setEnd(int endOffset)
-    {
-        this.endOffset = endOffset;
     }
 
     public String getText()
@@ -128,9 +148,9 @@ public class Selection
         return text;
     }
 
-    public void setText(String selectedText)
+    public void setText(String aText)
     {
-        this.text = selectedText;
+        text = aText;
     }
 
     public VID getAnnotation()
@@ -138,24 +158,42 @@ public class Selection
         return selectedAnnotationId;
     }
 
-    public void setAnnotation(VID selectedAnnotationId)
+    public void setAnnotation(VID aVID)
     {
-        this.selectedAnnotationId = selectedAnnotationId;
+        selectedAnnotationId = aVID;
     }
 
-    public void clear()
+    public void reverseArc()
     {
-        setText("");
-        setAnnotation(VID.NONE_ID);
-        //
-        // getCommand().setBeginOffset(-1);
-        // getCommand().setEndOffset(-1);
+        int tempSpanId = originSpanId;
+        originSpanId = targetSpanId;
+        targetSpanId = tempSpanId;
     }
 
-    public void set(JCas aJCas, int aBegin, int aEnd)
+    @Override
+    public String toString()
     {
-        setBegin(aBegin);
-        setEnd(aEnd);
-        setText(aJCas.getDocumentText().substring(aBegin, aEnd));
+        StringBuilder builder = new StringBuilder();
+        builder.append("Selection [");
+        if (arc) {
+            builder.append("arc");
+        }
+        else {
+            builder.append("span");
+        }
+        builder.append(", origin=");
+        builder.append(originSpanId);
+        builder.append(", target=");
+        builder.append(targetSpanId);
+        builder.append(", begin=");
+        builder.append(beginOffset);
+        builder.append(", end=");
+        builder.append(endOffset);
+        builder.append(", vid=");
+        builder.append(selectedAnnotationId);
+        builder.append(", text=[");
+        builder.append(text);
+        builder.append("]]");
+        return builder.toString();
     }
 }

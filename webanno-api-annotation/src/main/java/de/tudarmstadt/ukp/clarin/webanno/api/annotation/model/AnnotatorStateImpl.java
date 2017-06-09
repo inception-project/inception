@@ -517,7 +517,7 @@ public class AnnotatorStateImpl
     @Override
     public void rememberFeatures()
     {
-        if (getSelection().isRelationAnno()) {
+        if (getSelection().isArc()) {
             this.rememberedArcLayer = getSelectedAnnotationLayer();
             setRememberedArcFeatures(featureModels);
         }

@@ -35,13 +35,18 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.link.PopupSettings;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
+import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -54,7 +59,9 @@ import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 
@@ -71,6 +78,7 @@ public abstract class ApplicationPageBase
     private Label embeddedDbWarning;
     private Label browserWarning;
     private ExternalLink helpLink;
+    private ListView<ImageLinkDecl> links;
 
     private @SpringBean SettingsService settingsService;
 
@@ -191,6 +199,18 @@ public abstract class ApplicationPageBase
         helpLink.setPopupSettings(new PopupSettings("_blank"));
         helpLink.setVisible(helpAvailable);
         
+        links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
+        {
+            @Override
+            protected void populateItem(ListItem<ImageLinkDecl> aItem)
+            {
+                aItem.add(new ImageLink("link",
+                        new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
+                        Model.of(aItem.getModelObject().getLinkUrl())));
+            }
+        };
+        
+        add(links);
         add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);

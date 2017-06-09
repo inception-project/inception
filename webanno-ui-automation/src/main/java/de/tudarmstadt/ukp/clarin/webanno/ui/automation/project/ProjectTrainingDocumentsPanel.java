@@ -37,18 +37,15 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 
 /**
@@ -129,7 +126,7 @@ public class ProjectTrainingDocumentsPanel
                 for (FileUpload documentToUpload : uploadedFiles) {
                     String fileName = documentToUpload.getClientFileName();
 
-                    if (documentService.existsSourceDocument(project, fileName)) {
+                    if (automationService.existsTrainingDocument(project, fileName)) {
                         error("Document " + fileName + " already uploaded ! Delete "
                                 + "the document if you want to upload again");
                         continue;
@@ -138,24 +135,16 @@ public class ProjectTrainingDocumentsPanel
                     try {
                         File uploadFile = documentToUpload.writeToTempFile();
 
-                        SourceDocument document = new SourceDocument();
+                        TrainingDocument document = new TrainingDocument();
                         document.setName(fileName);
                         document.setProject(project);
 
-                        document.setTrainingDocument(true);
-                        // Since new training document is added, all
-                        // non-tarining document should be
-                        // re-annotated
-                        for (SourceDocument sd : documentService.listSourceDocuments(project)) {
-                            if (!sd.isTrainingDocument()) {
-                                sd.setProcessed(false);
-                            }
-                        }
+						for (TrainingDocument sd : automationService.listTrainingDocuments(project)) {
+							sd.setProcessed(false);
+						}
 
-                        for (SourceDocument sd : automationService.listTabSepDocuments(project)) {
-                            if (!sd.isTrainingDocument()) {
-                                sd.setProcessed(false);
-                            }
+                        for (TrainingDocument sd : automationService.listTabSepDocuments(project)) {
+                             	sd.setProcessed(false);
                         }
                         // If this document is tab-sep and used as a feature itself, no need to add
                         // a feature to the document
@@ -171,7 +160,7 @@ public class ProjectTrainingDocumentsPanel
                                     .getModelObject());
                             document.setFormat(reader);
                         }
-                        documentService.createSourceDocument(document);
+                        automationService.createTrainingDocument(document);
                         importExportService.uploadTrainingDocument(uploadFile, document);
                         info("File [" + fileName + "] has been imported successfully!");
                     }
@@ -202,7 +191,7 @@ public class ProjectTrainingDocumentsPanel
                         documents.clear();
                         if (project.getId() != 0) {
                             if (aTabsDocModel.getObject().isTabSep()) {
-                                for (SourceDocument document : automationService
+                                for (TrainingDocument document : automationService
                                         .listTabSepDocuments(project)) {
                                     // This is tab-sep training document to the target layer
                                     if (aTabsDocModel.getObject().isTraining()
@@ -219,8 +208,8 @@ public class ProjectTrainingDocumentsPanel
 
                             }
                             else {
-                                for (SourceDocument document : documentService
-                                        .listSourceDocuments(project)) {
+                                for (TrainingDocument document : automationService
+                                        .listTrainingDocuments(project)) {
                                     if (document.getFeature() != null
                                             && document.getFeature().equals(feature)) {
                                         documents.add(document.getName());
@@ -245,14 +234,9 @@ public class ProjectTrainingDocumentsPanel
                 boolean isTrain = false;
                 for (String document : selectedDocuments) {
                     try {
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-                        SourceDocument srDoc = documentService.getSourceDocument(project, document);
-                        if(srDoc.isTrainingDocument()){
-                        	isTrain = true;
-                        }
-                        documentService.removeSourceDocument(srDoc);
+                        TrainingDocument trainingDoc = automationService.getTrainingDocument(project, document);
+                        isTrain = true;
+                        automationService.removeTrainingDocument(trainingDoc);
                     }
                     catch (IOException e) {
                         error("Error while removing a document document "
@@ -262,10 +246,10 @@ public class ProjectTrainingDocumentsPanel
                 }
                 // If the deleted document is training document, re-training an automation should be possible again
                 if(isTrain){
-                	List<SourceDocument> docs = documentService.listSourceDocuments(project);
+                	List<TrainingDocument> docs = automationService.listTrainingDocuments(project);
                 		docs.addAll(automationService.listTabSepDocuments(project));
-                	for(SourceDocument srDoc:docs){
-                		srDoc.setProcessed(false);
+                	for(TrainingDocument trainingDoc:docs){
+                		trainingDoc.setProcessed(false);
                 	}
                 }
             }

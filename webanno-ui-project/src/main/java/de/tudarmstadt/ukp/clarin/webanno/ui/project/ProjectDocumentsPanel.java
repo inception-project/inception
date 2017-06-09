@@ -116,9 +116,7 @@ public class ProjectDocumentsPanel
                         if (project.getId() != 0) {
                             for (SourceDocument document : documentService
                                     .listSourceDocuments(project)) {
-                                if (!document.isTrainingDocument()) {
-                                    documents.add(document.getName());
-                                }
+                            	documents.add(document.getName());
                             }
                         }
                         return documents;

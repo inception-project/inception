@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectExportException;
@@ -154,22 +154,15 @@ public class ExportUtil
         // add source documents to a project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(aProject);
-        documents.addAll(automationService.listTabSepDocuments(aProject));
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
             SourceDocument exDocument = new SourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
-            exDocument.setProcessed(sourceDocument.isProcessed());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
-            exDocument.setTrainingDocument(sourceDocument.isTrainingDocument());
             exDocument.setSentenceAccessed(sourceDocument.getSentenceAccessed());
             exDocument.setProcessed(false);
-
-            if (sourceDocument.getFeature() != null) {
-                exDocument.setFeature(featureToExFeatures.get(sourceDocument.getFeature()));
-            }
 
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : documentService
@@ -243,7 +236,6 @@ public class ExportUtil
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(aProject);
-        documents.addAll(automationService.listTabSepDocuments(aProject));
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             try {

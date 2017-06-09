@@ -26,11 +26,12 @@ import java.util.Map;
 import java.util.Queue;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public abstract class ColoringStrategy
 {
@@ -39,7 +40,7 @@ public abstract class ColoringStrategy
         return new ColoringStrategy()
         {
             @Override
-            public String getColor(Object aObj, String aLabel)
+            public String getColor(VID aVid, String aLabel)
             {
                 // If each tag should get a separate color, we currently have no chance other than
                 // to derive the color from the actual label text because at this point, we cannot
@@ -59,7 +60,7 @@ public abstract class ColoringStrategy
     public static ColoringStrategy staticColor(final String aColor) {
         return new ColoringStrategy() {
             @Override
-            public String getColor(Object aObj, String aLabel)
+            public String getColor(VID aVid, String aLabel)
             {
                 return aColor;
             }
@@ -193,5 +194,5 @@ public abstract class ColoringStrategy
     public final static String[] PALETTE_NORMAL_FILTERED = filterLightColors(PALETTE_NORMAL,
             LIGHTNESS_FILTER_THRESHOLD);
 
-    public abstract String getColor(Object aObj, String aLabel);
+    public abstract String getColor(VID aVid, String aLabel);
 }

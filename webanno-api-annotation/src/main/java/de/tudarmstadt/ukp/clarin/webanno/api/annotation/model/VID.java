@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -39,8 +43,10 @@ public class VID
     private static final String SUB = "SUB";
     private static final String ATTR = "ATTR";
     private static final String SLOT = "SLOT";
+	private static final String EXTENSION = "EXT";    
     
-    public static final Pattern PATTERN_VID = Pattern.compile("(?<ID>\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
+    public static final Pattern PATTERN_VID = Pattern.compile(
+            "(?:(?<EXT>\\w+)\\:)?(?<ID>-?\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
     public static final int NONE = -1;
 
     public static final VID NONE_ID = new VID(NONE);
@@ -49,28 +55,70 @@ public class VID
     private final int subAnnotationId;
     private final int attribute;
     private final int slot;
+    private final String extensionId;
+
+    public VID(AnnotationFS aFS)
+    {
+        this(null, getAddr(aFS), NONE, NONE, NONE);
+    }
 
     public VID(int aAnnotationID)
     {
-        this(aAnnotationID, NONE, NONE, NONE);
+        this(null, aAnnotationID, NONE, NONE, NONE);
+    }
+
+    public VID(AnnotationFS aFS, int aAttribute)
+    {
+        this(null, getAddr(aFS), NONE, aAttribute, NONE);
     }
 
     public VID(int aAnnotationID, int aAttribute)
     {
-        this(aAnnotationID, NONE, aAttribute, NONE);
-    }
-    
-    public VID(int aAnnotationID, int aAttribute, int aSlot)
-    {
-        this(aAnnotationID, NONE, aAttribute, aSlot);
+        this(null, aAnnotationID, NONE, aAttribute, NONE);
     }
 
+    public VID(AnnotationFS aFS, int aAttribute, int aSlot)
+    {
+        this(null, getAddr(aFS), NONE, aAttribute, aSlot);
+    }
+
+    public VID(int aAnnotationID, int aAttribute, int aSlot)
+    {
+        this(null, aAnnotationID, NONE, aAttribute, aSlot);
+    }
+    
     public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
+    {
+        this(null, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+    }
+
+    public VID(AnnotationFS aFS, int aSubAnnotationId, int aAttribute, int aSlot)
+    {
+        this(null, getAddr(aFS), aSubAnnotationId, aAttribute, aSlot);
+    }
+
+    public VID(String aExtensionId, int aAnnotationID)
+    {
+        this(aExtensionId, aAnnotationID, NONE, NONE, NONE);
+    }
+
+    public VID(String aExtensionId, int aAnnotationID, int aAttribute)
+    {
+        this(aExtensionId, aAnnotationID, NONE, aAttribute, NONE);
+    }
+    
+    public VID(String aExtensionId, int aAnnotationID, int aAttribute, int aSlot)
+    {
+        this(aExtensionId, aAnnotationID, NONE, aAttribute, aSlot);
+    }
+        
+    public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         annotationId = aAnnotationID;
         subAnnotationId = aSubAnnotationId;
         attribute = aAttribute;
         slot = aSlot;
+        extensionId = aExtensionId;
     }
 
     public boolean isSet()
@@ -107,8 +155,24 @@ public class VID
     {
         return slot >= 0;
     }
+    
+    /**
+     * @return {@code true} if the annotation referred to does not exist in the CAS. These are
+     *         annotations created by editor extensions.
+     */
+    public boolean isSynthetic()
+    {
+        return isNotBlank(extensionId);
+    }
+    
+    /**
+     * @return the ID of the editor extension that created the annotation referred to.
+     */
+    public String getExtensionId() {
+		return extensionId;
+	}
 
-    public static VID parseOptional(String aVid)
+	public static VID parseOptional(String aVid)
     {
         if (StringUtils.isNotBlank(aVid)) {
             return parse(aVid);
@@ -126,6 +190,8 @@ public class VID
             int subAnnotationId = NONE;
             int feature = NONE;
             int slot = NONE;
+            String extensionId = null;
+            
             if (m.group(SUB) != null) {
                 subAnnotationId = Integer.valueOf(m.group(SUB));
             }
@@ -135,7 +201,10 @@ public class VID
             if (m.group(SLOT) != null) {
                 slot = Integer.valueOf(m.group(SLOT));
             }
-            return new VID(annotationId, subAnnotationId, feature, slot);
+            if (m.group(EXTENSION) != null) {
+                extensionId = m.group(EXTENSION);
+            }
+            return new VID(extensionId, annotationId, subAnnotationId, feature, slot);
         }
         else {
             throw new IllegalArgumentException("Cannot parse visual identifier [" + aVid + "]");
@@ -146,6 +215,11 @@ public class VID
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
+
+        if (isNotBlank(extensionId)) {
+            sb.append(extensionId);
+            sb.append(':');
+        }
 
         sb.append(annotationId);
 
@@ -165,5 +239,54 @@ public class VID
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + annotationId;
+        result = prime * result + attribute;
+        result = prime * result + ((extensionId == null) ? 0 : extensionId.hashCode());
+        result = prime * result + slot;
+        result = prime * result + subAnnotationId;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        VID other = (VID) obj;
+        if (annotationId != other.annotationId) {
+            return false;
+        }
+        if (attribute != other.attribute) {
+            return false;
+        }
+        if (extensionId == null) {
+            if (other.extensionId != null) {
+                return false;
+            }
+        }
+        else if (!extensionId.equals(other.extensionId)) {
+            return false;
+        }
+        if (slot != other.slot) {
+            return false;
+        }
+        if (subAnnotationId != other.subAnnotationId) {
+            return false;
+        }
+        return true;
     }
 }

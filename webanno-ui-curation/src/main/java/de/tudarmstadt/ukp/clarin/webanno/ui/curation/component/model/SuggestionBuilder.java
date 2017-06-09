@@ -43,7 +43,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -61,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.MergeCas;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -131,7 +131,7 @@ public class SuggestionBuilder
         if (aBModel.getMode().equals(Mode.AUTOMATION) || aBModel.getMode().equals(Mode.CORRECTION)) {
             jCases = listJcasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
-            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
+            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument, false);
             String username = jCases.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
                     jCases.get(username), username, aBModel.getWindowBeginOffset(),
@@ -140,7 +140,7 @@ public class SuggestionBuilder
         else {
             jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
-            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument);
+            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument, false);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
                     WebAnnoConst.CURATION_USER,
                     WebAnnoCasUtil.getFirstSentence(mergeJCas).getBegin(),
@@ -382,7 +382,7 @@ public class SuggestionBuilder
      *             hum?
      */
     public JCas getMergeCas(AnnotatorState aBratAnnotatorModel, SourceDocument aDocument,
-            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument)
+            Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas mergeJCas = null;
@@ -396,6 +396,10 @@ public class SuggestionBuilder
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = correctionDocumentService.readCorrectionCas(aDocument);
+                if (aUpgrade) {
+                    correctionDocumentService.upgradeCorrectionCas(mergeJCas.getCas(), aDocument);
+                    correctionDocumentService.writeCorrectionCas(mergeJCas, aDocument);
+                }
             }
             else {
                 // Upgrading should be an explicit action during the opening of a document at the
@@ -405,6 +409,10 @@ public class SuggestionBuilder
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = curationDocumentService.readCurationCas(aDocument);
+                if (aUpgrade) {
+                    curationDocumentService.upgradeCurationCas(mergeJCas.getCas(), aDocument);
+                    curationDocumentService.writeCurationCas(mergeJCas, aDocument, true);
+                }
             }
         }
         // Create jcas, if it could not be loaded from the file system
@@ -504,7 +512,7 @@ public class SuggestionBuilder
         mergeJCas = MergeCas.geMergeCas(diff, jCases);
 
         curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn, false);
+                false);
         return mergeJCas;
     }
     
@@ -515,8 +523,7 @@ public class SuggestionBuilder
         User userLoggedIn = userRepository.get(SecurityContextHolder.getContext()
                 .getAuthentication().getName());
         mergeJCas = documentService.readAnnotationCas(aBratAnnotatorModel.getDocument(), userLoggedIn);
-        correctionDocumentService.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument(),
-                userLoggedIn);
+        correctionDocumentService.writeCorrectionCas(mergeJCas, randomAnnotationDocument.getDocument());
         return mergeJCas;
     }
 }

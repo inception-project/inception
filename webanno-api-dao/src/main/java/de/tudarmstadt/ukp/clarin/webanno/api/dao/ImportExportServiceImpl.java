@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
@@ -71,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -80,6 +80,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -107,6 +109,9 @@ public class ImportExportServiceImpl
 
     @Resource(name = "documentService")
     private DocumentService documentService;
+    
+    @Resource(name = "automationService")
+    private AutomationService automationService;
 
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
@@ -182,7 +187,7 @@ public class ImportExportServiceImpl
     
     @Override
     @Transactional
-    public void uploadTrainingDocument(File aFile, SourceDocument aDocument)
+    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
         throws IOException
     {
         // Check if the file has a valid format / can be converted without error
@@ -196,27 +201,27 @@ public class ImportExportServiceImpl
             }
             else {
                 cas = importCasFromFile(aFile, aDocument.getProject(), aDocument.getFormat());
-                casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, cas.getCas());
+                casStorageService.analyzeAndRepair(aDocument, cas.getCas());
             }
         }
         catch (IOException e) {
-            documentService.removeSourceDocument(aDocument);
+            automationService.removeTrainingDocument(aDocument);
             throw e;
         }
         catch (Exception e) {
-            documentService.removeSourceDocument(aDocument);
+        	automationService.removeTrainingDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
 
         // Copy the original file into the repository
-        File targetFile = documentService.getSourceDocumentFile(aDocument);
+        File targetFile = automationService.getTrainingDocumentFile(aDocument);
         FileUtils.forceMkdir(targetFile.getParentFile());
         FileUtils.copyFile(aFile, targetFile);
 
         // Copy the initial conversion of the file into the repository
         if (cas != null) {
             CasPersistenceUtils.writeSerializedCas(cas,
-                    documentService.getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+            		automationService.getCasFile(aDocument));
         }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,

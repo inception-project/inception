@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -28,9 +29,11 @@ import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -257,6 +260,7 @@ public class ProjectUsersPanel
         public List<PermissionLevel> permissionLevels = new ArrayList<PermissionLevel>();
         public User user;
         public List<User> users = new ArrayList<User>();
+        public String userFilter;
     }
 
     private class PermissionLevelDetailForm
@@ -354,6 +358,20 @@ public class ProjectUsersPanel
         public UserDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            TextField<String> filterText = new TextField<String>("userFilter");
+            
+            add(filterText.setOutputMarkupPlaceholderTag(true));
+            add(new Button("filterButton")
+            {
+            	private static final long serialVersionUID = -7523594952670514192L;
+            	
+                @Override
+                public void onSubmit()
+                {
+					//Only needed so that user list is loaded
+                }
+            });
+            
             add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<User>("users",
                     new LoadableDetachableModel<List<User>>()
                     {
@@ -363,9 +381,20 @@ public class ProjectUsersPanel
                         protected List<User> load()
                         {
                             List<User> allUSers = userRepository.list();
+                            List<User> filteredUSers = new ArrayList<User>();
                             allUSers.removeAll(projectRepository.listProjectUsersWithPermissions(
                                     ProjectUsersPanel.this.getModelObject()));
-                            return allUSers;
+                            
+                            for (User user : allUSers) 
+                            {
+                                User current = user;
+                                if (current.getUsername().contains(filterText.getValue()))
+                            	{
+                                	filteredUSers.add(current);
+                            	}
+                            }
+                            
+                            return filteredUSers;
                         }
                     }, new ChoiceRenderer<User>("username", "username")));
             users.setSuffix("<br>");
@@ -377,7 +406,9 @@ public class ProjectUsersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (users.getModelObject() != null) {
+                	if (users.getModelObject() != null) {
+                		UserDetailForm.this.getModelObject().userFilter = "";
+                        
                         for (User user : users.getModelObject()) {
                             ProjectPermission projectPermission = new ProjectPermission();
                             projectPermission.setProject(ProjectUsersPanel.this.getModelObject());
@@ -409,6 +440,7 @@ public class ProjectUsersPanel
                 public void onSubmit()
                 {
                     UserDetailForm.this.setVisible(false);
+                    UserDetailForm.this.getModelObject().userFilter = "";
                 }
             });
         }

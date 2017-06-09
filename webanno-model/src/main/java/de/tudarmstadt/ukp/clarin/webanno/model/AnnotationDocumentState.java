@@ -30,39 +30,52 @@ public enum AnnotationDocumentState implements PersistentEnum
      * For every source document, there will be a NEW annotation document, untill the user start
      * annotating it.
      */
-    NEW("NEW"),
+    NEW("NEW", "black"),
+    
     /**
      *
      * annotation document has been created for this document for this annotator
      */
-    IN_PROGRESS("INPROGRESS"),
+    IN_PROGRESS("INPROGRESS", "blue"),
+    
     /**
      * annotator has marked annotation document as complete
      */
-    FINISHED("FINISHED"),
+    FINISHED("FINISHED", "red"),
+    
     /**
      * Ignore this annotation document from further processing such as curation
      */
-    IGNORE("IGNORE");
+    IGNORE("IGNORE", "black");
+
+    private final String id;
+    private final String color;
+
+    AnnotationDocumentState(String aId, String aColor)
+    {
+        id = aId;
+        color = aColor;
+    }
+
     public String getName()
     {
         return getId();
     }
-    @Override
-    public String toString()
-    {
-        return getId();
-    }
-    AnnotationDocumentState(String aId)
-    {
-        this.id = aId;
-    }
-
-    private final String id;
-
+    
     @Override
     public String getId()
     {
         return id;
+    }
+    
+    public String getColor()
+    {
+        return color;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return getId();
     }
 }

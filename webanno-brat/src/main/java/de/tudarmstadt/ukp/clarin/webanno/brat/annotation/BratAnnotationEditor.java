@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -41,6 +44,8 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
@@ -51,7 +56,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -74,7 +82,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -91,8 +103,6 @@ public class BratAnnotationEditor
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    private static final String PARAM_TARGET_TYPE = "targetType";
-    private static final String PARAM_ORIGIN_TYPE = "originType";
 
     private @SpringBean AnnotationSchemaService annotationService;
 
@@ -125,7 +135,7 @@ public class BratAnnotationEditor
                 
                 // Get action from the request
                 String action = request.getParameterValue(PARAM_ACTION).toString();
-                LOG.info("AJAX-RPC CALLED: [{}]", action);
+                LOG.debug("AJAX-RPC CALLED: [{}]", action);
                 
                 // Parse annotation ID if present in request
                 VID paramId;
@@ -177,7 +187,8 @@ public class BratAnnotationEditor
                     paramId = new VID(paramId.getId());
                 }
 
-                // Doing anything but a span annotation when a slot is armed will unarm it
+                // Doing anything but selecting or creating a span annotation when a slot is armed
+                // will unarm it
                 if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
                     getModelObject().clearArmedSlot();
                 }
@@ -190,17 +201,54 @@ public class BratAnnotationEditor
                     }
                     else if (SpanAnnotationResponse.is(action)) {
                         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        getActionHandler().actionSpanAnnotation(aTarget, jCas, offsets.getBegin(),
-                                offsets.getEnd(), paramId);
+                        
+                        AnnotatorState state = getModelObject();
+                        Selection selection = state.getSelection();
+                        
+                        if (state.isSlotArmed()) {
+                            // When filling a slot, the current selection is *NOT* changed. The
+                            // Span annotation which owns the slot that is being filled remains
+                            // selected!
+                            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(),
+                                    offsets.getEnd(), paramId);
+                        }
+                        else {
+                            selection.selectSpan(paramId, jCas, offsets.getBegin(),
+                                    offsets.getEnd());
+
+                            if (selection.getAnnotation().isNotSet()) {
+                                // Create new annotation
+                                state.getAction().setAnnotate(true);
+                                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                            }
+                            else {
+                                state.getAction().setAnnotate(false);
+                                getActionHandler().actionSelect(aTarget, jCas);
+                            }
+                        }
+                        
                         result = new SpanAnnotationResponse();
                     }
                     else if (ArcAnnotationResponse.is(action)) {
-                        String originType = request.getParameterValue(PARAM_ORIGIN_TYPE).toString();
-                        int originSpanId = request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
-                        String targetType = request.getParameterValue(PARAM_TARGET_TYPE).toString();
-                        int targetSpanId = request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt();
-                        getActionHandler().actionArcAnnotation(aTarget, jCas, paramId, originType,
-                                originSpanId, targetType, targetSpanId);
+                        AnnotationFS originFs = selectByAddr(jCas,
+                                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
+                        AnnotationFS targetFs = selectByAddr(jCas,
+                                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+                        
+                        AnnotatorState state = getModelObject();
+                        Selection selection = state.getSelection();
+                        selection.selectArc(paramId, originFs, targetFs);
+                        
+                        if (selection.getAnnotation().isNotSet()) {
+                            // Create new annotation
+                            state.getAction().setAnnotate(true);
+                            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                        }
+                        else {
+                            state.getAction().setAnnotate(false);
+                            getActionHandler().actionSelect(aTarget, jCas);
+                        }
+
                         result = new ArcAnnotationResponse();
                     }
                     else if (LoadConfResponse.is(action)) {
@@ -217,15 +265,11 @@ public class BratAnnotationEditor
                     else if (GetDocumentResponse.is(action)) {
                         GetDocumentResponse response = new GetDocumentResponse();
                         if (getModelObject().getProject() != null) {
-                            BratRenderer.render(response, getModelObject(), jCas, annotationService);
+                            render(response, jCas);
                         }
                         result = response;
                     }
 
-                }
-                catch (ClassNotFoundException e) {
-                    LOG.error("Invalid reader: " + e.getMessage(), e);
-                    error("Invalid reader: " + e.getMessage());
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
@@ -245,7 +289,7 @@ public class BratAnnotationEditor
                             + json + ";");
                 }
                 
-                LOG.info("AJAX-RPC DONE: [{}] completed in {}ms", action,
+                LOG.debug("AJAX-RPC DONE: [{}] completed in {}ms", action,
                         (System.currentTimeMillis() - timerStart));
             }
         };
@@ -382,15 +426,42 @@ public class BratAnnotationEditor
 
     private String bratRenderCommand(JCas aJCas)
     {
-        LOG.info("BEGIN bratRenderCommand");
+        LOG.debug("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, getModelObject(), aJCas, annotationService);
+        render(response, aJCas);
         String json = toJson(response);
-        LOG.info("END bratRenderCommand");
+        LOG.debug("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
+    
+    private void render(GetDocumentResponse response, JCas aJCas)
+    {
+        VDocument vdoc = new VDocument();
+        PreRenderer.render(vdoc, getModelObject(), aJCas, annotationService, getLayersToRender());
+        
+        BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
+    }
 
+    private List<AnnotationLayer> getLayersToRender()
+    {
+        AnnotatorState state = getModelObject();
+        List<AnnotationLayer> layersToRender = new ArrayList<>();
+        for (AnnotationLayer layer : state.getAnnotationLayers()) {
+            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName());
+            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
+                    && (state.getMode().equals(Mode.AUTOMATION)
+                            || state.getMode().equals(Mode.CORRECTION)
+                            || state.getMode().equals(Mode.CURATION));
+            
+            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+                layersToRender.add(layer);
+            }
+        }
+        return layersToRender;
+    }
+    
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
      *

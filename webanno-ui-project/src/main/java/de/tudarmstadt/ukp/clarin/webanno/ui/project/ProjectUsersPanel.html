@@ -33,6 +33,13 @@
 	<form wicket:id="userDetailForm" class="hfill">
 		<fieldset class="ui-widget-content ui-corner-all">
 			<legend>Select users to add</legend>
+			<table class="hfill">
+				<tr>
+					<td><label> Filter: </label></td>
+					<td class="hfill"><input type="text" wicket:id="userFilter" /></td>
+					<td><button wicket:id="filterButton">Filter</button></td>
+				</tr>
+			</table>
 			<span wicket:id="users" class="hfill"> </span>
 			<div class="buttons">
 				<button wicket:id="add">Add</button>

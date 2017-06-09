@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.storage;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationDocumentService
 {
@@ -42,15 +43,16 @@ public interface CurationDocumentService
      *            the JCas.
      * @param document
      *            the source document.
-     * @param user
-     *            the user.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCurationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
+    void writeCurationCas(JCas jCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
+    void upgradeCurationCas(CAS aCurCas, SourceDocument document)
+            throws UIMAException, IOException;
+    
     /**
      * Get a curation document for the given {@link SourceDocument}
      *

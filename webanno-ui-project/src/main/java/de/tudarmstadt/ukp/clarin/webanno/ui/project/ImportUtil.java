@@ -44,7 +44,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
@@ -58,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -455,16 +455,7 @@ public class ImportUtil
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
             sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
-            
-            // BEGIN AUTOMATION - THIS MUST SOMEHOW BE REMOVED HERE...
-            if (aFeatureMap.size() > 0) {
-                sourceDocument.setFeature(aFeatureMap.get(importedSourceDocument.getFeature()));
-            }
-            sourceDocument.setProcessed(false);// automation re-start in the new
-                                               // project settings
-            sourceDocument.setTrainingDocument(importedSourceDocument.isTrainingDocument());
-            // END AUTOMATION - THIS MUST SOMEHOW BE REMOVED HERE...
-            
+          
             aRepository.createSourceDocument(sourceDocument);
         }
     }

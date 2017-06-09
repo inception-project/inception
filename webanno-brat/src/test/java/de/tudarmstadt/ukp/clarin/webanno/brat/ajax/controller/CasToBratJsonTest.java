@@ -27,18 +27,17 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -51,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import junit.framework.TestCase;
 
@@ -119,12 +119,12 @@ public class CasToBratJsonTest
         collectionInformation.setSearchConfig(new ArrayList<String[]>());
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE);
         tagSetNames
-                .add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
+                .add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFRELTYPE);
 
         JSONUtil.generatePrettyJson(jsonConverter, collectionInformation, new File(jsonFilePath));
 
@@ -172,11 +172,11 @@ public class CasToBratJsonTest
         }
 
         List<String> tagSetNames = new ArrayList<String>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFRELTYPE);
 
         AnnotatorState bratannotatorModel = new AnnotatorStateImpl(Mode.ANNOTATION);
         bratannotatorModel.getPreferences().setWindowSize(10);

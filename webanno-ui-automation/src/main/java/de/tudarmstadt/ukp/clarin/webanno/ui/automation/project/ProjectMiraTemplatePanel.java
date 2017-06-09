@@ -49,7 +49,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -60,8 +59,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
@@ -448,12 +449,6 @@ public class ProjectMiraTemplatePanel
                 {
                     template = MiraTemplateDetailForm.this.getModelObject();
                     if (template.getId() == 0) {
-
-                        // Since the layer is changed, new classifier is needed
-                        for (SourceDocument sd : documentService.listSourceDocuments(
-                                ProjectMiraTemplatePanel.this.getModelObject())) {
-                            sd.setProcessed(false);
-                        }
                         template.setTrainFeature(selectedFeature);
                         automationService.createTemplate(template);
                         featureModel.setObject(
@@ -647,23 +642,17 @@ public class ProjectMiraTemplatePanel
                         
                         // no training document is added / no curation is done yet!
                         boolean existsTrainDocument = false;
-                        for (SourceDocument document : documentService
-                                .listSourceDocuments(project)) {
-                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
-                                    || (document.isTrainingDocument() && template.getTrainFeature()
-                                            .equals(document.getFeature()))) {
-                                existsTrainDocument = true;
-                                break;
+                        for (TrainingDocument document : automationService
+                                .listTrainingDocuments(project)) {
+							if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
+									|| template.getTrainFeature().equals(document.getFeature())) {
+								existsTrainDocument = true;
+								break;
                             }
                         }
+						if (automationService.listTabSepDocuments(project).size() > 0)
+							existsTrainDocument = true;
 
-                        for (SourceDocument document : automationService
-                                .listTabSepDocuments(project)) {
-                            if (document.isTrainingDocument()) {
-                                existsTrainDocument = true;
-                                break;
-                            }
-                        }
                         if (!existsTrainDocument) {
                             error("No training document exists to proceed.");
                             aTarget.appendJavaScript("alert('No training document exists to proceed.')");
@@ -679,13 +668,13 @@ public class ProjectMiraTemplatePanel
                         boolean existUnprocessedDocument = false;
                         for (SourceDocument document : documentService
                                 .listSourceDocuments(project)) {
-                            if (!document.isProcessed()) {
+                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                                 existUnprocessedDocument = true;
                                 break;
                             }
                         }
-                        for (SourceDocument document : automationService
-                                .listTabSepDocuments(project)) {
+                        for (TrainingDocument document : automationService
+                                .listTrainingDocuments(project)) {
                             if (!document.isProcessed()) {
                                 existUnprocessedDocument = true;
                                 break;
@@ -701,15 +690,15 @@ public class ProjectMiraTemplatePanel
 
                         for (SourceDocument document : documentService
                                 .listSourceDocuments(project)) {
-                            if ((document.isTrainingDocument() || document.getState().equals(
-                                    SourceDocumentState.CURATION_FINISHED))
-                                    && !document.isProcessed()) {
-                                trainDoc++;
-                            }
-                            else if (!document.isTrainingDocument() && !document.isProcessed()) {
+							if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+								trainDoc++;
+							}
+                            else  {
                                 annodoc++;
                             }
                         }
+                        
+						trainDoc = trainDoc + automationService.listTrainingDocuments(project).size();
 
                         automationStatus = automationService.existsAutomationStatus(template) ?
                                 automationService.getAutomationStatus(template) : automationStatus;
@@ -727,12 +716,12 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setStatus(Status.GENERATE_TRAIN_DOC);
                         template.setResult("---");
 
-                        AutomationUtil.addOtherFeatureTrainDocument(template, documentService,
+                        AutomationUtil.addOtherFeatureTrainDocument(template, 
                                 annotationService, automationService, userRepository);
                         AutomationUtil.otherFeatureClassifiers(template, documentService,
                                 automationService);
 
-                        AutomationUtil.addTabSepTrainDocument(template, documentService,
+                        AutomationUtil.addTabSepTrainDocument(template,
                                 automationService);
                         AutomationUtil.tabSepClassifiers(template, automationService);
 

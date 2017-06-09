@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.TRAIN;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -98,186 +100,211 @@ public class CasStorageServiceImpl
     public void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
-        log.debug("Writing annotation document [{}]({}) for user [{}] in project [{}]({})",
-                aDocument.getName(), aDocument.getId(), aUserName, aDocument.getProject().getName(),
-                aDocument.getProject().getId());
-        // DebugUtils.smallStack();
+    	
+    	   File annotationFolder = getAnnotationFolder(aDocument);
+    	   File targetPath = getAnnotationFolder(aDocument);   
+    	   writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, aUserName, annotationFolder, targetPath);
+    }
+    	
+    /**
+     * Creates a CAS for the Automation documents
+     *
+     * @param aDocument
+     *            the {@link TrainingDocumentDocument}
+     * @param aJcas
+     *            The annotated CAS object
+     */
+    @Override
+    public void writeCas(TrainingDocument aDocument, JCas aJcas)
+        throws IOException
+    {
+    	
+    	   File annotationFolder = getAutomationFolder(aDocument);
+    	   File targetPath = getAutomationFolder(aDocument);   
+    	   writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, "Automation", annotationFolder, targetPath);
+    }
+    
+    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas, String aUserName, File aAnnotationFolder, File aTargetPath) throws IOException{
+    	  log.debug("Writing annotation document [{}]({}) for user [{}] in project [{}]({})",
+                  aDocumentName, aDocumentId, aUserName, aProject.getName(),
+                  aProject.getId());
+          // DebugUtils.smallStack();
 
-        try {
-            casDoctor.analyze(aDocument.getProject(), aJcas.getCas());
-        }
-        catch (CasDoctorException e) {
-            StringBuilder detailMsg = new StringBuilder();
-            detailMsg.append("CAS Doctor found problems for user ["
-                    + aUserName + "] in source document [" + aDocument.getName() + "] ("
-                    + aDocument.getId() + ") in project["
-                    + aDocument.getProject().getName() + "] ("
-                    + aDocument.getProject().getId() + ")\n");
-            e.getDetails().forEach(m -> detailMsg.append(
-                    String.format("- [%s] %s%n", m.level, m.message)));
-            
-            throw new DataRetrievalFailureException(detailMsg.toString());
-        }
-        catch (Exception e) {
-            throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                    + aUserName + "] in source document [" + aDocument.getName() + "] ("
-                    + aDocument.getId() + ") in project ["
-                    + aDocument.getProject().getName() + "] ("
-                    + aDocument.getProject().getId() + ")", e);
-        }
-        
-        synchronized (lock) {
-            File annotationFolder = getAnnotationFolder(aDocument);
-            FileUtils.forceMkdir(annotationFolder);
+          try {
+              casDoctor.analyze(aProject, aJcas.getCas());
+          }
+          catch (CasDoctorException e) {
+              StringBuilder detailMsg = new StringBuilder();
+              detailMsg.append("CAS Doctor found problems for user ["
+                      + aUserName + "] in source document [" + aDocumentName + "] ("
+                      + aDocumentId + ") in project["
+                      + aProject.getName() + "] ("
+                      + aProject.getId() + ")\n");
+              e.getDetails().forEach(m -> detailMsg.append(
+                      String.format("- [%s] %s%n", m.level, m.message)));
+              
+              throw new DataRetrievalFailureException(detailMsg.toString());
+          }
+          catch (Exception e) {
+              throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                      + aUserName + "] in source document [" + aDocumentName + "] ("
+                      + aDocumentId + ") in project ["
+                      + aProject.getName() + "] ("
+                      + aProject.getId() + ")", e);
+          }
+          
+          synchronized (lock) {
+            //  File annotationFolder = getAnnotationFolder(aDocument);
+              FileUtils.forceMkdir(aAnnotationFolder);
 
-            final String username = aUserName;
+              final String username = aUserName;
 
-            File currentVersion = new File(annotationFolder, username + ".ser");
-            File oldVersion = new File(annotationFolder, username + ".ser.old");
+              File currentVersion = new File(aAnnotationFolder, username + ".ser");
+              File oldVersion = new File(aAnnotationFolder, username + ".ser.old");
 
-            // Save current version
-            try {
-                // Make a backup of the current version of the file before overwriting
-                if (currentVersion.exists()) {
-                    renameFile(currentVersion, oldVersion);
-                }
+              // Save current version
+              try {
+                  // Make a backup of the current version of the file before overwriting
+                  if (currentVersion.exists()) {
+                      renameFile(currentVersion, oldVersion);
+                  }
 
-                // Now write the new version to "<username>.ser" or CURATION_USER.ser
-                DocumentMetaData md;
-                try {
-                    md = DocumentMetaData.get(aJcas);
-                }
-                catch (IllegalArgumentException e) {
-                    md = DocumentMetaData.create(aJcas);
-                }
-                md.setDocumentId(aUserName);
+                  // Now write the new version to "<username>.ser" or CURATION_USER.ser
+                  DocumentMetaData md;
+                  try {
+                      md = DocumentMetaData.get(aJcas);
+                  }
+                  catch (IllegalArgumentException e) {
+                      md = DocumentMetaData.create(aJcas);
+                  }
+                  md.setDocumentId(aUserName);
 
-                File targetPath = getAnnotationFolder(aDocument);
-                CasPersistenceUtils.writeSerializedCas(aJcas,
-                        new File(targetPath, aUserName + ".ser"));
+                 // File targetPath = getAnnotationFolder(aDocument);
+                  CasPersistenceUtils.writeSerializedCas(aJcas,
+                          new File(aTargetPath, aUserName + ".ser"));
 
-                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                        String.valueOf(aDocument.getProject().getId()))) {
-                    Project project = aDocument.getProject();
-                    log.info(
-                            "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
-                            aUserName, aDocument.getName(), aDocument.getId(), project.getName(),
-                            project.getId());
-                }                
+                  try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                          String.valueOf(aProject.getId()))) {
+                      Project project = aProject;
+                      log.info(
+                              "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
+                              aUserName, aDocumentName, aDocumentId, project.getName(),
+                              project.getId());
+                  }                
 
-                // If the saving was successful, we delete the old version
-                if (oldVersion.exists()) {
-                    FileUtils.forceDelete(oldVersion);
-                }
-            }
-            catch (IOException e) {
-                // If we could not save the new version, restore the old one.
-                FileUtils.forceDelete(currentVersion);
-                // If this is the first version, there is no old version, so do not restore anything
-                if (oldVersion.exists()) {
-                    renameFile(oldVersion, currentVersion);
-                }
-                // Now abort anyway
-                throw e;
-            }
+                  // If the saving was successful, we delete the old version
+                  if (oldVersion.exists()) {
+                      FileUtils.forceDelete(oldVersion);
+                  }
+              }
+              catch (IOException e) {
+                  // If we could not save the new version, restore the old one.
+                  FileUtils.forceDelete(currentVersion);
+                  // If this is the first version, there is no old version, so do not restore anything
+                  if (oldVersion.exists()) {
+                      renameFile(oldVersion, currentVersion);
+                  }
+                  // Now abort anyway
+                  throw e;
+              }
 
-            // Manage history
-            if (backupInterval > 0) {
-                // Determine the reference point in time based on the current version
-                long now = currentVersion.lastModified();
+              // Manage history
+              if (backupInterval > 0) {
+                  // Determine the reference point in time based on the current version
+                  long now = currentVersion.lastModified();
 
-                // Get all history files for the current user
-                File[] history = annotationFolder.listFiles(new FileFilter()
-                {
-                    private final Matcher matcher = Pattern.compile(
-                            Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+                  // Get all history files for the current user
+                  File[] history = aAnnotationFolder.listFiles(new FileFilter()
+                  {
+                      private final Matcher matcher = Pattern.compile(
+                              Pattern.quote(username) + "\\.ser\\.[0-9]+\\.bak").matcher("");
 
-                    @Override
-                    public boolean accept(File aFile)
-                    {
-                        // Check if the filename matches the pattern given above.
-                        return matcher.reset(aFile.getName()).matches();
-                    }
-                });
+                      @Override
+                      public boolean accept(File aFile)
+                      {
+                          // Check if the filename matches the pattern given above.
+                          return matcher.reset(aFile.getName()).matches();
+                      }
+                  });
 
-                // Sort the files (oldest one first)
-                Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+                  // Sort the files (oldest one first)
+                  Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
 
-                // Check if we need to make a new history file
-                boolean historyFileCreated = false;
-                File historyFile = new File(annotationFolder, username + ".ser." + now + ".bak");
-                if (history.length == 0) {
-                    // If there is no history yet but we should keep history, then we create a
-                    // history file in any case.
-                    FileUtils.copyFile(currentVersion, historyFile);
-                    historyFileCreated = true;
-                }
-                else {
-                    // Check if the newest history file is significantly older than the current one
-                    File latestHistory = history[history.length - 1];
-                    if (latestHistory.lastModified() + backupInterval < now) {
-                        FileUtils.copyFile(currentVersion, historyFile);
-                        historyFileCreated = true;
-                    }
-                }
+                  // Check if we need to make a new history file
+                  boolean historyFileCreated = false;
+                  File historyFile = new File(aAnnotationFolder, username + ".ser." + now + ".bak");
+                  if (history.length == 0) {
+                      // If there is no history yet but we should keep history, then we create a
+                      // history file in any case.
+                      FileUtils.copyFile(currentVersion, historyFile);
+                      historyFileCreated = true;
+                  }
+                  else {
+                      // Check if the newest history file is significantly older than the current one
+                      File latestHistory = history[history.length - 1];
+                      if (latestHistory.lastModified() + backupInterval < now) {
+                          FileUtils.copyFile(currentVersion, historyFile);
+                          historyFileCreated = true;
+                      }
+                  }
 
-                // Prune history based on number of backup
-                if (historyFileCreated) {
-                    // The new version is not in the history, so we keep that in any case. That
-                    // means we need to keep one less.
-                    int toKeep = Math.max(backupKeepNumber - 1, 0);
-                    if ((backupKeepNumber > 0) && (toKeep < history.length)) {
-                        // Copy the oldest files to a new array
-                        File[] toRemove = new File[history.length - toKeep];
-                        System.arraycopy(history, 0, toRemove, 0, toRemove.length);
+                  // Prune history based on number of backup
+                  if (historyFileCreated) {
+                      // The new version is not in the history, so we keep that in any case. That
+                      // means we need to keep one less.
+                      int toKeep = Math.max(backupKeepNumber - 1, 0);
+                      if ((backupKeepNumber > 0) && (toKeep < history.length)) {
+                          // Copy the oldest files to a new array
+                          File[] toRemove = new File[history.length - toKeep];
+                          System.arraycopy(history, 0, toRemove, 0, toRemove.length);
 
-                        // Restrict the history to what is left
-                        File[] newHistory = new File[toKeep];
-                        if (toKeep > 0) {
-                            System.arraycopy(history, toRemove.length, newHistory, 0,
-                                    newHistory.length);
-                        }
-                        history = newHistory;
+                          // Restrict the history to what is left
+                          File[] newHistory = new File[toKeep];
+                          if (toKeep > 0) {
+                              System.arraycopy(history, toRemove.length, newHistory, 0,
+                                      newHistory.length);
+                          }
+                          history = newHistory;
 
-                        // Remove these old files
-                        for (File file : toRemove) {
-                            FileUtils.forceDelete(file);
-                            
-                            try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                    Logging.KEY_PROJECT_ID,
-                                    String.valueOf(aDocument.getProject().getId()))) {
-                                Project project = aDocument.getProject();
-                                log.info(
-                                        "Removed surplus history file [{}] of user [{}] for "
-                                                + "document [{}]({}) in project [{}]({})",
-                                        file.getName(), aUserName, aDocument.getName(),
-                                        aDocument.getId(), project.getName(), project.getId());
-                            }
-                        }
-                    }
+                          // Remove these old files
+                          for (File file : toRemove) {
+                              FileUtils.forceDelete(file);
+                              
+                              try (MDC.MDCCloseable closable = MDC.putCloseable(
+                                      Logging.KEY_PROJECT_ID,
+                                      String.valueOf(aProject.getId()))) {
+                                  Project project = aProject;
+                                  log.info(
+                                          "Removed surplus history file [{}] of user [{}] for "
+                                                  + "document [{}]({}) in project [{}]({})",
+                                          file.getName(), aUserName, aDocumentName,
+                                          aDocumentId, project.getName(), project.getId());
+                              }
+                          }
+                      }
 
-                    // Prune history based on time
-                    if (backupKeepTime > 0) {
-                        for (File file : history) {
-                            if ((file.lastModified() + backupKeepTime) < now) {
-                                FileUtils.forceDelete(file);
-                                
-                                try (MDC.MDCCloseable closable = MDC.putCloseable(
-                                        Logging.KEY_PROJECT_ID,
-                                        String.valueOf(aDocument.getProject().getId()))) {
-                                    Project project = aDocument.getProject();
-                                    log.info(
-                                            "Removed outdated history file [{}] of user [{}] for "
-                                                    + "document [{}]({}) in project [{}]({})",
-                                            file.getName(), aUserName, aDocument.getName(),
-                                            aDocument.getId(), project.getName(), project.getId());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                      // Prune history based on time
+                      if (backupKeepTime > 0) {
+                          for (File file : history) {
+                              if ((file.lastModified() + backupKeepTime) < now) {
+                                  FileUtils.forceDelete(file);
+                                  
+                                  try (MDC.MDCCloseable closable = MDC.putCloseable(
+                                          Logging.KEY_PROJECT_ID,
+                                          String.valueOf(aProject.getId()))) {
+                                      Project project = aProject;
+                                      log.info(
+                                              "Removed outdated history file [{}] of user [{}] for "
+                                                      + "document [{}]({}) in project [{}]({})",
+                                              file.getName(), aUserName, aDocumentName,
+                                              aDocumentId, project.getName(), project.getId());
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
     }
 
     /**
@@ -326,36 +353,83 @@ public class CasStorageServiceImpl
             }
         }
     }
+
     
+    @Override
+    public JCas readCas(TrainingDocument aDocument)
+        throws IOException
+    {
+        log.debug("Reading CAs for Automation document [{}] ({}) in project [{}] ({})",
+                aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
+                aDocument.getProject().getId());
+
+        // DebugUtils.smallStack();
+
+        synchronized (lock) {
+            File annotationFolder = getAutomationFolder(aDocument);
+
+            String file = aDocument.getName() + ".ser";
+
+            try {
+                File serializedCasFile = new File(annotationFolder, file);
+                if (!serializedCasFile.exists()) {
+                    throw new FileNotFoundException("Annotation document of  Training document "
+                    		+ "[" + aDocument.getName() + "] ("
+                            + aDocument.getId() + ") not found in project["
+                            + aDocument.getProject().getName() + "] ("
+                            + aDocument.getProject().getId() + ")");
+                }
+
+                CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+                CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+
+                analyzeAndRepair(aDocument, cas);
+
+                return cas.getJCas();
+            }
+            catch (UIMAException e) {
+                throw new DataRetrievalFailureException("Unable to parse annotation", e);
+            }
+        }
+    }
     @Override
     public void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
     {
+      analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUsername, aCas);
+    }
+    @Override
+    public void analyzeAndRepair(TrainingDocument aDocument, CAS aCas)
+    {
+      analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), "Automation", aCas);
+    }
+    
+    private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,String aUsername, CAS aCas){
         // Check if repairs are active - if this is the case, we only need to run the repairs
         // because the repairs do an analysis as a pre- and post-condition. 
         if (casDoctor.isRepairsActive()) {
             try {
-                casDoctor.repair(aDocument.getProject(), aCas);
+                casDoctor.repair(aProject, aCas);
             }
             catch (Exception e) {
                 throw new DataRetrievalFailureException("Error repairing CAS of user ["
                         + aUsername + "] for document ["
-                        + aDocument.getName() + "] (" + aDocument.getId() + ") in project["
-                        + aDocument.getProject().getName() + "] ("
-                        + aDocument.getProject().getId() + ")", e);
+                        + aDocumentName + "] (" + aDocumentId + ") in project["
+                        + aProject.getName() + "] ("
+                        + aProject.getId() + ")", e);
             }
         }
         // If the repairs are not active, then we run the analysis explicitly
         else {
             try {
-                casDoctor.analyze(aDocument.getProject(), aCas);
+                casDoctor.analyze(aProject, aCas);
             }
             catch (CasDoctorException e) {
                 StringBuilder detailMsg = new StringBuilder();
                 detailMsg.append("CAS Doctor found problems for user ["
-                        + aUsername + "] in document [" + aDocument.getName() + "] ("
-                        + aDocument.getId() + ") in project["
-                        + aDocument.getProject().getName() + "] ("
-                        + aDocument.getProject().getId() + ")\n");
+                        + aUsername + "] in document [" + aDocumentName + "] ("
+                        + aDocumentId + ") in project["
+                        + aProject.getName() + "] ("
+                        + aProject.getId() + ")\n");
                 e.getDetails().forEach(m -> detailMsg.append(
                         String.format("- [%s] %s%n", m.level, m.message)));
                 
@@ -363,14 +437,13 @@ public class CasStorageServiceImpl
             }
             catch (Exception e) {
                 throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                        + aUsername + "] in document [" + aDocument.getName() + "] ("
-                        + aDocument.getId() + ") in project["
-                        + aDocument.getProject().getName() + "] ("
-                        + aDocument.getProject().getId() + ")", e);
+                        + aUsername + "] in document [" + aDocumentName + "] ("
+                        + aDocumentId + ") in project["
+                        + aProject.getName() + "] ("
+                        + aProject.getId() + ")", e);
             }
         }
     }
-
     /**
      * Get the folder where the annotations are stored. Creates the folder if necessary.
      *
@@ -382,6 +455,22 @@ public class CasStorageServiceImpl
         throws IOException
     {
         File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
+                + aDocument.getId() + ANNOTATION);
+        FileUtils.forceMkdir(annotationFolder);
+        return annotationFolder;
+    }
+    
+    /**
+     * Get the folder where the Automation document annotations are stored. Creates the folder if necessary.
+     *
+     * @throws IOException
+     *             if the folder cannot be created.
+     */
+    @Override
+    public File getAutomationFolder(TrainingDocument aDocument)
+        throws IOException
+    {
+        File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + TRAIN
                 + aDocument.getId() + ANNOTATION);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;

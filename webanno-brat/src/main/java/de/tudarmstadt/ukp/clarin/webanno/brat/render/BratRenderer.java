@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -30,29 +31,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TypeRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratArcRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratChainRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.adapter.BratSpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -66,6 +75,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratRenderer
 {
+    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
+            VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
+    {
+        render(aResponse, aState, aVDoc, aJCas, aAnnotationService, null);
+    }
+    
     /**
      * wrap JSON responses to BRAT visualizer
      *
@@ -78,8 +93,9 @@ public class BratRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            JCas aJCas, AnnotationSchemaService aAnnotationService)
+    public static void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
+            JCas aJCas, AnnotationSchemaService aAnnotationService,
+            ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
 
@@ -88,35 +104,76 @@ public class BratRenderer
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE)
-                            && (aState.getMode().equals(Mode.AUTOMATION)
-                                    || aState.getMode().equals(Mode.CORRECTION)
-                                    || aState.getMode().equals(Mode.CURATION)))
-                    || !layer.isEnabled()) { /* Hide layer if not enabled */
-                continue;
-            }
+        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
+            ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
+                    : ColoringStrategy.getBestStrategy(aAnnotationService, layer,
+                            aState.getPreferences(), colorQueues);
 
-            ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
-                    aAnnotationService, layer, aState.getPreferences(), colorQueues);
-
-            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
-            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
-            for (AnnotationFeature feature : features) {
-                if (!feature.isVisible()) {
-                    invisibleFeatures.add(feature);
-                }
-            }
-            features.removeAll(invisibleFeatures);
+            TypeAdapter typeAdapter = getAdapter(aAnnotationService, layer);
             
-            TypeAdapter adapter = getAdapter(aAnnotationService, layer);
-            TypeRenderer renderer = getRenderer(adapter);
-            renderer.render(aJCas, features, aResponse, aState, coloringStrategy);
+            for (VSpan vspan : aVDoc.spans(layer.getId())) {
+                List<Offsets> offsets = toOffsets(vspan.getRanges());
+                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
+                String color = getColor(vspan, coloringStrategy, bratLabelText);
+                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets, bratLabelText,
+                        color));
+            }
+
+            for (VArc varc : aVDoc.arcs(layer.getId())) {
+                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
+                String color = getColor(varc, coloringStrategy, bratLabelText);
+                aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
+                        getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
+            }
+        }
+        
+        for (VComment vcomment : aVDoc.comments()) {
+            String type;
+            switch (vcomment.getCommentType()) {
+            case ERROR:
+                type = Comment.ANNOTATION_ERROR;
+                break;
+            case INFO:
+                type = Comment.ANNOTATOR_NOTES;
+                break;
+            default:
+                type = Comment.ANNOTATOR_NOTES;
+                break;
+            }
+            
+            aResponse.addComment(new Comment(vcomment.getVid(), type, vcomment.getComment()));
         }
     }
-
+    
+    private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
+            String aLabelText)
+    {
+        String color;
+        if (aVObject.getEquivalenceSet() >= 0) {
+            // Every chain is supposed to have a different color
+            color = ColoringStrategy.PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
+                    % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
+        }
+        else {
+            color = aColoringStrategy.getColor(aVObject.getVid(), aLabelText);
+        }
+        return color;
+    }
+    
+    private static List<Offsets> toOffsets(List<VRange> aRanges)
+    {
+        return aRanges.stream().map(r -> new Offsets(r.getBegin(), r.getEnd()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Argument lists for the arc annotation
+     */
+    private static List<Argument> getArgument(VID aGovernorFs, VID aDependentFs)
+    {
+        return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
+    }
+    
     public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
             AnnotatorState aState)
     {
@@ -292,26 +349,5 @@ public class BratRenderer
             bratTypeName += ChainAdapter.CHAIN;
         }
         return bratTypeName;
-    }
-    
-    /**
-     * Helper method to fetch a renderer for a given type. This is indented to be a temporary
-     * solution. The final solution should be able to return renderers specific to a certain
-     * visualisation - one of which would be brat.
-     */
-    public static TypeRenderer getRenderer(TypeAdapter aTypeAdapter) {
-        if (aTypeAdapter instanceof SpanAdapter) {
-            return new BratSpanRenderer((SpanAdapter) aTypeAdapter);
-        }
-        else if (aTypeAdapter instanceof ArcAdapter) {
-            return new BratArcRenderer((ArcAdapter) aTypeAdapter);
-        }
-        else if (aTypeAdapter instanceof ChainAdapter) {
-            return new BratChainRenderer((ChainAdapter) aTypeAdapter);
-        }
-        else {
-            throw new IllegalArgumentException(
-                    "Unknown adapter type [" + aTypeAdapter.getClass().getName() + "]");
-        }
     }
 }

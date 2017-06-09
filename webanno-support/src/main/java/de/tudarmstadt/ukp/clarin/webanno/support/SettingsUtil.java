@@ -21,8 +21,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
@@ -47,6 +52,10 @@ public class SettingsUtil
     public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
     public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
     public static final String CFG_USER_ALLOW_PROFILE_ACCESS = "user.profile.accessible";
+    
+    public static final String CFG_LINK_PREFIX = "style.header.icon.";
+    public static final String CFG_LINK_URL = ".linkUrl";
+    public static final String CFG_LINK_IMAGE_URL = ".imageUrl";
     
     private static Properties versionInfo;
     private static Properties settings;
@@ -125,5 +134,38 @@ public class SettingsUtil
             }
         }
         return settings;
+    }
+    
+    public static List<ImageLinkDecl> getLinks()
+    {
+        Properties props = getSettings();
+        Map<String, ImageLinkDecl> linkMap = new HashMap<>();
+        for (String key : props.stringPropertyNames()) {
+            if (key.startsWith(CFG_LINK_PREFIX)) {
+                String id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
+                
+                // Create new declaration for current ID if there is none so far
+                ImageLinkDecl e = linkMap.get(id);
+                if (e == null) {
+                    e = new ImageLinkDecl(id);
+                    linkMap.put(id, e);
+                }
+            
+                // Record link URL
+                if (key.endsWith(CFG_LINK_URL)) {
+                    e.setLinkUrl(props.getProperty(key));
+                }
+                // Record link URL
+                if (key.endsWith(CFG_LINK_IMAGE_URL)) {
+                    e.setImageUrl(props.getProperty(key));
+                }
+            }
+        }
+        
+        // Sort by ID
+        List<ImageLinkDecl> links = new ArrayList<>(linkMap.values());
+        links.sort((a,b) -> { return a.getId().compareTo(b.getId()); }); 
+        
+        return links;
     }
 }

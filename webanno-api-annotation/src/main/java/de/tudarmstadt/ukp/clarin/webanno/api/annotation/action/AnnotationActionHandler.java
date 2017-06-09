@@ -19,23 +19,46 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
 import java.io.IOException;
 
-import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionArcAnnotation(AjaxRequestTarget aTarget, JCas jCas, VID paramId, String aOriginType,
-            int aOriginSpanId, String aTargetType, int aTargetSpanId)
-        throws AnnotationException, UIMAException, ClassNotFoundException, IOException;
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
+        throws IOException, AnnotationException;
 
-    void actionSpanAnnotation(AjaxRequestTarget aTarget, JCas jCas, int aBegin, int aEnd,
+    /**
+     * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
+     */
+    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
+        throws AnnotationException;
+
+    /**
+     * Delete currently selected annotation.
+     */
+    void actionDelete(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException;
+
+    /**
+     * Clear the currently selected annotation from the editor panel.
+     */
+    void actionClear(AjaxRequestTarget aTarget)
+        throws AnnotationException;
+
+    /**
+     * Reverse the currently selected relation.
+     */
+    void actionReverse(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException;
+    
+    /**
+     * Fill the currently armed slot with the given annotation.
+     */
+    public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
             VID paramId)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
-
-    void actionAnnotate(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException;
+        throws IOException, AnnotationException;
 }

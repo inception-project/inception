@@ -82,7 +82,7 @@ public class DeleteOrReplaceAnnotationModalPanel
                             aEditor.loadFeatureEditorModels(aTarget);
                             
                             // Create the replacement annotation
-                            aEditor.actionAnnotate(aTarget);
+                            aEditor.actionCreateOrUpdate(aTarget, aEditor.getEditorCas());
                             aTarget.add(aEditor.getAnnotationFeatureForm());
                         }
                         else {

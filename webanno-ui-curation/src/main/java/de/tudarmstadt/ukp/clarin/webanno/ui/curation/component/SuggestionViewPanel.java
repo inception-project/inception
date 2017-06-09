@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -59,14 +58,16 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TypeRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -82,11 +83,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
@@ -388,8 +390,7 @@ public class SuggestionViewPanel
             documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), aState.getUser(),
-                    true);
+            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
         }
     }
 
@@ -414,7 +415,7 @@ public class SuggestionViewPanel
             final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
-            final Map<String, AnnotationState> aStates)
+            final Map<String, Map<VID, AnnotationState>> aStates)
         throws IOException
     {
         List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
@@ -451,12 +452,13 @@ public class SuggestionViewPanel
                 ColoringStrategy curationColoringStrategy = new ColoringStrategy()
                 {
                     @Override
-                    public String getColor(Object aObj, String aLabel)
+                    public String getColor(VID aVid, String aLabel)
                     {
-                        if (aStates.get(aObj.toString())==null){
+                        Map<VID, AnnotationState> colors = aStates.get(username);
+                        if (colors.get(aVid)==null){
                             return AnnotationState.NOT_SUPPORTED.getColorCode();
                         }
-                        return aStates.get(aObj.toString()).getColorCode();
+                        return colors.get(aVid).getColorCode();
                     }
                 };
 
@@ -479,35 +481,24 @@ public class SuggestionViewPanel
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
-        AnnotationSchemaService aAnnotationService = annotationService;
+        List<AnnotationLayer> layersToRender = new ArrayList<>();
+        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
+            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName());
+            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
+            
+            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+                layersToRender.add(layer);
+            }
+        }
         
         GetDocumentResponse response = new GetDocumentResponse();
-        response.setRtlMode(ScriptDirection.RTL.equals(aBratAnnotatorModel.getScriptDirection()));
-
-        // Render invisible baseline annotations (sentence, tokens)
-        BratRenderer.renderTokenAndSentence(aJcas, response, aBratAnnotatorModel);
-
-        // Render visible (custom) layers
-        for (AnnotationLayer layer : aBratAnnotatorModel.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
-                continue;
-            }
-
-            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
-            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
-            for (AnnotationFeature feature : features) {
-                if (!feature.isVisible()) {
-                    invisibleFeatures.add(feature);
-                }
-            }
-            features.removeAll(invisibleFeatures);
-            TypeAdapter adapter = getAdapter(aAnnotationService, layer);
-            TypeRenderer renderer = BratRenderer.getRenderer(adapter);
-            renderer.render(aJcas, features, response, aBratAnnotatorModel,
-                    aCurationColoringStrategy);
-        }
+        
+        VDocument vdoc = new VDocument();
+        PreRenderer.render(vdoc, aBratAnnotatorModel, aJcas, annotationService, layersToRender);
+        
+        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,
+                aCurationColoringStrategy);
 
         return JSONUtil.toInterpretableJsonString(response);
     }
@@ -571,7 +562,7 @@ public class SuggestionViewPanel
                 bModel.getAnnotationLayers(), annotationService);
         List<AnnotationOption> annotationOptions = null;
 
-        Map<String, AnnotationState> annoStates = new HashMap<>();
+        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
         DiffResult diff;
 
@@ -595,8 +586,8 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, d, false, false);
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, i, true, false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, d, false, false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, i, true, false);
 
         List<ConfigurationSet> all = new ArrayList<>();
 
@@ -610,7 +601,7 @@ public class SuggestionViewPanel
             all.remove(cfgSet);
         }
 
-        addSuggestionColor(bModel.getMode(), jCases, annoStates, all, false, true);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false, true);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
 
@@ -628,37 +619,54 @@ public class SuggestionViewPanel
      * For each {@link ConfigurationSet}, where there are some differences in users annotation and
      * the curation annotation.
      */
-    private void addSuggestionColor(Mode aMode, Map<String, JCas> aCasMap,
-            Map<String, AnnotationState> aSuggestionColors, Collection<ConfigurationSet> aCfgSet,
-            boolean aI, boolean aAgree)
+    private void addSuggestionColor(Project aProject, Mode aMode, Map<String, JCas> aCasMap,
+            Map<String, Map<VID, AnnotationState>> aSuggestionColors,
+            Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
             boolean use = false;
             for (String u : cs.getCasGroupIds()) {
+                Map<VID, AnnotationState> colors = aSuggestionColors.get(u);
+                if (colors == null) {
+                    colors = new HashMap<>();
+                    aSuggestionColors.put(u, colors);
+                }
+                
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
-                    Object key = fs;
+                    
+                    AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(), aProject);
+                    TypeAdapter typeAdapter = TypeUtil.getAdapter(annotationService, layer);
+                    
+                    VID vid;
                     // link FS
                     if (c.getPosition().getFeature() != null) {
-                        ArrayFS links = (ArrayFS) fs.getFeatureValue(fs.getType()
-                                .getFeatureByBaseName(c.getPosition().getFeature()));
-                        FeatureStructure link = links.get(c.getAID(u).index);
-                        fs = (AnnotationFS) link.getFeatureValue(link.getType()
-                                .getFeatureByBaseName("target"));
-                        key = key + "-" + fs + "-" + link;
+                        int fi = 0;
+                        for (AnnotationFeature f : typeAdapter.listFeatures()) {
+                            if (f.getName().equals(c.getPosition().getFeature())) {
+                                break;
+                            }
+                            fi++;
+                        }
+                        
+                        vid = new VID(WebAnnoCasUtil.getAddr(fs), fi, c.getAID(u).index);
                     }
+                    else {
+                        vid = new VID(WebAnnoCasUtil.getAddr(fs));
+                    }
+                    
                     if (aAgree) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                        colors.put(vid, AnnotationState.AGREE);
                         continue;
                     }
                     // automation and correction projects
                     if (!aMode.equals(Mode.CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                            colors.put(vid, AnnotationState.DO_NOT_USE);
                         }
                         else {
-                            aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                            colors.put(vid, AnnotationState.DISAGREE);
                         }
                         continue;
                     }
@@ -676,19 +684,19 @@ public class SuggestionViewPanel
                     }
 
                     if (aAgree) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.AGREE);
+                        colors.put(vid, AnnotationState.AGREE);
                     }
                     else if (use) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.USE);
+                        colors.put(vid, AnnotationState.USE);
                     }
                     else if (aI) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                        colors.put(vid, AnnotationState.DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DISAGREE);
+                        colors.put(vid, AnnotationState.DISAGREE);
                     }
                     else {
-                        aSuggestionColors.put(key.toString(), AnnotationState.DO_NOT_USE);
+                        colors.put(vid, AnnotationState.DO_NOT_USE);
                     }
                 }
             }

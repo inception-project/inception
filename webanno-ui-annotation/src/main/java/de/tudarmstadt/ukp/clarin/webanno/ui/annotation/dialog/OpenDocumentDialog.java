@@ -19,15 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
 public abstract class OpenDocumentDialog
     extends ModalWindow
@@ -36,10 +35,10 @@ public abstract class OpenDocumentDialog
     
     private boolean closeButtonClicked;
 
-    private IModel<List<Pair<Project, String>>> projects;
+    private IModel<List<DecoratedObject<Project>>> projects;
     
     public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
-            IModel<List<Pair<Project, String>>> aProjects)
+            IModel<List<DecoratedObject<Project>>> aProjects)
     {
         super(aId, aModel);
         
@@ -65,8 +64,7 @@ public abstract class OpenDocumentDialog
     {
         closeButtonClicked = false;
         
-        setContent(new OpenModalWindowPanel(getContentId(),
-                getModelObject(), this, Mode.ANNOTATION, projects)
+        setContent(new OpenDocumentDialogPanel(getContentId(), getModelObject(), this, projects)
         {
             private static final long serialVersionUID = -3434069761864809703L;
 

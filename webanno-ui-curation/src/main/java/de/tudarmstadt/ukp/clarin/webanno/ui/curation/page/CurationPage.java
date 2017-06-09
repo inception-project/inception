@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
@@ -44,6 +42,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
@@ -365,27 +366,29 @@ public class CurationPage
         finishDocumentLink.add(finishDocumentIcon);
     }
     
-    private IModel<List<Pair<Project, String>>> getAllowedProjects()
+    private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
-        return new LoadableDetachableModel<List<Pair<Project, String>>>()
+        return new LoadableDetachableModel<List<DecoratedObject<Project>>>()
         {
             private static final long serialVersionUID = -2518743298741342852L;
 
             @Override
-            protected List<Pair<Project, String>> load()
+            protected List<DecoratedObject<Project>> load()
             {
                 User user = userRepository.get(
                         SecurityContextHolder.getContext().getAuthentication().getName());
-                List<Pair<Project, String>> allowedProject = new ArrayList<>();
+                List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 List<Project> projectsWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
                 for (Project project : projectService.listProjects()) {
                     if (SecurityUtil.isCurator(project, projectService, user)) {
+                        DecoratedObject<Project> dp = DecoratedObject.of(project);
                         if (projectsWithFinishedAnnos.contains(project)) {
-                            allowedProject.add(Pair.of(project, "#008000"));
+                            dp.setColor("green");
                         }
                         else {
-                            allowedProject.add(Pair.of(project, "#99cc99"));
+                            dp.setColor("red");
                         }
+                        allowedProject.add(dp);
                     }
                 }
                return allowedProject;
@@ -560,7 +563,6 @@ public class CurationPage
             else {
                 sourceDocument.setState(SourceDocumentStateTransition.transition(
                         SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
-                sourceDocument.setProcessed(false);
             }
             
             documentService.createSourceDocument(sourceDocument);
@@ -660,7 +662,7 @@ public class CurationPage
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
             JCas mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
-                    randomAnnotationDocument);
+                    randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();

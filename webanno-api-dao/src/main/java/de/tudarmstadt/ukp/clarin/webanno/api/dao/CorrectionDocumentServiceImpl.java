@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CORRECTION_USER;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.annotation.Resource;
@@ -34,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Component(CorrectionDocumentService.SERVICE_NAME)
 public class CorrectionDocumentServiceImpl
@@ -69,7 +69,7 @@ public class CorrectionDocumentServiceImpl
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument, User aUser)
+    public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument)
         throws IOException
     {
         casStorageService.writeCas(aDocument, aJcas, CORRECTION_USER);

@@ -71,12 +71,6 @@ public class SourceDocument
 
     private int sentenceAccessed = 0;
 
-    private boolean trainingDocument = false;
-    private boolean processed = false;
-    @ManyToOne
-    @ForeignKey(name = "none")
-    AnnotationFeature feature; // if it is a training document, for which Template (layer)
-
     public long getId()
     {
         return id;
@@ -182,35 +176,6 @@ public class SourceDocument
         }
         return true;
     }
-
-    public boolean isTrainingDocument()
-    {
-        return trainingDocument;
-    }
-
-    public void setTrainingDocument(boolean trainingDocument)
-    {
-        this.trainingDocument = trainingDocument;
-    }
-
-    public boolean isProcessed()
-    {
-        return processed;
-    }
-
-    public void setProcessed(boolean processed)
-    {
-        this.processed = processed;
-    }
-
-	public AnnotationFeature getFeature() {
-		return feature;
-	}
-
-	public void setFeature(AnnotationFeature feature) {
-		this.feature = feature;
-	}
-
 	public static final Comparator<SourceDocument> NAME_COMPARATOR = new Comparator<SourceDocument>() {
         @Override
         public int compare(SourceDocument aO1, SourceDocument aO2)
