@@ -69,6 +69,7 @@ public class ImportUtil
 
     public static final String META_INF = "META-INF";
     public static final String SOURCE = "source";
+    public static final String TRAIN = "train";
     public static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     public static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
     public static final String GUIDELINE = "guideline";

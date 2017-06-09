@@ -45,6 +45,9 @@ public class Project
 
     @JsonProperty("source_documents")
     private List<SourceDocument> sourceDocuments;
+    
+    @JsonProperty("training_documents")
+    private List<TrainingDocument> trainingDocuments;
 
     @JsonProperty("annotation_documents")
     private List<AnnotationDocument> annotationDocuments;
@@ -100,7 +103,15 @@ public class Project
         this.sourceDocuments = sourceDocuments;
     }
 
-    public List<AnnotationDocument> getAnnotationDocuments()
+    public List<TrainingDocument> getTrainingDocuments() {
+		return trainingDocuments;
+	}
+
+	public void setTrainingDocuments(List<TrainingDocument> trainingDocuments) {
+		this.trainingDocuments = trainingDocuments;
+	}
+
+	public List<AnnotationDocument> getAnnotationDocuments()
     {
         return annotationDocuments;
     }

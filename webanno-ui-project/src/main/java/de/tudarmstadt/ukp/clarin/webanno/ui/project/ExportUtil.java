@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
@@ -77,6 +78,7 @@ public class ExportUtil
             + ImportUtil.ANNOTATION_AS_SERIALISED_CAS + "/";
     private static final String META_INF = "/" + ImportUtil.META_INF;
     private static final String SOURCE_FOLDER = "/" + ImportUtil.SOURCE;
+    private static final String TRAIN_FOLDER = "/" + ImportUtil.TRAIN;
     private static final String CORRECTION_USER = "CORRECTION_USER";
     private static final String CURATION_AS_SERIALISED_CAS = "/"
             + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
@@ -146,11 +148,11 @@ public class ExportUtil
         }
 
         exProjekt.setTagSets(extTagSets);
+      
         List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
         List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
 
-        // Store map of source document and exSourceDocument
-        Map<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument, SourceDocument> exDocuments = new HashMap<>();
+  
         // add source documents to a project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
                 .listSourceDocuments(aProject);
@@ -162,7 +164,6 @@ public class ExportUtil
             exDocument.setState(sourceDocument.getState());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
             exDocument.setSentenceAccessed(sourceDocument.getSentenceAccessed());
-            exDocument.setProcessed(false);
 
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : documentService
@@ -177,11 +178,36 @@ public class ExportUtil
                 annotationDocuments.add(annotationDocumentToExport);
             }
             sourceDocuments.add(exDocument);
-            exDocuments.put(sourceDocument, exDocument);
+
         }
 
         exProjekt.setSourceDocuments(sourceDocuments);
         exProjekt.setAnnotationDocuments(annotationDocuments);
+        
+        List<de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument> trainDocuments = new
+        		ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument>();
+        List<TrainingDocument> trainingDocuments = automationService
+                .listTrainingDocuments(aProject);
+        
+        Map<String, de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> fm = new HashMap<>();
+        for(de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature f: featureToExFeatures.values()){
+        	fm.put(f.getName(), f);
+        }
+        for (TrainingDocument trainingDocument : trainingDocuments) {
+
+        	de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument exDocument = new de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument();
+            exDocument.setFormat(trainingDocument.getFormat());
+            exDocument.setName(trainingDocument.getName());
+            exDocument.setState(trainingDocument.getState());
+            exDocument.setTimestamp(trainingDocument.getTimestamp());
+            exDocument.setSentenceAccessed(trainingDocument.getSentenceAccessed());
+            if(trainingDocument.getFeature()!=null)
+            	exDocument.setFeature(fm.get(trainingDocument.getFeature().getName()));
+            trainDocuments.add(exDocument);
+
+        }
+        
+        exProjekt.setTrainingDocuments(trainDocuments);
 
         List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
 
@@ -248,6 +274,40 @@ public class ExportUtil
                 StringBuffer errorMessage = new StringBuffer();
                 errorMessage.append("Source file '");
                 errorMessage.append(sourceDocument.getName());
+                errorMessage.append("' related to project couldn't be located in repository");
+                LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
+                model.messages.add(errorMessage.toString());
+                throw new ProjectExportException("Couldn't find some source file(s) related to project");
+//              continue;
+                
+            }
+        }
+    }
+    /**
+     * Export {@link TrainingDocument}
+     */
+    
+    public static void exportTrainingDocuments(AutomationService automationService, 
+    		ProjectExportModel model, Project aProject, File aCopyDir)
+        throws IOException, ProjectExportException
+    {
+        File trainDocumentDir = new File(aCopyDir + TRAIN_FOLDER);
+        FileUtils.forceMkdir(trainDocumentDir);
+        // Get all the training documents from the project
+        List<TrainingDocument> documents = automationService
+                .listTrainingDocuments(aProject);
+        int i = 1;
+        for (TrainingDocument trainingDocument : documents) {
+            try {
+                FileUtils.copyFileToDirectory(automationService.getTrainingDocumentFile(trainingDocument),
+                        trainDocumentDir);
+                model.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
+                i++;
+            } catch (FileNotFoundException e) {
+//              error(e.getMessage());
+                StringBuffer errorMessage = new StringBuffer();
+                errorMessage.append("Source file '");
+                errorMessage.append(trainingDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
                 LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
                 model.messages.add(errorMessage.toString());

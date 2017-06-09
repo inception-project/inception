@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
 /**
@@ -36,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SourceDocument
+public class TrainingDocument
 {
     @JsonProperty("name")
     String name;
@@ -45,7 +44,7 @@ public class SourceDocument
     String format;
 
     @JsonProperty("state")
-    SourceDocumentState state;
+    TrainDocumentState state;
 
     @JsonProperty("timestamp")
     @Temporal(TemporalType.TIMESTAMP)
@@ -54,54 +53,66 @@ public class SourceDocument
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
-    public String getName()
-    {
-        return name;
-    }
+    @JsonProperty("processed")
+    private boolean processed = false;
 
-    public void setName(String name)
-    {
-        this.name = name;
-    }
+    @JsonProperty("feature")
+    AnnotationFeature feature;
 
-    public String getFormat()
-    {
-        return format;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setFormat(String format)
-    {
-        this.format = format;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public SourceDocumentState getState()
-    {
-        return state;
-    }
+	public String getFormat() {
+		return format;
+	}
 
-    public void setState(SourceDocumentState state)
-    {
-        this.state = state;
-    }
+	public void setFormat(String format) {
+		this.format = format;
+	}
 
-    public Date getTimestamp()
-    {
-        return timestamp;
-    }
+	public TrainDocumentState getState() {
+		return state;
+	}
 
-    public void setTimestamp(Date timestamp)
-    {
-        this.timestamp = timestamp;
-    }
+	public void setState(TrainDocumentState state) {
+		this.state = state;
+	}
 
-    public int getSentenceAccessed()
-    {
-        return sentenceAccessed;
-    }
+	public Date getTimestamp() {
+		return timestamp;
+	}
 
-    public void setSentenceAccessed(int sentenceAccessed)
-    {
-        this.sentenceAccessed = sentenceAccessed;
-    }
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	public int getSentenceAccessed() {
+		return sentenceAccessed;
+	}
+
+	public void setSentenceAccessed(int sentenceAccessed) {
+		this.sentenceAccessed = sentenceAccessed;
+	}
+
+	public boolean isProcessed() {
+		return processed;
+	}
+
+	public void setProcessed(boolean processed) {
+		this.processed = processed;
+	}
+
+	public AnnotationFeature getFeature() {
+		return feature;
+	}
+
+	public void setFeature(AnnotationFeature feature) {
+		this.feature = feature;
+	}
 
 }

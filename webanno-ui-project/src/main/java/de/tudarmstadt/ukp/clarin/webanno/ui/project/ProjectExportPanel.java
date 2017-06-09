@@ -479,6 +479,7 @@ public class ProjectExportPanel
             model.progress = 9;
             ExportUtil.exportSourceDocuments(documentService, automationService, aModel,
                     aModel.project, exportTempDir);
+            ExportUtil.exportTrainingDocuments(automationService, aModel, aModel.project, exportTempDir);
             ExportUtil.exportAnnotationDocuments(documentService, importExportService,
                     userRepository, aModel, exportTempDir);
             ExportUtil.exportProjectLog(projectService, aModel.project, exportTempDir);
