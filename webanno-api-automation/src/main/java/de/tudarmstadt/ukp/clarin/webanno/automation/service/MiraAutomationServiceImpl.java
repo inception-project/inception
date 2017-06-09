@@ -21,9 +21,9 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.MIRA;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.MIRA_TEMPLATE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.TRAIN;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA_TEMPLATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -57,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -64,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(AutomationService.SERVICE_NAME)

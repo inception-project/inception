@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.TRAIN;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
