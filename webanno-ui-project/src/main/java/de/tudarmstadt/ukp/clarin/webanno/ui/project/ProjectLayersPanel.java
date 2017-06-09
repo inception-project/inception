@@ -40,8 +40,8 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -76,6 +76,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -117,7 +120,6 @@ public class ProjectLayersPanel
     private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
 
-    private List<String> spanTypes = new ArrayList<String>();
     private String layerType = WebAnnoConst.SPAN_TYPE;
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -1003,17 +1005,6 @@ public class ProjectLayersPanel
             });
             add(new CheckBox("hideUnconstraintFeature"));
 
-//            spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
-//            for (AnnotationLayer spanLayer : annotationService
-//                    .listAnnotationLayer(selectedProjectModel.getObject())) {
-//                if (spanLayer.getName().equals(Token.class.getName())) {
-//                    continue;
-//                }
-//                if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-//                    spanTypes.add(spanLayer.getName());
-//                }
-//            }
-
             add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
             {
                 private static final long serialVersionUID = 9029205407108101183L;
@@ -1031,7 +1022,6 @@ public class ProjectLayersPanel
                             if (getModelObject() != null) {
                                 return Arrays.asList(getModelObject());
                             }
-//                            types.addAll(spanTypes);
                             return types;
                         }
                     });
@@ -1089,19 +1079,19 @@ public class ProjectLayersPanel
                     
                     //Empty the 'type' list drop-down in FeatureDetailForm
                     types.clear();
+                    
+                    // FIXME REC: I am not really sure why the types variable is filled here
+                    // and not in the loadable-detachable model of the featureType dropdown.
+                    
                     //Add primitive types
-                    types.addAll(PRIMITIVE_TYPES);
+                    FeatureSupport primitiveUima = new PrimitiveUimaFeatureSupport();
+                    types.addAll(primitiveUima
+                            .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
+                    
                     // Add non-primitive types only when layer is of type SPAN (#62)
-                    if (layerDetailForm.getModelObject().getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                        spanTypes.add(CAS.TYPE_NAME_ANNOTATION);
-                        //Add layers of type SPAN available in the project
-                        for (AnnotationLayer spanLayer : annotationService
-                                .listAnnotationLayer(ProjectLayersPanel.this.getModelObject())) {
-                            if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                                types.add(spanLayer.getName());
-                            }
-                        }
-                    }
+                    FeatureSupport slotFeatureSupport = new SlotFeatureSupport(annotationService);
+                    types.addAll(slotFeatureSupport
+                            .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
                 }
             });
 
