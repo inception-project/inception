@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.automation.service;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +26,8 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.automation.model.AutomationStatus;
-import de.tudarmstadt.ukp.clarin.webanno.api.automation.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
+import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
