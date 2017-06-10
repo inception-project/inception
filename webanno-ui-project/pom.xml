@@ -150,6 +150,11 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    	<artifactId>webanno-automation</artifactId>
+    	<version>3.3.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <resources>

@@ -593,6 +593,7 @@
     <module>webanno-webapp</module>
     <!-- Documentation -->
     <module>webanno-doc</module>
+    <module>webanno-automation</module>
   </modules>
   <build>
     <extensions>
