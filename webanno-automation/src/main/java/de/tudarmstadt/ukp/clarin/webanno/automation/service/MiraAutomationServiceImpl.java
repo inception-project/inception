@@ -54,7 +54,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
@@ -75,8 +73,8 @@ public class MiraAutomationServiceImpl
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Resource(name = "casStorageService")
-    private CasStorageService casStorageService;
+    @Resource(name = "automationCasStorageService")
+    private AutomationCasStorageService automationCasStorageService;
     
     @Value(value = "${repository.path}")
     private File dir;
@@ -381,13 +379,13 @@ public class MiraAutomationServiceImpl
                 throw new IOException("The reader for format [" + aTrainingAnnotationDocument.getFormat()
                         + "] is unable to digest data" + e.getMessage());
             }
-            casStorageService.writeCas(aTrainingAnnotationDocument, jcas);
+            automationCasStorageService.writeCas(aTrainingAnnotationDocument, jcas);
         }
         else {
             // Read existing CAS
             // We intentionally do not upgrade the CAS here because in general the IDs
             // must remain stable. If an upgrade is required the caller should do it
-            jcas = casStorageService.readCas(aTrainingAnnotationDocument);
+            jcas = automationCasStorageService.readCas(aTrainingAnnotationDocument);
         }
 
         return jcas;
@@ -419,7 +417,7 @@ public class MiraAutomationServiceImpl
     public boolean existsCas(TrainingDocument aTrainingDocument)
         throws IOException
     {
-        return new File(casStorageService.getAutomationFolder(aTrainingDocument), aTrainingDocument.getName() + ".ser")
+        return new File(automationCasStorageService.getAutomationFolder(aTrainingDocument), aTrainingDocument.getName() + ".ser")
                 .exists();
     }
     
@@ -429,7 +427,7 @@ public class MiraAutomationServiceImpl
 			throws UIMAException, IOException, ClassNotFoundException {
         JCas jcas = importExportService.importCasFromFile(getTrainingDocumentFile(aDocument),
                 aDocument.getProject(), aDocument.getFormat());
-        casStorageService.analyzeAndRepair(aDocument, jcas.getCas());
+        automationCasStorageService.analyzeAndRepair(aDocument, jcas.getCas());
         CasPersistenceUtils.writeSerializedCas(jcas,
                 getCasFile(aDocument));
         
@@ -451,7 +449,7 @@ public class MiraAutomationServiceImpl
 	        
 				CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument));
 	        
-				casStorageService.analyzeAndRepair(aDocument, jcas.getCas());
+				automationCasStorageService.analyzeAndRepair(aDocument, jcas.getCas());
 	        
 	        return jcas;
 	}

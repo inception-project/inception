@@ -89,5 +89,11 @@
     	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     	<artifactId>webanno-api-automation</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+    	<artifactId>
+    		de.tudarmstadt.ukp.dkpro.core.api.metadata-asl
+    	</artifactId>
+    </dependency>
   </dependencies>
 </project>

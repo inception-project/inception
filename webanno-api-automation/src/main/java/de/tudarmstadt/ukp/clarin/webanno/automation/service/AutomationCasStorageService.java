@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,39 +28,32 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public interface CasStorageService
+public interface AutomationCasStorageService
 {
-    static final String SERVICE_NAME = "casStorageService";
+    static final String SERVICE_NAME = "automationCasStorageService";
+    
     
     /**
-     * Creates an annotation document (either user's annotation document or CURATION_USER's
-     * annotation document)
+     * Creates an annotation document for the {@link TrainingDocument}
      *
      * @param aDocument
-     *            the {@link SourceDocument}
+     *            the {@link TrainingDocument}
      * @param aJcas
      *            The annotated CAS object
-     * @param aUserName
-     *            the user who annotates the document if it is user's annotation document OR the
-     *            CURATION_USER
      */
-    void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
-        throws IOException;
+    void writeCas(TrainingDocument aDocument, JCas aJcas)
+            throws IOException;
     
     /**
-     * For a given {@link SourceDocument}, return the {@link AnnotationDocument} for the user or for
-     * the CURATION_USER
+     * For a given {@link TrainingDocument}, return the annotated CAS object
      *
      * @param aDocument
-     *            the {@link SourceDocument}
-     * @param aUsername
-     *            the {@link User} who annotates the {@link SourceDocument} or the CURATION_USER
+     *            the {@link TrainingDocument}
      */
-    JCas readCas(SourceDocument aDocument, String aUsername)
-        throws IOException;
-        
-    
-    File getAnnotationFolder(SourceDocument aDocument)
+    JCas readCas(TrainingDocument aDocument)
             throws IOException;
-    void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
+        
+    File getAutomationFolder(TrainingDocument aDocument)
+    		throws IOException;
+    void analyzeAndRepair(TrainingDocument aDocument, CAS aCas);
 }

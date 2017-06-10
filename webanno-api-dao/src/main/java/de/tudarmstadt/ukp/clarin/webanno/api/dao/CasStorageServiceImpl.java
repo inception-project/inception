@@ -106,24 +106,6 @@ public class CasStorageServiceImpl
     	   File targetPath = getAnnotationFolder(aDocument);   
     	   writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, aUserName, annotationFolder, targetPath);
     }
-    	
-    /**
-     * Creates a CAS for the Automation documents
-     *
-     * @param aDocument
-     *            the {@link TrainingDocument}
-     * @param aJcas
-     *            The annotated CAS object
-     */
-    @Override
-    public void writeCas(TrainingDocument aDocument, JCas aJcas)
-        throws IOException
-    {
-    	
-    	   File annotationFolder = getAutomationFolder(aDocument);
-    	   File targetPath = getAutomationFolder(aDocument);   
-    	   writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, "Automation", annotationFolder, targetPath);
-    }
     
     private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas, String aUserName, File aAnnotationFolder, File aTargetPath) throws IOException{
     	  log.debug("Writing annotation document [{}]({}) for user [{}] in project [{}]({})",
@@ -354,54 +336,11 @@ public class CasStorageServiceImpl
             }
         }
     }
-
     
-    @Override
-    public JCas readCas(TrainingDocument aDocument)
-        throws IOException
-    {
-        log.debug("Reading CAs for Automation document [{}] ({}) in project [{}] ({})",
-                aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
-                aDocument.getProject().getId());
-
-        // DebugUtils.smallStack();
-
-        synchronized (lock) {
-            File annotationFolder = getAutomationFolder(aDocument);
-
-            String file = aDocument.getName() + ".ser";
-
-            try {
-                File serializedCasFile = new File(annotationFolder, file);
-                if (!serializedCasFile.exists()) {
-                    throw new FileNotFoundException("Annotation document of  Training document "
-                    		+ "[" + aDocument.getName() + "] ("
-                            + aDocument.getId() + ") not found in project["
-                            + aDocument.getProject().getName() + "] ("
-                            + aDocument.getProject().getId() + ")");
-                }
-
-                CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-                CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
-
-                analyzeAndRepair(aDocument, cas);
-
-                return cas.getJCas();
-            }
-            catch (UIMAException e) {
-                throw new DataRetrievalFailureException("Unable to parse annotation", e);
-            }
-        }
-    }
     @Override
     public void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
     {
       analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUsername, aCas);
-    }
-    @Override
-    public void analyzeAndRepair(TrainingDocument aDocument, CAS aCas)
-    {
-      analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), "Automation", aCas);
     }
     
     private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,String aUsername, CAS aCas){
@@ -456,22 +395,6 @@ public class CasStorageServiceImpl
         throws IOException
     {
         File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + ANNOTATION);
-        FileUtils.forceMkdir(annotationFolder);
-        return annotationFolder;
-    }
-    
-    /**
-     * Get the folder where the Automation document annotations are stored. Creates the folder if necessary.
-     *
-     * @throws IOException
-     *             if the folder cannot be created.
-     */
-    @Override
-    public File getAutomationFolder(TrainingDocument aDocument)
-        throws IOException
-    {
-        File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + TRAIN
                 + aDocument.getId() + ANNOTATION);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;

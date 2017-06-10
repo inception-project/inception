@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationCasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -103,6 +104,10 @@ public class ImportExportServiceImpl
     
     @Resource(name = "casStorageService")
     private CasStorageService casStorageService;
+    
+    @Resource(name = "automationCasStorageService")
+    private AutomationCasStorageService automationCasStorageService;
+    
     
     @Resource(name = "annotationService")
     private AnnotationSchemaService annotationService;
@@ -201,7 +206,7 @@ public class ImportExportServiceImpl
             }
             else {
                 cas = importCasFromFile(aFile, aDocument.getProject(), aDocument.getFormat());
-                casStorageService.analyzeAndRepair(aDocument, cas.getCas());
+                automationCasStorageService.analyzeAndRepair(aDocument, cas.getCas());
             }
         }
         catch (IOException e) {
