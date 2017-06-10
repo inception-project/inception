@@ -45,8 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -467,7 +467,7 @@ public class ImportUtil
             Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> aFeatureMaps)
     {
         for (MiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
-            de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate();
+            de.tudarmstadt.ukp.clarin.webanno.api.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.api.automation.model.MiraTemplate();
             template.setAnnotateAndRepeat(exTemplate.isAnnotateAndPredict());
             template.setAutomationStarted(false);
             template.setCurrentLayer(exTemplate.isCurrentLayer());

@@ -18,4 +18,4 @@
 /**
  * Brat Specific implementations related to annotation, curation and correction goes here. 
  */
-package de.tudarmstadt.ukp.clarin.webanno.automation.service;
+package de.tudarmstadt.ukp.clarin.webanno.api.automation.service;

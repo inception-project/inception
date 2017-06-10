@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.api.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
