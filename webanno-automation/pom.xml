@@ -43,6 +43,22 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-export</artifactId>
     </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-diag</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-api-automation</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>
@@ -56,6 +72,7 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
+    
     <!-- Spring dependencies -->
 
     <dependency>
@@ -69,31 +86,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-    </dependency>
-
-    <!-- Hibernate dependencies -->
-
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-core</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-api</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-diag</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-api-automation</artifactId>
-    </dependency>
-    <dependency>
-    	<groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-    	<artifactId>
-    		de.tudarmstadt.ukp.dkpro.core.api.metadata-asl
-    	</artifactId>
     </dependency>
   </dependencies>
 </project>

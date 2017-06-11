@@ -439,7 +439,6 @@ public class ImportUtil
      * @param aImportedProjectSetting  the exported project.
      * @param aImportedProject the project.
      * @param aRepository the repository service.
-     * @param aFeatureMap hum?
      * @throws IOException if an I/O error occurs.
      */
     public static void createSourceDocument(
@@ -478,8 +477,9 @@ public class ImportUtil
             trainingDocument.setProject(aImportedProject);
             trainingDocument.setTimestamp(importedTrainingDocument.getTimestamp());
             trainingDocument.setSentenceAccessed(importedTrainingDocument.getSentenceAccessed());
-			if (importedTrainingDocument.getFeature() != null)
-				trainingDocument.setFeature(aFeatureMap.get(importedTrainingDocument.getFeature().getName()));
+			if (importedTrainingDocument.getFeature() != null) {
+                trainingDocument.setFeature(aFeatureMap.get(importedTrainingDocument.getFeature().getName()));
+            }
             aRepository.createTrainingDocument(trainingDocument);
         }
     }
