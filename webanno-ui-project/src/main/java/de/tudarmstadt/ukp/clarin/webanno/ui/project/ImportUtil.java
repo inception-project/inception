@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.MiraTemplate;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -153,7 +154,7 @@ public class ImportUtil
      * @return hum?
      * @throws IOException if an I/O error occurs.
      */
-    public static Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> createLayer(
+    public static Map<String, AnnotationFeature> createLayer(
             Project aProjecct,
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             UserDao aRepository, AnnotationSchemaService aAnnotationService)
@@ -166,7 +167,7 @@ public class ImportUtil
         if (aImportedProjectSetting.getVersion() == 0) {
             // this is projects prior to version 2.0
             createV0TagSet(aProjecct, importedTagSets, aAnnotationService, user);
-            return new HashMap<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature>();
+            return new HashMap<String, AnnotationFeature>();
         }
         return createV1Layer(aProjecct, aImportedProjectSetting, aAnnotationService, user);
     }
@@ -222,13 +223,13 @@ public class ImportUtil
                 corefRelTags.toArray(new String[0]));
     }
 
-    private static Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> createV1Layer(
+    private static Map<String, AnnotationFeature> createV1Layer(
             Project aProject,
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             AnnotationSchemaService aAnnotationService, User aUser)
         throws IOException
     {
-        Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> featuresMap = new HashMap<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature>();
+        Map<String, AnnotationFeature> featuresMap = new HashMap<String, AnnotationFeature>();
         Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer, AnnotationLayer> layersMap = new HashMap<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer, AnnotationLayer>();
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer : aImportedProjectSetting
                 .getLayers()) {
@@ -242,13 +243,13 @@ public class ImportUtil
                         AnnotationFeature feature = aAnnotationService.getFeature(
                                 exfeature.getName(), layer);
                         setFeature(aAnnotationService, feature, exfeature, aProject, aUser);
-                        featuresMap.put(exfeature, feature);
+                        featuresMap.put(exfeature.getName(), feature);
                         continue;
                     }
                     AnnotationFeature feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     setFeature(aAnnotationService, feature, exfeature, aProject, aUser);
-                    featuresMap.put(exfeature, feature);
+                    featuresMap.put(exfeature.getName(), feature);
                 }
             }
             else {
@@ -260,7 +261,7 @@ public class ImportUtil
                     AnnotationFeature feature = new AnnotationFeature();
                     feature.setLayer(layer);
                     setFeature(aAnnotationService, feature, exfeature, aProject, aUser);
-                    featuresMap.put(exfeature, feature);
+                    featuresMap.put(exfeature.getName(), feature);
                 }
             }
         }
@@ -289,7 +290,7 @@ public class ImportUtil
             for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature eXFeature : exLayer
                     .getFeatures()) {
                 if (eXFeature.getTagSet() != null) {
-                    featuresMap.get(eXFeature)
+                    featuresMap.get(eXFeature.getName())
                             .setTagset(
                                     aAnnotationService.getTagSet(eXFeature.getTagSet().getName(),
                                             aProject));
@@ -443,8 +444,7 @@ public class ImportUtil
      */
     public static void createSourceDocument(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
-            Project aImportedProject, DocumentService aRepository, 
-            Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> aFeatureMap)
+            Project aImportedProject, DocumentService aRepository)
         throws IOException
     {
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument importedSourceDocument : aImportedProjectSetting
@@ -461,10 +461,32 @@ public class ImportUtil
         }
     }
 
+    
+    public static void createTrainingDocument(
+            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            Project aImportedProject, AutomationService aRepository, 
+            Map<String, AnnotationFeature> aFeatureMap)
+        throws IOException
+    {
+        for (TrainingDocument  importedTrainingDocument : aImportedProjectSetting
+                .getTrainingDocuments()) {
+        	de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument  trainingDocument =
+        			new de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument ();
+            trainingDocument.setFormat(importedTrainingDocument.getFormat());
+            trainingDocument.setName(importedTrainingDocument.getName());
+            trainingDocument.setState(importedTrainingDocument.getState());
+            trainingDocument.setProject(aImportedProject);
+            trainingDocument.setTimestamp(importedTrainingDocument.getTimestamp());
+            trainingDocument.setSentenceAccessed(importedTrainingDocument.getSentenceAccessed());
+			if (importedTrainingDocument.getFeature() != null)
+				trainingDocument.setFeature(aFeatureMap.get(importedTrainingDocument.getFeature().getName()));
+            aRepository.createTrainingDocument(trainingDocument);
+        }
+    }
     public static void createMiraTemplate(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             AutomationService aRepository,
-            Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> aFeatureMaps)
+            Map<String, AnnotationFeature> aFeatureMaps)
     {
         for (MiraTemplate exTemplate : aImportedProjectSetting.getMiraTemplates()) {
             de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate template = new de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate();
@@ -472,12 +494,12 @@ public class ImportUtil
             template.setAutomationStarted(false);
             template.setCurrentLayer(exTemplate.isCurrentLayer());
             template.setResult("---");
-            template.setTrainFeature(aFeatureMaps.get(exTemplate.getTrainFeature()));
+            template.setTrainFeature(aFeatureMaps.get(exTemplate.getTrainFeature().getName()));
             Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
             if (exTemplate.getOtherFeatures() != null) {
                 for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exOtherFeature : exTemplate
                         .getOtherFeatures()) {
-                    otherFeatures.add(aFeatureMaps.get(exOtherFeature));
+                    otherFeatures.add(aFeatureMaps.get(exOtherFeature.getName()));
                 }
                 template.setOtherFeatures(otherFeatures);
             }
@@ -566,6 +588,33 @@ public class ImportUtil
                 
                 LOG.info("Imported source document content for source document ["
                         + sourceDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
+        }
+    }
+    
+    public static void createTrainingDocumentContent(ZipFile zip, Project aProject,
+    		AutomationService aRepository)
+        throws IOException
+    {
+        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+            
+            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
+            String entryName = normalizeEntryName(entry);
+            
+            if (entryName.startsWith(TRAIN)) {
+                String fileName = FilenameUtils.getName(entryName);
+                if(fileName.trim().isEmpty()){
+                	continue;
+                }
+                de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument trainingDocument = aRepository
+                        .getTrainingDocument(aProject, fileName);
+                File trainigFilePath = aRepository.getTrainingDocumentFile(trainingDocument);
+                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), trainigFilePath);
+                
+                LOG.info("Imported source document content for source document ["
+                        + trainingDocument.getId() + "] in project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
         }

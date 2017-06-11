@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.Date;
 
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -26,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
 /**
@@ -42,6 +45,10 @@ public class TrainingDocument
 
     @JsonProperty("format")
     String format;
+    @ManyToOne
+    
+    @JoinColumn(name = "project")
+    Project project;
 
     @JsonProperty("state")
     TrainDocumentState state;
@@ -113,6 +120,14 @@ public class TrainingDocument
 
 	public void setFeature(AnnotationFeature feature) {
 		this.feature = feature;
+	}
+
+	public Project getProject() {
+		return project;
+	}
+
+	public void setProject(Project project) {
+		this.project = project;
 	}
 
 }

@@ -609,7 +609,7 @@ public class ProjectPage
                 }
 
                 // Import layers
-                Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature, AnnotationFeature> featuresMap = ImportUtil
+                Map<String, AnnotationFeature> featuresMap = ImportUtil
                         .createLayer(importedProject, importedProjectSetting, userRepository,
                                 annotationService);
                 /*
@@ -620,9 +620,15 @@ public class ProjectPage
                 
                 // Import source document 
                 ImportUtil.createSourceDocument(importedProjectSetting, importedProject,
-                        documentService, featuresMap);
+                        documentService);
+                
+                // Import Training document 
+                ImportUtil.createTrainingDocument(importedProjectSetting, importedProject,
+                        automationService, featuresMap);
                 // Import source document content
                 ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
+                // Import training document content
+                ImportUtil.createTrainingDocumentContent(zip, importedProject, automationService);
                 
                 // Import automation settings
                 ImportUtil.createMiraTemplate(importedProjectSetting, automationService,
