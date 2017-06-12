@@ -87,7 +87,7 @@ public class ImportUtil
      */
     public static Map<String, String> getTagSetFromFile(String aLineSeparatedTags)
     {
-        Map<String, String> tags = new LinkedHashMap<String, String>();
+        Map<String, String> tags = new LinkedHashMap<>();
         StringTokenizer st = new StringTokenizer(aLineSeparatedTags, "\n");
         while (st.hasMoreTokens()) {
             StringTokenizer stTag = new StringTokenizer(st.nextToken(), "\t");

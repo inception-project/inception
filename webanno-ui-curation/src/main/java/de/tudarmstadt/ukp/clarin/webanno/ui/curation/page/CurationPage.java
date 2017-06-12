@@ -144,7 +144,7 @@ public class CurationPage
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
 
-        curationPanel = new CurationPanel("curationPanel", new Model<CurationContainer> (
+        curationPanel = new CurationPanel("curationPanel", new Model<>(
                 curationContainer))
         {
             private static final long serialVersionUID = 2175915644696513166L;
@@ -249,8 +249,8 @@ public class CurationPage
             }
         });
 
-        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<Integer>("gotoPageText", Model.of(1), Integer.class);
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1); 
         gotoPageTextField.setOutputMarkupId(true); 
@@ -638,7 +638,7 @@ public class CurationPage
             // Re-render whole page as sidebar size preference may have changed
             aTarget.add(CurationPage.this);
     
-            List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
+            List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
     
             for (AnnotationDocument annotationDocument : documentService
                     .listAnnotationDocuments(state.getDocument())) {

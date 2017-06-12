@@ -94,7 +94,7 @@ public class ChainAdapter
         chainFirstFeatureName = aFirstFeatureName;
         linkNextFeatureName = aNextFeatureName;
 
-        features = new LinkedHashMap<String, AnnotationFeature>();
+        features = new LinkedHashMap<>();
         for (AnnotationFeature f : aFeatures) {
             features.put(f.getName(), f);
         }
@@ -200,7 +200,7 @@ public class ChainAdapter
                 }
                 else {
                   // collect all the links
-                  List<AnnotationFS> links = new ArrayList<AnnotationFS>();
+                  List<AnnotationFS> links = new ArrayList<>();
                   links.addAll(collectLinks(originChain));
                   links.addAll(collectLinks(targetChain));
 
@@ -380,7 +380,7 @@ public class ChainAdapter
     @Override
     public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
     {
-        return new ArrayList<String>();
+        return new ArrayList<>();
     }
 
     @Override
@@ -432,7 +432,7 @@ public class ChainAdapter
 
     private List<AnnotationFS> collectLinks(FeatureStructure aChain)
     {
-        List<AnnotationFS> links = new ArrayList<AnnotationFS>();
+        List<AnnotationFS> links = new ArrayList<>();
 
         // Now we seek the link within the current chain
         AnnotationFS linkFs = (AnnotationFS) aChain.getFeatureValue(aChain.getType()

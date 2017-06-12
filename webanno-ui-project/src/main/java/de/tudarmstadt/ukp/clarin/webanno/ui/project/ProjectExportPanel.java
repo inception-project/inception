@@ -138,7 +138,7 @@ public class ProjectExportPanel
 
         public ProjectExportForm(String id, Project aProject)
         {
-            super(id, new CompoundPropertyModel<ProjectExportModel>(
+            super(id, new CompoundPropertyModel<>(
                     new ProjectExportModel(aProject)));
             
             add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
@@ -148,7 +148,7 @@ public class ProjectExportPanel
                 @Override
                 protected List<String> load()
                 {                    
-                    List<String> formats = new ArrayList<String>(
+                    List<String> formats = new ArrayList<>(
                             importExportService.getWritableFormatLabels());
                     formats.add(0, FORMAT_AUTO);
                     return formats;

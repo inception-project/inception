@@ -53,7 +53,7 @@ public class WebAnnoTsv2ReaderWriterTest
                 WebannoTsv2Reader.PARAM_PATH, "src/test/resources/tsv2/",
                 WebannoTsv2Reader.PARAM_PATTERNS, "example2.tsv");
      
-        List<String> multipleSpans = new ArrayList<String>();
+        List<String> multipleSpans = new ArrayList<>();
         multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
         multipleSpans.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
         AnalysisEngineDescription writer = createPrimitiveDescription(

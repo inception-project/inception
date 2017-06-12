@@ -61,10 +61,7 @@ public final class CasPersistenceUtils
                 // components
                 aJCas.getCas().getJCas();
             }
-            catch (CASException e) {
-                throw new IOException(e);
-            }
-            catch (ClassNotFoundException e) {
+            catch (CASException | ClassNotFoundException e) {
                 throw new IOException(e);
             }
         }

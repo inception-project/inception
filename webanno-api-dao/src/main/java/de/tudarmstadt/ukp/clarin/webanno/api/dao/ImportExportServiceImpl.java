@@ -240,7 +240,7 @@ public class ImportExportServiceImpl
     @Override
     public List<String> getReadableFormatLabels()
     {
-        List<String> readableFormats = new ArrayList<String>();
+        List<String> readableFormats = new ArrayList<>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
@@ -289,7 +289,7 @@ public class ImportExportServiceImpl
     @Override
     public List<String> getWritableFormatLabels()
     {
-        List<String> writableFormats = new ArrayList<String>();
+        List<String> writableFormats = new ArrayList<>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String writerLabel = key.substring(0, key.lastIndexOf(".label"));
@@ -428,12 +428,12 @@ public class ImportExportServiceImpl
                     .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
                 List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
     
-                List<String> slotFeatures = new ArrayList<String>();
-                List<String> slotTargets = new ArrayList<String>();
-                List<String> linkTypes = new ArrayList<String>();
+                List<String> slotFeatures = new ArrayList<>();
+                List<String> slotTargets = new ArrayList<>();
+                List<String> linkTypes = new ArrayList<>();
     
-                Set<String> spanLayers = new HashSet<String>();
-                Set<String> slotLayers = new HashSet<String>();
+                Set<String> spanLayers = new HashSet<>();
+                Set<String> slotLayers = new HashSet<>();
                 for (AnnotationLayer layer : layers) {
                     
                     if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
@@ -460,7 +460,7 @@ public class ImportExportServiceImpl
                     }
                 }
                 spanLayers.addAll(slotLayers);
-                List<String> chainLayers = new ArrayList<String>();
+                List<String> chainLayers = new ArrayList<>();
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
                         if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
@@ -470,7 +470,7 @@ public class ImportExportServiceImpl
                     }
                 }
     
-                List<String> relationLayers = new ArrayList<String>();
+                List<String> relationLayers = new ArrayList<>();
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
                         // TSV will not use this

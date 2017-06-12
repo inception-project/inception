@@ -36,17 +36,17 @@ public class NumberFeatureEditor<T extends Number>
 
     public NumberFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
-        super(aId, "numberFeatureEditor", aItem, new CompoundPropertyModel<FeatureState>(aModel));
+        super(aId, "numberFeatureEditor", aItem, new CompoundPropertyModel<>(aModel));
 
         add(new Label("feature", getModelObject().feature.getUiName()));
 
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
-            field = new NumberTextField<Integer>("value", Integer.class);
+            field = new NumberTextField<>("value", Integer.class);
             break;
         }
         case CAS.TYPE_NAME_FLOAT: {
-            field = new NumberTextField<Float>("value", Float.class);
+            field = new NumberTextField<>("value", Float.class);
             add(field);
             break;
         }

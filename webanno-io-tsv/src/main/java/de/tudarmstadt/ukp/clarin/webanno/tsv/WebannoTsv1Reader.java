@@ -66,14 +66,14 @@ public class WebannoTsv1Reader
 
     {
         StringBuilder text = new StringBuilder();
-        Map<Integer, String> tokens = new HashMap<Integer, String>();
-        Map<Integer, String> pos = new HashMap<Integer, String>();
-        Map<Integer, String> lemma = new HashMap<Integer, String>();
-        Map<Integer, String> namedEntity = new HashMap<Integer, String>();
-        Map<Integer, String> dependencyFunction = new HashMap<Integer, String>();
-        Map<Integer, Integer> dependencyDependent = new HashMap<Integer, Integer>();
+        Map<Integer, String> tokens = new HashMap<>();
+        Map<Integer, String> pos = new HashMap<>();
+        Map<Integer, String> lemma = new HashMap<>();
+        Map<Integer, String> namedEntity = new HashMap<>();
+        Map<Integer, String> dependencyFunction = new HashMap<>();
+        Map<Integer, Integer> dependencyDependent = new HashMap<>();
 
-        List<Integer> firstTokenInSentence = new ArrayList<Integer>();
+        List<Integer> firstTokenInSentence = new ArrayList<>();
 
         DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
         fileName = documentMetadata.getDocumentTitle();
@@ -82,7 +82,7 @@ public class WebannoTsv1Reader
 
         aJCas.setDocumentText(text.toString());
 
-        Map<String, Token> tokensStored = new HashMap<String, Token>();
+        Map<String, Token> tokensStored = new HashMap<>();
 
         createToken(aJCas, text, tokens, pos, lemma, tokensStored);
 

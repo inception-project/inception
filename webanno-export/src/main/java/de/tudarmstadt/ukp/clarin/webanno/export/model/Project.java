@@ -56,13 +56,13 @@ public class Project
     private List<ProjectPermission> projectPermissions;
 
     @JsonProperty("tag_sets")
-    private List<TagSet> tagSets = new ArrayList<TagSet>();
+    private List<TagSet> tagSets = new ArrayList<>();
 
     @JsonProperty("layers")
     private List<AnnotationLayer> layers;
 
     @JsonProperty("mira_templates")
-    private List<MiraTemplate> miraTemplates = new ArrayList<MiraTemplate>();
+    private List<MiraTemplate> miraTemplates = new ArrayList<>();
 
     @JsonProperty("version")
     private int version;

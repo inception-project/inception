@@ -78,16 +78,16 @@ public class WebAnnoTsv3ReaderWriterTest
 		        WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/", 
 		        WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
 
-		List<String> slotFeatures = new ArrayList<String>();
-		List<String> slotTargets = new ArrayList<String>();
-		List<String> linkTypes = new ArrayList<String>();
-		List<String> spanLayers = new ArrayList<String>();
+		List<String> slotFeatures = new ArrayList<>();
+		List<String> slotTargets = new ArrayList<>();
+		List<String> linkTypes = new ArrayList<>();
+		List<String> spanLayers = new ArrayList<>();
 		spanLayers.add(NamedEntity.class.getName());
 		spanLayers.add(POS.class.getName());
         spanLayers.add(Lemma.class.getName());
-		List<String> chainLayers = new ArrayList<String>();
+		List<String> chainLayers = new ArrayList<>();
 		chainLayers.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
-		List<String> relationLayers = new ArrayList<String>();
+		List<String> relationLayers = new ArrayList<>();
 		relationLayers.add(Dependency.class.getName());
 
 		AnalysisEngineDescription writer = createEngineDescription(
@@ -1036,7 +1036,7 @@ public class WebAnnoTsv3ReaderWriterTest
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
         tb.buildTokens(jcas, "This is a test .");
         
@@ -1056,7 +1056,7 @@ public class WebAnnoTsv3ReaderWriterTest
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
         tb.buildTokens(jcas, "He loves her .\nShe loves him not .");
         
@@ -1078,7 +1078,7 @@ public class WebAnnoTsv3ReaderWriterTest
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
         tb.buildTokens(jcas, aText);
         

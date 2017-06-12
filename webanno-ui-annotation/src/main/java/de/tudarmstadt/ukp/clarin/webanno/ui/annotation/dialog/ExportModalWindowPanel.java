@@ -79,7 +79,7 @@ public class ExportModalWindowPanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ExportDetailsForm(String id, final ModalWindow modalWindow)
         {
-            super(id, new CompoundPropertyModel<DefaultModel>(new DefaultModel()));
+            super(id, new CompoundPropertyModel<>(new DefaultModel()));
             writeableFormats = (ArrayList<String>) importExportService.getWritableFormatLabels();
             selectedFormat = writeableFormats.get(0);
             add(writeableFormatsChoice = new DropDownChoice<String>("writeableFormats", new Model(

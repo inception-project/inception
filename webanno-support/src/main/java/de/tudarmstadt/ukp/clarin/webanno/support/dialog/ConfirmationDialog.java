@@ -182,8 +182,8 @@ public class ConfirmationDialog
             Form<State> form = new Form<>("form", aModel);
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
-            form.add(new LambdaAjaxButton<State>("confirm",  ConfirmationDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxButton<State>("cancel", ConfirmationDialog.this::onCancelInternal));
+            form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
+            form.add(new LambdaAjaxButton<>("cancel", ConfirmationDialog.this::onCancelInternal));
             
             add(form);
         }

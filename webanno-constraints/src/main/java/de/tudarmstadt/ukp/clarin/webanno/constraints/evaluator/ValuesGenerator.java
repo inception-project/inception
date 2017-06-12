@@ -58,7 +58,7 @@ public class ValuesGenerator
         throws UIMAException
     {
         imports = parsedConstraints.getImports();
-        List<PossibleValue> possibleValues = new ArrayList<PossibleValue>();
+        List<PossibleValue> possibleValues = new ArrayList<>();
         //If there are no rules for the FS, don't execute further
         //Enabling the second option might take too much time for rules to execute.
 //        if(!areThereRulesFor(aContext, parsedConstraints)){

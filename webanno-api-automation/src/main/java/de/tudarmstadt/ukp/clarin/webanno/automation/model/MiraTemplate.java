@@ -61,7 +61,7 @@ public class MiraTemplate
      * {@link TagSet} used as a feature for the trainFeature
      */
     @ManyToMany(fetch=FetchType.EAGER)
-    private Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
+    private Set<AnnotationFeature> otherFeatures = new HashSet<>();
 
     private boolean currentLayer = false;// The current training layer for this mira template
 

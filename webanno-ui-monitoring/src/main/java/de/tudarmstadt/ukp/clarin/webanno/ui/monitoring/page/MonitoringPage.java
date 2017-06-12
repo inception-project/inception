@@ -229,24 +229,24 @@ public class MonitoringPage
 
         if (!projectService.listProjects().isEmpty()) {
             Project project = projectService.listProjects().get(0);
-            List<List<String>> userAnnotationDocumentLists = new ArrayList<List<String>>();
+            List<List<String>> userAnnotationDocumentLists = new ArrayList<>();
             List<SourceDocument> dc = documentService.listSourceDocuments(project);
             for (int j = 0; j < projectService.listProjectUsersWithPermissions(project).size(); j++) {
-                List<String> userAnnotationDocument = new ArrayList<String>();
+                List<String> userAnnotationDocument = new ArrayList<>();
                 userAnnotationDocument.add("");
                 for (int i = 0; i < dc.size(); i++) {
                     userAnnotationDocument.add("");
                 }
                 userAnnotationDocumentLists.add(userAnnotationDocument);
             }
-            List<String> documentListAsColumnHeader = new ArrayList<String>();
+            List<String> documentListAsColumnHeader = new ArrayList<>();
             documentListAsColumnHeader.add("Users");
             for (SourceDocument d : dc) {
                 documentListAsColumnHeader.add(d.getName());
             }
             TableDataProvider prov = new TableDataProvider(documentListAsColumnHeader,
                     userAnnotationDocumentLists);
-            List<IColumn<?, ?>> cols = new ArrayList<IColumn<?, ?>>();
+            List<IColumn<?, ?>> cols = new ArrayList<>();
             for (int i = 0; i < prov.getColumnCount(); i++) {
                 cols.add(new DocumentStatusColumnMetaData(prov, i, new Project()));
             }
@@ -275,7 +275,7 @@ public class MonitoringPage
 
         public ProjectSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<ProjectSelectionModel>(new ProjectSelectionModel()));
+            super(id, new CompoundPropertyModel<>(new ProjectSelectionModel()));
 
             add(new ListChoice<Project>("project")
             {
@@ -289,7 +289,7 @@ public class MonitoringPage
                         @Override
                         protected List<Project> load()
                         {
-                            List<Project> allowedProject = new ArrayList<Project>();
+                            List<Project> allowedProject = new ArrayList<>();
 
                             String username = SecurityContextHolder.getContext()
                                     .getAuthentication().getName();
@@ -305,7 +305,7 @@ public class MonitoringPage
                             return allowedProject;
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
                 }
 
@@ -328,8 +328,8 @@ public class MonitoringPage
 
                     ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
                     projectSelectionModel.project = aNewSelection;
-                    projectSelectionModel.annotatorsProgress = new TreeMap<String, Integer>();
-                    projectSelectionModel.annotatorsProgressInPercent = new TreeMap<String, Integer>();
+                    projectSelectionModel.annotatorsProgress = new TreeMap<>();
+                    projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
                     projectSelectionModel.totalDocuments = sourceDocuments.size();
                     ProjectSelectionForm.this.setVisible(true);
 
@@ -353,7 +353,7 @@ public class MonitoringPage
                             projectSelectionModel.annotatorsProgressInPercent, 100, true));
                     annotatorsProgressPercentageImage.setVisible(true);
 
-                    List<String> documentListAsColumnHeader = new ArrayList<String>();
+                    List<String> documentListAsColumnHeader = new ArrayList<>();
                     documentListAsColumnHeader.add("Documents");
 
                     // A column for curation user annotation document status
@@ -367,10 +367,10 @@ public class MonitoringPage
                         documentListAsColumnHeader.add(user.getUsername());
                     }
 
-                    List<List<String>> userAnnotationDocumentStatusList = new ArrayList<List<String>>();
+                    List<List<String>> userAnnotationDocumentStatusList = new ArrayList<>();
 
                     // Add a timestamp row for every user.
-                    List<String> projectTimeStamp = new ArrayList<String>();
+                    List<String> projectTimeStamp = new ArrayList<>();
                     projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
                                                                          // column
                     if (projectService.existsProjectTimeStamp(aNewSelection)) {
@@ -399,7 +399,7 @@ public class MonitoringPage
                     userAnnotationDocumentStatusList.add(projectTimeStamp);
 
                     for (SourceDocument document : sourceDocuments) {
-                        List<String> userAnnotationDocuments = new ArrayList<String>();
+                        List<String> userAnnotationDocuments = new ArrayList<>();
                         userAnnotationDocuments.add(DOCUMENT + document.getName());
 
                         // Curation Document status
@@ -418,7 +418,7 @@ public class MonitoringPage
                     TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
                             userAnnotationDocumentStatusList);
 
-                    List<IColumn<?,?>> columns = new ArrayList<IColumn<?,?>>();
+                    List<IColumn<?,?>> columns = new ArrayList<>();
 
                     for (int i = 0; i < provider.getColumnCount(); i++) {
                         columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project));
@@ -458,7 +458,7 @@ public class MonitoringPage
 
     private Map<String, Integer> getFinishedDocumentsPerUser(Project aProject)
     {
-        Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
+        Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
                 for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
@@ -482,7 +482,7 @@ public class MonitoringPage
 
     private Map<String, Integer> getPercentageOfFinishedDocumentsPerUser(Project aProject)
     {
-        Map<String, Integer> annotatorsProgress = new HashMap<String, Integer>();
+        Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
                 int finished = 0;
@@ -511,7 +511,7 @@ public class MonitoringPage
 
     private Map<String, Integer> getOverallProjectProgress()
     {
-        Map<String, Integer> overallProjectProgress = new LinkedHashMap<String, Integer>();
+        Map<String, Integer> overallProjectProgress = new LinkedHashMap<>();
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         for (Project project : projectService.listProjects()) {
@@ -534,8 +534,8 @@ public class MonitoringPage
         private static final long serialVersionUID = -1L;
 
         public Project project;
-        public Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
-        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
+        public Map<String, Integer> annotatorsProgress = new TreeMap<>();
+        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
     }
 
     private class MonitoringDetailForm
@@ -545,7 +545,7 @@ public class MonitoringPage
 
         public MonitoringDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<Project>(new EntityModel<Project>(new Project())));
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
         }
     }
     
@@ -566,7 +566,7 @@ public class MonitoringPage
 
         public TrainingResultForm(String id)
         {
-            super(id, new CompoundPropertyModel<ResultModel>(new ResultModel()));
+            super(id, new CompoundPropertyModel<>(new ResultModel()));
 
             add(new Label("resultLabel", new LoadableDetachableModel<String>()
             {

@@ -40,6 +40,6 @@ public class DefaultModelIteratorAdapter<T extends Serializable>
     
     public static <T extends Serializable> DefaultModelIteratorAdapter<T> of(Iterable<T> aIterable)
     {
-        return new DefaultModelIteratorAdapter<T>(aIterable);
+        return new DefaultModelIteratorAdapter<>(aIterable);
     }
 }

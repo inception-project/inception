@@ -173,7 +173,7 @@ public class ConllUWriter
         }
         
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-            HashMap<Token, Row> ctokens = new LinkedHashMap<Token, Row>();
+            HashMap<Token, Row> ctokens = new LinkedHashMap<>();
 
             // Tokens
             List<Token> tokens = selectCovered(Token.class, sentence);

@@ -770,7 +770,7 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
         if (aLayer == null || aLayer.getId() == 0) {
-            return new ArrayList<AnnotationFeature>();
+            return new ArrayList<>();
         }
 
         return entityManager

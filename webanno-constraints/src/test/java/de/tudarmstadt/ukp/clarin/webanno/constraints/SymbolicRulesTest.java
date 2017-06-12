@@ -71,7 +71,7 @@ public class SymbolicRulesTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new ArrayList<PossibleValue>();
+        List<PossibleValue> expectedOutput = new ArrayList<>();
         expectedOutput.add(new PossibleValue("good", true));
 
         assertEquals(expectedOutput, possibleValues);
@@ -105,7 +105,7 @@ public class SymbolicRulesTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new ArrayList<PossibleValue>();
+        List<PossibleValue> expectedOutput = new ArrayList<>();
         expectedOutput.add(new PossibleValue("good", true));
 
         assertEquals(expectedOutput, possibleValues);

@@ -79,7 +79,7 @@ public class User
     @CollectionTable(name = "authorities", joinColumns = { @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
-    private Set<Role> roles = new HashSet<Role>();
+    private Set<Role> roles = new HashSet<>();
 
     private String encodePassword(String aPassword)
     {

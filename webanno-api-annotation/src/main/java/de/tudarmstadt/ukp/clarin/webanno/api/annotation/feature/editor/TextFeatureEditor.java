@@ -67,8 +67,7 @@ public class TextFeatureEditor
     
     public TextFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
-        super(aId, "textFeatureEditor", aItem, new CompoundPropertyModel<FeatureState>(aModel));
-        
+        super(aId, "textFeatureEditor", aItem, new CompoundPropertyModel<>(aModel));
         // Checks whether hide un-constraint feature is enabled or not
         hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
         
@@ -171,8 +170,8 @@ public class TextFeatureEditor
 	protected void onInitialize()
 	{
 	    super.onInitialize();
-        LOG.trace(String.format("TextFeatureEditor(path: " + getPageRelativePath() + ", "
-                + getModelObject().feature.getUiName() + ": " + getModelObject().value + ")"));
+        LOG.trace("TextFeatureEditor(path: " + getPageRelativePath() + ", "
+                + getModelObject().feature.getUiName() + ": " + getModelObject().value + ")");
 	}
 	
     @Override

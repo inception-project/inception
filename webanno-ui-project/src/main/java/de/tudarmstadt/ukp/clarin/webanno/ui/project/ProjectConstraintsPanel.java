@@ -108,7 +108,7 @@ public class ProjectConstraintsPanel
                 private static final long serialVersionUID = 1L;
                 
                 {
-                    setChoiceRenderer(new ChoiceRenderer<ConstraintSet>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
                 }
                 
@@ -142,21 +142,18 @@ public class ProjectConstraintsPanel
         
         public DetailForm(String aId)
         {
-            super(aId, new CompoundPropertyModel<ConstraintSet>(new EntityModel<ConstraintSet>(null)));
+            super(aId, new CompoundPropertyModel<>(new EntityModel<>(null)));
             TextField<String> constraintNameTextField = new TextField<>("name");
             add(constraintNameTextField);
             
-            add(script = new TextArea<String>("script", new LoadableDetachableModel<String>()
-            {
+            add(script = new TextArea<>("script", new LoadableDetachableModel<String>() {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                protected String load()
-                {
+                protected String load() {
                     try {
                         return constraintsService.readConstrainSet(DetailForm.this.getModelObject());
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         // Cannot call "Component.error()" here - it causes a 
                         // org.apache.wicket.WicketRuntimeException: Cannot modify component 
                         // hierarchy after render phase has started (page version cant change then

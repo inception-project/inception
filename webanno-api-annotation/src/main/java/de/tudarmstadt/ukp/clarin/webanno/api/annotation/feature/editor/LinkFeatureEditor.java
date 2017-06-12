@@ -118,7 +118,7 @@ public class LinkFeatureEditor
             @Override
             protected Iterator<IModel<LinkWithRoleModel>> getItemModels()
             {
-                ModelIteratorAdapter<LinkWithRoleModel> i = new ModelIteratorAdapter<LinkWithRoleModel>(
+                return new ModelIteratorAdapter<LinkWithRoleModel>(
                         (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value)
                 {
                     @Override
@@ -127,7 +127,6 @@ public class LinkFeatureEditor
                         return Model.of(aObject);
                     }
                 };
-                return i;
             }
 
             @Override
@@ -135,9 +134,7 @@ public class LinkFeatureEditor
             {
                 AnnotatorState state = stateModel.getObject();
 
-                aItem.setModel(
-                        new CompoundPropertyModel<LinkWithRoleModel>(aItem.getModelObject()));
-
+                aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
                 Label role = new Label("role");
                 aItem.add(role);
 
@@ -400,7 +397,7 @@ public class LinkFeatureEditor
         }
 
         // Construct a quick index for tags
-        Set<String> tagset = new HashSet<String>();
+        Set<String> tagset = new HashSet<>();
         for (Tag t : aTagset) {
             tagset.add(t.getName());
         }
@@ -408,7 +405,7 @@ public class LinkFeatureEditor
         // Get links list and build role index
         @SuppressWarnings("unchecked")
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) getModelObject().value;
-        Set<String> roles = new HashSet<String>();
+        Set<String> roles = new HashSet<>();
         for (LinkWithRoleModel l : links) {
             roles.add(l.role);
         }

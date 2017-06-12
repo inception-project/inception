@@ -45,7 +45,7 @@ public class SourceListView
     private Integer sentenceNumber;
     private boolean isCurrentSentence;
 
-    private Map<String, Integer> sentenceAddress = new LinkedHashMap<String, Integer>();
+    private Map<String, Integer> sentenceAddress = new LinkedHashMap<>();
 
     public SourceListView()
     {

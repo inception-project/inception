@@ -78,7 +78,7 @@ public class ConstraintsGeneratorTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new LinkedList<PossibleValue>();
+        List<PossibleValue> expectedOutput = new LinkedList<>();
         expectedOutput.add(new PossibleValue("be", true));
 
         assertEquals(expectedOutput, possibleValues);
@@ -127,7 +127,7 @@ public class ConstraintsGeneratorTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
                 dep_the_sun, "DependencyType", constraints);
 
-        List<PossibleValue> expectedOutput = new LinkedList<PossibleValue>();
+        List<PossibleValue> expectedOutput = new LinkedList<>();
         expectedOutput.add(new PossibleValue("det", false));
 
         assertEquals(expectedOutput, possibleValues);
@@ -187,7 +187,7 @@ public class ConstraintsGeneratorTest
         
         DocumentMetaData.create(jcas).setDocumentId("doc");
         
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
         tb.buildTokens(jcas, "This is a test .");
         

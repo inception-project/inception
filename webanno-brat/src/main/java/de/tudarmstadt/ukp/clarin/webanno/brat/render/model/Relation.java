@@ -46,7 +46,7 @@ public class Relation
     /**
      * The initial/destination span annotations as shown in the example above
      */
-    private List<Argument> arguments = new ArrayList<Argument>();
+    private List<Argument> arguments = new ArrayList<>();
 
     // WEBANNO EXTENSION BEGIN
     private String labelText;

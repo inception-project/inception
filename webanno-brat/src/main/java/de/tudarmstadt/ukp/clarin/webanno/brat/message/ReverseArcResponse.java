@@ -38,7 +38,7 @@ public class ReverseArcResponse
     /**
      * [[ "T1"],["T2"]]
      */
-    private List<String[]> edited = new ArrayList<String[]>();
+    private List<String[]> edited = new ArrayList<>();
 
     public GetDocumentResponse getAnnotations()
     {

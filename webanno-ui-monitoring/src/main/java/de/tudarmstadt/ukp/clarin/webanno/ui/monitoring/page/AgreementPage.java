@@ -215,19 +215,19 @@ public class AgreementPage
 
         public AgreementForm(String id)
         {
-            super(id, new CompoundPropertyModel<AgreementFormModel>(new AgreementFormModel()));
+            super(id, new CompoundPropertyModel<>(new AgreementFormModel()));
 
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
-            add(measureDropDown = new DropDownChoice<ConcreteAgreementMeasure>("measure",
+            add(measureDropDown = new DropDownChoice<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
-                    new EnumChoiceRenderer<ConcreteAgreementMeasure>(AgreementPage.this)));
+                    new EnumChoiceRenderer<>(AgreementPage.this)));
             addUpdateAgreementTableBehavior(measureDropDown);
 
             add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
-                    new EnumChoiceRenderer<LinkCompareBehavior>(AgreementPage.this))
+                    new EnumChoiceRenderer<>(AgreementPage.this))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -247,9 +247,9 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            add(exportFormat = new DropDownChoice<AgreementReportExportFormat>("exportFormat",
+            add(exportFormat = new DropDownChoice<>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
-                    new EnumChoiceRenderer<AgreementReportExportFormat>(AgreementPage.this)));
+                    new EnumChoiceRenderer<>(AgreementPage.this)));
             exportFormat.add(new OnChangeAjaxBehavior()
             {
                 private static final long serialVersionUID = -1L;
@@ -292,7 +292,7 @@ public class AgreementPage
                             List<AnnotationFeature> features = annotationService
                                     .listAnnotationFeature(
                                             (projectSelectionForm.getModelObject().project));
-                            List<AnnotationFeature> unusedFeatures = new ArrayList<AnnotationFeature>();
+                            List<AnnotationFeature> unusedFeatures = new ArrayList<>();
                             for (AnnotationFeature feature : features) {
                                 if (feature.getLayer().getName().equals(Token.class.getName())
                                         || feature.getLayer().getName()
@@ -536,7 +536,7 @@ public class AgreementPage
         public ProjectSelectionForm(String id)
         {
             super(id,
-                    new CompoundPropertyModel<ProjectSelectionModel>(new ProjectSelectionModel()));
+                    new CompoundPropertyModel<>(new ProjectSelectionModel()));
 
             add(new ListChoice<Project>("project")
             {
@@ -550,7 +550,7 @@ public class AgreementPage
                         @Override
                         protected List<Project> load()
                         {
-                            List<Project> allowedProject = new ArrayList<Project>();
+                            List<Project> allowedProject = new ArrayList<>();
 
                             String username = SecurityContextHolder.getContext().getAuthentication()
                                     .getName();
@@ -566,7 +566,7 @@ public class AgreementPage
                             return allowedProject;
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
                 }
 
@@ -619,8 +619,8 @@ public class AgreementPage
         private static final long serialVersionUID = -1L;
 
         public Project project;
-        public Map<String, Integer> annotatorsProgress = new TreeMap<String, Integer>();
-        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<String, Integer>();
+        public Map<String, Integer> annotatorsProgress = new TreeMap<>();
+        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
     }
     
     /**

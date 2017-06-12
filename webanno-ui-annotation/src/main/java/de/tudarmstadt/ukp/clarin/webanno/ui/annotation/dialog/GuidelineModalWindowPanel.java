@@ -95,7 +95,7 @@ public class GuidelineModalWindowPanel
                 IResourceStream stream = new FileResourceStream(projectService
                         .getGuideline(getModelObject().getProject(), guidelineFileName));
                 ResourceStreamResource resource = new ResourceStreamResource(stream);
-                ResourceLink<Void> rlink = new ResourceLink<Void>("guideine", resource);
+                ResourceLink<Void> rlink = new ResourceLink<>("guideine", resource);
                 rlink.setPopupSettings(popupSettings);
                 item.add(new Label("guidelineName", guidelineFileName));
                 item.add(rlink);

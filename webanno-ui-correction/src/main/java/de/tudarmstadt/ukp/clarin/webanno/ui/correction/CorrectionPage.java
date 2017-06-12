@@ -144,7 +144,7 @@ public class CorrectionPage
 
     private CurationContainer curationContainer;
 
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
     private SourceListView curationSegment = new SourceListView();
 
@@ -185,7 +185,7 @@ public class CorrectionPage
         };
         add(annotationViewCell);
         
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (getModelObject().getDocument() != null) {
             curationUserSegmentForAnnotationDocument
@@ -194,7 +194,7 @@ public class CorrectionPage
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
         suggestionView = new SuggestionViewPanel("correctionView",
-                new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
+                new Model<>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
 
@@ -310,8 +310,8 @@ public class CorrectionPage
             }
         });
 
-        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<Integer>("gotoPageText", Model.of(1), Integer.class);
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1); 
         gotoPageTextField.setOutputMarkupId(true); 

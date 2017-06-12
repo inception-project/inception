@@ -23,7 +23,6 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -43,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -218,11 +216,11 @@ public class BratRenderer
             AnnotationSchemaService aAnnotationService)
     {
         // Sort layers
-        List<AnnotationLayer> layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
-        layers.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
+        List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
+        layers.sort(Comparator.comparing(AnnotationLayer::getName));
 
         // Now build the actual configuration
-        Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();
+        Set<EntityType> entityTypes = new LinkedHashSet<>();
         for (AnnotationLayer layer : layers) {
             EntityType entityType = configureEntityType(layer);
 
@@ -325,9 +323,8 @@ public class BratRenderer
         }
 
         String bratTypeName = getBratTypeName(aLayer);
-        RelationType arc = new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
+        return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
                 attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
-        return arc;
     }
 
     private static String getBratTypeName(AnnotationLayer aLayer)

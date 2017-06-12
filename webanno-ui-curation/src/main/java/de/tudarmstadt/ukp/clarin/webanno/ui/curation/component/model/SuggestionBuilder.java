@@ -88,7 +88,7 @@ public class SuggestionBuilder
     boolean firstload = true;
     public static Map<Integer, Set<Integer>> crossSentenceLists;
     //
-    Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
+    Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
 
     public SuggestionBuilder(DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService,
@@ -108,12 +108,12 @@ public class SuggestionBuilder
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
         SourceDocument sourceDocument = aBModel.getDocument();
-        Map<Integer, Integer> segmentBeginEnd = new HashMap<Integer, Integer>();
-        Map<Integer, Integer> segmentNumber = new HashMap<Integer, Integer>();
-        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<String, Map<Integer, Integer>>();
+        Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
+        Map<Integer, Integer> segmentNumber = new HashMap<>();
+        Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
         // get annotation documents
 
-        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<AnnotationDocument>();
+        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
 
         for (AnnotationDocument annotationDocument : documentService.listAnnotationDocuments(aBModel
                 .getDocument())) {
@@ -122,7 +122,7 @@ public class SuggestionBuilder
             }
         }
 
-        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        Map<String, JCas> jCases = new HashMap<>();
 
         AnnotationDocument randomAnnotationDocument = null;
         JCas mergeJCas;
@@ -150,7 +150,7 @@ public class SuggestionBuilder
 
         List<Type> entryTypes = null;
 
-        segmentAdress.put(WebAnnoConst.CURATION_USER, new HashMap<Integer, Integer>());
+        segmentAdress.put(WebAnnoConst.CURATION_USER, new HashMap<>());
         for (Sentence sentence : selectCovered(mergeJCas, Sentence.class, diffRangeBegin, diffRangeEnd)) {
             segmentAdress.get(WebAnnoConst.CURATION_USER).put(sentence.getBegin(),
                     getAddr(sentence));
@@ -319,7 +319,7 @@ public class SuggestionBuilder
             SourceDocument aDocument, Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        Map<String, JCas> jCases = new HashMap<>();
         User user = userRepository.get(SecurityContextHolder.getContext().getAuthentication()
                 .getName());
         randomAnnotationDocument = documentService.getAnnotationDocument(aDocument, user);
@@ -337,7 +337,7 @@ public class SuggestionBuilder
             AnnotationDocument randomAnnotationDocument, Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        Map<String, JCas> jCases = new HashMap<>();
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             String username = annotationDocument.getUser();
 
@@ -448,7 +448,7 @@ public class SuggestionBuilder
         // we can just increment this one.
         int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aJCas, diffRangeBegin);
 
-        aSegmentAdress.put(aUsername, new HashMap<Integer, Integer>());
+        aSegmentAdress.put(aUsername, new HashMap<>());
         for (Sentence sentence : selectCovered(aJCas, Sentence.class, diffRangeBegin,
                 diffRangeEnd)) {
             aIdxSentenceBeginEnd.put(sentence.getBegin(), sentence.getEnd());
@@ -461,7 +461,7 @@ public class SuggestionBuilder
     public static List<Type> getEntryTypes(JCas mergeJCas, List<AnnotationLayer> aLayers,
             AnnotationSchemaService aAnnotationService)
     {
-        List<Type> entryTypes = new LinkedList<Type>();
+        List<Type> entryTypes = new LinkedList<>();
 
         for (AnnotationLayer layer : aLayers) {
             if (layer.getName().equals(Token.class.getName())) {

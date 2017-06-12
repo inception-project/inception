@@ -87,7 +87,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 
 	private String fileName;
 	private int columns = 2;// token number + token columns (minimum required)
-	private Map<Type, Set<Feature>> allLayers = new LinkedHashMap<Type, Set<Feature>>();
+	private Map<Type, Set<Feature>> allLayers = new LinkedHashMap<>();
 	private Map<Feature, Type> roleLinks = new HashMap<>();
 	private Map<Feature, Type> roleTargets = new HashMap<>();
 	private Map<Feature, Type> slotLinkTypes = new HashMap<>();
@@ -696,7 +696,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				String layerNames = headerTk.nextToken().trim();
 				StringTokenizer layerTk = new StringTokenizer(layerNames, "|");
 
-				Set<Feature> features = new LinkedHashSet<Feature>();
+				Set<Feature> features = new LinkedHashSet<>();
 				String layerName = layerTk.nextToken().trim();
 				layerName = layerName.substring(layerName.indexOf("=") + 1);
 

@@ -40,7 +40,7 @@ public class Entity
 {
     private VID vid;
     private String type;
-    private List<Offsets> offsets = new ArrayList<Offsets>();
+    private List<Offsets> offsets = new ArrayList<>();
     // WEBANNO EXTENSION BEGIN
     private String labelText;
     private String color;

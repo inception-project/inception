@@ -91,7 +91,7 @@ public class ComplexTypeTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(gurevych,
                 "professorName", constraints);
 
-        List<PossibleValue> exValues = new LinkedList<PossibleValue>();
+        List<PossibleValue> exValues = new LinkedList<>();
         exValues.add(new PossibleValue("Iryna Gurevych", false));
 
         assertEquals(possibleValues, exValues);
@@ -134,7 +134,7 @@ public class ComplexTypeTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(russia,
                 "regionType", constraints);
 
-        List<PossibleValue> exValues = new LinkedList<PossibleValue>();
+        List<PossibleValue> exValues = new LinkedList<>();
         exValues.add(new PossibleValue("cold", true));
 
         assertEquals(possibleValues, exValues);

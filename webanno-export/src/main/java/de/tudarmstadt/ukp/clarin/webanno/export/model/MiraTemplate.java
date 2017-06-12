@@ -39,7 +39,7 @@ public class MiraTemplate
     private AnnotationFeature trainFeature;
 
     @JsonProperty("other_features")
-    private Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
+    private Set<AnnotationFeature> otherFeatures = new HashSet<>();
 
     @JsonProperty("current_layer")
     private boolean currentLayer = false;

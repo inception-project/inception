@@ -59,7 +59,7 @@ public class LogoutPanel
     @SuppressWarnings("serial")
     private void commonInit()
     {
-        add(new Label("username").setDefaultModel(new Model<String>(SecurityContextHolder
+        add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
                 .getContext().getAuthentication().getName())));
 
         add(new StatelessLink<Void>("logout")

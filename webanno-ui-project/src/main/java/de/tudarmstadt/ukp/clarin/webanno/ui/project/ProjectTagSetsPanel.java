@@ -131,7 +131,7 @@ public class ProjectTagSetsPanel
 
         public TagSetSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(new Button("create", new StringResourceModel("label"))
             {
@@ -171,7 +171,7 @@ public class ProjectTagSetsPanel
                                 return annotationService.listTagSets(project);
                             }
                             else {
-                                return new ArrayList<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>();
+                                return new ArrayList<>();
                             }
                         }
                     });
@@ -232,10 +232,10 @@ public class ProjectTagSetsPanel
         {
             super(id);
             add(fileUpload = new FileUploadField("content", new Model()));
-            add(importTagsetFormat = new DropDownChoice<String>("importTagsetFormat",
-                    new Model<String>(selectedExporTagsetFormat),
-                    Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
-                            ExportedTagSetConstant.TAB_FORMAT })));
+            add(importTagsetFormat = new DropDownChoice<>("importTagsetFormat",
+                    new Model<>(selectedExporTagsetFormat),
+                    Arrays.asList(new String[]{ExportedTagSetConstant.JSON_FORMAT,
+                            ExportedTagSetConstant.TAB_FORMAT})));
             overwriteTagsetFlag = new CheckBox("overwriteTagset", Model.of(Boolean.FALSE));
             add(overwriteTagsetFlag);
             add(new Button("import", new StringResourceModel("label"))
@@ -379,11 +379,11 @@ public class ProjectTagSetsPanel
 
         public TagSetDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
-                    new EntityModel<de.tudarmstadt.ukp.clarin.webanno.model.TagSet>(
+            super(id, new CompoundPropertyModel<>(
+                    new EntityModel<>(
                             new de.tudarmstadt.ukp.clarin.webanno.model.TagSet())));
             final Project project = ProjectTagSetsPanel.this.getModelObject();
-            TextField<String> tagSetName = new TextField<String>("name");
+            TextField<String> tagSetName = new TextField<>("name");
             tagSetName.setRequired(true);
             add(tagSetName);
 
@@ -524,7 +524,7 @@ public class ProjectTagSetsPanel
             });
 
             add(exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
-                    new Model<String>(selectedExporTagsetFormat),
+                    new Model<>(selectedExporTagsetFormat),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
                             ExportedTagSetConstant.TAB_FORMAT }))
             {
@@ -571,7 +571,7 @@ public class ProjectTagSetsPanel
                             exTagSet.setLanguage(tagSet.getLanguage());
                             exTagSet.setName(tagSet.getName());
 
-                            List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
+                            List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<>();
                             for (Tag tag : annotationService.listTags(tagSet)) {
                                 de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exportedTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
                                 exportedTag.setDescription(tag.getDescription());
@@ -649,7 +649,7 @@ public class ProjectTagSetsPanel
 
         public TagDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<Tag>(new EntityModel<Tag>(new Tag())));
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(new Tag())));
             add(new TextField<String>("name").setRequired(true));
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
@@ -741,7 +741,7 @@ public class ProjectTagSetsPanel
         public TagSelectionForm(String id)
         {
             // super(id);
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(tags = new ListChoice<Tag>("tag")
             {

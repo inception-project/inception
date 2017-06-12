@@ -86,7 +86,7 @@ public class AnnotationPreferenceModalPanel
         public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow,
                 AnnotationDetailEditorPanel aEditor)
         {
-            super(id, new CompoundPropertyModel<AnnotationLayerDetailFormModel>(
+            super(id, new CompoundPropertyModel<>(
                     new AnnotationLayerDetailFormModel()));
 
             // Import current settings from the annotator
@@ -110,24 +110,24 @@ public class AnnotationPreferenceModalPanel
                 getModelObject().annotationLayers.add(layer);
             }
             
-            windowSizeField = new NumberTextField<Integer>("windowSize");
+            windowSizeField = new NumberTextField<>("windowSize");
             windowSizeField.setType(Integer.class);
             windowSizeField.setMinimum(1);
             add(windowSizeField);
 
-            sidebarSizeField = new NumberTextField<Integer>("sidebarSize");
+            sidebarSizeField = new NumberTextField<>("sidebarSize");
             sidebarSizeField.setType(Integer.class);
             sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
             sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
             add(sidebarSizeField);
 
-            fontSizeField = new NumberTextField<Integer>("fontSize");
+            fontSizeField = new NumberTextField<>("fontSize");
             fontSizeField.setType(Integer.class);
             fontSizeField.setMinimum(AnnotationPreference.FONT_SIZE_MIN);
             fontSizeField.setMaximum(AnnotationPreference.FONT_SIZE_MAX);
             add(fontSizeField);
 
-            curationWindowSizeField = new NumberTextField<Integer>("curationWindowSize");
+            curationWindowSizeField = new NumberTextField<>("curationWindowSize");
             curationWindowSizeField.setType(Integer.class);
             curationWindowSizeField.setMinimum(1);
             if (!bModel.getMode().equals(Mode.CURATION)) {
@@ -169,8 +169,8 @@ public class AnnotationPreferenceModalPanel
                             // release
                             List<AnnotationLayer> layers = annotationService
                                     .listAnnotationLayer(bModel.getProject());
-                            List<AnnotationLayer> corefTagSets = new ArrayList<AnnotationLayer>();
-                            List<AnnotationLayer> hideLayer = new ArrayList<AnnotationLayer>();
+                            List<AnnotationLayer> corefTagSets = new ArrayList<>();
+                            List<AnnotationLayer> hideLayer = new ArrayList<>();
                             for (AnnotationLayer layer : layers) {
                                 if (!layer.isEnabled()) {
                                     hideLayer.add(layer);
@@ -192,7 +192,7 @@ public class AnnotationPreferenceModalPanel
                             return layers;
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName", "id"));
+                    setChoiceRenderer(new ChoiceRenderer<>("uiName", "id"));
                 }
             });
 
@@ -226,14 +226,9 @@ public class AnnotationPreferenceModalPanel
                         PreferencesUtil.savePreference(bModel, projectService);
                         aEditor.loadFeatureEditorModels(aTarget);
                     }
-                    catch (FileNotFoundException e) {
+                    catch (IOException | AnnotationException e) {
                         error("Preference file not found");
                     }
-                    catch (IOException e) {
-                        error("Preference file not found");
-                    } catch (AnnotationException e) {
-                    	error("Preference file not found");
-					}
                     modalWindow.close(aTarget);                   
                     aTarget.add(aEditor);
                 }

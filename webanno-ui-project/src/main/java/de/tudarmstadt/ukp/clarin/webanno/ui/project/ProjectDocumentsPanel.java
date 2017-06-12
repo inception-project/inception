@@ -66,8 +66,8 @@ public class ProjectDocumentsPanel
     private @SpringBean ImportExportService importExportService;
     private @SpringBean UserDao userRepository;
 
-    private ArrayList<String> documents = new ArrayList<String>();
-    private ArrayList<String> selectedDocuments = new ArrayList<String>();
+    private ArrayList<String> documents = new ArrayList<>();
+    private ArrayList<String> selectedDocuments = new ArrayList<>();
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -80,7 +80,7 @@ public class ProjectDocumentsPanel
     public ProjectDocumentsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-        readableFormats = new ArrayList<String>(importExportService.getReadableFormatLabels());
+        readableFormats = new ArrayList<>(importExportService.getReadableFormatLabels());
         selectedFormat = readableFormats.get(0);
         
         add(fileUpload = new FileUploadField("content", new Model()));

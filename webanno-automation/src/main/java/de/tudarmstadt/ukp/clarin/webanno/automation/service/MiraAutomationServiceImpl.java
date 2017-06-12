@@ -96,7 +96,7 @@ public class MiraAutomationServiceImpl
                 + MIRA_TEMPLATE).listFiles();
 
         // Name of the MIRA template files
-        List<String> templateFiles = new ArrayList<String>();
+        List<String> templateFiles = new ArrayList<>();
         if (files != null) {
             for (File file : files) {
                 templateFiles.add(file.getName());
@@ -112,7 +112,7 @@ public class MiraAutomationServiceImpl
     {
         List<MiraTemplate> allTenplates = entityManager.createQuery(
                 "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
-        List<MiraTemplate> templatesInThisProject = new ArrayList<MiraTemplate>();
+        List<MiraTemplate> templatesInThisProject = new ArrayList<>();
         for (MiraTemplate miraTemplate : allTenplates) {
             if (miraTemplate.getTrainFeature() != null
                     && miraTemplate.getTrainFeature().getProject().getId() == aProject.getId()) {
@@ -271,7 +271,7 @@ public class MiraAutomationServiceImpl
         List<TrainingDocument> trainingDocuments = entityManager
                 .createQuery("FROM TrainingDocument where project =:project", TrainingDocument.class)
                 .setParameter("project", aProject).getResultList();
-        List<TrainingDocument> tabSepDocuments = new ArrayList<TrainingDocument>();
+        List<TrainingDocument> tabSepDocuments = new ArrayList<>();
         for (TrainingDocument trainingDocument : trainingDocuments) {
             if (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 tabSepDocuments.add(trainingDocument);

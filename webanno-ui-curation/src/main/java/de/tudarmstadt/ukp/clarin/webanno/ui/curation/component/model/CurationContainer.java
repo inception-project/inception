@@ -38,15 +38,15 @@ public class CurationContainer
 {
     private static final long serialVersionUID = -6632707037285383353L;
 
-    private Map<Integer, SourceListView> curationViewByBegin = new HashMap<Integer, SourceListView>();
+    private Map<Integer, SourceListView> curationViewByBegin = new HashMap<>();
 
     private AnnotatorState bratAnnotatorModel;
 
     public List<SourceListView> getCurationViews()
     {
-        LinkedList<Integer> viewsBegin = new LinkedList<Integer>(curationViewByBegin.keySet());
+        LinkedList<Integer> viewsBegin = new LinkedList<>(curationViewByBegin.keySet());
         Collections.sort(viewsBegin);
-        List<SourceListView> curationViews = new LinkedList<SourceListView>();
+        List<SourceListView> curationViews = new LinkedList<>();
         for (Integer begin : viewsBegin) {
             curationViews.add(curationViewByBegin.get(begin));
         }

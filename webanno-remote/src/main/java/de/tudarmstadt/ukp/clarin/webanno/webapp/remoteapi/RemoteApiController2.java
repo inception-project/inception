@@ -495,7 +495,7 @@ public class RemoteApiController2
                 httpHeaders.setContentLength(resource.length);
                 httpHeaders.set("Content-Disposition", "attachment; filename=\""+exportedFile.getName()+"\"");
                 
-                return new ResponseEntity<byte[]>(resource, httpHeaders, HttpStatus.OK);
+                return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
             }
             finally {
                 if (exportedFile != null) {
@@ -726,7 +726,7 @@ public class RemoteApiController2
         httpHeaders.setContentLength(resource.length);
         httpHeaders.set("Content-Disposition", "attachment; filename=\""+filename+"\"");
         
-        return new ResponseEntity<byte[]>(resource, httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
     }
     
     private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,

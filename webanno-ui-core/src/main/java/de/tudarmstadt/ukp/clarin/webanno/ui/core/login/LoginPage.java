@@ -127,7 +127,7 @@ public class LoginPage
         public LoginForm(String id)
         {
             super(id);
-            setModel(new CompoundPropertyModel<LoginForm>(this));
+            setModel(new CompoundPropertyModel<>(this));
             add(new RequiredTextField<String>("username"));
             add(new PasswordTextField("password"));
             Properties settings = SettingsUtil.getSettings();

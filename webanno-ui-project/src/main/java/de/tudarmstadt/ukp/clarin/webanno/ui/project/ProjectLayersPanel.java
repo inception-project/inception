@@ -157,7 +157,7 @@ public class ProjectLayersPanel
 
         public LayerSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(new Button("create", new StringResourceModel("label"))
             {
@@ -179,9 +179,9 @@ public class ProjectLayersPanel
                 }
             });
 
-            final Map<AnnotationLayer, String> colors = new HashMap<AnnotationLayer, String>();
+            final Map<AnnotationLayer, String> colors = new HashMap<>();
 
-            layerSelection = new Select<AnnotationLayer>("layerSelection");
+            layerSelection = new Select<>("layerSelection");
             ListView<AnnotationLayer> layers = new ListView<AnnotationLayer>("layers",
                     new LoadableDetachableModel<List<AnnotationLayer>>()
                     {
@@ -211,7 +211,7 @@ public class ProjectLayersPanel
                                 }
                                 return layers;
                             }
-                            return new ArrayList<AnnotationLayer>();
+                            return new ArrayList<>();
                         }
                     })
             {
@@ -220,7 +220,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void populateItem(final ListItem<AnnotationLayer> item)
                 {
-                    item.add(new SelectOption<AnnotationLayer>("layer", new Model<AnnotationLayer>(
+                    item.add(new SelectOption<AnnotationLayer>("layer", new Model<>(
                             item.getModelObject()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
@@ -422,7 +422,7 @@ public class ProjectLayersPanel
 
         public LayerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<AnnotationLayer>(new EntityModel<AnnotationLayer>(
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(
                     new AnnotationLayer())));
 
             final Project project = ProjectLayersPanel.this.getModelObject();

@@ -301,8 +301,8 @@ public class AnnotationPage
             }
         });
 
-        Form<Void> gotoPageTextFieldForm = new Form<Void>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<Integer>("gotoPageText", Model.of(1), Integer.class);
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1); 
         gotoPageTextField.setOutputMarkupId(true); 

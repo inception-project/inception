@@ -30,7 +30,7 @@ public class AnnotationOption
     implements Serializable
 {
     private static final long serialVersionUID = -688656645133996937L;
-    private List<AnnotationSelection> annotationSelections = new ArrayList<AnnotationSelection>();
+    private List<AnnotationSelection> annotationSelections = new ArrayList<>();
 
     public List<AnnotationSelection> getAnnotationSelections()
     {

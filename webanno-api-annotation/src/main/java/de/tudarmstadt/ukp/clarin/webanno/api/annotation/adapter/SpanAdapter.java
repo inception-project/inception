@@ -93,7 +93,7 @@ public class SpanAdapter
 
         // Using a sorted map here so we have reliable positions in the map when iterating. We use
         // these positions to remember the armed slots!
-        features = new TreeMap<String, AnnotationFeature>();
+        features = new TreeMap<>();
         for (AnnotationFeature f : aFeatures) {
             features.put(f.getName(), f);
         }
@@ -423,7 +423,7 @@ public class SpanAdapter
         CAS cas = aSentence.getCAS();
         
         Type type = getType(cas, getAnnotationTypeName());
-        List<String> annotations = new ArrayList<String>();
+        List<String> annotations = new ArrayList<>();
 
         for (Token token : selectCovered(Token.class, aSentence)) {
             List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
@@ -442,7 +442,7 @@ public class SpanAdapter
     public Map<Integer, String> getMultipleAnnotation(Sentence sentence, AnnotationFeature aFeature)
         throws CASException
     {
-        Map<Integer, String> multAnno = new HashMap<Integer, String>();
+        Map<Integer, String> multAnno = new HashMap<>();
         Type type = getType(sentence.getCAS(), getAnnotationTypeName());
         for (AnnotationFS fs : selectCovered(type, sentence)) {
             boolean isBegin = true;

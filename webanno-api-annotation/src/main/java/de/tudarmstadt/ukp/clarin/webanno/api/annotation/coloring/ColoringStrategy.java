@@ -156,7 +156,7 @@ public abstract class ColoringStrategy
      */
     public static String[] filterLightColors(String[] aPalette, int aThreshold)
     {
-        List<String> filtered = new ArrayList<String>();
+        List<String> filtered = new ArrayList<>();
         for (String color : aPalette) {
             if (!isTooLight(color, aThreshold)) {
                 filtered.add(color);

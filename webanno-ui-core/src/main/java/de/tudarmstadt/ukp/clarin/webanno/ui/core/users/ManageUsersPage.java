@@ -83,7 +83,7 @@ public class ManageUsersPage
 
         public SelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(new Button("create", new StringResourceModel("label"))
             {
@@ -179,12 +179,12 @@ public class ManageUsersPage
     {
         private static final long serialVersionUID = -1L;
 
-        public transient Model<String> passwordModel = new Model<String>();
-        public transient Model<String> repeatPasswordModel = new Model<String>();
+        public transient Model<String> passwordModel = new Model<>();
+        public transient Model<String> repeatPasswordModel = new Model<>();
 
         public DetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<User>(new Model<User>(new User())));
+            super(id, new CompoundPropertyModel<>(new Model<>(new User())));
 
             add(new TextField<String>("username").setOutputMarkupId(true));
             add(new PasswordTextField("password", passwordModel).setRequired(false));
@@ -192,8 +192,8 @@ public class ManageUsersPage
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
             WebMarkupContainer adminOnly = new WebMarkupContainer("adminOnly");
-            adminOnly.add(new ListMultipleChoice<Role>("roles",
-                    new ArrayList<Role>(Role.getRoles())).add(new IValidator<Collection<Role>>()
+            adminOnly.add(new ListMultipleChoice<>("roles",
+                    new ArrayList<>(Role.getRoles())).add(new IValidator<Collection<Role>>()
             {
                 private static final long serialVersionUID = 1L;
 

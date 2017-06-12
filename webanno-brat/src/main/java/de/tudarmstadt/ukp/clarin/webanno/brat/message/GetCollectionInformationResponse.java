@@ -43,15 +43,15 @@ public class GetCollectionInformationResponse
     /**
      * Column headers in the document/collection open dialog.
      */
-    private List<String[]> header = new ArrayList<String[]>();
+    private List<String[]> header = new ArrayList<>();
 
     /**
      * Collections/documents listed in the open dialog.
      */
-    private List<String[]> items = new ArrayList<String[]>();
+    private List<String[]> items = new ArrayList<>();
 
     @JsonProperty("disambiguator_config")
-    private List<String> disambiguatorConfig = new ArrayList<String>();
+    private List<String> disambiguatorConfig = new ArrayList<>();
 
     @JsonProperty("search_config")
     private List<String[]> searchConfig;
@@ -63,7 +63,7 @@ public class GetCollectionInformationResponse
     private boolean annotationLogging;
 
     @JsonProperty("entity_types")
-    private Set<EntityType> entityTypes = new HashSet<EntityType>();
+    private Set<EntityType> entityTypes = new HashSet<>();
 
     public GetCollectionInformationResponse()
     {

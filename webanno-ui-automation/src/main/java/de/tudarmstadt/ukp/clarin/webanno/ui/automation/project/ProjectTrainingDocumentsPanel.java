@@ -62,8 +62,8 @@ public class ProjectTrainingDocumentsPanel
     private @SpringBean AutomationService automationService;
     private @SpringBean UserDao userRepository;
     
-    private ArrayList<String> documents = new ArrayList<String>();
-    private ArrayList<String> selectedDocuments = new ArrayList<String>();
+    private ArrayList<String> documents = new ArrayList<>();
+    private ArrayList<String> selectedDocuments = new ArrayList<>();
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
@@ -82,12 +82,12 @@ public class ProjectTrainingDocumentsPanel
         this.selectedProjectModel = aProjectModel;
         feature = afeatureModel.getObject();
         if (aTabsDocModel.getObject().isTabSep()) {
-            readableFormats = new ArrayList<String>(
-                    Arrays.asList(new String[] { WebAnnoConst.TAB_SEP }));
+            readableFormats = new ArrayList<>(
+                    Arrays.asList(new String[]{WebAnnoConst.TAB_SEP}));
             selectedFormat = WebAnnoConst.TAB_SEP;
         }
         else {
-            readableFormats = new ArrayList<String>(importExportService.getReadableFormatLabels());
+            readableFormats = new ArrayList<>(importExportService.getReadableFormatLabels());
             selectedFormat = readableFormats.get(0);
         }
         add(fileUpload = new FileUploadField("content", new Model()));

@@ -171,7 +171,7 @@ public class CasToBratJsonTest
             LOG.info("Unable to process", ex);
         }
 
-        List<String> tagSetNames = new ArrayList<String>();
+        List<String> tagSetNames = new ArrayList<>();
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);

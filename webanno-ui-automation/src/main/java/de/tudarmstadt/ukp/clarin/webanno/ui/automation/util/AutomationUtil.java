@@ -282,15 +282,7 @@ public class AutomationUtil
             catch (IOException e) {
                 throw e;
             }
-            catch (DataRetrievalFailureException e) {
-                jCas = aDocumentService.readAnnotationCas(
-                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
-                // upgrade this cas
-                aDocumentService.upgradeCas(jCas.getCas(),
-                        aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
-            }
-            catch (NoResultException e) {
+            catch (DataRetrievalFailureException | NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
@@ -445,7 +437,7 @@ public class AutomationUtil
     {
         AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
                 aAnnotationService, aFeature.getLayer());
-        List<String> annotations = new ArrayList<String>();
+        List<String> annotations = new ArrayList<>();
      // this is training - all training documents will be converted to a single training file
         if (aSourceDocument == null) {
             for (TrainingDocument trainingDocument : aAutomationServic.listTrainingDocuments(aFeature

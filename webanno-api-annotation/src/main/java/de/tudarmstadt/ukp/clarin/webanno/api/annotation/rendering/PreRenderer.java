@@ -42,7 +42,7 @@ public class PreRenderer
         // Render visible (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
-            List<AnnotationFeature> invisibleFeatures = new ArrayList<AnnotationFeature>();
+            List<AnnotationFeature> invisibleFeatures = new ArrayList<>();
             for (AnnotationFeature feature : features) {
                 if (!feature.isVisible()) {
                     invisibleFeatures.add(feature);

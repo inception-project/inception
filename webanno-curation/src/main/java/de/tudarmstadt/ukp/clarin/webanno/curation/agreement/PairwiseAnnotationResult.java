@@ -30,7 +30,7 @@ public class PairwiseAnnotationResult
 {
     private static final long serialVersionUID = -6943850667308982795L;
     
-    private Set<String> raters = new TreeSet<String>();
+    private Set<String> raters = new TreeSet<>();
     private Map<String, AgreementResult> results = new HashMap<>();
     
     public Set<String> getRaters()

@@ -238,7 +238,7 @@ public class WebAnnoCasUtil
             final Class<T> aType, int aBegin, int aEnd)
     {
 
-        List<T> annotations = new ArrayList<T>();
+        List<T> annotations = new ArrayList<>();
         for (T t : select(aJCas, aType)) {
             if (t.getBegin() >= aEnd) {
                 break;

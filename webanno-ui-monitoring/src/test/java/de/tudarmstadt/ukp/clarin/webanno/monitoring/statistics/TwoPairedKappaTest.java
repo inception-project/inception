@@ -179,7 +179,7 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<User, JCas>();
+        Map<User, JCas> userCases = new HashMap<>();
         userCases.put(user1, kappatestCas.getJCas());
         userCases.put(user2, kappaspandiff.getJCas());
 
@@ -210,7 +210,7 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<User, JCas>();
+        Map<User, JCas> userCases = new HashMap<>();
         userCases.put(user1, kappatestCas.getJCas());
         userCases.put(user2, kappaspanarcdiff.getJCas());
 

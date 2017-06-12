@@ -96,7 +96,7 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
     private TargetLaerDetailForm targetLayerDetailForm;
 
-    private Model<AnnotationFeature> featureModel = new Model<AnnotationFeature>();
+    private Model<AnnotationFeature> featureModel = new Model<>();
 
     private AnnotationFeature selectedFeature;
     private AnnotationFeature otherSelectedFeature = new AnnotationFeature();
@@ -161,7 +161,7 @@ public class ProjectMiraTemplatePanel
 
         public MiraTrainLayerSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
             final Project project = ProjectMiraTemplatePanel.this.getModelObject();
 
             add(features = new DropDownChoice<AnnotationFeature>("features")
@@ -178,7 +178,7 @@ public class ProjectMiraTemplatePanel
                         {
                             List<AnnotationFeature> allFeatures = annotationService
                                     .listAnnotationFeature(project);
-                            List<AnnotationFeature> spanFeatures = new ArrayList<AnnotationFeature>();
+                            List<AnnotationFeature> spanFeatures = new ArrayList<>();
 
                             for (AnnotationFeature feature : allFeatures) {
                                 if (!feature.getLayer().isEnabled()

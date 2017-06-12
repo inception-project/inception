@@ -91,26 +91,26 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 		LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
 		int columns = 1;// token number + token columns (minimum required)
 		int tokenStart = 0, sentenceStart = 0;
-		Map<Type, Set<Feature>> spanLayers = new LinkedHashMap<Type, Set<Feature>>();
-		Map<Type, Type> relationayers = new LinkedHashMap<Type, Type>();
+		Map<Type, Set<Feature>> spanLayers = new LinkedHashMap<>();
+		Map<Type, Type> relationayers = new LinkedHashMap<>();
 
 		// an annotation for every feature in a layer
-		Map<Type, Map<Integer, AnnotationFS>> annotations = new LinkedHashMap<Type, Map<Integer, AnnotationFS>>();
+		Map<Type, Map<Integer, AnnotationFS>> annotations = new LinkedHashMap<>();
 
 		// store if this is a Begin/Intermediate/End of an annotation
-		Map<Type, Map<Integer, String>> beginEndAnno = new LinkedHashMap<Type, Map<Integer, String>>();
+		Map<Type, Map<Integer, String>> beginEndAnno = new LinkedHashMap<>();
 
 		// Store annotations of tokens so that it can be used later for relation
 		// annotations
-		Map<Type, Map<String, List<AnnotationFS>>> tokenAnnotations = new LinkedHashMap<Type, Map<String, List<AnnotationFS>>>();
+		Map<Type, Map<String, List<AnnotationFS>>> tokenAnnotations = new LinkedHashMap<>();
 
 		// store target token ids used for a relation
-		Map<Type, Map<String, List<String>>> relationTargets = new LinkedHashMap<Type, Map<String, List<String>>>();
+		Map<Type, Map<String, List<String>>> relationTargets = new LinkedHashMap<>();
 
 		// store tokens indexing with the concat of itsbegin-end so that lemma
 		// and pos annotation
 		// can be attached, if exists, later
-		indexedTokens = new HashMap<String, Token>();
+		indexedTokens = new HashMap<>();
 
 		while (lineIterator.hasNext()) {
 			String line = lineIterator.next().trim();
@@ -193,7 +193,7 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 			String layerNames = headerTk.nextToken().trim();
 			StringTokenizer layerTk = new StringTokenizer(layerNames, "|");
 
-			Set<Feature> features = new LinkedHashSet<Feature>();
+			Set<Feature> features = new LinkedHashSet<>();
 			String layerName = layerTk.nextToken().trim();
 
 			Iterator<Type> types = aJcas.getTypeSystem().getTypeIterator();
@@ -300,7 +300,7 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 			int lastIndex = 1;
 			// if a layer is bound to a single token but has multiple feature
 			// annotation is created once and feature values be appended
-			Map<Integer, AnnotationFS> singleTokenMultiFeature = new HashMap<Integer, AnnotationFS>();
+			Map<Integer, AnnotationFS> singleTokenMultiFeature = new HashMap<>();
 
 			// The relation line number should be read once all feature columns
 			// are obtained
@@ -358,16 +358,16 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 						if (aRelationayers.containsKey(layer) && numberOfFeaturesPerLayer == 0) {
 							Map<String, List<String>> targets = aRelationTargets.get(layer);
 							if (targets == null) {
-								List<String> governors = new ArrayList<String>();
+								List<String> governors = new ArrayList<>();
 								governors.add(relationTargets[i]);
-								targets = new HashMap<String, List<String>>();
+								targets = new HashMap<>();
 								targets.put(aTokenNumberColumn, governors);
 								i++;
 								aRelationTargets.put(layer, targets);
 							} else {
 								List<String> governors = targets.get(aTokenNumberColumn);
 								if (governors == null) {
-									governors = new ArrayList<String>();
+									governors = new ArrayList<>();
 								}
 								governors.add(relationTargets[i]);
 								targets.put(aTokenNumberColumn, governors);
@@ -378,11 +378,11 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 
 						Map<String, List<AnnotationFS>> tokenAnnotations = aTokenAnnotations.get(layer);
 						if (tokenAnnotations == null) {
-							tokenAnnotations = new HashMap<String, List<AnnotationFS>>();
+							tokenAnnotations = new HashMap<>();
 						}
 						List<AnnotationFS> relAnnos = tokenAnnotations.get(aTokenNumberColumn);
 						if (relAnnos == null) {
-							relAnnos = new ArrayList<AnnotationFS>();
+							relAnnos = new ArrayList<>();
 						}
 						relAnnos.add(newAnnotation);
 						tokenAnnotations.put(aTokenNumberColumn, relAnnos);
@@ -402,8 +402,8 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 						if (indexedAnnos == null) {
 							newAnnotation = aJcas.getCas().createAnnotation(layer, aTokenStart,
 									aTokenStart + aToken.length());
-							indexedAnnos = new LinkedHashMap<Integer, AnnotationFS>();
-							indexedBeginEndAnnos = new LinkedHashMap<Integer, String>();
+							indexedAnnos = new LinkedHashMap<>();
+							indexedBeginEndAnnos = new LinkedHashMap<>();
 						} else if (indexedAnnos.get(index) == null) {
 							newAnnotation = aJcas.getCas().createAnnotation(layer, aTokenStart,
 									aTokenStart + aToken.length());
@@ -436,16 +436,16 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 						if (aRelationayers.containsKey(layer)) {
 							Map<String, List<String>> targets = aRelationTargets.get(layer);
 							if (targets == null) {
-								List<String> governors = new ArrayList<String>();
+								List<String> governors = new ArrayList<>();
 								governors.add(relationTargets[i]);
-								targets = new HashMap<String, List<String>>();
+								targets = new HashMap<>();
 								targets.put(aTokenNumberColumn, governors);
 								i++;
 								aRelationTargets.put(layer, targets);
 							} else {
 								List<String> governors = targets.get(aTokenNumberColumn);
 								if (governors == null) {
-									governors = new ArrayList<String>();
+									governors = new ArrayList<>();
 								}
 								governors.add(relationTargets[i]);
 								targets.put(aTokenNumberColumn, governors);
@@ -457,11 +457,11 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 						Map<String, List<AnnotationFS>> tokenAnnotations = aTokenAnnotations.get(layer);
 						if (isNewAnnotation) {
 							if (tokenAnnotations == null) {
-								tokenAnnotations = new HashMap<String, List<AnnotationFS>>();
+								tokenAnnotations = new HashMap<>();
 							}
 							List<AnnotationFS> relAnnos = tokenAnnotations.get(aTokenNumberColumn);
 							if (relAnnos == null) {
-								relAnnos = new ArrayList<AnnotationFS>();
+								relAnnos = new ArrayList<>();
 							}
 							relAnnos.add(newAnnotation);
 							tokenAnnotations.put(aTokenNumberColumn, relAnnos);

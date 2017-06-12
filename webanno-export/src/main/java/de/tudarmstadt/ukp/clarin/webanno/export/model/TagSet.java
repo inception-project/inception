@@ -60,7 +60,7 @@ public class TagSet
     String typeDescription;
 
     @JsonProperty("tags")
-    List<Tag> tags = new ArrayList<Tag>();
+    List<Tag> tags = new ArrayList<>();
 
     @JsonProperty("create_tag")
     private boolean createTag;

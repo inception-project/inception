@@ -130,9 +130,9 @@ public class OpenDocumentDialogPanel
 
         public ProjectSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
-            projectSelection = new Select<Project>("projectSelection");
+            projectSelection = new Select<>("projectSelection");
             
             ListView<DecoratedObject<Project>> lv = new ListView<DecoratedObject<Project>>(
                     "projects", projects)
@@ -146,7 +146,7 @@ public class OpenDocumentDialogPanel
                     
                     String color = defaultIfEmpty(dp.getColor(), "#008000");
                     
-                    item.add(new SelectOption<Project>("project", new Model<Project>(dp.get()))
+                    item.add(new SelectOption<Project>("project", new Model<>(dp.get()))
                     {
                         private static final long serialVersionUID = 3095089418860168215L;
 
@@ -211,9 +211,9 @@ public class OpenDocumentDialogPanel
         public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
 
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
-            documentSelection = new Select<SourceDocument>("documentSelection");
+            documentSelection = new Select<>("documentSelection");
             lv = new ListView<DecoratedObject<SourceDocument>>("documents",
                     new LoadableDetachableModel<List<DecoratedObject<SourceDocument>>>()
                     {

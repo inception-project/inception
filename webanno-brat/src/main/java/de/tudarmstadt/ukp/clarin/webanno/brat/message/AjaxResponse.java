@@ -27,7 +27,7 @@ import java.util.List;
 public class AjaxResponse
 {
     private String action;
-    private List<String> messages = new ArrayList<String>();
+    private List<String> messages = new ArrayList<>();
 
     public AjaxResponse()
     {

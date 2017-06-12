@@ -164,7 +164,7 @@ public class SuggestionViewPanel
                         .getModelObject();
                 BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
                         "sentence",
-                        new Model<CurationUserSegmentForAnnotationDocument>(curationUserSegment))
+                        new Model<>(curationUserSegment))
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
 
@@ -418,7 +418,7 @@ public class SuggestionViewPanel
             final Map<String, Map<VID, AnnotationState>> aStates)
         throws IOException
     {
-        List<String> usernamesSorted = new ArrayList<String>(aJCases.keySet());
+        List<String> usernamesSorted = new ArrayList<>(aJCases.keySet());
         Collections.sort(usernamesSorted);
 
         final Mode mode = aBratAnnotatorModel.getMode();
@@ -548,7 +548,7 @@ public class SuggestionViewPanel
     {
         AnnotatorState bModel = aCurationContainer.getBratAnnotatorModel();
         SourceDocument sourceDocument = bModel.getDocument();
-        Map<String, JCas> jCases = new HashMap<String, JCas>();
+        Map<String, JCas> jCases = new HashMap<>();
 
         // This is the CAS that the user can actively edit
         JCas annotatorCas = getAnnotatorCas(bModel, aAnnotationSelectionByUsernameAndAddress,
@@ -603,7 +603,7 @@ public class SuggestionViewPanel
 
         addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false, true);
 
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
 
         populateCurationSentences(jCases, sentences, bModel, annotationOptions,
                 aAnnotationSelectionByUsernameAndAddress, annotationService, aCurationContainer,

@@ -200,10 +200,7 @@ public class TeiReader
             // Make sure we know about the first element;
             nextTeiElement();
         }
-        catch (CollectionException e) {
-            new ResourceInitializationException(e);
-        }
-        catch (IOException e) {
+        catch (CollectionException | IOException e) {
             new ResourceInitializationException(e);
         }
     }
@@ -244,10 +241,7 @@ public class TeiReader
                 teiElementIterator = teiElements.iterator();
                 currentTeiElementNumber = 0;
             }
-            catch (DocumentException e) {
-                throw new IOException(e);
-            }
-            catch (JaxenException e) {
+            catch (DocumentException | JaxenException e) {
                 throw new IOException(e);
             }
             finally {
@@ -362,7 +356,7 @@ public class TeiReader
 
         private String language = null;
 
-        Map<String, Token> tokenIds = new LinkedHashMap<String, Token>();
+        Map<String, Token> tokenIds = new LinkedHashMap<>();
 
         private final StringBuilder buffer = new StringBuilder();
 

@@ -88,11 +88,11 @@ public class ProjectUsersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        List<User> userLists = new ArrayList<User>();
+        List<User> userLists = new ArrayList<>();
 
         public UserSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(users = new ListChoice<User>("user")
             {
@@ -122,7 +122,7 @@ public class ProjectUsersPanel
                             List<ProjectPermission> projectPermissions = projectRepository
                                     .listProjectPermissionLevel(aObject,
                                             ProjectUsersPanel.this.getModelObject());
-                            List<String> permissionLevels = new ArrayList<String>();
+                            List<String> permissionLevels = new ArrayList<>();
                             for (ProjectPermission projectPermission : projectPermissions) {
                                 permissionLevels.add(projectPermission.getLevel().getName());
                             }
@@ -145,7 +145,7 @@ public class ProjectUsersPanel
                     List<ProjectPermission> projectPermissions = projectRepository
                             .listProjectPermissionLevel(selectedUser,
                                     ProjectUsersPanel.this.getModelObject());
-                    List<PermissionLevel> levels = new ArrayList<PermissionLevel>();
+                    List<PermissionLevel> levels = new ArrayList<>();
                     for (ProjectPermission permission : projectPermissions) {
                         levels.add(permission.getLevel());
                     }
@@ -257,9 +257,9 @@ public class ProjectUsersPanel
     {
         private static final long serialVersionUID = 9137613222721590389L;
 
-        public List<PermissionLevel> permissionLevels = new ArrayList<PermissionLevel>();
+        public List<PermissionLevel> permissionLevels = new ArrayList<>();
         public User user;
-        public List<User> users = new ArrayList<User>();
+        public List<User> users = new ArrayList<>();
         public String userFilter;
     }
 
@@ -270,7 +270,7 @@ public class ProjectUsersPanel
 
         public PermissionLevelDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
             add(permissionLevels = new CheckBoxMultipleChoice<PermissionLevel>("permissionLevels")
             {
                 private static final long serialVersionUID = 1L;

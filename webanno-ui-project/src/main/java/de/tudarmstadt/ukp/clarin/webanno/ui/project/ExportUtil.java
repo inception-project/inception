@@ -149,8 +149,8 @@ public class ExportUtil
 
         exProjekt.setTagSets(extTagSets);
       
-        List<SourceDocument> sourceDocuments = new ArrayList<SourceDocument>();
-        List<AnnotationDocument> annotationDocuments = new ArrayList<AnnotationDocument>();
+        List<SourceDocument> sourceDocuments = new ArrayList<>();
+        List<AnnotationDocument> annotationDocuments = new ArrayList<>();
 
   
         // add source documents to a project
@@ -185,7 +185,7 @@ public class ExportUtil
         exProjekt.setAnnotationDocuments(annotationDocuments);
         
         List<de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument> trainDocuments = new
-        		ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.TrainingDocument>();
+                ArrayList<>();
         List<TrainingDocument> trainingDocuments = automationService
                 .listTrainingDocuments(aProject);
         
@@ -209,7 +209,7 @@ public class ExportUtil
         
         exProjekt.setTrainingDocuments(trainDocuments);
 
-        List<ProjectPermission> projectPermissions = new ArrayList<ProjectPermission>();
+        List<ProjectPermission> projectPermissions = new ArrayList<>();
 
         // add project permissions to the project
         for (User user : projectService.listProjectUsersWithPermissions(aProject)) {

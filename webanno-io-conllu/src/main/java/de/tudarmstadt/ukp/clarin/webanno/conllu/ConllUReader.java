@@ -340,7 +340,7 @@ public class ConllUReader
     private static List<String[]> readSentence(BufferedReader aReader)
         throws IOException
     {
-        List<String[]> words = new ArrayList<String[]>();
+        List<String[]> words = new ArrayList<>();
         String line;
         while ((line = aReader.readLine()) != null) {
             if (StringUtils.isBlank(line)) {

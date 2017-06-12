@@ -35,7 +35,7 @@ public class GetDocumentResponse
 {
     public static final String COMMAND = "getDocument";
 
-    private List<String> modifications = new ArrayList<String>();
+    private List<String> modifications = new ArrayList<>();
 
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
@@ -46,7 +46,7 @@ public class GetDocumentResponse
     private String text;
 
     @JsonProperty("source_files")
-    private List<String> sourceFiles = new ArrayList<String>();
+    private List<String> sourceFiles = new ArrayList<>();
 
     private long ctime;
     private long mtime;
@@ -71,24 +71,24 @@ public class GetDocumentResponse
      * [ 0, 3 ]
      */
     @JsonProperty("token_offsets")
-    private List<Offsets> tokenOffsets = new ArrayList<Offsets>();
+    private List<Offsets> tokenOffsets = new ArrayList<>();
 
     /**
      * [ 0, 3 ]
      */
     @JsonProperty("sentence_offsets")
-    private List<Offsets> sentenceOffsets = new ArrayList<Offsets>();
+    private List<Offsets> sentenceOffsets = new ArrayList<>();
 
-    private List<Relation> relations = new ArrayList<Relation>();
+    private List<Relation> relations = new ArrayList<>();
 
     /**
      * ["T1", "Protein", 8, 11]
      *
      * Guess: ID (maybe token ID?), Type, begin offset, end offset
      */
-    private List<Entity> entities = new ArrayList<Entity>();
-    private List<String> attributes = new ArrayList<String>();
-    private List<String> equivs = new ArrayList<String>();
+    private List<Entity> entities = new ArrayList<>();
+    private List<String> attributes = new ArrayList<>();
+    private List<String> equivs = new ArrayList<>();
 
     private List<Comment> comments = new ArrayList<>();
     public GetDocumentResponse()

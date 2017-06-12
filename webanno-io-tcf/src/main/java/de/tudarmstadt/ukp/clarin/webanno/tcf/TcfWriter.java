@@ -221,7 +221,7 @@ public class TcfWriter
                 TextCorpusLayerTag.SENTENCES);
         
         // If we have annotations for these layers in the CAS, we rewrite those layers. 
-        List<TextCorpusLayerTag> layersToReplace = new ArrayList<TextCorpusLayerTag>();
+        List<TextCorpusLayerTag> layersToReplace = new ArrayList<>();
         if (exists(aJCas, POS.class) || !preserveIfEmpty) {
             layersToReplace.add(TextCorpusLayerTag.POSTAGS);
         }
@@ -286,8 +286,8 @@ public class TcfWriter
         }
         
         
-        Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap = 
-                new HashMap<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token>();
+        Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap =
+                new HashMap<>();
 
         int j = 0;
         for (Token token : select(aJCas, Token.class)) {
@@ -384,7 +384,7 @@ public class TcfWriter
         getLogger().debug("Layer [" + TextCorpusLayerTag.SENTENCES.getXmlName() + "]: created");
 
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokens = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Token>();
+            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokens = new ArrayList<>();
             for (Token token : selectCovered(Token.class, sentence)) {
                 tokens.add(aTokensBeginPositionMap.get(token.getBegin()));
             }
@@ -415,7 +415,7 @@ public class TcfWriter
         getLogger().debug("Layer [" + TextCorpusLayerTag.PARSING_DEPENDENCY.getXmlName() + "]: created");
         
         for (Sentence s : select(aJCas, Sentence.class)) {
-            List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Dependency>();
+            List<eu.clarin.weblicht.wlfxb.tc.api.Dependency> deps = new ArrayList<>();
             for (Dependency d : selectCovered(Dependency.class, s)) {
                 eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency = dependencyParsingLayer
                         .createDependency(d.getDependencyType(),
@@ -454,7 +454,7 @@ public class TcfWriter
         for (NamedEntity namedEntity : select(aJCas, NamedEntity.class)) {
             List<Token> tokensInCas = selectCovered(aJCas, Token.class, namedEntity.getBegin(),
                     namedEntity.getEnd());
-            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokensInTcf = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Token>();
+            List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokensInTcf = new ArrayList<>();
             for (Token token : tokensInCas) {
                 tokensInTcf.add(aTokensBeginPositionMap.get(token.getBegin()));
             }
@@ -487,10 +487,10 @@ public class TcfWriter
         for (CoreferenceChain chain : select(aJCas, CoreferenceChain.class)) {
             CoreferenceLink prevLink = null;
             Reference prevRef = null;
-            List<Reference> refs = new ArrayList<Reference>();
+            List<Reference> refs = new ArrayList<>();
             for (CoreferenceLink link : chain.links()) {
                 // Get covered tokens
-                List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokens = new ArrayList<eu.clarin.weblicht.wlfxb.tc.api.Token>();
+                List<eu.clarin.weblicht.wlfxb.tc.api.Token> tokens = new ArrayList<>();
                 for (Token token : selectCovered(Token.class, link)) {
                     tokens.add(aTokensBeginPositionMap.get(token.getBegin()));
                 }

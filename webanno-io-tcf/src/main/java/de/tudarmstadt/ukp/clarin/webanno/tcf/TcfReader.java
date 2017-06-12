@@ -135,7 +135,7 @@ public class TcfReader
     {
         if (aCorpusData.getTokensLayer() == null) {
             // No layer to read from.
-            return new HashMap<String, Token>();
+            return new HashMap<>();
         }
 
         String text = aJCas.getDocumentText();
@@ -143,7 +143,7 @@ public class TcfReader
         Token outToken;
         int tokenBeginPosition = 0;
         int tokenEndPosition;
-        Map<String, Token> tokens = new HashMap<String, Token>();
+        Map<String, Token> tokens = new HashMap<>();
 
         for (int i = 0; i < aCorpusData.getTokensLayer().size(); i++) {
 
@@ -341,7 +341,7 @@ public class TcfReader
             eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity = aCorpusData
                     .getReferencesLayer().getReferencedEntity(i);
 
-            Map<Integer, CoreferenceLink> referencesMap = new TreeMap<Integer, CoreferenceLink>();
+            Map<Integer, CoreferenceLink> referencesMap = new TreeMap<>();
             storeReferencesAndTargetsInMap(referencesMap, entity, aCorpusData, aTokens, aJCas);
 
             CoreferenceChain chain = new CoreferenceChain(aJCas);
@@ -403,8 +403,8 @@ public class TcfReader
     private int[] getOffsets(eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
             Map<String, Token> aAllTokens)
     {
-        List<Integer> beginPositions = new ArrayList<Integer>();
-        List<Integer> endPositions = new ArrayList<Integer>();
+        List<Integer> beginPositions = new ArrayList<>();
+        List<Integer> endPositions = new ArrayList<>();
         for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aSpanTokens) {
             beginPositions.add(aAllTokens.get(token.getID()).getBegin());
             endPositions.add(aAllTokens.get(token.getID()).getEnd());
@@ -422,8 +422,8 @@ public class TcfReader
      */
     private int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens)
     {
-        List<Integer> beginPositions = new ArrayList<Integer>();
-        List<Integer> endPositions = new ArrayList<Integer>();
+        List<Integer> beginPositions = new ArrayList<>();
+        List<Integer> endPositions = new ArrayList<>();
         for (String token : aSpanTokens) {
             beginPositions.add(aAllTokens.get(token).getBegin());
             endPositions.add(aAllTokens.get(token).getEnd());

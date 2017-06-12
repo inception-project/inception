@@ -55,8 +55,8 @@ public class AnnotationGuideLinePanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectRepository;
 
-    private ArrayList<String> documents = new ArrayList<String>();
-    private ArrayList<String> selectedDocuments = new ArrayList<String>();
+    private ArrayList<String> documents = new ArrayList<>();
+    private ArrayList<String> selectedDocuments = new ArrayList<>();
 
     private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;

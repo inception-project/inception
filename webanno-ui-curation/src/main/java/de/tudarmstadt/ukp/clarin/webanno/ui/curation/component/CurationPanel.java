@@ -101,7 +101,7 @@ public class CurationPanel
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
      * username from which the span has been selected
      */
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<String, Map<Integer, AnnotationSelection>>();
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
     public SourceListView curationView;
 
@@ -155,7 +155,7 @@ public class CurationPanel
     
         bModel = getModelObject().getBratAnnotatorModel();
     
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<CurationUserSegmentForAnnotationDocument>();
+        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
         if (bModel != null) {
             curationUserSegmentForAnnotationDocument
@@ -168,7 +168,7 @@ public class CurationPanel
                 : sourceListModel;
     
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
-                new Model<LinkedList<CurationUserSegmentForAnnotationDocument>>(sentences))
+                new Model<>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
             CurationContainer curationContainer = cCModel.getObject();
@@ -185,13 +185,7 @@ public class CurationPanel
                 catch (UIMAException e) {
                     error(ExceptionUtils.getRootCause(e));
                 }
-                catch (ClassNotFoundException e) {
-                    error(e.getMessage());
-                }
-                catch (IOException e) {
-                    error(e.getMessage());
-                }
-                catch (AnnotationException e) {
+                catch (ClassNotFoundException | AnnotationException | IOException e) {
                     error(e.getMessage());
                 }
             }
@@ -201,7 +195,7 @@ public class CurationPanel
         annotationViewCell.add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<AnnotatorState>(bModel))
+                "annotationDetailEditorPanel", new Model<>(bModel))
         {
             private static final long serialVersionUID = 2857345299480098279L;
     
@@ -249,7 +243,7 @@ public class CurationPanel
         };
         sidebarCell.add(editor);
     
-        annotationEditor = new BratAnnotationEditor("mergeView", new Model<AnnotatorState>(bModel), editor,
+        annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(bModel), editor,
                 () -> { return getEditorCas(); });
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         annotationViewCell.add(annotationEditor);
@@ -354,13 +348,7 @@ public class CurationPanel
                         catch (UIMAException e) {
                             error(ExceptionUtils.getRootCause(e));
                         }
-                        catch (ClassNotFoundException e) {
-                            error(e.getMessage());
-                        }
-                        catch (IOException e) {
-                            error(e.getMessage());
-                        }
-                        catch (AnnotationException e) {
+                        catch (ClassNotFoundException | AnnotationException | IOException e) {
                             error(e.getMessage());
                         }
                     }

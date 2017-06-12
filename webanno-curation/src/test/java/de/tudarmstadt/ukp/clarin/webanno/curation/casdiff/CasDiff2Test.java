@@ -588,7 +588,7 @@ public class CasDiff2Test
        
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
 
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<Token, Sentence>(Token.class,
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
         
         JCas jcasA = JCasFactory.createJCas(merged);

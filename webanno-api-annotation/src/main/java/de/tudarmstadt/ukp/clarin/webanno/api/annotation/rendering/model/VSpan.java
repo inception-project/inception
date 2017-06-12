@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VSpan
     extends VObject
 {
-    private List<VRange> ranges = new ArrayList<VRange>();
+    private List<VRange> ranges = new ArrayList<>();
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures)

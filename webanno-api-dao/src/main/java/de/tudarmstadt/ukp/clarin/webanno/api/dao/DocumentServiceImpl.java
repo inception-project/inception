@@ -325,7 +325,7 @@ public class DocumentServiceImpl
         // Bail out already. HQL doesn't seem to like queries with an empty
         // parameter right of "in"
         if (users.isEmpty()) {
-            return new ArrayList<AnnotationDocument>();
+            return new ArrayList<>();
         }
 
         return entityManager
@@ -355,7 +355,7 @@ public class DocumentServiceImpl
         List<SourceDocument> sourceDocuments = entityManager
                 .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC", SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
-        List<SourceDocument> tabSepDocuments = new ArrayList<SourceDocument>();
+        List<SourceDocument> tabSepDocuments = new ArrayList<>();
         for (SourceDocument sourceDocument : sourceDocuments) {
             if (sourceDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 tabSepDocuments.add(sourceDocument);

@@ -128,7 +128,7 @@ public class AnnotatorStateImpl
     /**
      * The annotation layers available in the current project.
      */
-    private List<AnnotationLayer> annotationLayers = new ArrayList<AnnotationLayer>();
+    private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private AnnotationPreference preferences = new AnnotationPreference();
 
@@ -145,8 +145,8 @@ public class AnnotatorStateImpl
     private AnnotationLayer rememberedSpanLayer;
     private AnnotationLayer rememberedArcLayer;
 
-    private Map<AnnotationFeature, Serializable> rememberedSpanFeatures = new HashMap<AnnotationFeature, Serializable>();
-    private Map<AnnotationFeature, Serializable> rememberedArcFeatures = new HashMap<AnnotationFeature, Serializable>();
+    private Map<AnnotationFeature, Serializable> rememberedSpanFeatures = new HashMap<>();
+    private Map<AnnotationFeature, Serializable> rememberedArcFeatures = new HashMap<>();
 
     // the selected annotation layer
     private AnnotationLayer selectedAnnotationLayer;

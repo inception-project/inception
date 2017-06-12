@@ -218,7 +218,7 @@ public class ProjectPage
                             return projectService.listAccessibleProjects(user);
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<Project>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
                     
                     add(new OnChangeAjaxBehavior()
@@ -370,7 +370,7 @@ public class ProjectPage
                 tabs.add(tab);
             }
             
-            AjaxTabbedPanel<ITab> tabsPanel = new AjaxTabbedPanel<ITab>("tabs", tabs);
+            AjaxTabbedPanel<ITab> tabsPanel = new AjaxTabbedPanel<>("tabs", tabs);
             tabsPanel.setOutputMarkupPlaceholderTag(true);
             tabsPanel.setOutputMarkupId(true);
             return tabsPanel;
@@ -389,7 +389,7 @@ public class ProjectPage
         public ProjectDetailsPanel(String id)
         {
             super(id);
-            TextField<String> projectNameTextField = new TextField<String>("name");
+            TextField<String> projectNameTextField = new TextField<>("name");
             projectNameTextField.setRequired(true);
             add(projectNameTextField);
 
@@ -409,7 +409,7 @@ public class ProjectPage
                 }
             });
 
-            add(new DropDownChoice<ScriptDirection>("scriptDirection",
+            add(new DropDownChoice<>("scriptDirection",
                     Arrays.asList(ScriptDirection.values())));
             
             add(new CheckBox("disableExport"));

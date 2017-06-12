@@ -117,16 +117,16 @@ public class WebannoTsv2Writer
     {
         LowLevelCAS llCas = aJCas.getLowLevelCas();
         
-        tokenIds = new HashMap<Integer, String>();
+        tokenIds = new HashMap<>();
         setTokenId(aJCas, tokenIds);
-        tokenPositions = new TreeMap<Integer, Integer>();
+        tokenPositions = new TreeMap<>();
         setTokenPosition(aJCas, tokenPositions);
 
-        Map<Integer, Integer> getTokensPerSentence = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> getTokensPerSentence = new TreeMap<>();
         setTokenSentenceAddress(aJCas, getTokensPerSentence);
 
         // list of annotation types
-        Set<Type> allTypes = new LinkedHashSet<Type>();
+        Set<Type> allTypes = new LinkedHashSet<>();
 
         for (Annotation a : select(aJCas, Annotation.class)) {
             if (!(a instanceof Token || a instanceof Sentence || a instanceof DocumentMetaData
@@ -134,7 +134,7 @@ public class WebannoTsv2Writer
                 allTypes.add(a.getType());
             }
         }
-        Set<Type> relationTypes = new LinkedHashSet<Type>();
+        Set<Type> relationTypes = new LinkedHashSet<>();
 
         // get all arc types
         for (Type type : allTypes) {
@@ -153,7 +153,7 @@ public class WebannoTsv2Writer
         allTypes.removeAll(relationTypes);
 
         // relation annotations
-        Map<Type, String> relationTypesMap = new HashMap<Type, String>();
+        Map<Type, String> relationTypesMap = new HashMap<>();
         for (Type type : relationTypes) {
             if (type.getName().equals(Dependency.class.getName())) {
                 relationTypesMap.put(type, POS.class.getName());
@@ -171,7 +171,7 @@ public class WebannoTsv2Writer
 
         // all span annotation first
 
-        Map<Feature, Type> spanFeatures = new LinkedHashMap<Feature, Type>();
+        Map<Feature, Type> spanFeatures = new LinkedHashMap<>();
         allTypes: for (Type type : allTypes) {
             if (type.getFeatures().size() == 0) {
                 continue;
@@ -195,7 +195,7 @@ public class WebannoTsv2Writer
         }
 
         // write all relation annotation first
-        Set<Feature> relationFeatures = new LinkedHashSet<Feature>();
+        Set<Feature> relationFeatures = new LinkedHashSet<>();
         for (Type type : relationTypes) {
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
@@ -215,7 +215,7 @@ public class WebannoTsv2Writer
 
         IOUtils.write("\n", aOs, aEncoding);
 
-        Map<Feature, Map<Integer, String>> allAnnos = new HashMap<Feature, Map<Integer, String>>();
+        Map<Feature, Map<Integer, String>> allAnnos = new HashMap<>();
         allTypes: for (Type type : allTypes) {
             for (Feature feature : type.getFeatures()) {
                 // coreference annotation not supported
@@ -230,14 +230,14 @@ public class WebannoTsv2Writer
                     continue;
                 }
 
-                Map<Integer, String> tokenAnnoMap = new TreeMap<Integer, String>();
+                Map<Integer, String> tokenAnnoMap = new TreeMap<>();
                 setTokenAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
                 allAnnos.put(feature, tokenAnnoMap);
 
             }
         }
         // get tokens where dependents are drown to
-        Map<Feature, Map<Integer, String>> relAnnos = new HashMap<Feature, Map<Integer, String>>();
+        Map<Feature, Map<Integer, String>> relAnnos = new HashMap<>();
         for (Type type : relationTypes) {
             for (Feature feature : type.getFeatures()) {
                 if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
@@ -248,17 +248,17 @@ public class WebannoTsv2Writer
                     continue;
                 }
 
-                Map<Integer, String> tokenAnnoMap = new HashMap<Integer, String>();
+                Map<Integer, String> tokenAnnoMap = new HashMap<>();
                 setRelationFeatureAnnos(aJCas.getCas(), tokenAnnoMap, type, feature);
                 relAnnos.put(feature, tokenAnnoMap);
             }
         }
 
         // get tokens where dependents are drown from - the governor
-        Map<Type, Map<Integer, String>> governorAnnos = new HashMap<Type, Map<Integer, String>>();
+        Map<Type, Map<Integer, String>> governorAnnos = new HashMap<>();
         for (Type type : relationTypes) {
 
-            Map<Integer, String> govAnnoMap = new HashMap<Integer, String>();
+            Map<Integer, String> govAnnoMap = new HashMap<>();
             setRelationGovernorPos(aJCas.getCas(), govAnnoMap, type);
             governorAnnos.put(type, govAnnoMap);
         }
