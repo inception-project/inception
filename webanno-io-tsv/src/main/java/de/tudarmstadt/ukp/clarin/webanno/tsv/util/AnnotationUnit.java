@@ -49,20 +49,18 @@ public class AnnotationUnit {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object obj)
+	{
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		AnnotationUnit other = (AnnotationUnit) obj;
-		if (begin != other.begin)
-			return false;
-		if (end != other.end)
-			return false;
-		if (isSubtoken != other.isSubtoken)
-			return false;
-		return true;
+		return begin == other.begin && end == other.end && isSubtoken == other.isSubtoken;
 	}
 }

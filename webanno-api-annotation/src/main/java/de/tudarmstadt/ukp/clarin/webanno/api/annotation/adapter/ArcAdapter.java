@@ -79,7 +79,7 @@ public class ArcAdapter
 
     private final String targetFeatureName;
 
-    /*    *//**
+    /*
      * The UIMA type name used as for origin/target span annotations, e.g. {@link POS} for
      * {@link Dependency}
      */

@@ -86,7 +86,7 @@ public class CasToBratJsonTest
 
         GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
 
-        List<AnnotationLayer> layerList = new ArrayList<AnnotationLayer>();
+        List<AnnotationLayer> layerList = new ArrayList<>();
 
         AnnotationLayer layer = new AnnotationLayer();
         layer.setDescription("span annoattion");
@@ -116,9 +116,9 @@ public class CasToBratJsonTest
         collectionInformation.addDocument("/Collection2/doc2");
         collectionInformation.addDocument("/Collection3/doc2");
 
-        collectionInformation.setSearchConfig(new ArrayList<String[]>());
+        collectionInformation.setSearchConfig(new ArrayList<>());
 
-        List<String> tagSetNames = new ArrayList<String>();
+        List<String> tagSetNames = new ArrayList<>();
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);

@@ -45,9 +45,6 @@ public enum SentenceState
      */
     SELECTED_DISAGREE(true, "#C736D1"),
     /**
-     *
-     */
-    /**
      * In the range of current display window
      */
     SELECTED_RANGE(true, "#FFFF00"),

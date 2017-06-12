@@ -28,8 +28,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
@@ -74,7 +74,7 @@ public class WebAnnoCasUtil
         if (a == null || b == null) {
             return false;
         }
-
+	    
         if (a.getCAS() != b.getCAS()) {
             return false;
         }
@@ -170,13 +170,7 @@ public class WebAnnoCasUtil
         List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
 
         // Remove all that do not have the exact same offset
-        Iterator<AnnotationFS> i = covered.iterator();
-        while (i.hasNext()) {
-            AnnotationFS cur = i.next();
-            if (!(cur.getBegin() == aBegin && cur.getEnd() == aEnd)) {
-                i.remove();
-            }
-        }
+        covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));
 
         return covered;
     }
@@ -476,8 +470,8 @@ public class WebAnnoCasUtil
         }
 
         // Center sentence
-        Sentence c = (Sentence) aSentence;
-        Sentence n = (Sentence) s;
+        Sentence c = aSentence;
+        Sentence n = s;
 
         if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
             return s;
@@ -610,7 +604,7 @@ public class WebAnnoCasUtil
     public static List<Integer> getDisplayWindowBeginningSentenceAddresses(JCas aJcas,
             int aWindowSize)
     {
-        List<Integer> beginningAddresses = new ArrayList<Integer>();
+        List<Integer> beginningAddresses = new ArrayList<>();
         int j = 0;
         for (Sentence sentence : select(aJcas, Sentence.class)) {
             if (j % aWindowSize == 0) {
@@ -730,7 +724,7 @@ public class WebAnnoCasUtil
                 aEndOffset);
         StringBuilder seletedTextSb = new StringBuilder();
         for (Token token : tokens) {
-            seletedTextSb.append(token.getCoveredText() + " ");
+            seletedTextSb.append(token.getCoveredText()).append(" ");
         }
         return seletedTextSb.toString();
     }
@@ -766,7 +760,7 @@ public class WebAnnoCasUtil
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
             // Sanity check
-            if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
                 throw new IllegalArgumentException("Actual feature type ["
                         + feature.getRange().getName() + "]does not match expected feature type ["
                         + aFeature.getType() + "].");
@@ -846,7 +840,7 @@ public class WebAnnoCasUtil
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
             // Sanity check
-            if (!ObjectUtils.equals(aFeature.getType(), feature.getRange().getName())) {
+            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
                 throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
                         + aFeature.getName() + "] actual type [" + feature.getRange().getName()
                         + "] does not match expected feature type [" + aFeature.getType() + "].");

@@ -186,33 +186,35 @@ public class ImportUtil
         List<String> corefTypeTags = new ArrayList<String>();
         List<String> corefRelTags = new ArrayList<String>();
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet tagSet : importedTagSets) {
-            if (tagSet.getTypeName().equals(WebAnnoConst.POS)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
-                    posTags.add(tag.getName());
-                    posTagDescriptions.add(tag.getDescription());
-                }
-            }
-            else if (tagSet.getTypeName().equals(WebAnnoConst.DEPENDENCY)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
-                    depTags.add(tag.getName());
-                    depTagDescriptions.add(tag.getDescription());
-                }
-            }
-            else if (tagSet.getTypeName().equals(WebAnnoConst.NAMEDENTITY)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
-                    neTags.add(tag.getName());
-                    neTagDescriptions.add(tag.getDescription());
-                }
-            }
-            else if (tagSet.getTypeName().equals(WebAnnoConst.COREFRELTYPE)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
-                    corefTypeTags.add(tag.getName());
-                }
-            }
-            else if (tagSet.getTypeName().equals(WebAnnoConst.COREFERENCE)) {
-                for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
-                    corefRelTags.add(tag.getName());
-                }
+            switch (tagSet.getTypeName()) {
+                case WebAnnoConst.POS:
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
+                        posTags.add(tag.getName());
+                        posTagDescriptions.add(tag.getDescription());
+                    }
+                    break;
+                case WebAnnoConst.DEPENDENCY:
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
+                        depTags.add(tag.getName());
+                        depTagDescriptions.add(tag.getDescription());
+                    }
+                    break;
+                case WebAnnoConst.NAMEDENTITY:
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
+                        neTags.add(tag.getName());
+                        neTagDescriptions.add(tag.getDescription());
+                    }
+                    break;
+                case WebAnnoConst.COREFRELTYPE:
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
+                        corefTypeTags.add(tag.getName());
+                    }
+                    break;
+                case WebAnnoConst.COREFERENCE:
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : tagSet.getTags()) {
+                        corefRelTags.add(tag.getName());
+                    }
+                    break;
             }
         }
         

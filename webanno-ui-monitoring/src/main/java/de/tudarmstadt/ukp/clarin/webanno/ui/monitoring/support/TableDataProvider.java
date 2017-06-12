@@ -60,20 +60,16 @@ public class TableDataProvider
             @Override
             protected List<List<String>> load()
             {
-                ArrayList<List<String>> resultList = new ArrayList<List<String>>();
+                ArrayList<List<String>> resultList = new ArrayList<>();
 
-                colNames = new ArrayList<String>();
-                for (String document : aTableHeaders) {
-                    colNames.add(document);
-                }
+                colNames = new ArrayList<>();
+                colNames.addAll(aTableHeaders);
 
                 int rowsRead = 0;
                 for (List<String> cellContents : aCellContents) {
-                    List<String> row = new ArrayList<String>();
+                    List<String> row = new ArrayList<>();
                     rowsRead++;
-                    for (String cellContent : cellContents) {
-                        row.add(cellContent);
-                    }
+                    row.addAll(cellContents);
                     resultList.add(row);
                 }
                 size = rowsRead;
@@ -86,7 +82,7 @@ public class TableDataProvider
     public Iterator<List<String>> iterator(long first, long count)
     {
 
-        long boundsSafeCount = count;
+        long boundsSafeCount;
 
         if (first + count > size) {
             boundsSafeCount = first - size;
@@ -107,7 +103,7 @@ public class TableDataProvider
     @Override
     public IModel<List<String>> model(List<String> object)
     {
-        return (IModel<List<String>>) (IModel) Model.<String>ofList(object);
+        return Model.ofList(object);
     }
 
     @Override
