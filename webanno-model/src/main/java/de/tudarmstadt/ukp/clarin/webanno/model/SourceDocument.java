@@ -32,7 +32,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 /**
@@ -70,6 +69,20 @@ public class SourceDocument
     private Date timestamp;
 
     private int sentenceAccessed = 0;
+
+    /*
+     * This field are only here because we still may have the non-nullable columns in the DB. Once
+     * we can properly migrate the database schema, this can go away.
+     */
+    @Deprecated
+    private boolean trainingDocument = false;
+    
+    /*
+     * This field are only here because we still may have the non-nullable columns in the DB. Once
+     * we can properly migrate the database schema, this can go away.
+     */
+    @Deprecated
+    private boolean processed = false;
 
     public long getId()
     {
