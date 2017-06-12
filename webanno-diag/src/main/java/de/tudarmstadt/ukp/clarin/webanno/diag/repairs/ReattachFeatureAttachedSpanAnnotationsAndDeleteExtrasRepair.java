@@ -102,7 +102,7 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
             
             // Delete those the extra candidates that are not properly attached
             if (!toDelete.isEmpty()) {
-                toDelete.forEach(fs -> aCas.removeFsFromIndexes(fs));
+                toDelete.forEach(aCas::removeFsFromIndexes);
                 aMessages.add(new LogMessage(this, LogLevel.INFO,
                         "Removed [%d] unattached stacked candidates [" + layer.getName() + "].",
                         toDelete.size()));

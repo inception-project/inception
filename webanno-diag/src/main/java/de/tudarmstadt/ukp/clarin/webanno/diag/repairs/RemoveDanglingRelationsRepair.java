@@ -70,7 +70,7 @@ public class RemoveDanglingRelationsRepair
 
         // Delete those relations that pointed to deleted spans
         if (!toDelete.isEmpty()) {
-            toDelete.forEach(fs -> aCas.removeFsFromIndexes(fs));
+            toDelete.forEach(aCas::removeFsFromIndexes);
             aMessages.add(new LogMessage(this, LogLevel.INFO, "Removed [%d] dangling relations.",
                     nonIndexed.size()));
         }

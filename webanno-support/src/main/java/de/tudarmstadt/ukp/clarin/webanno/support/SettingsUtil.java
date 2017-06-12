@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Comparator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -164,7 +165,7 @@ public class SettingsUtil
         
         // Sort by ID
         List<ImageLinkDecl> links = new ArrayList<>(linkMap.values());
-        links.sort((a,b) -> { return a.getId().compareTo(b.getId()); }); 
+        links.sort(Comparator.comparing(ImageLinkDecl::getId));
         
         return links;
     }

@@ -436,13 +436,9 @@ public class AnnotationPage
         if (factory == null) {
             factory = editorRegistry.getDefaultEditorFactory();
         }
-        
-        AnnotationEditorBase editor = factory.create("embedder1", getModel(),
-                detailEditor, () -> {
-                    return getEditorCas();
-                });
-        
-        return editor;
+
+        return factory.create("embedder1", getModel(),
+                detailEditor, this::getEditorCas);
     }
 
     @Override

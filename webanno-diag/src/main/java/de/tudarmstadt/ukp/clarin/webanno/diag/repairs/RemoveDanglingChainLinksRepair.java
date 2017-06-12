@@ -68,7 +68,7 @@ public class RemoveDanglingChainLinksRepair
 
             // Delete those relations that pointed to deleted spans
             if (!links.isEmpty()) {
-                links.forEach(fs -> aCas.removeFsFromIndexes(fs));
+                links.forEach(aCas::removeFsFromIndexes);
                 aMessages.add(new LogMessage(this, LogLevel.INFO,
                         "Removed [%d] dangling links in layer [" + layer.getName() + "].",
                         links.size()));

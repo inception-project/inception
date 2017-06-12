@@ -63,6 +63,6 @@ public class RemoveDanglingRelationsRepairTest
         
         assertFalse(result);
         
-        messages.forEach(s -> System.out.println(s));
+        messages.forEach(System.out::println);
     }
 }

@@ -93,44 +93,34 @@ public class StandaloneShutdownDialog
         if (System.console() == null && !GraphicsEnvironment.isHeadless() && ServerDetector.isWinstone()) {
             log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
 
-            EventQueue.invokeLater(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    final JOptionPane optionPane = new JOptionPane(
-                            new JLabel(
-                                    "<HTML>WebAnno is running now and can be accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
-                                            + "WebAnno works best with the browsers Google Chrome or Safari.<br>"
-                                            + "Use this dialog to shut WebAnno down.</HTML>"),
-                            JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_OPTION, null,
-                            new String[] { "Shutdown" });
+            EventQueue.invokeLater(() -> {
+                final JOptionPane optionPane = new JOptionPane(
+                        new JLabel(
+                                "<HTML>WebAnno is running now and can be accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
+                                        + "WebAnno works best with the browsers Google Chrome or Safari.<br>"
+                                        + "Use this dialog to shut WebAnno down.</HTML>"),
+                        JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_OPTION, null,
+                        new String[] { "Shutdown" });
 
-                    final JDialog dialog = new JDialog((JFrame) null, "WebAnno", true);
-                    dialog.setContentPane(optionPane);
-                    dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-                    dialog.addWindowListener(new WindowAdapter()
+                final JDialog dialog = new JDialog((JFrame) null, "WebAnno", true);
+                dialog.setContentPane(optionPane);
+                dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+                dialog.addWindowListener(new WindowAdapter()
+                {
+                    @Override
+                    public void windowClosing(WindowEvent we)
                     {
-                        @Override
-                        public void windowClosing(WindowEvent we)
-                        {
-                            // Avoid closing window by other means than button
-                        }
-                    });
-                    optionPane.addPropertyChangeListener(new PropertyChangeListener()
-                    {
-                        @Override
-                        public void propertyChange(PropertyChangeEvent aEvt)
-                        {
-                            if (dialog.isVisible() && (aEvt.getSource() == optionPane)
-                                    && (aEvt.getPropertyName().equals(JOptionPane.VALUE_PROPERTY))) {
-                                System.exit(0);
-                            }
-                        }
-                    });
-                    dialog.pack();
-                    dialog.setVisible(true);
-                }
+                        // Avoid closing window by other means than button
+                    }
+                });
+                optionPane.addPropertyChangeListener(aEvt -> {
+                    if (dialog.isVisible() && (aEvt.getSource() == optionPane)
+                            && (aEvt.getPropertyName().equals(JOptionPane.VALUE_PROPERTY))) {
+                        System.exit(0);
+                    }
+                });
+                dialog.pack();
+                dialog.setVisible(true);
             });
         }
         else {

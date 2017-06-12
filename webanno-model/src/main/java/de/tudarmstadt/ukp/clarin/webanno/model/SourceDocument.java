@@ -189,11 +189,5 @@ public class SourceDocument
         }
         return true;
     }
-	public static final Comparator<SourceDocument> NAME_COMPARATOR = new Comparator<SourceDocument>() {
-        @Override
-        public int compare(SourceDocument aO1, SourceDocument aO2)
-        {
-            return aO1.getName().compareTo(aO2.getName());
-        }
-    };
+	public static final Comparator<SourceDocument> NAME_COMPARATOR = (aO1, aO2) -> aO1.getName().compareTo(aO2.getName());
 }

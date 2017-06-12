@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -134,7 +135,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
                     };
                 }
                 else {
-                    panel.condition = (aProject, aExportInProgress) -> { return !aExportInProgress; };
+                    panel.condition = (aProject, aExportInProgress) -> !aExportInProgress;
                 }
             }
             catch (ClassNotFoundException e) {
@@ -142,7 +143,7 @@ public class ProjectSettingsPanelRegistryServiceImpl
             }
         }
         
-        Collections.sort(panels, (a, b) -> { return a.prio - b.prio; });
+        panels.sort(Comparator.comparingInt(a -> a.prio));
     }
 
     @Override

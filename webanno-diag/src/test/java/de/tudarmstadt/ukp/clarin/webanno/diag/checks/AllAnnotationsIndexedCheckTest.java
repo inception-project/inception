@@ -35,7 +35,6 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class AllAnnotationsIndexedCheckTest
@@ -73,7 +72,7 @@ public class AllAnnotationsIndexedCheckTest
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
         
-        messages.forEach(s -> System.out.println(s));
+        messages.forEach(System.out::println);
         
         assertFalse(result);
     }
@@ -112,7 +111,7 @@ public class AllAnnotationsIndexedCheckTest
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
         
-        messages.forEach(s -> System.out.println(s));
+        messages.forEach(System.out::println);
         
         assertTrue(result);
     }

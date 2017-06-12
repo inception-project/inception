@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Comparator;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
@@ -34,13 +35,12 @@ public class CasDoctorUtils
     public static Set<FeatureStructure> collectIndexed(CAS aCas)
     {
         LowLevelCAS llcas = aCas.getLowLevelCAS();
-        Set<FeatureStructure> fses = new TreeSet<>((fs1, fs2) -> llcas.ll_getFSRef(fs1)
-                - llcas.ll_getFSRef(fs2));
+        Set<FeatureStructure> fses = new TreeSet<>(Comparator.comparingInt(llcas::ll_getFSRef));
 
         FSIterator<FeatureStructure> i = aCas.getIndexRepository().getAllIndexedFS(
                 aCas.getTypeSystem().getTopType());
 
-        i.forEachRemaining(fs -> fses.add(fs));
+        i.forEachRemaining(fses::add);
 
         return fses;
     }
@@ -48,8 +48,7 @@ public class CasDoctorUtils
     public static Set<FeatureStructure> collectReachable(CAS aCas)
     {
         LowLevelCAS llcas = aCas.getLowLevelCAS();
-        Set<FeatureStructure> fses = new TreeSet<>((fs1, fs2) -> llcas.ll_getFSRef(fs1)
-                - llcas.ll_getFSRef(fs2));
+        Set<FeatureStructure> fses = new TreeSet<>(Comparator.comparingInt(llcas::ll_getFSRef));
 
         FSIterator<FeatureStructure> i = aCas.getIndexRepository().getAllIndexedFS(
                 aCas.getTypeSystem().getTopType());
@@ -123,7 +122,7 @@ public class CasDoctorUtils
 
         Set<FeatureStructure> allIndexedFS = collectIndexed(aCas);
         Map<FeatureStructure, FeatureStructure> allReachableFS = new TreeMap<>(
-                (fs1, fs2) -> llcas.ll_getFSRef(fs1) - llcas.ll_getFSRef(fs2));
+            Comparator.comparingInt(llcas::ll_getFSRef));
         
         FSIterator<FeatureStructure> i = aCas.getIndexRepository().getAllIndexedFS(
                 aCas.getTypeSystem().getTopType());

@@ -309,7 +309,7 @@ public class MergeCas
 
         List<FeatureStructure> fssAtThisPosition = new ArrayList<>();
         CasUtil.selectCovered(aJCases.get(aUser).getCas(), t, begin, end)
-                .forEach(fss -> fssAtThisPosition.add(fss));
+                .forEach(fssAtThisPosition::add);
 
         return fssAtThisPosition;
     }

@@ -114,30 +114,25 @@ public abstract class ApplicationPageBase
         feedbackPanel = new FeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "error"));
-        feedbackPanel.setFilter(new IFeedbackMessageFilter()
-        {
-            @Override
-            public boolean accept(FeedbackMessage aMessage)
-            {
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                String username = auth != null ? auth.getName() : "SYSTEM";
-                if (aMessage.isFatal()) {
-                    LOG.error("{}: {}", username, aMessage.getMessage());
-                }
-                else if (aMessage.isError()) {
-                    LOG.error("{}: {}", username, aMessage.getMessage());
-                }
-                else if (aMessage.isWarning()) {
-                    LOG.warn("{}: {}", username, aMessage.getMessage());
-                }
-                else if (aMessage.isInfo()) {
-                    LOG.info("{}: {}", username, aMessage.getMessage());
-                }
-                else if (aMessage.isDebug()) {
-                    LOG.debug("{}: {}", username, aMessage.getMessage());
-                }
-                return true;
+        feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth != null ? auth.getName() : "SYSTEM";
+            if (aMessage.isFatal()) {
+                LOG.error("{}: {}", username, aMessage.getMessage());
             }
+            else if (aMessage.isError()) {
+                LOG.error("{}: {}", username, aMessage.getMessage());
+            }
+            else if (aMessage.isWarning()) {
+                LOG.warn("{}: {}", username, aMessage.getMessage());
+            }
+            else if (aMessage.isInfo()) {
+                LOG.info("{}: {}", username, aMessage.getMessage());
+            }
+            else if (aMessage.isDebug()) {
+                LOG.debug("{}: {}", username, aMessage.getMessage());
+            }
+            return true;
         });
         
         versionLabel = new Label("version", SettingsUtil.getVersionString());

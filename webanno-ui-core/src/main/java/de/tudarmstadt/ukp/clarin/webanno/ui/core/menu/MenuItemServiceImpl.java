@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -132,7 +133,7 @@ public class MenuItemServiceImpl
                     };
                 }
                 else {
-                    item.condition = () -> { return true; };
+                    item.condition = () -> true;
                 }
                 
                 menuItems.add(item);
@@ -142,7 +143,7 @@ public class MenuItemServiceImpl
             }
         }
         
-        Collections.sort(menuItems, (a, b) -> { return a.prio - b.prio; });
+        menuItems.sort(Comparator.comparingInt(a -> a.prio));
     }
 
     @Override

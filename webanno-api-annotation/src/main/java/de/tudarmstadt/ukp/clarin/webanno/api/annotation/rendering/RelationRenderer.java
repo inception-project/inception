@@ -125,15 +125,7 @@ public class RelationRenderer
 
                 // sort the annotations (begin, end)
                 List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                Collections.sort(sortedDepFs, new Comparator<Integer>()
-                {
-                    @Override
-                    public int compare(Integer arg0, Integer arg1)
-                    {
-                        return selectByAddr(aJcas, arg0).getBegin()
-                                - selectByAddr(aJcas, arg1).getBegin();
-                    }
-                });
+                sortedDepFs.sort(Comparator.comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
 
                 String cm = getYieldMessage(aJcas, sortedDepFs);
                 aResponse.add(
@@ -147,7 +139,7 @@ public class RelationRenderer
      */
     private String getYieldMessage(JCas aJCas, List<Integer> sortedDepFs)
     {
-        StringBuffer cm = new StringBuffer();
+        StringBuilder cm = new StringBuilder();
         int end = -1;
         for (Integer depFs : sortedDepFs) {
             if (end == -1) {

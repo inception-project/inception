@@ -40,10 +40,8 @@ public class SurfaceForm_Type extends Annotation_Type {
   @Override
   protected FSGenerator getFSGenerator() {return fsGenerator;}
   /** @generated */
-  private final FSGenerator fsGenerator = 
-    new FSGenerator() {
-      @Override
-    public FeatureStructure createFS(int addr, CASImpl cas) {
+  private final FSGenerator fsGenerator =
+      (addr, cas) -> {
   			 if (SurfaceForm_Type.this.useExistingInstance) {
   			   // Return eq fs instance if already created
   		     FeatureStructure fs = SurfaceForm_Type.this.jcas.getJfsFromCaddr(addr);
@@ -57,8 +55,7 @@ public class SurfaceForm_Type extends Annotation_Type {
             else {
                 return new SurfaceForm(addr, SurfaceForm_Type.this);
             }
-  	  }
-    };
+  	  };
   /** @generated */
   @SuppressWarnings ("hiding")
   public final static int typeIndexID = SurfaceForm.typeIndexID;

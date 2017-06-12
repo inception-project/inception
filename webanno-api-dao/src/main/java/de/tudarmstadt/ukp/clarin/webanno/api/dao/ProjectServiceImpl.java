@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Comparator;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -779,8 +780,7 @@ public class ProjectServiceImpl
                 log.error("Class [{}] not found", bd.getBeanClassName(), e);
             }
         }
-        
-        Collections.sort(projectTypes, (a, b) -> { return a.prio() - b.prio(); });
+        projectTypes.sort(Comparator.comparingInt(ProjectType::prio));
     }
 
     @Override

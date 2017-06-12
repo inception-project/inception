@@ -219,14 +219,7 @@ public class BratRenderer
     {
         // Sort layers
         List<AnnotationLayer> layers = new ArrayList<AnnotationLayer>(aAnnotationLayers);
-        Collections.sort(layers, new Comparator<AnnotationLayer>()
-        {
-            @Override
-            public int compare(AnnotationLayer o1, AnnotationLayer o2)
-            {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        layers.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
 
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<EntityType>();

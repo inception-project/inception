@@ -205,7 +205,7 @@ public class ChainAdapter
                   links.addAll(collectLinks(targetChain));
 
                   // sort them ascending by begin and descending by end (default UIMA order)
-                  Collections.sort(links, new AnnotationComparator());
+                  links.sort(new AnnotationComparator());
 
                   // thread them
                   AnnotationFS prev = null;

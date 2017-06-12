@@ -49,15 +49,7 @@ public class SettingsServiceImpl
     {
         final StringBuilder sb = new StringBuilder();
         Session session = entityManager.unwrap(Session.class);
-        session.doWork(new Work()
-        {
-            @Override
-            public void execute(Connection aConnection)
-                throws SQLException
-            {
-                sb.append(aConnection.getMetaData().getDriverName());
-            }
-        });
+        session.doWork(aConnection -> sb.append(aConnection.getMetaData().getDriverName()));
 
         return sb.toString();
     }

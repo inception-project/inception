@@ -230,15 +230,7 @@ public class AutomationUtil
     private static Collection<AnnotationFS> getAllAnnoFss(JCas aJcas, Type aType)
     {
         Collection<AnnotationFS> spanAnnos = select(aJcas.getCas(), aType);
-
-        Collections.sort(new ArrayList<AnnotationFS>(spanAnnos), new Comparator<AnnotationFS>()
-        {
-            @Override
-            public int compare(AnnotationFS arg0, AnnotationFS arg1)
-            {
-                return arg0.getBegin() - arg1.getBegin();
-            }
-        });
+	new ArrayList<>(spanAnnos).sort(Comparator.comparingInt(AnnotationFS::getBegin));
         return spanAnnos;
     }
 
