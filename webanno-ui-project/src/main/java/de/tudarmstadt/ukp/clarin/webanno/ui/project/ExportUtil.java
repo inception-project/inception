@@ -271,7 +271,7 @@ public class ExportUtil
                 i++;
             } catch (FileNotFoundException e) {
 //              error(e.getMessage());
-                StringBuffer errorMessage = new StringBuffer();
+                StringBuilder errorMessage = new StringBuilder();
                 errorMessage.append("Source file '");
                 errorMessage.append(sourceDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
@@ -305,7 +305,7 @@ public class ExportUtil
                 i++;
             } catch (FileNotFoundException e) {
 //              error(e.getMessage());
-                StringBuffer errorMessage = new StringBuffer();
+                StringBuilder errorMessage = new StringBuilder();
                 errorMessage.append("Source file '");
                 errorMessage.append(trainingDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");

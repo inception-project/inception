@@ -618,8 +618,8 @@ public class WebannoTsv3Writer
 			if (slotFeatures != null && slotFeatures.contains(feature.getName())) {
 				if (aFs.getFeatureValue(feature) != null) {
 					ArrayFS array = (ArrayFS) aFs.getFeatureValue(feature);
-					StringBuffer sbRole = new StringBuffer();
-					StringBuffer sbTarget = new StringBuffer();
+					StringBuilder sbRole = new StringBuilder();
+					StringBuilder sbTarget = new StringBuilder();
 					for (FeatureStructure linkFS : array.toArray()) {
 						String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName("role"));
 						AnnotationFS targetFs = (AnnotationFS) linkFS

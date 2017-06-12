@@ -239,7 +239,7 @@ public class WebannoTsv1Reader
 
         LineIterator lineIterator = IOUtils.lineIterator(aIs, aEncoding);
         boolean textFound = false;
-        StringBuffer tmpText = new StringBuffer();
+        StringBuilder tmpText = new StringBuilder();
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
             if (line.startsWith("#text=")) {

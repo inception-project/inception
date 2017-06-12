@@ -171,7 +171,7 @@ public class ServerDetector
             sd._geronimo = _detect(GERONIMO_CLASS);
         }
 
-        return sd._geronimo.booleanValue();
+        return sd._geronimo;
     }
 
     public static boolean isGlassfish()
@@ -189,7 +189,7 @@ public class ServerDetector
             }
         }
 
-        return sd._glassfish.booleanValue();
+        return sd._glassfish;
     }
 
     public static boolean isJBoss()
@@ -211,7 +211,7 @@ public class ServerDetector
             sd._jetty = _detect(JETTY_CLASS);
         }
 
-        return sd._jetty.booleanValue();
+        return sd._jetty;
     }
 
     public static boolean isJOnAS()
@@ -222,7 +222,7 @@ public class ServerDetector
             sd._jonas = _detect(JONAS_CLASS);
         }
 
-        return sd._jonas.booleanValue();
+        return sd._jonas;
     }
 
     public static boolean isOC4J()
@@ -233,7 +233,7 @@ public class ServerDetector
             sd._oc4j = _detect(OC4J_CLASS);
         }
 
-        return sd._oc4j.booleanValue();
+        return sd._oc4j;
     }
 
     public static boolean isOrion()
@@ -244,7 +244,7 @@ public class ServerDetector
             sd._orion = _detect(ORION_CLASS);
         }
 
-        return sd._orion.booleanValue();
+        return sd._orion;
     }
 
     public static boolean isPramati()
@@ -255,7 +255,7 @@ public class ServerDetector
             sd._pramati = _detect(PRAMATI_CLASS);
         }
 
-        return sd._pramati.booleanValue();
+        return sd._pramati;
     }
 
     public static boolean isResin()
@@ -266,7 +266,7 @@ public class ServerDetector
             sd._resin = _detect(RESIN_CLASS);
         }
 
-        return sd._resin.booleanValue();
+        return sd._resin;
     }
 
     public static boolean isRexIP()
@@ -277,7 +277,7 @@ public class ServerDetector
             sd._rexIP = _detect(REXIP_CLASS);
         }
 
-        return sd._rexIP.booleanValue();
+        return sd._rexIP;
     }
 
     public static boolean isTomcat()
@@ -292,7 +292,7 @@ public class ServerDetector
             sd._tomcat = _detect(TOMCAT_EMBEDDED_CLASS);
         }
 
-        return sd._tomcat.booleanValue();
+        return sd._tomcat;
     }
 
     public static boolean isWebLogic()
@@ -303,7 +303,7 @@ public class ServerDetector
             sd._webLogic = _detect(WEBLOGIC_CLASS);
         }
 
-        return sd._webLogic.booleanValue();
+        return sd._webLogic;
     }
 
     public static boolean isWebSphere()
@@ -314,7 +314,7 @@ public class ServerDetector
             sd._webSphere = _detect(WEBSPHERE_CLASS);
         }
 
-        return sd._webSphere.booleanValue();
+        return sd._webSphere;
     }
 
     public static boolean isWinstone()
@@ -325,7 +325,7 @@ public class ServerDetector
             sd._winstone = _detect(WINSTONE_CLASS);
         }
 
-        return sd._winstone.booleanValue();
+        return sd._winstone;
     }
 
     private static Boolean _detect(String className)

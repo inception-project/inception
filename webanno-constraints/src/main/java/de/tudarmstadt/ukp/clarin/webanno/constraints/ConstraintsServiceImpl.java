@@ -217,7 +217,7 @@ public class ConstraintsServiceImpl
                     if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
                             .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
                         // If detected, notify user with proper message and abort merging
-                        StringBuffer errorMessage = new StringBuffer();
+                        StringBuilder errorMessage = new StringBuilder();
                         errorMessage.append("Conflict detected in imports for key \"");
                         errorMessage.append(e.getKey());
                         errorMessage.append("\", conflicting values are \"");

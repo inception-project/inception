@@ -224,7 +224,7 @@ public class ProjectExportPanel
                 @Override
                 protected String load()
                 {
-                    StringBuffer fileName = new StringBuffer();
+                    StringBuilder fileName = new StringBuilder();
                     fileName.append(ProjectExportForm.this.getModelObject().project.getName());
                     fileName.append("_curated_documents_");
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");

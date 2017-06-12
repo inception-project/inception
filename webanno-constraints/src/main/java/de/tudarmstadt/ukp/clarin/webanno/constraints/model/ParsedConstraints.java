@@ -57,7 +57,7 @@ public class ParsedConstraints
     private String printImports()
     {
 
-        StringBuffer output = new StringBuffer();
+        StringBuilder output = new StringBuilder();
         for (Entry<String, String> e : imports.entrySet()) {
             output.append(e.getKey());
             output.append(" is short for ");
