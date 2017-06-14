@@ -220,11 +220,11 @@ public class CorrectionPage
                 }
                 catch (UIMAException e) {
                     LOG.error("Error: " + e.getMessage(), e);
-                    error(ExceptionUtils.getRootCause(e));
+                    error("Error: " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);
-                    error(e.getMessage());
+                    error("Error: " + e.getMessage());
                 }
             }
         };

@@ -80,7 +80,7 @@ public class BratSuggestionVisualizer
                 }
                 catch (UIMAException | ClassNotFoundException | IOException | AnnotationException e) {
                     aTarget.addChildren(getPage(), FeedbackPanel.class);
-                    error(e.getMessage());
+                    error("Error: " + e.getMessage());
                 }
 			}
 

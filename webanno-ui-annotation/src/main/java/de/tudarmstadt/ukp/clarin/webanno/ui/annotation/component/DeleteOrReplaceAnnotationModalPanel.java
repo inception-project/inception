@@ -91,7 +91,7 @@ public class DeleteOrReplaceAnnotationModalPanel
                     }
                     catch (Exception e) {
                         log.error(e.getMessage(), e);
-                        error(e.getMessage());
+                        error("Error: " + e.getMessage());
                     }
                     modalWindow.close(aTarget);
                 }

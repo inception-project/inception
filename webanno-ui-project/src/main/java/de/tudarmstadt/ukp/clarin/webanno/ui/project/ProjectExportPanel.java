@@ -193,12 +193,11 @@ public class ProjectExportPanel
                         }
                     } catch (CASRuntimeException e) {
                     	cancelOperationOnError();
-                        error(e.getMessage());
+                        error("Error: " + e.getMessage());
                     } 
                     catch (Exception e){
-                    	error(e.getMessage());
+                    	error("Error: " + e.getMessage());
                     	cancelOperationOnError();
-                    	
                     }
                     finally {
                         try {
@@ -492,7 +491,7 @@ public class ProjectExportPanel
                         exportTempDir, true);
 			} catch (ProjectExportException e) {
 				//cancel export operation here
-			    error(e.getMessage());
+			    error("Error: " + e.getMessage());
 				if (thread != null) {
 				    model.progress = 100;
                     thread.interrupt();

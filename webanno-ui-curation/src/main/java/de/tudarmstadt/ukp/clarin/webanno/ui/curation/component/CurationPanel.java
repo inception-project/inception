@@ -186,7 +186,7 @@ public class CurationPanel
                     error(ExceptionUtils.getRootCause(e));
                 }
                 catch (ClassNotFoundException | AnnotationException | IOException e) {
-                    error(e.getMessage());
+                    error("Error: " + e.getMessage());
                 }
             }
         };
@@ -210,11 +210,11 @@ public class CurationPanel
                 }
                 catch (UIMAException e) {
                     LOG.error("Error: " + e.getMessage(), e);
-                    error(ExceptionUtils.getRootCause(e));
+                    error("Error: " + ExceptionUtils.getRootCauseMessage(e));
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);
-                    error(e.getMessage());
+                    error("Error: " + e.getMessage());
                 }
             }
     
@@ -346,10 +346,10 @@ public class CurationPanel
                             bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
                         }
                         catch (UIMAException e) {
-                            error(ExceptionUtils.getRootCause(e));
+                            error("Error: " + ExceptionUtils.getRootCauseMessage(e));
                         }
                         catch (ClassNotFoundException | AnnotationException | IOException e) {
-                            error(e.getMessage());
+                            error("Error: " + e.getMessage());
                         }
                     }
                 };
