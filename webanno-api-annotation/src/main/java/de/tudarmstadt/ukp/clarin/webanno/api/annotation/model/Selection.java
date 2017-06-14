@@ -53,7 +53,7 @@ public class Selection
 
     // selected span text
     private String text;
-
+    
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         arc = true;
@@ -195,5 +195,29 @@ public class Selection
         builder.append(text);
         builder.append("]]");
         return builder.toString();
+    }
+
+    public Selection copy()
+    {
+        Selection sel = new Selection();
+        sel.arc = arc;
+        sel.originSpanId = originSpanId;
+        sel.targetSpanId = targetSpanId;
+        sel.beginOffset = beginOffset;
+        sel.endOffset = endOffset;
+        sel.selectedAnnotationId = selectedAnnotationId;
+        sel.text = text;        
+        return sel;
+    }
+    
+    public void set(Selection aSelection)
+    {
+        arc = aSelection.arc;
+        originSpanId = aSelection.originSpanId;
+        targetSpanId = aSelection.targetSpanId;
+        beginOffset = aSelection.beginOffset;
+        endOffset = aSelection.endOffset;
+        selectedAnnotationId = aSelection.selectedAnnotationId;
+        text = aSelection.text;        
     }
 }

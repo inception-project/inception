@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
@@ -69,12 +70,17 @@ public class DeleteOrReplaceAnnotationModalPanel
                 {
                     try {
                         if (aIsReplace) {
+                            // The delete action clears the selection, but we need it to create
+                            // the new annotation - so we save it.
+                            Selection savedSel = aEditor.getModelObject().getSelection().copy();
+                            
                             // Delete current annotation
                             aEditor.actionDelete(aTarget);
                             
                             // Set up the action to create the replacement annotation
-                            aState.getAction().setAnnotate(true);
+                            aState.getSelection().set(savedSel);
                             aState.getSelection().setAnnotation(VID.NONE_ID);
+                            aState.getAction().setAnnotate(true);
                             aState.setSelectedAnnotationLayer(aLayer);
                             aState.setDefaultAnnotationLayer(aLayer);
                             aEditor.getSelectedAnnotationLayer()
