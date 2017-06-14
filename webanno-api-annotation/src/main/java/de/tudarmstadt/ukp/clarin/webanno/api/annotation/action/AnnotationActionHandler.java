@@ -61,4 +61,7 @@ public interface AnnotationActionHandler
     public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
             VID paramId)
         throws IOException, AnnotationException;
+    
+    public JCas getEditorCas()
+            throws IOException;
 }

@@ -77,8 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -106,6 +105,7 @@ public class ProjectLayersPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private final String FIRST = "first";
     private final String NEXT = "next";
@@ -1082,16 +1082,11 @@ public class ProjectLayersPanel
                     
                     // FIXME REC: I am not really sure why the types variable is filled here
                     // and not in the loadable-detachable model of the featureType dropdown.
-                    
-                    //Add primitive types
-                    FeatureSupport primitiveUima = new PrimitiveUimaFeatureSupport();
-                    types.addAll(primitiveUima
-                            .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
-                    
-                    // Add non-primitive types only when layer is of type SPAN (#62)
-                    FeatureSupport slotFeatureSupport = new SlotFeatureSupport(annotationService);
-                    types.addAll(slotFeatureSupport
-                            .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
+                    for (FeatureSupport featureSupport : featureSupportRegistry
+                            .getFeatureSupports()) {
+                        types.addAll(featureSupport
+                                .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
+                    }
                 }
             });
 

@@ -19,11 +19,42 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.List;
 
+import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.model.IModel;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupport
 {
-
     List<String> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer);
+
+    boolean accepts(AnnotationFeature aFeature);
+
+    FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
+            final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel);
+
+    default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
+    {
+        return new IllegalArgumentException("Unsupported type [" + aFeatureState.feature.getType()
+                + "] on feature [" + aFeatureState.feature.getName() + "]");
+    }
+
+    default IllegalArgumentException unsupportedLinkModeException(FeatureState aFeatureState)
+    {
+        return new IllegalArgumentException(
+                "Unsupported link mode [" + aFeatureState.feature.getLinkMode() + "] on feature ["
+                        + aFeatureState.feature.getName() + "]");
+    }
     
+    default IllegalArgumentException unsupportedMultiValueModeException(FeatureState aFeatureState)
+    {
+        return new IllegalArgumentException(
+                "Unsupported multi-value mode [" + aFeatureState.feature.getMultiValueMode()
+                        + "] on feature [" + aFeatureState.feature.getName() + "]");
+    }
 }

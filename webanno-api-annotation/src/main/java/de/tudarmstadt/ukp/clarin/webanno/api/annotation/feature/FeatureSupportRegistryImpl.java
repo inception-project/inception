@@ -30,6 +30,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class FeatureSupportRegistryImpl
@@ -74,5 +76,17 @@ public class FeatureSupportRegistryImpl
             sorted = true;
         }
         return sortedBeans;
+    }
+    
+    @Override
+    public FeatureSupport getFeatureSupport(AnnotationFeature aFeature)
+    {
+        for (FeatureSupport support : getFeatureSupports()) {
+            if (support.accepts(aFeature)) {
+                return support;
+            }
+        }
+        
+        throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName() + "]");
     }
 }

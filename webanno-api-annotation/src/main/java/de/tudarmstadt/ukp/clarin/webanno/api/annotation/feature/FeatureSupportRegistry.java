@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
 public interface FeatureSupportRegistry
 {
     List<FeatureSupport> getFeatureSupports();
+    
+    FeatureSupport getFeatureSupport(AnnotationFeature aFeature);
 }

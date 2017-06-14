@@ -17,27 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import com.googlecode.wicket.kendo.ui.form.TextField;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel
+    .handleException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component
-    .DeleteOrReplaceAnnotationModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor.*;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import org.apache.uima.cas.CAS;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -66,14 +56,32 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 
-import java.util.*;
+import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel
-    .handleException;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
+import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component
+    .DeleteOrReplaceAnnotationModalPanel;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class AnnotationFeatureForm
     extends Form<AnnotatorState>
@@ -96,6 +104,8 @@ public class AnnotationFeatureForm
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
+    
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     void setSelectedTag(String selectedTag)
     {
@@ -654,57 +664,12 @@ public class AnnotationFeatureForm
 
             final FeatureState featureState = item.getModelObject();
             final FeatureEditor frag;
-
-            switch (featureState.feature.getMultiValueMode()) {
-                case NONE: {
-                    switch (featureState.feature.getType()) {
-                        case CAS.TYPE_NAME_INTEGER: {
-                            frag = new NumberFeatureEditor("editor", "numberFeatureEditor",
-                                AnnotationFeatureForm.this, item.getModel());
-                            break;
-                        }
-                        case CAS.TYPE_NAME_FLOAT: {
-                            frag = new NumberFeatureEditor("editor", "numberFeatureEditor",
-                                AnnotationFeatureForm.this, item.getModel());
-                            break;
-                        }
-                        case CAS.TYPE_NAME_BOOLEAN: {
-                            frag = new BooleanFeatureEditor("editor", "booleanFeatureEditor",
-                                AnnotationFeatureForm.this, item.getModel());
-                            break;
-                        }
-                        case CAS.TYPE_NAME_STRING: {
-                            frag = new TextFeatureEditor("editor", "textFeatureEditor",
-                                AnnotationFeatureForm.this, item.getModel());
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException(
-                                "Unsupported type [" + featureState.feature.getType()
-                                    + "] on feature [" + featureState.feature.getName() + "]");
-                    }
-                    break;
-                }
-                case ARRAY: {
-                    switch (featureState.feature.getLinkMode()) {
-                        case WITH_ROLE: {
-                            // If it is none of the primitive types, it must be a link feature
-                            frag = new LinkFeatureEditor("editor", "linkFeatureEditor",
-                                editorPanel, item.getModel());
-                            break;
-                        }
-                        default:
-                            throw new IllegalArgumentException(
-                                "Unsupported link mode [" + featureState.feature.getLinkMode()
-                                    + "] on feature [" + featureState.feature.getName() + "]");
-                    }
-                    break;
-                }
-                default:
-                    throw new IllegalArgumentException("Unsupported multi-value mode ["
-                        + featureState.feature.getMultiValueMode() + "] on feature ["
-                        + featureState.feature.getName() + "]");
-            }
+            
+            // Look up a suitable editor and instantiate it
+            FeatureSupport featureSupport = featureSupportRegistry
+                    .getFeatureSupport(featureState.feature);
+            frag = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
+                    AnnotationFeatureForm.this.getModel(), item.getModel());
 
             if (!featureState.feature.getLayer().isReadonly()) {
                 AnnotatorState state = getModelObject();

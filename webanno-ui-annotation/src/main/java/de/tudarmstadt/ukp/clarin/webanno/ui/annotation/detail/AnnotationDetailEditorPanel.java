@@ -105,17 +105,6 @@ public class AnnotationDetailEditorPanel
 
     private AnnotationFeatureForm annotationFeatureForm;
 
-    /**
-     * Function to return tooltip using jquery
-     * Docs for the JQuery tooltip widget that we configure below:
-     * https://api.jqueryui.com/tooltip/
-     */
-    public static final String FUNCTION_FOR_TOOLTIP = "function() { return "
-        + "'<div class=\"tooltip-title\">'+($(this).text() "
-        + "? $(this).text() : 'no title')+'</div>"
-        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
-        + "? $(this).attr('title') : 'no description' )+'</div>' }";
-
     public AnnotationDetailEditorPanel(String id, IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
@@ -771,11 +760,12 @@ public class AnnotationDetailEditorPanel
     }
 
     public JCas getEditorCas()
-        throws IOException {
+        throws IOException
+    {
         AnnotatorState state = getModelObject();
 
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-            || state.getMode().equals(Mode.CORRECTION)) {
+                || state.getMode().equals(Mode.CORRECTION)) {
 
             return documentService.readAnnotationCas(state.getDocument(), state.getUser());
         }

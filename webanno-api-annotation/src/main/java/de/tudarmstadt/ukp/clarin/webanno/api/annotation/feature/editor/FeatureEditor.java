@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -31,12 +31,20 @@ public abstract class FeatureEditor
 
     protected static final String ID_PREFIX = "featureEditorHead";
     
+    private MarkupContainer owner;
+    
     public FeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
             IModel<FeatureState> aModel)
     {
         super(aId, aMarkupId, aMarkupProvider, aModel);
+        owner = aMarkupProvider;
     }
 
+    public MarkupContainer getOwner()
+    {
+        return owner;
+    }
+    
     public Component getLabelComponent()
     {
         return get("feature");

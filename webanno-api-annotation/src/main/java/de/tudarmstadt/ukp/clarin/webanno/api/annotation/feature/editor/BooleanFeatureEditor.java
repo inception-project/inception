@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.editor;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -32,10 +32,9 @@ public class BooleanFeatureEditor
     private static final long serialVersionUID = 5104979547245171152L;
     private final CheckBox field;
 
-    public BooleanFeatureEditor(String aId, String aMarkupId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+    public BooleanFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
-        super(aId, aMarkupId, aItem, new CompoundPropertyModel<FeatureState>(aModel));
+        super(aId, "booleanFeatureEditor", aItem, new CompoundPropertyModel<FeatureState>(aModel));
 
         add(new Label("feature", getModelObject().feature.getUiName()));
 
