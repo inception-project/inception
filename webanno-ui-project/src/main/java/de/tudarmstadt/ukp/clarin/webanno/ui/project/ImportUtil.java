@@ -469,6 +469,10 @@ public class ImportUtil
             Map<String, AnnotationFeature> aFeatureMap)
         throws IOException
     {
+        if (aImportedProjectSetting.getTrainingDocuments() == null) {
+            return;
+        }
+        
         for (TrainingDocument  importedTrainingDocument : aImportedProjectSetting
                 .getTrainingDocuments()) {
         	de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument  trainingDocument =
