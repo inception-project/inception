@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
@@ -361,8 +360,8 @@ public class ImportExportServiceImpl
                         .getAbsolutePath(), ResourceCollectionReaderBase.PARAM_PATTERNS,
                 new String[] { "[+]" + aFile.getName() });
         if (!reader.hasNext()) {
-            throw new FileNotFoundException("Annotation file [" + aFile.getName()
-                    + "] not found in [" + aFile.getPath() + "]");
+            throw new FileNotFoundException(
+                    "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
         }
         reader.getNext(cas);
         JCas jCas = cas.getJCas();

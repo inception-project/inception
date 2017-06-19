@@ -377,7 +377,7 @@ public class MiraAutomationServiceImpl
                 log.error("The reader for format [" + aTrainingAnnotationDocument.getFormat()
                         + "] is unable to digest data", e);
                 throw new IOException("The reader for format [" + aTrainingAnnotationDocument.getFormat()
-                        + "] is unable to digest data" + e.getMessage());
+                        + "] is unable to digest data: " + e.getMessage());
             }
             automationCasStorageService.writeCas(aTrainingAnnotationDocument, jcas);
         }
