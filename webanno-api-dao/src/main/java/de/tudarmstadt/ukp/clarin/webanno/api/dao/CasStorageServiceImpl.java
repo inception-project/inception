@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -52,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -303,6 +300,13 @@ public class CasStorageServiceImpl
     public JCas readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
+        return readCas(aDocument, aUsername, true);
+    }
+    
+    @Override
+    public JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
+        throws IOException
+    {
         log.debug("Reading annotation document [{}] ({}) for user [{}] in project [{}] ({})",
                 aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
                 aDocument.getProject().getId());
@@ -327,7 +331,9 @@ public class CasStorageServiceImpl
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
                 CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
 
-                analyzeAndRepair(aDocument, aUsername, cas);
+                if (aAnalyzeAndRepair) {
+                    analyzeAndRepair(aDocument, aUsername, cas);
+                }
 
                 return cas.getJCas();
             }

@@ -39,7 +39,7 @@ public class AllFeatureStructuresIndexedCheck
         Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
         if (!nonIndexed.isEmpty()) {
-            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed feature structure: %d",
+            aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed feature structures: %d",
                     nonIndexed.size()));
 
             for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {

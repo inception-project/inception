@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -227,6 +228,16 @@ public class CasDoctor
         return ok;
     }
 
+    public void setCheckClasses(List<Class<? extends Check>> aCheckClasses)
+    {
+        checkClasses = aCheckClasses;
+    }
+    
+    public void setRepairClasses(List<Class<? extends Repair>> aRepairClasses)
+    {
+        repairClasses = aRepairClasses;
+    }
+    
     public void setActiveChecks(String aActiveChecks)
     {
         activeChecks = aActiveChecks;
@@ -248,18 +259,18 @@ public class CasDoctor
                 version.contains("-SNAPSHOT") || 
                 version.contains("-beta-"))
         ) {
-            Reflections reflections = new Reflections(Check.class.getPackage().getName());
-            checkClasses.addAll(reflections.getSubTypesOf(Check.class).stream()
-                    .filter(c -> !Modifier.isAbstract(c.getModifiers()))
-                    .collect(Collectors.toList()));
+            checkClasses.addAll(scanChecks());
             log.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
         }
         
         if (StringUtils.isNotBlank(activeChecks)) {
             for (String check : activeChecks.split(",")) {
                 try {
-                    checkClasses.add((Class<? extends Check>) Class.forName(Check.class
-                            .getPackage().getName() + "." + check.trim()));
+                    Class<? extends Check> checkClass = (Class<? extends Check>) Class
+                            .forName(Check.class.getPackage().getName() + "." + check.trim());
+                    if (!checkClasses.contains(checkClass)) {
+                        checkClasses.add(checkClass);
+                    }
                 }
                 catch (ClassNotFoundException e) {
                     throw new IllegalStateException(e);
@@ -287,6 +298,24 @@ public class CasDoctor
             log.info("Repair activated: " + c.getSimpleName());
         }
     }
+    
+    public static List<Class<? extends Check>> scanChecks()
+    {
+        Reflections reflections = new Reflections(Check.class.getPackage().getName());
+        return reflections.getSubTypesOf(Check.class).stream()
+                .filter(c -> !Modifier.isAbstract(c.getModifiers()))
+                .sorted((a,b) -> a.getName().compareTo(b.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Class<? extends Repair>> scanRepairs()
+    {
+        Reflections reflections = new Reflections(Repair.class.getPackage().getName());
+        return reflections.getSubTypesOf(Repair.class).stream()
+                .filter(c -> !Modifier.isAbstract(c.getModifiers()))
+                .sorted((a,b) -> a.getName().compareTo(b.getName()))
+                .collect(Collectors.toList());
+    }
 
     public static enum LogLevel
     {
@@ -294,7 +323,10 @@ public class CasDoctor
     }
 
     public static class LogMessage
+        implements Serializable
     {
+        private static final long serialVersionUID = 2002139781814027105L;
+        
         public final LogLevel level;
         public final Class<?> source;
         public final String message;
@@ -307,7 +339,12 @@ public class CasDoctor
         public LogMessage(Object aSource, LogLevel aLevel, String aFormat, Object... aValues)
         {
             super();
-            source = aSource != null ? aSource.getClass() : null;
+            if (aSource instanceof Class) {
+                source = (Class) aSource;
+            }
+            else {
+                source = aSource != null ? aSource.getClass() : null;
+            }
             level = aLevel;
             message = String.format(aFormat, aValues);
         }

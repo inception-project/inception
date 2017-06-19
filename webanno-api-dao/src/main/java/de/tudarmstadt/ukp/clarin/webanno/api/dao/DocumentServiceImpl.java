@@ -198,6 +198,14 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public boolean existsAnnotationCas(AnnotationDocument aAnnotationDocument)
+        throws IOException
+    {
+        return existsCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+    }
+
+    @Override
+    @Transactional
     public boolean existsSourceDocument(Project aProject, String aFileName)
     {
         try {
@@ -486,9 +494,16 @@ public class DocumentServiceImpl
     {
         return existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
-    
+
     @Override
     public JCas createInitialCas(SourceDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        return createInitialCas(aDocument, true);
+    }
+
+    @Override
+    public JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeRepairAndSave)
         throws UIMAException, IOException, ClassNotFoundException
     {
         // Normally, the initial CAS should be created on document import, but after
@@ -496,22 +511,35 @@ public class DocumentServiceImpl
         // we create them here lazily
         JCas jcas = importExportService.importCasFromFile(getSourceDocumentFile(aDocument),
                 aDocument.getProject(), aDocument.getFormat());
-        casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
-        CasPersistenceUtils.writeSerializedCas(jcas,
-                getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        
+        if (aAnalyzeRepairAndSave) {
+            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
+            
+            CasPersistenceUtils.writeSerializedCas(jcas,
+                    getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        }
         
         return jcas;
     }
-    
+
     @Override
     public JCas readInitialCas(SourceDocument aDocument)
+        throws CASException, ResourceInitializationException, IOException
+    {
+        return readInitialCas(aDocument, true);
+    }
+
+    @Override
+    public JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
         throws CASException, ResourceInitializationException, IOException
     {
         JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
         
         CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         
-        casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
+        if (aAnalyzeAndRepair) {
+            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
+        }
         
         return jcas;
     }
@@ -545,10 +573,18 @@ public class DocumentServiceImpl
 
         return readAnnotationCas(annotationDocument);
     }
-    
+
     @Override
     @Transactional
     public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
+        throws IOException
+    {
+        return readAnnotationCas(aAnnotationDocument, true);
+    }
+    
+    @Override
+    @Transactional
+    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
         throws IOException
     {
         // If there is no CAS yet for the annotation document, create one.
@@ -559,20 +595,20 @@ public class DocumentServiceImpl
             // Convert the source file into an annotation CAS
             try {
                 if (!existsInitialCas(aDocument)) {
-                    jcas = createInitialCas(aDocument);
+                    jcas = createInitialCas(aDocument, aAnalyzeAndRepair);
                 }
 
                 // Ok, so at this point, we either have the lazily converted CAS already loaded
                 // or we know that we can load the existing initial CAS.
                 if (jcas == null) {
-                    jcas = readInitialCas(aDocument);
+                    jcas = readInitialCas(aDocument, aAnalyzeAndRepair);
                 }
             }
             catch (Exception e) {
                 log.error("The reader for format [" + aDocument.getFormat()
                         + "] is unable to digest data", e);
                 throw new IOException("The reader for format [" + aDocument.getFormat()
-                        + "] is unable to digest data" + e.getMessage());
+                        + "] is unable to digest data: " + e.getMessage());
             }
             casStorageService.writeCas(aDocument, jcas, user);
         }
@@ -580,7 +616,7 @@ public class DocumentServiceImpl
             // Read existing CAS
             // We intentionally do not upgrade the CAS here because in general the IDs
             // must remain stable. If an upgrade is required the caller should do it
-            jcas = casStorageService.readCas(aDocument, user);
+            jcas = casStorageService.readCas(aDocument, user, aAnalyzeAndRepair);
         }
 
         return jcas;

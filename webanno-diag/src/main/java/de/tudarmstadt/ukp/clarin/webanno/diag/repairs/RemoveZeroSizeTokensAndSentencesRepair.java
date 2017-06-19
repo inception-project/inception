@@ -28,6 +28,7 @@ import org.apache.uima.cas.CASException;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+@Safe(false)
 public class RemoveZeroSizeTokensAndSentencesRepair
     implements Repair
 {

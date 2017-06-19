@@ -32,12 +32,14 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * Removes relations that were not properly cleaned up after deleting a source/target span. Such
  * relations still point to the respective span even through the span is not indexed anymore.
  */
+@Safe(false)
 public class RemoveDanglingRelationsRepair
     implements Repair
 {

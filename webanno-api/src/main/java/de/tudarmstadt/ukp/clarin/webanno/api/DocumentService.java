@@ -255,6 +255,9 @@ public interface DocumentService
     boolean existsCas(SourceDocument sourceDocument, String username)
         throws IOException;
 
+    boolean existsAnnotationCas(AnnotationDocument annotationDocument)
+            throws IOException;
+
     /**
      * Export a Serialized CAS annotation document from the file system
      *
@@ -292,6 +295,9 @@ public interface DocumentService
     JCas readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
+    JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
+        throws IOException;
+    
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document
@@ -317,13 +323,24 @@ public interface DocumentService
     
     JCas createInitialCas(SourceDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException;
-    
+
+    /**
+     * 
+     * @param aAnalyzeAndRepair
+     *            if {@code false} then the CAS is not analyzed, repaired, and also not saved.
+     */
+    JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
+            throws UIMAException, IOException, ClassNotFoundException;
+
     JCas readInitialCas(SourceDocument aDocument)
         throws CASException, ResourceInitializationException, IOException;
     
+    JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
+            throws CASException, ResourceInitializationException, IOException;
+
     JCas createOrReadInitialCas(SourceDocument aDocument)
         throws IOException, UIMAException, ClassNotFoundException;
-    
+
     /**
      * List all the {@link AnnotationDocument}s, if available for a given {@link SourceDocument} in
      * the {@link Project}. Returns list of {@link AnnotationDocument}s for all {@link User}s in the

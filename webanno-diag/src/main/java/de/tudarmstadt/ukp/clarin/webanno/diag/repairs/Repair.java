@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -27,4 +31,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public interface Repair
 {
     void repair(Project aProject, CAS aCas, List<LogMessage> aMessages);
+    
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    public static @interface Safe
+    {
+        boolean value() default true;
+    }
 }

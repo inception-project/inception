@@ -32,9 +32,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
+@Safe
 public class ReattachFeatureAttachedSpanAnnotationsRepair
     implements Repair
 {
