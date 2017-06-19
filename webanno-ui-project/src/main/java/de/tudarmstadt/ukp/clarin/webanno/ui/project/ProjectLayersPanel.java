@@ -807,6 +807,13 @@ public class ProjectLayersPanel
                     aTarget.add(featureDetailForm);
                 }
             });
+            
+            //add(new Label("isZeroWidthOnlyLabel", "Only allow zero with annotations:"));
+            //add(new CheckBox("isZeroWidthOnly"));
+            add(new Label("onClickJavascriptActionLabel", "Run Javascript action on click:"));
+            add(new TextArea<String>("onClickJavascriptAction").add(new AttributeModifier("placeholder", "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + $PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
+            
+            // -- 
 
             add(new Button("save", new StringResourceModel("label"))
             {

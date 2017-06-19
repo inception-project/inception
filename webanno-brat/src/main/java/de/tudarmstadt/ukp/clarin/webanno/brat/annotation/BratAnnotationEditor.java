@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -45,6 +47,7 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -63,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
@@ -83,8 +87,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -104,6 +110,7 @@ public class BratAnnotationEditor
     private static final String PARAM_OFFSETS = "offsets";
     private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    private static final String PARAM_SPAN_TYPE = "type";
 
     private @SpringBean AnnotationSchemaService annotationService;
 
@@ -164,11 +171,11 @@ public class BratAnnotationEditor
                         BratAnnotationEditor.this.getModelObject().getAction().clearUserAction();
                     }
                 });
-
+                
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
-                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action);
+                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action) || DoActionResponse.is(action);
                 JCas jCas = null;
                 if (requiresCasLoading) {
                     try {
@@ -180,7 +187,36 @@ public class BratAnnotationEditor
                         return;
                     }
                 }
-
+                
+				/*  */
+				// Whenever an action should be performed, do ONLY perform this action and nothing else, and only if the item actually is an action item
+                if(DoActionResponse.is(action)){
+                	Project proj = aModel.getObject().getProject();
+                	StringValue layer_type = request.getParameterValue(PARAM_SPAN_TYPE);
+                	if(!layer_type.isEmpty()){
+	                	long layer_id = Long.parseLong(layer_type.beforeFirst('_'));
+	                	AnnotationLayer anno_layer = annotationService.getLayer(layer_id);
+	                	if(!StringUtils.isEmpty(anno_layer.getOnClickJavascriptAction())){ 
+		                	/* parse the action */
+	                		List<AnnotationFeature> anno_layer_features = annotationService.listAnnotationFeature(anno_layer);
+	                		AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas, paramId.getId());
+		                	Map<String, String> function_params = OnClickActionParser.parse(
+		                			anno_layer,
+		                			anno_layer_features,
+		                			proj, 
+		                			aModel.getObject().getDocument(), 
+		                			anno);
+		                	String js = String.format(
+		                			"(function ($PARAM){ %s })(%s)", // define anonymous function, fill the body and immediately execute it
+		                			anno_layer.getOnClickJavascriptAction(),
+		                			OnClickActionParser.asJSONObject(function_params));
+		                	aTarget.appendJavaScript(js);
+		                	return;
+	                	}
+                	}
+                }
+                
+                
                 // HACK: If an arc was clicked that represents a link feature, then open the
                 // associated span annotation instead.
                 if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {

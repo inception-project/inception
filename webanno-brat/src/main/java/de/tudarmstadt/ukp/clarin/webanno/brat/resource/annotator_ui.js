@@ -186,6 +186,42 @@ var AnnotatorUI = (function($, window, undefined) {
         }
       };
 
+/// BEGIN: WEBANNO CLICK EXTENSION
+      var clickcnt = 0;
+      // need a function that distinguishes between double clicks and single clicks  
+      var onClick = function(evt){
+          clickcnt++;
+          setTimeout(function() {
+        	  if (clickcnt == 1){
+        		  onSnglClick.call(self, evt);
+        		  clickcnt = 0;
+        	  } else {
+        		  onDblClick.call(self, evt);
+        		  clickcnt = 0;
+        	  }
+          }, 300);
+      }
+      
+      var onSnglClick = function(evt) {
+      	  // must be logged in
+          if (that.user === null) return;
+          var target = $(evt.target);
+          var id;
+          // single click actions currently only for spans
+    	  if (id = target.attr('data-span-id')){
+    		  preventDefault(evt);
+    		  editedSpan = data.spans[id];    		  
+        	  dispatcher.post('ajax', [ {
+        			action: 'doAction',
+        			id:id,
+        			labelText: editedSpan.labelText,
+        			type: editedSpan.type
+        	  	}, 'serverResult']);
+    	  }
+      }
+      
+/// END: WEBANNO CLICK EXTENSION
+
       var onDblClick = function(evt) {
         // must be logged in
         if (that.user === null) return;
@@ -1648,7 +1684,7 @@ var AnnotatorUI = (function($, window, undefined) {
           var targetValid = target.hasClass('reselectTarget');
           stopArcDrag(target);
 // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
-          if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
+          if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
 //          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
 // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
             var originSpan = data.spans[origin];
@@ -2819,6 +2855,7 @@ var AnnotatorUI = (function($, window, undefined) {
           on('current', gotCurrent).
           on('isReloadOkay', isReloadOkay).
           on('keydown', onKeyDown).
+          on('click', onClick).
           on('dblclick', onDblClick).
           on('dragstart', preventDefault).
           on('mousedown', onMouseDown).

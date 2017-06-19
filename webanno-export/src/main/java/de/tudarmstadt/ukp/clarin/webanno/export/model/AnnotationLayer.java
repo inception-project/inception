@@ -78,6 +78,9 @@ public class AnnotationLayer
 
     @JsonProperty("linked_list_behavior")
     private boolean linkedListBehavior;
+    
+    @JsonProperty("on_click_javascript_action")
+    private String onClickJavascriptAction;
 
     public String getName()
     {
@@ -236,6 +239,16 @@ public class AnnotationLayer
     {
         readonly = aReadonly;
     }
+    
+	public String getOnClickJavascriptAction() 
+	{
+		return onClickJavascriptAction;
+	}
+
+	public void setOnClickJavascriptAction(String onClickAction) 
+	{
+		this.onClickJavascriptAction = onClickAction;
+	}
 
     @Override
 	public int hashCode() {

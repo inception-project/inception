@@ -71,6 +71,9 @@ public class AnnotationLayer
     private boolean builtIn = false;
     
     private boolean readonly = false;
+    
+    @Column(nullable = true)
+    private String onClickJavascriptAction;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -438,4 +441,14 @@ public class AnnotationLayer
     {
         readonly = aReadonly;
     }
+    
+	public String getOnClickJavascriptAction() 
+	{
+		return onClickJavascriptAction;
+	}
+
+	public void setOnClickJavascriptAction(String onClickAction) 
+	{
+		this.onClickJavascriptAction = onClickAction;
+	}
 }
