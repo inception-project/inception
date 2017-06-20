@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +35,6 @@ import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -228,10 +228,10 @@ public class LinkFeatureEditor
 
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
-                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                    if (target != null) {
+                    Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+                    if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
-                        target.appendJavaScript(
+                        target.get().appendJavaScript(
                                 String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
                                         KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
                     }
@@ -320,7 +320,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionAdd(aTarget);
             }
@@ -343,7 +343,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionSet(aTarget);
             }
@@ -365,7 +365,7 @@ public class LinkFeatureEditor
             }
 
             @Override
-            protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            protected void onSubmit(AjaxRequestTarget aTarget)
             {
                 actionDel(aTarget);
             }

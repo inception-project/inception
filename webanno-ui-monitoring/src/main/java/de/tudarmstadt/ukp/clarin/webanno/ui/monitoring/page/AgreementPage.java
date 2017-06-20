@@ -39,6 +39,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -434,7 +435,7 @@ public class AgreementPage
                 }
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     download.initiate(aTarget, "agreement"
                             + AgreementForm.this.getModelObject().exportFormat.getExtension());
@@ -568,27 +569,22 @@ public class AgreementPage
                     });
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
-                }
+                    
+                    add(new FormComponentUpdatingBehavior() {
+                        private static final long serialVersionUID = -993092727599599088L;
 
-                @Override
-                protected void onSelectionChanged(Project aNewSelection)
-                {
-                    agreementForm.setModelObject(new AgreementFormModel());
+                        @Override
+                        protected void onUpdate() {
+                            agreementForm.setModelObject(new AgreementFormModel());
 
-                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
-                            .getModelObject();
-                    projectSelectionModel.project = aNewSelection;
-                    ProjectSelectionForm.this.setVisible(true);
+                            ProjectSelectionForm.this.setVisible(true);
 
-                    // Clear the cached CASes. When we switch to another project, we'll have to
-                    // reload them.
-                    updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                            // Clear the cached CASes. When we switch to another project, we'll have
+                            // to reload them.
+                            updateAgreementTable(
+                                    RequestCycle.get().find(AjaxRequestTarget.class).get(), true);
+                        }
+                    });
                 }
 
                 @Override

@@ -30,6 +30,7 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -104,24 +105,24 @@ public class ProjectConstraintsPanel
                 }
             };
             
-            add(new ListChoice<ConstraintSet>("ruleset", SelectionForm.this.getModel(), rulesets) {
+            add(new ListChoice<ConstraintSet>("ruleset", SelectionForm.this.getModel(), rulesets)
+            {
                 private static final long serialVersionUID = 1L;
-                
+
                 {
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
-                }
-                
-                @Override
-                protected void onSelectionChanged(ConstraintSet aNewSelection)
-                {
-                    ProjectConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
-                }
+                    add(new FormComponentUpdatingBehavior()
+                    {
+                        private static final long serialVersionUID = 955417275413756538L;
 
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                        @Override
+                        protected void onUpdate()
+                        {
+                            ProjectConstraintsPanel.this.detailForm
+                                    .setModelObject(SelectionForm.this.getModelObject());
+                        };
+                    });
                 }
 
                 @Override

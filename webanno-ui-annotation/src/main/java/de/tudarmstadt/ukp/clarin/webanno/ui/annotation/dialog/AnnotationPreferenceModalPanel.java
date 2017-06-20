@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -210,7 +209,7 @@ public class AnnotationPreferenceModalPanel
                 private static final long serialVersionUID = -755759008587787147L;
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
                     bModel.getPreferences().setRememberLayer(getModelObject().rememberLayer);
@@ -234,7 +233,7 @@ public class AnnotationPreferenceModalPanel
                 }
 
                 @Override
-                protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onError(AjaxRequestTarget aTarget)
                 {
 
                 }

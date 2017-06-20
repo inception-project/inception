@@ -46,10 +46,10 @@ public class LambdaAjaxButton<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+    protected void onSubmit(AjaxRequestTarget aTarget)
     {
         try {
-            action.accept(aTarget, (Form<T>) aForm);
+            action.accept(aTarget, (Form<T>) getForm());
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

@@ -45,6 +45,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -55,6 +56,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -187,37 +189,41 @@ public class ProjectTagSetsPanel
                         }
                     });
                     setNullValid(false);
+                    
+                    add(new FormComponentUpdatingBehavior()
+                    {
+                        private static final long serialVersionUID = 5771816671700237764L;
+
+                        @Override
+                        protected void onUpdate()
+                        {
+                            if (tagSelectionForm.getModelObject() != null) {
+                                tagSetDetailForm.clearInput();
+                                tagSetDetailForm.setModelObject(
+                                        tagSetSelectionForm.getModelObject().tagSet);
+                                tagSetDetailForm.setVisible(true);
+                                tagSelectionForm.setVisible(true);
+                                tagDetailForm.setModelObject(new Tag());
+                                tagDetailForm.setVisible(true);
+                                TagSetSelectionForm.this.setVisible(true);
+                            }
+                        }
+                    });
                 }
-
-                @Override
-                protected void onSelectionChanged(
-                        de.tudarmstadt.ukp.clarin.webanno.model.TagSet aNewSelection)
-                {
-                    if (aNewSelection != null) {
-                        tagSetDetailForm.clearInput();
-                        tagSetDetailForm.setModelObject(aNewSelection);
-                        tagSetDetailForm.setVisible(true);
-                        tagSelectionForm.setVisible(true);
-                        tagDetailForm.setModelObject(new Tag());
-                        tagDetailForm.setVisible(true);
-                        TagSetSelectionForm.this.setVisible(true);
-
-                    }
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
+                
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
                     return "";
                 }
             }).setOutputMarkupId(true);
-
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            setVisible(tagSetDetailForm.getModelObject() != null);
         }
     }
 
@@ -523,26 +529,12 @@ public class ProjectTagSetsPanel
                 }
             });
 
-            add(exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
-                    new Model<>(selectedExporTagsetFormat),
+            exportTagsetFormat = new DropDownChoice<String>("exportTagsetFormat",
+                    PropertyModel.of(ProjectTagSetsPanel.this, "selectedExporTagsetFormat"),
                     Arrays.asList(new String[] { ExportedTagSetConstant.JSON_FORMAT,
-                            ExportedTagSetConstant.TAB_FORMAT }))
-            {
-                private static final long serialVersionUID = -3149305683012829848L;
-
-                @Override
-                protected void onSelectionChanged(String newSelection)
-                {
-                    selectedExporTagsetFormat = newSelection;
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-            });
+                            ExportedTagSetConstant.TAB_FORMAT }));
+            exportTagsetFormat.add(new FormComponentUpdatingBehavior());
+            add(exportTagsetFormat);
 
             add(new DownloadLink("export", new LoadableDetachableModel<File>()
             {
@@ -727,6 +719,13 @@ public class ProjectTagSetsPanel
 //                    tagDetailForm.setVisible(false);
                 }
             });
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            setVisible(tagSetDetailForm.getModelObject() != null);
         }
     }
 

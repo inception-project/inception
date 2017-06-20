@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
@@ -57,6 +58,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
@@ -307,133 +309,130 @@ public class MonitoringPage
                     });
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
-                }
+                    
+                    add(new FormComponentUpdatingBehavior() {
+                        private static final long serialVersionUID = -8626216183950181168L;
 
-                @SuppressWarnings({ "unchecked", "rawtypes" })
-                @Override
-                protected void onSelectionChanged(Project aNewSelection)
-                {
-                    List<SourceDocument> sourceDocuments = documentService
-                            .listSourceDocuments(aNewSelection);
+                        @Override
+                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                        protected void onUpdate() {
+                            ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
 
-                    if (aNewSelection == null) {
-                        return;
-                    }
+                            if (projectSelectionModel.project == null) {
+                                return;
+                            }
 
-                    monitoringDetailForm.setModelObject(aNewSelection);
-                    monitoringDetailForm.setVisible(true);
+                            List<SourceDocument> sourceDocuments = documentService
+                                    .listSourceDocuments(projectSelectionModel.project);
 
-                    updateTrainingResultForm(aNewSelection);
-                    result = "";
+                            monitoringDetailForm.setModelObject(projectSelectionModel.project);
+                            monitoringDetailForm.setVisible(true);
 
-                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
-                    projectSelectionModel.project = aNewSelection;
-                    projectSelectionModel.annotatorsProgress = new TreeMap<>();
-                    projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
-                    projectSelectionModel.totalDocuments = sourceDocuments.size();
-                    ProjectSelectionForm.this.setVisible(true);
+                            updateTrainingResultForm(projectSelectionModel.project);
+                            result = "";
 
-                    // Annotator's Progress
-                    if (projectSelectionModel.project != null) {
-                        projectSelectionModel.annotatorsProgressInPercent
-                                .putAll(getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
-                        projectSelectionModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
+                            projectSelectionModel.annotatorsProgress = new TreeMap<>();
+                            projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
+                            projectSelectionModel.totalDocuments = sourceDocuments.size();
+                            ProjectSelectionForm.this.setVisible(true);
 
-                    }
-                    projectName.setDefaultModelObject(projectSelectionModel.project.getName());
-                    overallProjectProgressImage.setVisible(false);
-                    overview.setVisible(false);
+                            // Annotator's Progress
+                            if (projectSelectionModel.project != null) {
+                                projectSelectionModel.annotatorsProgressInPercent
+                                        .putAll(getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
+                                projectSelectionModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
 
-                    annotatorsProgressImage.setImageResource(createProgressChart(
-                            projectSelectionModel.annotatorsProgress,
-                            projectSelectionModel.totalDocuments, false));
-                    annotatorsProgressImage.setVisible(true);
+                            }
+                            projectName.setDefaultModelObject(projectSelectionModel.project.getName());
+                            overallProjectProgressImage.setVisible(false);
+                            overview.setVisible(false);
 
-                    annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                            projectSelectionModel.annotatorsProgressInPercent, 100, true));
-                    annotatorsProgressPercentageImage.setVisible(true);
+                            annotatorsProgressImage.setImageResource(createProgressChart(
+                                    projectSelectionModel.annotatorsProgress,
+                                    projectSelectionModel.totalDocuments, false));
+                            annotatorsProgressImage.setVisible(true);
 
-                    List<String> documentListAsColumnHeader = new ArrayList<>();
-                    documentListAsColumnHeader.add("Documents");
+                            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
+                                    projectSelectionModel.annotatorsProgressInPercent, 100, true));
+                            annotatorsProgressPercentageImage.setVisible(true);
 
-                    // A column for curation user annotation document status
-                    documentListAsColumnHeader.add(CURATION);
+                            List<String> documentListAsColumnHeader = new ArrayList<>();
+                            documentListAsColumnHeader.add("Documents");
 
-                    // List of users with USER permission level
-                    List<User> users = projectService.listProjectUsersWithPermissions(
-                            projectSelectionModel.project, PermissionLevel.USER);
+                            // A column for curation user annotation document status
+                            documentListAsColumnHeader.add(CURATION);
 
-                    for (User user : users) {
-                        documentListAsColumnHeader.add(user.getUsername());
-                    }
+                            // List of users with USER permission level
+                            List<User> users = projectService.listProjectUsersWithPermissions(
+                                    projectSelectionModel.project, PermissionLevel.USER);
 
-                    List<List<String>> userAnnotationDocumentStatusList = new ArrayList<>();
+                            for (User user : users) {
+                                documentListAsColumnHeader.add(user.getUsername());
+                            }
 
-                    // Add a timestamp row for every user.
-                    List<String> projectTimeStamp = new ArrayList<>();
-                    projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
-                                                                         // column
-                    if (projectService.existsProjectTimeStamp(aNewSelection)) {
-                        projectTimeStamp.add(LAST_ACCESS
-                                + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(projectService
-                                        .getProjectTimeStamp(aNewSelection)));
-                    }
-                    else {
-                        projectTimeStamp.add(LAST_ACCESS + "__");
-                    }
+                            List<List<String>> userAnnotationDocumentStatusList = new ArrayList<>();
 
-                    for (User user : users) {
-                        if (projectService.existsProjectTimeStamp(projectSelectionModel.project,
-                                user.getUsername())) {
-                            projectTimeStamp
-                                    .add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-                                            .format(projectService.getProjectTimeStamp(
-                                                    projectSelectionModel.project,
-                                                    user.getUsername())));
+                            // Add a timestamp row for every user.
+                            List<String> projectTimeStamp = new ArrayList<>();
+                            projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
+                                                                                 // column
+                            if (projectService.existsProjectTimeStamp(projectSelectionModel.project)) {
+                                projectTimeStamp.add(LAST_ACCESS
+                                        + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(projectService
+                                                .getProjectTimeStamp(projectSelectionModel.project)));
+                            }
+                            else {
+                                projectTimeStamp.add(LAST_ACCESS + "__");
+                            }
+
+                            for (User user : users) {
+                                if (projectService.existsProjectTimeStamp(projectSelectionModel.project,
+                                        user.getUsername())) {
+                                    projectTimeStamp
+                                            .add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                                                    .format(projectService.getProjectTimeStamp(
+                                                            projectSelectionModel.project,
+                                                            user.getUsername())));
+                                }
+                                else {
+                                    projectTimeStamp.add(LAST_ACCESS + "__");
+                                }
+                            }
+
+                            userAnnotationDocumentStatusList.add(projectTimeStamp);
+
+                            for (SourceDocument document : sourceDocuments) {
+                                List<String> userAnnotationDocuments = new ArrayList<>();
+                                userAnnotationDocuments.add(DOCUMENT + document.getName());
+
+                                // Curation Document status
+                                userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT
+                                        + document.getName());
+
+                                for (User user : users) {
+                                    // annotation document status for this annotator
+                                    userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
+                                            + document.getName());
+                                }
+
+                                userAnnotationDocumentStatusList.add(userAnnotationDocuments);
+                            }
+
+                            TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
+                                    userAnnotationDocumentStatusList);
+
+                            List<IColumn<?,?>> columns = new ArrayList<>();
+
+                            for (int i = 0; i < provider.getColumnCount(); i++) {
+                                columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project));
+                            }
+                            annotationDocumentStatusTable.remove();
+                            annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
+                                    provider, 20);
+                            annotationDocumentStatusTable.setOutputMarkupId(true);
+                            monitoringDetailForm.add(annotationDocumentStatusTable);
                         }
-                        else {
-                            projectTimeStamp.add(LAST_ACCESS + "__");
-                        }
-                    }
-
-                    userAnnotationDocumentStatusList.add(projectTimeStamp);
-
-                    for (SourceDocument document : sourceDocuments) {
-                        List<String> userAnnotationDocuments = new ArrayList<>();
-                        userAnnotationDocuments.add(DOCUMENT + document.getName());
-
-                        // Curation Document status
-                        userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT
-                                + document.getName());
-
-                        for (User user : users) {
-                            // annotation document status for this annotator
-                            userAnnotationDocuments.add(user.getUsername() + "-" + DOCUMENT
-                                    + document.getName());
-                        }
-
-                        userAnnotationDocumentStatusList.add(userAnnotationDocuments);
-                    }
-
-                    TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
-                            userAnnotationDocumentStatusList);
-
-                    List<IColumn<?,?>> columns = new ArrayList<>();
-
-                    for (int i = 0; i < provider.getColumnCount(); i++) {
-                        columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project));
-                    }
-                    annotationDocumentStatusTable.remove();
-                    annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
-                            provider, 20);
-                    annotationDocumentStatusTable.setOutputMarkupId(true);
-                    monitoringDetailForm.add(annotationDocumentStatusTable);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                    });
                 }
 
                 @Override

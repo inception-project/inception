@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -28,12 +27,12 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -131,33 +130,38 @@ public class ProjectUsersPanel
                         }
                     });
                     setNullValid(false);
-                }
+                    
+                    add(new FormComponentUpdatingBehavior()
+                    {
+                        private static final long serialVersionUID = -6150689118128379975L;
 
-                @Override
-                protected void onSelectionChanged(User aNewSelection)
-                {
-                    if (aNewSelection == null) {
-                        return;
-                    }
-                    selectedUser = aNewSelection;
-                    // Clear old selections
-                    permissionLevelDetailForm.setModelObject(null);
-                    List<ProjectPermission> projectPermissions = projectRepository
-                            .listProjectPermissionLevel(selectedUser,
-                                    ProjectUsersPanel.this.getModelObject());
-                    List<PermissionLevel> levels = new ArrayList<>();
-                    for (ProjectPermission permission : projectPermissions) {
-                        levels.add(permission.getLevel());
-                    }
-                    SelectionModel newSelectionModel = new SelectionModel();
-                    newSelectionModel.permissionLevels.addAll(levels);
-                    permissionLevelDetailForm.setModelObject(newSelectionModel);
-                }
+                        @Override
+                        protected void onUpdate()
+                        {
+                            if (users.getModelObject() == null) {
+                                return;
+                            }
 
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
+                            selectedUser = users.getModelObject();
+                            // Clear old selections
+                            permissionLevelDetailForm.setModelObject(null);
+                            List<ProjectPermission> projectPermissions = projectRepository
+                                    .listProjectPermissionLevel(selectedUser,
+                                            ProjectUsersPanel.this.getModelObject());
+                            List<PermissionLevel> levels = new ArrayList<>();
+                            for (ProjectPermission permission : projectPermissions) {
+                                levels.add(permission.getLevel());
+                            }
+                            SelectionModel newSelectionModel = new SelectionModel();
+                            newSelectionModel.permissionLevels.addAll(levels);
+                            permissionLevelDetailForm.setModelObject(newSelectionModel);
+                        }
+                        
+                        @Override
+                        protected void onError(RuntimeException e) {
+                            super.onError(e);
+                        };
+                    });
                 }
 
                 @Override

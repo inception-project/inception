@@ -58,6 +58,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -423,8 +424,7 @@ public class ProjectLayersPanel
 
         public LayerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new EntityModel<>(
-                    new AnnotationLayer())));
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(new AnnotationLayer())));
 
             final Project project = ProjectLayersPanel.this.getModelObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
@@ -969,12 +969,11 @@ public class ProjectLayersPanel
         DropDownChoice<TagSet> tagSet;
         DropDownChoice<String> featureType;
         CheckBox required;
-        List<String> types = new ArrayList<String>();
 
         public FeatureDetailForm(String id)
         {
             super(id, new CompoundPropertyModel<AnnotationFeature>(
-                    new EntityModel<AnnotationFeature>(new AnnotationFeature())));
+                    new EntityModel<AnnotationFeature>(null)));
 
             add(new Label("name")
             {
@@ -1027,9 +1026,13 @@ public class ProjectLayersPanel
                         @Override
                         protected List<String> load()
                         {
-                            if (getModelObject() != null) {
-                                return Arrays.asList(getModelObject());
+                            List<String> types = new ArrayList<>();
+                            for (FeatureSupport featureSupport : featureSupportRegistry
+                                    .getFeatureSupports()) {
+                                types.addAll(featureSupport.getSupportedFeatureTypes(
+                                        layerDetailForm.getModelObject()));
                             }
+                            types.sort(Comparator.naturalOrder());
                             return types;
                         }
                     });
@@ -1082,19 +1085,6 @@ public class ProjectLayersPanel
                     // feature type here.
                     setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
                             || !PRIMITIVE_TYPES.contains(feature.getType()));
-                    
-                    //Empty the 'type' list drop-down in FeatureDetailForm
-                    types.clear();
-                    
-                    // FIXME REC: I am not really sure why the types variable is filled here
-                    // and not in the loadable-detachable model of the featureType dropdown.
-                    for (FeatureSupport featureSupport : featureSupportRegistry
-                            .getFeatureSupports()) {
-                        types.addAll(featureSupport
-                                .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
-                    }
-                    
-                    types.sort(Comparator.naturalOrder());
                 }
             });
 
@@ -1166,7 +1156,12 @@ public class ProjectLayersPanel
 //                    FeatureDetailForm.this.setVisible(false);
                 }
             });
-
+        }
+        
+        @Override
+        protected void onConfigure()
+        {
+            setVisible(getModelObject() != null);
         }
     }
 
@@ -1221,24 +1216,20 @@ public class ProjectLayersPanel
                         }
                     });
                     setNullValid(false);
+                    
+                    add(new FormComponentUpdatingBehavior()
+                    {
+                        private static final long serialVersionUID = 3243704540085234363L;
+
+                        @Override
+                        protected void onUpdate()
+                        {
+                            featureDetailForm.setModelObject(
+                                    FeatureSelectionForm.this.getModelObject().feature);
+                        };
+                    });
                 }
-
-                @Override
-                protected void onSelectionChanged(AnnotationFeature aNewSelection)
-                {
-                    if (aNewSelection != null) {
-                        featureDetailForm.setModelObject(aNewSelection);
-                        featureDetailForm.setVisible(true);
-
-                    }
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
+                
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {

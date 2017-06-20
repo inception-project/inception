@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -199,7 +200,7 @@ public class AnnotationFeatureForm
             }
 
             @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            public void onSubmit(AjaxRequestTarget aTarget)
             {
                 try {
                     AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
@@ -248,7 +249,7 @@ public class AnnotationFeatureForm
             }
 
             @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            public void onSubmit(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {
@@ -274,7 +275,7 @@ public class AnnotationFeatureForm
             }
 
             @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            public void onSubmit(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 try {
@@ -378,7 +379,7 @@ public class AnnotationFeatureForm
                     featureStates.get(0).value = getKeyBindValue(selectedTag, bindTags);
                 }
                 aTarget.add(forwardAnnotationText);
-                aTarget.add(featureEditorPanelContent.get(0));
+                aTarget.add(featureEditorPanelContent.iterator().next());
             }
         });
         forwardAnnotationText.setOutputMarkupId(true);
@@ -698,10 +699,10 @@ public class AnnotationFeatureForm
                 }
                 // Restore/preserve focus when tabbing through the feature editors
                 else if (state.getAction().getUserAction() == null) {
-                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                    if (target != null && frag.getFocusComponent().getMarkupId()
-                        .equals(target.getLastFocusedElementId())) {
-                        target.focusComponent(frag.getFocusComponent());
+                    Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+                    if (target.isPresent() && frag.getFocusComponent().getMarkupId()
+                        .equals(target.get().getLastFocusedElementId())) {
+                        target.get().focusComponent(frag.getFocusComponent());
                     }
                 }
 

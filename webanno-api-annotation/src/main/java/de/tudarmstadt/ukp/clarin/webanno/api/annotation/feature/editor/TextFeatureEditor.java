@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Optional;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -31,6 +31,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
@@ -110,10 +112,11 @@ public class TextFeatureEditor
                     
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
-                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                    if (target != null) {
+                    Optional<AjaxRequestTarget> target = RequestCycle.get()
+                            .find(AjaxRequestTarget.class);
+                    if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
-                        target.appendJavaScript(
+                        target.get().appendJavaScript(
                                 String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
                                         KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
                     }

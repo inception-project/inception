@@ -345,7 +345,7 @@ public class OpenDocumentDialogPanel
                 private static final long serialVersionUID = -755759008587787147L;
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     if (selectedProject == null) {
                         aTarget.appendJavaScript("alert('No project is selected!')"); // If there is
@@ -379,7 +379,7 @@ public class OpenDocumentDialogPanel
                 }
 
                 @Override
-                protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onError(AjaxRequestTarget aTarget)
                 {
 
                 }

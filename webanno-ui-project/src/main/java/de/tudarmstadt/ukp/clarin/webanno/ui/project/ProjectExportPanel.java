@@ -39,6 +39,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -141,7 +142,7 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportModel(aProject)));
             
-            add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
+            DropDownChoice<String> format = new DropDownChoice<>("format", new LoadableDetachableModel<List<String>>()
             {
                 private static final long serialVersionUID = 1L;
 
@@ -153,17 +154,11 @@ public class ProjectExportPanel
                     formats.add(0, FORMAT_AUTO);
                     return formats;
                 }
-            }) {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    // Needed to update the model with the selection because the DownloadLink does
-                    // not trigger a form submit.
-                    return true;
-                }
             });
+            // Needed to update the model with the selection because the DownloadLink does
+            // not trigger a form submit.
+            format.add(new FormComponentUpdatingBehavior());
+            add(format);
             
             add(new DownloadLink("export", new LoadableDetachableModel<File>() {
                 private static final long serialVersionUID = 840863954694163375L;

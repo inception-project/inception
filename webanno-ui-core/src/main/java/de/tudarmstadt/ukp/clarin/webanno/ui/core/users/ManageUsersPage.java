@@ -33,6 +33,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.PasswordTextField;
@@ -143,20 +144,15 @@ public class ManageUsersPage
                         }
                     });
                     setNullValid(false);
+                    
+                    add(new FormComponentUpdatingBehavior() {
+                        @Override
+                        protected void onUpdate() {
+                            actionSelectionChanged(SelectionForm.this.getModelObject().user);
+                        }
+                    });
                 }
                 
-                @Override
-                protected void onSelectionChanged(User aNewSelection)
-                {
-                    actionSelectionChanged(aNewSelection);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
@@ -184,7 +180,7 @@ public class ManageUsersPage
 
         public DetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new Model<>(new User())));
+            super(id, new CompoundPropertyModel<>(Model.of()));
 
             add(new TextField<String>("username").setOutputMarkupId(true));
             add(new PasswordTextField("password", passwordModel).setRequired(false));
@@ -275,6 +271,13 @@ public class ManageUsersPage
         {
             return passwordModel.getObject();
         }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            setVisible(getModelObject() != null);
+        }
     }
 
     private SelectionForm selectionForm;
@@ -303,12 +306,8 @@ public class ManageUsersPage
     {
         if (aNewSelection != null) {
             detailForm.setModelObject(aNewSelection);
-            detailForm.setVisible(true);
             detailForm.get("username").setEnabled(false);
             isCreate = false;
-        }
-        else {
-            detailForm.setVisible(false);
         }
     }
 
@@ -316,7 +315,6 @@ public class ManageUsersPage
     {
         selectionForm.getModelObject().user = null;
         detailForm.setModelObject(new User());
-        detailForm.setVisible(true);
         detailForm.get("username").setEnabled(true);
         isCreate = true;
     }
@@ -330,7 +328,7 @@ public class ManageUsersPage
         }
         selectionForm.getModelObject().user = null;
         selectionForm.get("user").detachModels();
-        detailForm.setVisible(false);
+        detailForm.setModelObject(null);
         info("User [" + user.getUsername() + "] has been removed.");
     }
 
@@ -361,8 +359,7 @@ public class ManageUsersPage
     {
         if (isAdmin()) {
             detailForm.detach();
-            detailForm.setModelObject(new User());
-            detailForm.setVisible(false);
+            detailForm.setModelObject(null);
         }
         else {
             setResponsePage(getApplication().getHomePage());
