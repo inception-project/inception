@@ -239,8 +239,8 @@ public class AutomationPage
 
         sidebarCell.add(detailEditor = createDetailEditor());
 
-        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor, 
-                () -> { return getEditorCas(); });
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
+            this::getEditorCas);
         annotationViewCell.add(annotationEditor);
 
         curationContainer = new CurationContainer();

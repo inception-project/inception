@@ -399,7 +399,7 @@ public class WebAnnoCasUtil
     private static <T extends Annotation> FSIterator<T> seekByAddress(JCas aJcas, Class<T> aType,
             int aAddr)
     {
-        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
                 .getAnnotationType(aJcas, aType));
         return idx.iterator(selectByAddr(aJcas, aAddr));
     }
@@ -419,7 +419,7 @@ public class WebAnnoCasUtil
     private static <T extends Annotation> FSIterator<T> seekByFs(JCas aJcas, Class<T> aType,
             AnnotationFS aFS)
     {
-        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
                 .getAnnotationType(aJcas, aType));
         return idx.iterator(aFS);
     }

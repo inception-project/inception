@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationException;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
@@ -216,13 +215,13 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public void onSelectionChanged(AnnotationFeature aNewSelection)
                 {
-                    selectedFeature = (AnnotationFeature) aNewSelection;
+                    selectedFeature = aNewSelection;
                     if (automationService.existsMiraTemplate(selectedFeature)) {
                         template = automationService.getMiraTemplate(selectedFeature);
                     }
                     else {
                         template = new MiraTemplate();
-                        template.setTrainFeature((AnnotationFeature) aNewSelection);
+                        template.setTrainFeature(aNewSelection);
                     }
                     featureModel.setObject(selectedFeature);
                     miraTemplateDetailForm.setModelObject(template);
@@ -248,11 +247,11 @@ public class ProjectMiraTemplatePanel
 
         public TargetLaerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<MiraTemplate>(new EntityModel<MiraTemplate>(
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(
                     new MiraTemplate())));
 
-            List<ITab> tabs = new ArrayList<ITab>();
-            tabs.add(new AbstractTab(new Model<String>("Target layer"))
+            List<ITab> tabs = new ArrayList<>();
+            tabs.add(new AbstractTab(new Model<>("Target layer"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -263,7 +262,7 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("TAB-SEP target"))
+            tabs.add(new AbstractTab(new Model<>("TAB-SEP target"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -273,7 +272,7 @@ public class ProjectMiraTemplatePanel
                     return new FreeTabSepAsTargetDocumentsPanel(panelId);
                 }
             });
-            tabs.add(new AbstractTab(new Model<String>("Other layers"))
+            tabs.add(new AbstractTab(new Model<>("Other layers"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -284,7 +283,7 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            tabs.add(new AbstractTab(new Model<String>("TAB-SEP feature"))
+            tabs.add(new AbstractTab(new Model<>("TAB-SEP feature"))
             {
                 private static final long serialVersionUID = 6703144434578403272L;
 
@@ -295,7 +294,7 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            add(autoTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<ITab>("autoTabs", tabs)
+            add(autoTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<>("autoTabs", tabs)
                     .setOutputMarkupPlaceholderTag(true));
         }
     }
@@ -322,7 +321,7 @@ public class ProjectMiraTemplatePanel
 
             add(targetLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
                     "targetLayerTarinDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
-                    new Model<TabSepDocModel>(new TabSepDocModel(false, false)), featureModel)
+                    new Model<>(new TabSepDocModel(false, false)), featureModel)
             {
 
                 private static final long serialVersionUID = 7698999083009818310L;
@@ -363,7 +362,7 @@ public class ProjectMiraTemplatePanel
 
             add(otherLayerTarinDocumentsPanel = new ProjectTrainingDocumentsPanel(
                     "otherLayerTarinDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
-                    new Model<TabSepDocModel>(new TabSepDocModel(false, false)),
+                    new Model<>(new TabSepDocModel(false, false)),
                     Model.of(otherLayerDetailForm.getModelObject().selectedFeatures))
             {
                 private static final long serialVersionUID = -4663938706290521594L;
@@ -388,7 +387,7 @@ public class ProjectMiraTemplatePanel
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
                     "freeTabSepAsFeatureDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
-                    new Model<TabSepDocModel>(new TabSepDocModel(false, true)), featureModel)
+                    new Model<>(new TabSepDocModel(false, true)), featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 
@@ -413,7 +412,7 @@ public class ProjectMiraTemplatePanel
             super(id);
             add(freeTrainDocumentsPanel = new ProjectTrainingDocumentsPanel(
                     "freeTabSepAsTargetDocumentsPanel", ProjectMiraTemplatePanel.this.getModel(),
-                    new Model<TabSepDocModel>(new TabSepDocModel(true, true)), featureModel)
+                    new Model<>(new TabSepDocModel(true, true)), featureModel)
             {
                 private static final long serialVersionUID = -4663938706290521594L;
 
@@ -435,7 +434,7 @@ public class ProjectMiraTemplatePanel
 
         public MiraTemplateDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<MiraTemplate>(new EntityModel<MiraTemplate>(
+            super(id, new CompoundPropertyModel<>(new EntityModel<>(
                     new MiraTemplate())));
 
             add(new CheckBox("annotateAndRepeat"));
@@ -481,7 +480,7 @@ public class ProjectMiraTemplatePanel
 
         public OtherLayerDeatilForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(otherFeatures = new DropDownChoice<AnnotationFeature>("features")
             {
@@ -564,7 +563,7 @@ public class ProjectMiraTemplatePanel
                         @Override
                         protected List<AnnotationFeature> load()
                         {
-                            return new ArrayList<AnnotationFeature>(miraTemplateDetailForm
+                            return new ArrayList<>(miraTemplateDetailForm
                                     .getModelObject().getOtherFeatures());
                         }
                     });
@@ -758,15 +757,7 @@ public class ProjectMiraTemplatePanel
                         automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + ExceptionUtils.getRootCause(e) + "')");
                     }
-                    catch (ClassNotFoundException e) {
-                        template.setAutomationStarted(false);
-                        automationStatus.setStatus(Status.INTERRUPTED);
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        automationService.createTemplate(template);
-                        automationService.createAutomationStatus(automationStatus);
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                    }
-                    catch (IOException e) {
+                    catch (ClassNotFoundException | IOException e) {
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
@@ -775,14 +766,6 @@ public class ProjectMiraTemplatePanel
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     catch (AnnotationException e) {
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
-                    }
-                    catch (AutomationException e) {
-                        template.setAutomationStarted(false);
-                        automationStatus.setStatus(Status.INTERRUPTED);
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        automationService.createTemplate(template);
-                        automationService.createAutomationStatus(automationStatus);
                         aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
                     }
                     // any other exception such as Memmory heap

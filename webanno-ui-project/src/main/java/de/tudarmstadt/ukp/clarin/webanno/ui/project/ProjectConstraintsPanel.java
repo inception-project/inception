@@ -271,7 +271,7 @@ public class ProjectConstraintsPanel
         {
             super(aId);
 
-            add(new FileUploadField("uploads", PropertyModel.<List<FileUpload>> of(this, "uploads")));
+            add(new FileUploadField("uploads", PropertyModel.of(this, "uploads")));
             add(new Button("import", new StringResourceModel("label"))
             {
                 private static final long serialVersionUID = 1L;

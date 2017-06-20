@@ -17,13 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

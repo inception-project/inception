@@ -217,17 +217,13 @@ public class ConstraintsServiceImpl
                     if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
                             .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
                         // If detected, notify user with proper message and abort merging
-                        StringBuilder errorMessage = new StringBuilder();
-                        errorMessage.append("Conflict detected in imports for key \"");
-                        errorMessage.append(e.getKey());
-                        errorMessage.append("\", conflicting values are \"");
-                        errorMessage.append(e.getValue());
-                        errorMessage.append("\" & \"");
-                        errorMessage.append(merged.getImports().get(e.getKey()));
-                        errorMessage.append(
-                                "\". Please contact Project Admin for correcting this. Constraints feature may not work.");
-                        errorMessage.append("\nAborting Constraint rules merge!");
-                        throw new ParseException(errorMessage.toString());
+                        String errorMessage = "Conflict detected in imports for key \"" + e.getKey() +
+                            "\", conflicting values are \"" + e.getValue() +
+                            "\" & \"" + merged.getImports().get(e.getKey()) +
+                            "\". Please contact Project Admin for correcting this." +
+                            "Constraints feature may not work." +
+                            "\nAborting Constraint rules merge!";
+                        throw new ParseException(errorMessage);
                     }
                 }
                 merged.getImports().putAll(constraints.getImports());

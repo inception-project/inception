@@ -249,7 +249,7 @@ public class ExportModalWindowPanel
 
     enum SELECTEXPORT
     {
-        AUTOMATED, ANNOTATED;
+        AUTOMATED, ANNOTATED
     }
 
 }

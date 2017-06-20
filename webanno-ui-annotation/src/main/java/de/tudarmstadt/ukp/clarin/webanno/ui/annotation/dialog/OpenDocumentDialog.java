@@ -72,7 +72,7 @@ public abstract class OpenDocumentDialog
             protected void onCancel(AjaxRequestTarget aInnerTarget)
             {
                 closeButtonClicked = true;
-            };
+            }
         });
         
         setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

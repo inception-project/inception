@@ -162,7 +162,7 @@ public abstract class ColoringStrategy
                 filtered.add(color);
             }
         }
-        return (String[]) filtered.toArray(new String[filtered.size()]);
+        return filtered.toArray(new String[filtered.size()]);
     }
 
     public static boolean isTooLight(String aColor, int aThreshold)

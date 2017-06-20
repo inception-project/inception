@@ -20,18 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints;
 import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.Test;

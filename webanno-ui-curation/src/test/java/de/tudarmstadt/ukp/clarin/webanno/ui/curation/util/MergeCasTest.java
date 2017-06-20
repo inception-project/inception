@@ -283,7 +283,7 @@ public class MergeCasTest {
 	@Test
 	public void simpleSpanNoDiffMultiFeatureTest() throws Exception {
 		TypeSystemDescription customeTypes = DiffUtils.createCustomTypeSystem(SPAN_TYPE, "webanno.custom.Opinion",
-				asList(new String[] { "aspect", "opinion" }), null);
+				asList("aspect", "opinion"), null);
 
 		Map<String, List<JCas>> casByUser = DiffUtils.loadWebAnnoTSV(customeTypes,
 				"mergecas/spanmultifeature/1sentenceNENoFeature.tsv",
@@ -316,7 +316,7 @@ public class MergeCasTest {
 	@Test
 	public void simpleSpanDiffMultiFeatureTest() throws Exception {
 		TypeSystemDescription customeTypes = DiffUtils.createCustomTypeSystem(SPAN_TYPE, "webanno.custom.Opinion",
-				asList(new String[] { "aspect", "opinion" }), null);
+				asList("aspect", "opinion"), null);
 
 		Map<String, List<JCas>> casByUser = DiffUtils.loadWebAnnoTSV(customeTypes,
 				"mergecas/spanmultifeature/1sentenceNEFeatureA.tsv",
@@ -439,10 +439,10 @@ public class MergeCasTest {
 	@Test
 	public void simpleRelGovStackedTest() throws Exception {
 		TypeSystemDescription customeTypesSpan = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
-				"webanno.custom.Multivalspan", asList(new String[] { "f1", "f2" }), null);
+				"webanno.custom.Multivalspan", asList("f1", "f2"), null);
 
 		TypeSystemDescription customeTypesRel = DiffUtils.createCustomTypeSystem(RELATION_TYPE,
-				"webanno.custom.Multivalrel", asList(new String[] { "rel1", "rel2" }), "webanno.custom.Multivalspan");
+				"webanno.custom.Multivalrel", asList("rel1", "rel2"), "webanno.custom.Multivalspan");
 
 		List<TypeSystemDescription> customTypes = new ArrayList<>();
 		customTypes.add(customeTypesSpan);
@@ -480,10 +480,10 @@ public class MergeCasTest {
 	@Test
 	public void relStackedTest() throws Exception {
 		TypeSystemDescription customeTypesSpan = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
-				"webanno.custom.Multivalspan", asList(new String[] { "f1", "f2" }), null);
+				"webanno.custom.Multivalspan", asList("f1", "f2"), null);
 
 		TypeSystemDescription customeTypesRel = DiffUtils.createCustomTypeSystem(RELATION_TYPE,
-				"webanno.custom.Multivalrel", asList(new String[] { "rel1", "rel2" }), "webanno.custom.Multivalspan");
+				"webanno.custom.Multivalrel", asList("rel1", "rel2"), "webanno.custom.Multivalspan");
 
 		List<TypeSystemDescription> customTypes = new ArrayList<>();
 		customTypes.add(customeTypesSpan);

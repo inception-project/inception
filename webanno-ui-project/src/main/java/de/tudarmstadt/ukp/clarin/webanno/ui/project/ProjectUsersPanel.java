@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -33,7 +32,6 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -284,8 +282,8 @@ public class ProjectUsersPanel
                         @Override
                         protected List<PermissionLevel> load()
                         {
-                            return Arrays.asList(new PermissionLevel[] { PermissionLevel.ADMIN,
-                                    PermissionLevel.CURATOR, PermissionLevel.USER });
+                            return Arrays.asList(PermissionLevel.ADMIN,
+                                PermissionLevel.CURATOR, PermissionLevel.USER);
                         }
 
                     });
@@ -357,8 +355,8 @@ public class ProjectUsersPanel
 
         public UserDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
-            TextField<String> filterText = new TextField<String>("userFilter");
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
+            TextField<String> filterText = new TextField<>("userFilter");
             
             add(filterText.setOutputMarkupPlaceholderTag(true));
             add(new Button("filterButton")
@@ -372,31 +370,29 @@ public class ProjectUsersPanel
                 }
             });
             
-            add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<User>("users",
-                    new LoadableDetachableModel<List<User>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+            add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<>("users",
+                new LoadableDetachableModel<List<User>>()
+                {
+                    private static final long serialVersionUID = 1L;
 
-                        @Override
-                        protected List<User> load()
-                        {
-                            List<User> allUSers = userRepository.list();
-                            List<User> filteredUSers = new ArrayList<User>();
-                            allUSers.removeAll(projectRepository.listProjectUsersWithPermissions(
-                                    ProjectUsersPanel.this.getModelObject()));
-                            
-                            for (User user : allUSers) 
-                            {
-                                User current = user;
-                                if (current.getUsername().contains(filterText.getValue()))
-                            	{
-                                	filteredUSers.add(current);
-                            	}
+                    @Override
+                    protected List<User> load()
+                    {
+                        List<User> allUSers = userRepository.list();
+                        List<User> filteredUSers = new ArrayList<>();
+                        allUSers.removeAll(projectRepository.listProjectUsersWithPermissions(
+                            ProjectUsersPanel.this.getModelObject()));
+
+                        for (User user : allUSers) {
+                            User current = user;
+                            if (current.getUsername().contains(filterText.getValue())) {
+                                filteredUSers.add(current);
                             }
-                            
-                            return filteredUSers;
                         }
-                    }, new ChoiceRenderer<User>("username", "username")));
+
+                        return filteredUSers;
+                    }
+                }, new ChoiceRenderer<>("username", "username")));
             users.setSuffix("<br>");
 
             add(new Button("add")

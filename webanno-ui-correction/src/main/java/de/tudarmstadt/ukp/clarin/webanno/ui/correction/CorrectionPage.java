@@ -235,7 +235,7 @@ public class CorrectionPage
         sidebarCell.add(detailEditor = createDetailEditor());
         
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
-                () -> { return getEditorCas(); });
+            this::getEditorCas);
         annotationViewCell.add(annotationEditor);
 
         curationContainer = new CurationContainer();

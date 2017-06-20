@@ -848,12 +848,8 @@ public class CasDiff2
         @Override
         public String toMinimalString()
         {
-            StringBuilder builder = new StringBuilder();
-            builder.append("(").append(sourceBegin).append('-').append(sourceEnd).append(')');
-            builder.append('[').append(sourceText).append(']');
-            builder.append(" -> (").append(targetBegin).append('-').append(targetEnd).append(')');
-            builder.append(" [").append(targetText).append(']');
-            return builder.toString();
+            return "(" + sourceBegin + '-' + sourceEnd + ')' + '[' + sourceText + ']' +
+                " -> (" + targetBegin + '-' + targetEnd + ')' + " [" + targetText + ']';
         }
     }
 
@@ -1656,12 +1652,12 @@ public class CasDiff2
         
         public <T extends TOP> SpanDiffAdapter(Class<T> aType, String... aLabelFeatures)
         {
-            this(aType.getName(), new HashSet<String>(asList(aLabelFeatures)));
+            this(aType.getName(), new HashSet<>(asList(aLabelFeatures)));
         }
         
         public SpanDiffAdapter(String aType, String... aLabelFeatures)
         {
-            this(aType, new HashSet<String>(asList(aLabelFeatures)));
+            this(aType, new HashSet<>(asList(aLabelFeatures)));
         }
         
         public SpanDiffAdapter(String aType, Set<String> aLabelFeatures)
@@ -1711,14 +1707,14 @@ public class CasDiff2
         public <T extends TOP> ArcDiffAdapter(Class<T> aType, String aSourceFeature, String aTargetFeature,
                 String... aLabelFeatures)
         {
-            this(aType.getName(), aSourceFeature, aTargetFeature, new HashSet<String>(
-                    asList(aLabelFeatures)));
+            this(aType.getName(), aSourceFeature, aTargetFeature, new HashSet<>(
+                asList(aLabelFeatures)));
         }
         
         public ArcDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
                 String... aLabelFeatures)
         {
-            this(aType, aSourceFeature, aTargetFeature, new HashSet<String>(asList(aLabelFeatures)));
+            this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aLabelFeatures)));
         }
         
         public ArcDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
