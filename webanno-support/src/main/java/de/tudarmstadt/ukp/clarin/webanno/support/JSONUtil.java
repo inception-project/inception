@@ -58,11 +58,26 @@ public class JSONUtil
             Object aObject)
         throws IOException
     {
+        return toJsonString(jsonConverter, true, aObject);
+    }
+
+    public static String toJsonString(Object aObject)
+        throws IOException
+    {
+        return toJsonString(getJsonConverter(), false, aObject);
+    }
+    
+    public static String toJsonString(MappingJackson2HttpMessageConverter jsonConverter,
+            boolean aPretty, Object aObject)
+        throws IOException
+    {
         StringWriter out = new StringWriter();
 
         JsonGenerator jsonGenerator = jsonConverter.getObjectMapper().getFactory()
                 .createGenerator(out);
-        jsonGenerator.useDefaultPrettyPrinter();
+        if (aPretty) {
+            jsonGenerator.useDefaultPrettyPrinter();
+        }
 
         jsonGenerator.writeObject(aObject);
         return out.toString();
@@ -73,7 +88,6 @@ public class JSONUtil
     {
         return toPrettyJsonString(getJsonConverter(), aObject);
     }
-    
     public static MappingJackson2HttpMessageConverter getJsonConverter()
     {
         return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",

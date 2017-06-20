@@ -21,25 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public final class OnClickActionParser
 {
-    private final static Logger LOG = LoggerFactory.getLogger(OnClickActionParser.class);
-
     private OnClickActionParser()
     {
         // No instances
@@ -48,57 +37,28 @@ public final class OnClickActionParser
     /**
      * @return String with substituted variables
      */
-    public static Map<String, String> parse(AnnotationLayer aLayer,
-            List<AnnotationFeature> aFeatures, Project aProject, SourceDocument aDocument,
-            AnnotationFS aAnnotation)
+    public static Map<String, Object> parse(AnnotationLayer aLayer,
+            List<AnnotationFeature> aFeatures, SourceDocument aDocument, AnnotationFS aAnnotation)
     {
-        Map<String, String> valuesMap = new HashMap<>();
+        Map<String, Object> valuesMap = new HashMap<>();
 
         // add some defaults
-        valuesMap.put("PID", String.valueOf(aProject.getId()));
-        valuesMap.put("PNAME", aProject.getName());
-        valuesMap.put("DOCID", String.valueOf(aDocument.getId()));
+        valuesMap.put("PID", aLayer.getProject().getId());
+        valuesMap.put("PNAME", aLayer.getProject().getName());
+        valuesMap.put("DOCID", aDocument.getId());
         valuesMap.put("DOCNAME", aDocument.getName());
-        valuesMap.put("LAYERNAME", aLayer.getUiName());
+        valuesMap.put("LAYERNAME", aLayer.getName());
 
         // add fields from the annotation layer features and use the values from before
         aFeatures.stream().forEach(feat -> {
-            Object val = FSUtil.getFeature(aAnnotation, feat.getName(), Object.class);
-            if (val != null) {
-                valuesMap.put(feat.getUiName(), String.valueOf(val));
+            if (WebAnnoCasUtil.isPrimitiveFeature(aAnnotation, feat.getName())) {
+                Object val = WebAnnoCasUtil.getFeature(aAnnotation, feat.getName());
+                if (val != null) {
+                    valuesMap.put(feat.getUiName(), String.valueOf(val));
+                }
             }
         });
 
         return valuesMap;
-    }
-
-    /**
-     * as JSON object
-     * 
-     * @return map as JSON object string
-     */
-    public static String asJSONObject(final Map<String, String> aValueMap)
-    {
-        if (aValueMap == null) {
-            return "{ }";
-        }
-        try {
-            return new ObjectMapper().writeValueAsString(aValueMap);
-        }
-        catch (JsonProcessingException e) {
-            LOG.warn("Could not encode map to json object: '{}'.",
-                    StringUtils.abbreviate(aValueMap.toString(), 100), e);
-            return String.format("{ \"%s\": \"%s\" }", e.getClass().getSimpleName(),
-                    e.getMessage());
-        }
-    }
-
-    /**
-     * Escapes values in the map
-     */
-    public static void escapeJavascript(final Map<String, String> aUnescapedValues)
-    {
-        aUnescapedValues.entrySet()
-                .forEach(e -> e.setValue(StringEscapeUtils.escapeJava(e.getValue())));
     }
 }

@@ -90,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReferenc
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -188,50 +187,52 @@ public class BratAnnotationEditor
                     }
                 }
                 
-				/*  */
-				// Whenever an action should be performed, do ONLY perform this action and nothing else, and only if the item actually is an action item
-                if(DoActionResponse.is(action)){
-                	Project proj = aModel.getObject().getProject();
-                	StringValue layer_type = request.getParameterValue(PARAM_SPAN_TYPE);
-                	if(!layer_type.isEmpty()){
-	                	long layer_id = Long.parseLong(layer_type.beforeFirst('_'));
-	                	AnnotationLayer anno_layer = annotationService.getLayer(layer_id);
-	                	if(!StringUtils.isEmpty(anno_layer.getOnClickJavascriptAction())){ 
-		                	/* parse the action */
-	                		List<AnnotationFeature> anno_layer_features = annotationService.listAnnotationFeature(anno_layer);
-	                		AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas, paramId.getId());
-		                	Map<String, String> function_params = OnClickActionParser.parse(
-		                			anno_layer,
-		                			anno_layer_features,
-		                			proj, 
-		                			aModel.getObject().getDocument(), 
-		                			anno);
-		                	String js = String.format(
-		                			"(function ($PARAM){ %s })(%s)", // define anonymous function, fill the body and immediately execute it
-		                			anno_layer.getOnClickJavascriptAction(),
-		                			OnClickActionParser.asJSONObject(function_params));
-		                	aTarget.appendJavaScript(js);
-		                	return;
-	                	}
-                	}
-                }
                 
-                
-                // HACK: If an arc was clicked that represents a link feature, then open the
-                // associated span annotation instead.
-                if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
-                    action = SpanAnnotationResponse.COMMAND;
-                    paramId = new VID(paramId.getId());
-                }
-
-                // Doing anything but selecting or creating a span annotation when a slot is armed
-                // will unarm it
-                if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
-                    getModelObject().clearArmedSlot();
-                }
-
                 Object result = null;
                 try {
+                    boolean skipImplicitSlotActions = false;
+                    
+                    // Whenever an action should be performed, do ONLY perform this action and
+                    // nothing else, and only if the item actually is an action item
+                    if (DoActionResponse.is(action)) {
+                        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+                        if (!layerParam.isEmpty()) {
+                            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+                            AnnotationLayer layer = annotationService.getLayer(layerId);
+                            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
+                                // parse the action
+                                List<AnnotationFeature> features = annotationService
+                                        .listAnnotationFeature(layer);
+                                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas,
+                                        paramId.getId());
+                                Map<String, Object> functionParams = OnClickActionParser.parse(
+                                        layer, features, aModel.getObject().getDocument(), anno);
+                                // define anonymous function, fill the body and immediately execute
+                                String js = String.format("(function ($PARAM){ %s })(%s)",
+                                        layer.getOnClickJavascriptAction(),
+                                        JSONUtil.toJsonString(functionParams));
+                                aTarget.appendJavaScript(js);
+                                skipImplicitSlotActions = true;
+                            }
+                        }
+                    }
+
+                    if (!skipImplicitSlotActions) {
+                        // HACK: If an arc was clicked that represents a link feature, then open the
+                        // associated span annotation instead.
+                        if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
+                            action = SpanAnnotationResponse.COMMAND;
+                            paramId = new VID(paramId.getId());
+                        }
+    
+                        // Doing anything but selecting or creating a span annotation when a slot is
+                        // armed
+                        // will unarm it
+                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
+                            getModelObject().clearArmedSlot();
+                        }
+                    }
+
                     if (WhoamiResponse.is(action)) {
                         result = new WhoamiResponse(
                                 SecurityContextHolder.getContext().getAuthentication().getName());

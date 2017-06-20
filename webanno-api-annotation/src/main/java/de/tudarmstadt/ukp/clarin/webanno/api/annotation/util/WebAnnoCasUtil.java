@@ -729,6 +729,26 @@ public class WebAnnoCasUtil
         return seletedTextSb.toString();
     }
 
+    public static boolean isPrimitiveFeature(FeatureStructure aFS, String aFeatureName)
+    {
+        Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);
+
+        if (feature == null) {
+            throw new IllegalArgumentException("Type [" + aFS.getType().getName()
+                    + "] has no feature called [" + aFeatureName + "]");
+        }
+        
+        switch (feature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING: // fallthrough
+        case CAS.TYPE_NAME_BOOLEAN: // fallthrough
+        case CAS.TYPE_NAME_FLOAT: // fallthrough
+        case CAS.TYPE_NAME_INTEGER:
+            return true;
+        default:
+            return false;
+        }
+    }
+    
     public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);
