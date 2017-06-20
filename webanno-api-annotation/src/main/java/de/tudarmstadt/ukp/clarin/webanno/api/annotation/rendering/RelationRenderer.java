@@ -23,7 +23,6 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

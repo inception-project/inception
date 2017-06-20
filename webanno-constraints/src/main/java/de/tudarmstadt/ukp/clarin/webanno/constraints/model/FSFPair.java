@@ -86,12 +86,7 @@ public class FSFPair implements Serializable
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("FSFPair [featureStructure=");
-        builder.append(featureStructure);
-        builder.append(", affectedFeature=");
-        builder.append(affectedFeature);
-        builder.append("]");
-        return builder.toString();
+        return "FSFPair [featureStructure=" + featureStructure +
+            ", affectedFeature=" + affectedFeature + "]";
     }
 }

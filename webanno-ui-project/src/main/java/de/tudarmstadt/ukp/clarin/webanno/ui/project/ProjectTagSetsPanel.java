@@ -234,8 +234,8 @@ public class ProjectTagSetsPanel
             add(fileUpload = new FileUploadField("content", new Model()));
             add(importTagsetFormat = new DropDownChoice<>("importTagsetFormat",
                     new Model<>(selectedExporTagsetFormat),
-                    Arrays.asList(new String[]{ExportedTagSetConstant.JSON_FORMAT,
-                            ExportedTagSetConstant.TAB_FORMAT})));
+                    Arrays.asList(ExportedTagSetConstant.JSON_FORMAT,
+                        ExportedTagSetConstant.TAB_FORMAT)));
             overwriteTagsetFlag = new CheckBox("overwriteTagset", Model.of(Boolean.FALSE));
             add(overwriteTagsetFlag);
             add(new Button("import", new StringResourceModel("label"))

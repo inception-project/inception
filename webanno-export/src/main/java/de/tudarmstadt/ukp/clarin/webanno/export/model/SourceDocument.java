@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
 /**
  * Source document information to be exported/imported

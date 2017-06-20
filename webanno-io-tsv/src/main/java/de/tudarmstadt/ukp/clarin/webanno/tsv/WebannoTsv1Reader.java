@@ -333,7 +333,7 @@ public class WebannoTsv1Reader
             Map<Integer, String> aTokensMap, Map<String, Token> aJcasTokens)
     {
 
-        Map<Integer, NamedEntity> indexedNeAnnos = new LinkedHashMap<Integer, NamedEntity>();
+        Map<Integer, NamedEntity> indexedNeAnnos = new LinkedHashMap<>();
 
         for (int i = 1; i <= aTokensMap.size(); i++) {
             if (aNamedEntityMap.get(i).equals("O")) {

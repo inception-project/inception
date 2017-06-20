@@ -270,7 +270,7 @@ public class RemoteApiController
             JSONObject projectJSON = new JSONObject();
 
             for (ProjectPermission p : projectPermissions) {
-                permissionArr.put(p.getLevel().getName().toString());
+                permissionArr.put(p.getLevel().getName());
             }
             projectJSON.put(project.getName(), permissionArr);
             returnJSONObj.put(projectId, projectJSON);
@@ -763,7 +763,7 @@ public class RemoteApiController
             response.setContentType(mimeType);
             response.setContentType("application/force-download");
             response.setHeader("Content-Disposition",
-                    String.format("inline; filename=\"" + downloadableFile.getName() + "\""));
+                "inline; filename=\"" + downloadableFile.getName() + "\"");
             response.setContentLength((int) downloadableFile.length());
             InputStream inputStream = new BufferedInputStream(
                     new FileInputStream(downloadableFile));
@@ -894,8 +894,7 @@ public class RemoteApiController
             // Set response
             response.setContentType(mimeType);
             response.setContentType("application/force-download");
-            response.setHeader("Content-Disposition", String
-                    .format("inline; filename=\"" + downloadableFile.getName() + "\""));
+            response.setHeader("Content-Disposition", "inline; filename=\"" + downloadableFile.getName() + "\"");
             response.setContentLength((int) downloadableFile.length());
             InputStream inputStream = new BufferedInputStream(
                     new FileInputStream(downloadableFile));

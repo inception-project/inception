@@ -449,7 +449,7 @@ public class ProjectLayersPanel
                 {
                     setVisible(StringUtils.isNotBlank(LayerDetailForm.this.getModelObject()
                             .getName()));
-                };
+                }
             });
             
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
@@ -492,7 +492,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            attachTypes = (DropDownChoice<AnnotationLayer>) new DropDownChoice<AnnotationLayer>(
+            attachTypes = new DropDownChoice<AnnotationLayer>(
                     "attachType")
             {
                 private static final long serialVersionUID = -6705445053442011120L;
@@ -510,20 +510,20 @@ public class ProjectLayersPanel
 
                             if (LayerDetailForm.this.getModelObject().getId() > 0) {
                                 if (LayerDetailForm.this.getModelObject().getAttachType() == null) {
-                                    return new ArrayList<AnnotationLayer>();
+                                    return new ArrayList<>();
                                 }
 
                                 return Arrays.asList(LayerDetailForm.this.getModelObject()
                                         .getAttachType());
                             }
                             if (!layerType.equals(RELATION_TYPE)) {
-                                return new ArrayList<AnnotationLayer>();
+                                return new ArrayList<>();
                             }
 
-                            List<AnnotationLayer> attachTeypes = new ArrayList<AnnotationLayer>();
+                            List<AnnotationLayer> attachTeypes = new ArrayList<>();
                             // remove a span layer which is already used as attach type for the
                             // other
-                            List<AnnotationLayer> usedLayers = new ArrayList<AnnotationLayer>();
+                            List<AnnotationLayer> usedLayers = new ArrayList<>();
                             for (AnnotationLayer layer : allLayers) {
                                 if (layer.getAttachType() != null) {
                                     usedLayers.add(layer.getAttachType());
@@ -540,7 +540,7 @@ public class ProjectLayersPanel
                             return attachTeypes;
                         }
                     });
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationLayer>("uiName"));
+                    setChoiceRenderer(new ChoiceRenderer<>("uiName"));
                 }
 
                 @Override
@@ -548,7 +548,7 @@ public class ProjectLayersPanel
                 {
                     setEnabled(LayerDetailForm.this.getModelObject().getId() == 0);
                     setNullValid(isVisible());
-                };
+                }
             };
             attachTypes.setOutputMarkupPlaceholderTag(true);
             add(attachTypes);
@@ -969,12 +969,12 @@ public class ProjectLayersPanel
         DropDownChoice<TagSet> tagSet;
         DropDownChoice<String> featureType;
         CheckBox required;
-        List<String> types = new ArrayList<String>();
+        List<String> types = new ArrayList<>();
 
         public FeatureDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<AnnotationFeature>(
-                    new EntityModel<AnnotationFeature>(new AnnotationFeature())));
+            super(id, new CompoundPropertyModel<>(
+                new EntityModel<>(new AnnotationFeature())));
 
             add(new Label("name")
             {
@@ -985,7 +985,7 @@ public class ProjectLayersPanel
                 {
                     setVisible(StringUtils.isNotBlank(FeatureDetailForm.this.getModelObject()
                             .getName()));
-                };
+                }
             });
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
@@ -1013,7 +1013,7 @@ public class ProjectLayersPanel
             });
             add(new CheckBox("hideUnconstraintFeature"));
 
-            add(featureType = (DropDownChoice<String>) new DropDownChoice<String>("type")
+            add(featureType = new DropDownChoice<String>("type")
             {
                 private static final long serialVersionUID = 9029205407108101183L;
 
@@ -1039,7 +1039,7 @@ public class ProjectLayersPanel
                 protected void onConfigure()
                 {
                     setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
-                };
+                }
             });
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
             {
@@ -1058,7 +1058,7 @@ public class ProjectLayersPanel
                 {
                     setOutputMarkupPlaceholderTag(true);
                     setOutputMarkupId(true);
-                    setChoiceRenderer(new ChoiceRenderer<TagSet>("name"));
+                    setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(true);
                     setChoices(new LoadableDetachableModel<List<TagSet>>()
                     {
@@ -1202,7 +1202,7 @@ public class ProjectLayersPanel
 
         public FeatureSelectionForm(String id)
         {
-            super(id, new CompoundPropertyModel<SelectionModel>(new SelectionModel()));
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             add(feature = new ListChoice<AnnotationFeature>("feature")
             {
@@ -1280,7 +1280,7 @@ public class ProjectLayersPanel
                             .listAnnotationFeature(layerDetailForm.getModelObject());
                     if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
                             && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
-                        List<AnnotationFeature> filtered = new ArrayList<AnnotationFeature>();
+                        List<AnnotationFeature> filtered = new ArrayList<>();
                         for (AnnotationFeature f : features) {
                             if (!WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
                                 filtered.add(f);

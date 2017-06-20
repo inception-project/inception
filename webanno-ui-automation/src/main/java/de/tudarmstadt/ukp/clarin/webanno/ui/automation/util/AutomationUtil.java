@@ -37,7 +37,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -447,7 +446,7 @@ public class AutomationUtil
                     for (Sentence sentence : select(jCas, Sentence.class)) {
 
                         if (aFeature.getLayer().isMultipleTokens()) {
-                            annotations.addAll((List<String>) ((SpanAdapter) adapter)
+                            annotations.addAll(((SpanAdapter) adapter)
                                     .getMultipleAnnotation(sentence, aFeature).values());
                         }
                         else {
@@ -467,7 +466,7 @@ public class AutomationUtil
             JCas jCas = aRepository.readAnnotationCas(annodoc);
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 if (aFeature.getLayer().isMultipleTokens()) {
-                    annotations.addAll((List<String>) ((SpanAdapter) adapter)
+                    annotations.addAll(((SpanAdapter) adapter)
                             .getMultipleAnnotation(sentence, aFeature).values());
                 }
                 else {
@@ -719,7 +718,7 @@ public class AutomationUtil
         StringBuffer sb = new StringBuffer();
 
         String tag = "";
-        List<String> annotations = new ArrayList<String>();
+        List<String> annotations = new ArrayList<>();
         Map<Integer, String> multAnno = null;
         if (aLayerFeature != null) {
             if (aLayerFeature.getLayer().isMultipleTokens()) {
@@ -1141,7 +1140,7 @@ public class AutomationUtil
         int beamSize = 0;
         boolean maxPosteriors = false;
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
-        List<List<String>> predictions = new ArrayList<List<String>>();
+        List<List<String>> predictions = new ArrayList<>();
 
         File miraDir = aAutomationService.getMiraDir(layerFeature);
         Mira mira = new Mira();
@@ -1284,7 +1283,7 @@ public class AutomationUtil
             mira.test(input, stream);
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1337,7 +1336,7 @@ public class AutomationUtil
             }
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1383,7 +1382,7 @@ public class AutomationUtil
 
         File miraDir = aAutomationService.getMiraDir(layerFeature);
         for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
-            List<List<String>> predictions = new ArrayList<List<String>>();
+            List<List<String>> predictions = new ArrayList<>();
                 File predFtFile = new File(miraDir, document.getId() + ".pred.ft");
                 Mira mira = new Mira();
                 int beamSize = 0;
@@ -1418,7 +1417,7 @@ public class AutomationUtil
         throws IOException
     {
         LineIterator it = IOUtils.lineIterator(new FileReader(aBaseFile));
-        StringBuffer trainBuffer = new StringBuffer();
+        StringBuilder trainBuffer = new StringBuilder();
         int i = 0;
         while (it.hasNext()) {
             String line = it.next();
@@ -1458,7 +1457,7 @@ public class AutomationUtil
         throws IOException
     {
         LineIterator it = IOUtils.lineIterator(new FileReader(apredFt));
-        StringBuffer predBuffer = new StringBuffer();
+        StringBuilder predBuffer = new StringBuilder();
         int i = 0;
         while (it.hasNext()) {
             String line = it.next();
@@ -1634,7 +1633,7 @@ public class AutomationUtil
 
             LOG.info("Prediction is wrtten to a MIRA File. To be done is writing back to the CAS");
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1676,11 +1675,8 @@ public class AutomationUtil
     public static void clearAnnotations(JCas aJCas, Type aType)
         throws IOException
     {
-        List<AnnotationFS> annotationsToRemove = new ArrayList<AnnotationFS>();
-        for (AnnotationFS a : select(aJCas.getCas(), aType)) {
-            annotationsToRemove.add(a);
-
-        }
+        List<AnnotationFS> annotationsToRemove = new ArrayList<>();
+        annotationsToRemove.addAll(select(aJCas.getCas(), aType));
         for (AnnotationFS annotation : annotationsToRemove) {
             aJCas.removeFsFromIndexes(annotation);
         }

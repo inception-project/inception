@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag;
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -304,7 +305,7 @@ public class CasDoctor
         Reflections reflections = new Reflections(Check.class.getPackage().getName());
         return reflections.getSubTypesOf(Check.class).stream()
                 .filter(c -> !Modifier.isAbstract(c.getModifiers()))
-                .sorted((a,b) -> a.getName().compareTo(b.getName()))
+                .sorted(Comparator.comparing(Class::getName))
                 .collect(Collectors.toList());
     }
 
@@ -313,7 +314,7 @@ public class CasDoctor
         Reflections reflections = new Reflections(Repair.class.getPackage().getName());
         return reflections.getSubTypesOf(Repair.class).stream()
                 .filter(c -> !Modifier.isAbstract(c.getModifiers()))
-                .sorted((a,b) -> a.getName().compareTo(b.getName()))
+                .sorted(Comparator.comparing(Class::getName))
                 .collect(Collectors.toList());
     }
 

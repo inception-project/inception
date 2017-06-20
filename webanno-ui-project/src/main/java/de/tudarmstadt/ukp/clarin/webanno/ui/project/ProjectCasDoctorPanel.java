@@ -76,10 +76,10 @@ public class ProjectCasDoctorPanel
         Form<FormModel> form = new Form<>("casDoctorForm", PropertyModel.of(this, "formModel"));
         add(form);
 
-        form.add(new CheckBoxMultipleChoice<Class<? extends Repair>>("repairs",
-                PropertyModel.of(this, "formModel.repairs"),
-                CasDoctor.scanRepairs(),
-                new ChoiceRenderer<>("simpleName")).setPrefix("<div>").setSuffix("</div>"));
+        form.add(new CheckBoxMultipleChoice<>("repairs",
+            PropertyModel.of(this, "formModel.repairs"),
+            CasDoctor.scanRepairs(),
+            new ChoiceRenderer<>("simpleName")).setPrefix("<div>").setSuffix("</div>"));
         form.add(new LambdaAjaxButton<FormModel>("check", this::actionCheck));
         form.add(new LambdaAjaxButton<FormModel>("repair", this::actionRepair));
         form.add(createMessageSetsView());

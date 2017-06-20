@@ -112,13 +112,13 @@ public abstract class WicketApplicationBase
                 ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
                 DocumentService repo = ctx.getBean(DocumentService.class);
                 MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
-            };
+            }
 
             @Override
             public void onEndRequest(RequestCycle cycle)
             {
                 MDC.remove(Logging.KEY_REPOSITORY_PATH);
-            };
+            }
         });
     }
 

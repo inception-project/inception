@@ -167,7 +167,7 @@ public class ImportUtil
         if (aImportedProjectSetting.getVersion() == 0) {
             // this is projects prior to version 2.0
             createV0TagSet(aProjecct, importedTagSets, aAnnotationService, user);
-            return new HashMap<String, AnnotationFeature>();
+            return new HashMap<>();
         }
         return createV1Layer(aProjecct, aImportedProjectSetting, aAnnotationService, user);
     }
@@ -177,14 +177,14 @@ public class ImportUtil
             AnnotationSchemaService aAnnotationService, User user)
         throws IOException
     {
-        List<String> posTags = new ArrayList<String>();
-        List<String> depTags = new ArrayList<String>();
-        List<String> neTags = new ArrayList<String>();
-        List<String> posTagDescriptions = new ArrayList<String>();
-        List<String> depTagDescriptions = new ArrayList<String>();
-        List<String> neTagDescriptions = new ArrayList<String>();
-        List<String> corefTypeTags = new ArrayList<String>();
-        List<String> corefRelTags = new ArrayList<String>();
+        List<String> posTags = new ArrayList<>();
+        List<String> depTags = new ArrayList<>();
+        List<String> neTags = new ArrayList<>();
+        List<String> posTagDescriptions = new ArrayList<>();
+        List<String> depTagDescriptions = new ArrayList<>();
+        List<String> neTagDescriptions = new ArrayList<>();
+        List<String> corefTypeTags = new ArrayList<>();
+        List<String> corefRelTags = new ArrayList<>();
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet tagSet : importedTagSets) {
             switch (tagSet.getTypeName()) {
                 case WebAnnoConst.POS:
@@ -231,8 +231,8 @@ public class ImportUtil
             AnnotationSchemaService aAnnotationService, User aUser)
         throws IOException
     {
-        Map<String, AnnotationFeature> featuresMap = new HashMap<String, AnnotationFeature>();
-        Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer, AnnotationLayer> layersMap = new HashMap<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer, AnnotationLayer>();
+        Map<String, AnnotationFeature> featuresMap = new HashMap<>();
+        Map<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer, AnnotationLayer> layersMap = new HashMap<>();
         for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer : aImportedProjectSetting
                 .getLayers()) {
             if (aAnnotationService.existsLayer(exLayer.getName(), exLayer.getType(), aProject)) {
@@ -501,7 +501,7 @@ public class ImportUtil
             template.setCurrentLayer(exTemplate.isCurrentLayer());
             template.setResult("---");
             template.setTrainFeature(aFeatureMaps.get(exTemplate.getTrainFeature().getName()));
-            Set<AnnotationFeature> otherFeatures = new HashSet<AnnotationFeature>();
+            Set<AnnotationFeature> otherFeatures = new HashSet<>();
             if (exTemplate.getOtherFeatures() != null) {
                 for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exOtherFeature : exTemplate
                         .getOtherFeatures()) {
@@ -735,7 +735,7 @@ public class ImportUtil
             aLayerToExLayer.put(aLayer, exLayer);
         }
 
-        List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> exFeatures = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature>();
+        List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature> exFeatures = new ArrayList<>();
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exFeature = new de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature();
             exFeature.setDescription(feature.getDescription());
@@ -762,7 +762,7 @@ public class ImportUtil
                 exTagSet.setName(tagSet.getName());
                 exTagSet.setCreateTag(tagSet.isCreateTag());
 
-                List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag>();
+                List<de.tudarmstadt.ukp.clarin.webanno.export.model.Tag> exportedTags = new ArrayList<>();
                 for (Tag tag : aAnnotationService.listTags(tagSet)) {
                     de.tudarmstadt.ukp.clarin.webanno.export.model.Tag exTag = new de.tudarmstadt.ukp.clarin.webanno.export.model.Tag();
                     exTag.setDescription(tag.getDescription());

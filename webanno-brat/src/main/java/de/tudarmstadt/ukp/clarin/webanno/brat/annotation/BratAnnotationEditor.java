@@ -410,33 +410,32 @@ public class BratAnnotationEditor
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
         //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
-        
-        StringBuilder script = new StringBuilder();
-        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
+
+	// REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
         // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
         // console.
-        script.append("(function() {");
-        script.append("var dispatcher = new Dispatcher();");
-        // Each visualizer talks to its own Wicket component instance
-        script.append("dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; ");
-        // We attach the JSON send back from the server to this HTML element
-        // because we cannot directly pass it from Wicket to the caller in ajax.js.
-        script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
-        script.append("var ajax = new Ajax(dispatcher);");
-        script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
-        script.append("var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
-        script.append("var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        //script.append("var logger = new AnnotationLog(dispatcher);");
-        script.append("dispatcher.post('init');");
-        script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
-        script.append("Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
-        script.append("})();");
+        String script = "(function() {" +
+            "var dispatcher = new Dispatcher();" +
+	    // Each visualizer talks to its own Wicket component instance
+            "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
+	    // We attach the JSON send back from the server to this HTML element
+	    // because we cannot directly pass it from Wicket to the caller in ajax.js.
+            "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
+            "var ajax = new Ajax(dispatcher);" +
+            "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
+            "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
+            "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
+	    //script.append("var logger = new AnnotationLog(dispatcher);");
+            "dispatcher.post('init');" +
+            "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
+            "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
+            "})();";
 
         // Must be OnDomReader so that this is rendered before all other Javascript that is
         // appended to the same AJAX request which turns the annotator visible after a document
         // has been chosen.
-        aResponse.render(OnDomReadyHeaderItem.forScript(script.toString()));
+        aResponse.render(OnDomReadyHeaderItem.forScript(script));
         
         // If the page is reloaded in the browser and a document was already open, we need
         // to render it. We use the "later" commands here to avoid polluting the Javascript

@@ -379,14 +379,8 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
 
-        Iterator<LinkWithRoleModel> existingLinks = list.iterator();
-        while (existingLinks.hasNext()) {
-            LinkWithRoleModel link = existingLinks.next();
-            if (link.autoCreated && link.targetAddr == -1) {
-                // remove it
-                existingLinks.remove();
-            }
-        }
+        // remove it
+        list.removeIf(link -> link.autoCreated && link.targetAddr == -1);
     }
 
     private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)

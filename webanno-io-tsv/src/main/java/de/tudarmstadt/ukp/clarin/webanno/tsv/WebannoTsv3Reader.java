@@ -735,7 +735,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 					}
 					if (ft.startsWith(ROLE)) {
 						ft = ft.substring(5);
-						String t = layerTk.nextToken().toString();
+						String t = layerTk.nextToken();
 						columns++;
 						Type tType = CasUtil.getType(aJcas.getCas(), t);
 						String fName = ft.substring(0, ft.indexOf("_"));
