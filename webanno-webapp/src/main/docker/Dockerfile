@@ -44,16 +44,15 @@ COPY @docker.warfile@ /opt/webanno/webapps/ROOT.war
 RUN chmod +x /etc/init.d/webanno
 RUN update-rc.d webanno defaults
 
-RUN mkdir /srv/webanno
-RUN chown -R www-data /srv/webanno
-# COPY settings.properties /srv/webanno/settings.properties
+RUN mkdir /export
+RUN chown -R www-data /export
+# COPY settings.properties /export/settings.properties
 
 COPY entrypoint.sh /opt/webanno/entrypoint.sh
 
 ##################### INSTALLATION END #####################
 
-VOLUME /srv/webanno/repository
-VOLUME /var/lib/mysql
+VOLUME /export
 
 EXPOSE 18080
 

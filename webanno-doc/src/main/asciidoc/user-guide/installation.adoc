@@ -17,6 +17,8 @@
 [[sect_installation]]
 == Installation
 
+=== Run as Java application
+
 All-in-one version which does not require a database server or servlet container to be set up.
 
 [NOTE]
@@ -39,7 +41,7 @@ If you have previously used an older version of the WebAnno standalone, make sur
    * On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
 ====
 
-=== Optional configuration
+==== Optional configuration
 
 Alternatively, you can start WebAnno from the command line, in particular if you wish to provide it with additional memory (here 1 GB) or if you want it to store its data in a different folder.
 
@@ -52,4 +54,76 @@ Mind to replace `/my/webanno/home` with path of a folder where WebAnno can store
 By default the server starts on port 8080 and you can access it via a browser at `http://localhost:8080` after you started it. You can add the parameter `--httpPort=9999` at the end of the command line to start the server on port 9999 (or choose any other port).
 
 A full list of the command line parameters can be found in the link:http://winstone.sourceforge.net/#commandLine[Winstone documentation].
+
+=== Run using Docker
+
+==== Quick start
+
+If you have Docker installed, you can run WebAnno using
+
+[source,text,subs="+attributes"]
+----
+docker run -it --name webanno -p8080:18080 webanno/webanno:{revnumber}
+----
+
+The command download WebAnno from Dockerhub and starts it on port 8080. If this port is not
+available on your machine, you should provide another port to the `-p` parameter. 
+
+The logs will be printed to the console. To stop the container, press `CTRL-C`.
+
+NOTE: Use `docker run` only the first time that you run WebAnno. If you try it a second time, Docker
+      will complain about the name `webanno` already being in use. If you follow Docker`s suggestion
+      to delete the container, you will loose all your WebAnno data. Further below, we explain how
+      you can store your data outside the container in a folder on your host.
+      
+When you want to run WebAnno again later, use the command
+
+[source,text,subs="+attributes"]
+----
+docker start -ai webanno
+----
+
+Again, the logs will be printed to the console. To stop the container, press `CTRL-C`.
+
+==== Storing data on the host
+
+If you follow the quick start instructions above, WebAnno will store all its data inside the docker
+container. This is normally not what you want because as soon as you delete the container, all data
+is gone. That means for example that you cannot easily upgrade to a new version of the WebAnno
+docker image when one is released.
+
+To store your data on your host computer, first create a folder where you want to store your data.
+For example, if you are on Linux, you could create a folder `/srv/webanno`:
+
+----
+$ mkdir /srv/webanno
+----
+
+When you run WebAnno via Docker, you then mount this folder into the container:
+
+[source,text,subs="+attributes"]
+----
+docker run -it --name webanno -v /srv/webanno:/export -p8080:18080 webanno/webanno:{revnumber}
+----
+
+==== Connecting to a MySQL database
+
+By default, WebAnno uses an embedded SQL database to store its metadata (not the texts and 
+annotations, these are stored in files on disk). For production use, it is highly recommended to
+use a separate MySQL database instead of the embedded SQL database.
+
+To configure WebAnno to use a separate database, place a file called `settings.properties` into the
+data folder that you mount into the WebAnno container. It should contain the following contents:
+
+----
+database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+database.driver=com.mysql.jdbc.Driver
+database.url=jdbc:mysql://localhost:3306/webanno
+database.username=webanno
+database.password=t0t4llYSecreT
+----
+
+NOTE: The settings are just examples. Adjust the database url, usename, and password according to
+      your MySQL setup.
+
 

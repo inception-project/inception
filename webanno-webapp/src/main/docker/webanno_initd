@@ -23,7 +23,7 @@ fi
 
 NAME="WebAnno"
 DAEMON=none
-WEBANNO_HOME="/srv/webanno"
+WEBANNO_HOME="/export"
 WEBANNO_PORT="18080"
 WEBANNO_USER="www-data"
 CATALINA_BASE="/opt/webanno"
