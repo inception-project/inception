@@ -13,17 +13,18 @@ MAINTAINER WebAnno Team
 
 RUN apt-get update
 # Install tomcat utilities (we will need tomcat7-instance-create) and mysql
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat7-user tomcat7-admin authbind
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat7-user tomcat7-admin authbind
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat7-user tomcat7-admin authbind
 
 # Copy webanno and mysql settings to tmp
-COPY create_webanno_db.sql mysql-init /tmp/
+# COPY create_webanno_db.sql mysql-init /tmp/
 
 # Setup mysql as depicted in the webanno admin guide
-RUN service mysql stop
-RUN mysqld_safe --init-file=/tmp/mysql-init &
-RUN rm /tmp/mysql-init
-RUN service mysql start && \
-    mysql -u root < /tmp/create_webanno_db.sql
+# RUN service mysql stop
+# RUN mysqld_safe --init-file=/tmp/mysql-init &
+# RUN rm /tmp/mysql-init
+# RUN service mysql start && \
+#     mysql -u root < /tmp/create_webanno_db.sql
 
 WORKDIR /opt
 
@@ -42,10 +43,10 @@ COPY @docker.warfile@ /opt/webanno/webapps/ROOT.war
 # Setup webanno as a service 
 RUN chmod +x /etc/init.d/webanno
 RUN update-rc.d webanno defaults
-RUN mkdir /srv/webanno
 
-COPY settings.properties /srv/webanno/settings.properties
+RUN mkdir /srv/webanno
 RUN chown -R www-data /srv/webanno
+# COPY settings.properties /srv/webanno/settings.properties
 
 COPY entrypoint.sh /opt/webanno/entrypoint.sh
 
