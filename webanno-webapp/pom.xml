@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -112,20 +113,20 @@
       <artifactId>spring-webmvc</artifactId>
     </dependency>
 
-    <!-- SPRING ASPECTS 
-    <dependency>
+    <!-- SPRING ASPECTS
+      <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aspects</artifactId>
-    </dependency>
-    <dependency>
+      </dependency>
+      <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aop</artifactId>
-    </dependency>
-    <dependency>
+      </dependency>
+      <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
       <version>1.6.10</version>
-    </dependency>
+      </dependency>
     -->
 
     <!-- SPRING SECURITY -->
@@ -327,10 +328,10 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
-              <!-- Spring AOP 
-              <usedDependency>org.springframework:spring-aop</usedDependency>
-              <usedDependency>org.springframework:spring-aspects</usedDependency>
-              <usedDependency>org.aspectj:aspectjrt</usedDependency>
+              <!-- Spring AOP
+                <usedDependency>org.springframework:spring-aop</usedDependency>
+                <usedDependency>org.springframework:spring-aspects</usedDependency>
+                <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
               <!-- Spring Security -->
               <usedDependency>org.springframework.security:spring-security-config</usedDependency>
@@ -341,7 +342,8 @@
           </configuration>
         </plugin>
       </plugins>
-    </pluginManagement>  </build>
+    </pluginManagement>
+  </build>
   <profiles>
     <profile>
       <id>tomcat7-standalone</id>
@@ -420,22 +422,22 @@
               <argLine>-Xmx1g</argLine>
             </configuration>
           </plugin>
-          <!-- 
-          <plugin>
+          <!--
+            <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>aspectj-maven-plugin</artifactId>
             <version>1.10</version>
             <configuration>
-              <source>${maven.compiler.source}</source>
-              <target>${maven.compiler.target}</target>
-              <aspectLibraries>
-                <aspectLibrary>
-                  <groupId>org.springframework</groupId>
-                  <artifactId>spring-aspects</artifactId>
-                </aspectLibrary>
-              </aspectLibraries>
+            <source>${maven.compiler.source}</source>
+            <target>${maven.compiler.target}</target>
+            <aspectLibraries>
+            <aspectLibrary>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+            </aspectLibrary>
+            </aspectLibraries>
             </configuration>
-          </plugin>
+            </plugin>
           -->
         </plugins>
       </build>
@@ -458,8 +460,12 @@
             <configuration>
               <images>
                 <image>
-                  <name>webanno/webanno</name>
+                  <name>webanno/webanno-snapshots</name>
                   <build>
+                    <tags>
+                      <tag>latest</tag>
+                      <tag>${project.version}</tag>
+                    </tags>
                     <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                     <filter>@</filter>
                     <assembly>
