@@ -591,9 +591,15 @@ public class SuggestionViewPanel
 
         List<ConfigurationSet> all = new ArrayList<>();
 
-        all.addAll(diff.getConfigurationSets());
-        all.removeAll(d);
-        all.removeAll(i);
+        for (ConfigurationSet a : diff.getConfigurationSets()) {
+            all.add(a);
+        }
+        for (ConfigurationSet cfgSet : d) {
+            all.remove(cfgSet);
+        }
+        for (ConfigurationSet cfgSet : i) {
+            all.remove(cfgSet);
+        }
 
         addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false, true);
 
@@ -625,7 +631,7 @@ public class SuggestionViewPanel
                     colors = new HashMap<>();
                     aSuggestionColors.put(u, colors);
                 }
-
+                
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
@@ -720,7 +726,7 @@ public class SuggestionViewPanel
                     sourceDocument, user);
             jCases.put(user.getUsername(), documentService.readAnnotationCas(annotationDocument));
             aAnnotationSelectionByUsernameAndAddress.put(CURATION_USER,
-                new HashMap<>());
+                    new HashMap<Integer, AnnotationSelection>());
         }
         else {
             // If this is a true CURATION then we get all the annotation documents from all the
@@ -741,7 +747,7 @@ public class SuggestionViewPanel
 
                     // cleanup annotationSelections
                     aAnnotationSelectionByUsernameAndAddress.put(username,
-                        new HashMap<>());
+                            new HashMap<Integer, AnnotationSelection>());
                 }
             }
         }

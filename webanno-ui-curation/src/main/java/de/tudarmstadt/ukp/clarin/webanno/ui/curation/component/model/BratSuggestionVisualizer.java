@@ -137,18 +137,19 @@ public class BratSuggestionVisualizer
         //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 	    
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        String script = "Util.embedByURL(" +
-            "  '" + vis.getMarkupId() + "'," +
-            "  '" + collProvider.getCallbackUrl() + "', " +
-            "  '" + docProvider.getCallbackUrl() + "', " +
-            "  function(dispatcher) {" +
-            "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
-            "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " +
-            "    var ajax = new Ajax(dispatcher);" +
-            "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');" +
-            "    dispatcher.post('clearSVG', []);" +
-            "  });";
-        aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
+        StringBuilder script = new StringBuilder();
+        script.append("Util.embedByURL(");
+        script.append("  '"+vis.getMarkupId()+"',");
+        script.append("  '"+collProvider.getCallbackUrl()+"', ");
+        script.append("  '"+docProvider.getCallbackUrl()+"', ");
+        script.append("  function(dispatcher) {");
+        script.append("    dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
+        script.append("    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; ");
+        script.append("    var ajax = new Ajax(dispatcher);");
+        script.append("    var curation_mod = new CurationMod(dispatcher, '"+vis.getMarkupId()+"');");
+        script.append("    dispatcher.post('clearSVG', []);");
+        script.append("  });");
+        aResponse.render(OnLoadHeaderItem.forScript("\n" + script.toString()));
 	}
 	
     @Override

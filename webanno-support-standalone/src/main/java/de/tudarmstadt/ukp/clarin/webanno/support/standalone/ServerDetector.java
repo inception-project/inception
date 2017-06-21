@@ -200,7 +200,7 @@ public class ServerDetector
             sd._jBoss = _detect(JBOSS_CLASS);
         }
 
-        return sd._jBoss;
+        return sd._jBoss.booleanValue();
     }
 
     public static boolean isJetty()

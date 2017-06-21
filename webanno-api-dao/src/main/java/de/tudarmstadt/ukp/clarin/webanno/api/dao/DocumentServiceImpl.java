@@ -817,7 +817,7 @@ public class DocumentServiceImpl
         // Bail out already. HQL doesn't seem to like queries with an empty
         // parameter right of "in"
         if (users.isEmpty()) {
-            return new ArrayList<>();
+            return new ArrayList<AnnotationDocument>();
         }
 
         return entityManager
@@ -878,7 +878,7 @@ public class DocumentServiceImpl
         // check if the username is in the Users database (imported projects
         // might have username
         // in the ProjectPermission entry while it is not in the Users database
-        List<String> notInUsers = new ArrayList<>();
+        List<String> notInUsers = new ArrayList<String>();
         for (String user : users) {
             if (!userRepository.exists(user)) {
                 notInUsers.add(user);

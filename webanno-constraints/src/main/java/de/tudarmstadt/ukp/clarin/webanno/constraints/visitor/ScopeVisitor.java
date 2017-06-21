@@ -22,6 +22,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.ScopedDeclarations;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 /**

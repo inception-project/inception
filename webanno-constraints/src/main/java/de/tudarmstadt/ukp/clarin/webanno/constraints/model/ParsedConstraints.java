@@ -91,7 +91,7 @@ public class ParsedConstraints
     {
 
         if (scopeMap == null) { // initialize map if not set already
-            scopeMap = new HashMap<>();
+            scopeMap = new HashMap<String, Scope>();
             for (Scope scope : scopes) {
                 scopeMap.put(scope.getScopeName(), scope);
             }

@@ -244,7 +244,7 @@ public class CurationPanel
         sidebarCell.add(editor);
     
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(bModel), editor,
-            this::getEditorCas);
+                () -> { return getEditorCas(); });
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         annotationViewCell.add(annotationEditor);
     

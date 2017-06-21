@@ -83,7 +83,7 @@ public class ProjectTrainingDocumentsPanel
         feature = afeatureModel.getObject();
         if (aTabsDocModel.getObject().isTabSep()) {
             readableFormats = new ArrayList<>(
-                    Arrays.asList(WebAnnoConst.TAB_SEP));
+                    Arrays.asList(new String[]{WebAnnoConst.TAB_SEP}));
             selectedFormat = WebAnnoConst.TAB_SEP;
         }
         else {

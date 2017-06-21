@@ -308,7 +308,8 @@ public class MergeCas
         int end = ((AnnotationFS) fs).getEnd();
 
         List<FeatureStructure> fssAtThisPosition = new ArrayList<>();
-        fssAtThisPosition.addAll(CasUtil.selectCovered(aJCases.get(aUser).getCas(), t, begin, end));
+        CasUtil.selectCovered(aJCases.get(aUser).getCas(), t, begin, end)
+                .forEach(fssAtThisPosition::add);
 
         return fssAtThisPosition;
     }

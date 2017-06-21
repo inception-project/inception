@@ -169,29 +169,31 @@ public class AgreementTable
                             else {
                                 label = String.format("%.2f", result.getAgreement());
                             }
-
-                            String tooltipTitle = result.getCasGroupIds().get(0) +
-                                '/' +
-                                result.getCasGroupIds().get(1);
-
-                            String tooltipContent = "Positions annotated:\n" +
-                                String.format("- %s: %d/%d%n",
+                            
+                            StringBuilder tooltipTitle = new StringBuilder();
+                            tooltipTitle.append(result.getCasGroupIds().get(0));
+                            tooltipTitle.append('/');
+                            tooltipTitle.append(result.getCasGroupIds().get(1));
+                            
+                            StringBuilder tooltipContent = new StringBuilder();
+                            tooltipContent.append("Positions annotated:\n");
+                            tooltipContent.append(String.format("- %s: %d/%d%n",
                                     result.getCasGroupIds().get(0),
                                     result.getNonNullCount(result.getCasGroupIds().get(0)),
-                                    result.getStudy().getItemCount()) +
-                                String.format("- %s: %d/%d%n",
+                                    result.getStudy().getItemCount()));
+                            tooltipContent.append(String.format("- %s: %d/%d%n",
                                     result.getCasGroupIds().get(1),
                                     result.getNonNullCount(result.getCasGroupIds().get(1)),
-                                    result.getStudy().getItemCount()) +
-                                String.format("Distinct labels used: %d%n",
-                                    result.getStudy().getCategoryCount());
-
+                                    result.getStudy().getItemCount()));
+                            tooltipContent.append(String.format("Distinct labels used: %d%n",
+                                    result.getStudy().getCategoryCount()));
+                            
                             Label l = new Label("label", Model.of(label)); 
                             cell.add(l);
                             l.add(makeDownloadBehavior(aRowItem.getModelObject(),
                                     aCellItem.getModelObject()));
                             DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-                                tooltipTitle, tooltipContent);
+                                    tooltipTitle.toString(), tooltipContent.toString());
                             tooltip.setOption("position", (Object) null);
                             l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: pointer", ";"));
@@ -220,7 +222,7 @@ public class AgreementTable
                             
                             Label l = new Label("label", Model.of(label)); 
                             DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-                                tooltipTitle, tooltipContent.toString());
+                                    tooltipTitle.toString(), tooltipContent.toString());
                             tooltip.setOption("position", (Object) null);
                             l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: help", ";"));

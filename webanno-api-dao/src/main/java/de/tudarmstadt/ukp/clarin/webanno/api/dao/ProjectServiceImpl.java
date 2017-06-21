@@ -290,7 +290,7 @@ public class ProjectServiceImpl
                                 + "project =:project ORDER BY user ASC", String.class)
                 .setParameter("project", aProject).getResultList();
 
-        List<User> users = new ArrayList<>();
+        List<User> users = new ArrayList<User>();
 
         for (String username : usernames) {
             if (userRepository.exists(username)) {
@@ -310,7 +310,7 @@ public class ProjectServiceImpl
                                 + "project =:project AND level =:level ORDER BY user ASC",
                         String.class).setParameter("project", aProject)
                 .setParameter("level", aPermissionLevel).getResultList();
-        List<User> users = new ArrayList<>();
+        List<User> users = new ArrayList<User>();
         for (String username : usernames) {
             if (userRepository.exists(username)) {
                 users.add(userRepository.get(username));
@@ -399,7 +399,7 @@ public class ProjectServiceImpl
                 .listFiles();
 
         // Name of the guideline files
-        List<String> annotationGuidelineFiles = new ArrayList<>();
+        List<String> annotationGuidelineFiles = new ArrayList<String>();
         if (files != null) {
             for (File file : files) {
                 annotationGuidelineFiles.add(file.getName());
@@ -570,7 +570,7 @@ public class ProjectServiceImpl
     @Override
     public List<Project> listAccessibleProjects(User user)
     {
-        List<Project> allowedProject = new ArrayList<>();
+        List<Project> allowedProject = new ArrayList<Project>();
         List<Project> allProjects = listProjects();
 
         // if global admin, show all projects
@@ -765,7 +765,7 @@ public class ProjectServiceImpl
 
         for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
             try {
-                Class<?> clazz = Class.forName(bd.getBeanClassName());
+                Class<?> clazz = (Class<?>) Class.forName(bd.getBeanClassName());
                 ProjectType pt = clazz.getAnnotation(ProjectType.class);
 
                 if (projectTypes.stream().anyMatch(t -> t.id().equals(pt.id()))) {

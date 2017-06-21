@@ -633,7 +633,7 @@ public class AgreementUtils
                     .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
             pluralitySets = Collections
                     .unmodifiableList(new ArrayList<>(aPluralitySets));
-            casGroupIds = Collections.unmodifiableList(new ArrayList<>(aCasGroupIds));
+            casGroupIds = Collections.unmodifiableList(new ArrayList<String>(aCasGroupIds));
             excludeIncomplete = aExcludeIncomplete;
         }
         

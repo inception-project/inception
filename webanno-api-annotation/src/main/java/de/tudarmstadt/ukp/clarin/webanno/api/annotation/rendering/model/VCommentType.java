@@ -21,5 +21,5 @@ public enum VCommentType
 {
     INFO,
     ERROR,
-    YIELD
+    YIELD;
 }

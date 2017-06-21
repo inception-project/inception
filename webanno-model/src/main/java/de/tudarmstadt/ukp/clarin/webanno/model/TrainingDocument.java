@@ -199,5 +199,11 @@ public class TrainingDocument
 		this.feature = feature;
 	}
 
-	public static final Comparator<TrainingDocument> NAME_COMPARATOR = Comparator.comparing(TrainingDocument::getName);
+	public static final Comparator<TrainingDocument> NAME_COMPARATOR = new Comparator<TrainingDocument>() {
+        @Override
+        public int compare(TrainingDocument aO1, TrainingDocument aO2)
+        {
+            return aO1.getName().compareTo(aO2.getName());
+        }
+    };
 }

@@ -246,7 +246,7 @@ public class WebannoTsv3Writer
 				annoType = CH;
 			}
 			IOUtils.write("#" + annoType + "=" + type + "|", docOS, encoding);
-			StringBuilder fsb = new StringBuilder();
+			StringBuffer fsb = new StringBuffer();
 			for (String feature : featurePerLayer.get(type)) {
 				if (fsb.length() < 1) {
 					fsb.append(feature);

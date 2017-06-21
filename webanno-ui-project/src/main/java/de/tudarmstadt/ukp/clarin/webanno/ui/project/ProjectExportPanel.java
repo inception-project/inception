@@ -223,9 +223,13 @@ public class ProjectExportPanel
                 @Override
                 protected String load()
                 {
+                    StringBuilder fileName = new StringBuilder();
+                    fileName.append(ProjectExportForm.this.getModelObject().project.getName());
+                    fileName.append("_curated_documents_");
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-                    return ProjectExportForm.this.getModelObject().project.getName() +
-                        "_curated_documents_" + fmt.format(new Date()) + ".zip";
+                    fileName.append(fmt.format(new Date()));
+                    fileName.append(".zip");
+                    return fileName.toString();
                 }
             }) {
                 private static final long serialVersionUID = 5630612543039605914L;
@@ -272,7 +276,7 @@ public class ProjectExportPanel
                     name += "_" + fmt.format(new Date()) + ".zip";
                     
                     return name;
-                }
+                };
             };
 
             fileGenerationProgress = new ProgressBar("progress", new ProgressionModel()

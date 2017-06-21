@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -135,7 +136,9 @@ public class AnnotationPreferenceModalPanel
            // add(curationWindowSizeField);
 
             List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                    .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName())).collect(Collectors.toList());
+                    .stream().map(f -> {
+                        return Pair.of(f.getBeanName(), f.getDisplayName());
+                    }).collect(Collectors.toList());
             
             add(new DropDownChoice<Pair<String, String>>("editor", editorChoices,
                     new ChoiceRenderer<>("value"))

@@ -864,7 +864,7 @@ public class AnnotationSchemaServiceImpl
     public List<TypeSystemDescription> getProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
-        List<TypeSystemDescription> types = new ArrayList<>();
+        List<TypeSystemDescription> types = new ArrayList<TypeSystemDescription>();
         for (AnnotationLayer type : listAnnotationLayer(aProject)) {
             if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
                 TypeSystemDescription tsd = new TypeSystemDescription_impl();

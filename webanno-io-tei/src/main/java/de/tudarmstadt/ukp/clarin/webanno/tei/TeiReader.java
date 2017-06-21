@@ -523,7 +523,7 @@ public class TeiReader
         public void characters(char[] aCh, int aStart, int aLength)
             throws SAXException
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             sb.append(aCh, aStart, aLength);
             if (captureText) {
                 if (isSpaceChar && !buffer.toString().isEmpty()) {

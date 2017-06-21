@@ -23,6 +23,7 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -90,7 +91,7 @@ public class AnnotationPreferencesModalPanel
                                 protected void onCancel(AjaxRequestTarget aTarget)
                                 {
                                     closeButtonClicked = true;
-                                }
+                                };
                             });
 
                     annotationLayerSelectionModal

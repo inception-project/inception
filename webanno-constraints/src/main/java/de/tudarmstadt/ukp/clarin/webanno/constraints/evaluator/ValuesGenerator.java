@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -204,7 +205,14 @@ public class ValuesGenerator
         List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
 
         // Remove all that do not have the exact same offset
-        covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));
+        Iterator<AnnotationFS> i = covered.iterator();
+        while (i.hasNext()) {
+            AnnotationFS cur = i.next();
+            if (!(cur.getBegin() == aBegin && cur.getEnd() == aEnd)) {
+                i.remove();
+            }
+        }
+
         return covered;
     }
 

@@ -131,7 +131,7 @@ public class PreferencesUtil
         throws FileNotFoundException, IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();
-        ArrayList<Long> layers = new ArrayList<>();
+        ArrayList<Long> layers = new ArrayList<Long>();
 
         for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
             layers.add(layer.getId());

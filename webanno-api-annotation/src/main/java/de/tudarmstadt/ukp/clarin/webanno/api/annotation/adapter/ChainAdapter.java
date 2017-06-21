@@ -23,6 +23,7 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
