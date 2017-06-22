@@ -485,12 +485,17 @@ public class LinkFeatureEditor
 
         aTarget.add(content);
 
-        // Commit change
-        try {
-            actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
-        }
-        catch (Exception e) {
-            handleException(this, aTarget, e);
+        // Commit change - but only if we set the label on a slot which was already filled/saved.
+        // Unset slots only exist in the link editor and if we commit the change here, we trigger
+        // a reload of the feature editors from the CAS which makes the unfilled slots disappear
+        // and leaves behind an armed slot pointing to a removed slot.
+        if (m.targetAddr != -1) {
+            try {
+                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+            }
+            catch (Exception e) {
+                handleException(this, aTarget, e);
+            }
         }
     }
 
