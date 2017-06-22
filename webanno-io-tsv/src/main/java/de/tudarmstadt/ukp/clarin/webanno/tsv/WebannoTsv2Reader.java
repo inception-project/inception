@@ -175,7 +175,7 @@ public class WebannoTsv2Reader extends JCasResourceCollectionReader_ImplBase {
 					tokenAnnotations, relationTargets, lineTk, tokenColumn, tokenNumberColumn);
 
 			tokenStart = tokenStart + tokenColumn.length() + 1;
-			text.append(tokenColumn + " ");
+			text.append(tokenColumn).append(" ");
 		}
 		if (tokenStart > sentenceStart) {
 			Sentence sentence = new Sentence(aJcas, sentenceStart, tokenStart);

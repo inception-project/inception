@@ -67,7 +67,7 @@ public class WebAnnoSemanticGraphReader
                 outToken.addToIndexes();
                 tokenBeginPosition = outToken.getEnd() +1;
                 chainEnd = tokenBeginPosition;
-                text.append(content + " ");
+                text.append(content).append(" ");
             }
 
             CoreferenceChain chain = new CoreferenceChain(aJCas);
@@ -102,7 +102,7 @@ public class WebAnnoSemanticGraphReader
                 outToken.addToIndexes();
                 tokenBeginPosition = outToken.getEnd() +1;
                 chainEnd = tokenBeginPosition;
-                text.append(content + " ");
+                text.append(content).append(" ");
 
             }
             CoreferenceLink nextLink = new CoreferenceLink(aJCas, chainBegin, chainEnd-1);

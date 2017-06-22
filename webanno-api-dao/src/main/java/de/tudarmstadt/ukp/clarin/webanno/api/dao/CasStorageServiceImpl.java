@@ -115,11 +115,12 @@ public class CasStorageServiceImpl
           }
           catch (CasDoctorException e) {
               StringBuilder detailMsg = new StringBuilder();
-              detailMsg.append("CAS Doctor found problems for user ["
-                      + aUserName + "] in source document [" + aDocumentName + "] ("
-                      + aDocumentId + ") in project["
-                      + aProject.getName() + "] ("
-                      + aProject.getId() + ")\n");
+              detailMsg.append("CAS Doctor found problems for user [")
+                  .append(aUserName)
+                  .append("] in source document [")
+                  .append(aDocumentName).append("] (").append(aDocumentId)
+                  .append(") in project[")
+                  .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
               e.getDetails().forEach(m -> detailMsg.append(
                       String.format("- [%s] %s%n", m.level, m.message)));
               
@@ -371,11 +372,12 @@ public class CasStorageServiceImpl
             }
             catch (CasDoctorException e) {
                 StringBuilder detailMsg = new StringBuilder();
-                detailMsg.append("CAS Doctor found problems for user ["
-                        + aUsername + "] in document [" + aDocumentName + "] ("
-                        + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")\n");
+                detailMsg.append("CAS Doctor found problems for user [")
+                    .append(aUsername)
+                    .append("] in document [")
+                    .append(aDocumentName).append("] (").append(aDocumentId)
+                    .append(") in project[")
+                    .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
                 e.getDetails().forEach(m -> detailMsg.append(
                         String.format("- [%s] %s%n", m.level, m.message)));
                 

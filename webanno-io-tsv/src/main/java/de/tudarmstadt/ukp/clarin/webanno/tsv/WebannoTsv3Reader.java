@@ -153,7 +153,7 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 				if (sentLineSb.toString().isEmpty()) {
 					sentLineSb.append(text);
 				} else {
-					sentLineSb.append(LF + text);
+					sentLineSb.append(LF).append(text);
 				}
 				lastSent = sentLineSb.toString();
 				continue;
@@ -669,13 +669,13 @@ public class WebannoTsv3Reader extends JCasResourceCollectionReader_ImplBase {
 	    
 		if (aPrevEnd + 1 < aBegin) {
 		    // FIXME This is very slow. Better use StringUtils.repeat()		    
-			String pad = ""; // if there is plenty of spaces between sentences
+			StringBuilder pad = new StringBuilder(); // if there is plenty of spaces between sentences
 			for (int i = aPrevEnd + 1; i < aBegin; i++) {
-				pad = pad + " ";
+				pad.append(" ");
 			}
-			coveredText.append(pad + aLine + LF);
+			coveredText.append(pad).append(aLine).append(LF);
 		} else {
-			coveredText.append(aLine + LF);
+			coveredText.append(aLine).append(LF);
 		}
 		Sentence sentence = new Sentence(aJCas, aBegin, aEnd);
 		sentence.addToIndexes();

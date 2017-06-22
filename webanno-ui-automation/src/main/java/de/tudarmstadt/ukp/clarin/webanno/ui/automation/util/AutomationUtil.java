@@ -414,7 +414,8 @@ public class AutomationUtil
                         .getFeature().equals(feature))) {
                     JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter)
+                            .toString()).append("\n");
                     }
                     trainingDocument.setProcessed(false);
                     status.setTrainDocs(status.getTrainDocs() - 1);
@@ -604,10 +605,12 @@ public class AutomationUtil
                 JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, null, adapter)
+                            .toString()).append("\n");
                     }
                     else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter)
+                            .toString()).append("\n");
                     }
                 }
                 trainingDocument.setProcessed(!aBase);
@@ -623,10 +626,10 @@ public class AutomationUtil
                 JCas jCas = aCurationDocumentService.readCurationCas(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, null, adapter).toString()).append("\n");
                     }
                     else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString()).append("\n");
                     }
                 }
                 if (!aBase) {
@@ -705,7 +708,7 @@ public class AutomationUtil
                 }
 
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    predOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
+                    predOut.append(getMiraLine(sentence, null, adapter).toString()).append("\n");
                 }
                 predOut.close();
         }
@@ -777,8 +780,9 @@ public class AutomationUtil
                 }
 
             }
-            sb.append(word + " " + prefix1 + prefix2 + prefix3 + prefix4 + suffix1 + suffix2
-                    + suffix3 + suffix4 + tag + nl);
+            sb.append(word).append(" ").append(prefix1).append(prefix2).append(prefix3)
+                .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+                .append(tag).append(nl);
         }
         return sb;
 
@@ -817,8 +821,9 @@ public class AutomationUtil
                 + " ";
 
         String nl = "\n";
-        sb.append(aToken + " " + prefix1 + prefix2 + prefix3 + prefix4 + suffix1 + suffix2
-                + suffix3 + suffix4 + aFeature + nl);
+        sb.append(aToken).append(" ").append(prefix1).append(prefix2).append(prefix3)
+            .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+            .append(aFeature).append(nl);
         return sb;
 
     }
@@ -970,13 +975,13 @@ public class AutomationUtil
     private static void setNgramForLable(StringBuffer aSb, int aOther)
     {
         int i = 1;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("U" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("U" +
          * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
          */
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("U" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
@@ -987,12 +992,14 @@ public class AutomationUtil
         if (aOther > 0) {// consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1000,13 +1007,13 @@ public class AutomationUtil
         aSb.append("\n");
 
         i = 1;
-        aSb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("B").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("B" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("B" +
          * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
          */
-        aSb.append("B" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("B").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("B" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
@@ -1016,12 +1023,14 @@ public class AutomationUtil
         if (tempOther > 0) {// consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("B" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("B" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1032,67 +1041,72 @@ public class AutomationUtil
     private static void setMorphoTemplate(StringBuffer aSb, int aOther)
     {
         int i = 1;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
         aSb.append("\n");
 
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]").append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[1,0]" + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[1,0]").append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
+            .append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]" + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]").append("%x[1,0]")
+            .append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]"
-                + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0]").append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]"
-                + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
+            .append("%x[1,0]").append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0" + "%x[1,0]"
-                + "%x[2,0]]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0").append("%x[1,0]").append("%x[2,0]]\n");
         aSb.append("\n");
         int temp = 1;
         if (aOther > 0) {// consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1435,15 +1449,15 @@ public class AutomationUtil
                     label = feature;
                     continue;
                 }
-                trainBuffer.append(label + " ");
+                trainBuffer.append(label).append(" ");
                 label = feature;
 
             }
             for (List<String> prediction : aPredictions) {
-                trainBuffer.append(prediction.get(i) + " ");
+                trainBuffer.append(prediction.get(i)).append(" ");
             }
             // add its own label
-            trainBuffer.append(label + "\n");
+            trainBuffer.append(label).append("\n");
             i++;
         }
         IOUtils.write(trainBuffer.toString(), new FileOutputStream(aTrainFile));
@@ -1469,15 +1483,15 @@ public class AutomationUtil
             // if the target feature is on multiple token, we do not need the morphological features
             // in the prediction file
             if (aFeature.getLayer().isMultipleTokens()) {
-                predBuffer.append(st.nextToken() + " ");
+                predBuffer.append(st.nextToken()).append(" ");
             }
             else {
                 while (st.hasMoreTokens()) {
-                    predBuffer.append(st.nextToken() + " ");
+                    predBuffer.append(st.nextToken()).append(" ");
                 }
             }
             for (List<String> prediction : aPredictions) {
-                predBuffer.append(prediction.get(i) + " ");
+                predBuffer.append(prediction.get(i)).append(" ");
             }
             // add its
             predBuffer.append("\n");

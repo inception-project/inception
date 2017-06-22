@@ -151,11 +151,11 @@ public class RelationRenderer
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             else if (end + 1 != selectByAddr(aJCas, depFs).getBegin()) {
-                cm.append(" ... " + selectByAddr(aJCas, depFs).getCoveredText());
+                cm.append(" ... ").append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             else {
-                cm.append(" " + selectByAddr(aJCas, depFs).getCoveredText());
+                cm.append(" ").append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
 

@@ -372,7 +372,7 @@ public class TcfReader
             StringBuilder sbTokens = new StringBuilder();
             for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aCorpusData.getReferencesLayer()
                     .getTokens(reference)) {
-                sbTokens.append(token.getID() + " ");
+                sbTokens.append(token.getID()).append(" ");
             }
 
             String[] referenceTokens = sbTokens.toString().split(" ");

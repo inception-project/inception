@@ -243,7 +243,7 @@ public class WebannoTsv1Reader
         while (lineIterator.hasNext()) {
             String line = lineIterator.next().trim();
             if (line.startsWith("#text=")) {
-                text.append(line.substring(6) + "\n");
+                text.append(line.substring(6)).append("\n");
                 textFound = true;
                 continue;
             }
@@ -279,7 +279,7 @@ public class WebannoTsv1Reader
                 String token = lineTk.nextToken();
 
                 // for backward compatibility
-                tmpText.append(token + " ");
+                tmpText.append(token).append(" ");
 
                 tokens.put(tokenNumber, token);
                 lemma.put(tokenNumber, lineTk.nextToken());

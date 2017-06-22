@@ -251,7 +251,7 @@ public class WebannoTsv3Writer
 				if (fsb.length() < 1) {
 					fsb.append(feature);
 				} else {
-					fsb.append("|" + feature);
+					fsb.append("|").append(feature);
 				}
 			}
 			IOUtils.write(fsb.toString() + LF, docOS, encoding);
@@ -646,9 +646,9 @@ public class WebannoTsv3Writer
 							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
 								targetTypeNumber = layerMaps.get(tType);
 							}
-							sbTarget.append(
-									unitsLineNumber.get(firstUnit) + (targetTypeNumber ==0 ? "" : "-" + targetTypeNumber)
-											+ (ref > 0 ? "[" + ref + "]" : ""));
+							sbTarget.append(unitsLineNumber.get(firstUnit))
+								.append(targetTypeNumber == 0 ? "" : "-" + targetTypeNumber)
+								.append(ref > 0 ? "[" + ref + "]" : "");
 						} else {
 							sbRole.append(";");
 							sbTarget.append(";");
@@ -657,9 +657,9 @@ public class WebannoTsv3Writer
 							if (slotFeatureTypes.get(feature).getName().equals(CAS.TYPE_NAME_ANNOTATION)) {
 								targetTypeNumber = layerMaps.get(tType);
 							}
-							sbTarget.append(
-									unitsLineNumber.get(firstUnit) + (targetTypeNumber ==0 ? "" : "-" + targetTypeNumber)
-											+ (ref > 0 ? "[" + ref + "]" : ""));
+							sbTarget.append(unitsLineNumber.get(firstUnit))
+								.append(targetTypeNumber == 0 ? "" : "-" + targetTypeNumber)
+								.append(ref > 0 ? "[" + ref + "]" : "");
 						}
 					}
 					annoPerFeatures.add(sbRole.toString().isEmpty() ? "_" : sbRole.toString());

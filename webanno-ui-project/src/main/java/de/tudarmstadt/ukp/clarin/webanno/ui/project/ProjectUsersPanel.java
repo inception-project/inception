@@ -370,7 +370,7 @@ public class ProjectUsersPanel
                 }
             });
             
-            add(users = (CheckBoxMultipleChoice<User>) new CheckBoxMultipleChoice<>("users",
+            add(users = new CheckBoxMultipleChoice<>("users",
                 new LoadableDetachableModel<List<User>>()
                 {
                     private static final long serialVersionUID = 1L;
@@ -384,9 +384,8 @@ public class ProjectUsersPanel
                             ProjectUsersPanel.this.getModelObject()));
 
                         for (User user : allUSers) {
-                            User current = user;
-                            if (current.getUsername().contains(filterText.getValue())) {
-                                filteredUSers.add(current);
+                            if (user.getUsername().contains(filterText.getValue())) {
+                                filteredUSers.add(user);
                             }
                         }
 
