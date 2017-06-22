@@ -489,13 +489,18 @@ public class LinkFeatureEditor
         links.set(state.getArmedSlot(), m); // avoid reordering
         
         aTarget.add(content);
-        
-        // Commit change
-        try {
-            owner.actionAnnotate(aTarget);
-        }
-        catch (Exception e) {
-            AnnotationDetailEditorPanel.handleException(this, aTarget, e);
+
+        // Commit change - but only if we set the label on a slot which was already filled/saved.
+        // Unset slots only exist in the link editor and if we commit the change here, we trigger
+        // a reload of the feature editors from the CAS which makes the unfilled slots disappear
+        // and leaves behind an armed slot pointing to a removed slot.
+        if (m.targetAddr != -1) {
+            try {
+                owner.actionAnnotate(aTarget);
+            }
+            catch (Exception e) {
+                AnnotationDetailEditorPanel.handleException(this, aTarget, e);
+            }
         }
     }
     
