@@ -25,11 +25,6 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="ignoreUnresolvablePlaceholders" value="true" />
 		<property name="ignoreResourceNotFound" value="true" />
-        <!-- 
-          Allow overriding the default database connection details via system properties. This
-          facilitates deployment in a Docker-based scenario.
-        -->
-        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
 		<property name="properties">
 			<props>
 				<prop key="database.dialect">org.hibernate.dialect.HSQLDialect</prop>
