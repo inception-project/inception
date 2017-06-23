@@ -123,7 +123,7 @@ database.username=webanno
 database.password=t0t4llYSecreT
 ----
 
-NOTE: The settings are just examples. Adjust the database url, usename, and password according to
+NOTE: The settings are just examples. Adjust the database URL, username, and password according to
       your MySQL setup.
 
 
