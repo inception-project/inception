@@ -27,11 +27,11 @@
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="properties">
 			<props>
-				<prop key="database.dialect">org.hibernate.dialect.HSQLDialect</prop>
-				<prop key="database.driver">org.hsqldb.jdbc.JDBCDriver</prop>
-				<prop key="database.url">jdbc:hsqldb:file:#{systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno') }/db/webanno;hsqldb.default_table_type=cached</prop>
-				<prop key="database.username">sa</prop>
-				<prop key="database.password"></prop>
+                <prop key="database.dialect">#{systemEnvironment['WEBANNO_DB_DIALECT'] ?: 'org.hibernate.dialect.HSQLDialect'}</prop>
+                <prop key="database.driver">#{systemEnvironment['WEBANNO_DB_DRIVER'] ?: 'org.hsqldb.jdbc.JDBCDriver'}</prop>
+                <prop key="database.url">#{systemEnvironment['WEBANNO_DB_URL'] ?: 'jdbc:hsqldb:file:'.concat(systemProperties['webanno.home'] ?: systemProperties['user.home'].concat('/.webanno')).concat('/db/webanno;hsqldb.default_table_type=cached')}</prop>
+                <prop key="database.username">#{systemEnvironment['WEBANNO_DB_USERNAME'] ?: 'sa'}</prop>
+                <prop key="database.password">#{systemEnvironment['WEBANNO_DB_PASSWORD'] ?: ''}</prop>
 				<prop key="database.initial-pool-size">4</prop>
 				<prop key="database.min-pool-size">4</prop>
 				<prop key="database.max-pool-size">10</prop>

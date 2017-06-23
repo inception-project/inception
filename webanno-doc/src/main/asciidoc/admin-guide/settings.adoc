@@ -66,7 +66,7 @@
 
 | database.password
 | Database password
-| sa
+| _unset_
 | pass
 
 | database.initial-pool-size
@@ -144,6 +144,46 @@
 | false
 | true
 |===
+
+=== Configure database via environment variables
+
+The database connection details can also be configured via environment variables. When these
+environment variables are present, they are preferred over the `settings.properties` file. 
+The following environment variables can be used:
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `WEBANNO_DB_DIALECT`
+| Database dialect
+| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.MySQL5InnoDBDialect
+
+| `WEBANNO_DB_DRIVER`
+| Database driver
+| org.hsqldb.jdbc.JDBCDriver
+| com.mysql.jdbc.Driver
+
+| `WEBANNO_DB_URL`
+| JDBC connection string
+| _location in WebAnno home_
+| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8
+
+| `WEBANNO_DB_USERNAME`
+| Database username
+| sa
+| user
+
+| `WEBANNO_DB_PASSWORD`
+| Database password
+| _unset_
+| pass
+|===
+
 
 === Custom header icons
 
