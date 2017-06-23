@@ -253,8 +253,7 @@ public abstract class AnnotationPageBase
     protected void ensureRequiredFeatureValuesSet(AjaxRequestTarget aTarget, JCas aJcas)
     {
         AnnotatorState state = getModelObject();
-        JCas editorJCas = aJcas;
-        CAS editorCas = editorJCas.getCas();
+        CAS editorCas = aJcas.getCas();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
             TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
@@ -270,10 +269,10 @@ public abstract class AnnotationPageBase
                     if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
                         // Find the sentence that contains the annotation with the missing
                         // required feature value
-                        Sentence s = WebAnnoCasUtil.getSentence(editorJCas, fs.getBegin());
+                        Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
                         // Put this sentence into the focus
                         state.setFirstVisibleUnit(s);
-                        actionRefreshDocument(aTarget, editorJCas);
+                        actionRefreshDocument(aTarget, aJcas);
                         // Inform the user
                         throw new IllegalStateException(
                                 "Document cannot be marked as finished. Annotation with ID ["

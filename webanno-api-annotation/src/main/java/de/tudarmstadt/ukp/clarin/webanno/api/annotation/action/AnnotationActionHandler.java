@@ -58,10 +58,10 @@ public interface AnnotationActionHandler
     /**
      * Fill the currently armed slot with the given annotation.
      */
-    public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
+    void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
             VID paramId)
         throws IOException, AnnotationException;
     
-    public JCas getEditorCas()
+    JCas getEditorCas()
             throws IOException;
 }

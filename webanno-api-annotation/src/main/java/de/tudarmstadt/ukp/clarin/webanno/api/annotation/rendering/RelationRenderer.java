@@ -218,9 +218,6 @@ public class RelationRenderer
                 aRelLinks.get(aGov).addAll(aRelLinks.get(dep));
                 updateLinks(aRelLinks, dep);
             }
-            else {
-                continue;
-            }
         }
     }
 }

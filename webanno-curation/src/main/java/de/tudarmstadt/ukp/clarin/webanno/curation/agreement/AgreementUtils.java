@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,13 +64,13 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFun
 
 public class AgreementUtils
 {
-    public static enum AgreementReportExportFormat {
+    public enum AgreementReportExportFormat {
         CSV(".csv"),
         DEBUG(".txt");
         
         private final String extension;
         
-        private AgreementReportExportFormat(String aExtension)
+        AgreementReportExportFormat(String aExtension)
         {
             extension = aExtension;
         }
@@ -82,14 +81,14 @@ public class AgreementUtils
         }
     }
     
-    public static enum ConcreteAgreementMeasure {
+    public enum ConcreteAgreementMeasure {
         COHEN_KAPPA_AGREEMENT(false),
         FLEISS_KAPPA_AGREEMENT(false),
         KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT(true);
         
         private final boolean nullValueSupported;
         
-        private ConcreteAgreementMeasure(boolean aNullValueSupported)
+        ConcreteAgreementMeasure(boolean aNullValueSupported)
         {
             nullValueSupported = aNullValueSupported;
         }
@@ -416,7 +415,7 @@ public class AgreementUtils
             
             // If the position feature is set (subposition), then it must match the feature we
             // are calculating agreement over
-            assert !(cfgSet.getPosition().getFeature() != null)
+            assert cfgSet.getPosition().getFeature() == null
                     || cfgSet.getPosition().getFeature().equals(aFeature);
             
             completeSets.add(cfgSet);
@@ -780,7 +779,7 @@ public class AgreementUtils
     }
     
     public static InputStream generateCsvReport(AgreementResult aResult)
-        throws UnsupportedEncodingException, IOException
+        throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),

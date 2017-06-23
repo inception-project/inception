@@ -174,9 +174,8 @@ public class DiffUtils
 
         typeSystems.add(tsd);
         typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(typeSystems);
 
-        return allTypes;
+        return CasCreationUtils.mergeTypeSystems(typeSystems);
     }
 
     public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem(String... aFeatures)
@@ -200,9 +199,8 @@ public class DiffUtils
 
         typeSystems.add(tsd);
         typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
-        TypeSystemDescription allTypes = CasCreationUtils.mergeTypeSystems(typeSystems);
 
-        return allTypes;
+        return CasCreationUtils.mergeTypeSystems(typeSystems);
     }
 
     public static TypeSystemDescription createCustomTypeSystem(String aType, String aTypeName,
@@ -266,5 +264,4 @@ public class DiffUtils
 
         return linkA1;
     }
-
 }

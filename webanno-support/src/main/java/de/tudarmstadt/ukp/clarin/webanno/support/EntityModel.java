@@ -63,8 +63,7 @@ public class EntityModel<T>
             return BeanUtils.instantiate(entityClass);
         }
         else {
-            T entity = getEntityManager().find(entityClass, id);
-            return entity;
+            return getEntityManager().find(entityClass, id);
         }
     }
 

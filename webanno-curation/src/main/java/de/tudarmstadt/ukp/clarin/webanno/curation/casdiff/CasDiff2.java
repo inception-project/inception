@@ -408,7 +408,7 @@ public class CasDiff2
 //        entryTypes.add(aType);
     }
     
-    public static enum LinkCompareBehavior
+    public enum LinkCompareBehavior
     {
         /**
          * The link target is considered to be the label. As a consequence, the
@@ -434,7 +434,7 @@ public class CasDiff2
      * logical position in the document are collected under this. Within the position, there are
      * groups that represent the different configurations of the annotation made by different users.
      */
-    public static interface Position extends Comparable<Position>
+    public interface Position extends Comparable<Position>
     {
         /**
          * @return the CAS id.
@@ -1560,7 +1560,7 @@ public class CasDiff2
         }
     }
     
-    public static interface DiffAdapter
+    public interface DiffAdapter
     {
         String getType();
         

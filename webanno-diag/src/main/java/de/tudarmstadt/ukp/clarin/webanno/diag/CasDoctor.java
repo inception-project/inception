@@ -318,7 +318,7 @@ public class CasDoctor
                 .collect(Collectors.toList());
     }
 
-    public static enum LogLevel
+    public enum LogLevel
     {
         INFO, ERROR
     }

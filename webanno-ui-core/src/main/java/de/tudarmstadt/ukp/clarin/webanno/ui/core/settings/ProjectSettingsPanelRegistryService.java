@@ -26,11 +26,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectSettingsPanelRegistryService
 {
-    static final String SERVICE_NAME = "projectSettingsPanelRegistryService";
+    String SERVICE_NAME = "projectSettingsPanelRegistryService";
     
     List<ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl> getPanels();
 
-    public static class ProjectSettingsPanelDecl
+    class ProjectSettingsPanelDecl
         implements Serializable
     {
         private static final long serialVersionUID = -2464913342442260640L;
@@ -42,7 +42,7 @@ public interface ProjectSettingsPanelRegistryService
     }
 
     @FunctionalInterface
-    public static interface Condition
+    interface Condition
         extends Serializable
     {
         boolean applies(Project aProject, boolean aExportInProgress);

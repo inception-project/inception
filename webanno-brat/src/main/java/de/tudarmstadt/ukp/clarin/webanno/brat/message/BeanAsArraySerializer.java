@@ -24,7 +24,6 @@ import java.util.Collection;
 import org.springframework.util.ReflectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
@@ -92,7 +91,7 @@ public class BeanAsArraySerializer
     
     @Override
     public void serializeContents(Object value, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException, JsonGenerationException
+        throws IOException
     {
         JsonPropertyOrder order = value.getClass().getAnnotation(JsonPropertyOrder.class);
         String[] propOrder = (order == null) ? null : order.value();

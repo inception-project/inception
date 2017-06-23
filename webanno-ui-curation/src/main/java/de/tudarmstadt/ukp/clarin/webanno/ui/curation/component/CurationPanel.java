@@ -229,7 +229,6 @@ public class CurationPanel
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage(), e);
                     error("Error reading CAS " + e.getMessage());
-                    return;
                 }
             }
     

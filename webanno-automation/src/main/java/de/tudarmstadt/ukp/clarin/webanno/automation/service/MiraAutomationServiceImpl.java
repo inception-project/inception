@@ -317,12 +317,12 @@ public class MiraAutomationServiceImpl
                 .createQuery("FROM TrainingDocument where project =:project",
                         TrainingDocument.class)
                 .setParameter("project", aProject).getResultList();
-        /*
-         * List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>(); for
-         * (TrainingDocument trainingDocument : trainingDocuments) { if
-         * (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-         * webAnnoTraiingDocuments.add(trainingDocument); } }
-         */
+       /*
+        * List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>(); for
+        * (TrainingDocument trainingDocument : trainingDocuments) { if
+        * (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+        * webAnnoTraiingDocuments.add(trainingDocument); } }
+        */
         return trainingDocuments;
     }
     

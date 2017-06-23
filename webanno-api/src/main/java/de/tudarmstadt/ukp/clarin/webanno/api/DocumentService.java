@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface DocumentService
 {
-    static final String SERVICE_NAME = "documentService";
+    String SERVICE_NAME = "documentService";
     
     /**
      * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored

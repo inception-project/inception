@@ -24,11 +24,11 @@ import org.apache.wicket.Page;
 
 public interface MenuItemService
 {
-    static final String SERVICE_NAME = "menuItemService";
+    String SERVICE_NAME = "menuItemService";
 
     List<MenuItemService.MenuItemDecl> getMenuItems();
 
-    public static class MenuItemDecl
+    class MenuItemDecl
         implements Serializable
     {
         private static final long serialVersionUID = -6839143167407389149L;
@@ -41,7 +41,7 @@ public interface MenuItemService
     }
     
     @FunctionalInterface
-    public static interface Condition extends Serializable
+    interface Condition extends Serializable
     {
         boolean applies();
     }

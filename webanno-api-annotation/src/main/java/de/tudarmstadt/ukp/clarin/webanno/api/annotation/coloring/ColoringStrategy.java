@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
 public abstract class ColoringStrategy
 {
-    public static final ColoringStrategy labelHashBasedColor(final String[] aPalette)
+    public static ColoringStrategy labelHashBasedColor(final String[] aPalette)
     {
         return new ColoringStrategy()
         {

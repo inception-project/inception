@@ -28,7 +28,6 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -277,9 +276,6 @@ public class AutomationUtil
                 jCas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
                 aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
-            }
-            catch (IOException e) {
-                throw e;
             }
             catch (DataRetrievalFailureException | NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
@@ -1285,7 +1281,7 @@ public class AutomationUtil
             AutomationService aAutomationService, AnnotationSchemaService aAnnotationService,
             UserDao aUserDao, int beamSize, boolean maxPosteriors, List<List<String>> predictions,
             Mira mira, File predFtFile, File predcitedFile, SourceDocument document)
-        throws FileNotFoundException, IOException, ClassNotFoundException, UIMAException
+        throws IOException, ClassNotFoundException, UIMAException
     {
         // other layers as training document
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
@@ -1335,7 +1331,7 @@ public class AutomationUtil
             AutomationService aAutomationService, int beamSize, boolean maxPosteriors,
             AnnotationFeature layerFeature, List<List<String>> predictions, Mira mira,
             File predFile, File predcitedFile)
-        throws FileNotFoundException, IOException, ClassNotFoundException, AutomationException
+        throws IOException, ClassNotFoundException, AutomationException
     {
         for (TrainingDocument document : aAutomationService
                 .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
@@ -1632,7 +1628,7 @@ public class AutomationUtil
     public static void predict(MiraTemplate aTemplate, DocumentService aRepository,
             CorrectionDocumentService aCorrectionDocumentService,
             AutomationService aAutomationService, UserDao aUserDao)
-        throws CASException, UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 

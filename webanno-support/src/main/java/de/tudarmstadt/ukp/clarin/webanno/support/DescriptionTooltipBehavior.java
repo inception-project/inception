@@ -35,7 +35,7 @@ public class DescriptionTooltipBehavior
 {
     private static final long serialVersionUID = 1L;
 
-    public static enum Mode {
+    public enum Mode {
         DEFAULT,
         MARKDOWN
     }

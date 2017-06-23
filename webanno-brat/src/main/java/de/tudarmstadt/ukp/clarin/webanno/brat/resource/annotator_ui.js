@@ -2259,7 +2259,6 @@ var AnnotatorUI = (function($, window, undefined) {
           $normLink.hide();
           if (!base) {
             // base URL is now optional, just skip link generation if not set
-            ;
           } else if (base.indexOf('%s') == -1) {
             dispatcher.post('messages', [[['Base URL "'+base+'" for '+normDb+' does not contain "%s"', 'error']]]);
           } else {

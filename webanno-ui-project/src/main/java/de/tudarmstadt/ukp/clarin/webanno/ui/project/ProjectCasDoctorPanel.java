@@ -237,7 +237,7 @@ public class ProjectCasDoctorPanel
             List<Class<? extends Repair>> allRepairs = CasDoctor.scanRepairs();
             repairs = allRepairs.stream().filter(r -> {
                 Safe s = r.getAnnotation(Safe.class);
-                return s != null && s.value() == true;
+                return s != null && s.value();
             }).collect(Collectors.toList());
         }
     }

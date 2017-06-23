@@ -96,14 +96,12 @@ public class LineOrientedTextReader
         int begin = aSpan[0];
         int end = aSpan[1] - 1;
 
-        String data = aText;
-        while ((begin < (data.length() - 1)) && trimChar(data.charAt(begin))) {
+        while ((begin < (aText.length() - 1)) && trimChar(aText.charAt(begin))) {
             begin++;
         }
-        while ((end > 0) && trimChar(data.charAt(end))) {
+        while ((end > 0) && trimChar(aText.charAt(end))) {
             end--;
         }
-
         end++;
 
         aSpan[0] = begin;

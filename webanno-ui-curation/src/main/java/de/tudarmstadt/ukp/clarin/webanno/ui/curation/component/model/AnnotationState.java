@@ -53,7 +53,7 @@ public enum AnnotationState
 
     private String colorCode;
 
-    private AnnotationState(String aColorCode)
+    AnnotationState(String aColorCode)
     {
         colorCode = aColorCode;
     }

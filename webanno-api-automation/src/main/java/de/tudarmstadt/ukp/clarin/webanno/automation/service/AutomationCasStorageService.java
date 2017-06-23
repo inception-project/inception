@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 
 public interface AutomationCasStorageService
 {
-    static final String SERVICE_NAME = "automationCasStorageService";
+    String SERVICE_NAME = "automationCasStorageService";
     
     
     /**

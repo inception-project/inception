@@ -77,7 +77,6 @@ public class AutomationCasStorageServiceImpl
     public void writeCas(TrainingDocument aDocument, JCas aJcas)
         throws IOException
     {
-
         File annotationFolder = getAutomationFolder(aDocument);
         File targetPath = getAutomationFolder(aDocument);
         writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
@@ -110,13 +109,10 @@ public class AutomationCasStorageServiceImpl
                     + aDocumentName + "] (" + aDocumentId + ") in project [" + aProject.getName()
                     + "] (" + aProject.getId() + ")", e);
         }
-
         synchronized (lock) {
             FileUtils.forceMkdir(aAnnotationFolder);
-
             // Save CAS of the training document
-            try {
-
+            {
                 DocumentMetaData md;
                 try {
                     md = DocumentMetaData.get(aJcas);
@@ -130,15 +126,9 @@ public class AutomationCasStorageServiceImpl
 
                 try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                         String.valueOf(aProject.getId()))) {
-                    Project project = aProject;
                     log.info("Updated annotations on document [{}]({}) in project [{}]({})",
-                            aDocumentName, aDocumentId, project.getName(), project.getId());
+                            aDocumentName, aDocumentId, aProject.getName(), aProject.getId());
                 }
-
-            }
-            catch (IOException e) {
-                // Now abort
-                throw e;
             }
         }
     }

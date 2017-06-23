@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -129,7 +128,7 @@ public class PreferencesUtil
     }
 
     public static void savePreference(AnnotatorState aBModel, ProjectService aRepository)
-        throws FileNotFoundException, IOException
+        throws IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();
         ArrayList<Long> layers = new ArrayList<>();

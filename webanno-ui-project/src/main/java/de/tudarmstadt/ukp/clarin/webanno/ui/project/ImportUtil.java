@@ -114,7 +114,7 @@ public class ImportUtil
      */
     @SuppressWarnings({ "rawtypes" })
     public static boolean isZipValidWebanno(File aZipFile)
-        throws ZipException, IOException
+        throws IOException
     {
 
         boolean isZipValidWebanno = false;

@@ -22,9 +22,6 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
@@ -41,7 +38,7 @@ public class JsonImportUtil
      */
     public static TagSet importTagSetFromJsonWithOverwrite(Project project,
             InputStream tagInputStream, AnnotationSchemaService aAnnotationService)
-        throws IOException, JsonParseException, JsonMappingException
+        throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
 
@@ -89,7 +86,7 @@ public class JsonImportUtil
     
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
             AnnotationSchemaService aAnnotationService)
-        throws IOException, JsonParseException, JsonMappingException
+        throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
     

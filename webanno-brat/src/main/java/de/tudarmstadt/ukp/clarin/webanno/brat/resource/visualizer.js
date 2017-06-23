@@ -1195,7 +1195,6 @@ var Visualizer = (function($, window, undefined) {
             dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
             var chunk = data.chunks[data.chunks.length - 1];
             chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
-            return;
           }
         }); // markedText
 

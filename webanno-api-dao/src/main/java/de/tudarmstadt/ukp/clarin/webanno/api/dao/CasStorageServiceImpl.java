@@ -166,11 +166,10 @@ public class CasStorageServiceImpl
 
                 try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                         String.valueOf(aProject.getId()))) {
-                    Project project = aProject;
                     log.info(
                             "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
-                            aUserName, aDocumentName, aDocumentId, project.getName(),
-                            project.getId());
+                            aUserName, aDocumentName, aDocumentId, aProject.getName(),
+                            aProject.getId());
                 }
 
                 // If the saving was successful, we delete the old version
@@ -253,12 +252,11 @@ public class CasStorageServiceImpl
 
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
                                     Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
-                                Project project = aProject;
                                 log.info(
                                         "Removed surplus history file [{}] of user [{}] for "
                                                 + "document [{}]({}) in project [{}]({})",
                                         file.getName(), aUserName, aDocumentName, aDocumentId,
-                                        project.getName(), project.getId());
+                                        aProject.getName(), aProject.getId());
                             }
                         }
                     }
@@ -271,12 +269,11 @@ public class CasStorageServiceImpl
 
                                 try (MDC.MDCCloseable closable = MDC.putCloseable(
                                         Logging.KEY_PROJECT_ID, String.valueOf(aProject.getId()))) {
-                                    Project project = aProject;
                                     log.info(
                                             "Removed outdated history file [{}] of user [{}] for "
                                                     + "document [{}]({}) in project [{}]({})",
                                             file.getName(), aUserName, aDocumentName, aDocumentId,
-                                            project.getName(), project.getId());
+                                            aProject.getName(), aProject.getId());
                                 }
                             }
                         }

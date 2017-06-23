@@ -652,11 +652,9 @@ public class MergeCasTest
         result.print(System.out);
 
         JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
-        JCas actual = jcasA;
 
         casByUser = new HashMap<>();
-
-        casByUser.put("actual", asList(actual));
+        casByUser.put("actual", asList(jcasA));
         casByUser.put("merge", asList(mergeCas));
 
         result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,

@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
  */
 public interface TypeAdapter
 {
-    static final String FEATURE_SEPARATOR = " | ";
+    String FEATURE_SEPARATOR = " | ";
     /**
      * Update this feature with a new value
      *

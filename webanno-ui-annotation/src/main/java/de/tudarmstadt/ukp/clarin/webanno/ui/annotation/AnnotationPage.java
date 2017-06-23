@@ -203,7 +203,6 @@ public class AnnotationPage
             catch (NoResultException e) {
                 error("Document [" + documentId + "] does not exist in project [" + project.getId()
                         + "]");
-                return;
             }
         }
     }
@@ -424,7 +423,6 @@ public class AnnotationPage
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
                     error("Error reading CAS " + e.getMessage());
-                    return;
                 }
             }
         };
@@ -539,7 +537,6 @@ public class AnnotationPage
         catch (Exception e) {
             LOG.info("Error reading CAS " + e.getMessage());
             error("Error reading CAS " + e.getMessage());
-            return;
         }
     }
     

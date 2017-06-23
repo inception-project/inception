@@ -36,19 +36,19 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface ProjectService
 {
-    static final String SERVICE_NAME = "projectService";
+    String SERVICE_NAME = "projectService";
     
-    public static final String PROJECT = "/project/";
-    public static final String DOCUMENT = "/document/";
-    public static final String SOURCE = "/source";
-    public static final String GUIDELINE = "/guideline/";
-    public static final String ANNOTATION = "/annotation";
-    public static final String SETTINGS = "/settings/";
-    public static final String META_INF = "/META-INF/";
+    String PROJECT = "/project/";
+    String DOCUMENT = "/document/";
+    String SOURCE = "/source";
+    String GUIDELINE = "/guideline/";
+    String ANNOTATION = "/annotation";
+    String SETTINGS = "/settings/";
+    String META_INF = "/META-INF/";
 
-    public static final String HELP_FILE = "/help.properties";
+    String HELP_FILE = "/help.properties";
 
-    public static final String LOG_DIR = "log";
+    String LOG_DIR = "log";
     
     /**
      * creates a project permission, adding permission level for the user in the given project

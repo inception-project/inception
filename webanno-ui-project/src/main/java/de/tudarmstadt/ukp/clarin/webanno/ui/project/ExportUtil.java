@@ -512,7 +512,7 @@ public class ExportUtil
     public static void exportCuratedDocuments(DocumentService documentService,
             ImportExportService importExportService, ProjectExportModel aModel, File aCopyDir,
             boolean aIncludeInProgress)
-        throws FileNotFoundException, UIMAException, IOException, ClassNotFoundException,
+        throws UIMAException, IOException, ClassNotFoundException,
         ProjectExportException
     {
         // Get all the source documents from the project

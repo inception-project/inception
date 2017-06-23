@@ -95,7 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
 
@@ -350,10 +349,8 @@ public class ProjectPage
                     public Panel getPanel(String aPanelId)
                     {
                         try {
-                            ProjectSettingsPanelBase panel = (ProjectSettingsPanelBase)
-                                    ConstructorUtils.invokeConstructor(psp.panel, aPanelId,
+                            return ConstructorUtils.invokeConstructor(psp.panel, aPanelId,
                                             ProjectDetailForm.this.getModel());
-                            return panel;
                         }
                         catch (Exception e) {
                             throw new RuntimeException(e);

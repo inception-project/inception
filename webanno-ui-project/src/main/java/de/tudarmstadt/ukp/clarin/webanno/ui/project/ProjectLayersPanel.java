@@ -435,8 +435,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onUpdate(AjaxRequestTarget target)
                 {
-                    String modelValue = StringUtils.capitalize(getModelObject().getUiName());
-                    layerName = modelValue;
+                    layerName = StringUtils.capitalize(getModelObject().getUiName());
                 }
             });
 

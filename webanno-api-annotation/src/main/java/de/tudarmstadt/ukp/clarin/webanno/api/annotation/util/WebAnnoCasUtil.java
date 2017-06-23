@@ -470,10 +470,9 @@ public class WebAnnoCasUtil
         }
 
         // Center sentence
-        Sentence c = aSentence;
         Sentence n = s;
 
-        if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
+        if (aWindowSize == 2 && n.getBegin() > aSentence.getBegin()) {
             return s;
         }
 
@@ -920,11 +919,10 @@ public class WebAnnoCasUtil
         // Create all the links
         // FIXME: actually we could re-use existing link link feature structures
         List<FeatureStructure> linkFSes = new ArrayList<>();
-        List<LinkWithRoleModel> linksList = aValue;
 
-        if (linksList != null) {
+        if (aValue != null) {
             // remove duplicate links
-            Set<LinkWithRoleModel> links = new HashSet<>(linksList);
+            Set<LinkWithRoleModel> links = new HashSet<>(aValue);
             for (LinkWithRoleModel e : links) {
                 // Skip links that have been added in the UI but where the target has not
                 // yet been

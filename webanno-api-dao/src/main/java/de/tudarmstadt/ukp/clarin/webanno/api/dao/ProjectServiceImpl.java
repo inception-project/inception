@@ -420,7 +420,7 @@ public class ProjectServiceImpl
 
     @Override
     public Properties loadUserSettings(String aUsername, Project aProject)
-        throws FileNotFoundException, IOException
+        throws IOException
     {
         Properties property = new Properties();
         property.load(new FileInputStream(new File(dir.getAbsolutePath() + PROJECT

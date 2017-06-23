@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CasStorageService
 {
-    static final String SERVICE_NAME = "casStorageService";
+    String SERVICE_NAME = "casStorageService";
     
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's

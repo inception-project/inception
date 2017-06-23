@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CurationDocumentService
 {
-    static final String SERVICE_NAME = "curationDocumentService";
+    String SERVICE_NAME = "curationDocumentService";
     
     // --------------------------------------------------------------------------------------------
     // Methods related to curation
