@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
@@ -116,7 +117,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MenuItem(icon="images/attribution.png", label="Monitoring", prio=300)
+@MenuItem(icon = "images/attribution.png", label = "Monitoring", prio = 300)
 @MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
@@ -231,7 +232,8 @@ public class MonitoringPage
             Project project = projectService.listProjects().get(0);
             List<List<String>> userAnnotationDocumentLists = new ArrayList<>();
             List<SourceDocument> dc = documentService.listSourceDocuments(project);
-            for (int j = 0; j < projectService.listProjectUsersWithPermissions(project).size(); j++) {
+            for (int j = 0; j < projectService.listProjectUsersWithPermissions(project)
+                    .size(); j++) {
                 List<String> userAnnotationDocument = new ArrayList<>();
                 userAnnotationDocument.add("");
                 for (int i = 0; i < dc.size(); i++) {
@@ -256,7 +258,7 @@ public class MonitoringPage
                     .add(annotatorsProgressPercentageImage).add(projectName)
                     .add(annotationDocumentStatusTable));
             annotationDocumentStatusTable.setVisible(false);
-        }else{
+        } else {
             annotationDocumentStatusTable = new EmptyPanel("rsTable");
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm);
@@ -326,7 +328,8 @@ public class MonitoringPage
                     updateTrainingResultForm(aNewSelection);
                     result = "";
 
-                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
+                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
+                            .getModelObject();
                     projectSelectionModel.project = aNewSelection;
                     projectSelectionModel.annotatorsProgress = new TreeMap<>();
                     projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
@@ -336,9 +339,10 @@ public class MonitoringPage
                     // Annotator's Progress
                     if (projectSelectionModel.project != null) {
                         projectSelectionModel.annotatorsProgressInPercent
-                                .putAll(getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
-                        projectSelectionModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
-
+                                .putAll(getPercentageOfFinishedDocumentsPerUser(
+                                        projectSelectionModel.project));
+                        projectSelectionModel.annotatorsProgress
+                                .putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
                     }
                     projectName.setDefaultModelObject(projectSelectionModel.project.getName());
                     overallProjectProgressImage.setVisible(false);
@@ -421,7 +425,8 @@ public class MonitoringPage
                     List<IColumn<?,?>> columns = new ArrayList<>();
 
                     for (int i = 0; i < provider.getColumnCount(); i++) {
-                        columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project));
+                        columns.add(new DocumentStatusColumnMetaData(provider, i,
+                                projectSelectionModel.project));
                     }
                     annotationDocumentStatusTable.remove();
                     annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
@@ -460,7 +465,8 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
+            for (User user : projectService.listProjectUsersWithPermissions(aProject,
+                    PermissionLevel.USER)) {
                 for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
                     if (documentService.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
@@ -484,7 +490,8 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
+            for (User user : projectService.listProjectUsersWithPermissions(aProject,
+                    PermissionLevel.USER)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
@@ -495,8 +502,8 @@ public class MonitoringPage
                         finished++;
                     }
                     else if (documentService.existsAnnotationDocument(document, user)) {
-                        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                                document, user);
+                        AnnotationDocument annotationDocument = documentService
+                                .getAnnotationDocument(document, user);
                         if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
                             ignored++;
                         }
@@ -551,10 +558,11 @@ public class MonitoringPage
     
     private void updateTrainingResultForm(Project aProject)
     {
-    	trainingResultForm.remove();
-    	 trainingResultForm = new TrainingResultForm("trainingResultForm");
-    	 add(trainingResultForm);
-         trainingResultForm.setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
+        trainingResultForm.remove();
+        trainingResultForm = new TrainingResultForm("trainingResultForm");
+        add(trainingResultForm);
+        trainingResultForm
+                .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
     }
 
     private class TrainingResultForm
@@ -643,12 +651,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStartime().toString();
+                        return automationService.getAutomationStatus(template).getStartime()
+                                .toString();
                     }
                     else {
                         return "";
                     }
-
                 }
             }).setOutputMarkupId(true));
 
@@ -661,11 +669,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        if (automationService.getAutomationStatus(template).getEndTime()
-                                .equals(automationService.getAutomationStatus(template).getStartime())) {
+                        if (automationService.getAutomationStatus(template).getEndTime().equals(
+                                automationService.getAutomationStatus(template).getStartime())) {
                             return "---";
                         }
-                        return automationService.getAutomationStatus(template).getEndTime().toString();
+                        return automationService.getAutomationStatus(template).getEndTime()
+                                .toString();
                     }
                     else {
                         return "";
@@ -683,12 +692,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStatus().getName();
+                        return automationService.getAutomationStatus(template).getStatus()
+                                .getName();
                     }
                     else {
                         return "";
                     }
-
                 }
             }).setOutputMarkupId(true));
             add(selectedTemplate = new ListChoice<MiraTemplate>("layerResult")
@@ -860,7 +869,8 @@ public class MonitoringPage
 //                        && document.getSentenceAccessed() != 0) {
 //                    JCas jCas = null;
 //                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
+//                                user);                
 //                    }
 //                    catch (UIMAException e) {
 //                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
@@ -872,13 +882,14 @@ public class MonitoringPage
 //                        LOG.info(e.getMessage());
 //                    }
 //                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
+//                   aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"
+//                            + totalSN));
 //                }
 //                else {
                 
-                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                    aCellItem.add(icon);
+                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
@@ -898,13 +909,16 @@ public class MonitoringPage
                             SourceDocument doc = documentService.getSourceDocument(project,
                                     value.substring(value.indexOf(":") + 1));
                             if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc, CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc,
+                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }
                             else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                                changeSourceDocumentState(doc,
+                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
                             }
                             else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc,
+                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                             }
                         }
                         catch (IOException e) {
@@ -945,7 +959,8 @@ public class MonitoringPage
 //                        && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
 //                    JCas jCas = null;
 //                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), annotator);
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
+//                                annotator);
 //                    }
 //                    catch (UIMAException e) {
 //                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
@@ -957,12 +972,13 @@ public class MonitoringPage
 //                        LOG.info(e.getMessage());
 //                    }
 //                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
+//                   aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + 
+//                           "/" + totalSN));
 //                }
 //                else {
-                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                    aCellItem.add(icon);
+                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
@@ -995,7 +1011,8 @@ public class MonitoringPage
                             if (state.toString().equals(AnnotationDocumentState.NEW.toString())) {
                                 changeAnnotationDocumentState(document, user, NEW_TO_IGNORE);
                             }
-                            if (state.toString().equals(AnnotationDocumentState.IGNORE.toString())) {
+                            if (state.toString()
+                                    .equals(AnnotationDocumentState.IGNORE.toString())) {
                                 changeAnnotationDocumentState(document, user, IGNORE_TO_NEW);
                             }
                         }
@@ -1027,7 +1044,8 @@ public class MonitoringPage
             aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
 
             aModel.annotatorsProgressInPercent.clear();
-            aModel.annotatorsProgressInPercent.putAll(getPercentageOfFinishedDocumentsPerUser(project));
+            aModel.annotatorsProgressInPercent
+                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
             annotatorsProgressPercentageImage.setImageResource(createProgressChart(
                     aModel.annotatorsProgressInPercent, 100, true));
             aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
@@ -1069,11 +1087,11 @@ public class MonitoringPage
         private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
                 AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
         {
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    aSourceDocument, aUser);
+            AnnotationDocument annotationDocument = documentService
+                    .getAnnotationDocument(aSourceDocument, aUser);
             annotationDocument.setState(AnnotationDocumentStateTransition
                     .transition(aAnnotationDocumentStateTransition));
-                documentService.createAnnotationDocument(annotationDocument);
+            documentService.createAnnotationDocument(annotationDocument);
         }
 
         /**

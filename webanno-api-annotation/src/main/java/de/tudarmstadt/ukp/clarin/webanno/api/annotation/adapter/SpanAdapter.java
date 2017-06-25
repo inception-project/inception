@@ -208,9 +208,10 @@ public class SpanAdapter
     public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
             String aLabelValue)
     {
-        if(allowStacking){
+        if (allowStacking) {
             return null;
         }
+        
         int begin;
         int end;
         // update the begin and ends (no sub token selection)
@@ -228,32 +229,34 @@ public class SpanAdapter
             begin = aBegin;
             end = aEnd;
         }
+        
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, begin, end)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 return getFeatureValue(fs, aFeature);
             }
         }
+        
         return null;
     }
 
     public static Serializable getFeatureValue(FeatureStructure aFs, AnnotationFeature aFeature)
-       {
-           Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-           switch (aFeature.getType()) {
-           case CAS.TYPE_NAME_STRING:
-               return aFs.getFeatureValueAsString(uimaFeature);
-           case CAS.TYPE_NAME_BOOLEAN:
-               return aFs.getBooleanValue(uimaFeature);
-           case CAS.TYPE_NAME_FLOAT:
-               return aFs.getFloatValue(uimaFeature);
-           case CAS.TYPE_NAME_INTEGER:
-               return aFs.getIntValue(uimaFeature);
-           default:
-               return aFs.getFeatureValueAsString(uimaFeature);
-           }
-       }
+    {
+        Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        switch (aFeature.getType()) {
+        case CAS.TYPE_NAME_STRING:
+            return aFs.getFeatureValueAsString(uimaFeature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return aFs.getBooleanValue(uimaFeature);
+        case CAS.TYPE_NAME_FLOAT:
+            return aFs.getFloatValue(uimaFeature);
+        case CAS.TYPE_NAME_INTEGER:
+            return aFs.getIntValue(uimaFeature);
+        default:
+            return aFs.getFeatureValueAsString(uimaFeature);
+        }
+    }
+
     /**
      * A Helper method to add annotation to CAS
      */
@@ -339,8 +342,8 @@ public class SpanAdapter
             newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
         }
         if (aIsSlot && countAnno > 1) {
-            throw new AnnotationException(
-                    "There are different stacking annotation on curation panel, cannot copy the slot feature");
+            throw new AnnotationException("There are different stacking annotation on curation "
+                    + "panel, cannot copy the slot feature");
         }
         return newAnnotation;
     }

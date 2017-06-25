@@ -36,7 +36,7 @@ public interface FeatureSupport
     boolean accepts(AnnotationFeature aFeature);
 
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
-            final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel);
+            IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
     default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
     {

@@ -37,6 +37,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -139,12 +140,13 @@ public class ProjectTrainingDocumentsPanel
                         document.setName(fileName);
                         document.setProject(project);
 
-						for (TrainingDocument sd : automationService.listTrainingDocuments(project)) {
-							sd.setProcessed(false);
-						}
+                        for (TrainingDocument sd : automationService
+                                .listTrainingDocuments(project)) {
+                            sd.setProcessed(false);
+                        }
 
                         for (TrainingDocument sd : automationService.listTabSepDocuments(project)) {
-                             	sd.setProcessed(false);
+                            sd.setProcessed(false);
                         }
                         // If this document is tab-sep and used as a feature itself, no need to add
                         // a feature to the document
@@ -156,8 +158,8 @@ public class ProjectTrainingDocumentsPanel
                             document.setFormat(selectedFormat);
                         }
                         else {
-                            String reader = importExportService.getReadableFormatId(readableFormatsChoice
-                                    .getModelObject());
+                            String reader = importExportService
+                                    .getReadableFormatId(readableFormatsChoice.getModelObject());
                             document.setFormat(reader);
                         }
                         automationService.createTrainingDocument(document);
@@ -234,7 +236,8 @@ public class ProjectTrainingDocumentsPanel
                 boolean isTrain = false;
                 for (String document : selectedDocuments) {
                     try {
-                        TrainingDocument trainingDoc = automationService.getTrainingDocument(project, document);
+                        TrainingDocument trainingDoc = automationService
+                                .getTrainingDocument(project, document);
                         isTrain = true;
                         automationService.removeTrainingDocument(trainingDoc);
                     }
@@ -244,16 +247,16 @@ public class ProjectTrainingDocumentsPanel
                     }
                     documents.remove(document);
                 }
-                // If the deleted document is training document, re-training an automation should be possible again
-                if(isTrain){
-                	List<TrainingDocument> docs = automationService.listTrainingDocuments(project);
-                		docs.addAll(automationService.listTabSepDocuments(project));
-                	for(TrainingDocument trainingDoc:docs){
-                		trainingDoc.setProcessed(false);
-                	}
+                // If the deleted document is training document, re-training an automation should be
+                // possible again
+                if (isTrain) {
+                    List<TrainingDocument> docs = automationService.listTrainingDocuments(project);
+                    docs.addAll(automationService.listTabSepDocuments(project));
+                    for (TrainingDocument trainingDoc : docs) {
+                        trainingDoc.setProcessed(false);
+                    }
                 }
             }
         });
     }
-    
 }

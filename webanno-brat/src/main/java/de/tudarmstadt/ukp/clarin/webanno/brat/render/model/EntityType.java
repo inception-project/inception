@@ -54,9 +54,14 @@ public class EntityType
     }
 
     /**
-     * @param aName the "name" (the UIMA type name).
-     * @param aLabel the "label" which is displayed to the user e.g. in the comment popup (the display name)
-     * @param aType the "type" (brat type name, which is basically an identifier used in the UI visual model)
+     * @param aName
+     *            the "name" (the UIMA type name).
+     * @param aLabel
+     *            the "label" which is displayed to the user e.g. in the comment pop-up (the display
+     *            name)
+     * @param aType
+     *            the "type" (brat type name, which is basically an identifier used in the UI visual
+     *            model)
      */
     public EntityType(String aName, String aLabel, String aType)
     {

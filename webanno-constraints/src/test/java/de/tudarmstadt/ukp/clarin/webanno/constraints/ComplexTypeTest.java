@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
 import java.util.LinkedList;

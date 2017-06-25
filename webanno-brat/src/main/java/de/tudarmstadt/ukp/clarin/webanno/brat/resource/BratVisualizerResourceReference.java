@@ -19,27 +19,29 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class BratVisualizerResourceReference extends JavaScriptResourceReference
+public class BratVisualizerResourceReference
+    extends JavaScriptResourceReference
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final BratVisualizerResourceReference INSTANCE = new BratVisualizerResourceReference();
+    private static final BratVisualizerResourceReference INSTANCE = 
+            new BratVisualizerResourceReference();
 
-	/**
-	 * Gets the instance of the resource reference
-	 *
-	 * @return the single instance of the resource reference
-	 */
-	public static BratVisualizerResourceReference get()
-	{
-		return INSTANCE;
-	}
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static BratVisualizerResourceReference get()
+    {
+        return INSTANCE;
+    }
 
-	/**
-	 * Private constructor
-	 */
-	private BratVisualizerResourceReference()
-	{
-		super(BratVisualizerResourceReference.class, "visualizer.js");
-	}
+    /**
+     * Private constructor
+     */
+    private BratVisualizerResourceReference()
+    {
+        super(BratVisualizerResourceReference.class, "visualizer.js");
+    }
 }

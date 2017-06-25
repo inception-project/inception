@@ -38,8 +38,6 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for meta-data of source documents. The content of the source document is
  * stored in the file system.
- *
- *
  */
 @Entity
 @Table(name = "train_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
@@ -117,15 +115,17 @@ public class TrainingDocument
         format = aFormat;
     }
     
-    public TrainDocumentState getState() {
-		return state;
-	}
+    public TrainDocumentState getState()
+    {
+        return state;
+    }
 
-	public void setState(TrainDocumentState state) {
-		this.state = state;
-	}
+    public void setState(TrainDocumentState state)
+    {
+        this.state = state;
+    }
 
-	public Date getTimestamp()
+    public Date getTimestamp()
     {
         return timestamp;
     }
@@ -145,16 +145,17 @@ public class TrainingDocument
         this.sentenceAccessed = sentenceAccessed;
     }
     
-    
-    public boolean isProcessed() {
-		return processed;
-	}
+    public boolean isProcessed()
+    {
+        return processed;
+    }
 
-	public void setProcessed(boolean processed) {
-		this.processed = processed;
-	}
+    public void setProcessed(boolean processed)
+    {
+        this.processed = processed;
+    }
 
-	@Override
+    @Override
     public int hashCode()
     {
         final int prime = 31;
@@ -191,13 +192,16 @@ public class TrainingDocument
         return true;
     }
 
-	public AnnotationFeature getFeature() {
-		return feature;
-	}
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
 
-	public void setFeature(AnnotationFeature feature) {
-		this.feature = feature;
-	}
+    public void setFeature(AnnotationFeature feature)
+    {
+        this.feature = feature;
+    }
 
-	public static final Comparator<TrainingDocument> NAME_COMPARATOR = Comparator.comparing(TrainingDocument::getName);
+    public static final Comparator<TrainingDocument> NAME_COMPARATOR = Comparator
+            .comparing(TrainingDocument::getName);
 }

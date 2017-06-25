@@ -32,6 +32,7 @@ public class DefaultFocusBehavior
     public void renderHead(Component component, IHeaderResponse response)
     {
         super.renderHead(component, response);
-        response.render(OnLoadHeaderItem.forScript("$(\":input:not(input[type=button],input[type=submit],button):visible:first\", $(\"#featureValues\")).focus();"));
+        response.render(OnLoadHeaderItem.forScript(
+                "$(\":input:not(input[type=button],input[type=submit],button):visible:first\", $(\"#featureValues\")).focus();"));
     }
 }

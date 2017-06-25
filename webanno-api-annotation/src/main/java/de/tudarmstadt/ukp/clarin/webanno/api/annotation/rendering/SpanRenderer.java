@@ -36,9 +36,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -109,12 +109,13 @@ public class SpanRenderer
             if (sentences.size() > 1) {
                 for (Sentence sentence : sentences) {
                     if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
-                        ranges.add(new VRange(fs.getBegin() - windowBegin, sentence
-                                .getEnd() - windowBegin));
+                        ranges.add(new VRange(fs.getBegin() - windowBegin,
+                                sentence.getEnd() - windowBegin));
                     }
-                    else if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
-                        ranges.add(new VRange(sentence.getBegin() - windowBegin, fs
-                                .getEnd() - windowBegin));
+                    else if (sentence.getBegin() <= fs.getEnd()
+                            && fs.getEnd() <= sentence.getEnd()) {
+                        ranges.add(new VRange(sentence.getBegin() - windowBegin,
+                                fs.getEnd() - windowBegin));
                     }
                     else {
                         ranges.add(new VRange(sentence.getBegin() - windowBegin,

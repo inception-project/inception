@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  *
  */
 @JsonPropertyOrder(value = { "tag_name", "tag_description" })
-public class Tag
+public class ExportedTag
 {
     @JsonProperty("tag_name")
     String name;

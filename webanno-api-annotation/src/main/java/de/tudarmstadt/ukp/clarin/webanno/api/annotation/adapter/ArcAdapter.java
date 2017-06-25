@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -42,10 +40,12 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ArcCrossedMultipleSentenceException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -151,11 +151,11 @@ public class ArcAdapter
      * @throws AnnotationException
      *             if the annotation could not be created/updated.
      */
-    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin,
-            int aWindowEnd, AnnotationFeature aFeature, Object aLabelValue)
-                throws AnnotationException
+    public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
+            int aWindowBegin, int aWindowEnd, AnnotationFeature aFeature, Object aLabelValue)
+        throws AnnotationException
     {
-          if (crossMultipleSentence
+        if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
             return interalAddToCas(aJCas, aWindowBegin, aWindowEnd, aOriginFs, aTargetFs,
                     aLabelValue, aFeature);
@@ -268,8 +268,8 @@ public class ArcAdapter
             AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
             AnnotationFS aAnnotationFSNewTarget)
     {
-		return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
-				&& isSame(aAnnotationFSOldTarget, aAnnotationFSNewTarget);
+        return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
+                && isSame(aAnnotationFSOldTarget, aAnnotationFSNewTarget);
     }
 
     @Override
@@ -311,8 +311,10 @@ public class ArcAdapter
     public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
             String aDepCoveredText, String aGovCoveredText, Object aValue)
     {
-        Feature dependentFeature = getAnnotationType(aJCas.getCas()).getFeatureByBaseName(getTargetFeatureName());
-        Feature governorFeature = getAnnotationType(aJCas.getCas()).getFeatureByBaseName(getSourceFeatureName());
+        Feature dependentFeature = getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(getTargetFeatureName());
+        Feature governorFeature = getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(getSourceFeatureName());
 
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
@@ -322,7 +324,6 @@ public class ArcAdapter
         Feature arcSpanFeature = spanType.getFeatureByBaseName(getAttachFeatureName());
         
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-
             if (getAttachFeatureName() != null) {
                 dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
                         arcSpanFeature);
@@ -334,12 +335,13 @@ public class ArcAdapter
                 dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
                 governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
             }
-         if(aDepCoveredText.equals(dependentFs.getCoveredText()) && aGovCoveredText.equals(governorFs.getCoveredText())){
-             if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
-                 delete(aJCas, new VID(getAddr(fs)));
-             }
-         }
             
+            if (aDepCoveredText.equals(dependentFs.getCoveredText())
+                    && aGovCoveredText.equals(governorFs.getCoveredText())) {
+                if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
+                    delete(aJCas, new VID(getAddr(fs)));
+                }
+            }
         }
     }
 

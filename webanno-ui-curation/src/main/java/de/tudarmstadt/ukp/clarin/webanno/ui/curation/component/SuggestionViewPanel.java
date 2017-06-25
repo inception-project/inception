@@ -197,14 +197,17 @@ public class SuggestionViewPanel
                         JCas annotationJCas = null;
 
                         annotationJCas = (curationUserSegment.getBratAnnotatorModel().getMode()
-                                .equals(Mode.AUTOMATION) || curationUserSegment
-                                .getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) ?
-                                documentService.readAnnotationCas(
-                                        documentService.getAnnotationDocument(sourceDocument, user)) :
-                                            curationDocumentService.readCurationCas(sourceDocument);
+                                .equals(Mode.AUTOMATION)
+                                || curationUserSegment.getBratAnnotatorModel().getMode()
+                                        .equals(Mode.CORRECTION))
+                                                ? documentService.readAnnotationCas(
+                                                        documentService.getAnnotationDocument(
+                                                                sourceDocument, user))
+                                                : curationDocumentService
+                                                        .readCurationCas(sourceDocument);
                         StringValue action = request.getParameterValue("action");
                         // check if clicked on a span
-                        if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {                    
+                        if (!action.isEmpty() && action.toString().equals("selectSpanForMerge")) {
                             mergeSpan(request, curationUserSegment, annotationJCas);
                         }
                         // check if clicked on an arc
@@ -225,15 +228,17 @@ public class SuggestionViewPanel
         add(sentenceListView);
     }
 
-	boolean isCorefType(AnnotationFS aFS) {
-		for (Feature f : MergeCas.getAllFeatures(aFS)) {
-			if (f.getShortName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)
-					|| f.getShortName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
-				return true;
-			}
-		}
-		return false;
-	}
+    boolean isCorefType(AnnotationFS aFS)
+    {
+        for (Feature f : MergeCas.getAllFeatures(aFS)) {
+            if (f.getShortName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE)
+                    || f.getShortName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void onChange(AjaxRequestTarget aTarget)
     {
         // Overriden in curationPanel
@@ -277,10 +282,9 @@ public class SuggestionViewPanel
 
         AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
 
-       	if(isCorefType(fsClicked)){
-       		
-    		throw new AnnotationException(" Coreference Annotation not supported in curation");
-    	}
+        if (isCorefType(fsClicked)) {
+            throw new AnnotationException("Coreference Annotation not supported in curation");
+        }
         long layerId = TypeUtil.getLayerId(spanType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
@@ -323,21 +327,20 @@ public class SuggestionViewPanel
         
         // for correction and automation, the lower panel is the clickedJcase, from the suggestions
         if (!aCurationUserSegment.getBratAnnotatorModel().getMode().equals(Mode.CURATION)) {
-        	clickedJCas = correctionDocumentService.readCorrectionCas(sourceDocument);
+            clickedJCas = correctionDocumentService.readCorrectionCas(sourceDocument);
         }
-        else{
-        AnnotationDocument clickedAnnotationDocument = documentService
-                .listAnnotationDocuments(sourceDocument).stream()
-                .filter(an -> an.getUser().equals(username)).findFirst().get();
+        else {
+            AnnotationDocument clickedAnnotationDocument = documentService
+                    .listAnnotationDocuments(sourceDocument).stream()
+                    .filter(an -> an.getUser().equals(username)).findFirst().get();
 
-
-        try {
-            clickedJCas = getJCas(bModel, clickedAnnotationDocument);
+            try {
+                clickedJCas = getJCas(bModel, clickedAnnotationDocument);
+            }
+            catch (IOException e1) {
+                throw new IOException();
+            }
         }
-        catch (IOException e1) {
-            throw new IOException();
-        }
-       }
 
         long layerId = TypeUtil.getLayerId(arcType);
 
@@ -346,11 +349,11 @@ public class SuggestionViewPanel
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
         AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
 
-     	if(isCorefType(clickedFS)){
-       		
-    		throw new AnnotationException(" Coreference Annotation not supported in curation");
-    	}
-     	
+        if (isCorefType(clickedFS)) {
+
+            throw new AnnotationException(" Coreference Annotation not supported in curation");
+        }
+
         MergeCas.addArcAnnotation(adapter, aJcas, addressOriginClicked, addressTargetClicked,
                 fsArcaddress, clickedJCas, clickedFS);
         writeEditorCas(bModel, aJcas);
@@ -455,7 +458,7 @@ public class SuggestionViewPanel
                     public String getColor(VID aVid, String aLabel)
                     {
                         Map<VID, AnnotationState> colors = aStates.get(username);
-                        if (colors.get(aVid)==null){
+                        if (colors.get(aVid) == null) {
                             return AnnotationState.NOT_SUPPORTED.getColorCode();
                         }
                         return colors.get(aVid).getColorCode();
@@ -463,15 +466,16 @@ public class SuggestionViewPanel
                 };
 
                 // Create curation view for the current user
-                CurationUserSegmentForAnnotationDocument curationUserSegment2 = new CurationUserSegmentForAnnotationDocument();
-                curationUserSegment2.setCollectionData(getCollectionInformation(aAnnotationService,
-                        aCurationContainer));
-                curationUserSegment2.setDocumentResponse(render(jCas, aBratAnnotatorModel,
-                        curationColoringStrategy));
+                CurationUserSegmentForAnnotationDocument curationUserSegment2 = 
+                        new CurationUserSegmentForAnnotationDocument();
+                curationUserSegment2.setCollectionData(
+                        getCollectionInformation(aAnnotationService, aCurationContainer));
+                curationUserSegment2.setDocumentResponse(
+                        render(jCas, aBratAnnotatorModel, curationColoringStrategy));
                 curationUserSegment2.setUsername(username);
                 curationUserSegment2.setBratAnnotatorModel(aBratAnnotatorModel);
-                curationUserSegment2
-                        .setAnnotationSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
+                curationUserSegment2.setSelectionByUsernameAndAddress(
+                        aAnnotationSelectionByUsernameAndAddress);
                 aSentences.add(curationUserSegment2);
             }
         }
@@ -586,8 +590,10 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, d, false, false);
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, i, true, false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, d, false,
+                false);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, i, true,
+                false);
 
         List<ConfigurationSet> all = new ArrayList<>();
 
@@ -595,7 +601,8 @@ public class SuggestionViewPanel
         all.removeAll(d);
         all.removeAll(i);
 
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false, true);
+        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false,
+                true);
 
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
 
@@ -630,7 +637,8 @@ public class SuggestionViewPanel
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
                     
-                    AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(), aProject);
+                    AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(),
+                            aProject);
                     TypeAdapter typeAdapter = TypeUtil.getAdapter(annotationService, layer);
                     
                     VID vid;
@@ -705,7 +713,8 @@ public class SuggestionViewPanel
         throws UIMAException, IOException, ClassNotFoundException
     {
         JCas annotatorCas;
-        if (aBModel.getMode().equals(Mode.AUTOMATION) || aBModel.getMode().equals(Mode.CORRECTION)) {
+        if (aBModel.getMode().equals(Mode.AUTOMATION)
+                || aBModel.getMode().equals(Mode.CORRECTION)) {
             // If this is a CORRECTION or AUTOMATION project, then we get the CORRECTION document
             // and put it in as the single document to compare with. Basically what we do is that
             // we treat consider this scenario as a curation scenario where the CORRECTION document

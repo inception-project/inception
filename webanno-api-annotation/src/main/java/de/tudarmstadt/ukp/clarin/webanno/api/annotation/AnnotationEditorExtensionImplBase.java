@@ -27,9 +27,9 @@ public abstract class AnnotationEditorExtensionImplBase
     @Override
     public void setBeanName(String aName)
     {
-         beanName = aName;
+        beanName = aName;
     }
-    
+
     @Override
     public String getBeanName()
     {

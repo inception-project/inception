@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static org.apache.uima.fit.util.FSUtil.*;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
+
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -28,6 +29,7 @@ import javax.annotation.Resource;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
@@ -46,7 +48,8 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     {
         boolean ok = true;
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -66,12 +69,14 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
 
             for (AnnotationFS anno : select(aCas, layerType)) {
                 for (AnnotationFS attach : selectCovered(attachType, anno)) {
-                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
+                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
+                            AnnotationFS.class);
                     if (candidate != anno) {
                         aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                                "Annotation should be attached to [" + layer.getAttachFeature().getName()
-                                + "] but is not.\nAnnotation: [" + anno 
-                                + "]\nAttach annotation:[" + attach + "]"));
+                                "Annotation should be attached to ["
+                                        + layer.getAttachFeature().getName()
+                                        + "] but is not.\nAnnotation: [" + anno
+                                        + "]\nAttach annotation:[" + attach + "]"));
                         ok = false;
                     }
                 }

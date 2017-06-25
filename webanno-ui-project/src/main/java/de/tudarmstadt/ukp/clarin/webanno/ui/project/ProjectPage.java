@@ -36,8 +36,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -66,6 +64,8 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -107,7 +107,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRe
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */
-@MenuItem(icon="images/setting_tools.png", label="Projects", prio=400)
+@MenuItem(icon = "images/setting_tools.png", label = "Projects", prio = 400)
 @MountPath("/projectsetting.html")
 public class ProjectPage
     extends ApplicationPageBase
@@ -350,8 +350,9 @@ public class ProjectPage
                     public Panel getPanel(String aPanelId)
                     {
                         try {
-                            ProjectSettingsPanelBase panel = (ProjectSettingsPanelBase) ConstructorUtils
-                                    .invokeConstructor(psp.panel, aPanelId, ProjectDetailForm.this.getModel());
+                            ProjectSettingsPanelBase panel = (ProjectSettingsPanelBase)
+                                    ConstructorUtils.invokeConstructor(psp.panel, aPanelId,
+                                            ProjectDetailForm.this.getModel());
                             return panel;
                         }
                         catch (Exception e) {
@@ -419,20 +420,23 @@ public class ProjectPage
                 private static final long serialVersionUID = 1L;
                 
                 @Override
-				public void validate() {
-					super.validate();
-						if (!NameUtil.isNameValid(projectNameTextField.getInput())) {
-							error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-							LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
-						}
-						if (projectNameTextField.getModelObject()!=null && projectService.existsProject(projectNameTextField.getInput())
-								&& !projectNameTextField.getInput().equals(projectNameTextField.getModelObject())) {
-							error("Another project with same name exists. Please try a different name");
-						} 
-					
-				}
+                public void validate()
+                {
+                    super.validate();
+                    if (!NameUtil.isNameValid(projectNameTextField.getInput())) {
+                        error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+                        LOG.error("Project name shouldn't contain characters such as /\\*?&!$+[^]");
+                    }
+                    if (projectNameTextField.getModelObject() != null
+                            && projectService.existsProject(projectNameTextField.getInput())
+                            && !projectNameTextField.getInput()
+                                    .equals(projectNameTextField.getModelObject())) {
+                        error("Another project with same name exists. Please try a different name");
+                    }
 
-				@Override
+                }
+
+                @Override
                 public void onSubmit()
                 {
                     Project project = projectDetailForm.getModelObject();
@@ -578,10 +582,8 @@ public class ProjectPage
 
                 // Load the project model from the JSON file
                 String text = IOUtils.toString(projectInputStream, "UTF-8");
-                de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = JSONUtil
-                        .getJsonConverter()
-                        .getObjectMapper()
-                        .readValue(text,
+                de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = 
+                        JSONUtil.getJsonConverter().getObjectMapper().readValue(text,
                                 de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
 
                 // Import the project itself
@@ -595,7 +597,8 @@ public class ProjectPage
                     ImportUtil.createMissingUsers(importedProjectSetting, userRepository);
                 }
                 
-                // Notify all relevant service so that they can initialize themselves for the given project
+                // Notify all relevant service so that they can initialize themselves for the given
+                // project
                 for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
                     try {
                         bean.onProjectImport(zip, importedProjectSetting, importedProject);

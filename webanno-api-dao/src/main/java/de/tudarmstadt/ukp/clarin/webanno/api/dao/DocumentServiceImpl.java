@@ -300,9 +300,11 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public SourceDocument getSourceDocument(long aProjectId, long aSourceDocId)
     {              
-        return entityManager.createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid", SourceDocument.class)
-                .setParameter("docid", aSourceDocId)
-                .setParameter("pid", aProjectId).getSingleResult();
+        return entityManager
+                .createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid",
+                        SourceDocument.class)
+                .setParameter("docid", aSourceDocId).setParameter("pid", aProjectId)
+                .getSingleResult();
     }
 
     @Override
@@ -376,7 +378,8 @@ public class DocumentServiceImpl
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC", SourceDocument.class)
+                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC",
+                        SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
         List<SourceDocument> tabSepDocuments = new ArrayList<>();
         for (SourceDocument sourceDocument : sourceDocuments) {
@@ -741,10 +744,11 @@ public class DocumentServiceImpl
     @Override
     public boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject)
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(
-                aSourceDocument);
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments =
+                listAnnotationDocuments(aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
+            annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocumentExist = true;
                 break;
@@ -928,6 +932,4 @@ public class DocumentServiceImpl
     {
         // Nothing at the moment
     }
-
-
-	}
+}

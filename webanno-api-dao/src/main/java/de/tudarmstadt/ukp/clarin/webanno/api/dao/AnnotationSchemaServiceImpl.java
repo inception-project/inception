@@ -226,9 +226,9 @@ public class AnnotationSchemaServiceImpl
             entityManager
                     .createQuery(
                             "FROM AnnotationLayer WHERE name = :name AND type = :type AND project = :project",
-                            AnnotationLayer.class).setParameter("name", aName)
-                    .setParameter("type", aType).setParameter("project", aProject)
-                    .getSingleResult();
+                            AnnotationLayer.class)
+                    .setParameter("name", aName).setParameter("type", aType)
+                    .setParameter("project", aProject).getSingleResult();
             return true;
         }
         catch (NoResultException e) {
@@ -369,9 +369,10 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void initializeTypesForProject(Project aProject, String[] aPostags, String[] aPosTagDescriptions,
-            String[] aDepTags, String[] aDepTagDescriptions, String[] aNeTags,
-            String[] aNeTagDescriptions, String[] aCorefTypeTags, String[] aCorefRelTags)
+    public void initializeTypesForProject(Project aProject, String[] aPostags,
+            String[] aPosTagDescriptions, String[] aDepTags, String[] aDepTagDescriptions,
+            String[] aNeTags, String[] aNeTagDescriptions, String[] aCorefTypeTags,
+            String[] aCorefRelTags)
         throws IOException
     {
         createTokenLayer(aProject);
@@ -383,8 +384,8 @@ public class AnnotationSchemaServiceImpl
                 "PTKA", "PTKANT", "PTKNEG", "PTKVZ", "PTKZU", "PWAT", "PWAV", "PWS", "TRUNC",
                 "VAFIN", "VAIMP", "VAINF", "VAPP", "VMFIN", "VMINF", "VMPP", "VVFIN", "VVIMP",
                 "VVINF", "VVIZU", "VVPP", "XY", "--" };
-        String[] posTagDescriptions = aPosTagDescriptions.length == posTags.length ? aPosTagDescriptions
-                : new String[] {
+        String[] posTagDescriptions = aPosTagDescriptions.length == posTags.length
+                ? aPosTagDescriptions : new String[] {
                         "sonstige Satzzeichen; satzintern \nBsp: - [,]()",
                         "Komma \nBsp: ,",
                         "Satzbeendende Interpunktion \nBsp: . ? ! ; :   ",
@@ -457,8 +458,8 @@ public class AnnotationSchemaServiceImpl
                 "CD", "DA", "SVP", "OP", "MO", "JU", "CVC", "NG", "SB", "SBP", "AG", "PM", "OCRC",
                 "OG", "SUBJI3", "VOK", "ZEIT", "$", "--", "OC", "OA", "MNR", "NK", "RC", "EP",
                 "CC", "CM", "UC", "AC", "PNC" };
-        String[] depTagsDescription = aDepTagDescriptions.length == depTags.length ? aDepTagDescriptions
-                : depTags;
+        String[] depTagsDescription = aDepTagDescriptions.length == depTags.length
+                ? aDepTagDescriptions : depTags;
         TagSet deFeatureTagset = createTagSet("Dependency annotation", "Tiger", "de", depTags,
                 depTagsDescription, aProject);
         createDepLayer(aProject, deFeatureTagset);
@@ -560,8 +561,9 @@ public class AnnotationSchemaServiceImpl
         createFeature(lemmaFeature);
     }
 
-    private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags, TagSet aCorefRelTags)
-                throws IOException
+    private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags,
+            TagSet aCorefRelTags)
+        throws IOException
     {
         AnnotationLayer base = new AnnotationLayer(
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
@@ -852,14 +854,15 @@ public class AnnotationSchemaServiceImpl
         entityManager.remove(aLayer);
     }
 
-	@Override
-	@Transactional
-	public void removeAllTags(TagSet aTagSet) {
-		for (Tag tag : listTags(aTagSet)) {
-			entityManager.remove(tag);
-		}
-	}
-	
+    @Override
+    @Transactional
+    public void removeAllTags(TagSet aTagSet)
+    {
+        for (Tag tag : listTags(aTagSet)) {
+            entityManager.remove(tag);
+        }
+    }
+
     @Override
     public List<TypeSystemDescription> getProjectTypes(Project aProject)
     {

@@ -91,7 +91,8 @@ public class TableDataProvider
             boundsSafeCount = count;
         }
 
-        return dataModel.getObject().subList((int) first, (int) (first + boundsSafeCount)).iterator();
+        return dataModel.getObject().subList((int) first, (int) (first + boundsSafeCount))
+                .iterator();
     }
 
     @Override

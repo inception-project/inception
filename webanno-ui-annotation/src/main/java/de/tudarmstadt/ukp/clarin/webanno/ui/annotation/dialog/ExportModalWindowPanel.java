@@ -156,12 +156,12 @@ public class ExportModalWindowPanel
                     else {
                         try {
                             downloadFile = importExportService.exportAnnotationDocument(
-                                    bratAnnotatorModel.getDocument(),
-                                    username,
-                                    importExportService.getWritableFormats().get(
-                                            importExportService.getWritableFormatId(selectedFormat)),
-                                    bratAnnotatorModel.getDocument().getName(), bratAnnotatorModel
-                                            .getMode());
+                                    bratAnnotatorModel.getDocument(), username,
+                                    importExportService.getWritableFormats()
+                                            .get(importExportService
+                                                    .getWritableFormatId(selectedFormat)),
+                                    bratAnnotatorModel.getDocument().getName(),
+                                    bratAnnotatorModel.getMode());
                         }
                         catch (FileNotFoundException e) {
                             LOG.error("Export failed", e);

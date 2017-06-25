@@ -141,7 +141,7 @@ public class ProjectCasDoctorPanel
                 else {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
                             "Created initial CAS for [" + sd.getName() + "]"));
-                        initialCas = documentService.createInitialCas(sd, false);
+                    initialCas = documentService.createInitialCas(sd, false);
                 }
                 casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
                 CasPersistenceUtils.writeSerializedCas(initialCas,

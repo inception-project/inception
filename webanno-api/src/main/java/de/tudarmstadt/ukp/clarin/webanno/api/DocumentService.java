@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
+
 public interface DocumentService
 {
     static final String SERVICE_NAME = "documentService";

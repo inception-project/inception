@@ -79,10 +79,11 @@ public class MainMenuPage
         
         // if not either a curator or annotator, display warning message
         if (
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION) && 
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION) && 
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION) && 
-            !curationEnabeled(projectService, user)) {
+                !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION)
+                && !curationEnabeled(projectService, user)) 
+        {
             info("You are not member of any projects to annotate or curate");
         }
         

@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Comparator;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
@@ -64,7 +64,8 @@ public class CasDoctorUtils
             aFSes.add(aFS);
 
             for (Feature f : aFS.getType().getFeatures()) {
-                if (!f.getRange().isPrimitive() && !CAS.FEATURE_BASE_NAME_SOFA.equals(f.getShortName())) {
+                if (!f.getRange().isPrimitive()
+                        && !CAS.FEATURE_BASE_NAME_SOFA.equals(f.getShortName())) {
                     collect(aFSes, aFS.getFeatureValue(f));
                 }
             }
@@ -89,9 +90,10 @@ public class CasDoctorUtils
             }
 
             for (Feature f : aFS.getType().getFeatures()) {
-                if (!f.getRange().isPrimitive() && !CAS.FEATURE_BASE_NAME_SOFA.equals(f.getShortName())) {
-                    collect(aFSes, aIndexed, aFS.getFeatureValue(f), aIndexed.contains(aFS) ? aFS
-                            : aLastIndexed);
+                if (!f.getRange().isPrimitive()
+                        && !CAS.FEATURE_BASE_NAME_SOFA.equals(f.getShortName())) {
+                    collect(aFSes, aIndexed, aFS.getFeatureValue(f),
+                            aIndexed.contains(aFS) ? aFS : aLastIndexed);
                 }
             }
         }
@@ -130,8 +132,8 @@ public class CasDoctorUtils
         i.forEachRemaining(fs -> collect(allReachableFS, allIndexedFS, fs, fs));
 
         // Remove all that are not annotations
-        allReachableFS.entrySet().removeIf(
-                e -> !ts.subsumes(aCas.getAnnotationType(), e.getKey().getType()));
+        allReachableFS.entrySet().removeIf(e -> 
+                !ts.subsumes(aCas.getAnnotationType(), e.getKey().getType()));
         
         // Remove all that are indexed
         allReachableFS.entrySet().removeIf(e -> e.getKey() == e.getValue());

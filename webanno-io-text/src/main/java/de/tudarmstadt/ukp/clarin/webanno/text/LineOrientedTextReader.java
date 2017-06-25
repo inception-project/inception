@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.text;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -31,26 +33,26 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * UIMA collection reader for plain text files, one sentence per line.
  */
 @TypeCapability(
-        outputs={
+        outputs = {
                 "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData"})
 public class LineOrientedTextReader
-	extends JCasResourceCollectionReader_ImplBase
+    extends JCasResourceCollectionReader_ImplBase
 {
     @Override
     public void getNext(JCas aJCas)
         throws IOException, CollectionException
     {
-		Resource res = nextFile();
-		initCas(aJCas, res);
+        Resource res = nextFile();
+        initCas(aJCas, res);
 
-		try (InputStream is = new BufferedInputStream(res.getInputStream())) {
-		    aJCas.setDocumentText(IOUtils.toString(is, "UTF-8"));
-		}
+        try (InputStream is = new BufferedInputStream(res.getInputStream())) {
+            aJCas.setDocumentText(IOUtils.toString(is, "UTF-8"));
+        }
 
-		String t = aJCas.getDocumentText();
-		int start = 0;
-		int end = t.indexOf('\n');
-		while (end >= 0) {
+        String t = aJCas.getDocumentText();
+        int start = 0;
+        int end = t.indexOf('\n');
+        while (end >= 0) {
             createSentence(aJCas, start, end);
             start = end + 1;
             if (start < t.length()) {
@@ -59,13 +61,13 @@ public class LineOrientedTextReader
             else {
                 end = -1;
             }
-		}
+        }
 
-		if (start < t.length()) {
+        if (start < t.length()) {
             createSentence(aJCas, start, t.length());
-		}
-	}
-	
+        }
+    }
+
     protected Sentence createSentence(final JCas aJCas, final int aBegin,
             final int aEnd)
     {
@@ -83,26 +85,23 @@ public class LineOrientedTextReader
     
     /**
      * Remove trailing or leading whitespace from the annotation.
-     * @param aText the text.
-     * @param aSpan the offsets.
+     * 
+     * @param aText
+     *            the text.
+     * @param aSpan
+     *            the offsets.
      */
     public void trim(String aText, int[] aSpan)
     {
         int begin = aSpan[0];
-        int end = aSpan[1]-1;
+        int end = aSpan[1] - 1;
 
         String data = aText;
-        while (
-                (begin < (data.length()-1))
-                && trimChar(data.charAt(begin))
-        ) {
-            begin ++;
+        while ((begin < (data.length() - 1)) && trimChar(data.charAt(begin))) {
+            begin++;
         }
-        while (
-                (end > 0)
-                && trimChar(data.charAt(end))
-        ) {
-            end --;
+        while ((end > 0) && trimChar(data.charAt(end))) {
+            end--;
         }
 
         end++;

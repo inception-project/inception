@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -31,6 +29,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
@@ -86,7 +86,9 @@ public class TextFeatureEditor
                     // behavior (in super.onInitialize()), then tooltip.
                     Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                     options.set("content", FUNCTION_FOR_TOOLTIP);
-                    add(new TooltipBehavior("#"+field.getMarkupId()+"_listbox *[title]", options) {
+                    add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]",
+                            options)
+                    {
                         private static final long serialVersionUID = 1854141593969780149L;
 
                         @Override
@@ -166,14 +168,14 @@ public class TextFeatureEditor
         add(constraintsInUseIndicator);
     }
 
-	@Override
-	protected void onInitialize()
-	{
-	    super.onInitialize();
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
         LOG.trace("TextFeatureEditor(path: " + getPageRelativePath() + ", "
                 + getModelObject().feature.getUiName() + ": " + getModelObject().value + ")");
-	}
-	
+    }
+
     @Override
     public Component getFocusComponent()
     {

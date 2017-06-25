@@ -54,10 +54,10 @@ public class PairwiseAnnotationResult
     {
         String key;
         if (aKey1.compareTo(aKey2) > 0) {
-            key = aKey1+aKey2;
+            key = aKey1 + aKey2;
         }
         else {
-            key = aKey2+aKey1;
+            key = aKey2 + aKey1;
         }
         return key;
     }

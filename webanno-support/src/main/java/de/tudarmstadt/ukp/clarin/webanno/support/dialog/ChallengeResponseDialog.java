@@ -201,8 +201,10 @@ public class ChallengeResponseDialog
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
-            form.add(new LambdaAjaxButton<>("confirm", ChallengeResponseDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxButton<>("cancel", ChallengeResponseDialog.this::onCancelInternal));
+            form.add(new LambdaAjaxButton<>("confirm",
+                    ChallengeResponseDialog.this::onConfirmInternal));
+            form.add(new LambdaAjaxButton<>("cancel",
+                    ChallengeResponseDialog.this::onCancelInternal));
             
             add(form);
         }

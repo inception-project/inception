@@ -174,12 +174,14 @@ public class ConstraintsServiceImpl
 
     /**
      * Checks if there's a constraint set already with the name
-     * @param constraintSetName The name of constraint set
+     * 
+     * @param constraintSetName
+     *            The name of constraint set
      * @return true if exists
      */
     @Override
-    public boolean existConstraintSet(String constraintSetName, Project aProject){
-        
+    public boolean existConstraintSet(String constraintSetName, Project aProject)
+    {
         try {
             entityManager.createQuery("FROM ConstraintSet WHERE project = :project" 
                             + " AND name = :name ", ConstraintSet.class)
@@ -190,8 +192,7 @@ public class ConstraintsServiceImpl
         }
         catch (NoResultException ex) {
             return false;
-        }
-        
+        }        
     }
     
     @Override
@@ -217,12 +218,12 @@ public class ConstraintsServiceImpl
                     if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
                             .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
                         // If detected, notify user with proper message and abort merging
-                        String errorMessage = "Conflict detected in imports for key \"" + e.getKey() +
-                            "\", conflicting values are \"" + e.getValue() +
-                            "\" & \"" + merged.getImports().get(e.getKey()) +
-                            "\". Please contact Project Admin for correcting this." +
-                            "Constraints feature may not work." +
-                            "\nAborting Constraint rules merge!";
+                        String errorMessage = "Conflict detected in imports for key \"" + e.getKey()
+                                + "\", conflicting values are \"" + e.getValue() + "\" & \""
+                                + merged.getImports().get(e.getKey())
+                                + "\". Please contact Project Admin for correcting this."
+                                + "Constraints feature may not work."
+                                + "\nAborting Constraint rules merge!";
                         throw new ParseException(errorMessage);
                     }
                 }
@@ -258,7 +259,7 @@ public class ConstraintsServiceImpl
         throws Exception
     {
         //Remove Constraints
-        for (ConstraintSet set: listConstraintSets(aProject) ){
+        for (ConstraintSet set : listConstraintSets(aProject)) {
             removeConstraintSet(set);
         }
     }
@@ -278,7 +279,7 @@ public class ConstraintsServiceImpl
             
             if (entryName.startsWith(CONSTRAINTS)) {
                 String fileName = FilenameUtils.getName(entry.getName());
-                if(fileName.trim().isEmpty()){
+                if (fileName.trim().isEmpty()) {
                     continue;
                 }
                 ConstraintSet constraintSet = new ConstraintSet();

@@ -40,39 +40,35 @@ import de.tudarmstadt.ukp.dkpro.core.api.resources.CompressionUtils;
 /**
  * UIMA XMI format writer.
  */
-@TypeCapability(
-        inputs={
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData"})
+@TypeCapability(inputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData" })
 public class XmiWriter
-	extends JCasFileWriter_ImplBase
+    extends JCasFileWriter_ImplBase
 {
     public static final String PARAM_PRETTY_PRINT = "prettyPrint";
     @ConfigurationParameter(name = PARAM_PRETTY_PRINT, mandatory = true, defaultValue = "true")
     private boolean prettyPrint;
-    
-	/**
-	 * Location to write the type system to. If this is not set, a file called typesystem.xml will
-	 * be written to the XMI output path. If this is set, it is expected to be a file relative
-	 * to the current work directory or an absolute file.
-	 * <br>
-	 * If this parameter is set, the {@link #PARAM_COMPRESSION} parameter has no effect on the
-	 * type system. Instead, if the file name ends in ".gz", the file will be compressed,
-	 * otherwise not.
-	 */
-	public static final String PARAM_TYPE_SYSTEM_FILE = "typeSystemFile";
-	@ConfigurationParameter(name=PARAM_TYPE_SYSTEM_FILE, mandatory=false)
-	private File typeSystemFile;
 
-	private boolean typeSystemWritten;
+    /**
+     * Location to write the type system to. If this is not set, a file called typesystem.xml will
+     * be written to the XMI output path. If this is set, it is expected to be a file relative to
+     * the current work directory or an absolute file. <br>
+     * If this parameter is set, the {@link #PARAM_COMPRESSION} parameter has no effect on the type
+     * system. Instead, if the file name ends in ".gz", the file will be compressed, otherwise not.
+     */
+    public static final String PARAM_TYPE_SYSTEM_FILE = "typeSystemFile";
+    @ConfigurationParameter(name = PARAM_TYPE_SYSTEM_FILE, mandatory = false)
+    private File typeSystemFile;
 
-	@Override
-	public void initialize(UimaContext aContext)
-		throws ResourceInitializationException
-	{
-		super.initialize(aContext);
+    private boolean typeSystemWritten;
 
-		typeSystemWritten = false;
-	}
+    @Override
+    public void initialize(UimaContext aContext)
+        throws ResourceInitializationException
+    {
+        super.initialize(aContext);
+
+        typeSystemWritten = false;
+    }
 
     @Override
     public void process(JCas aJCas)
@@ -94,21 +90,21 @@ public class XmiWriter
     private void writeTypeSystem(JCas aJCas)
         throws IOException, CASRuntimeException, SAXException
     {
-		@SuppressWarnings("resource")
+        @SuppressWarnings("resource")
         OutputStream typeOS = null;
-		
-        try {
-    		if (typeSystemFile != null) {
-    		    typeOS = CompressionUtils.getOutputStream(typeSystemFile);
-    		}
-    		else {
-    		    typeOS = getOutputStream("typesystem", ".xml");
-    		}
 
-			TypeSystemUtil.typeSystem2TypeSystemDescription(aJCas.getTypeSystem()).toXML(typeOS);
-		}
-		finally {
-			closeQuietly(typeOS);
-		}
-	}
+        try {
+            if (typeSystemFile != null) {
+                typeOS = CompressionUtils.getOutputStream(typeSystemFile);
+            }
+            else {
+                typeOS = getOutputStream("typesystem", ".xml");
+            }
+
+            TypeSystemUtil.typeSystem2TypeSystemDescription(aJCas.getTypeSystem()).toXML(typeOS);
+        }
+        finally {
+            closeQuietly(typeOS);
+        }
+    }
 }

@@ -48,7 +48,7 @@ public class VSpan
     {
         super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures);
         ranges = asList(aOffsets);
-   }
+    }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
             Map<String, String> aFeatures)

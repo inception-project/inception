@@ -19,27 +19,29 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class BratAnnotatorUiResourceReference extends JavaScriptResourceReference
+public class BratAnnotatorUiResourceReference
+    extends JavaScriptResourceReference
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final BratAnnotatorUiResourceReference INSTANCE = new BratAnnotatorUiResourceReference();
+    private static final BratAnnotatorUiResourceReference INSTANCE = 
+            new BratAnnotatorUiResourceReference();
 
-	/**
-	 * Gets the instance of the resource reference
-	 *
-	 * @return the single instance of the resource reference
-	 */
-	public static BratAnnotatorUiResourceReference get()
-	{
-		return INSTANCE;
-	}
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static BratAnnotatorUiResourceReference get()
+    {
+        return INSTANCE;
+    }
 
-	/**
-	 * Private constructor
-	 */
-	private BratAnnotatorUiResourceReference()
-	{
-		super(BratAnnotatorUiResourceReference.class, "annotator_ui.js");
-	}
+    /**
+     * Private constructor
+     */
+    private BratAnnotatorUiResourceReference()
+    {
+        super(BratAnnotatorUiResourceReference.class, "annotator_ui.js");
+    }
 }

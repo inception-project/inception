@@ -48,7 +48,8 @@ public interface AutomationService
     boolean existsTrainingDocument(Project project, String fileName);
     
     /**
-     * Get the directory of this {@link TrainingDocument} usually to read the content of the document
+     * Get the directory of this {@link TrainingDocument} usually to read the content of the
+     * document.
      *
      * @param trainingDocument
      *            the Training document.

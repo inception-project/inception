@@ -81,10 +81,12 @@ public class CasToBratJsonTest
         throws IOException
 
     {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = 
+                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
 
-        GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
+        GetCollectionInformationResponse collectionInformation = 
+                new GetCollectionInformationResponse();
 
         List<AnnotationLayer> layerList = new ArrayList<>();
 
@@ -142,7 +144,8 @@ public class CasToBratJsonTest
     public void testGenerateBratJsonGetDocument()
         throws Exception
     {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = 
+                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
 
         InputStream is = null;
@@ -153,8 +156,8 @@ public class CasToBratJsonTest
             String path = "src/test/resources/";
             String file = "tcf04-karin-wl.xml";
             CAS cas = JCasFactory.createJCas().getCas();
-            CollectionReader reader = CollectionReaderFactory.createReader(
-                    TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION, path, TcfReader.PARAM_PATTERNS,
+            CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
+                    TcfReader.PARAM_SOURCE_LOCATION, path, TcfReader.PARAM_PATTERNS,
                     new String[] { "[+]" + file });
             if (!reader.hasNext()) {
                 throw new FileNotFoundException("Annotation file [" + file + "] not found in ["

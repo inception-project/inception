@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -64,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -97,7 +98,8 @@ import wicket.contrib.input.events.key.KeyType;
 @MenuItem(icon = "images/categories.png", label = "Annotation", prio = 100)
 @MountPath(value = "/annotation.html", alt =  { 
     "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}",
-    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${" + AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}" })
+    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${" + 
+            AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}" })
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
@@ -220,7 +222,7 @@ public class AnnotationPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = AnnotationPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize()+"%");
+                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
             }
         };
         sidebarCell.setOutputMarkupId(true);
@@ -234,7 +236,7 @@ public class AnnotationPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = AnnotationPage.this.getModelObject();
-                aTag.put("width", (100-state.getPreferences().getSidebarSize())+"%");
+                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
             }
         };
         annotationViewCell.setOutputMarkupId(true);
@@ -271,7 +273,8 @@ public class AnnotationPage
             }
         });
 
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(), detailEditor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
+                detailEditor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -282,7 +285,7 @@ public class AnnotationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", getModel()){
+        add(new ExportModalPanel("exportModalPanel", getModel()) {
             private static final long serialVersionUID = -468896211970839443L;
 
             {
@@ -295,9 +298,8 @@ public class AnnotationPage
             {
                 super.onConfigure();
                 AnnotatorState state = AnnotationPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
-                                || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
+                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
 
@@ -550,8 +552,7 @@ public class AnnotationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)

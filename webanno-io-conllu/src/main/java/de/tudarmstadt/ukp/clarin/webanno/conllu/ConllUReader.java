@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -64,7 +65,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * </li>
  * <li>POSTAG - <b>(POS)</b> Language-specific part-of-speech tag; underscore if not available.</li>
  * <li>FEATS - <b>(MorphologicalFeatures)</b> List of morphological features from the universal
- * feature inventory or from a defined language-specific extension; underscore if not available.</li>
+ * feature inventory or from a defined language-specific extension; underscore if not available.
+ * </li>
  * <li>HEAD - <b>(Dependency)</b> Head of the current token, which is either a value of ID or zero
  * (0).</li>
  * <li>DEPREL - <b>(Dependency)</b> Universal Stanford dependency relation to the HEAD (root iff
@@ -108,7 +110,8 @@ public class ConllUReader
      * Load the part-of-speech tag to UIMA type mapping from this location instead of locating
      * the mapping automatically.
      */
-    public static final String PARAM_POS_MAPPING_LOCATION = ComponentParameters.PARAM_POS_MAPPING_LOCATION;
+    public static final String PARAM_POS_MAPPING_LOCATION = 
+            ComponentParameters.PARAM_POS_MAPPING_LOCATION;
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     protected String posMappingLocation;
     
@@ -169,10 +172,10 @@ public class ConllUReader
         throws IOException
     {
         if (readPos) {
-            try{
+            try {
                 posMappingProvider.configure(aJCas.getCas());
             }
-            catch(AnalysisEngineProcessException e){
+            catch (AnalysisEngineProcessException e) {
                 throw new IOException(e);
             }
         }

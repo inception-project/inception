@@ -99,11 +99,13 @@ public class AnnotationPreferenceModalPanel
             getModelObject().rememberLayer = bModel.getPreferences().isRememberLayer();
 
             String editorId = bModel.getPreferences().getEditor();
-            AnnotationEditorFactory editorFactory = annotationEditorRegistry.getEditorFactory(editorId);
+            AnnotationEditorFactory editorFactory = annotationEditorRegistry
+                    .getEditorFactory(editorId);
             if (editorFactory == null) {
                 editorFactory = annotationEditorRegistry.getDefaultEditorFactory();
             }
-            getModelObject().editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
+            getModelObject().editor = Pair.of(editorFactory.getBeanName(),
+                    editorFactory.getDisplayName());
             
             for (AnnotationLayer layer : bModel.getAnnotationLayers()) {
                 getModelObject().annotationLayers.add(layer);
@@ -135,7 +137,8 @@ public class AnnotationPreferenceModalPanel
            // add(curationWindowSizeField);
 
             List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                    .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName())).collect(Collectors.toList());
+                    .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                    .collect(Collectors.toList());
             
             add(new DropDownChoice<Pair<String, String>>("editor", editorChoices,
                     new ChoiceRenderer<>("value"))

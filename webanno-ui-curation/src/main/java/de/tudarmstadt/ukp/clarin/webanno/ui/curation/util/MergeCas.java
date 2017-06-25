@@ -221,7 +221,8 @@ public class MergeCas
                                 if (targetFs == null) {
                                     continue;
                                 }
-                                Map<String, List<FeatureStructure>> targetAnnosPerUser = new HashMap<>();
+                                Map<String, List<FeatureStructure>> targetAnnosPerUser = 
+                                        new HashMap<>();
                                 getAllAnnosOnPosition(aJCases, targetAnnosPerUser, users, targetFs);
 
                                 // do not agree on targets

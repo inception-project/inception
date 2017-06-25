@@ -59,7 +59,8 @@ public class DocumentNamePanel
                     sb.append(aModel.getObject().getDocument().getName());
                 }
                 
-                if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                if (RuntimeConfigurationType.DEVELOPMENT
+                        .equals(getApplication().getConfigurationType())) {
                     sb.append(" (");
                     if (aModel.getObject().getProject() != null) {
                         sb.append(aModel.getObject().getProject().getId());

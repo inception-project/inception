@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder(value = { "name", "typeUiName","description", "language", "type", "typeName",
         "typeDescription" ,"tags" })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TagSet
+public class ExportedTagSet
 {
     @JsonProperty("name")
     String name;
@@ -60,7 +60,7 @@ public class TagSet
     String typeDescription;
 
     @JsonProperty("tags")
-    List<Tag> tags = new ArrayList<>();
+    List<ExportedTag> tags = new ArrayList<>();
 
     @JsonProperty("create_tag")
     private boolean createTag;
@@ -108,11 +108,11 @@ public class TagSet
     {
         typeDescription = aTypeDescription;
     }
-    public List<Tag> getTags()
+    public List<ExportedTag> getTags()
     {
         return tags;
     }
-    public void setTags(List<Tag> aTags)
+    public void setTags(List<ExportedTag> aTags)
     {
         tags = aTags;
     }

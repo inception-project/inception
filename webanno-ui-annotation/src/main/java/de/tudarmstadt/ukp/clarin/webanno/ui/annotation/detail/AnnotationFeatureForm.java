@@ -19,8 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel
-    .handleException;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -79,8 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component
-    .DeleteOrReplaceAnnotationModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DeleteOrReplaceAnnotationModalPanel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class AnnotationFeatureForm
@@ -286,8 +284,8 @@ public class AnnotationFeatureForm
             }
         });
 
-        add(layerSelector = new AnnotationFeatureForm.LayerSelector
-            ("defaultAnnotationLayer", annotationLayers));
+        add(layerSelector = new AnnotationFeatureForm.LayerSelector("defaultAnnotationLayer",
+                annotationLayers));
 
         featureEditorPanel = new WebMarkupContainer("featureEditorsContainer")
         {
@@ -317,8 +315,8 @@ public class AnnotationFeatureForm
             }
         });
 
-        featureEditorPanelContent = new AnnotationFeatureForm.FeatureEditorPanelContent
-            ("featureValues");
+        featureEditorPanelContent = new AnnotationFeatureForm.FeatureEditorPanelContent(
+                "featureValues");
         featureEditorPanel.add(featureEditorPanelContent);
 
         forwardAnnotationText = new TextField<>("forwardAnno");
@@ -603,8 +601,8 @@ public class AnnotationFeatureForm
                             }
                         }
                         else {
-                            deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel
-                                (deleteModal.getContentId(), state, deleteModal, editorPanel,
+                            deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel(
+                                    deleteModal.getContentId(), state, deleteModal, editorPanel,
                                     getModelObject(), true));
 
                             deleteModal.setWindowClosedCallback(new ModalWindow

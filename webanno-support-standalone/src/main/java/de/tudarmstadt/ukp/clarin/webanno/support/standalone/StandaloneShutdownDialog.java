@@ -88,7 +88,8 @@ public class StandaloneShutdownDialog
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
         
         // Show this only when run from the standalone JAR via a double-click
-        if (System.console() == null && !GraphicsEnvironment.isHeadless() && ServerDetector.isWinstone()) {
+        if (System.console() == null && !GraphicsEnvironment.isHeadless()
+                && ServerDetector.isWinstone()) {
             log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
 
             EventQueue.invokeLater(() -> {

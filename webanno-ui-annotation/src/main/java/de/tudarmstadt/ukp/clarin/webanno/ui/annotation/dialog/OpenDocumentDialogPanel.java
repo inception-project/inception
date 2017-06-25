@@ -268,8 +268,8 @@ public class OpenDocumentDialogPanel
                 protected void onEvent(final AjaxRequestTarget aTarget)
                 {
                     // do not use this default layer in that other project
-                    if(bModel.getProject()!=null){
-                        if(!bModel.getProject().equals(selectedProject)){
+                    if (bModel.getProject() != null) {
+                        if (!bModel.getProject().equals(selectedProject)) {
                             bModel.setDefaultAnnotationLayer(null);
                         }
                     }
@@ -364,8 +364,8 @@ public class OpenDocumentDialogPanel
                     }
                     else {
                         // do not use this default layer in that other project
-                        if(bModel.getProject()!=null){
-                            if(!bModel.getProject().equals(selectedProject)){
+                        if (bModel.getProject() != null) {
+                            if (!bModel.getProject().equals(selectedProject)) {
                                 bModel.setDefaultAnnotationLayer(null);
                             }
                         }

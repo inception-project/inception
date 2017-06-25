@@ -62,7 +62,7 @@ public class LoginPage
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean(required=false) SessionRegistry sessionRegistry;
+    private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
     public LoginPage()
     {

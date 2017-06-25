@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -97,7 +98,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Panel Used to add Layers to a selected {@link Project} in the project settings page
  */
-@ProjectSettingsPanel(label="Layers", prio=300)
+@ProjectSettingsPanel(label = "Layers", prio = 300)
 public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {
@@ -303,17 +304,16 @@ public class ProjectLayersPanel
                             tagInputStream = tagFile.getInputStream();
                             String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = JSONUtil
-                                    .getJsonConverter()
-                                    .getObjectMapper()
-                                    .readValue(
-                                            text,
-                                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer.class);
+                            de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer =
+                                    JSONUtil.getJsonConverter().getObjectMapper().readValue(
+                                        text,
+                                        de.tudarmstadt.ukp.clarin.webanno.export.model
+                                                .AnnotationLayer.class);
 
                             AnnotationLayer attachLayer = null;
                             if (exLayer.getAttachType() != null) {
-                                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exAttachLayer = exLayer
-                                        .getAttachType();
+                                de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer
+                                        exAttachLayer = exLayer.getAttachType();
                                 createLayer(exAttachLayer, user, null);
                                 attachLayer = annotationService.getLayer(exAttachLayer.getName(),
                                         project);
@@ -326,7 +326,8 @@ public class ProjectLayersPanel
 
                         }
                         catch (IOException e) {
-                            error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
+                            error("Error Importing TagSet "
+                                    + ExceptionUtils.getRootCauseMessage(e));
                         }
                     }
                     featureDetailForm.setVisible(false);
@@ -349,11 +350,10 @@ public class ProjectLayersPanel
                         ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
                     }
                     layer.setAttachType(aAttachLayer);
-                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature exfeature : aExLayer
-                            .getFeatures()) {
+                    for (de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationFeature
+                            exfeature : aExLayer.getFeatures()) {
 
-                        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet exTagset = exfeature
-                                .getTagSet();
+                        ExportedTagSet exTagset = exfeature.getTagSet();
                         TagSet tagSet = null;
                         if (exTagset != null
                                 && annotationService.existsTagSet(exTagset.getName(), project)) {
@@ -626,8 +626,8 @@ public class ProjectLayersPanel
                             !SurfaceForm.class.getName().equals(layer.getName()) &&
                             // Not configurable for chains
                             !CHAIN_TYPE.equals(layer.getType()) && 
-                            // Not configurable for layers that attach to tokens (currently that is the
-                            // only layer on which we use the attach feature)
+                            // Not configurable for layers that attach to tokens (currently that is
+                            // the only layer on which we use the attach feature)
                             layer.getAttachFeature() == null);
                 }
             });
@@ -651,8 +651,8 @@ public class ProjectLayersPanel
                             !SurfaceForm.class.getName().equals(layer.getName()) &&
                             // Not configurable for chains
                             !CHAIN_TYPE.equals(layer.getType()) && 
-                            // Not configurable for layers that attach to tokens (currently that is the
-                            // only layer on which we use the attach feature)
+                            // Not configurable for layers that attach to tokens (currently that is
+                            // the only layer on which we use the attach feature)
                             layer.getAttachFeature() == null);
                 }
             });
@@ -830,7 +830,7 @@ public class ProjectLayersPanel
 
                     if (layer.getId() == 0) {
                         layerName = layerName.replaceAll("\\W", "");
-                        if(layerName.isEmpty() || !isAscii(layerName)){
+                        if (layerName.isEmpty() || !isAscii(layerName)) {
                             error("Non ASCII characters can not be used as layer name!");
                             return;
                         }
@@ -839,7 +839,8 @@ public class ProjectLayersPanel
                             error("Only one Layer per project is allowed!");
                             return;
                         }
-                        if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
+                        if (layer.getType().equals(RELATION_TYPE)
+                                && layer.getAttachType() == null) {
                             error("a relation layer need an attach type!");
                             return;
                         }
@@ -910,12 +911,13 @@ public class ProjectLayersPanel
                     }
                     AnnotationLayer layer = layerDetailForm.getModelObject();
 
-                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = ImportUtil
-                            .exportLayerDetails(null, null, layer, annotationService);
+                    de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exLayer = 
+                            ImportUtil.exportLayerDetails(null, null, layer, annotationService);
                     if (layer.getAttachType() != null) {
                         AnnotationLayer attachLayer = layer.getAttachType();
-                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer exAttachLayer = ImportUtil
-                                .exportLayerDetails(null, null, attachLayer, annotationService);
+                        de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer 
+                                exAttachLayer = ImportUtil.exportLayerDetails(
+                                        null, null, attachLayer, annotationService);
                         exLayer.setAttachType(exAttachLayer);
                     }
 
@@ -1133,7 +1135,8 @@ public class ProjectLayersPanel
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(ProjectLayersPanel.this.getModelObject());
 
-                        if (annotationService.existsFeature(feature.getName(), feature.getLayer())) {
+                        if (annotationService.existsFeature(feature.getName(),
+                                feature.getLayer())) {
                             error("This feature is already added for this layer!");
                             return;
                         }

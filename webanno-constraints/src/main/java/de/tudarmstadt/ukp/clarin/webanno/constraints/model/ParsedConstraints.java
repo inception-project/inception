@@ -31,11 +31,8 @@ import java.util.Set;
 public class ParsedConstraints
     implements Serializable
 {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2401965871743170805L;
+    
     private final Map<String, String> imports;
     private final List<Scope> scopes;
     private Map<String, Scope> scopeMap = null;
@@ -56,7 +53,6 @@ public class ParsedConstraints
 
     private String printImports()
     {
-
         StringBuilder output = new StringBuilder();
         for (Entry<String, String> e : imports.entrySet()) {
             output.append(e.getKey());
@@ -99,28 +95,32 @@ public class ParsedConstraints
         return scopeMap.get(scopeName);
     }
     
-    //Checks if rules exists or not
-    public boolean areThereRules(String featureStructure, String feature){
-        if(rulesSet==null){
+    /** 
+     * Checks if rules exists or not
+     */
+    public boolean areThereRules(String featureStructure, String feature)
+    {
+        if (rulesSet == null) {
             buildRulesSet();
         }
-        
-        if(getShortName(featureStructure)==null){
+
+        if (getShortName(featureStructure) == null) {
             return false;
         }
-        if(getScopeByName(getShortName(featureStructure))==null){
+        if (getScopeByName(getShortName(featureStructure)) == null) {
             return false;
         }
         FSFPair _tempFsfPair = new FSFPair(getShortName(featureStructure), feature);
-        if(rulesSet.contains(_tempFsfPair)){
-            //If it has rules satisfying with proper input FS and affecting feature
+        if (rulesSet.contains(_tempFsfPair)) {
+            // If it has rules satisfying with proper input FS and affecting feature
             return true;
         }
         return false;
     }
-/**
- * Fill Set with values of different conditions for which rules are available.
- */
+
+    /**
+     * Fill Set with values of different conditions for which rules are available.
+     */
     private void buildRulesSet()
     {
         rulesSet = new HashSet<>();
@@ -135,7 +135,5 @@ public class ParsedConstraints
                 }
             }
         }
-        
     }
-
 }

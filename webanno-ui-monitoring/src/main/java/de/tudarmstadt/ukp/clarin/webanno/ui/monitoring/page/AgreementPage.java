@@ -492,7 +492,8 @@ public class AgreementPage
 
         public boolean excludeIncomplete = false;
 
-        public ConcreteAgreementMeasure measure = ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
+        public ConcreteAgreementMeasure measure = 
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
 
         private boolean savedExcludeIncomplete = excludeIncomplete;
         private boolean savedNullSupported = measure.isNullValueSupported();

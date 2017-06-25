@@ -318,7 +318,8 @@ public class AnnotatorStateImpl
 
         Sentence lastVisibleUnit = getLastSentenceInDisplayWindow(jcas, getAddr(aFirstVisibleUnit),
                 getPreferences().getWindowSize());
-        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, aFirstVisibleUnit.getBegin());
+        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas,
+                aFirstVisibleUnit.getBegin());
         lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, lastVisibleUnit.getBegin());
         unitCount = select(jcas, Sentence.class).size();
         

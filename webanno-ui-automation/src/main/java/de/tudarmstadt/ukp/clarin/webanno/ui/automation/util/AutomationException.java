@@ -18,13 +18,13 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
 
-public class AutomationException extends Exception {
+public class AutomationException
+    extends Exception
+{
+    private static final long serialVersionUID = 7597946404792611798L;
 
-	private static final long serialVersionUID = 7597946404792611798L;
     public AutomationException(String message)
     {
         super(message);
     }
-
-
 }

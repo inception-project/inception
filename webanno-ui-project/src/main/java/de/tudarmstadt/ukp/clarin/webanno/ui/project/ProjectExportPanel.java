@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
-@ProjectSettingsPanel(label="Export")
+@ProjectSettingsPanel(label = "Export")
 public class ProjectExportPanel
     extends ProjectSettingsPanelBase
 {
@@ -87,49 +87,51 @@ public class ProjectExportPanel
 
     public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
 
-	private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ConstraintsService constraintsService;
-	private @SpringBean UserDao userRepository;
+    private @SpringBean UserDao userRepository;
 
-	private ProgressBar fileGenerationProgress;
-	@SuppressWarnings("unused")
-	private AjaxLink<Void> exportProjectLink;
+    private ProgressBar fileGenerationProgress;
+    @SuppressWarnings("unused")
+    private AjaxLink<Void> exportProjectLink;
 
-	private String fileName;
-	private String downloadedFile;
-	@SuppressWarnings("unused")
-	private String projectName;
+    private String fileName;
+    private String downloadedFile;
+    @SuppressWarnings("unused")
+    private String projectName;
 
-	private transient Thread thread = null;
-	private transient FileGenerator runnable = null;
+    private transient Thread thread = null;
+    private transient FileGenerator runnable = null;
 
-	private boolean enabled = true;
-	private boolean canceled = false;
+    private boolean enabled = true;
+    private boolean canceled = false;
 
-	public ProjectExportPanel(String id, final IModel<Project> aProjectModel) {
-		super(id, aProjectModel);
-		add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
-	}
+    public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
+    {
+        super(id, aProjectModel);
+        add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
+    }
 
-	private boolean existsCurationDocument(Project aProject) {
-		boolean curationDocumentExist = false;
-		List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-				.listSourceDocuments(aProject);
+    private boolean existsCurationDocument(Project aProject)
+    {
+        boolean curationDocumentExist = false;
+        List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
+                .listSourceDocuments(aProject);
 
-		for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
 
-			// If the curation document is finished
-			if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-				curationDocumentExist = true;
-				break;
-			}
-		}
-		return curationDocumentExist;
-	}
+            // If the curation document is finished
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                curationDocumentExist = true;
+                break;
+            }
+        }
+        return curationDocumentExist;
+    }
     
     public class ProjectExportForm
         extends Form<ProjectExportModel>
@@ -177,8 +179,8 @@ public class ProjectExportPanel
                         exportTempDir.delete();
                         exportTempDir.mkdirs();
 
-                        boolean curationDocumentExist = existsCurationDocument(ProjectExportForm.this
-                                .getModelObject().project);
+                        boolean curationDocumentExist = existsCurationDocument(
+                                ProjectExportForm.this.getModelObject().project);
 
                         if (!curationDocumentExist) {
                             error("No curation document created yet for this document");
@@ -191,13 +193,14 @@ public class ProjectExportPanel
                                     + ".zip");
 
                         }
-                    } catch (CASRuntimeException e) {
-                    	cancelOperationOnError();
+                    }
+                    catch (CASRuntimeException e) {
+                        cancelOperationOnError();
                         error("Error: " + e.getMessage());
-                    } 
-                    catch (Exception e){
-                    	error("Error: " + e.getMessage());
-                    	cancelOperationOnError();
+                    }
+                    catch (Exception e) {
+                        error("Error: " + e.getMessage());
+                        cancelOperationOnError();
                     }
                     finally {
                         try {
@@ -210,14 +213,14 @@ public class ProjectExportPanel
                     return exportFile;
                 }
 
-				private void cancelOperationOnError() {
-					if (thread != null) {
-					    ProjectExportForm.this.getModelObject().progress = 100;
+                private void cancelOperationOnError()
+                {
+                    if (thread != null) {
+                        ProjectExportForm.this.getModelObject().progress = 100;
                         thread.interrupt();
                     }
-					
-				}
-            },new LoadableDetachableModel<String>(){
+                }
+            }, new LoadableDetachableModel<String>() {
                 private static final long serialVersionUID = 2591915908792854707L;
 //                Provide meaningful name to curated documents zip
                 @Override
@@ -421,18 +424,18 @@ public class ProjectExportPanel
             }
             catch (FileNotFoundException e) {
                 LOG.error("Unable to find some project file(s) during project export", e);
-                model.messages.add("Unable to find file during project export: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (Throwable e){
-            	LOG.error("Unexpected error during project export", e);
-            	model.messages.add("Unexpected error during project export: "
+                model.messages.add("Unable to find file during project export: "
                         + ExceptionUtils.getRootCauseMessage(e));
-                if(thread!=null){
-                	canceled = true;
-                	model.progress = 100; 
+            }
+            catch (Throwable e) {
+                LOG.error("Unexpected error during project export", e);
+                model.messages.add("Unexpected error during project export: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                if (thread != null) {
+                    canceled = true;
+                    model.progress = 100;
                     thread.interrupt();
                 }
-                
             }
         }
 
@@ -474,7 +477,8 @@ public class ProjectExportPanel
             model.progress = 9;
             ExportUtil.exportSourceDocuments(documentService, automationService, aModel,
                     aModel.project, exportTempDir);
-            ExportUtil.exportTrainingDocuments(automationService, aModel, aModel.project, exportTempDir);
+            ExportUtil.exportTrainingDocuments(automationService, aModel, aModel.project,
+                    exportTempDir);
             ExportUtil.exportAnnotationDocuments(documentService, importExportService,
                     userRepository, aModel, exportTempDir);
             ExportUtil.exportProjectLog(projectService, aModel.project, exportTempDir);
@@ -485,14 +489,15 @@ public class ProjectExportPanel
             try {
                 ExportUtil.exportCuratedDocuments(documentService, importExportService, aModel,
                         exportTempDir, true);
-			} catch (ProjectExportException e) {
-				//cancel export operation here
-			    error("Error: " + e.getMessage());
-				if (thread != null) {
-				    model.progress = 100;
+            }
+            catch (ProjectExportException e) {
+                // cancel export operation here
+                error("Error: " + e.getMessage());
+                if (thread != null) {
+                    model.progress = 100;
                     thread.interrupt();
                 }
-			}
+            }
             try {
                 ZipUtils.zipFolder(exportTempDir, projectZipFile);
             }

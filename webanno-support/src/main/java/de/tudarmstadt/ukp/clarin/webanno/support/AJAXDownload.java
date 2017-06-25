@@ -106,10 +106,14 @@ public class AJAXDownload
             private static final long serialVersionUID = 1L;
             InputStream inStream;
             @Override
-            public InputStream getInputStream() throws ResourceStreamNotFoundException{
+            public InputStream getInputStream()
+                throws ResourceStreamNotFoundException
+            {
                 try {
-                    inStream =  new FileInputStream(fileName);
-                } catch (IOException e) {                               
+                    inStream = new FileInputStream(fileName);
+                }
+                catch (IOException e) {
+                    throw new ResourceStreamNotFoundException(e);
                 }
                 return inStream;
             }
@@ -121,6 +125,5 @@ public class AJAXDownload
             }
         };
         return resStream; 
-
     }
 }

@@ -37,8 +37,6 @@ import org.hibernate.annotations.Type;
 /**
  * A persistence object for meta-data of source documents. The content of the source document is
  * stored in the file system.
- *
- *
  */
 @Entity
 @Table(name = "source_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
@@ -189,5 +187,7 @@ public class SourceDocument
         }
         return true;
     }
-	public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator.comparing(SourceDocument::getName);
+    
+    public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator
+            .comparing(SourceDocument::getName);
 }

@@ -30,6 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
@@ -44,7 +45,7 @@ public class RemoveDanglingChainLinksRepair
 {
     @Resource(name = "annotationService")
     private AnnotationSchemaService annotationService;
-    
+
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
@@ -52,7 +53,7 @@ public class RemoveDanglingChainLinksRepair
             if (!WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
                 continue;
             }
-            
+
             List<FeatureStructure> chains = new ArrayList<>(
                     selectFS(aCas, getType(aCas, layer.getName() + "Chain")));
 
@@ -61,7 +62,7 @@ public class RemoveDanglingChainLinksRepair
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
-                
+
                 while (link != null) {
                     links.remove(link);
                     link = FSUtil.getFeature(link, "next", AnnotationFS.class);

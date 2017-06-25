@@ -97,7 +97,7 @@ public class ChainAdapter
         for (AnnotationFeature f : aFeatures) {
             features.put(f.getName(), f);
         }
-}
+    }
 
     public int addSpan( JCas aJCas, int aBegin, int aEnd,
             AnnotationFeature aFeature, String aLabelValue)
@@ -198,34 +198,34 @@ public class ChainAdapter
                     WebAnnoCasUtil.setFeature(aOriginFs, aFeature, aValue);
                 }
                 else {
-                  // collect all the links
-                  List<AnnotationFS> links = new ArrayList<>();
-                  links.addAll(collectLinks(originChain));
-                  links.addAll(collectLinks(targetChain));
+                    // collect all the links
+                    List<AnnotationFS> links = new ArrayList<>();
+                    links.addAll(collectLinks(originChain));
+                    links.addAll(collectLinks(targetChain));
 
-                  // sort them ascending by begin and descending by end (default UIMA order)
-                  links.sort(new AnnotationComparator());
+                    // sort them ascending by begin and descending by end (default UIMA order)
+                    links.sort(new AnnotationComparator());
 
-                  // thread them
-                  AnnotationFS prev = null;
-                  for (AnnotationFS link : links) {
-                      if (prev != null) {
-                          // Set next link
-                          setNextLink(prev, link);
-//                          // Clear arc label - it makes no sense in this mode
-//                          setLabel(prev, aFeature, null);
-                      }
-                      prev = link;
-                  }
+                    // thread them
+                    AnnotationFS prev = null;
+                    for (AnnotationFS link : links) {
+                        if (prev != null) {
+                            // Set next link
+                            setNextLink(prev, link);
+                            // // Clear arc label - it makes no sense in this mode
+                            // setLabel(prev, aFeature, null);
+                        }
+                        prev = link;
+                    }
 
-                  // make sure the last link terminates the chain
-                  setNextLink(links.get(links.size()-1), null);
+                    // make sure the last link terminates the chain
+                    setNextLink(links.get(links.size() - 1), null);
 
-                  // the chain head needs to point to the first link
-                  setFirstLink(originChain, links.get(0));
+                    // the chain head needs to point to the first link
+                    setFirstLink(originChain, links.get(0));
 
-                  // we don't need the second chain head anymore
-                  aJCas.removeFsFromIndexes(targetChain);
+                    // we don't need the second chain head anymore
+                    aJCas.removeFsFromIndexes(targetChain);
                 }
             }
             else {

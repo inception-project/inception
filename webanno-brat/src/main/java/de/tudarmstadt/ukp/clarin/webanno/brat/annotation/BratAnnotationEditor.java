@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +37,6 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -174,7 +173,8 @@ public class BratAnnotationEditor
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
-                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action) || DoActionResponse.is(action);
+                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
+                        || DoActionResponse.is(action);
                 JCas jCas = null;
                 if (requiresCasLoading) {
                     try {
@@ -293,7 +293,8 @@ public class BratAnnotationEditor
                         result = new LoadConfResponse();
                     }
                     else if (GetCollectionInformationResponse.is(action)) {
-                        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+                        GetCollectionInformationResponse info = 
+                                new GetCollectionInformationResponse();
                         if (getModelObject().getProject() != null) {
                             info.setEntityTypes(BratRenderer.buildEntityTypes(
                                     getModelObject().getAnnotationLayers(), annotationService));
@@ -393,40 +394,42 @@ public class BratAnnotationEditor
                 "brat-font"));
         
         // Libraries
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
+        aResponse.render(forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQuerySvgResourceReference.get()));
+        aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
+        aResponse.render(forReference(JQueryJsonResourceReference.get()));
 
         // BRAT helpers
-        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        aResponse.render(forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(forReference(BratUtilResourceReference.get()));
+        // aResponse.render(
+        //    JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
 
         // BRAT modules
-        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        aResponse.render(forReference(BratDispatcherResourceReference.get()));
+        aResponse.render(forReference(BratAjaxResourceReference.get()));
+        aResponse.render(forReference(BratVisualizerResourceReference.get()));
+        aResponse.render(forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(forReference(BratAnnotatorUiResourceReference.get()));
+        // aResponse.render(
+        //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
-	// REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
+        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
         // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
         // console.
         String script = "(function() {" +
             "var dispatcher = new Dispatcher();" +
-	    // Each visualizer talks to its own Wicket component instance
+            // Each visualizer talks to its own Wicket component instance
             "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
-	    // We attach the JSON send back from the server to this HTML element
-	    // because we cannot directly pass it from Wicket to the caller in ajax.js.
+            // We attach the JSON send back from the server to this HTML element
+            // because we cannot directly pass it from Wicket to the caller in ajax.js.
             "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
             "var ajax = new Ajax(dispatcher);" +
             "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
             "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
             "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
-	    //script.append("var logger = new AnnotationLog(dispatcher);");
+            //script.append("var logger = new AnnotationLog(dispatcher);");
             "dispatcher.post('init');" +
             "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
             "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
@@ -452,10 +455,10 @@ public class BratAnnotationEditor
 //        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
 //                .getAnnotationLayers(), annotationService));
 //        String json = toJson(response);
-//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
-//                + "]);";
+//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + 
+//                json + "]);";
 //    }
-    
+//    
 //    public void bratInit(AjaxRequestTarget aTarget)
 //    {
 //        aTarget.appendJavaScript(bratInitCommand());

@@ -74,7 +74,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 /**
  * A Panel used to define automation properties for the {@code MIRA} machine learning algorithm
  */
-@ProjectSettingsPanel(label="Automation", prio=700)
+@ProjectSettingsPanel(label = "Automation", prio = 700)
 public class ProjectMiraTemplatePanel
     extends ProjectSettingsPanelBase
 {
@@ -629,7 +629,8 @@ public class ProjectMiraTemplatePanel
                 protected void onSubmit(AjaxRequestTarget aTarget, Form<?> form)
                 {
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
-                    if(!template.getTrainFeature().getLayer().getType().equals(WebAnnoConst.SPAN_TYPE)){
+                    if (!template.getTrainFeature().getLayer().getType()
+                            .equals(WebAnnoConst.SPAN_TYPE)) {
                         aTarget.addChildren(getPage(), FeedbackPanel.class);
                         error("Relation automation is not supported yet, but you can use the copy annotator.");
                         // No support yet for relation automation
@@ -643,14 +644,15 @@ public class ProjectMiraTemplatePanel
                         boolean existsTrainDocument = false;
                         for (TrainingDocument document : automationService
                                 .listTrainingDocuments(project)) {
-							if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
-									|| template.getTrainFeature().equals(document.getFeature())) {
-								existsTrainDocument = true;
-								break;
+                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                                    || template.getTrainFeature().equals(document.getFeature())) {
+                                existsTrainDocument = true;
+                                break;
                             }
                         }
-						if (automationService.listTabSepDocuments(project).size() > 0)
-							existsTrainDocument = true;
+                        if (automationService.listTabSepDocuments(project).size() > 0) {
+                            existsTrainDocument = true;
+                        }
 
                         if (!existsTrainDocument) {
                             error("No training document exists to proceed.");
@@ -689,15 +691,16 @@ public class ProjectMiraTemplatePanel
 
                         for (SourceDocument document : documentService
                                 .listSourceDocuments(project)) {
-							if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-								trainDoc++;
-							}
-                            else  {
+                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+                                trainDoc++;
+                            }
+                            else {
                                 annodoc++;
                             }
                         }
-                        
-						trainDoc = trainDoc + automationService.listTrainingDocuments(project).size();
+
+                        trainDoc = trainDoc
+                                + automationService.listTrainingDocuments(project).size();
 
                         automationStatus = automationService.existsAutomationStatus(template) ?
                                 automationService.getAutomationStatus(template) : automationStatus;
@@ -724,8 +727,9 @@ public class ProjectMiraTemplatePanel
                                 automationService);
                         AutomationUtil.tabSepClassifiers(template, automationService);
 
-                        AutomationUtil.generateTrainDocument(template, documentService, curationDocumentService,
-                                annotationService, automationService, userRepository, true);
+                        AutomationUtil.generateTrainDocument(template, documentService,
+                                curationDocumentService, annotationService, automationService,
+                                userRepository, true);
                         AutomationUtil.generatePredictDocument(template, documentService,
                                 correctionDocumentService, annotationService, automationService,
                                 userRepository);
@@ -807,6 +811,7 @@ public class ProjectMiraTemplatePanel
     @ProjectSettingsPanelCondition
     public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
     {
-        return !aExportInProgress && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
+        return !aExportInProgress
+                && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
     }
 }

@@ -19,27 +19,28 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class JQueryJsonResourceReference extends JavaScriptResourceReference
+public class JQueryJsonResourceReference
+    extends JavaScriptResourceReference
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final JQueryJsonResourceReference INSTANCE = new JQueryJsonResourceReference();
+    private static final JQueryJsonResourceReference INSTANCE = new JQueryJsonResourceReference();
 
-	/**
-	 * Gets the instance of the resource reference
-	 *
-	 * @return the single instance of the resource reference
-	 */
-	public static JQueryJsonResourceReference get()
-	{
-		return INSTANCE;
-	}
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static JQueryJsonResourceReference get()
+    {
+        return INSTANCE;
+    }
 
-	/**
-	 * Private constructor
-	 */
-	private JQueryJsonResourceReference()
-	{
-		super(JQueryJsonResourceReference.class, "jquery.json.min.js");
-	}
+    /**
+     * Private constructor
+     */
+    private JQueryJsonResourceReference()
+    {
+        super(JQueryJsonResourceReference.class, "jquery.json.min.js");
+    }
 }

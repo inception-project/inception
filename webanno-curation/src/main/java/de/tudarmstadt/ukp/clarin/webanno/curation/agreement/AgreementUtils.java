@@ -366,7 +366,8 @@ public class AgreementUtils
                     
                     switch (cfg.getPosition().getLinkCompareBehavior()) {
                     case LINK_TARGET_AS_LABEL:
-                        // FIXME The target feature name should be obtained from the feature definition!
+                        // FIXME The target feature name should be obtained from the feature
+                        // definition!
                         AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
                                 .getFeatureByBaseName("target"));
                         
@@ -374,7 +375,8 @@ public class AgreementUtils
                                 + target.getCoveredText() + "]";
                         break;
                     case LINK_ROLE_AS_LABEL:
-                        // FIXME The role feature name should be obtained from the feature definition!
+                        // FIXME The role feature name should be obtained from the feature
+                        // definition!
                         String role = link.getStringValue(link.getType().getFeatureByBaseName(
                                 "role"));
                         
@@ -448,17 +450,20 @@ public class AgreementUtils
         aOut.printComment(String.format("Relevant position count: %d%n",
                 aAgreement.getRelevantSetCount()));
 
-//        aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
+        // aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets());
-//        
-//        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
-//
-//        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
-//
-//        aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
+        //
+        // aOut.printf("%n== Incomplete sets (by position): %d == %n",
+        // aAgreement.getIncompleteSetsByPosition().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement,
+        // aAgreement.getIncompleteSetsByPosition());
+        //
+        // aOut.printf("%n== Incomplete sets (by label): %d ==%n",
+        // aAgreement.getIncompleteSetsByLabel().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
+        //
+        // aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
     }    
     
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
@@ -481,10 +486,12 @@ public class AgreementUtils
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
         
-        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
+        aOut.printf("%n== Incomplete sets (by position): %d == %n",
+                aAgreement.getIncompleteSetsByPosition().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
 
-        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
+        aOut.printf("%n== Incomplete sets (by label): %d ==%n",
+                aAgreement.getIncompleteSetsByLabel().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
 
         aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());

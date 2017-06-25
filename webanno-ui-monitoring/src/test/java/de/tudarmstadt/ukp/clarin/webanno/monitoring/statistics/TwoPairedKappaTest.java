@@ -158,8 +158,8 @@ public class TwoPairedKappaTest
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", convert(userCases));
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -221,8 +221,8 @@ public class TwoPairedKappaTest
         DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
                 "Dependent", "Governor", "DependencyType"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, Dependency.class.getName(),
-                "DependencyType", convert(userCases));
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                Dependency.class.getName(), "DependencyType", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());

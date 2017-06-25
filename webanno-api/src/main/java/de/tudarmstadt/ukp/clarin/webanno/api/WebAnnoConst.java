@@ -44,7 +44,7 @@ public class WebAnnoConst
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
     public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
 
-    public static final String TAB_SEP ="TAB-SEP";
+    public static final String TAB_SEP = "TAB-SEP";
     public static final String COREFERENCE_LAYER = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
     public static final String MIRA = "/mira/";
     public static final String MIRA_TEMPLATE = "/template/";

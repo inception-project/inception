@@ -56,8 +56,8 @@ public class GuidelineModalPanel
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-                guidelineModal.setContent(new GuidelineModalWindowPanel(guidelineModal.getContentId(),
-                        guidelineModal, aModel));
+                guidelineModal.setContent(new GuidelineModalWindowPanel(
+                        guidelineModal.getContentId(), guidelineModal, aModel));
 
                 guidelineModal.show(target);
 

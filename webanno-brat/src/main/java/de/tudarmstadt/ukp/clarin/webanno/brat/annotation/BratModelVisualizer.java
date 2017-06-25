@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.IOException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.model.IModel;
 
@@ -26,59 +27,58 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 /**
  * Displays a BRAT visualization and fills it with data from an BRAT object model.
- *
  */
 public class BratModelVisualizer
-	extends BratVisualizer
+    extends BratVisualizer
 {
-	private static final long serialVersionUID = -5898873898138122798L;
+    private static final long serialVersionUID = -5898873898138122798L;
 
-	private boolean dirty = true;
+    private boolean dirty = true;
 
-	private String docData = EMPTY_DOC;
+    private String docData = EMPTY_DOC;
 
-	public BratModelVisualizer(String id, IModel<GetDocumentResponse> aModel)
-	{
-		super(id, aModel);
-	}
+    public BratModelVisualizer(String id, IModel<GetDocumentResponse> aModel)
+    {
+        super(id, aModel);
+    }
 
-	public void setModel(IModel<GetDocumentResponse> aModel)
-	{
-		setDefaultModel(aModel);
-	}
+    public void setModel(IModel<GetDocumentResponse> aModel)
+    {
+        setDefaultModel(aModel);
+    }
 
-	public void setModelObject(GetDocumentResponse aModel)
-	{
-		setDefaultModelObject(aModel);
-	}
+    public void setModelObject(GetDocumentResponse aModel)
+    {
+        setDefaultModelObject(aModel);
+    }
 
-	@SuppressWarnings("unchecked")
-	public IModel<GetDocumentResponse> getModel()
-	{
-		return (IModel<GetDocumentResponse>) getDefaultModel();
-	}
+    @SuppressWarnings("unchecked")
+    public IModel<GetDocumentResponse> getModel()
+    {
+        return (IModel<GetDocumentResponse>) getDefaultModel();
+    }
 
-	public GetDocumentResponse getModelObject()
-	{
-		return (GetDocumentResponse) getDefaultModelObject();
-	}
+    public GetDocumentResponse getModelObject()
+    {
+        return (GetDocumentResponse) getDefaultModelObject();
+    }
 
-	@Override
-	protected void onModelChanged()
-	{
-		super.onModelChanged();
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
 
-		dirty = true;
-	}
+        dirty = true;
+    }
 
-	@Override
-	protected String getDocumentData()
-	{
-		if (!dirty) {
-			return docData;
-		}
+    @Override
+    protected String getDocumentData()
+    {
+        if (!dirty) {
+            return docData;
+        }
 
-		// Get BRAT object model
+        // Get BRAT object model
         GetDocumentResponse response = getModelObject();
 
         // Serialize BRAT object model to JSON
@@ -88,7 +88,7 @@ public class BratModelVisualizer
         catch (IOException e) {
             error(ExceptionUtils.getRootCauseMessage(e));
         }
-        
-		return docData;
-	}
+
+        return docData;
+    }
 }

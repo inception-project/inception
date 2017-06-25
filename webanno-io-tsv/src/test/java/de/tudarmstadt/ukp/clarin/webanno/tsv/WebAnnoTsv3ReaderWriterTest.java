@@ -73,63 +73,65 @@ public class WebAnnoTsv3ReaderWriterTest
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
         
-		CollectionReader reader = CollectionReaderFactory.createReader(
-		        WebannoTsv3Reader.class,
-		        WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/", 
-		        WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        CollectionReader reader = CollectionReaderFactory.createReader(
+                WebannoTsv3Reader.class,
+                WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
+                WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
 
-		List<String> slotFeatures = new ArrayList<>();
-		List<String> slotTargets = new ArrayList<>();
-		List<String> linkTypes = new ArrayList<>();
-		List<String> spanLayers = new ArrayList<>();
-		spanLayers.add(NamedEntity.class.getName());
-		spanLayers.add(POS.class.getName());
+        List<String> slotFeatures = new ArrayList<>();
+        List<String> slotTargets = new ArrayList<>();
+        List<String> linkTypes = new ArrayList<>();
+        List<String> spanLayers = new ArrayList<>();
+        spanLayers.add(NamedEntity.class.getName());
+        spanLayers.add(POS.class.getName());
         spanLayers.add(Lemma.class.getName());
-		List<String> chainLayers = new ArrayList<>();
-		chainLayers.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
-		List<String> relationLayers = new ArrayList<>();
-		relationLayers.add(Dependency.class.getName());
+        List<String> chainLayers = new ArrayList<>();
+        chainLayers.add("de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference");
+        List<String> relationLayers = new ArrayList<>();
+        relationLayers.add(Dependency.class.getName());
 
-		AnalysisEngineDescription writer = createEngineDescription(
-		        WebannoTsv3Writer.class,
-		        WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
-		        WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true, 
-		        WebannoTsv3Writer.PARAM_SPAN_LAYERS, spanLayers, 
-		        WebannoTsv3Writer.PARAM_SLOT_FEATS, slotFeatures, 
-		        WebannoTsv3Writer.PARAM_SLOT_TARGETS, slotTargets, 
-		        WebannoTsv3Writer.PARAM_LINK_TYPES, linkTypes, 
-		        WebannoTsv3Writer.PARAM_CHAIN_LAYERS, chainLayers,
-		        WebannoTsv3Writer.PARAM_RELATION_LAYERS, relationLayers);
+        AnalysisEngineDescription writer = createEngineDescription(
+                WebannoTsv3Writer.class,
+                WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
+                WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, spanLayers, 
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, slotFeatures,
+                WebannoTsv3Writer.PARAM_SLOT_TARGETS, slotTargets,
+                WebannoTsv3Writer.PARAM_LINK_TYPES, linkTypes, 
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, chainLayers,
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, relationLayers);
 
-		runPipeline(reader, writer);
+        runPipeline(reader, writer);
 
-		CollectionReader reader1 = CollectionReaderFactory.createReader(WebannoTsv3Reader.class,
-		        WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/", 
-		        WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        CollectionReader reader1 = CollectionReaderFactory.createReader(
+                WebannoTsv3Reader.class,
+                WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
+                WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
 
-		CollectionReader reader2 = CollectionReaderFactory.createReader(WebannoTsv3Reader.class,
-		        WebannoTsv3Reader.PARAM_SOURCE_LOCATION, targetFolder, 
-		        WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        CollectionReader reader2 = CollectionReaderFactory.createReader(
+                WebannoTsv3Reader.class,
+                WebannoTsv3Reader.PARAM_SOURCE_LOCATION, targetFolder,
+                WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
 
-		CAS cas1 = JCasFactory.createJCas().getCas();
-		reader1.getNext(cas1);
+        CAS cas1 = JCasFactory.createJCas().getCas();
+        reader1.getNext(cas1);
 
-		CAS cas2 = JCasFactory.createJCas().getCas();
-		reader2.getNext(cas2);
+        CAS cas2 = JCasFactory.createJCas().getCas();
+        reader2.getNext(cas2);
 
-		assertEquals(JCasUtil.select(cas2.getJCas(), Token.class).size(),
-				JCasUtil.select(cas1.getJCas(), Token.class).size());
-		assertEquals(JCasUtil.select(cas2.getJCas(), POS.class).size(),
-				JCasUtil.select(cas1.getJCas(), POS.class).size());
-		assertEquals(JCasUtil.select(cas2.getJCas(), Lemma.class).size(),
-				JCasUtil.select(cas1.getJCas(), Lemma.class).size());
-		assertEquals(JCasUtil.select(cas2.getJCas(), NamedEntity.class).size(),
-				JCasUtil.select(cas1.getJCas(), NamedEntity.class).size());
-		assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
-				JCasUtil.select(cas1.getJCas(), Sentence.class).size());
-		assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
-				JCasUtil.select(cas1.getJCas(), Dependency.class).size());
-	}
+        assertEquals(JCasUtil.select(cas2.getJCas(), Token.class).size(),
+                JCasUtil.select(cas1.getJCas(), Token.class).size());
+        assertEquals(JCasUtil.select(cas2.getJCas(), POS.class).size(),
+                JCasUtil.select(cas1.getJCas(), POS.class).size());
+        assertEquals(JCasUtil.select(cas2.getJCas(), Lemma.class).size(),
+                JCasUtil.select(cas1.getJCas(), Lemma.class).size());
+        assertEquals(JCasUtil.select(cas2.getJCas(), NamedEntity.class).size(),
+                JCasUtil.select(cas1.getJCas(), NamedEntity.class).size());
+        assertEquals(JCasUtil.select(cas2.getJCas(), Sentence.class).size(),
+                JCasUtil.select(cas1.getJCas(), Sentence.class).size());
+        assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
+                JCasUtil.select(cas1.getJCas(), Dependency.class).size());
+    }
     
     @Test
     public void testZeroLengthSpansWithoutFeatureValues() throws Exception
@@ -158,7 +160,8 @@ public class WebAnnoTsv3ReaderWriterTest
         ne1.addToIndexes();
 
         // One at the end
-        NamedEntity ne2 = new NamedEntity(jcas, jcas.getDocumentText().length(), jcas.getDocumentText().length());
+        NamedEntity ne2 = new NamedEntity(jcas, jcas.getDocumentText().length(),
+                jcas.getDocumentText().length());
         ne2.setValue("ORG");
         ne2.addToIndexes();
 
@@ -311,11 +314,13 @@ public class WebAnnoTsv3ReaderWriterTest
     }
     
     @Test
-    public void testSingleTokenWithoutFeatureValue() throws Exception{
+    public void testSingleTokenWithoutFeatureValue()
+        throws Exception
+    {
         JCas jCas = makeJCasOneSentence();
         NamedEntity neToken = new NamedEntity(jCas, 0, 4);
         neToken.addToIndexes();
-        
+
         writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
     }
 
@@ -327,7 +332,7 @@ public class WebAnnoTsv3ReaderWriterTest
         int n = 0;
         for (Token t : select(jcas, Token.class)) {
             NamedEntity ne = new NamedEntity(jcas, t.getBegin(), t.getEnd());
-            ne.setValue(((n == 0) ? "B-" : "I-")+"NOTBIO!");
+            ne.setValue(((n == 0) ? "B-" : "I-") + "NOTBIO!");
             ne.addToIndexes();
             n++;
         }
@@ -459,7 +464,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token gov = tokens.get(0);
-        Token dep = tokens.get(tokens.size()-1);
+        Token dep = tokens.get(tokens.size() - 1);
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         
@@ -482,7 +487,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token t1 = tokens.get(0);
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
         
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
@@ -511,7 +516,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token t1 = tokens.get(0);
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
         
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
@@ -543,7 +548,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token t1 = tokens.get(0);
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
         
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t2.getEnd());
         gov.addToIndexes();
@@ -575,7 +580,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token t1 = tokens.get(0);
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
         
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.addToIndexes();
@@ -637,7 +642,7 @@ public class WebAnnoTsv3ReaderWriterTest
         
         Token gov = tokens.get(0);
         
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
         NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
         dep.addToIndexes();
 
@@ -663,7 +668,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token gov = tokens.get(0);
-        Token dep = tokens.get(tokens.size()-1);
+        Token dep = tokens.get(tokens.size() - 1);
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
         

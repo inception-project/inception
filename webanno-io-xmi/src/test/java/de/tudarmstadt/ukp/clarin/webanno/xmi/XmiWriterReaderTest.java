@@ -43,51 +43,49 @@ import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class XmiWriterReaderTest
 {
-	@Rule
-	public TemporaryFolder testFolder = new TemporaryFolder();
+    @Rule
+    public TemporaryFolder testFolder = new TemporaryFolder();
 
-	@Test
-	public void test() throws Exception
-	{
-		write();
-		read();
-	}
+    @Test
+    public void test()
+        throws Exception
+    {
+        write();
+        read();
+    }
 
-	public void write() throws Exception
-	{
-		CollectionReader textReader = CollectionReaderFactory.createReader(
-				TextReader.class,
-				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, "src/test/resources/texts",
-				ResourceCollectionReaderBase.PARAM_PATTERNS, new String [] {
-					ResourceCollectionReaderBase.INCLUDE_PREFIX + "latin.txt"
-				},
-				ResourceCollectionReaderBase.PARAM_LANGUAGE, "latin");
+    public void write()
+        throws Exception
+    {
+        CollectionReader textReader = CollectionReaderFactory.createReader(TextReader.class,
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, "src/test/resources/texts",
+                ResourceCollectionReaderBase.PARAM_PATTERNS,
+                new String[] { ResourceCollectionReaderBase.INCLUDE_PREFIX + "latin.txt" },
+                ResourceCollectionReaderBase.PARAM_LANGUAGE, "latin");
 
-		AnalysisEngine xmiWriter = AnalysisEngineFactory.createEngine(
-				XmiWriter.class,
-				XmiWriter.PARAM_TARGET_LOCATION, testFolder.getRoot().getPath());
+        AnalysisEngine xmiWriter = AnalysisEngineFactory.createEngine(XmiWriter.class,
+                XmiWriter.PARAM_TARGET_LOCATION, testFolder.getRoot().getPath());
 
-		runPipeline(textReader, xmiWriter);
+        runPipeline(textReader, xmiWriter);
 
-		assertTrue(new File(testFolder.getRoot(), "latin.txt.xmi").exists());
-	}
+        assertTrue(new File(testFolder.getRoot(), "latin.txt.xmi").exists());
+    }
 
-	public void read() throws Exception
-	{
-		CollectionReader xmiReader = CollectionReaderFactory.createReader(
-				XmiReader.class,
-				ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, testFolder.getRoot().getPath(),
-				ResourceCollectionReaderBase.PARAM_PATTERNS, new String [] {
-					ResourceCollectionReaderBase.INCLUDE_PREFIX+"*.xmi"
-				});
+    public void read()
+        throws Exception
+    {
+        CollectionReader xmiReader = CollectionReaderFactory.createReader(XmiReader.class,
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, testFolder.getRoot().getPath(),
+                ResourceCollectionReaderBase.PARAM_PATTERNS,
+                new String[] { ResourceCollectionReaderBase.INCLUDE_PREFIX + "*.xmi" });
 
-		CAS cas = CasCreationUtils.createCas(createTypeSystemDescription(), null, null);
-		xmiReader.getNext(cas);
+        CAS cas = CasCreationUtils.createCas(createTypeSystemDescription(), null, null);
+        xmiReader.getNext(cas);
 
-		String refText = readFileToString(new File("src/test/resources/texts/latin.txt"));
-		assertEquals(refText, cas.getDocumentText());
-		assertEquals("latin", cas.getDocumentLanguage());
-	}
+        String refText = readFileToString(new File("src/test/resources/texts/latin.txt"));
+        assertEquals(refText, cas.getDocumentText());
+        assertEquals("latin", cas.getDocumentLanguage());
+    }
 
     @Rule
     public DkproTestContext testContext = new DkproTestContext();

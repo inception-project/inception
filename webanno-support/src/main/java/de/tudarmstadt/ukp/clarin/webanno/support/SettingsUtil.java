@@ -22,11 +22,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Comparator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;

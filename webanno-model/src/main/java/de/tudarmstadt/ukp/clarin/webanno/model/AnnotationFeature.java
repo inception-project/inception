@@ -34,13 +34,11 @@ import org.hibernate.annotations.Type;
 
 /**
  * A persistence object for an annotation feature. One or more features can be defined per
- * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label feature”.
- * Additional features may be defined. Features have a type which can either be String, integer,
- * float, or boolean. To control the values that a String feature assumes, it can be associated with
- * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
- * another span type which then serves as a label type for the first one
- *
- *
+ * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label
+ * feature”. Additional features may be defined. Features have a type which can either be String,
+ * integer, float, or boolean. To control the values that a String feature assumes, it can be
+ * associated with a tagset. If the feature is defined on a span type, it is also possible to add a
+ * feature of another span type which then serves as a label type for the first one
  */
 @Entity
 @Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = {
@@ -92,11 +90,11 @@ public class AnnotationFeature
     private boolean required;
 
     @Column(name = "multi_value_mode")
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
     private MultiValueMode multiValueMode;
 
     @Column(name = "link_mode")
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
     private LinkMode linkMode;
 
     @Column(name = "link_type_name")
@@ -353,15 +351,17 @@ public class AnnotationFeature
         remember = aRemember;
     }
 
-    public boolean isHideUnconstraintFeature() {
-		return hideUnconstraintFeature;
-	}
+    public boolean isHideUnconstraintFeature()
+    {
+        return hideUnconstraintFeature;
+    }
 
-	public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature) {
-		hideUnconstraintFeature = aHideUnconstraintFeature;
-	}
-	
-	public boolean isRequired()
+    public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
+    {
+        hideUnconstraintFeature = aHideUnconstraintFeature;
+    }
+
+    public boolean isRequired()
     {
         return required;
     }

@@ -542,7 +542,7 @@
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
       </dependency>
-      
+
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>
@@ -562,6 +562,8 @@
     </dependencies>
   </dependencyManagement>
   <modules>
+    <!-- Build -->
+    <module>webanno-build</module>
     <!-- IO -->
     <module>webanno-io-tcf</module>
     <module>webanno-io-tei</module>
@@ -793,6 +795,8 @@
                 <configuration>
                   <excludes>
                     <exclude>.gitignore</exclude>
+                    <exclude>.checkstyle</exclude>
+                    <exclude>suppressions.xml</exclude>
                     <!-- maven config files -->
                     <exclude>src/filter/**/*</exclude>
                     <!-- release generated artifact -->
@@ -817,6 +821,65 @@
             </executions>
           </plugin>
         </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>checkstyle</id>
+      <activation>
+        <file>
+          <exists>src</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+          </plugin>
+        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-checkstyle-plugin</artifactId>
+              <version>2.17</version>
+              <inherited>true</inherited>
+              <dependencies>
+                <dependency>
+                  <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+                  <artifactId>webanno-build</artifactId>
+                  <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                  <groupId>com.puppycrawl.tools</groupId>
+                  <artifactId>checkstyle</artifactId>
+                  <version>7.8.2</version>
+                </dependency>
+              </dependencies>
+              <configuration>
+                <configLocation>webanno/checkstyle.xml</configLocation>
+                <propertyExpansion>basedir=${project.basedir}</propertyExpansion>
+                <consoleOutput>true</consoleOutput>
+                <failOnViolation>true</failOnViolation>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                <includeResources>false</includeResources>
+                <includeTestResources>false</includeTestResources>
+                <logViolationsToConsole>true</logViolationsToConsole>
+                <maxAllowedViolations>0</maxAllowedViolations>
+                <violationSeverity>error</violationSeverity>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>checkstyle-check</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
       </build>
     </profile>
   </profiles>

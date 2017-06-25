@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
-@ProjectSettingsPanel(label="Guidelines", prio=600)
+@ProjectSettingsPanel(label = "Guidelines", prio = 600)
 public class AnnotationGuideLinePanel
     extends ProjectSettingsPanelBase
 {

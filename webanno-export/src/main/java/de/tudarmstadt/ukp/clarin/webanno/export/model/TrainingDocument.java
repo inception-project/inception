@@ -32,9 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 
 /**
- * Source document information to be exported/imported
- *
- *
+ * Source document information to be exported/imported.
  */
 @JsonPropertyOrder(value = { "name", "format", "state" })
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -46,7 +44,7 @@ public class TrainingDocument
     @JsonProperty("format")
     String format;
     @ManyToOne
-    
+
     @JoinColumn(name = "project")
     Project project;
 
@@ -66,68 +64,83 @@ public class TrainingDocument
     @JsonProperty("feature")
     AnnotationFeature feature;
 
-	public String getName() {
-		return name;
-	}
+    public String getName()
+    {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name)
+    {
+        this.name = name;
+    }
 
-	public String getFormat() {
-		return format;
-	}
+    public String getFormat()
+    {
+        return format;
+    }
 
-	public void setFormat(String format) {
-		this.format = format;
-	}
+    public void setFormat(String format)
+    {
+        this.format = format;
+    }
 
-	public TrainDocumentState getState() {
-		return state;
-	}
+    public TrainDocumentState getState()
+    {
+        return state;
+    }
 
-	public void setState(TrainDocumentState state) {
-		this.state = state;
-	}
+    public void setState(TrainDocumentState state)
+    {
+        this.state = state;
+    }
 
-	public Date getTimestamp() {
-		return timestamp;
-	}
+    public Date getTimestamp()
+    {
+        return timestamp;
+    }
 
-	public void setTimestamp(Date timestamp) {
-		this.timestamp = timestamp;
-	}
+    public void setTimestamp(Date timestamp)
+    {
+        this.timestamp = timestamp;
+    }
 
-	public int getSentenceAccessed() {
-		return sentenceAccessed;
-	}
+    public int getSentenceAccessed()
+    {
+        return sentenceAccessed;
+    }
 
-	public void setSentenceAccessed(int sentenceAccessed) {
-		this.sentenceAccessed = sentenceAccessed;
-	}
+    public void setSentenceAccessed(int sentenceAccessed)
+    {
+        this.sentenceAccessed = sentenceAccessed;
+    }
 
-	public boolean isProcessed() {
-		return processed;
-	}
+    public boolean isProcessed()
+    {
+        return processed;
+    }
 
-	public void setProcessed(boolean processed) {
-		this.processed = processed;
-	}
+    public void setProcessed(boolean processed)
+    {
+        this.processed = processed;
+    }
 
-	public AnnotationFeature getFeature() {
-		return feature;
-	}
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
 
-	public void setFeature(AnnotationFeature feature) {
-		this.feature = feature;
-	}
+    public void setFeature(AnnotationFeature feature)
+    {
+        this.feature = feature;
+    }
 
-	public Project getProject() {
-		return project;
-	}
+    public Project getProject()
+    {
+        return project;
+    }
 
-	public void setProject(Project project) {
-		this.project = project;
-	}
-
+    public void setProject(Project project)
+    {
+        this.project = project;
+    }
 }

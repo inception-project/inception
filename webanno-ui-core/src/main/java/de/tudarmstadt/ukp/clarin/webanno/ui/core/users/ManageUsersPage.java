@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 /**
  * Manage Application wide Users.
  */
-@MenuItem(icon="images/user_add.png", label="Users")
+@MenuItem(icon = "images/user_add.png", label = "Users")
 @MountPath("/users.html")
 public class ManageUsersPage
     extends ApplicationPageBase
@@ -192,33 +192,33 @@ public class ManageUsersPage
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
             WebMarkupContainer adminOnly = new WebMarkupContainer("adminOnly");
-            adminOnly.add(new ListMultipleChoice<>("roles",
-                    new ArrayList<>(Role.getRoles())).add(new IValidator<Collection<Role>>()
-            {
-                private static final long serialVersionUID = 1L;
+            adminOnly.add(new ListMultipleChoice<>("roles", new ArrayList<>(Role.getRoles()))
+                    .add(new IValidator<Collection<Role>>()
+                    {
+                        private static final long serialVersionUID = 1L;
 
-                @Override
-                public void validate(IValidatable<Collection<Role>> aValidatable)
-                {
-                    Collection<Role> newRoles = aValidatable.getValue();
-                    if (newRoles.isEmpty()) {
-                        aValidatable.error(new ValidationError()
-                                .setMessage("A user has to have at least one role."));
-                    }
-                    // enforce users to have at least the ROLE_USER role
-                    if (!newRoles.contains(Role.ROLE_USER)) {
-                        aValidatable.error(new ValidationError()
-                                .setMessage("Every user has to be a user."));
-                    }
-                    // don't let an admin user strip himself of admin rights
-                    if (getActiveUser().equals(getModelObject())
-                            && !newRoles.contains(Role.ROLE_ADMIN)) {
-                        aValidatable.error(new ValidationError()
-                                .setMessage("You can't remove your own admin status."));
-                    }
+                        @Override
+                        public void validate(IValidatable<Collection<Role>> aValidatable)
+                        {
+                            Collection<Role> newRoles = aValidatable.getValue();
+                            if (newRoles.isEmpty()) {
+                                aValidatable.error(new ValidationError()
+                                        .setMessage("A user has to have at least one role."));
+                            }
+                            // enforce users to have at least the ROLE_USER role
+                            if (!newRoles.contains(Role.ROLE_USER)) {
+                                aValidatable.error(new ValidationError()
+                                        .setMessage("Every user has to be a user."));
+                            }
+                            // don't let an admin user strip himself of admin rights
+                            if (getActiveUser().equals(getModelObject())
+                                    && !newRoles.contains(Role.ROLE_ADMIN)) {
+                                aValidatable.error(new ValidationError()
+                                        .setMessage("You can't remove your own admin status."));
+                            }
 
-                }
-            }));
+                        }
+                    }));
             adminOnly.add(new CheckBox("enabled").add(new IValidator<Boolean>()
             {
                 private static final long serialVersionUID = 1L;
@@ -242,10 +242,11 @@ public class ManageUsersPage
                 @Override
                 public void onSubmit()
                 {
-                    if(userRepository.exists(DetailForm.this.getModelObject().getUsername())&& isCreate){
+                    if (userRepository.exists(DetailForm.this.getModelObject().getUsername())
+                            && isCreate) {
                         info("User already exists.");
                     }
-                    else if(DetailForm.this.getModelObject().getUsername().contains(" ")){
+                    else if (DetailForm.this.getModelObject().getUsername().contains(" ")) {
                         info("User username should not contain SPACE character.");
                     }
                     else if (NameUtil.isNameValid(DetailForm.this.getModelObject().getUsername())) {

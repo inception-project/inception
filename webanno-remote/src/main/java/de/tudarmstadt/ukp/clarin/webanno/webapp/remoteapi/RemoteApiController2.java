@@ -41,8 +41,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -55,6 +53,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -98,7 +98,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 
-@SwaggerDefinition(info=@Info(title="WebAnno Remote API", version="2"))
+@SwaggerDefinition(info = @Info(title = "WebAnno Remote API", version = "2"))
 @RequestMapping(RemoteApiController2.API_BASE)
 @Controller
 public class RemoteApiController2
@@ -175,14 +175,14 @@ public class RemoteApiController2
     }
 
     private User getUser(String aUserId)
-            throws ObjectNotFoundException
-        {
-            User user = userRepository.get(aUserId);
-            if (user == null) {
-                throw new ObjectNotFoundException("User [" + aUserId + "] not found.");
-            }
-            return user;
+        throws ObjectNotFoundException
+    {
+        User user = userRepository.get(aUserId);
+        if (user == null) {
+            throw new ObjectNotFoundException("User [" + aUserId + "] not found.");
         }
+        return user;
+    }
 
     private Project getProject(long aProjectId)
         throws ObjectNotFoundException, AccessForbiddenException
@@ -421,7 +421,7 @@ public class RemoteApiController2
                 .body(rDocument);
     }
 
-    @ApiOperation(value = "Get a document from a project", response=byte[].class)
+    @ApiOperation(value = "Get a document from a project", response = byte[].class)
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}",
@@ -462,7 +462,8 @@ public class RemoteApiController2
             FileSystemResource resource = new FileSystemResource(docFile);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.contentLength());
-            httpHeaders.set("Content-Disposition", "attachment; filename=\""+doc.getName()+"\"");
+            httpHeaders.set("Content-Disposition",
+                    "attachment; filename=\"" + doc.getName() + "\"");
             return new ResponseEntity<org.springframework.core.io.Resource>(resource, httpHeaders,
                     HttpStatus.OK);
         }
@@ -493,7 +494,8 @@ public class RemoteApiController2
                 // Send it back to the client
                 HttpHeaders httpHeaders = new HttpHeaders();
                 httpHeaders.setContentLength(resource.length);
-                httpHeaders.set("Content-Disposition", "attachment; filename=\""+exportedFile.getName()+"\"");
+                httpHeaders.set("Content-Disposition",
+                        "attachment; filename=\"" + exportedFile.getName() + "\"");
                 
                 return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
             }
@@ -659,7 +661,7 @@ public class RemoteApiController2
                 .body(response);
     }
 
-    @ApiOperation(value = "Get annotations of a document in a project", response=byte[].class)
+    @ApiOperation(value = "Get annotations of a document in a project", response = byte[].class)
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
@@ -724,7 +726,7 @@ public class RemoteApiController2
         
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentLength(resource.length);
-        httpHeaders.set("Content-Disposition", "attachment; filename=\""+filename+"\"");
+        httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         
         return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
     }

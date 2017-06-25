@@ -21,10 +21,10 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
@@ -53,7 +53,7 @@ public class RemoveZeroSizeTokensAndSentencesRepair
                             "Removed sentence with illegal span: %s", s));
                 }
             }
-            
+
             for (Token t : select(aCas.getJCas(), Token.class)) {
                 if (t.getBegin() >= t.getEnd()) {
                     Lemma lemma = t.getLemma();
@@ -86,8 +86,8 @@ public class RemoveZeroSizeTokensAndSentencesRepair
         }
         catch (CASException e) {
             log.error("Unabled to access JCas", e);
-            aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                    "Unabled to access JCas", e.getMessage()));
+            aMessages.add(
+                    new LogMessage(this, LogLevel.ERROR, "Unabled to access JCas", e.getMessage()));
         }
     }
 }

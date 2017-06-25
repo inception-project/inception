@@ -37,6 +37,7 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -496,7 +497,8 @@ public class TcfWriter
                 }
                 
                 // Create current reference
-                Reference ref = coreferencesLayer.createReference(link.getReferenceType(), tokens, null);
+                Reference ref = coreferencesLayer.createReference(link.getReferenceType(), tokens,
+                        null);
 
                 // Special handling for expletive relations
                 if (REL_TYPE_EXPLETIVE.equals(link.getReferenceRelation())) {

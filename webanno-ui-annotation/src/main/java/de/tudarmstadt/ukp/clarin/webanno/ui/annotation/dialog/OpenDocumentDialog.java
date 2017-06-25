@@ -51,7 +51,10 @@ public abstract class OpenDocumentDialog
         setWidthUnit("px");
         setHeightUnit("px");
         setTitle("Open document");
-        setCloseButtonCallback((t) -> {closeButtonClicked = true; return true;});
+        setCloseButtonCallback((t) -> {
+            closeButtonClicked = true;
+            return true;
+        });
     }
     
     public AnnotatorState getModelObject()

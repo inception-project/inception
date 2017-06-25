@@ -30,14 +30,18 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -54,6 +58,8 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -357,9 +363,9 @@ public class AnnotationDetailEditorPanel
         if (state.getSelection().isArc()) {
             LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
 
-            // FIXME REC I think this whole section which meddles around with the selected annotation
-            // layer should be moved out of there to the place where we originally set the annotation
-            // layer...!
+            // FIXME REC I think this whole section which meddles around with the selected
+            // annotation layer should be moved out of there to the place where we originally set
+            // the annotation layer...!
             AnnotationFS originFS = selectByAddr(aJCas, state.getSelection().getOrigin());
             AnnotationLayer spanLayer = TypeUtil.getLayer(annotationService, state.getProject(),
                 originFS);
@@ -369,7 +375,7 @@ public class AnnotationDetailEditorPanel
                     !spanLayer.equals(state.getDefaultAnnotationLayer()))
             {
                 throw new AnnotationException(
-                    "No relation annotation allowed ["+ spanLayer.getUiName() +"]");
+                        "No relation annotation allowed [" + spanLayer.getUiName() + "]");
             }
 
             AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
@@ -509,11 +515,12 @@ public class AnnotationDetailEditorPanel
 
             LOG.info("BEGIN auto-forward annotation");
 
-            AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas, state.getSelection().getBegin(),
-                state.getSelection().getEnd());
+            AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
+                    state.getSelection().getBegin(), state.getSelection().getEnd());
             if (nextToken != null) {
                 if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                    state.getSelection().selectSpan(aJCas, nextToken.getBegin(), nextToken.getEnd());
+                    state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
+                            nextToken.getEnd());
                     actionCreateOrUpdate(aTarget, aJCas, true);
                 }
             }
@@ -631,7 +638,8 @@ public class AnnotationDetailEditorPanel
         // annotations from layers that have link features that could point to the FS
         // to be deleted: the link feature must be the type of the FS or it must be generic.
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFeature linkFeature : annotationService.listAttachedLinkFeatures(layer)) {
+            for (AnnotationFeature linkFeature : annotationService
+                    .listAttachedLinkFeatures(layer)) {
                 Type linkType = CasUtil.getType(jCas.getCas(), linkFeature.getLayer().getName());
 
                 for (AnnotationFS linkFS : CasUtil.select(jCas.getCas(), linkType)) {
@@ -759,6 +767,7 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
 
+    @Override
     public JCas getEditorCas()
         throws IOException
     {
@@ -993,13 +1002,15 @@ public class AnnotationDetailEditorPanel
                 state.getFeatureStates().add(featureState);
 
                 // verification to check whether constraints exist for this project or NOT
-                if (state.getConstraints() != null && state.getSelection().getAnnotation().isSet()) {
+                if (state.getConstraints() != null
+                        && state.getSelection().getAnnotation().isSet()) {
                     // indicator.setRulesExist(true);
                     populateTagsBasedOnRules(aJCas, featureState);
                 }
                 else {
                     // indicator.setRulesExist(false);
-                    featureState.tagset = annotationService.listTags(featureState.feature.getTagset());
+                    featureState.tagset = annotationService
+                            .listTags(featureState.feature.getTagset());
                 }
             }
         }
@@ -1099,17 +1110,17 @@ public class AnnotationDetailEditorPanel
         // Add values from rules
         String restrictionFeaturePath;
         switch (aModel.feature.getLinkMode()) {
-            case WITH_ROLE:
-                restrictionFeaturePath = aModel.feature.getName() + "."
+        case WITH_ROLE:
+            restrictionFeaturePath = aModel.feature.getName() + "."
                     + aModel.feature.getLinkTypeRoleFeatureName();
-                break;
-            case NONE:
-                restrictionFeaturePath = aModel.feature.getName();
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported link mode ["
-                    + aModel.feature.getLinkMode() + "] on feature ["
-                    + aModel.feature.getName() + "]");
+            break;
+        case NONE:
+            restrictionFeaturePath = aModel.feature.getName();
+            break;
+        default:
+            throw new IllegalArgumentException(
+                    "Unsupported link mode [" + aModel.feature.getLinkMode() + "] on feature ["
+                            + aModel.feature.getName() + "]");
         }
 
         aModel.indicator.reset();
@@ -1164,10 +1175,10 @@ public class AnnotationDetailEditorPanel
         List<Tag> valuesFromTagset, RulesIndicator rulesIndicator)
     {
         //if no possible values, means didn't satisfy conditions
-        if(possibleValues.isEmpty())
-        {
+        if (possibleValues.isEmpty()) {
             rulesIndicator.didntMatchAnyRule();
         }
+        
         List<Tag> returnList = new ArrayList<>();
         // Sorting based on important flag
         // possibleValues.sort(null);
@@ -1182,16 +1193,18 @@ public class AnnotationDetailEditorPanel
                     tag.setReordered(true);
                     // HACK END
                     //Avoid duplicate entries
-                    if(!returnList.contains(tag)){
+                    if (!returnList.contains(tag)) {
                         returnList.add(tag);
                     }
                 }
             }
         }
+        
         //If no matching tags found
-        if(returnList.isEmpty()){
+        if (returnList.isEmpty()) {
             rulesIndicator.didntMatchAnyTag();
         }
+        
         return returnList;
     }
 

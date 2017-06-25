@@ -139,8 +139,8 @@ public abstract class AnnotationPageBase
     protected LambdaAjaxLink createOrGetResetDocumentLink()
     {
         if (resetDocumentLink == null) {
-            resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                    t -> resetDocumentDialog.show(t))
+            resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog", t -> 
+                    resetDocumentDialog.show(t))
             {
                 private static final long serialVersionUID = 874573384012299998L;
     

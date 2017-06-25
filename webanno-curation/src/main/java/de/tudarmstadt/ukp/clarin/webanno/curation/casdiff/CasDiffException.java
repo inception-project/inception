@@ -45,6 +45,5 @@ public class CasDiffException
     public CasDiffException(Throwable aCause)
     {
         super(aCause);
-    }
-    
+    }   
 }

@@ -25,8 +25,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -43,10 +41,12 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -86,12 +86,12 @@ public class AgreementTable
             @Override
             public List<String> getObject()
             {
-              List<String> raters = new ArrayList<>();
-              if (getModelObject() != null) {
-                  raters.add(null);
-                  raters.addAll(getModelObject().getRaters());
-              }
-              return raters;
+                List<String> raters = new ArrayList<>();
+                if (getModelObject() != null) {
+                    raters.add(null);
+                    raters.addAll(getModelObject().getRaters());
+                }
+                return raters;
             }
         };
 

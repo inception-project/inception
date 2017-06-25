@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.text.AnnotationFS;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;

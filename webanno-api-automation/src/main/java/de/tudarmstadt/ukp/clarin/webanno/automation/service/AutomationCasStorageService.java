@@ -51,6 +51,7 @@ public interface AutomationCasStorageService
             throws IOException;
         
     File getAutomationFolder(TrainingDocument aDocument)
-    		throws IOException;
+        throws IOException;
+
     void analyzeAndRepair(TrainingDocument aDocument, CAS aCas);
 }

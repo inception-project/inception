@@ -74,7 +74,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * </li>
  * <li>POSTAG - <b>(POS)</b> Language-specific part-of-speech tag; underscore if not available.</li>
  * <li>FEATS - <b>(MorphologicalFeatures)</b> List of morphological features from the universal
- * feature inventory or from a defined language-specific extension; underscore if not available.</li>
+ * feature inventory or from a defined language-specific extension; underscore if not available.
+ * </li>
  * <li>HEAD - <b>(Dependency)</b> Head of the current token, which is either a value of ID or zero
  * (0).</li>
  * <li>DEPREL - <b>(Dependency)</b> Universal Stanford dependency relation to the HEAD (root iff
@@ -180,9 +181,10 @@ public class ConllUWriter
             
             for (int i = 0; i < tokens.size(); i++) {
                 Row row = new Row();
-                row.id = i+1;
+                row.id = i + 1;
                 row.token = tokens.get(i);
-                row.noSpaceAfter = (i+1 < tokens.size()) && row.token.getEnd() == tokens.get(i+1).getBegin();
+                row.noSpaceAfter = (i + 1 < tokens.size())
+                        && row.token.getEnd() == tokens.get(i + 1).getBegin();
                 ctokens.put(row.token, row);
             }
 
@@ -267,7 +269,7 @@ public class ConllUWriter
                     @SuppressWarnings({ "unchecked", "rawtypes" })
                     List<Token> covered = (List) surfaceIdx.get(sf);
                     int id1 = ctokens.get(covered.get(0)).id;
-                    int id2 = ctokens.get(covered.get(covered.size()-1)).id;
+                    int id2 = ctokens.get(covered.get(covered.size() - 1)).id;
                     aOut.printf("%d-%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", id1, id2,
                             sf.getValue(), UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED, UNUSED,
                             UNUSED);

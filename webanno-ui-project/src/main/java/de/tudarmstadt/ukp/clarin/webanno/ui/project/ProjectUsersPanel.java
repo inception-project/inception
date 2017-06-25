@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 /**
  * A Panel used to add user permissions to a selected {@link Project}
  */
-@ProjectSettingsPanel(label="Users", prio=100)
+@ProjectSettingsPanel(label = "Users", prio = 100)
 public class ProjectUsersPanel
     extends ProjectSettingsPanelBase
 {
@@ -361,12 +361,12 @@ public class ProjectUsersPanel
             add(filterText.setOutputMarkupPlaceholderTag(true));
             add(new Button("filterButton")
             {
-            	private static final long serialVersionUID = -7523594952670514192L;
-            	
+                private static final long serialVersionUID = -7523594952670514192L;
+
                 @Override
                 public void onSubmit()
                 {
-					//Only needed so that user list is loaded
+                    // Only needed so that user list is loaded
                 }
             });
             
@@ -401,9 +401,9 @@ public class ProjectUsersPanel
                 @Override
                 public void onSubmit()
                 {
-                	if (users.getModelObject() != null) {
-                		UserDetailForm.this.getModelObject().userFilter = "";
-                        
+                    if (users.getModelObject() != null) {
+                        UserDetailForm.this.getModelObject().userFilter = "";
+
                         for (User user : users.getModelObject()) {
                             ProjectPermission projectPermission = new ProjectPermission();
                             projectPermission.setProject(ProjectUsersPanel.this.getModelObject());

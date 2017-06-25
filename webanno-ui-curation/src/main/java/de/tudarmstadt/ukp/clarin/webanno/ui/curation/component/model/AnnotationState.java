@@ -23,43 +23,43 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
  */
 public enum AnnotationState
 {
-	/**
-	 * All annotators and the curated document have the same annotation.
-	 */
-	AGREE("#bbbbbb"),
-	/**
-	 * color for the arc annotation that is in agreement
-	 */
-	AGREE_ARC("#000000"),
-	/**
-	 * Annotators have annotated differently. Curated document not yet has any annotations.
-	 */
-	DISAGREE("#7fa2ff"),
-	/**
-	 * Annotators have annotated differently. Annotation for current document and curation
-	 * document are equal.
-	 */
-	USE("#004413"),
-	/**
-	 * Annotators have annotated differently. Annotation for current document and curation
-	 * document are not equal.
-	 */
-	DO_NOT_USE("#ff7fa2"),
-	/**
-	 * Error state. Annotation has been added to the visualization, but has not been identified
-	 * by the CasDiff.
-	 */
-	NOT_SUPPORTED("#111111");
+    /**
+     * All annotators and the curated document have the same annotation.
+     */
+    AGREE("#bbbbbb"),
+    /**
+     * color for the arc annotation that is in agreement
+     */
+    AGREE_ARC("#000000"),
+    /**
+     * Annotators have annotated differently. Curated document not yet has any annotations.
+     */
+    DISAGREE("#7fa2ff"),
+    /**
+     * Annotators have annotated differently. Annotation for current document and curation document
+     * are equal.
+     */
+    USE("#004413"),
+    /**
+     * Annotators have annotated differently. Annotation for current document and curation document
+     * are not equal.
+     */
+    DO_NOT_USE("#ff7fa2"),
+    /**
+     * Error state. Annotation has been added to the visualization, but has not been identified by
+     * the CasDiff.
+     */
+    NOT_SUPPORTED("#111111");
 
-	private String colorCode;
+    private String colorCode;
 
-	private AnnotationState(String aColorCode)
-	{
-		colorCode = aColorCode;
-	}
+    private AnnotationState(String aColorCode)
+    {
+        colorCode = aColorCode;
+    }
 
-	public String getColorCode()
-	{
-		return colorCode;
-	}
+    public String getColorCode()
+    {
+        return colorCode;
+    }
 }

@@ -88,7 +88,8 @@ public class PreferencesUtil
                 String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
-                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
+                    if (AnnotationPreference.class.getDeclaredField(propertyName)
+                            .getGenericType() instanceof ParameterizedType) {
                         List<String> value = Arrays.asList(StringUtils.replaceChars(
                                 entry.getValue().toString(), "[]", "").split(","));
                         if (!value.get(0).equals("")) {

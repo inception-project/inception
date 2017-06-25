@@ -35,7 +35,8 @@ public class ReCreateMergeCASModalPanel
 
     private ReMergeCasModel reMerge;
 
-    public ReCreateMergeCASModalPanel(String aId, ModalWindow aModalWindow, ReMergeCasModel aReMerege)
+    public ReCreateMergeCASModalPanel(String aId, ModalWindow aModalWindow,
+            ReMergeCasModel aReMerege)
     {
         super(aId);
         this.reMerge = aReMerege;

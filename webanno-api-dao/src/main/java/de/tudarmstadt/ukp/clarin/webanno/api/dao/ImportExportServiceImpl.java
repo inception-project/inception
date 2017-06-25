@@ -213,7 +213,7 @@ public class ImportExportServiceImpl
             throw e;
         }
         catch (Exception e) {
-        	automationService.removeTrainingDocument(aDocument);
+            automationService.removeTrainingDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
 
@@ -224,8 +224,7 @@ public class ImportExportServiceImpl
 
         // Copy the initial conversion of the file into the repository
         if (cas != null) {
-            CasPersistenceUtils.writeSerializedCas(cas,
-            		automationService.getCasFile(aDocument));
+            CasPersistenceUtils.writeSerializedCas(cas, automationService.getCasFile(aDocument));
         }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -425,7 +424,8 @@ public class ImportExportServiceImpl
             AnalysisEngineDescription writer;
             if (aWriter.getName()
                     .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
-                List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+                List<AnnotationLayer> layers = annotationService
+                        .listAnnotationLayer(aDocument.getProject());
     
                 List<String> slotFeatures = new ArrayList<>();
                 List<String> slotTargets = new ArrayList<>();
@@ -437,7 +437,7 @@ public class ImportExportServiceImpl
                     
                     if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
                         // TSV will not use this
-                        if(!annotationExists(cas, layer.getName())){
+                        if (!annotationExists(cas, layer.getName())) {
                             continue;
                         }
                         boolean isslotLayer = false;
@@ -462,7 +462,7 @@ public class ImportExportServiceImpl
                 List<String> chainLayers = new ArrayList<>();
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
-                        if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
+                        if (!chainAnnotationExists(cas, layer.getName() + "Chain")) {
                             continue;
                         }
                         chainLayers.add(layer.getName());
@@ -473,17 +473,19 @@ public class ImportExportServiceImpl
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
                         // TSV will not use this
-                        if(!annotationExists(cas, layer.getName())){
+                        if (!annotationExists(cas, layer.getName())) {
                             continue;
                         }
                         relationLayers.add(layer.getName());
                     }
                 }
     
-                writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
-                        "slotFeatures", slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers",
-                        chainLayers, "relationLayers", relationLayers);
+                writer = createEngineDescription(aWriter,
+                        JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
+                        "spanLayers", spanLayers, "slotFeatures", slotFeatures, "slotTargets",
+                        slotTargets, "linkTypes", linkTypes, "chainLayers", chainLayers,
+                        "relationLayers", relationLayers);
             }
             else {
                 writer = createEngineDescription(aWriter,
@@ -508,7 +510,8 @@ public class ImportExportServiceImpl
                 }
             }
             else {
-                exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
+                exportFile = new File(exportTempDir.getParent(),
+                        exportTempDir.listFiles()[0].getName());
                 FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
             }
             

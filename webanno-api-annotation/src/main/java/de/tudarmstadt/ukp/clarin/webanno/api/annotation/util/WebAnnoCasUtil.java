@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -74,7 +74,7 @@ public class WebAnnoCasUtil
         if (a == null || b == null) {
             return false;
         }
-	    
+
         if (a.getCAS() != b.getCAS()) {
             return false;
         }
@@ -136,7 +136,8 @@ public class WebAnnoCasUtil
         return selectByAddr(aCas, FeatureStructure.class, aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType, int aAddress)
+    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType,
+            int aAddress)
     {
         return aType.cast(aCas.getLowLevelCAS().ll_getFSForRef(aAddress));
     }
@@ -337,13 +338,12 @@ public class WebAnnoCasUtil
 
     public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
     {
-
-    	AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
-		// thid happens when tokens such as Dr. OR Ms. selected with double
-		// click, which make  seletected text as Dr OR Ms
-		if (currentToken == null) {
-			currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
-		}
+        AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+        // thid happens when tokens such as Dr. OR Ms. selected with double
+        // click, which make seletected text as Dr OR Ms
+        if (currentToken == null) {
+            currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
+        }
         Token nextToken = null;
 
         for (Token token : selectFollowing(Token.class, currentToken, 1)) {
@@ -491,13 +491,16 @@ public class WebAnnoCasUtil
         return s;
     }
 
-	public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence) {
-		try {
-			return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
-		} catch (Exception e) { // end of the document reached
-			return WebAnnoCasUtil.getAddr(aSentence);
-		}
-	}
+    public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence)
+    {
+        try {
+            return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
+        }
+        catch (Exception e) { // end of the document reached
+            return WebAnnoCasUtil.getAddr(aSentence);
+        }
+    }
+
     /**
      * Move to the next page of size display window.
      *
@@ -574,10 +577,10 @@ public class WebAnnoCasUtil
 
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
-        List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
-                aJcas, aWindowSize);
-        return displayWindowBeginingSentenceAddresses.get(displayWindowBeginingSentenceAddresses
-                .size() - 1);
+        List<Integer> displayWindowBeginingSentenceAddresses = 
+                getDisplayWindowBeginningSentenceAddresses(aJcas, aWindowSize);
+        return displayWindowBeginingSentenceAddresses
+                .get(displayWindowBeginingSentenceAddresses.size() - 1);
     }
 
     /**

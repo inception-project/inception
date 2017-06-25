@@ -35,11 +35,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.json.JSONArray;
 import org.apache.wicket.ajax.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -222,7 +222,7 @@ public class RemoteApiController
             }
         }
                 
-        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");        
+        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
         
         JSONObject projectJSON = new JSONObject();
         long pId = projectRepository.getProject(aName).getId();        
@@ -323,9 +323,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
         }
         
         // remove project is user has admin access
@@ -375,9 +374,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
         }
             
         List<SourceDocument> srcDocumentList = documentRepository.listSourceDocuments(project);
@@ -409,9 +407,8 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = "/" + PROJECTS + "/{"+PARAM_PROJECT_ID+"}/" + DOCUMENTS + "/{"+PARAM_DOCUMENT_ID+"}", 
-            method = RequestMethod.DELETE)
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}", method = RequestMethod.DELETE)
     public ResponseEntity<String> sourceDocumentDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
@@ -442,9 +439,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
         }
         
         LOG.info("Deleting document [" + project.getName() + "]");
@@ -490,8 +486,9 @@ public class RemoteApiController
      *             if there was an error.
      */
     @RequestMapping(
-            value = "/" + PROJECTS + "/{"+PARAM_PROJECT_ID+"}/" + DOCUMENTS, 
-            method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
+            method = RequestMethod.POST, 
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> sourceDocumentCreate(
             @RequestParam(PARAM_FILE) MultipartFile aFile,
             @RequestParam(PARAM_FILETYPE) String aFileType, 
@@ -523,9 +520,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
         }
         
         // Existing project
@@ -563,9 +559,8 @@ public class RemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @RequestMapping(
-            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+DOCUMENTS+"/{"+PARAM_DOCUMENT_ID+"}/"+ANNOTATIONS, 
-            method = RequestMethod.GET)
+    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS, method = RequestMethod.GET)
     public ResponseEntity<String> annotationDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aSourceDocumentId)
@@ -596,9 +591,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
         }
 
         // Get source document
@@ -618,7 +612,7 @@ public class RemoteApiController
                 .listAllAnnotationDocuments(srcDocument);
         JSONArray annDocArr = new JSONArray();
         for (AnnotationDocument annDoc : annList) {
-            if(
+            if (
                     annDoc.getState().equals(AnnotationDocumentState.FINISHED) || 
                     annDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
             {
@@ -660,7 +654,9 @@ public class RemoteApiController
      *             if there was an error.
      */
     @RequestMapping(
-            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+DOCUMENTS+"/{"+PARAM_DOCUMENT_ID+"}/"+ANNOTATIONS+"/{"+PARAM_USERNAME+"}", 
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME
+                    + "}",
             method = RequestMethod.GET)
     public void annotationDocumentRead(HttpServletResponse response, 
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
@@ -694,8 +690,8 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            response.sendError(HttpStatus.FORBIDDEN.value(), 
-                    "User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
             return;
         }
 
@@ -799,7 +795,8 @@ public class RemoteApiController
      *             if there was an error.
      */
     @RequestMapping(
-            value = "/"+PROJECTS+"/{"+PARAM_PROJECT_ID+"}/"+CURATION+"/{"+PARAM_DOCUMENT_ID+"}", 
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
+                    + PARAM_DOCUMENT_ID + "}",
             method = RequestMethod.GET)
     public void curationDocumentRead(HttpServletResponse response, 
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
@@ -834,12 +831,10 @@ public class RemoteApiController
                 SecurityUtil.isProjectAdmin(project, projectRepository, user) ||
                 SecurityUtil.isSuperAdmin(projectRepository, user);
         if (!hasAccess) {
-            response.sendError(
-                    HttpStatus.FORBIDDEN.value(), 
-                    "User ["+username+"] is not allowed to access project [" + aProjectId + "]");
+            response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
+                    + "] is not allowed to access project [" + aProjectId + "]");
             return;
-        }
-        
+        }        
         
         // Get source document
         SourceDocument srcDocument;

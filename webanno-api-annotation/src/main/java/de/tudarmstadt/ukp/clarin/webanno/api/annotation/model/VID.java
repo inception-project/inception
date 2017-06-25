@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.Serializable;
@@ -43,7 +43,7 @@ public class VID
     private static final String SUB = "SUB";
     private static final String ATTR = "ATTR";
     private static final String SLOT = "SLOT";
-	private static final String EXTENSION = "EXT";    
+    private static final String EXTENSION = "EXT";
     
     public static final Pattern PATTERN_VID = Pattern.compile(
             "(?:(?<EXT>\\w+)\\:)?(?<ID>-?\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
@@ -111,8 +111,9 @@ public class VID
     {
         this(aExtensionId, aAnnotationID, NONE, aAttribute, aSlot);
     }
-        
-    public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
+
+    public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute,
+            int aSlot)
     {
         annotationId = aAnnotationID;
         subAnnotationId = aSubAnnotationId;
@@ -168,11 +169,12 @@ public class VID
     /**
      * @return the ID of the editor extension that created the annotation referred to.
      */
-    public String getExtensionId() {
-		return extensionId;
-	}
+    public String getExtensionId()
+    {
+        return extensionId;
+    }
 
-	public static VID parseOptional(String aVid)
+    public static VID parseOptional(String aVid)
     {
         if (StringUtils.isNotBlank(aVid)) {
             return parse(aVid);

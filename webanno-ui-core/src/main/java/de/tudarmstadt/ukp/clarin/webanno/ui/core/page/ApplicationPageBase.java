@@ -180,7 +180,8 @@ public abstract class ApplicationPageBase
         
         boolean helpAvailable;
         try {
-            Application.get().getResourceSettings().getLocalizer().getString("page.help.link", this);
+            Application.get().getResourceSettings().getLocalizer().getString("page.help.link",
+                    this);
             Application.get().getResourceSettings().getLocalizer().getString("page.help", this);
             helpAvailable = true;
         }
@@ -216,14 +217,15 @@ public abstract class ApplicationPageBase
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         // Do not cache pages in development mode - allows us to make changes to the HMTL without
         // having to reload the application
         if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
             getApplication().getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
-            getApplication().getResourceSettings().setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
+            getApplication().getResourceSettings()
+                    .setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
         }
-   }
+    }
 
     public FeedbackPanel getFeedbackPanel()
     {
@@ -258,7 +260,8 @@ public abstract class ApplicationPageBase
             aResponse.render(JavaScriptHeaderItem.forReference(kendoCfg.getJavaScriptReference()));
         }
         
-        aResponse.render(JavaScriptHeaderItem.forReference(CssBrowserSelectorResourceReference.get()));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(CssBrowserSelectorResourceReference.get()));
         
         aResponse.render(CssHeaderItem.forReference(FontAwesomeCssReference.get()));
 

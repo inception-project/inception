@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//CHECKSTYLE:OFF
 
 /* First created by JCasGen Fri Jun 17 19:10:16 CEST 2016 */
 package de.tudarmstadt.ukp.dkpro.core.api.segmentation.type;
@@ -106,7 +107,3 @@ public class SurfaceForm_Type extends Annotation_Type {
 
   }
 }
-
-
-
-    

@@ -60,28 +60,28 @@ public class WebAnnoSemanticGraphReader
             int chainBegin = tokenBeginPosition;
             int chainEnd = 0;
             StringTokenizer st = new StringTokenizer(contents[0]);
-            while(st.hasMoreTokens()){
+            while (st.hasMoreTokens()) {
                 String content = st.nextToken();
                 Token outToken = new Token(aJCas, tokenBeginPosition, tokenBeginPosition
                         + content.length());
                 outToken.addToIndexes();
-                tokenBeginPosition = outToken.getEnd() +1;
+                tokenBeginPosition = outToken.getEnd() + 1;
                 chainEnd = tokenBeginPosition;
                 text.append(content).append(" ");
             }
 
             CoreferenceChain chain = new CoreferenceChain(aJCas);
-            CoreferenceLink link = new CoreferenceLink(aJCas, chainBegin, chainEnd-1);
+            CoreferenceLink link = new CoreferenceLink(aJCas, chainBegin, chainEnd - 1);
             link.setReferenceType("text");
             link.addToIndexes();
             chain.setFirst(link);
 
-            if(line.contains("\t>\t")) {
+            if (line.contains("\t>\t")) {
                 link.setReferenceRelation("entails");
                 Token outToken = new Token(aJCas, tokenBeginPosition, tokenBeginPosition
                         + 1);
                 outToken.addToIndexes();
-                tokenBeginPosition = outToken.getEnd()+1;
+                tokenBeginPosition = outToken.getEnd() + 1;
                 text.append("> ");
             }
             else {
@@ -89,23 +89,23 @@ public class WebAnnoSemanticGraphReader
                 Token outToken = new Token(aJCas, tokenBeginPosition, tokenBeginPosition
                         + 1);
                 outToken.addToIndexes();
-                tokenBeginPosition = outToken.getEnd() +1 ;
+                tokenBeginPosition = outToken.getEnd() + 1;
                 text.append("X ");
             }
 
             chainBegin = tokenBeginPosition;
             st = new StringTokenizer(contents[0]);
-            while(st.hasMoreTokens()){
+            while (st.hasMoreTokens()) {
                 String content = st.nextToken();
                 Token outToken = new Token(aJCas, tokenBeginPosition, tokenBeginPosition
                         + content.length());
                 outToken.addToIndexes();
-                tokenBeginPosition = outToken.getEnd() +1;
+                tokenBeginPosition = outToken.getEnd() + 1;
                 chainEnd = tokenBeginPosition;
                 text.append(content).append(" ");
 
             }
-            CoreferenceLink nextLink = new CoreferenceLink(aJCas, chainBegin, chainEnd-1);
+            CoreferenceLink nextLink = new CoreferenceLink(aJCas, chainBegin, chainEnd - 1);
             nextLink.setReferenceType("hypothesis");
             nextLink.addToIndexes();
             link.setNext(nextLink);
@@ -116,7 +116,7 @@ public class WebAnnoSemanticGraphReader
             outSentence.setBegin(sentenceBegin);
             outSentence.setEnd(tokenBeginPosition);
             outSentence.addToIndexes();
-            tokenBeginPosition  = tokenBeginPosition +1;
+            tokenBeginPosition = tokenBeginPosition + 1;
             sentenceBegin = tokenBeginPosition;
         }
         aJCas.setDocumentText(text.toString());

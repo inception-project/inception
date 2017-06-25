@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}.
  */
-@ProjectSettingsPanel(label="Constraints", prio=500)
+@ProjectSettingsPanel(label = "Constraints", prio = 500)
 public class ProjectConstraintsPanel
     extends ProjectSettingsPanelBase
 {
@@ -92,15 +92,16 @@ public class ProjectConstraintsPanel
         {
             super(aId, Model.of((ConstraintSet) null));
 
-            LoadableDetachableModel<List<ConstraintSet>> rulesets = new LoadableDetachableModel<List<ConstraintSet>>()
-                    {
+            LoadableDetachableModel<List<ConstraintSet>> rulesets = 
+                    new LoadableDetachableModel<List<ConstraintSet>>()
+            {
                 private static final long serialVersionUID = 1L;
 
                 @Override
                 protected List<ConstraintSet> load()
                 {
-                    return constraintsService.listConstraintSets(ProjectConstraintsPanel.this
-                            .getModelObject());
+                    return constraintsService
+                            .listConstraintSets(ProjectConstraintsPanel.this.getModelObject());
                 }
             };
             
@@ -152,10 +153,12 @@ public class ProjectConstraintsPanel
                 @Override
                 protected String load() {
                     try {
-                        return constraintsService.readConstrainSet(DetailForm.this.getModelObject());
-                    } catch (IOException e) {
-                        // Cannot call "Component.error()" here - it causes a 
-                        // org.apache.wicket.WicketRuntimeException: Cannot modify component 
+                        return constraintsService
+                                .readConstrainSet(DetailForm.this.getModelObject());
+                    }
+                    catch (IOException e) {
+                        // Cannot call "Component.error()" here - it causes a
+                        // org.apache.wicket.WicketRuntimeException: Cannot modify component
                         // hierarchy after render phase has started (page version cant change then
                         // anymore)
                         LOG.error("Unable to load script", e);
@@ -187,7 +190,8 @@ public class ProjectConstraintsPanel
                     }
                 }
             }; 
-            add(new DownloadLink("export", exportFileModel, exportFilenameModel).setDeleteAfterDownload(true));
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel)
+                    .setDeleteAfterDownload(true));
             
             Button deleteButton = new Button("delete", new StringResourceModel("label")) {
 
@@ -224,15 +228,18 @@ public class ProjectConstraintsPanel
                     // form into the model object and Hibernate will persist it                    
                 }
 
-				@Override
-				public void validate() {
-					super.validate();
-					//Checking if the name provided already exists or not
-					if(constraintsService.existConstraintSet(constraintNameTextField.getInput(), ProjectConstraintsPanel.this.getModelObject())
-							&& !constraintNameTextField.getInput().equals(constraintNameTextField.getModelObject())){
-						error("Provided name for Constraint already exists, please choose a different name");
-					}
-				}
+                @Override
+                public void validate()
+                {
+                    super.validate();
+                    // Checking if the name provided already exists or not
+                    if (constraintsService.existConstraintSet(constraintNameTextField.getInput(),
+                            ProjectConstraintsPanel.this.getModelObject())
+                            && !constraintNameTextField.getInput()
+                                    .equals(constraintNameTextField.getModelObject())) {
+                        error("Provided name for Constraint already exists, please choose a different name");
+                    }
+                }
             });
             add(new Button("cancel", new StringResourceModel("label")) {
                 private static final long serialVersionUID = 1L;
@@ -329,8 +336,9 @@ public class ProjectConstraintsPanel
                         constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
                         //Check if ConstraintSet already exists or not
                         String constraintFilename = constraintRulesFile.getClientFileName();
-                        if(constraintsService.existConstraintSet(constraintFilename, project)){
-                            constraintFilename = copyConstraintName(constraintsService,constraintFilename);
+                        if (constraintsService.existConstraintSet(constraintFilename, project)) {
+                            constraintFilename = copyConstraintName(constraintsService,
+                                    constraintFilename);
                         }
                         constraintSet.setName(constraintFilename);
                         constraintsService.createConstraintSet(constraintSet);

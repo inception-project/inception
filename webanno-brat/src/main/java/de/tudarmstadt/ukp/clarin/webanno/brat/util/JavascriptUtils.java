@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import org.apache.wicket.Component;
 
-public class JavascriptUtils {
-    private JavascriptUtils() {
+public class JavascriptUtils
+{
+    private JavascriptUtils()
+    {
 
     }
 
-    public static String getFocusScript(Component component) {
+    public static String getFocusScript(Component component)
+    {
         return "document.getElementById('" + component.getMarkupId() + "').focus();";
     }
 }

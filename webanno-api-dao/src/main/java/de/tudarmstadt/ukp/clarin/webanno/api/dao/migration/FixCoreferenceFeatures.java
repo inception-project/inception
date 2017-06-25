@@ -27,9 +27,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.uima.cas.CAS;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.TransactionDefinition;

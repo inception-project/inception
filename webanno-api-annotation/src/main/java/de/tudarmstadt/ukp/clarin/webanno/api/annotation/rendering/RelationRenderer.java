@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -124,7 +124,7 @@ public class RelationRenderer
 
                 // sort the annotations (begin, end)
                 List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                sortedDepFs.sort(Comparator.comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
+                sortedDepFs.sort(comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
 
                 String cm = getYieldMessage(aJcas, sortedDepFs);
                 aResponse.add(
@@ -146,7 +146,7 @@ public class RelationRenderer
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             // if no space between token and punct
-            else if (end==selectByAddr(aJCas, depFs).getBegin()){
+            else if (end == selectByAddr(aJCas, depFs).getBegin()) {
                 cm.append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
@@ -213,7 +213,8 @@ public class RelationRenderer
     private void updateLinks(Map<Integer, Set<Integer>> aRelLinks, Integer aGov)
     {
         for (Integer dep : aRelLinks.get(aGov)) {
-            if (aRelLinks.containsKey(dep) && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
+            if (aRelLinks.containsKey(dep)
+                    && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
                 aRelLinks.get(aGov).addAll(aRelLinks.get(dep));
                 updateLinks(aRelLinks, dep);
             }

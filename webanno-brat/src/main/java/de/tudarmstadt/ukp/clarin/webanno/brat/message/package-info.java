@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * Provides Provides Classes that represent the actual Brat Responses, which will be changed to the
- *Json format using {@link org.springframework.http.converter.json.MappingJackson2HttpMessageConverter}
+ * Json format using
+ * {@link org.springframework.http.converter.json.MappingJackson2HttpMessageConverter}
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;

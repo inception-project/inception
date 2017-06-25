@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 /**
  * A Panel used to add Documents to the selected {@link Project}
  */
-@ProjectSettingsPanel(label="Documents", prio=200)
+@ProjectSettingsPanel(label = "Documents", prio = 200)
 public class ProjectDocumentsPanel
     extends ProjectSettingsPanelBase
 {
@@ -116,7 +116,7 @@ public class ProjectDocumentsPanel
                         if (project.getId() != 0) {
                             for (SourceDocument document : documentService
                                     .listSourceDocuments(project)) {
-                            	documents.add(document.getName());
+                                documents.add(document.getName());
                             }
                         }
                         return documents;

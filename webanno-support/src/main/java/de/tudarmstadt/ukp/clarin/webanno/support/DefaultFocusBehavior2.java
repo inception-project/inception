@@ -33,6 +33,7 @@ public class DefaultFocusBehavior2
     {
         super.renderHead(component, response);
 
-        response.render(OnLoadHeaderItem.forScript("$('#" + component.getMarkupId() + "').focus();"));
- }
+        response.render(
+                OnLoadHeaderItem.forScript("$('#" + component.getMarkupId() + "').focus();"));
+    }
 }

@@ -28,10 +28,11 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
+
 /**
- * A persistence object for project permission. A user can have one or multiple permissions on a project.
- * Project permissions include {@code admin}, {@code user} for (annotator) and {@code curator}
- *
+ * A persistence object for project permission. A user can have one or multiple permissions on a
+ * project. Project permissions include {@code admin}, {@code user} for (annotator) and
+ * {@code curator}
  */
 @Entity
 @Table(name = "project_permissions", uniqueConstraints = { @UniqueConstraint(columnNames = {
@@ -45,7 +46,7 @@ public class ProjectPermission
     @GeneratedValue
     private long id;
 
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
     private PermissionLevel level;
 
     private String user;

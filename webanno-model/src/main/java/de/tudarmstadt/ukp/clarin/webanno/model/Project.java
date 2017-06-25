@@ -31,8 +31,6 @@ import org.hibernate.annotations.Type;
 
 /**
  * A persistence object for a Project.
- *
- *
  */
 @Entity
 @Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
@@ -60,7 +58,7 @@ public class Project
     // Disable users from exporting annotation documents
     private boolean disableExport = false;
     
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
 
     public Project()
@@ -109,16 +107,17 @@ public class Project
         this.version = version;
     }
 
-    
-    public boolean isDisableExport() {
-		return disableExport;
-	}
+    public boolean isDisableExport()
+    {
+        return disableExport;
+    }
 
-	public void setDisableExport(boolean disableExport) {
-		this.disableExport = disableExport;
-	}
+    public void setDisableExport(boolean disableExport)
+    {
+        this.disableExport = disableExport;
+    }
 
-	public ScriptDirection getScriptDirection()
+    public ScriptDirection getScriptDirection()
     {
         // If unset, default to LTR - property was not present in older WebAnno versions
         if (scriptDirection == null) {

@@ -48,13 +48,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  */
 public final class TypeUtil
 {
-	private TypeUtil() {
-		// No instances
-	}
-	
-	public static AnnotationLayer getLayer(AnnotationSchemaService aRepo, Project aProject, 
-	        FeatureStructure aFS)
-	{
+    private TypeUtil()
+    {
+        // No instances
+    }
+
+    public static AnnotationLayer getLayer(AnnotationSchemaService aRepo, Project aProject,
+            FeatureStructure aFS)
+    {
         String layerName = aFS.getType().getName();
         AnnotationLayer layer;
         try {
@@ -69,45 +70,45 @@ public final class TypeUtil
             }
             layer = aRepo.getLayer(layerName, aProject);
         }
-        
+
         return layer;
-	}
+    }
 
     public static TypeAdapter getAdapter(AnnotationSchemaService aRepo, AnnotationLayer aLayer)
     {
         switch (aLayer.getType()) {
-            case WebAnnoConst.SPAN_TYPE: {
-                SpanAdapter adapter = new SpanAdapter(aLayer, aRepo.listAnnotationFeature(aLayer));
-                adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
-                adapter.setAllowStacking(aLayer.isAllowStacking());
-                adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
-                adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-                return adapter;
-            }
-            case WebAnnoConst.RELATION_TYPE: {
-                ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(),
+        case WebAnnoConst.SPAN_TYPE: {
+            SpanAdapter adapter = new SpanAdapter(aLayer, aRepo.listAnnotationFeature(aLayer));
+            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
+            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
+            return adapter;
+        }
+        case WebAnnoConst.RELATION_TYPE: {
+            ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(),
                     WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
                     aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
                     aLayer.getAttachType().getName(), aRepo.listAnnotationFeature(aLayer));
 
-                adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-                adapter.setAllowStacking(aLayer.isAllowStacking());
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
 
-                return adapter;
-                // default is chain (based on operation, change to CoreferenceLinK)
-            }
-            case WebAnnoConst.CHAIN_TYPE: {
-                ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(), aLayer.getName()
-                    + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
+            return adapter;
+            // default is chain (based on operation, change to CoreferenceLinK)
+        }
+        case WebAnnoConst.CHAIN_TYPE: {
+            ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(),
+                    aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
                     aRepo.listAnnotationFeature(aLayer));
 
-                adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
 
-                return adapter;
-            }
-            default:
-                throw new IllegalArgumentException("No adapter for type with name [" + aLayer.getName()
-                    + "]");
+            return adapter;
+        }
+        default:
+            throw new IllegalArgumentException(
+                    "No adapter for type with name [" + aLayer.getName() + "]");
         }
     }
     

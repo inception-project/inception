@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -70,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -152,7 +153,8 @@ public class AutomationPage
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
     
-    private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
+    private final Map<String, Map<Integer, AnnotationSelection>> 
+            annotationSelectionByUsernameAndAddress = new HashMap<>();
 
     private final SourceListView curationSegment = new SourceListView();
 
@@ -177,7 +179,7 @@ public class AutomationPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize()+"%");
+                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
             }
         };
         sidebarCell.setOutputMarkupId(true);
@@ -191,17 +193,18 @@ public class AutomationPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                aTag.put("width", (100-state.getPreferences().getSidebarSize())+"%");
+                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
             }
         };
         annotationViewCell.setOutputMarkupId(true);
         add(annotationViewCell);
         
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
+        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
+                new CurationUserSegmentForAnnotationDocument();
         if (getModelObject().getDocument() != null) {
-            curationUserSegmentForAnnotationDocument
-                    .setAnnotationSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
+                    annotationSelectionByUsernameAndAddress);
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(getModelObject());
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
@@ -222,8 +225,8 @@ public class AutomationPage
                     JCas editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                            curationSegment);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                            annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.render(aTarget, editorCas);
                     aTarget.add(getOrCreatePositionInfoLabel());
@@ -250,7 +253,8 @@ public class AutomationPage
 
         add(getOrCreatePositionInfoLabel());
 
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(), getAllowedProjects()) 
+        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
+                getAllowedProjects())
         {
             private static final long serialVersionUID = 5474030848589262638L;
 
@@ -274,8 +278,8 @@ public class AutomationPage
 //
 //                    actionLoadDocument(aCallbackTarget);
 //                    User user = userRepository.get(username);
-//                    detailEditor.setEnabled(!FinishImage.isFinished(new Model<AnnotatorState>(state),
-//                            user, documentService));
+//                    detailEditor.setEnabled(!FinishImage.isFinished(
+//                            new Model<AnnotatorState>(state), user, documentService));
 //                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
 //                }
 //                catch (Exception e) {
@@ -290,7 +294,8 @@ public class AutomationPage
             }
         });
 
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(), detailEditor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
+                detailEditor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -301,7 +306,7 @@ public class AutomationPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", getModel()){
+        add(new ExportModalPanel("exportModalPanel", getModel()) {
             private static final long serialVersionUID = -468896211970839443L;
 
             {
@@ -314,9 +319,8 @@ public class AutomationPage
             {
                 super.onConfigure();
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
-                                || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
+                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
 
@@ -372,8 +376,8 @@ public class AutomationPage
             {
                 super.onConfigure();
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !documentService.isAnnotationFinished(state.getDocument(), state.getUser()));
+                setEnabled(state.getDocument() != null && !documentService
+                        .isAnnotationFinished(state.getDocument(), state.getUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -434,8 +438,8 @@ public class AutomationPage
                     setCurationSegmentBeginEnd(getEditorCas());
                     curationContainer.setBratAnnotatorModel(state);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                            curationSegment);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                            annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     update(aTarget);
                 }
@@ -449,7 +453,7 @@ public class AutomationPage
             {
                 AnnotatorState state = getModelObject();
                 
-                if(state.isForwardAnnotation()){
+                if (state.isForwardAnnotation()) {
                     return;
                 }
                 AnnotationLayer layer = state.getSelectedAnnotationLayer();
@@ -554,8 +558,8 @@ public class AutomationPage
     protected List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
-        return new ArrayList<>(
-                documentService.listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
+        return new ArrayList<>(documentService
+                .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     /**
@@ -603,7 +607,8 @@ public class AutomationPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        suggestionView.updatePanel(target, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress, curationSegment);
+        suggestionView.updatePanel(target, curationContainer, annotationEditor,
+                annotationSelectionByUsernameAndAddress, curationSegment);
 
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
 
@@ -652,8 +657,8 @@ public class AutomationPage
         annotationEditor.renderLater(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                curationSegment);
+        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                annotationSelectionByUsernameAndAddress, curationSegment);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
@@ -692,8 +697,7 @@ public class AutomationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -750,7 +754,8 @@ public class AutomationPage
 
             // Update the CASes
             documentService.upgradeCas(editorCas.getCas(), annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
+                    state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),

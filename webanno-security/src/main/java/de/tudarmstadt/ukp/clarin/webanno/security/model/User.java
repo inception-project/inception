@@ -76,7 +76,8 @@ public class User
     private String email;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "authorities", joinColumns = { @JoinColumn(name = "username", referencedColumnName = "username") })
+    @CollectionTable(name = "authorities", joinColumns = {
+            @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();

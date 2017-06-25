@@ -35,41 +35,39 @@ import de.tudarmstadt.ukp.dkpro.core.api.resources.CompressionUtils;
 /**
  * Reader for UIMA XMI files.
  */
-@TypeCapability(
-        outputs={
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData"})
+@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData" })
 public class XmiReader
-	extends ResourceCollectionReaderBase
+    extends ResourceCollectionReaderBase
 {
     /**
      * In lenient mode, unknown types are ignored and do not cause an exception to be thrown.
      */
     public static final String PARAM_LENIENT = "lenient";
-    @ConfigurationParameter(name=PARAM_LENIENT, mandatory=true, defaultValue="true")
+    @ConfigurationParameter(name = PARAM_LENIENT, mandatory = true, defaultValue = "true")
     private boolean lenient;
-    
-	@Override
-	public void getNext(CAS aCAS)
-		throws IOException, CollectionException
-	{
-		Resource res = nextFile();
-		initCas(aCAS, res);
 
-		InputStream is = null;
+    @Override
+    public void getNext(CAS aCAS)
+        throws IOException, CollectionException
+    {
+        Resource res = nextFile();
+        initCas(aCAS, res);
+
+        InputStream is = null;
         try {
             is = CompressionUtils.getInputStream(res.getLocation(), res.getInputStream());
-			XmiCasDeserializer.deserialize(is, aCAS, lenient);
-			
-			// Override language using PARAM_LANG if that is set
-			if (getLanguage() != null) {
-			    aCAS.setDocumentLanguage(getLanguage());
-			}
-		}
-		catch (SAXException e) {
-			throw new IOException(e);
-		}
+            XmiCasDeserializer.deserialize(is, aCAS, lenient);
+
+            // Override language using PARAM_LANG if that is set
+            if (getLanguage() != null) {
+                aCAS.setDocumentLanguage(getLanguage());
+            }
+        }
+        catch (SAXException e) {
+            throw new IOException(e);
+        }
         finally {
             closeQuietly(is);
         }
-	}
+    }
 }

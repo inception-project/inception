@@ -101,7 +101,8 @@ public class CurationPanel
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
      * username from which the span has been selected
      */
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
+            new HashMap<>();
 
     public SourceListView curationView;
 
@@ -124,7 +125,7 @@ public class CurationPanel
             protected void onComponentTag(ComponentTag aTag)
             {
                 super.onComponentTag(aTag);
-                aTag.put("width", bModel.getPreferences().getSidebarSize()+"%");
+                aTag.put("width", bModel.getPreferences().getSidebarSize() + "%");
             }
         };
         add(sidebarCell);
@@ -136,7 +137,7 @@ public class CurationPanel
             protected void onComponentTag(ComponentTag aTag)
             {
                 super.onComponentTag(aTag);
-                aTag.put("width", (100-bModel.getPreferences().getSidebarSize())+"%");
+                aTag.put("width", (100 - bModel.getPreferences().getSidebarSize()) + "%");
             }
         };
         add(annotationViewCell);
@@ -156,10 +157,11 @@ public class CurationPanel
         bModel = getModelObject().getBratAnnotatorModel();
     
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
+        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
+                new CurationUserSegmentForAnnotationDocument();
         if (bModel != null) {
-            curationUserSegmentForAnnotationDocument
-                    .setAnnotationSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
+                    annotationSelectionByUsernameAndAddress);
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bModel);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
@@ -235,10 +237,10 @@ public class CurationPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(bModel.getDocument()!=null && !documentService
+                setEnabled(bModel.getDocument() != null && !documentService
                         .getSourceDocument(bModel.getDocument().getProject(),
-                                bModel.getDocument().getName()).getState()
-                        .equals(SourceDocumentState.CURATION_FINISHED));
+                                bModel.getDocument().getName())
+                        .getState().equals(SourceDocumentState.CURATION_FINISHED));
             }
         };
         sidebarCell.add(editor);
@@ -491,7 +493,8 @@ public class CurationPanel
             annotationEditor.renderLater(aTarget);
         }
         annotate = false;
-        suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor, annotationSelectionByUsernameAndAddress, curationView);
+        suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor,
+                annotationSelectionByUsernameAndAddress, curationView);
     }
 
     // CurationContainer curationContainer;

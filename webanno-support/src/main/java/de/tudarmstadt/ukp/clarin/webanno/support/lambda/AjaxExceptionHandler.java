@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
 import java.util.function.BiConsumer;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 @FunctionalInterface

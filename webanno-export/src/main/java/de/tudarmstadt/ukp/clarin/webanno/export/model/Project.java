@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -27,16 +28,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 
 /**
  * All required contents of a project to be exported.
- *
  */
-
 @JsonPropertyOrder(value = { "name", "description", "mode", "version" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Project
 {
     @JsonProperty(value = "name", required = true)
     private String name;
-    
+
     @JsonProperty("description")
     private String description;
 
@@ -45,7 +44,7 @@ public class Project
 
     @JsonProperty("source_documents")
     private List<SourceDocument> sourceDocuments;
-    
+
     @JsonProperty("training_documents")
     private List<TrainingDocument> trainingDocuments;
 
@@ -56,7 +55,7 @@ public class Project
     private List<ProjectPermission> projectPermissions;
 
     @JsonProperty("tag_sets")
-    private List<TagSet> tagSets = new ArrayList<>();
+    private List<ExportedTagSet> tagSets = new ArrayList<>();
 
     @JsonProperty("layers")
     private List<AnnotationLayer> layers;
@@ -66,7 +65,7 @@ public class Project
 
     @JsonProperty("version")
     private int version;
-    
+
     @JsonProperty("disableExport")
     private boolean disableExport;
 
@@ -103,15 +102,17 @@ public class Project
         this.sourceDocuments = sourceDocuments;
     }
 
-    public List<TrainingDocument> getTrainingDocuments() {
-		return trainingDocuments;
-	}
+    public List<TrainingDocument> getTrainingDocuments()
+    {
+        return trainingDocuments;
+    }
 
-	public void setTrainingDocuments(List<TrainingDocument> trainingDocuments) {
-		this.trainingDocuments = trainingDocuments;
-	}
+    public void setTrainingDocuments(List<TrainingDocument> trainingDocuments)
+    {
+        this.trainingDocuments = trainingDocuments;
+    }
 
-	public List<AnnotationDocument> getAnnotationDocuments()
+    public List<AnnotationDocument> getAnnotationDocuments()
     {
         return annotationDocuments;
     }
@@ -131,12 +132,12 @@ public class Project
         this.projectPermissions = projectPermissions;
     }
 
-    public List<TagSet> getTagSets()
+    public List<ExportedTagSet> getTagSets()
     {
         return tagSets;
     }
 
-    public void setTagSets(List<TagSet> tagSets)
+    public void setTagSets(List<ExportedTagSet> tagSets)
     {
         this.tagSets = tagSets;
     }
@@ -160,22 +161,23 @@ public class Project
     {
         this.version = version;
     }
-    
-    
-	public List<AnnotationLayer> getLayers()
+
+    public List<AnnotationLayer> getLayers()
     {
         return layers;
     }
 
-    public boolean isDisableExport() {
-		return disableExport;
-	}
+    public boolean isDisableExport()
+    {
+        return disableExport;
+    }
 
-	public void setDisableExport(boolean disableExport) {
-		this.disableExport = disableExport;
-	}
+    public void setDisableExport(boolean disableExport)
+    {
+        this.disableExport = disableExport;
+    }
 
-	public void setLayers(List<AnnotationLayer> layers)
+    public void setLayers(List<AnnotationLayer> layers)
     {
         this.layers = layers;
     }

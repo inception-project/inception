@@ -33,7 +33,8 @@ import javax.persistence.UniqueConstraint;
  *
  */
 @Entity
-@Table(name = "authorities", uniqueConstraints = { @UniqueConstraint(columnNames = { "authority", "username" }) })
+@Table(name = "authorities", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "authority", "username" }) })
 public class Authority
     implements Serializable
 {

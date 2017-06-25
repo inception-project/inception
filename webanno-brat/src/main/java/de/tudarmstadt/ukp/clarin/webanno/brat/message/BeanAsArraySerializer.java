@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
+
 import org.springframework.util.ReflectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

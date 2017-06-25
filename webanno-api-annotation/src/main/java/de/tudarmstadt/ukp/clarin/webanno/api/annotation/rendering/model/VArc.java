@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+
 import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;

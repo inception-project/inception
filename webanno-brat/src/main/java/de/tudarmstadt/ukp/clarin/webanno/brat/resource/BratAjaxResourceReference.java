@@ -19,27 +19,28 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class BratAjaxResourceReference extends JavaScriptResourceReference
+public class BratAjaxResourceReference
+    extends JavaScriptResourceReference
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final BratAjaxResourceReference INSTANCE = new BratAjaxResourceReference();
+    private static final BratAjaxResourceReference INSTANCE = new BratAjaxResourceReference();
 
-	/**
-	 * Gets the instance of the resource reference
-	 *
-	 * @return the single instance of the resource reference
-	 */
-	public static BratAjaxResourceReference get()
-	{
-		return INSTANCE;
-	}
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static BratAjaxResourceReference get()
+    {
+        return INSTANCE;
+    }
 
-	/**
-	 * Private constructor
-	 */
-	private BratAjaxResourceReference()
-	{
-		super(BratAjaxResourceReference.class, "ajax.js");
-	}
+    /**
+     * Private constructor
+     */
+    private BratAjaxResourceReference()
+    {
+        super(BratAjaxResourceReference.class, "ajax.js");
+    }
 }

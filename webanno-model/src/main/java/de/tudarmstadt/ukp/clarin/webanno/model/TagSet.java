@@ -28,12 +28,13 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
 /**
  * A persistence object for a TagSet
- *
  */
 @Entity
-@Table(name = "tag_set", uniqueConstraints = { @UniqueConstraint(columnNames = { "name","project" }) })
+@Table(name = "tag_set", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class TagSet
     implements Serializable
 {

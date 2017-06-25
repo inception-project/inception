@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -34,7 +35,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Comparator;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -189,16 +189,17 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel)
+    public boolean existsProjectPermissionLevel(User aUser, Project aProject,
+            PermissionLevel aLevel)
     {
         try {
             entityManager
                     .createQuery(
                             "FROM ProjectPermission WHERE user = :user AND "
                                     + "project =:project AND level =:level",
-                            ProjectPermission.class).setParameter("user", aUser.getUsername())
-                    .setParameter("project", aProject).setParameter("level", aLevel)
-                    .getSingleResult();
+                            ProjectPermission.class)
+                    .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
+                    .setParameter("level", aLevel).getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -650,7 +651,7 @@ public class ProjectServiceImpl
             
             if (entryName.startsWith(GUIDELINE)) {
                 String fileName = FilenameUtils.getName(entry.getName());
-                if(fileName.trim().isEmpty()){
+                if (fileName.trim().isEmpty()) {
                     continue;
                 }
                 File guidelineDir = getGuidelinesFile(aProject);
@@ -697,17 +698,21 @@ public class ProjectServiceImpl
     /**
      * Create {@link ProjectPermission} from the exported
      * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
-     * @param aImportedProjectSetting the imported project.
-     * @param aImportedProject the project.
-     * @throws IOException if an I/O error occurs.
+     * 
+     * @param aImportedProjectSetting
+     *            the imported project.
+     * @param aImportedProject
+     *            the project.
+     * @throws IOException
+     *             if an I/O error occurs.
      */
     private void createProjectPermission(
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
             Project aImportedProject)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission : aImportedProjectSetting
-                .getProjectPermissions()) {
+        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission :
+            aImportedProjectSetting.getProjectPermissions()) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());
             permission.setProject(aImportedProject);
@@ -780,7 +785,7 @@ public class ProjectServiceImpl
                 log.error("Class [{}] not found", bd.getBeanClassName(), e);
             }
         }
-        projectTypes.sort(Comparator.comparingInt(ProjectType::prio));
+        projectTypes.sort(comparingInt(ProjectType::prio));
     }
 
     @Override

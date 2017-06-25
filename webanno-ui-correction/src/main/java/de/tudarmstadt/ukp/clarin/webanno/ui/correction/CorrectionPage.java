@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -67,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -144,7 +145,8 @@ public class CorrectionPage
 
     private CurationContainer curationContainer;
 
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
+            new HashMap<>();
 
     private SourceListView curationSegment = new SourceListView();
 
@@ -167,7 +169,7 @@ public class CorrectionPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize()+"%");
+                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
             }
         };
         add(sidebarCell);
@@ -180,16 +182,17 @@ public class CorrectionPage
             {
                 super.onComponentTag(aTag);
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                aTag.put("width", (100-state.getPreferences().getSidebarSize())+"%");
+                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
             }
         };
         add(annotationViewCell);
         
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = new CurationUserSegmentForAnnotationDocument();
+        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
+                new CurationUserSegmentForAnnotationDocument();
         if (getModelObject().getDocument() != null) {
-            curationUserSegmentForAnnotationDocument
-                    .setAnnotationSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
+                    annotationSelectionByUsernameAndAddress);
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(getModelObject());
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
@@ -211,8 +214,8 @@ public class CorrectionPage
                     JCas editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                            curationSegment);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                            annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.render(aTarget, editorCas);
                     aTarget.add(getOrCreatePositionInfoLabel());
@@ -264,8 +267,8 @@ public class CorrectionPage
 //                    String username = SecurityContextHolder.getContext().getAuthentication()
 //                            .getName();
 //                    User user = userRepository.get(username);
-//                    detailEditor
-//                            .setEnabled(!FinishImage.isFinished(getModel(), user, documentService));
+//                    detailEditor.setEnabled(
+//                            !FinishImage.isFinished(getModel(), user, documentService));
 //                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
 //                }
 //                catch (Exception e) {
@@ -280,7 +283,8 @@ public class CorrectionPage
             }
         });
 
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(), detailEditor)
+        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
+                detailEditor)
         {
             private static final long serialVersionUID = -4657965743173979437L;
 
@@ -291,7 +295,7 @@ public class CorrectionPage
             }
         });
 
-        add(new ExportModalPanel("exportModalPanel", getModel()){
+        add(new ExportModalPanel("exportModalPanel", getModel()) {
             private static final long serialVersionUID = -468896211970839443L;
 
             {
@@ -304,9 +308,8 @@ public class CorrectionPage
             {
                 super.onConfigure();
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
-                                || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
+                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
 
@@ -427,8 +430,8 @@ public class CorrectionPage
                     setCurationSegmentBeginEnd(editorCas);
                     curationContainer.setBratAnnotatorModel(state);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                            curationSegment);
+                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                            annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     update(aTarget);
                 }
@@ -554,8 +557,8 @@ public class CorrectionPage
         annotationEditor.renderLater(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor, annotationSelectionByUsernameAndAddress,
-                curationSegment);
+        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                annotationSelectionByUsernameAndAddress, curationSegment);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
@@ -612,8 +615,7 @@ public class CorrectionPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-                    AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -670,7 +672,8 @@ public class CorrectionPage
 
             // Update the CASes
             documentService.upgradeCas(editorCas.getCas(), annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(), state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
+                    state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),

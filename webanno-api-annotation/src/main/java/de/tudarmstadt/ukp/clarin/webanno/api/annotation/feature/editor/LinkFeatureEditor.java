@@ -218,8 +218,8 @@ public class LinkFeatureEditor
                     AnnotatorState state = stateModel.getObject();
                     if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                             .equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                .getModelObject().value;
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                                LinkFeatureEditor.this.getModelObject().value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
                     else {
@@ -260,7 +260,8 @@ public class LinkFeatureEditor
 
                     if (state.isSlotArmed()
                             && featureState.feature.equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                                featureState.value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
                     else {
