@@ -18,11 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import java.io.Serializable;
-/***
+
+/**
  * Class for indicating whether Constraints affected a feature or not.
  * https://github.com/webanno/webanno/issues/46
- * 
- *
  */
 public class RulesIndicator
     implements Serializable
@@ -78,10 +77,10 @@ public class RulesIndicator
     }
     
     /**
-     * if a feature is affected by a constraint but no rule covers the feature value,
-     * e.g. @Lemma.value = "go" -> aFrame = "going". Here aFrame is affected by a constraint.
-     * However, if the actual lemma annotated in the document is walk and there is no rule that
-     * covers walk, then we should also indicate that.
+     * if a feature is affected by a constraint but no rule covers the feature value, e.g.
+     * <code>@Lemma.value = "go" -&gt; aFrame = "going"</code>. Here aFrame is affected by a
+     * constraint. However, if the actual lemma annotated in the document is walk and there is no
+     * rule that covers walk, then we should also indicate that.
      */
     public void didntMatchAnyRule()
     {
@@ -100,7 +99,8 @@ public class RulesIndicator
 
     /**
      * https://github.com/webanno/webanno/issues/46
-     * @return status symbols in fontawesome 
+     * 
+     * @return status symbols in fontawesome
      */
     public String getStatusSymbol()
     {
