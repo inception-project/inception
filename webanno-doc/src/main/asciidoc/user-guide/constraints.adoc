@@ -110,6 +110,42 @@ pos.PosValue
 
 Hereby all annotations of type `<shortLayerName>` at the same position as the current context are found.
 
+=== Conditional features
+
+Constraints can be used to set up conditional features, that is features that only become available
+in the UI if another feature has a specific value. Let's say that for example you want to annotate
+events and only *causing* events should additionally offer a *polarity* feature, while for *caused*
+events, there should be no way to select a polarity.
+
+Sticking with the example of annotating events, conditional features can be set up as following:
+
+* Go to the *Layer* tab of the project settings
+* Create a new tagset called *Event category* and add the tags *causing* and *caused*
+* Create a new tagset called *Event polarity* and add the tags *positive* and *negative*
+* Create a new span layer called *Event*
+* Add a string feature called *category* and assign the tagset *Event category* 
+* Save the changes to the *category* feature
+* Add a string feature called *polarity* and assign the tagset *Event polarity* 
+* Enabled the checkbox *Hide Un-constraint feature* on the *polarity* feature
+* Save the changes to the *polarity* feature
+* Create a new text file called `constraints.txt` with the following contents
+.
+[source,text]
+----
+import webanno.custom.Event as Event;
+
+Event {
+  category="causing" -> polarity="positive" | polarity="negative";
+}
+----
+* Import `constraints.txt` in the tab *Constraints* in the project settings.
+
+When you now annotate an *Event* in this project, then the *polarity* feature is only visible and
+editable if the *category* of the annotation is set to *causing*.
+
+NOTE: It is important that both of the features have tagsets assigned - otherwise the conditional
+      effect will not take place.
+
 === Constraints for slot features
 
 Constraints can be applied to the roles of slot features. This is useful, e.g. when annotating predicate/argument structures where specific predicates can only have certain arguments. 
