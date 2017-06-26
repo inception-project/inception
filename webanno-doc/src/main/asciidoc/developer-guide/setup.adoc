@@ -30,51 +30,87 @@ We recommend you start from a Eclipse Classic distribution.
 
 === Eclipse plugins
 
-* *Version Control:* Use Subclipse 1.8.x, see: `http://subclipse.tigris.org/update_1.8.x`
-  _Please do not use Subversive. If you did not start with an Eclipse Classic, you may end up with 
-  Subversive and Subclipse installed, which can easily confuse you as well as Eclipse._
-
-* *Maven Integration:* m2e , is included in Eclipse Classic. Use *Help->Install New Software, 
-  select "--All available sites--" and choose Collaboration -> m2e - Maven Integration for Eclipse*
-
-* *Subclipse/Maven Integration:* Update site: `http://subclipse.tigris.org/m2eclipse/1.0/`
+* *Maven Integration:* m2e , already comes pre-installed with the Eclipse IDE for Java Developers.
+  If you use another edition of Eclipse which does not have m2e pre-installed, go to *Help->Install
+  New Software, select "--All available sites--" and choose Collaboration -> m2e - Maven Integration
+  for Eclipse*
 
 * *Apache UIMA tools:* Update site: `http://www.apache.org/dist/uima/eclipse-update-site/`
 
-* You should check that Text file encoding is UTF-8  in "Preferences -> General -> Workspace" of 
-  your eclipse install.
+* You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
+  your Eclipse install.
 
-=== WebAnno and tomcat installation=
+=== WebAnno and Tomcat installation
 
-Checkout out the svn repository `https://webanno.googlecode.com/svn/trunk` and *checkout the project
-as Maven project*: http://webanno.googlecode.com/svn/wiki/images/checkout_as_maven_project.png
+Checkout out the WebAnno git repository with your favorite git client. If you use the command-line
+client, use the command
+
+[source,text]
+----
+$ git clone https://github.com/webanno/webanno.git
+----
+
+In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
+you have cloned WebAnno. Eclipse should automatically detect all modules.
 
 Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 7). Then, you need to
-add the Tomcat server to your runtime configuration. Go to preferences and go to *Servers ->
-Runtime environments*:
+add the Tomcat server to your runtime configuration. Go to preferences and go to *Servers -> Runtime environments*:
 
-http://webanno.googlecode.com/svn/wiki/images/AddApacheTomcat.png
+// http://webanno.googlecode.com/svn/wiki/images/AddApacheTomcat.png
 
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache
 Tomcat v7 into. 
 
 Change the runtime configuration for the project. On the left side of the dialog, you should now be
 able to select Apache Tomcat. Change its VM arguments and include the definition 
-`-Dwebanno.home="/srv/webanno"` to specify the home directory for WebAnno:
+`-Dwebanno.home="/srv/webanno"` to specify the home directory for WebAnno. Also add `-Dwicket.configuration=development` to enable the development mode for WebAnno. This adds additional
+debugging features to the UI and disables UI caches.
 
-http://webanno.googlecode.com/svn/wiki/images/ChangeRunConfiguration.png
+// http://webanno.googlecode.com/svn/wiki/images/ChangeRunConfiguration.png
 
 Head to the servers pane. If you cannot locate it in your eclipse window, add it by going to
 *Window -> Show View -> Other...* and select *Servers*. Right click on *Tomcat v7 localhost* and
 click on *Add and remove...*:
 
-http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServer.png
+// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServer.png
 
-You should end up with:
+// You should end up with:
 
-http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServerFinal.png
+// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServerFinal.png
 
 WebAnno should now be configured to start with tomcat.
+
+In the *Servers* view, double-click on the Tomcat instance you have configured. Activate the checkbox *Serve modules without publishing*. Go to the *Modules* tab, select the WebAnno module and disable
+auto-reloading. After these changes, you will have to manually restart the Tomcat server in order
+for changes to Java class files to take effect. However, as a benefit, changes to HTML, CSS or
+JavaScript files take effect immediately and you just have to refresh the browser to see the changes.
+
+=== Checkstyle
+
+* Install Checkstyle Eclipse plugin from here: http://eclipse-cs.sourceforge.net
+* Go to Eclipse Preferences
+** Go to Checkstyle pane
+** Add new *Global Check Configuration*
+** Select Type *Project relative*
+** Go to the project*webanno-build*
+** Enter the name *WebAnno checkstyle file*
+** Select file *src/main/resources/webanno/checkstyle.xml*
+* Configure one WebAnno module as a blueprint
+** Right-click on top-level WebAnno project
+** Select *Properties* from the popup
+** Go to *Checkstyle* pane
+** Select *WebAnno checkstyle file*
+** Apply and close
+* Apply blueprint to the other WebAnno modules
+** Select all WebAnno projects except the top-level project in the package explorer
+** Right-click on the selected projects
+** Select *Checkstyle->Configure project(s) from blueprint*
+** In the popup, select top-level WebAnno project
+** Apply and close
+* Enable Checkstyle for all WebAnno modules
+** Select all WebAnno projects in the package explorer
+** Right-click on the selected projects
+** Select *Checkstyle->Activate checkstyle*
 
 === Troubleshooting
 
