@@ -71,7 +71,8 @@ public class AnnotationLayer
     
     private boolean readonly = false;
     
-    @Column(nullable = true, length = 128000)
+    @Lob
+    @Column(nullable = true, length = 64000)
     private String onClickJavascriptAction;
 
     @Column(name = "name", nullable = false)
