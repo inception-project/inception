@@ -388,10 +388,10 @@ var VisualizerUI = (function($, window, undefined) {
                             action: 'normData',
                             database: dbName,
                             key: dbKey,
-                            collection: coll
+                            collection: coll,
                         }, function(response) {
-                            if (response.exception) { // TODO: response to error
-                            } else if (!response.value) { // TODO: response to missing key
+                            if (response.exception) {; // TODO: response to error
+                            } else if (!response.value) {; // TODO: response to missing key
                             } else {
                                 // extend comment popup with normalization data
                                 norminfo = '';
