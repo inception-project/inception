@@ -114,11 +114,14 @@ public class AnnotationDetailEditorPanel
     public AnnotationDetailEditorPanel(String id, IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
-
         setOutputMarkupId(true);
+        add(createAnnotationFeatureForm());
+    }
 
+    private Component createAnnotationFeatureForm()
+    {
         annotationFeatureForm = new AnnotationFeatureForm(this, "annotationFeatureForm",
-            getModel());
+                getModel());
         annotationFeatureForm.setOutputMarkupId(true);
         annotationFeatureForm.add(new AjaxFormValidatingBehavior("submit") {
             private static final long serialVersionUID = -5642108496844056023L;
@@ -134,7 +137,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
         });
-        add(annotationFeatureForm);
+        return annotationFeatureForm;
     }
 
     boolean isAnnotationFinished()
@@ -161,10 +164,10 @@ public class AnnotationDetailEditorPanel
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
             }
             else if (aAdapter instanceof ArcAdapter) {
-                createNewRelationAnnotation(aTarget, (ArcAdapter) aAdapter, aJCas);
+                createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainLinkAnnotation(aTarget, (ChainAdapter) aAdapter, aJCas);
+                createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -176,7 +179,7 @@ public class AnnotationDetailEditorPanel
                 createNewSpanAnnotation(aTarget, (SpanAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainElement(aTarget, (ChainAdapter) aAdapter, aJCas);
+                createNewChainElement((ChainAdapter) aAdapter, aJCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -185,8 +188,8 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewRelationAnnotation(AjaxRequestTarget aTarget, ArcAdapter aAdapter,
-        JCas aJCas)
+    private void createNewRelationAnnotation(ArcAdapter aAdapter,
+            JCas aJCas)
         throws AnnotationException
     {
         LOG.trace("createNewRelationAnnotation()");
@@ -239,8 +242,8 @@ public class AnnotationDetailEditorPanel
         selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
 
-    private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter,
-        JCas aJCas)
+    private void createNewChainElement(ChainAdapter aAdapter,
+            JCas aJCas)
         throws AnnotationException
     {
         LOG.trace("createNewChainElement()");
@@ -270,8 +273,8 @@ public class AnnotationDetailEditorPanel
             aJCas.getDocumentText().substring(selection.getBegin(), selection.getEnd()));
     }
 
-    private void createNewChainLinkAnnotation(AjaxRequestTarget aTarget, ChainAdapter aAdapter,
-        JCas aJCas) {
+    private void createNewChainLinkAnnotation(ChainAdapter aAdapter,
+            JCas aJCas) {
         LOG.trace("createNewChainLinkAnnotation()");
 
         AnnotatorState state = getModelObject();
@@ -783,7 +786,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    public void writeEditorCas(JCas aJCas)
+    private void writeEditorCas(JCas aJCas)
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -830,7 +833,7 @@ public class AnnotationDetailEditorPanel
     }
 
     @SuppressWarnings("unchecked")
-    public void setSlot(AjaxRequestTarget aTarget, JCas aJCas, int aAnnotationId)
+    private void setSlot(AjaxRequestTarget aTarget, JCas aJCas, int aAnnotationId)
     {
         AnnotatorState state = getModelObject();
 
@@ -1322,8 +1325,8 @@ public class AnnotationDetailEditorPanel
         return annotationService.listTags(tagSet).size() != 0;
     }
 
-    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-        Exception aException)
+    protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
+            Exception aException)
     {
         try {
             throw aException;

@@ -90,203 +90,34 @@ public class AnnotationFeatureForm
     private WebMarkupContainer featureEditorPanel;
     private FeatureEditorPanelContent featureEditorPanelContent;
 
-    private CheckBox forwardAnnotationCheck;
-    private AjaxButton deleteButton;
-    private AjaxButton reverseButton;
-    private LayerSelector layerSelector;
     private String selectedTag = "";
     private Label selectedAnnotationLayer;
     private TextField<String> forwardAnnotationText;
     private ModalWindow deleteModal;
-    private Label selectedTextLabel;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
-    void setSelectedTag(String selectedTag)
-    {
-        this.selectedTag = selectedTag;
-    }
-
-    TextField<String> getForwardAnnotationText()
-    {
-        return forwardAnnotationText;
-    }
-
-    Label getSelectedAnnotationLayer()
-    {
-        return selectedAnnotationLayer;
-    }
-
-    List<AnnotationLayer> getAnnotationLayers()
-    {
-        return annotationLayers;
-    }
-
-    WebMarkupContainer getFeatureEditorPanel()
-    {
-        return featureEditorPanel;
-    }
-
     AnnotationFeatureForm(AnnotationDetailEditorPanel editorPanel, String id,
         IModel<AnnotatorState> aBModel)
     {
         super(id, new CompoundPropertyModel<>(aBModel));
         this.editorPanel = editorPanel;
+        add(createForwardAnnotationTextField());
+        add(createForwardAnnotationCheckBox());
+        add(createNoAnnotationWarningLabel());
+        add(createDeleteModalWindow());
+        add(createDeleteButton());
+        add(createReverseButton());
+        add(createClearButton());
+        add(createDefaultAnnotationLayerSelector());
+        add(createFeatureEditorPanel());
+    }
 
-        add(forwardAnnotationCheck = new CheckBox("forwardAnnotation")
-        {
-            private static final long serialVersionUID = 8908304272310098353L;
-
-            {
-                setOutputMarkupId(true);
-                add(new AjaxFormComponentUpdatingBehavior("change")
-                {
-                    private static final long serialVersionUID = 5179816588460867471L;
-
-                    @Override
-                    protected void onUpdate(AjaxRequestTarget aTarget)
-                    {
-                        updateForwardAnnotation();
-                        if (AnnotationFeatureForm.this.getModelObject().isForwardAnnotation()) {
-                            aTarget.appendJavaScript(JavascriptUtils.getFocusScript
-                                (forwardAnnotationText));
-                            selectedTag = "";
-                        }
-                    }
-                });
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(editorPanel.isForwardable());
-                updateForwardAnnotation();
-            }
-        });
-
-        add(new Label("noAnnotationWarning", "No annotation selected!")
-        {
-            private static final long serialVersionUID = -6046409838139863541L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(!getModelObject().getSelection().getAnnotation().isSet());
-            }
-        });
-
-        add(deleteButton = new AjaxButton("delete")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-                setVisible(state.getSelection().getAnnotation().isSet());
-
-                // Avoid deleting in read-only layers
-                setEnabled(state.getSelectedAnnotationLayer() != null
-                    && !state.getSelectedAnnotationLayer().isReadonly());
-            }
-
-            @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-            {
-                try {
-                    AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-                    JCas jCas = editorPanel.getEditorCas();
-                    AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation()
-                        .getId());
-
-                    AnnotationLayer layer = state.getSelectedAnnotationLayer();
-                    TypeAdapter adapter = getAdapter(editorPanel.getAnnotationService(), layer);
-                    if (adapter instanceof SpanAdapter && editorPanel.getAttachedRels(jCas, fs,
-                        layer).size() > 0) {
-                        deleteModal.setTitle("Are you sure you like to delete all attached " +
-                            "relations to this span annotation?");
-                        deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel(
-                            deleteModal.getContentId(), state, deleteModal, editorPanel,
-                            state.getSelectedAnnotationLayer(), false));
-                        deleteModal.show(aTarget);
-                    }
-                    else {
-                        editorPanel.actionDelete(aTarget);
-                    }
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
-            }
-        });
-
-        add(reverseButton = new AjaxButton("reverse")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-
-                setVisible(state.getSelection().getAnnotation().isSet()
-                    && state.getSelection().isArc() && state.getSelectedAnnotationLayer().getType()
-                    .equals(WebAnnoConst.RELATION_TYPE));
-
-                // Avoid reversing in read-only layers
-                setEnabled(state.getSelectedAnnotationLayer() != null
-                    && !state.getSelectedAnnotationLayer().isReadonly());
-            }
-
-            @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-            {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                try {
-                    editorPanel.actionReverse(aTarget);
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
-            }
-        });
-        reverseButton.setOutputMarkupPlaceholderTag(true);
-
-        add(new AjaxButton("clear")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(AnnotationFeatureForm.this.getModelObject().getSelection()
-                    .getAnnotation().isSet());
-            }
-
-            @Override
-            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
-            {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                try {
-                    editorPanel.actionClear(aTarget);
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
-            }
-        });
-
-        add(layerSelector = new AnnotationFeatureForm.LayerSelector("defaultAnnotationLayer",
-                annotationLayers));
-
+    private Component createFeatureEditorPanel()
+    {
         featureEditorPanel = new WebMarkupContainer("featureEditorsContainer")
         {
             private static final long serialVersionUID = 8908304272310098353L;
@@ -298,12 +129,40 @@ public class AnnotationFeatureForm
                 setVisible(getModelObject().getSelection().getAnnotation().isSet());
             }
         };
+
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
         featureEditorPanel.setOutputMarkupPlaceholderTag(true);
         featureEditorPanel.setOutputMarkupId(true);
 
-        featureEditorPanel.add(new Label("noFeaturesWarning", "No features available!")
+        featureEditorPanel.add(createNoFeaturesWarningLabel());
+        featureEditorPanel.add(createFeatureEditorPanelContent());
+        featureEditorPanel.add(createSelectedTextLabel());
+        featureEditorPanel.add(createLayerNameLabel());
+        featureEditorPanel.add(createSelectedAnnotationLayerLabel());
+
+        return featureEditorPanel;
+    }
+
+    private Component createLayerNameLabel()
+    {
+        return new Label("layerName", "Layer")
+        {
+            private static final long serialVersionUID = 6084341323607243784L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(getModelObject().getPreferences().isRememberLayer());
+            }
+
+        };
+    }
+
+    private Component createNoFeaturesWarningLabel()
+    {
+        return new Label("noFeaturesWarning", "No features available!")
         {
             private static final long serialVersionUID = 4398704672665066763L;
 
@@ -313,12 +172,17 @@ public class AnnotationFeatureForm
                 super.onConfigure();
                 setVisible(getModelObject().getFeatureStates().isEmpty());
             }
-        });
+        };
+    }
 
-        featureEditorPanelContent = new AnnotationFeatureForm.FeatureEditorPanelContent(
+    private Component createFeatureEditorPanelContent()
+    {
+        return featureEditorPanelContent = new AnnotationFeatureForm.FeatureEditorPanelContent(
                 "featureValues");
-        featureEditorPanel.add(featureEditorPanelContent);
+    }
 
+    private Component createForwardAnnotationTextField()
+    {
         forwardAnnotationText = new TextField<>("forwardAnno");
         forwardAnnotationText.setOutputMarkupId(true);
         forwardAnnotationText.add(new AjaxFormComponentUpdatingBehavior("keyup")
@@ -343,7 +207,7 @@ public class AnnotationFeatureForm
                 attributes.getAjaxCallListeners().add(listener);
 
                 attributes.getDynamicExtraParameters().add("var eventKeycode = Wicket.Event" +
-                    ".keyCode(attrs.event);return {keycode: eventKeycode};");
+                        ".keyCode(attrs.event);return {keycode: eventKeycode};");
                 attributes.setPreventDefault(false);
             }
 
@@ -352,7 +216,7 @@ public class AnnotationFeatureForm
             {
                 final Request request = RequestCycle.get().getRequest();
                 final String jsKeycode = request.getRequestParameters()
-                    .getParameterValue("keycode").toString("");
+                        .getParameterValue("keycode").toString("");
                 if (jsKeycode.equals("32")) {
                     try {
                         JCas jCas = editorPanel.getEditorCas();
@@ -369,7 +233,7 @@ public class AnnotationFeatureForm
                     return;
                 }
                 selectedTag = (forwardAnnotationText.getModelObject() == null ? ""
-                    : forwardAnnotationText.getModelObject().charAt(0)) + selectedTag;
+                        : forwardAnnotationText.getModelObject().charAt(0)) + selectedTag;
                 Map<String, String> bindTags = getBindTags();
                 if (!bindTags.isEmpty()) {
                     List<FeatureState> featureStates = getModelObject().getFeatureStates();
@@ -382,29 +246,24 @@ public class AnnotationFeatureForm
         forwardAnnotationText.setOutputMarkupId(true);
         forwardAnnotationText.add(new AttributeAppender("style", "opacity:0", ";"));
         // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
-        add(forwardAnnotationText);
+        return forwardAnnotationText;
+    }
 
-        // the selected text for annotation
-        selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
-            "selection.text"));
-        selectedTextLabel.setOutputMarkupId(true);
-        featureEditorPanel.add(selectedTextLabel);
+    private Component createDeleteModalWindow()
+    {
+        deleteModal = new ModalWindow("yesNoModal");
+        deleteModal.setOutputMarkupId(true);
+        deleteModal.setInitialWidth(600);
+        deleteModal.setInitialHeight(50);
+        deleteModal.setResizable(true);
+        deleteModal.setWidthUnit("px");
+        deleteModal.setHeightUnit("px");
+        deleteModal.setTitle("Are you sure you want to delete the existing annotation?");
+        return deleteModal;
+    }
 
-        featureEditorPanel.add(new Label("layerName", "Layer")
-        {
-            private static final long serialVersionUID = 6084341323607243784L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getPreferences().isRememberLayer());
-            }
-
-        });
-        featureEditorPanel.setOutputMarkupId(true);
-
-        // the annotation layer for the selected annotation
+    private Component createSelectedAnnotationLayerLabel()
+    {
         selectedAnnotationLayer = new Label("selectedAnnotationLayer", new Model<String>())
         {
             private static final long serialVersionUID = 4059460390544343324L;
@@ -418,17 +277,182 @@ public class AnnotationFeatureForm
 
         };
         selectedAnnotationLayer.setOutputMarkupId(true);
-        featureEditorPanel.add(selectedAnnotationLayer);
-        add(featureEditorPanel);
+        return selectedAnnotationLayer;
+    }
 
-        add(deleteModal = new ModalWindow("yesNoModal"));
-        deleteModal.setOutputMarkupId(true);
-        deleteModal.setInitialWidth(600);
-        deleteModal.setInitialHeight(50);
-        deleteModal.setResizable(true);
-        deleteModal.setWidthUnit("px");
-        deleteModal.setHeightUnit("px");
-        deleteModal.setTitle("Are you sure you want to delete the existing annotation?");
+    private Component createDefaultAnnotationLayerSelector()
+    {
+        return new AnnotationFeatureForm.LayerSelector("defaultAnnotationLayer", annotationLayers);
+    }
+
+    private Component createSelectedTextLabel()
+    {
+        Label selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
+                "selection.text"));
+        selectedTextLabel.setOutputMarkupId(true);
+        return selectedTextLabel;
+    }
+
+    private Component createClearButton()
+    {
+        return new AjaxButton("clear")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(AnnotationFeatureForm.this.getModelObject().getSelection()
+                        .getAnnotation().isSet());
+            }
+
+            @Override
+            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                try {
+                    editorPanel.actionClear(aTarget);
+                }
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
+                }
+            }
+        };
+    }
+
+    private Component createReverseButton()
+    {
+        AjaxButton reverseButton = new AjaxButton("reverse")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+
+                setVisible(state.getSelection().getAnnotation().isSet()
+                        && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
+                        .getType().equals(WebAnnoConst.RELATION_TYPE));
+
+                // Avoid reversing in read-only layers
+                setEnabled(state.getSelectedAnnotationLayer() != null
+                        && !state.getSelectedAnnotationLayer().isReadonly());
+            }
+
+            @Override
+            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                try {
+                    editorPanel.actionReverse(aTarget);
+                }
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
+                }
+            }
+        };
+        reverseButton.setOutputMarkupPlaceholderTag(true);
+        return reverseButton;
+    }
+
+    private Component createDeleteButton()
+    {
+        return new AjaxButton("delete")
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+                setVisible(state.getSelection().getAnnotation().isSet());
+                // Avoid deleting in read-only layers
+                setEnabled(state.getSelectedAnnotationLayer() != null
+                        && !state.getSelectedAnnotationLayer().isReadonly());
+            }
+
+            @Override
+            public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+            {
+                try {
+                    AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+                    JCas jCas = editorPanel.getEditorCas();
+                    AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation()
+                            .getId());
+                    AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                    TypeAdapter adapter = getAdapter(editorPanel.getAnnotationService(), layer);
+                    if (adapter instanceof SpanAdapter && editorPanel.getAttachedRels(jCas, fs,
+                            layer).size() > 0) {
+                        deleteModal.setTitle("Are you sure you like to delete all attached " +
+                                "relations to this span annotation?");
+                        deleteModal.setContent(new DeleteOrReplaceAnnotationModalPanel(
+                                deleteModal.getContentId(), state, deleteModal, editorPanel,
+                                state.getSelectedAnnotationLayer(), false));
+                        deleteModal.show(aTarget);
+                    }
+                    else {
+                        editorPanel.actionDelete(aTarget);
+                    }
+                }
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
+                }
+            }
+        };
+    }
+
+    private Component createNoAnnotationWarningLabel()
+    {
+        return new Label("noAnnotationWarning", "No annotation selected!")
+        {
+            private static final long serialVersionUID = -6046409838139863541L;
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setVisible(!getModelObject().getSelection().getAnnotation().isSet());
+            }
+        };
+    }
+
+    private Component createForwardAnnotationCheckBox()
+    {
+        return new CheckBox("forwardAnnotation")
+        {
+            private static final long serialVersionUID = 8908304272310098353L;
+
+            {
+                setOutputMarkupId(true);
+                add(new AjaxFormComponentUpdatingBehavior("change")
+                {
+                    private static final long serialVersionUID = 5179816588460867471L;
+
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget aTarget)
+                    {
+                        updateForwardAnnotation();
+                        if (AnnotationFeatureForm.this.getModelObject().isForwardAnnotation()) {
+                            aTarget.appendJavaScript(JavascriptUtils.getFocusScript
+                                    (forwardAnnotationText));
+                            selectedTag = "";
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setEnabled(editorPanel.isForwardable());
+                updateForwardAnnotation();
+            }
+        };
     }
 
     @Override
@@ -678,10 +702,10 @@ public class AnnotationFeatureForm
                 // the ability to add slots. Adding a slot is NOT an annotation action.
                 if (state.getSelection().getAnnotation().isSet()
                     && !(frag instanceof LinkFeatureEditor)) {
-                    addAnnotateActionBehavior(frag, "change");
+                    addAnnotateActionBehavior(frag);
                 }
                 else if (!(frag instanceof LinkFeatureEditor)) {
-                    addRefreshFeaturePanelBehavior(frag, "change");
+                    addRefreshFeaturePanelBehavior(frag);
                 }
 
                 // Put focus on hidden input field if we are in forward-mode
@@ -729,9 +753,9 @@ public class AnnotationFeatureForm
             item.add(frag);
         }
 
-        private void addRefreshFeaturePanelBehavior(final FeatureEditor aFrag, String aEvent)
+        private void addRefreshFeaturePanelBehavior(final FeatureEditor aFrag)
         {
-            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior(aEvent)
+            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 
@@ -743,9 +767,9 @@ public class AnnotationFeatureForm
             });
         }
 
-        private void addAnnotateActionBehavior(final FeatureEditor aFrag, String aEvent)
+        private void addAnnotateActionBehavior(final FeatureEditor aFrag)
         {
-            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior(aEvent)
+            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
 
@@ -817,5 +841,30 @@ public class AnnotationFeatureForm
                 }
             };
         }
+    }
+
+    protected void setSelectedTag(String selectedTag)
+    {
+        this.selectedTag = selectedTag;
+    }
+
+    protected TextField<String> getForwardAnnotationText()
+    {
+        return forwardAnnotationText;
+    }
+
+    protected Label getSelectedAnnotationLayer()
+    {
+        return selectedAnnotationLayer;
+    }
+
+    protected List<AnnotationLayer> getAnnotationLayers()
+    {
+        return annotationLayers;
+    }
+
+    protected WebMarkupContainer getFeatureEditorPanel()
+    {
+        return featureEditorPanel;
     }
 }
