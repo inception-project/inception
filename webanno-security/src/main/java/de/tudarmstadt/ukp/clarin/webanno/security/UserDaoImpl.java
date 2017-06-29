@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -31,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 /**
  * Implementation of methods defined in the {@link UserDao} interface
  */
-@Repository
 public class UserDaoImpl
     implements UserDao
 {
