@@ -161,13 +161,14 @@ public class LoginPage
             // Wicket continueToOriginalDestination();
 
             String redirectUrl = getRedirectUrl();
-            if (redirectUrl != null) {
-                log.debug("Redirecting to saved URL: [{}]", redirectUrl);
-                throw new NonResettingRestartException(redirectUrl);
-            }
-            else {
+            
+            if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")) {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
+            }
+            else {
+                log.debug("Redirecting to saved URL: [{}]", redirectUrl);
+                throw new NonResettingRestartException(redirectUrl);
             }
         }
     }
