@@ -126,7 +126,7 @@ public class DocumentServiceImpl
         log.info("Database driver: " + databaseDriver);
         log.info("Database URL: " + databaseUrl);
         log.info("Database username: " + databaseUsername);
-        log.info("Repository: " + dir);
+        log.info("Document repository path: " + dir);
     }
     
     @Override
