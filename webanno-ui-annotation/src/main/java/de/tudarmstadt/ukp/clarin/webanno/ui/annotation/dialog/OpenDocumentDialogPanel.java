@@ -110,6 +110,7 @@ public class OpenDocumentDialogPanel
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
         
         if (aBModel.isProjectLocked()) {
+            selectedProject = aBModel.getProject();
             projectSelectionForm.getModelObject().projectSelection = aBModel.getProject();
             projectSelectionForm.setVisible(false);
         }
