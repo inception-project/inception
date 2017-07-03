@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
@@ -96,10 +98,8 @@ import wicket.contrib.input.events.key.KeyType;
  * annotation layer configuration, and Exporting document
  */
 @MenuItem(icon = "images/categories.png", label = "Annotation", prio = 100)
-@MountPath(value = "/annotation.html", alt =  { 
-    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}",
-    "/annotate/${" + AnnotationPage.PAGE_PARAM_PROJECT_ID + "}/${" + 
-            AnnotationPage.PAGE_PARAM_DOCUMENT_ID + "}" })
+@MountPath(value = "/annotation.html", alt = { "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}",
+        "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}" })
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
@@ -107,9 +107,6 @@ public class AnnotationPage
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
-    
-    public static final String PAGE_PARAM_PROJECT_ID = "projectId";
-    public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;

@@ -26,6 +26,10 @@ import java.util.List;
  */
 public class WebAnnoConst
 {
+    // Page parameters
+    public static final String PAGE_PARAM_PROJECT_ID = "projectId";
+    public static final String PAGE_PARAM_DOCUMENT_ID = "documentId";
+
     // Annotation types, for span or arc annotations.
     public static final String POS = "pos";
     public static final String NAMEDENTITY = "named entity";
