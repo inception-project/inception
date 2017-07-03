@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.Application;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
+import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
@@ -32,13 +34,10 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.link.ExternalLink;
-import org.apache.wicket.markup.html.link.PopupSettings;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -71,12 +69,16 @@ public abstract class ApplicationPageBase
 
     private static final long serialVersionUID = -1690130604031181803L;
 
-    private LogoutPanel logoutPanel;
+    public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = 
+            new MetaDataKey<Class<? extends Component>>()
+    {
+        private static final long serialVersionUID = 1L;
+    };
+    
     private FeedbackPanel feedbackPanel;
     private Label versionLabel;
     private Label embeddedDbWarning;
     private Label browserWarning;
-    private ExternalLink helpLink;
     private ListView<ImageLinkDecl> links;
 
     private @SpringBean SettingsService settingsService;
@@ -108,8 +110,20 @@ public abstract class ApplicationPageBase
             getSession().setLocale(Locale.forLanguageTag(locale));
             break;
         }
+        
+        // Add menubar
+        try {
+            Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
+            if (menubarClass == null) {
+                menubarClass = MenuBar.class;
+            }
+            add(ConstructorUtils.invokeConstructor(menubarClass, "menubar"));
+        }
+        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
+                | InstantiationException e1) {
+            throw new RuntimeException(e1);
+        }
 
-        logoutPanel = new LogoutPanel("logoutPanel");
         feedbackPanel = new FeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "error"));
@@ -178,22 +192,6 @@ public abstract class ApplicationPageBase
             browserWarning.setVisible(false);
         }
         
-        boolean helpAvailable;
-        try {
-            Application.get().getResourceSettings().getLocalizer().getString("page.help.link",
-                    this);
-            Application.get().getResourceSettings().getLocalizer().getString("page.help", this);
-            helpAvailable = true;
-        }
-        catch (MissingResourceException e) {
-            helpAvailable = false;
-        }
-        
-        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""),
-                new ResourceModel("page.help", "")));
-        helpLink.setPopupSettings(new PopupSettings("_blank"));
-        helpLink.setVisible(helpAvailable);
-        
         links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
         {
             @Override
@@ -206,7 +204,6 @@ public abstract class ApplicationPageBase
         };
         
         add(links);
-        add(logoutPanel);
         add(feedbackPanel);
         add(versionLabel);
         add(embeddedDbWarning);

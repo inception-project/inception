@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -230,5 +231,10 @@ public abstract class WicketApplicationBase
     protected Class<? extends ApplicationSession> getWebSessionClass()
     {
         return ApplicationSession.class;
+    }
+    
+    public Class<? extends Component> getMenubarClass()
+    {
+        return MenuBar.class;
     }
 }

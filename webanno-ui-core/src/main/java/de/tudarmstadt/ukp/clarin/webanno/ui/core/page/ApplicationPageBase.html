@@ -33,15 +33,7 @@
       <wicket:message key="page.title"></wicket:message>
       <span wicket:id="links" class="headerlink"><span wicket:id="link"></span></span>
     </div>
-    <div class="menubar">
-      <wicket:message key="product.name" /> | <a href="welcome.html"> Home </a>
-      <span style="float: right;">
-        <a wicket:id="helpLink"></a>
-        <wicket:enclosure child="logoutPanel">
-        | <span wicket:id="logoutPanel"></span>
-        </wicket:enclosure>
-      </span>
-    </div>
+    <div wicket:id="menubar"/>
   </div>
   <div class="pagecontent" style="padding-bottom: 38px; ">
     <wicket:child>
