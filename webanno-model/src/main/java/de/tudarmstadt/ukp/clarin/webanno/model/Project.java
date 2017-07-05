@@ -176,4 +176,15 @@ public class Project
         this.mode = aMode;
     }
 
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Project [id=");
+        builder.append(id);
+        builder.append(", name=");
+        builder.append(name);
+        builder.append("]");
+        return builder.toString();
+    }
 }
