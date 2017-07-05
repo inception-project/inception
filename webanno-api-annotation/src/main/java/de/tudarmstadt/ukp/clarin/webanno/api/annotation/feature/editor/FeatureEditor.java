@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public abstract class FeatureEditor
-    extends Fragment
+    extends Panel
 {
     private static final long serialVersionUID = -7275181609671919722L;
 
@@ -33,11 +33,10 @@ public abstract class FeatureEditor
     
     private MarkupContainer owner;
     
-    public FeatureEditor(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-            IModel<FeatureState> aModel)
+    public FeatureEditor(String aId, MarkupContainer aOwner, IModel<FeatureState> aModel)
     {
-        super(aId, aMarkupId, aMarkupProvider, aModel);
-        owner = aMarkupProvider;
+        super(aId, aModel);
+        owner = aOwner;
     }
 
     public MarkupContainer getOwner()

@@ -34,7 +34,7 @@ public class BooleanFeatureEditor
 
     public BooleanFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
-        super(aId, "booleanFeatureEditor", aItem, new CompoundPropertyModel<>(aModel));
+        super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
         add(new Label("feature", getModelObject().feature.getUiName()));
 

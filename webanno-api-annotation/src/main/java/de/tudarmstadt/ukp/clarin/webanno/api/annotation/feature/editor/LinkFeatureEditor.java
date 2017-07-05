@@ -94,7 +94,7 @@ public class LinkFeatureEditor
     public LinkFeatureEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel)
     {
-        super(aId, "linkFeatureEditor", aOwner, CompoundPropertyModel.of(aFeatureStateModel));
+        super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
         stateModel = aStateModel;
         actionHandler = aHandler;

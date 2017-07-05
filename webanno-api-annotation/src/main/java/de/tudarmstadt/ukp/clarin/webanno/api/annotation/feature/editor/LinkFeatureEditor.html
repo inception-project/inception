@@ -1,0 +1,55 @@
+<!--
+#Copyright 2017
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <td colspan="2">
+    <fieldset>
+      <legend>
+        <span wicket:id="feature"></span>
+        <span wicket:id="linkIndicator" class="" style=""></span>
+      </legend>
+      <div wicket:id="content">
+        <table class="hfill">
+          <tr wicket:id="slots">
+            <td><span wicket:id="role"></span></td>
+            <td><div class="hfill k-textbox"
+                style="display: block; white-space: nowrap; background: 0; line-height: 2.13em; max-width: 20em; max-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%; overflow:hidden; text-overflow: ellipsis;"
+                wicket:id="label"></div></td>
+          </tr>
+          <tr>
+            <td colspan="2" class="hfill">
+              <table class="hfill">
+                <tr>
+                  <td class="hfill"><input style="width: 100%"
+                      wicket:id="newRole" placeholder="Select role"></input></td>
+                  <td>
+                    <button style="" wicket:id="add">Add</button>
+                    <button style="" wicket:id="del">Del</button>
+                    <button style="" wicket:id="set">Set</button>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </fieldset>
+  </td>
+</wicket:panel>
+</html>

@@ -67,7 +67,7 @@ public class TextFeatureEditor
     
     public TextFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
-        super(aId, "textFeatureEditor", aItem, new CompoundPropertyModel<>(aModel));
+        super(aId, aItem, new CompoundPropertyModel<>(aModel));
         // Checks whether hide un-constraint feature is enabled or not
         hideUnconstraintFeature = getModelObject().feature.isHideUnconstraintFeature();
         
