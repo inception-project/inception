@@ -29,6 +29,7 @@ public class LambdaAjaxLink
 
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
+    private SerializableMethodDelegate<LambdaAjaxLink> onConfigureAction;
 
     public LambdaAjaxLink(String aId, AjaxCallback aAction)
     {
@@ -42,6 +43,22 @@ public class LambdaAjaxLink
         exceptionHandler = aExceptionHandler;
     }
 
+    public LambdaAjaxLink onConfigure(SerializableMethodDelegate<LambdaAjaxLink> aAction)
+    {
+        onConfigureAction = aAction;
+        return this;
+    }
+    
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        
+        if (onConfigureAction != null) {
+            onConfigureAction.run(this);
+        }
+    }
+    
     @Override
     public void onClick(AjaxRequestTarget aTarget)
     {

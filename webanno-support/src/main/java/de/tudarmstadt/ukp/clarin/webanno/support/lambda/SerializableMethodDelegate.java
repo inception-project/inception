@@ -18,12 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
-import java.util.function.Supplier;
 
 @FunctionalInterface
-public interface SerializableSupplier<T>
-    extends Serializable, Supplier<T>
+public interface SerializableMethodDelegate<T>
+    extends Serializable
 {
-    @Override
-    T get();
+    void run(T aCaller);
 }
