@@ -17,13 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import static java.util.Comparator.comparing;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupportRegistry
 {
+    default List<FeatureType> getAllTypes(AnnotationLayer aLayer)
+    {
+        List<FeatureType> types = new ArrayList<>();
+        for (FeatureSupport featureSupport : getFeatureSupports()) {
+            types.addAll(featureSupport.getSupportedFeatureTypes(aLayer));
+        }
+
+        types.sort(comparing(FeatureType::getUiName));
+        
+        return types;
+    }
+
     List<FeatureSupport> getFeatureSupports();
-    
+
     FeatureSupport getFeatureSupport(AnnotationFeature aFeature);
 }

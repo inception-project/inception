@@ -48,15 +48,16 @@ public class SlotFeatureSupport
     }
     
     @Override
-    public List<String> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
+    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        List<String> types = new ArrayList<>();
+        List<FeatureType> types = new ArrayList<>();
         if (aAnnotationLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
                 if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                    types.add(spanLayer.getName());
+                    types.add(new FeatureType(spanLayer.getName(), 
+                            "Link: " + spanLayer.getUiName()));
                 }
             }
         }

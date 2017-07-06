@@ -34,7 +34,6 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,8 +76,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -90,6 +89,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -968,9 +969,8 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
         DropDownChoice<TagSet> tagSet;
-        DropDownChoice<String> featureType;
+        DropDownChoice<FeatureType> featureType;
         CheckBox required;
-        List<String> types = new ArrayList<>();
 
         public FeatureDetailForm(String id)
         {
@@ -1014,26 +1014,23 @@ public class ProjectLayersPanel
             });
             add(new CheckBox("hideUnconstraintFeature"));
 
-            add(featureType = new DropDownChoice<String>("type")
+            add(featureType = new DropDownChoice<FeatureType>("type")
             {
                 private static final long serialVersionUID = 9029205407108101183L;
 
                 {
                     setRequired(true);
                     setNullValid(false);
-                    setChoices(new LoadableDetachableModel<List<String>>()
-                    {
-                        private static final long serialVersionUID = -5732558926576750673L;
-
-                        @Override
-                        protected List<String> load()
-                        {
-                            if (getModelObject() != null) {
-                                return Arrays.asList(getModelObject());
-                            }
-                            return types;
-                        }
-                    });
+                    setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+                    setModel(LambdaModelAdapter.of(
+                        () -> {
+                            AnnotationFeature feat = FeatureDetailForm.this.getModelObject();
+                            return feat.getType() != null ? new FeatureType(feat.getType())
+                                    : null;
+                        },
+                        (v) -> FeatureDetailForm.this.getModelObject().setType(v.getName())));
+                    setChoices(LambdaModel.of(() -> featureSupportRegistry
+                            .getAllTypes(layerDetailForm.getModelObject())));
                 }
 
                 @Override
@@ -1061,17 +1058,8 @@ public class ProjectLayersPanel
                     setOutputMarkupId(true);
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(true);
-                    setChoices(new LoadableDetachableModel<List<TagSet>>()
-                    {
-                        private static final long serialVersionUID = 1784646746122513331L;
-
-                        @Override
-                        protected List<TagSet> load()
-                        {
-                            return annotationService
-                                    .listTagSets(ProjectLayersPanel.this.getModelObject());
-                        }
-                    });
+                    setChoices(LambdaModel.of(() -> annotationService
+                            .listTagSets(ProjectLayersPanel.this.getModelObject())));
                 }
 
                 @Override
@@ -1083,19 +1071,6 @@ public class ProjectLayersPanel
                     // feature type here.
                     setEnabled(CAS.TYPE_NAME_STRING.equals(feature.getType())
                             || !PRIMITIVE_TYPES.contains(feature.getType()));
-                    
-                    //Empty the 'type' list drop-down in FeatureDetailForm
-                    types.clear();
-                    
-                    // FIXME REC: I am not really sure why the types variable is filled here
-                    // and not in the loadable-detachable model of the featureType dropdown.
-                    for (FeatureSupport featureSupport : featureSupportRegistry
-                            .getFeatureSupports()) {
-                        types.addAll(featureSupport
-                                .getSupportedFeatureTypes(layerDetailForm.getModelObject()));
-                    }
-                    
-                    types.sort(Comparator.naturalOrder());
                 }
             });
 

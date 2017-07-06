@@ -41,11 +41,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class PrimitiveUimaFeatureSupport
     implements FeatureSupport
 {
-    private final static List<String> PRIMITIVE_TYPES = asList(CAS.TYPE_NAME_STRING,
-            CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
+    private final static List<FeatureType> PRIMITIVE_TYPES = asList(
+            new FeatureType(CAS.TYPE_NAME_STRING, "Primitive: String"),
+            new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer"), 
+            new FeatureType(CAS.TYPE_NAME_FLOAT, "Primitive: Float"), 
+            new FeatureType(CAS.TYPE_NAME_BOOLEAN, "Primitive: Boolean"));
 
     @Override
-    public List<String> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
+    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         return PRIMITIVE_TYPES;
     }

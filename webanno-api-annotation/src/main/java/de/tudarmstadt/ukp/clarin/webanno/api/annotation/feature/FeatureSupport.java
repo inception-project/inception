@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupport
 {
-    List<String> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer);
+    List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer);
 
     boolean accepts(AnnotationFeature aFeature);
 
