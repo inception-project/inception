@@ -241,7 +241,6 @@ public class AnnotationFeatureForm
                 aTarget.add(featureEditorPanelContent.get(0));
             }
         });
-        textfield.setOutputMarkupId(true);
         textfield.add(new AttributeAppender("style", "opacity:0", ";"));
         // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
         return textfield;
@@ -281,7 +280,8 @@ public class AnnotationFeatureForm
 
     private LayerSelector createDefaultAnnotationLayerSelector()
     {
-        return new LayerSelector("defaultAnnotationLayer", annotationLayers);
+        return new LayerSelector("defaultAnnotationLayer",
+            new PropertyModel<>(this, "annotationLayers"));
     }
 
     private Label createSelectedTextLabel()
@@ -592,11 +592,10 @@ public class AnnotationFeatureForm
     {
         private static final long serialVersionUID = 2233133653137312264L;
 
-        LayerSelector(String aId, List<? extends AnnotationLayer> aChoices)
+        LayerSelector(String aId, IModel<List<? extends AnnotationLayer>> aChoices)
         {
-            super(aId, aChoices);
+            super(aId, aChoices, new ChoiceRenderer<>("uiName"));
             setOutputMarkupId(true);
-            setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 5179816588460867471L;
