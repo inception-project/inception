@@ -781,11 +781,19 @@ public class WebAnnoCasUtil
 
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
+            final String effectiveType;
+            if (aFeature.isVirtualFeature()) {
+                effectiveType = CAS.TYPE_NAME_STRING;
+            }
+            else {
+                effectiveType = aFeature.getType();
+            }
+            
             // Sanity check
-            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
+            if (!Objects.equals(effectiveType, feature.getRange().getName())) {
                 throw new IllegalArgumentException("Actual feature type ["
                         + feature.getRange().getName() + "]does not match expected feature type ["
-                        + aFeature.getType() + "].");
+                        + effectiveType + "].");
             }
 
             // switch (aFeature.getType()) {
@@ -861,14 +869,19 @@ public class WebAnnoCasUtil
 
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
+            String effectiveType = aFeature.getType();
+            if (effectiveType.contains(":")) {
+                effectiveType = CAS.TYPE_NAME_STRING;
+            }
+            
             // Sanity check
-            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
+            if (!Objects.equals(effectiveType, feature.getRange().getName())) {
                 throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
                         + aFeature.getName() + "] actual type [" + feature.getRange().getName()
-                        + "] does not match expected feature type [" + aFeature.getType() + "].");
+                        + "] does not match expected feature type [" + effectiveType + "].");
             }
 
-            switch (aFeature.getType()) {
+            switch (effectiveType) {
             case CAS.TYPE_NAME_STRING:
                 aFS.setStringValue(feature, (String) aValue);
                 break;

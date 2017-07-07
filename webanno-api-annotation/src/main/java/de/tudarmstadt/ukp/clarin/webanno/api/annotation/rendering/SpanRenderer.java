@@ -33,6 +33,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -50,19 +51,18 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * Render spans.
  */
 public class SpanRenderer
-    implements Renderer
+    extends Renderer_ImplBase<SpanAdapter>
 {
-    private SpanAdapter typeAdapter;
-    
-    public SpanRenderer(SpanAdapter aTypeAdapter)
+    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        typeAdapter = aTypeAdapter;
+        super(aTypeAdapter, aFeatureSupportRegistry);
     }
     
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
+        SpanAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
         int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();

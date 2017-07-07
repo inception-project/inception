@@ -41,6 +41,7 @@ public class FeatureSupportRegistryImpl
 
     private final Map<String, FeatureSupport> beans = new HashMap<>();
     private final List<FeatureSupport> sortedBeans = new ArrayList<>();
+    private final Map<Long, FeatureSupport> supportCache = new HashMap<>();
     private boolean sorted = false;
 
     @Override
@@ -81,12 +82,26 @@ public class FeatureSupportRegistryImpl
     @Override
     public FeatureSupport getFeatureSupport(AnnotationFeature aFeature)
     {
-        for (FeatureSupport support : getFeatureSupports()) {
-            if (support.accepts(aFeature)) {
-                return support;
+        // This method is called often during rendering, so we try to make it fast by caching
+        // the supports by feature. Since the set of annotation features is relatively stable,
+        // this should not be a memory leak - even if we don't remove entries if annotation
+        // features would be deleted from the DB.
+        FeatureSupport support = supportCache.get(aFeature.getId());
+        
+        if (support == null) {
+            for (FeatureSupport s : getFeatureSupports()) {
+                if (s.accepts(aFeature)) {
+                    support = s;
+                    supportCache.put(aFeature.getId(), s);
+                    break;
+                }
             }
         }
         
-        throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName() + "]");
+        if (support == null) {
+            throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName() + "]");
+        }
+        
+        return support;
     }
 }

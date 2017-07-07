@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.List;
 
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 
@@ -38,6 +40,16 @@ public interface FeatureSupport
     FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel);
 
+    /**
+     * Gets the label that should be displayed for the given feature value in the UI.
+     * {@code null} is an acceptable return value for this method.
+     */
+    default String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
+            Feature aLabelFeature)
+    {
+        return aFs.getFeatureValueAsString(aLabelFeature);
+    }
+    
     default IllegalArgumentException unsupportedFeatureTypeException(FeatureState aFeatureState)
     {
         return new IllegalArgumentException("Unsupported type [" + aFeatureState.feature.getType()

@@ -18,24 +18,25 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isRequiredFeatureMissing;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
@@ -58,20 +59,24 @@ public interface Renderer
      */
     void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             AnnotatorState aState);
+    
+    FeatureSupportRegistry getFeatureSupportRegistry();
 
     default Map<String, String> getFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
         Map<String, String> features = new LinkedHashMap<>();
-        for (AnnotationFeature feature : aFeatures) {
 
+        for (AnnotationFeature feature : aFeatures) {
             if (!feature.isEnabled() || !feature.isVisible()
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
-
+            
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            String label = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
+            String label = defaultString(
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
             
             features.put(feature.getName(), label);
         }
@@ -83,7 +88,7 @@ public interface Renderer
             FeatureStructure aFS, VDocument aResponse)
     {
         for (AnnotationFeature f : aFeatures) {
-            if (WebAnnoCasUtil.isRequiredFeatureMissing(f, aFS)) {
+            if (isRequiredFeatureMissing(f, aFS)) {
                 aResponse.add(new VComment(new VID(getAddr(aFS)), VCommentType.ERROR,
                         "Required feature [" + f.getName() + "] not set."));
             }

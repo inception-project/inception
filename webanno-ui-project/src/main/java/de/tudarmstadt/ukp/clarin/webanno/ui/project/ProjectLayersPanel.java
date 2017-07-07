@@ -1150,7 +1150,7 @@ public class ProjectLayersPanel
     private void saveFeature(AnnotationFeature aFeature)
     {
         // Set properties of link features since these are currently not configurable in the UI
-        if (!PRIMITIVE_TYPES.contains(aFeature.getType())) {
+        if (!PRIMITIVE_TYPES.contains(aFeature.getType()) && !aFeature.isVirtualFeature()) {
             aFeature.setMode(MultiValueMode.ARRAY);
             aFeature.setLinkMode(LinkMode.WITH_ROLE);
             aFeature.setLinkTypeRoleFeatureName("role");

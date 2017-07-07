@@ -919,7 +919,12 @@ public class AnnotationSchemaServiceImpl
     {
         switch (aFeature.getMultiValueMode()) {
         case NONE:
-            aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+            if (aFeature.isVirtualFeature()) {
+                aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+            }
+            else {
+                aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+            }
             break;
         case ARRAY: {
             switch (aFeature.getLinkMode()) {

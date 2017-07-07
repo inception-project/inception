@@ -32,6 +32,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -42,13 +43,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class ChainRenderer
-    implements Renderer
+    extends Renderer_ImplBase<ChainAdapter>
 {
-    private ChainAdapter typeAdapter;
-
-    public ChainRenderer(ChainAdapter aTypeAdapter)
+    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        typeAdapter = aTypeAdapter;
+        super(aTypeAdapter, aFeatureSupportRegistry);
     }
 
     @Override
@@ -70,6 +69,7 @@ public class ChainRenderer
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
 
+        ChainAdapter typeAdapter = getTypeAdapter();
         Type chainType = typeAdapter.getAnnotationType(aJcas.getCas());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 

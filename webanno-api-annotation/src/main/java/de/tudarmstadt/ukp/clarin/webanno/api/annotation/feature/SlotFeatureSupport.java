@@ -42,11 +42,6 @@ public class SlotFeatureSupport
 {
     private @Resource AnnotationSchemaService annotationService;
 
-    public SlotFeatureSupport(AnnotationSchemaService aAnnotationService)
-    {
-        annotationService = aAnnotationService;
-    }
-    
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {

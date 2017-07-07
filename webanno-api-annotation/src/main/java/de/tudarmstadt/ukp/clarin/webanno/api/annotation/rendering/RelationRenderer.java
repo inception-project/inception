@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -51,21 +52,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
 public class RelationRenderer
-    implements Renderer
+    extends Renderer_ImplBase<ArcAdapter>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ArcAdapter typeAdapter;
-    
-    public RelationRenderer(ArcAdapter aTypeAdapter)
+    public RelationRenderer(ArcAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        typeAdapter = aTypeAdapter;
+        super(aTypeAdapter, aFeatureSupportRegistry);
     }
     
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
+        ArcAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
         int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
@@ -170,6 +170,7 @@ public class RelationRenderer
             int aWindowEnd, Type type, Feature dependentFeature, Feature governorFeature,
             Feature arcSpanFeature)
     {
+        ArcAdapter typeAdapter = getTypeAdapter();
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();

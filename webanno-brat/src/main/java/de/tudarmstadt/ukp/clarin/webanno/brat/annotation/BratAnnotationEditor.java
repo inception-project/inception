@@ -110,6 +110,7 @@ public class BratAnnotationEditor
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
     private static final String PARAM_SPAN_TYPE = "type";
 
+    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
 
     private WebMarkupContainer vis;
@@ -478,7 +479,7 @@ public class BratAnnotationEditor
     private void render(GetDocumentResponse response, JCas aJCas)
     {
         VDocument vdoc = new VDocument();
-        PreRenderer.render(vdoc, getModelObject(), aJCas, annotationService, getLayersToRender());
+        preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
         
         BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
     }

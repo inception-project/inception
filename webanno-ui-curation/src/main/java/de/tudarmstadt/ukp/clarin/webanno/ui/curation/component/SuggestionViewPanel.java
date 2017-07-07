@@ -114,6 +114,7 @@ public class SuggestionViewPanel
     
     private final ListView<CurationUserSegmentForAnnotationDocument> sentenceListView;
     
+    private @SpringBean PreRenderer preRenderer;
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
@@ -499,7 +500,7 @@ public class SuggestionViewPanel
         GetDocumentResponse response = new GetDocumentResponse();
         
         VDocument vdoc = new VDocument();
-        PreRenderer.render(vdoc, aBratAnnotatorModel, aJcas, annotationService, layersToRender);
+        preRenderer.render(vdoc, aBratAnnotatorModel, aJcas, layersToRender);
         
         BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,
                 aCurationColoringStrategy);

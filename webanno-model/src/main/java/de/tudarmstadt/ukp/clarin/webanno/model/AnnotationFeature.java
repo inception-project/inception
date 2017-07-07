@@ -370,6 +370,15 @@ public class AnnotationFeature
     {
         required = aRequired;
     }
+    
+    /**
+     * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
+     * must be mapped to a plain UIMA type (usually to String).
+     */
+    public boolean isVirtualFeature()
+    {
+        return getType().contains(":");
+    }
 
     @Override
     public int hashCode()
@@ -430,6 +439,4 @@ public class AnnotationFeature
         }
         return true;
     }
-
-
 }
