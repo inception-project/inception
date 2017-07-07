@@ -162,7 +162,8 @@ public class LoginPage
 
             String redirectUrl = getRedirectUrl();
             
-            if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")) {
+            if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")
+                    || redirectUrl.contains("-logoutPanel-")) {
                 log.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
             }
