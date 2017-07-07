@@ -395,13 +395,6 @@ public class ChainAdapter
         return null;
     }
 
-    @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
-    {
-        FeatureStructure fs = WebAnnoCasUtil.selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        WebAnnoCasUtil.setFeature(fs, aFeature, aValue);
-    }
-
     /**
      * Find the chain head for the given link.
      *

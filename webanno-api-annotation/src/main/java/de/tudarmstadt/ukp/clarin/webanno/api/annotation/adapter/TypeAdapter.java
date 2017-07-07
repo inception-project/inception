@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+
 import java.util.Collection;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
@@ -33,15 +37,24 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public interface TypeAdapter
 {
     String FEATURE_SEPARATOR = " | ";
+
     /**
      * Update this feature with a new value
      *
-     * @param aJcas the JCas.
-     * @param feature the feature.
-     * @param address the annotation ID.
-     * @param value the value.
+     * @param aJcas
+     *            the JCas.
+     * @param aFeature
+     *            the feature.
+     * @param aAddress
+     *            the annotation ID.
+     * @param aValue
+     *            the value.
      */
-    void updateFeature(JCas aJcas, AnnotationFeature feature, int address, Object value);
+    default void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    {
+        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        setFeature(fs, aFeature, aValue);
+    }
 
     /**
      * The ID of the type.

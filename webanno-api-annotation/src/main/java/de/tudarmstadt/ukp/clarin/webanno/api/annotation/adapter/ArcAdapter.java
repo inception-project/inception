@@ -398,13 +398,6 @@ public class ArcAdapter
     }
 
     @Override
-    public void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
-    {
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, aValue);
-    }
-
-    @Override
     public AnnotationLayer getLayer()
     {
         return layer;
