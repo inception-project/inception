@@ -346,7 +346,7 @@ public class SuggestionViewPanel
         long layerId = TypeUtil.getLayerId(arcType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
-        TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
+        TypeAdapter adapter = annotationService.getAdapter(layer);
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
         AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
 
@@ -640,7 +640,7 @@ public class SuggestionViewPanel
                     
                     AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(),
                             aProject);
-                    TypeAdapter typeAdapter = TypeUtil.getAdapter(annotationService, layer);
+                    TypeAdapter typeAdapter = annotationService.getAdapter(layer);
                     
                     VID vid;
                     // link FS

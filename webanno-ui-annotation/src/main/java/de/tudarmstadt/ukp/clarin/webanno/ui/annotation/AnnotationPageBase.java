@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -255,7 +254,7 @@ public abstract class AnnotationPageBase
         AnnotatorState state = getModelObject();
         CAS editorCas = aJcas.getCas();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
-            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             
             // If no feature is required, then we can skip the whole procedure

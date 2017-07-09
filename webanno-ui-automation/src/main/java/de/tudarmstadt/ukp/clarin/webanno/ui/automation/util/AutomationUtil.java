@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -70,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -110,8 +108,7 @@ public class AutomationUtil
 
         // get selected text, concatenations of tokens
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
-        SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
-                aFeature.getLayer());
+        SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
@@ -122,10 +119,9 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        adapter.add(jCas, sentence.getBegin() + i,
-                                sentence.getBegin() + i + selectedText.length() - 1, aFeature,
-                                aValue);
-
+                        int addr = adapter.add(jCas, sentence.getBegin() + i,
+                                sentence.getBegin() + i + selectedText.length() - 1);
+                        adapter.setFeatureValue(aFeature, jCas, addr, aValue);
                     }
                 }
             }
@@ -143,7 +139,7 @@ public class AutomationUtil
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
+            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -201,7 +197,8 @@ public class AutomationUtil
         for (AnnotationFS fs : aSpanAnnos) {
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
-                    adapter.add(g, fs, jCas, aStart, aEnd, aFeature, aValue);
+                    AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
                     g = null;
                     d = null;
                     continue;// so we don't go to the other if
@@ -214,7 +211,8 @@ public class AutomationUtil
             // we don't use else, in case gov and dep are the same
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
-                    adapter.add(fs, d, jCas, aStart, aEnd, aFeature, aValue);
+                    AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
                     g = null;
                     d = null;
                 }
@@ -309,8 +307,8 @@ public class AutomationUtil
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
-                    aFeature.getLayer());
+            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -337,7 +335,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
-            ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
+            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -404,8 +402,8 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                    aAnnotationService, feature.getLayer());
+            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                    .getAdapter(feature.getLayer());
             for (TrainingDocument trainingDocument : aAutomationService
                     .listTrainingDocuments(feature.getProject())) {
                 if ((trainingDocument.getFeature() != null
@@ -433,8 +431,8 @@ public class AutomationUtil
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, aFeature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(aFeature.getLayer());
         List<String> annotations = new ArrayList<>();
      // this is training - all training documents will be converted to a single training file
         if (aSourceDocument == null) {
@@ -594,8 +592,8 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         List<TrainingDocument> trainingDocuments = aAutomationService
                 .listTrainingDocuments(feature.getProject());
@@ -698,8 +696,8 @@ public class AutomationUtil
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = aUserDao.get(username);
         AnnotationFeature feature = aTemplate.getTrainFeature();
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             File predFile = new File(miraDir, document.getId() + ".pred.ft");
             BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));

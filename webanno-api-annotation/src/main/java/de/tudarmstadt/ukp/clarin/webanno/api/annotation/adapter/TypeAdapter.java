@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
-
 import java.util.Collection;
 
 import org.apache.uima.cas.CAS;
@@ -37,24 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public interface TypeAdapter
 {
     String FEATURE_SEPARATOR = " | ";
-
-    /**
-     * Update this feature with a new value
-     *
-     * @param aJcas
-     *            the JCas.
-     * @param aFeature
-     *            the feature.
-     * @param aAddress
-     *            the annotation ID.
-     * @param aValue
-     *            the value.
-     */
-    default void updateFeature(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
-    {
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
-        setFeature(fs, aFeature, aValue);
-    }
 
     /**
      * The ID of the type.
@@ -95,7 +74,7 @@ public interface TypeAdapter
     String getAttachTypeName();
 
     /**
-     * check if the annotation type is deletable
+     * Check if the annotation type is deletable
      *
      * @return if the layer is deletable.
      */
@@ -114,4 +93,19 @@ public interface TypeAdapter
     AnnotationLayer getLayer();
     
     Collection<AnnotationFeature> listFeatures();
+
+    /**
+     * Update this feature with a new value.
+     * @param aFeature
+     *            the feature.
+     * @param aJcas
+     *            the JCas.
+     * @param aAddress
+     *            the annotation ID.
+     * @param aValue
+     *            the value.
+     */
+    void setFeatureValue(AnnotationFeature aFeature, JCas aJcas, int aAddress, Object aValue);
+
+    <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
 }

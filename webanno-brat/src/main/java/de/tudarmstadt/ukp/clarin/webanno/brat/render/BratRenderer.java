@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -107,7 +106,7 @@ public class BratRenderer
                     : ColoringStrategy.getBestStrategy(aAnnotationService, layer,
                             aState.getPreferences(), colorQueues);
 
-            TypeAdapter typeAdapter = getAdapter(aAnnotationService, layer);
+            TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
             
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = toOffsets(vspan.getRanges());

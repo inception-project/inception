@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -475,7 +474,7 @@ public class SuggestionBuilder
                 continue;
             }
             entryTypes.add(
-                    getAdapter(aAnnotationService, layer).getAnnotationType(mergeJCas.getCas()));
+                    aAnnotationService.getAdapter(layer).getAnnotationType(mergeJCas.getCas()));
         }
         return entryTypes;
     }

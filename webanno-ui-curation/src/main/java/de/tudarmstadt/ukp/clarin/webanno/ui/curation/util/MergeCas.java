@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
@@ -531,14 +529,15 @@ public class MergeCas
             AnnotationLayer aAnnotationLayer, AnnotationFS aOldFs, JCas aJCas)
         throws AnnotationException
     {
-        SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService, aAnnotationLayer);
+        SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aAnnotationLayer);
 
         // Create the annotation - this also takes care of attaching to an annotation if necessary
-        int id = adapter.add(aJCas, aOldFs.getBegin(), aOldFs.getEnd(), null, null);
+        int id = adapter.add(aJCas, aOldFs.getBegin(), aOldFs.getEnd());
 
         List<AnnotationFeature> features = aAnnotationService
                 .listAnnotationFeature(adapter.getLayer());
 
+        
         // Copy the features
         for (AnnotationFeature feature : features) {
             Type oldType = adapter.getAnnotationType(aOldFs.getCAS());
@@ -546,8 +545,8 @@ public class MergeCas
             if (isLinkOrBasicFeatures(aOldFs, oldFeature)) {
                 continue;
             }
-            Object value = SpanAdapter.getFeatureValue(aOldFs, feature);
-            adapter.updateFeature(aJCas, feature, id, value);
+            Object value = adapter.getFeatureValue(feature, aOldFs);
+            adapter.setFeatureValue(feature, aJCas, id, value);
         }
     }
 
@@ -631,8 +630,8 @@ public class MergeCas
     }
 
     public static void addSpanAnnotation(AnnotationSchemaService aAnnotationService,
-            AnnotationLayer aAnnotationLayer, JCas aMergeJCas, AnnotationFS aFSClicked,
-            boolean aAllowStacking)
+            AnnotationLayer aAnnotationLayer, JCas aMergeJCas,
+            AnnotationFS aFSClicked, boolean aAllowStacking)
         throws AnnotationException
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
@@ -643,8 +642,8 @@ public class MergeCas
         // a) if stacking allowed add this new annotation to the mergeview
         List<AnnotationFS> existingAnnos = MergeCas.getAnnosOnPosition(aFSClicked, aMergeJCas);
         if (existingAnnos.size() == 0 || aAllowStacking) {
-            MergeCas.copySpanAnnotation(aAnnotationService, aAnnotationLayer, aFSClicked,
-                    aMergeJCas);
+            MergeCas.copySpanAnnotation(aAnnotationService, aAnnotationLayer,
+                    aFSClicked, aMergeJCas);
         }
 
         // b) if stacking is not allowed, modify the existing annotation with this one
@@ -760,7 +759,7 @@ public class MergeCas
         f: for (AnnotationFeature feat : aAdapter.listFeatures()) {
             if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
                     && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
-                List<LinkWithRoleModel> links = getFeature(aClickedFS, feat);
+                List<LinkWithRoleModel> links = aAdapter.getFeatureValue(feat, aClickedFS);
                 for (int li = 0; li < links.size(); li++) {
                     LinkWithRoleModel link = links.get(li);
                     if (fi == fiIndex && li == liIndex) {
@@ -778,7 +777,7 @@ public class MergeCas
             fi++;
         }
 
-        List<LinkWithRoleModel> links = getFeature(mergeFs, slotFeature);
+        List<LinkWithRoleModel> links = aAdapter.getFeatureValue(slotFeature, mergeFs);
         LinkWithRoleModel duplicateLink = null; //
         for (LinkWithRoleModel lr : links) {
             if (lr.targetAddr == linkRole.targetAddr) {

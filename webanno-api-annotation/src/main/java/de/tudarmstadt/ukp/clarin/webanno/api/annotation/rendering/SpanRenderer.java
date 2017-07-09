@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -141,7 +140,7 @@ public class SpanRenderer
             for (AnnotationFeature feat : typeAdapter.listFeatures()) {
                 if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
                         && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
-                    List<LinkWithRoleModel> links = getFeature(fs, feat);
+                    List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, fs);
                     for (int li = 0; li < links.size(); li++) {
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);

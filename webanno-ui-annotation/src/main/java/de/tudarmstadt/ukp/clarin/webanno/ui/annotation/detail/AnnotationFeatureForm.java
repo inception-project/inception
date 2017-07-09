@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 
@@ -385,7 +384,7 @@ public class AnnotationFeatureForm
                     AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation()
                             .getId());
                     AnnotationLayer layer = state.getSelectedAnnotationLayer();
-                    TypeAdapter adapter = getAdapter(editorPanel.getAnnotationService(), layer);
+                    TypeAdapter adapter = editorPanel.getAnnotationService().getAdapter(layer);
                     if (adapter instanceof SpanAdapter && editorPanel.getAttachedRels(jCas, fs,
                             layer).size() > 0) {
                         deleteModal.setTitle("Are you sure you like to delete all attached " +

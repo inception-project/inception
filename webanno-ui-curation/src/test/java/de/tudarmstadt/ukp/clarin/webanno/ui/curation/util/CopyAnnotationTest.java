@@ -41,8 +41,13 @@ import org.junit.rules.ExpectedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -58,6 +63,7 @@ import mockit.MockUp;
 public class CopyAnnotationTest
 {
     private AnnotationSchemaService annotationSchemaService;
+    private FeatureSupportRegistryImpl featureSupportRegistry;
     private Project project;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
@@ -131,7 +137,20 @@ public class CopyAnnotationTest
                 }
                 throw new IllegalStateException("Unknown layer type: " + type.getName());
             }
+            
+            @Mock
+            TypeAdapter getAdapter(AnnotationLayer aLayer)
+            {
+                return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
+                        featureSupportRegistry, aLayer);
+            }
+
         }.getMockInstance();
+        
+        featureSupportRegistry = new FeatureSupportRegistryImpl();
+        featureSupportRegistry.postProcessAfterInitialization(new PrimitiveUimaFeatureSupport(),
+                "uimaPrimitive");
+        featureSupportRegistry.postProcessAfterInitialization(new SlotFeatureSupport(), "slots");
     }
     
     @Test
@@ -146,7 +165,8 @@ public class CopyAnnotationTest
         JCas mergeCAs = JCasFactory.createJCas();
         createTokenAnno(mergeCAs, 0, 0);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs, clickedFs, false);
+        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
+                clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -183,7 +203,8 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(existingFs);
 
         exception.expect(AnnotationException.class);
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs, clickedFs, false);
+        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
+                clickedFs, false);
     }
 
     @Test
@@ -200,7 +221,8 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs, clickedFs, false);
+        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
+                clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -222,7 +244,8 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs, clickedFs, true);
+        MergeCas.addSpanAnnotation(annotationSchemaService, posLayer, mergeCAs,
+                clickedFs, true);
 
         assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -246,7 +269,8 @@ public class CopyAnnotationTest
         DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs, clickedFs, false);
+        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs,
+                clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -270,7 +294,8 @@ public class CopyAnnotationTest
         DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs, clickedFs, true);
+        MergeCas.addSpanAnnotation(annotationSchemaService, slotLayer, mergeCAs,
+                clickedFs, true);
 
         assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }

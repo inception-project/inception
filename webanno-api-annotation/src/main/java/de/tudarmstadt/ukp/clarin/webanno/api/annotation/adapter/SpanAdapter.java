@@ -18,11 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -33,7 +31,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
@@ -47,6 +44,7 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -57,7 +55,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * A class that is used to create Brat Span to CAS and vice-versa.
  */
 public class SpanAdapter
-    implements TypeAdapter, AutomationTypeAdapter
+    extends TypeAdapter_ImplBase
+    implements AutomationTypeAdapter
 {
     /**
      * The minimum offset of the annotation is on token, and the annotation can't span multiple
@@ -78,25 +77,13 @@ public class SpanAdapter
 
     private boolean crossMultipleSentence;
 
-    private boolean deletable;
-
-    private AnnotationLayer layer;
-
-    private Map<String, AnnotationFeature> features;
-
     // value NILL for a token when the training file do not have annotations provided
     private final static String NILL = "__nill__";
 
-    public SpanAdapter(AnnotationLayer aLayer, Collection<AnnotationFeature> aFeatures)
+    public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
+            Collection<AnnotationFeature> aFeatures)
     {
-        layer = aLayer;
-
-        // Using a sorted map here so we have reliable positions in the map when iterating. We use
-        // these positions to remember the armed slots!
-        features = new TreeMap<>();
-        for (AnnotationFeature f : aFeatures) {
-            features.put(f.getName(), f);
-        }
+        super(aFeatureSupportRegistry, aLayer, aFeatures);
     }
 
     /**
@@ -155,47 +142,42 @@ public class SpanAdapter
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
      *
-     * @param aJcas
+     * @param aJCas
      *            the JCas.
      * @param aBegin
      *            the begin offset.
      * @param aEnd
      *            the end offset.
-     * @param aFeature
-     *            the feature.
-     * @param aValue
-     *            the value of the annotation for the span
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(JCas aJcas, int aBegin, int aEnd, AnnotationFeature aFeature, Object aValue)
+    public Integer add(JCas aJCas, int aBegin, int aEnd)
         throws AnnotationException
     {
         // if zero-offset annotation is requested
         if (aBegin == aEnd) {
-            return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+            return updateCas(aJCas.getCas(), aBegin, aEnd);
         }
-        if (crossMultipleSentence || isSameSentence(aJcas, aBegin, aEnd)) {
+        if (crossMultipleSentence || isSameSentence(aJCas, aBegin, aEnd)) {
             if (lockToTokenOffsets) {
-                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);
+                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
 
                 if (tokens.isEmpty()) {
                     throw new AnnotationException("No token is found to annotate");
                 }
-                return updateCas(aJcas.getCas(), tokens.get(0).getBegin(), tokens.get(0).getEnd(),
-                        aFeature, aValue);
+                return updateCas(aJCas.getCas(), tokens.get(0).getBegin(), tokens.get(0).getEnd());
 
             }
             else if (allowMultipleToken) {
-                List<Token> tokens = selectOverlapping(aJcas, Token.class, aBegin, aEnd);
+                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
-                return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+                return updateCas(aJCas.getCas(), aBegin, aEnd);
             }
             else {
-                return updateCas(aJcas.getCas(), aBegin, aEnd, aFeature, aValue);
+                return updateCas(aJCas.getCas(), aBegin, aEnd);
             }
         }
         else {
@@ -233,56 +215,35 @@ public class SpanAdapter
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, begin, end)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                return getFeatureValue(fs, aFeature);
+                return getFeatureValue(aFeature, fs);
             }
         }
         
         return null;
     }
 
-    public static Serializable getFeatureValue(FeatureStructure aFs, AnnotationFeature aFeature)
-    {
-        Feature uimaFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        switch (aFeature.getType()) {
-        case CAS.TYPE_NAME_STRING:
-            return aFs.getFeatureValueAsString(uimaFeature);
-        case CAS.TYPE_NAME_BOOLEAN:
-            return aFs.getBooleanValue(uimaFeature);
-        case CAS.TYPE_NAME_FLOAT:
-            return aFs.getFloatValue(uimaFeature);
-        case CAS.TYPE_NAME_INTEGER:
-            return aFs.getIntValue(uimaFeature);
-        default:
-            return aFs.getFeatureValueAsString(uimaFeature);
-        }
-    }
-
     /**
      * A Helper method to add annotation to CAS
      */
-    private Integer updateCas(CAS aCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            Object aValue)
+    private Integer updateCas(CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!allowStacking) {
-                    setFeature(fs, aFeature, aValue);
                     return getAddr(fs);
                 }
             }
         }
-        AnnotationFS newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
+        AnnotationFS newAnnotation = createAnnotation(aCas, aBegin, aEnd, type);
         return getAddr(newAnnotation);
     }
 
-    private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature, Object aValue, Type aType)
+    private AnnotationFS createAnnotation(CAS aCas, int aBegin, int aEnd, Type aType)
         throws AnnotationException
     {
         AnnotationFS newAnnotation = aCas.createAnnotation(aType, aBegin, aEnd);
-        setFeature(newAnnotation, aFeature, aValue);
 
         if (getAttachFeatureName() != null) {
             Type theType = CasUtil.getType(aCas, getAttachTypeName());
@@ -295,56 +256,6 @@ public class SpanAdapter
                     .setFeatureValue(attachFeature, newAnnotation);
         }
         aCas.addFsToIndexes(newAnnotation);
-        return newAnnotation;
-    }
-
-    /**
-     * A Helper method to add annotation to a Curation CAS
-     */
-    public AnnotationFS updateCurationCas(CAS aCas, int aBegin, int aEnd,
-            AnnotationFeature aFeature, Object aValue, AnnotationFS aClickedFs, boolean aIsSlot)
-        throws AnnotationException
-    {
-        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        AnnotationFS newAnnotation = null;
-        int countAnno = 0;
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-            countAnno++;
-            newAnnotation = fs;
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!allowStacking) {
-                    setFeature(fs, aFeature, aValue);
-                    return fs;
-                }
-                // if stacking, get other existing feature values before updating with the new
-                // feature
-                StringBuilder clickedFtValues = new StringBuilder();
-                StringBuilder curationFtValues = new StringBuilder();
-                for (Feature feat : type.getFeatures()) {
-                    switch (feat.getRange().getName()) {
-                    case CAS.TYPE_NAME_STRING:
-                    case CAS.TYPE_NAME_BOOLEAN:
-                    case CAS.TYPE_NAME_FLOAT:
-                    case CAS.TYPE_NAME_INTEGER:
-                        clickedFtValues.append(aClickedFs.getFeatureValueAsString(feat));
-                        curationFtValues.append(fs.getFeatureValueAsString(feat));
-                    default:
-                        continue;
-                    }
-                }
-                if (clickedFtValues.toString().equals(curationFtValues.toString())) {
-                    return fs;
-                }
-            }
-        }
-
-        if (!aIsSlot) {
-            newAnnotation = createAnnotation(aCas, aBegin, aEnd, aFeature, aValue, type);
-        }
-        if (aIsSlot && countAnno > 1) {
-            throw new AnnotationException("There are different stacking annotation on curation "
-                    + "panel, cannot copy the slot feature");
-        }
         return newAnnotation;
     }
 
@@ -375,7 +286,7 @@ public class SpanAdapter
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
 
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
+                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
                     delete(aJCas, new VID(getAddr(fs)));
                 }
             }
@@ -385,7 +296,7 @@ public class SpanAdapter
     @Override
     public long getTypeId()
     {
-        return layer.getId();
+        return getLayer().getId();
     }
 
     @Override
@@ -400,24 +311,14 @@ public class SpanAdapter
     @Override
     public String getAnnotationTypeName()
     {
-        return layer.getName();
-    }
-
-    public void setDeletable(boolean aDeletable)
-    {
-        this.deletable = aDeletable;
-    }
-
-    @Override
-    public boolean isDeletable()
-    {
-        return deletable;
+        return getLayer().getName();
     }
 
     @Override
     public String getAttachFeatureName()
     {
-        return layer.getAttachFeature() == null ? null : layer.getAttachFeature().getName();
+        return getLayer().getAttachFeature() == null ? null
+                : getLayer().getAttachFeature().getName();
     }
 
     @Override
@@ -474,18 +375,6 @@ public class SpanAdapter
     @Override
     public String getAttachTypeName()
     {
-        return layer.getAttachType() == null ? null : layer.getAttachType().getName();
-    }
-
-    @Override
-    public AnnotationLayer getLayer()
-    {
-        return layer;
-    }
-
-    @Override
-    public Collection<AnnotationFeature> listFeatures()
-    {
-        return features.values();
+        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
 }

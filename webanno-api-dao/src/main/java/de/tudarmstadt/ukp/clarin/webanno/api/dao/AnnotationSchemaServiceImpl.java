@@ -30,12 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
 
+import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
@@ -57,6 +59,11 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -88,6 +95,8 @@ public class AnnotationSchemaServiceImpl
 
     @PersistenceContext
     private EntityManager entityManager;
+    
+    private @Resource FeatureSupportRegistry featureSupportRegistry;
 
     public AnnotationSchemaServiceImpl()
     {
@@ -288,6 +297,28 @@ public class AnnotationSchemaServiceImpl
                 .createQuery("From AnnotationLayer where name = :name AND project =:project",
                         AnnotationLayer.class).setParameter("name", aName)
                 .setParameter("project", aProject).getSingleResult();
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationLayer getLayer(Project aProject, FeatureStructure aFS)
+    {
+        String layerName = aFS.getType().getName();
+        AnnotationLayer layer;
+        try {
+            layer = getLayer(layerName, aProject);
+        }
+        catch (NoResultException e) {
+            if (layerName.endsWith("Chain")) {
+                layerName = layerName.substring(0, layerName.length() - 5);
+            }
+            if (layerName.endsWith("Link")) {
+                layerName = layerName.substring(0, layerName.length() - 4);
+            }
+            layer = getLayer(layerName, aProject);
+        }
+
+        return layer;
     }
 
     @Override
@@ -994,6 +1025,53 @@ public class AnnotationSchemaServiceImpl
         }
     }
 
+    @Override
+    @Transactional
+    public TypeAdapter getAdapter(AnnotationLayer aLayer)
+    {
+        return getAdapter(this, featureSupportRegistry, aLayer);
+    }
+    
+    public static TypeAdapter getAdapter(AnnotationSchemaService aSchemaService,
+            FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer)
+    {
+        switch (aLayer.getType()) {
+        case WebAnnoConst.SPAN_TYPE: {
+            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aLayer,
+                    aSchemaService.listAnnotationFeature(aLayer));
+            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
+            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
+            return adapter;
+        }
+        case WebAnnoConst.RELATION_TYPE: {
+            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
+                    aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
+                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
+                    aLayer.getAttachType().getName(), aSchemaService.listAnnotationFeature(aLayer));
+
+            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
+            adapter.setAllowStacking(aLayer.isAllowStacking());
+
+            return adapter;
+            // default is chain (based on operation, change to CoreferenceLinK)
+        }
+        case WebAnnoConst.CHAIN_TYPE: {
+            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
+                    aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
+                    aSchemaService.listAnnotationFeature(aLayer));
+
+            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+
+            return adapter;
+        }
+        default:
+            throw new IllegalArgumentException(
+                    "No adapter for type with name [" + aLayer.getName() + "]");
+        }
+    }
+    
     @Override
     public void afterProjectCreate(Project aProject)
         throws Exception

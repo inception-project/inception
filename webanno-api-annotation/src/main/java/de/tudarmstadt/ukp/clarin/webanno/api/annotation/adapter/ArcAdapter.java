@@ -18,19 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
@@ -45,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ArcCrossedMultipleSentenceException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -52,11 +49,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
- *
- *
  */
 public class ArcAdapter
-    implements TypeAdapter, AutomationTypeAdapter
+    extends TypeAdapter_ImplBase
+    implements AutomationTypeAdapter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -98,8 +94,6 @@ public class ArcAdapter
      */
     private final String attachType;
 
-    private boolean deletable;
-
     /**
      * Allow multiple annotations of the same layer (only when the type value is different)
      */
@@ -107,27 +101,19 @@ public class ArcAdapter
 
     private boolean crossMultipleSentence;
 
-    private AnnotationLayer layer;
-
-    private Map<String, AnnotationFeature> features;
-
-    public ArcAdapter(AnnotationLayer aLayer, long aTypeId, String aTypeName,
-            String aTargetFeatureName, String aSourceFeatureName, /* String aArcSpanType, */
+    public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
+            long aTypeId, String aTypeName, String aTargetFeatureName,
+            String aSourceFeatureName, /* String aArcSpanType, */
             String aAttacheFeatureName, String aAttachType, Collection<AnnotationFeature> aFeatures)
     {
-        layer = aLayer;
+        super(aFeatureSupportRegistry, aLayer, aFeatures);
+        
         typeId = aTypeId;
         annotationTypeName = aTypeName;
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
-        // arcSpanType = aArcSpanType;
         attachFeatureName = aAttacheFeatureName;
         attachType = aAttachType;
-
-        features = new LinkedHashMap<>();
-        for (AnnotationFeature f : aFeatures) {
-            features.put(f.getName(), f);
-        }
     }
 
     /**
@@ -143,22 +129,17 @@ public class ArcAdapter
      *            begin offset of the first visible sentence
      * @param aWindowEnd
      *            end offset of the last visible sentence
-     * @param aFeature
-     *            the feature.
-     * @param aLabelValue
-     *            the value of the annotation for the arc
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation could not be created/updated.
      */
     public AnnotationFS add(AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJCas,
-            int aWindowBegin, int aWindowEnd, AnnotationFeature aFeature, Object aLabelValue)
+            int aWindowBegin, int aWindowEnd)
         throws AnnotationException
     {
         if (crossMultipleSentence
                 || isSameSentence(aJCas, aOriginFs.getBegin(), aTargetFs.getEnd())) {
-            return interalAddToCas(aJCas, aWindowBegin, aWindowEnd, aOriginFs, aTargetFs,
-                    aLabelValue, aFeature);
+            return interalAddToCas(aJCas, aWindowBegin, aWindowEnd, aOriginFs, aTargetFs);
         }
         else {
             throw new ArcCrossedMultipleSentenceException(
@@ -173,8 +154,7 @@ public class ArcAdapter
      *            end offset of the last visible sentence
      */
     private AnnotationFS interalAddToCas(JCas aJCas, int aWindowBegin, int aWindowEnd,
-            AnnotationFS aOriginFs, AnnotationFS aTargetFs, Object aValue,
-            AnnotationFeature aFeature)
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs)
         throws AnnotationException
     {
         Type type = getType(aJCas.getCas(), annotationTypeName);
@@ -203,7 +183,7 @@ public class ArcAdapter
             }
 
             if (dependentFs == null || governorFs == null) {
-                log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)
+                log.warn("Relation [" + getLayer().getName() + "] with id [" + getAddr(fs)
                         + "] has loose ends - ignoring during while checking for duplicates.");
                 continue;
             }
@@ -211,7 +191,6 @@ public class ArcAdapter
             // If stacking is not allowed and we would be creating a duplicate arc, then instead
             // update the label of the existing arc
             if (!allowStacking && isDuplicate(governorFs, aOriginFs, dependentFs, aTargetFs)) {
-                setFeature(fs, aFeature, aValue);
                 return fs;
             }
         }
@@ -251,7 +230,6 @@ public class ArcAdapter
         // position of the last token.
         newAnnotation.setFeatureValue(dependentFeature, dependentFs);
         newAnnotation.setFeatureValue(governorFeature, governorFs);
-        setFeature(newAnnotation, aFeature, aValue);
         aJCas.addFsToIndexes(newAnnotation);
         return newAnnotation;
     }
@@ -288,12 +266,6 @@ public class ArcAdapter
     public String getAnnotationTypeName()
     {
         return annotationTypeName;
-    }
-
-    @Override
-    public boolean isDeletable()
-    {
-        return deletable;
     }
 
     @Override
@@ -338,7 +310,7 @@ public class ArcAdapter
             
             if (aDepCoveredText.equals(dependentFs.getCoveredText())
                     && aGovCoveredText.equals(governorFs.getCoveredText())) {
-                if (ObjectUtils.equals(getFeature(fs, aFeature), aValue)) {
+                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
                     delete(aJCas, new VID(getAddr(fs)));
                 }
             }
@@ -397,18 +369,6 @@ public class ArcAdapter
         return attachType;
     }
 
-    @Override
-    public AnnotationLayer getLayer()
-    {
-        return layer;
-    }
-
-    @Override
-    public Collection<AnnotationFeature> listFeatures()
-    {
-        return features.values();
-    }
-
     public String getSourceFeatureName()
     {
         return sourceFeatureName;
@@ -423,6 +383,5 @@ public class ArcAdapter
     public void delete(JCas aJCas, AnnotationFeature feature, int aBegin, int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
-        
     }
 }

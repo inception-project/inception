@@ -22,9 +22,11 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -188,6 +190,8 @@ public interface AnnotationSchemaService
      */
     AnnotationLayer getLayer(String name, Project project);
 
+    AnnotationLayer getLayer(Project aProject, FeatureStructure aFS);
+    
     /**
      * Get a {@link AnnotationFeature} name using its ID.
      *
@@ -394,4 +398,6 @@ public interface AnnotationSchemaService
     
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
+
+    TypeAdapter getAdapter(AnnotationLayer aLayer);
 }

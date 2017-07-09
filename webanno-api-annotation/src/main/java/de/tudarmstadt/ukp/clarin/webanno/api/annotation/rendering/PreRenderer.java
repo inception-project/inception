@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +56,7 @@ public class PreRenderer
             }
             features.removeAll(invisibleFeatures);
 
-            TypeAdapter adapter = getAdapter(annotationService, layer);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = getRenderer(adapter);
             renderer.render(aJCas, features, aResponse, aState);
         }

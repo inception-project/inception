@@ -21,30 +21,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as geting
  * {@link TypeAdapter} based on its {@link CAS} {@link Type}
- *
  */
 public final class TypeUtil
 {
@@ -53,65 +43,6 @@ public final class TypeUtil
         // No instances
     }
 
-    public static AnnotationLayer getLayer(AnnotationSchemaService aRepo, Project aProject,
-            FeatureStructure aFS)
-    {
-        String layerName = aFS.getType().getName();
-        AnnotationLayer layer;
-        try {
-            layer = aRepo.getLayer(layerName, aProject);
-        }
-        catch (NoResultException e) {
-            if (layerName.endsWith("Chain")) {
-                layerName = layerName.substring(0, layerName.length() - 5);
-            }
-            if (layerName.endsWith("Link")) {
-                layerName = layerName.substring(0, layerName.length() - 4);
-            }
-            layer = aRepo.getLayer(layerName, aProject);
-        }
-
-        return layer;
-    }
-
-    public static TypeAdapter getAdapter(AnnotationSchemaService aRepo, AnnotationLayer aLayer)
-    {
-        switch (aLayer.getType()) {
-        case WebAnnoConst.SPAN_TYPE: {
-            SpanAdapter adapter = new SpanAdapter(aLayer, aRepo.listAnnotationFeature(aLayer));
-            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
-            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-            return adapter;
-        }
-        case WebAnnoConst.RELATION_TYPE: {
-            ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(),
-                    WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
-                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
-                    aLayer.getAttachType().getName(), aRepo.listAnnotationFeature(aLayer));
-
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
-
-            return adapter;
-            // default is chain (based on operation, change to CoreferenceLinK)
-        }
-        case WebAnnoConst.CHAIN_TYPE: {
-            ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(),
-                    aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
-                    aRepo.listAnnotationFeature(aLayer));
-
-            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
-
-            return adapter;
-        }
-        default:
-            throw new IllegalArgumentException(
-                    "No adapter for type with name [" + aLayer.getName() + "]");
-        }
-    }
-    
     /**
      * Construct the label text used in the brat user interface.
      *
