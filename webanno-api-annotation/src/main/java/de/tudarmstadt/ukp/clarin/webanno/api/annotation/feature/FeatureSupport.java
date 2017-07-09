@@ -65,7 +65,7 @@ public interface FeatureSupport
     
     /**
      * Update this feature with a new value. This method should not be called directly but
-     * rather via {@link TypeAdapter#updateFeature}.
+     * rather via {@link TypeAdapter#setFeatureValue}.
      *
      * @param aJcas
      *            the JCas.
