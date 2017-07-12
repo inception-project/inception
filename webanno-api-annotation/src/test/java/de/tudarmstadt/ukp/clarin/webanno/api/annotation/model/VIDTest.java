@@ -31,12 +31,14 @@ public class VIDTest
         assertEquals("10.1.2", new VID(10, 1, 2).toString());
         assertEquals("10-1.2.3", new VID(10, 1, 2, 3).toString());
         assertEquals("ext:10-1.2.3", new VID("ext", 10, 1, 2, 3).toString());
-
+        assertEquals("ext:1.10-1.2.3", new VID("ext", 1, 10, 1, 2, 3).toString());
+        
         assertEquals(VID.NONE_ID.toString(), VID.parse(VID.NONE_ID.toString()).toString());
         assertEquals("10", VID.parse("10").toString());
         assertEquals("10.1", VID.parse("10.1").toString());
         assertEquals("10.1.2", VID.parse("10.1.2").toString());
         assertEquals("10-1.2.3", VID.parse("10-1.2.3").toString());
         assertEquals("ext:10-1.2.3", VID.parse("ext:10-1.2.3").toString());
+        assertEquals("ext:1.10-1.2.3", VID.parse("ext:1.10-1.2.3").toString());
     }
 }

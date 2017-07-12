@@ -38,19 +38,27 @@ public class VID
     implements Serializable
 {
     private static final long serialVersionUID = -8490129995678288943L;
-    
+
     private static final String ID = "ID";
     private static final String SUB = "SUB";
     private static final String ATTR = "ATTR";
     private static final String SLOT = "SLOT";
     private static final String EXTENSION = "EXT";
-    
+    private static final String LAYER = "LAYER";
+
     public static final Pattern PATTERN_VID = Pattern.compile(
-            "(?:(?<EXT>\\w+)\\:)?(?<ID>-?\\d+)(?:\\-(?<SUB>\\d+))?(?:\\.(?<ATTR>\\d+))?(?:\\.(?<SLOT>\\d+))?");
+            "(?:(?<EXT>\\w+)\\:)?" + 
+            "((?<LAYER>\\d+)\\.)?" +
+            "(?<ID>-?\\d+)" +
+            "(?:\\-(?<SUB>\\d+))?" +
+            "(?:\\.(?<ATTR>\\d+))?" +
+            "(?:\\.(?<SLOT>\\d+))?");
+
     public static final int NONE = -1;
 
     public static final VID NONE_ID = new VID(NONE);
 
+    private final int layerId;
     private final int annotationId;
     private final int subAnnotationId;
     private final int attribute;
@@ -86,7 +94,7 @@ public class VID
     {
         this(null, aAnnotationID, NONE, aAttribute, aSlot);
     }
-    
+
     public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
@@ -106,7 +114,7 @@ public class VID
     {
         this(aExtensionId, aAnnotationID, NONE, aAttribute, NONE);
     }
-    
+
     public VID(String aExtensionId, int aAnnotationID, int aAttribute, int aSlot)
     {
         this(aExtensionId, aAnnotationID, NONE, aAttribute, aSlot);
@@ -115,21 +123,33 @@ public class VID
     public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute,
             int aSlot)
     {
+        this(aExtensionId, NONE, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+    }
+
+    public VID(String aExtensionId, int aLayerId, int aAnnotationID, int aSubAnnotationId,
+            int aAttribute, int aSlot)
+    {
         annotationId = aAnnotationID;
         subAnnotationId = aSubAnnotationId;
         attribute = aAttribute;
         slot = aSlot;
         extensionId = aExtensionId;
+        layerId = aLayerId;
     }
 
     public boolean isSet()
     {
         return annotationId >= 0;
     }
-    
+
     public boolean isNotSet()
     {
         return !isSet();
+    }
+
+    public int getLayerId()
+    {
+        return layerId;
     }
 
     public int getId()
@@ -141,7 +161,7 @@ public class VID
     {
         return subAnnotationId;
     }
-    
+
     public int getAttribute()
     {
         return attribute;
@@ -156,7 +176,7 @@ public class VID
     {
         return slot >= 0;
     }
-    
+
     /**
      * @return {@code true} if the annotation referred to does not exist in the CAS. These are
      *         annotations created by editor extensions.
@@ -165,7 +185,7 @@ public class VID
     {
         return isNotBlank(extensionId);
     }
-    
+
     /**
      * @return the ID of the editor extension that created the annotation referred to.
      */
@@ -192,8 +212,9 @@ public class VID
             int subAnnotationId = NONE;
             int feature = NONE;
             int slot = NONE;
+            int layerId = NONE;
             String extensionId = null;
-            
+
             if (m.group(SUB) != null) {
                 subAnnotationId = Integer.valueOf(m.group(SUB));
             }
@@ -206,7 +227,10 @@ public class VID
             if (m.group(EXTENSION) != null) {
                 extensionId = m.group(EXTENSION);
             }
-            return new VID(extensionId, annotationId, subAnnotationId, feature, slot);
+            if (m.group(LAYER) != null) {
+                layerId = Integer.valueOf(m.group(LAYER));
+            }
+            return new VID(extensionId, layerId, annotationId, subAnnotationId, feature, slot);
         }
         else {
             throw new IllegalArgumentException("Cannot parse visual identifier [" + aVid + "]");
@@ -223,13 +247,18 @@ public class VID
             sb.append(':');
         }
 
+        if (layerId >= 0) {
+            sb.append(layerId);
+            sb.append('.');
+        }
+
         sb.append(annotationId);
 
         if (subAnnotationId >= 0) {
             sb.append('-');
             sb.append(subAnnotationId);
         }
-        
+
         if (attribute >= 0) {
             sb.append('.');
             sb.append(attribute);
@@ -251,6 +280,7 @@ public class VID
         result = prime * result + annotationId;
         result = prime * result + attribute;
         result = prime * result + ((extensionId == null) ? 0 : extensionId.hashCode());
+        result = prime * result + ((layerId == NONE) ? 0 : extensionId.hashCode());
         result = prime * result + slot;
         result = prime * result + subAnnotationId;
         return result;
@@ -269,6 +299,9 @@ public class VID
             return false;
         }
         VID other = (VID) obj;
+        if (layerId != other.layerId) {
+            return false;
+        }
         if (annotationId != other.annotationId) {
             return false;
         }
