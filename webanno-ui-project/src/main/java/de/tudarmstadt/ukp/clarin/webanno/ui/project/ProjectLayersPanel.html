@@ -107,7 +107,7 @@
               Behaviors (<a target="_blank" wicket:message="href:behaviours.help.link"><wicket:message
                   key="help.label" /></a>)
             </legend>
-            <table>
+            <table class="hfill">
               <tr>
                 <td style="vertical-align: top;">Read-only:</td>
                 <td><input type="checkbox" wicket:id="readonly"></input></td>
@@ -136,9 +136,11 @@
                 <td style="vertical-align: top;"><span wicket:id="isZeroWidthOnlyLabel"></span></td>
                 <td><input type="checkbox" wicket:id="isZeroWidthOnly" /></td>
               </tr -->
-              <tr>
-                <td style="vertical-align: top;"><span wicket:id="onClickJavascriptActionLabel"></span></td>
-                <td><textarea wicket:id="onClickJavascriptAction" rows="6" cols="40"></textarea></td>
+              <tr>              
+                <td colspan="2">
+                  <div wicket:id="onClickJavascriptActionLabel"></div>
+                  <textarea class="hfill" wicket:id="onClickJavascriptAction" rows="6" cols="40"></textarea>
+                </td>
               </tr>
             </table>
           </fieldset>
