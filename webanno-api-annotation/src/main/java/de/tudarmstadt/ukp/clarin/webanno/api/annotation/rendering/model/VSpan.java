@@ -36,11 +36,12 @@ public class VSpan
     extends VObject
 {
     private List<VRange> ranges = new ArrayList<>();
-
+    private String colorHint;
+    
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, null);
     }
     
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
@@ -53,26 +54,37 @@ public class VSpan
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
             Map<String, String> aFeatures)
     {
-        this(aLayer, aVid, aType, asList(aOffsets), aFeatures);
+        this(aLayer, aVid, aType, asList(aOffsets), aFeatures, null);
+    }
+    
+    public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
+            Map<String, String> aFeatures, String color)
+    {
+        this(aLayer, aVid, aType, asList(aOffsets), aFeatures, color);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
             Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
             int aEquivalenceClass, Map<String, String> aFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, List<VRange> aOffsets,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, String color)
     {
         super(aLayer, aVid, aType, aFeatures);
         ranges = aOffsets;
+        colorHint = color;
+    }
+    
+    public String getColorHint () {
+        return colorHint;
     }
 
     public List<VRange> getOffsets()

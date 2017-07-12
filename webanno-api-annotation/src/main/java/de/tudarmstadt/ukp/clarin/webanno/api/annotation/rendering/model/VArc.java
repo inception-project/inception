@@ -32,19 +32,20 @@ public class VArc
 {
     private VID source;
     private VID target;
+    private String colorHint;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), aFeatures);
+                new VID(getAddr(aTargetFS)), aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
         this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aFeatures);
+                aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
@@ -56,13 +57,18 @@ public class VArc
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, String color)
     {
         super(aLayer, aVid, aType, aFeatures);
         source = aSource;
         target = aTarget;
+        colorHint = color;
     }
 
+    public String getColorHint () {
+        return colorHint;
+    }
+    
     public VID getSource()
     {
         return source;

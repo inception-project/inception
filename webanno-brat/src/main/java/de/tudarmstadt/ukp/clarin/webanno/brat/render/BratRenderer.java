@@ -111,14 +111,24 @@ public class BratRenderer
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = toOffsets(vspan.getRanges());
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
-                String color = getColor(vspan, coloringStrategy, bratLabelText);
+                String color;
+                if (vspan.getColorHint() == null) {
+                    color = getColor(vspan, coloringStrategy, bratLabelText);
+                } else {
+                    color = vspan.getColorHint();
+                }
                 aResponse.addEntity(
                         new Entity(vspan.getVid(), vspan.getType(), offsets, bratLabelText, color));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
-                String color = getColor(varc, coloringStrategy, bratLabelText);
+                String color;
+                if (varc.getColorHint() == null) {
+                    color = getColor(varc, coloringStrategy, bratLabelText);
+                } else {
+                    color = varc.getColorHint();
+                }
                 aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
                         getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
             }
