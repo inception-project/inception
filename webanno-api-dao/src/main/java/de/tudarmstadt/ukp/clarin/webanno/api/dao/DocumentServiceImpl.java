@@ -643,30 +643,32 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser,
-            boolean aUpdateTimestamp)
+            boolean aAnnotationsChanged)
         throws IOException
     {
         casStorageService.writeCas(aDocument, aJcas, aUser.getUsername());
         
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        if (aUpdateTimestamp) {
+        if (aAnnotationsChanged) {
             annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
             annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
             annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
             entityManager.merge(annotationDocument);
         }
         
-        // Notify all relevant service so that they can update themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
-            try {
-                bean.afterAnnotationUpdate(annotationDocument, aJcas);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
+        // Notify all relevant service so that they can update themselves for the given document,
+        // in the case the document timestamp has changed.
+        if (aAnnotationsChanged) {
+            for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry.getBeans()) {
+                try {
+                    bean.afterAnnotationUpdate(annotationDocument, aJcas);
+                }
+                catch (IOException e) {
+                    throw e;
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
             }
         }
     }
