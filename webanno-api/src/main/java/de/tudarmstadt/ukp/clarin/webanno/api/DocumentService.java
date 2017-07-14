@@ -219,17 +219,12 @@ public interface DocumentService
      * @param document
      *            the source document.
      * @param user
-     *            the User who perform this operation
-     * @param aAnnotationsChanged
-     *            whether the in the JCas (may) have changed. This triggers side effects such as
-     *            updating the latest change timestamp and triggering {@link DocumentLifecycleAware}
-     *            services.
+     *            The User who perform this operation
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, SourceDocument document, User user,
-            boolean aAnnotationsChanged)
+    void writeAnnotationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**
