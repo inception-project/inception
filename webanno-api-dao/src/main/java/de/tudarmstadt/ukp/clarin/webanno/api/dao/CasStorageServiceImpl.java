@@ -26,6 +26,9 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +41,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -62,6 +68,17 @@ public class CasStorageServiceImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Object lock = new Object();
+
+    public static final MetaDataKey<Map<JCasCacheKey, JCasCacheEntry>> CACHE = 
+            new MetaDataKey<Map<JCasCacheKey, JCasCacheEntry>>()
+    {
+        private static final long serialVersionUID = -5690189241875643945L;
+    };
+
+    public static final MetaDataKey<Boolean> CACHE_DISABLED = new MetaDataKey<Boolean>()
+    {
+        private static final long serialVersionUID = -624612695417652879L;
+    };
 
     @Value(value = "${repository.path}")
     private File dir;
@@ -99,11 +116,22 @@ public class CasStorageServiceImpl
     public void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName)
         throws IOException
     {
-
         File annotationFolder = getAnnotationFolder(aDocument);
         File targetPath = getAnnotationFolder(aDocument);
         writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, aUserName,
                 annotationFolder, targetPath);
+        
+        // Update the CAS in the cache
+        if (isCacheEnabled()) {
+            JCasCacheKey key = JCasCacheKey.of(aDocument, aUserName);
+            JCasCacheEntry entry = getCache().get(key);
+            if (entry == null) {
+                entry = new JCasCacheEntry();
+                entry.jcas = aJcas;
+            }
+            entry.writes++;
+            getCache().put(key, entry);
+        }
     }
     
     private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
@@ -310,32 +338,62 @@ public class CasStorageServiceImpl
         // DebugUtils.smallStack();
 
         synchronized (lock) {
-            File annotationFolder = getAnnotationFolder(aDocument);
-
-            String file = aUsername + ".ser";
-
-            try {
-                File serializedCasFile = new File(annotationFolder, file);
-                if (!serializedCasFile.exists()) {
-                    throw new FileNotFoundException("Annotation document of user [" + aUsername
-                            + "] for source document [" + aDocument.getName() + "] ("
-                            + aDocument.getId() + ") not found in project["
-                            + aDocument.getProject().getName() + "] ("
-                            + aDocument.getProject().getId() + ")");
+            JCas jcas = null;
+            
+            // Check if we have the CAS in the cache
+            if (isCacheEnabled()) {
+                JCasCacheEntry entry = getCache().get(JCasCacheKey.of(aDocument, aUsername));
+                if (entry != null) {
+                    log.debug("Fetched CAS [{},{}] from cache", aDocument.getId(), aUsername);
+                    entry.reads++;
+                    jcas = entry.jcas;
                 }
-
-                CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-                CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
-
-                if (aAnalyzeAndRepair) {
-                    analyzeAndRepair(aDocument, aUsername, cas);
+            }
+            
+            // If the CAS is not in the cache, load it from disk
+            if (jcas == null) {
+                File annotationFolder = getAnnotationFolder(aDocument);
+    
+                String file = aUsername + ".ser";
+    
+                try {
+                    File serializedCasFile = new File(annotationFolder, file);
+                    if (!serializedCasFile.exists()) {
+                        throw new FileNotFoundException("Annotation document of user [" + aUsername
+                                + "] for source document [" + aDocument.getName() + "] ("
+                                + aDocument.getId() + ") not found in project["
+                                + aDocument.getProject().getName() + "] ("
+                                + aDocument.getProject().getId() + ")");
+                    }
+    
+                    CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+                    CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+    
+                    if (aAnalyzeAndRepair) {
+                        analyzeAndRepair(aDocument, aUsername, cas);
+                    }
+    
+                    jcas = cas.getJCas();
                 }
-
-                return cas.getJCas();
+                catch (UIMAException e) {
+                    throw new DataRetrievalFailureException("Unable to parse annotation", e);
+                }
+                
+                // Update the cache
+                if (isCacheEnabled()) {
+                    JCasCacheEntry entry = new JCasCacheEntry();
+                    entry.jcas = jcas;
+                    entry.reads++;
+                    getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
+                    log.debug("Loaded CAS [{},{}] from disk and stored in cache", aDocument.getId(),
+                            aUsername);
+                }
+                else {
+                    log.debug("Loaded CAS [{},{}] from disk", aDocument.getId(), aUsername);
+                }
             }
-            catch (UIMAException e) {
-                throw new DataRetrievalFailureException("Unable to parse annotation", e);
-            }
+            
+            return jcas;
         }
     }
     
@@ -423,5 +481,125 @@ public class CasStorageServiceImpl
         // We are not sure if File is mutable. This makes sure we get a new file
         // in any case.
         return new File(aTo.getPath());
+    }
+    
+    public boolean isCacheEnabled()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        if (requestCycle != null) {
+            Boolean cacheDisabled = requestCycle.getMetaData(CACHE_DISABLED);
+            return cacheDisabled == null || cacheDisabled == false;
+        }
+        else {
+            // No caching if we are not in a request cycle
+            return false;
+        }
+    }
+    
+    @Override
+    public void disableCache()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        if (requestCycle != null) {
+            requestCycle.setMetaData(CACHE_DISABLED, true);
+        }
+    }
+     
+    private Map<JCasCacheKey, JCasCacheEntry> getCache()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        Map<JCasCacheKey, JCasCacheEntry> cache = requestCycle.getMetaData(CACHE);
+        if (cache == null) {
+            cache = new HashMap<>();
+            requestCycle.setMetaData(CACHE, cache);
+            requestCycle.getListeners().add(new AbstractRequestCycleListener() {
+                @Override
+                public void onEndRequest(RequestCycle aCycle)
+                {
+                    Map<JCasCacheKey, JCasCacheEntry> _cache = aCycle.getMetaData(CACHE);
+                    if (_cache != null) {
+                        for (Entry<JCasCacheKey, JCasCacheEntry> entry : _cache.entrySet()) {
+                            log.debug("{} - reads: {}  writes: {}", entry.getKey(),
+                                    entry.getValue().reads, entry.getValue().writes);
+                        }
+                    }
+                }
+            });
+        }
+        return cache;
+    }
+    
+    private static class JCasCacheEntry
+    {
+        int reads;
+        int writes;
+        JCas jcas;
+    }
+    
+    private static class JCasCacheKey
+    {
+        long sourceDocumentId;
+        String userId;
+        
+        public JCasCacheKey(long aSourceDocumentId, String aUserId)
+        {
+            super();
+            sourceDocumentId = aSourceDocumentId;
+            userId = aUserId;
+        }
+        
+        public static JCasCacheKey of(SourceDocument aSourceDocument, String aUserId)
+        {
+            return new JCasCacheKey(aSourceDocument.getId(), aUserId);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.append("[");
+            builder.append(sourceDocumentId);
+            builder.append(",");
+            builder.append(userId);
+            builder.append("]");
+            return builder.toString();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + (int) (sourceDocumentId ^ (sourceDocumentId >>> 32));
+            result = prime * result + ((userId == null) ? 0 : userId.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            JCasCacheKey other = (JCasCacheKey) obj;
+            if (sourceDocumentId != other.sourceDocumentId) {
+                return false;
+            }
+            if (userId == null) {
+                if (other.userId != null) {
+                    return false;
+                }
+            }
+            else if (!userId.equals(other.userId)) {
+                return false;
+            }
+            return true;
+        }
     }
 }

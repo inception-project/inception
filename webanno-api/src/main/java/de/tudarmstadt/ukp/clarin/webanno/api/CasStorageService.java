@@ -64,5 +64,12 @@ public interface CasStorageService
     
     File getAnnotationFolder(SourceDocument aDocument)
             throws IOException;
+    
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
+    
+    /**
+     * Disables the CAS cache for the current request cycle. This is useful to avoid quickly filling
+     * up the memory during bulk operations e.g. reparing all CASes in a project.
+     */
+    void disableCache();
 }

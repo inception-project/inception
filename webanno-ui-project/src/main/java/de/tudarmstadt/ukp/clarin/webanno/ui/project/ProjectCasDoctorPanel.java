@@ -39,6 +39,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -63,6 +64,7 @@ public class ProjectCasDoctorPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean CasStorageService casStorageService;
 
     // Data properties
     private FormModel formModel = new FormModel();
@@ -122,6 +124,8 @@ public class ProjectCasDoctorPanel
     private void actionRepair(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
+        casStorageService.disableCache();
+        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);
@@ -170,6 +174,8 @@ public class ProjectCasDoctorPanel
     private void actionCheck(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
+        casStorageService.disableCache();
+        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);

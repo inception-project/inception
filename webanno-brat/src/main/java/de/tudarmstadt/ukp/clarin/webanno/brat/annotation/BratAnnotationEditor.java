@@ -467,11 +467,9 @@ public class BratAnnotationEditor
 
     private String bratRenderCommand(JCas aJCas)
     {
-        LOG.debug("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aJCas);
         String json = toJson(response);
-        LOG.debug("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
