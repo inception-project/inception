@@ -20,6 +20,27 @@
 	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 
 <body>
+    <wicket:head>
+      <style>
+        #annotationEditorContent {
+          display: flex;
+          margin-bottom: 20px;
+        }
+        
+        #annotationEditorContent .editorCell {
+          flex-grow: 1;
+        }
+        
+        #annotationEditorContent .sidebarCell {
+          flex-basis: 20%;
+          flex-shrink: 0; 
+        }
+        
+        #annotationEditorContent .collapsed {
+          flex-basis: 39px;
+        }
+      </style>
+    </wicket:head>
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
 
@@ -135,17 +156,15 @@
 				</div>
 			</div>
 		</div>
-		<table class="hfill">
-			<tr style="vertical-align: top;">
-				<td wicket:id="annotationViewCell" width="80%">
-					<div class="hfill" wicket:id="embedder1"></div>
-				</td>
-				<td wicket:id="sidebarCell" width="20%">
-					<div id="annotationDetailEditorPanel"
-						wicket:id="annotationDetailEditorPanel"></div>
-				</td>
-			</tr>
-		</table>
+        <div id="annotationEditorContent">
+          <div class="sidebarCell" wicket:id="leftSidebar"/>
+          <div class="editorCell">
+            <div class="hfill" wicket:id="embedder1"></div>
+          </div>
+          <div class="sidebarCell">
+            <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
+          </div>
+        </div>
 	</wicket:extend>
 </body>
 </html>

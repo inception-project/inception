@@ -113,6 +113,7 @@ public class AnnotationDetailEditorPanel
     {
         super(id, aModel);
         setOutputMarkupId(true);
+        setOutputMarkupPlaceholderTag(true);
         add(createAnnotationFeatureForm());
     }
 
@@ -1050,6 +1051,14 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        
+        // Only show sidebar if a document is selected
+        setVisible(getModelObject() != null && getModelObject().getDocument() != null);
+    }
 
     protected void onChange(AjaxRequestTarget aTarget)
     {

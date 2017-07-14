@@ -47,16 +47,37 @@ $(document).ready(
 		});
 
 $(document).ready(function() {
+	/*
 	function fixAnnoPanel() {
-		var $annoPanel = $('#annotationDetailEditorPanel');
-		var pos = $('#annotationDetailEditorPanel').position();
+		var $annoPanel = $('#annotationEditorContent');
+		var pos = $annoPanel.position();
+		var sticker = $($(".top-sticker")[0]);
+		var top = sticker.position().top + sticker.outerHeight();
+		var bottom = $($(".pagefooter")[0]);
+		var height = bottom.position().top - top;
+		$annoPanel.css({
+		    'position' : 'relative',
+		    'top' : 'auto',
+		    'overflow-x': 'hidden',
+		    'overflow-y': 'auto',
+		    'height' : height + 'px'
+		});
+	}
+	var diff;
+	$(window).on("resize", fixAnnoPanel);
+	$(document).on("load", fixAnnoPanel);
+	fixAnnoPanel();
+	*/
+	
+	function fixSidebarPanel(sidebarPanel) {
+		var pos = sidebarPanel.position();
 		if(pos === undefined){
-			$annoPanel.css({
+			sidebarPanel.css({
 				'position' : 'relative',
 				'top' : 'auto',
 				'overflow-y': 'auto',
-				'height' : '70%',
-				'width' : $annoPanel.parent().width() + 'px'
+				'height' : 'auto',
+				'width' : sidebarPanel.parent().width() + 'px'
 			});
 			
 		}
@@ -65,20 +86,32 @@ $(document).ready(function() {
 		}
 		else {
 			var editorTop = stickerTop + diff;
-			$annoPanel.css({
+			sidebarPanel.css({
 				'position' : 'fixed',
 				'top' : editorTop  + 'px',
 				'overflow-y': 'auto',
 				'height' : '70%',
-				'width' : $annoPanel.parent().width() + 'px'
+				'width' : sidebarPanel.parent().width() + 'px'
 			});
 		}
 	}
 	var diff;
-	$(document).on("scroll", fixAnnoPanel);
-	$(document).on("resize", fixAnnoPanel);
-	$(document).on("load", fixAnnoPanel);
-	fixAnnoPanel();
+	
+	var detailEditors = $('#annotationDetailEditorPanel');
+	if (detailEditors.length > 0) {
+		$(document).on("scroll", function() { fixSidebarPanel(detailEditors); });
+		$(document).on("resize", function() { fixSidebarPanel(detailEditors); });
+		$(document).on("load", function() { fixSidebarPanel(detailEditors); });
+		fixSidebarPanel(detailEditors);
+	}
+	
+	var leftSidebar = $('#leftSidebar');
+	if (leftSidebar.length > 0) {
+		$(document).on("scroll", function() { fixSidebarPanel(leftSidebar); });
+		$(document).on("resize", function() { fixSidebarPanel(leftSidebar); });
+		$(document).on("load", function() { fixSidebarPanel(leftSidebar); });
+		fixSidebarPanel(leftSidebar);
+	}
 });
 
 

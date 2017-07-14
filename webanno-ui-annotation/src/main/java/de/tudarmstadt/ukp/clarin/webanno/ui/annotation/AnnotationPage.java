@@ -20,23 +20,21 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -68,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -86,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -210,38 +210,11 @@ public class AnnotationPage
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
 
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = AnnotationPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
-            }
-        };
-        sidebarCell.setOutputMarkupId(true);
-        add(sidebarCell);
-
-        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = AnnotationPage.this.getModelObject();
-                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
-            }
-        };
-        annotationViewCell.setOutputMarkupId(true);
-        add(annotationViewCell);
-
-        sidebarCell.add(detailEditor = createDetailEditor());
+        add(createLeftSidebar());
         
-        annotationEditor = createAnnotationEditor();
-        annotationViewCell.add(annotationEditor);
+        add(detailEditor = createDetailEditor());
+        
+        add(annotationEditor = createAnnotationEditor());
 
         add(createDocumentInfoLabel());
 
@@ -383,6 +356,16 @@ public class AnnotationPage
         };
     }
 
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
+    }
+
+    public void setGotoPageTextField(NumberTextField<Integer> aGotoPageTextField)
+    {
+        gotoPageTextField = aGotoPageTextField;
+    }
+
     private DocumentNamePanel createDocumentInfoLabel()
     {
         return new DocumentNamePanel("documentNamePanel", getModel());
@@ -438,6 +421,12 @@ public class AnnotationPage
                 detailEditor, this::getEditorCas);
     }
 
+    private SidebarPanel createLeftSidebar()
+    {
+        return new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> getEditorCas(),
+                AnnotationPage.this);
+    }
+
     @Override
     protected List<SourceDocument> getListOfDocs()
     {
@@ -450,20 +439,25 @@ public class AnnotationPage
      * for the first time, open the <b>open document dialog</b>
      */
     @Override
-    public void renderHead(IHeaderResponse response)
+    public void renderHead(IHeaderResponse aResponse)
     {
-        super.renderHead(response);
+        super.renderHead(aResponse);
 
         String jQueryString = "";
         if (showOpenDocumentSelectionDialog) {
             jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
             showOpenDocumentSelectionDialog = false;
         }
-        response.render(OnLoadHeaderItem.forScript(jQueryString));
+        aResponse.render(OnLoadHeaderItem.forScript(jQueryString));
+        
+        aResponse.render(CssContentHeaderItem.forCSS(
+                        String.format(Locale.US, ".sidebarCell { flex-basis: %d%%; }",
+                                getModelObject().getPreferences().getSidebarSize()),
+                        "sidebar-width"));
     }
 
     @Override
-    protected JCas getEditorCas()
+    public JCas getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -546,7 +540,9 @@ public class AnnotationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
+                    AnnotationDocumentStateTransition.
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -644,7 +640,7 @@ public class AnnotationPage
     }
     
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
+    public void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
     {
         annotationEditor.render(aTarget, aEditorCas);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());

@@ -119,6 +119,13 @@ select.hfill[multiple]{
     font-weight: bold;
 }
 
+.labels-left th {
+	padding: 1px;
+    padding-right: 1em;
+    width: 1em;
+    vertical-align: top;
+}
+
 label.inline{
     text-align:inherit;
     display:inline;
@@ -222,8 +229,8 @@ ul.vcheckboxgroup{
     text-align:center;
     vertical-align:middle;
     border-top:solid grey 1px;
-    color:grey;
-    background:white;
+    background: white;
+    color: grey;
     z-index:9999;
 }
 
@@ -249,7 +256,7 @@ ul.feedbackPanel {
 }
 
 .menubar a{
-    color:yellow;
+    color: yellow;
 }
 
 .locationbar {
@@ -485,6 +492,29 @@ div.navigator{
     background-color:#ffffff;
 }
 
+.documenttable{
+    width:55%;
+    text-align:center;
+}
+
+tr.border_bottom td {
+    border-bottom: 2pt solid green;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel top
+ */
+
+/*
+#annotationEditorContent .sidebarCell {
+	z-index: 100;
+    background-color: darkgray;
+}        
+*/
+
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel top
+ */
 div.tabpanel div.tab-row li{
     margin:0;
     padding:0;
@@ -525,13 +555,58 @@ div.tabpanel .tab-panel {
     margin: 1em;
 }
 
-.documenttable{
-    width:55%;
-    text-align:center;
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel left
+ */
+div.left-tabpanel {
+    display: table;
+    width: 100%;
+    vertical-align: top;
+    border-collapse: collapse;
 }
 
-tr.border_bottom td {
-    border-bottom: 2pt solid green;
+div.left-tabpanel div.tab-row {
+	display: table-cell;
+	width: 39px;
+	vertical-align: top;
 }
 
+div.left-tabpanel div.tab-row ul {
+	display: block;
+    padding: 0px;
+    margin: 0px;
+}
 
+div.left-tabpanel .tab-panel {
+    display: table-cell;
+}
+
+div.left-tabpanel div.tab-row li {
+	width: 100%;
+	display: block;
+}
+
+div.left-tabpanel div.tab-row li img {
+    display: block;
+    padding: 3px;
+}
+
+div.left-tabpanel div.tab-row a:link,
+div.left-tabpanel div.tab-row a:visited {
+    display: block;
+    background:#f3f3f3;
+    padding: 0px;
+    margin: 0px;
+    text-decoration:none;
+    color:#666;
+}
+
+div.left-tabpanel div.tab-row li.selected a:link,
+div.left-tabpanel div.tab-row a:visited.active {
+    background:#fff;
+    color:#000;
+}
+
+div.left-tabpanel div.tab-row a:hover {
+    background:#fff;
+}

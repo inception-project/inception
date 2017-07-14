@@ -216,6 +216,15 @@ public abstract class AnnotationPageBase
         actionLoadDocument(aTarget);
     }
 
+    /**
+     * Show the next document if exist
+     */
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        getModelObject().setDocument(aDocument, getListOfDocs());
+        actionLoadDocument(aTarget);
+    }
+
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);
