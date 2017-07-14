@@ -536,18 +536,6 @@ public class BratAnnotationEditor
         aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
     }
 
-    /**
-     * Render content in a separate request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     */
-    @Override
-    public void renderLater(AjaxRequestTarget aTarget)
-    {
-        aTarget.appendJavaScript(bratRenderLaterCommand());
-    }
-
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {

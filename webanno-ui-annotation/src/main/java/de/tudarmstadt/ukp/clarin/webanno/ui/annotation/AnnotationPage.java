@@ -502,7 +502,7 @@ public class AnnotationPage
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.renderLater(aTarget);
+        annotationEditor.requestRender(aTarget);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)

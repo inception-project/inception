@@ -102,23 +102,9 @@ public abstract class AnnotationEditorBase
     protected abstract void render(AjaxRequestTarget aTarget);
 
     /**
-     * Request an asynchronous rendering of the annotation editor. This typically happens by
-     * injecting a JavaScript command via {@link AjaxRequestTarget#appendJavaScript(CharSequence)}
-     * that causes the browser-side code to request the data structures from the server.
-     * <p>
-     * This entails that the CAS is loaded again when the async rendering request from the browser
-     * is triggered. Thus, it is preferred to use {@link #requestRender(AjaxRequestTarget)} because
-     * here we already have the CAS available.
-     */
-    public abstract void renderLater(AjaxRequestTarget aTarget);
-
-    /**
      * Put some focus/highlight on the annotation with the specified visual ID. This typically
      * happens by sending a suitable JavaScript command via
      * {@link AjaxRequestTarget#appendJavaScript(CharSequence)}.
-     * <p>
-     * It should not matter if this call is made before or after the call to
-     * {@link #requestRender(AjaxRequestTarget)} or {@link #renderLater(AjaxRequestTarget)}.
      */
     public abstract void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId);
     

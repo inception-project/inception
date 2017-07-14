@@ -654,7 +654,7 @@ public class AutomationPage
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.renderLater(aTarget);
+        annotationEditor.requestRender(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
         suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,

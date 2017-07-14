@@ -489,7 +489,7 @@ public class CurationPanel
             annotationEditor.setHighlight(aTarget, bModel.getSelection().getAnnotation());
         }
         else {
-            annotationEditor.renderLater(aTarget);
+            annotationEditor.requestRender(aTarget);
         }
         annotate = false;
         suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor,
