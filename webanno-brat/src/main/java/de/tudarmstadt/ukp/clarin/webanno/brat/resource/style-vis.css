@@ -464,7 +464,7 @@ fieldset legend {
   /* background-color: #d7e7ee; */
   /* background-color: #eeeeee; */
   color: #000000;
-  z-index: 20;
+  z-index: 100;
   -moz-box-shadow: 5px 5px 5px #aaaaaa;
   -webkit-box-shadow: 5px 5px 5px #aaaaaa;
   box-shadow: 5px 5px 5px #aaaaaa;
