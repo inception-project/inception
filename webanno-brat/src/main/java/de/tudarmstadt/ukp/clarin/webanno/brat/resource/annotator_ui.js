@@ -186,41 +186,44 @@ var AnnotatorUI = (function($, window, undefined) {
         }
       };
 
-/// BEGIN: WEBANNO CLICK EXTENSION
-      var clickcnt = 0;
+// WEBANNO EXTENSION BEGIN - #520 Perform javascript action on click 
+      var clickCount = 0;
+      var clickTimer = null;
+      var CLICK_DELAY = 300;
       // need a function that distinguishes between double clicks and single clicks  
       var onClick = function(evt){
-          clickcnt++;
-          setTimeout(function() {
-        	  if (clickcnt == 1){
-        		  onSnglClick.call(self, evt);
-        		  clickcnt = 0;
-        	  } else {
-        		  onDblClick.call(self, evt);
-        		  clickcnt = 0;
-        	  }
-          }, 300);
+    	    clickCount++;
+    	    
+    	    if (clickCount === 1) {
+    	      timer = setTimeout(function() {
+            onSnglClick.call(self, evt);  // perform single-click action    
+            clickCount = 0;               // after action performed, reset counter
+          }, CLICK_DELAY);
+        } else {
+          clearTimeout(timer);            // prevent single-click action
+          onDblClick.call(self, evt);     // perform double-click action
+          clickCount = 0;                 // after action performed, reset counter
+        }
       }
       
       var onSnglClick = function(evt) {
-      	  // must be logged in
-          if (that.user === null) return;
-          var target = $(evt.target);
-          var id;
-          // single click actions currently only for spans
-    	  if (id = target.attr('data-span-id')){
-    		  preventDefault(evt);
-    		  editedSpan = data.spans[id];    		  
-        	  dispatcher.post('ajax', [ {
-        			action: 'doAction',
-        			id:id,
-        			labelText: editedSpan.labelText,
-        			type: editedSpan.type
-        	  	}, 'serverResult']);
-    	  }
-      }
-      
-/// END: WEBANNO CLICK EXTENSION
+      	// must be logged in
+        if (that.user === null) return;
+        var target = $(evt.target);
+        var id;
+        // single click actions currently only for spans
+	    if (id = target.attr('data-span-id')) {
+	      preventDefault(evt);
+	    	  editedSpan = data.spans[id];    		  
+	    	  dispatcher.post('ajax', [ {
+	    	    action: 'doAction',
+	        	id: id,
+	        	labelText: editedSpan.labelText,
+	        	type: editedSpan.type
+	      }, 'serverResult']);
+	    	}
+      }      
+// WEBANNO EXTENSION END - #520 Perform javascript action on click 
 
       var onDblClick = function(evt) {
         // must be logged in
@@ -973,9 +976,9 @@ var AnnotatorUI = (function($, window, undefined) {
       };
 */
       
-      var fillSpanTypesAndDisplayForm =function(evt, offsets, spanText, span, id) {
+      var fillSpanTypesAndDisplayForm = function(evt, offsets, spanText, span, id) {
     	  
-       if(id) {
+      if (id) {
       	dispatcher.post('ajax', [ {
   			action: 'spanOpenDialog',
   			offsets: $.toJSON(offsets),
@@ -985,12 +988,11 @@ var AnnotatorUI = (function($, window, undefined) {
   		}, 'serverResult']);
       }
       else{
-    	dispatcher.post('ajax', [ {
+      	dispatcher.post('ajax', [ {
   			action: 'spanOpenDialog',
   			offsets: $.toJSON(offsets),
   			spanText: spanText
   		}, 'serverResult']);  
-	  
       }
     };
 // WEBANNO EXTENSION END
@@ -2856,7 +2858,11 @@ var AnnotatorUI = (function($, window, undefined) {
           on('isReloadOkay', isReloadOkay).
           on('keydown', onKeyDown).
           on('click', onClick).
-          on('dblclick', onDblClick).
+// WEBANNO EXTENSION BEGIN - #520 Perform javascript action on click 
+// We perform a manual double-click detection in the single-click handler - if we also bind to
+// the double-click event, then the bound actions will be triggered too often.
+          //on('dblclick', onDblClick).
+// WEBANNO EXTENSION END - #520 Perform javascript action on click 
           on('dragstart', preventDefault).
           on('mousedown', onMouseDown).
           on('mouseup', onMouseUp).
