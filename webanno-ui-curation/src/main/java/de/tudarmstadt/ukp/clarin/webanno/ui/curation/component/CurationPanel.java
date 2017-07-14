@@ -224,7 +224,7 @@ public class CurationPanel
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS " + e.getMessage(), e);
@@ -485,7 +485,7 @@ public class CurationPanel
          */
         aTarget.add(suggestionViewPanel);
         if (annotate) {
-            annotationEditor.render(aTarget, editor.getEditorCas());
+            annotationEditor.requestRender(aTarget);
             annotationEditor.setHighlight(aTarget, bModel.getSelection().getAnnotation());
         }
         else {

@@ -228,7 +228,7 @@ public class AutomationPage
                     suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
-                    annotationEditor.render(aTarget, editorCas);
+                    annotationEditor.requestRender(aTarget);
                     aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
@@ -422,7 +422,7 @@ public class AutomationPage
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                     annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
                 }
                 catch (Exception e) {
@@ -512,7 +512,7 @@ public class AutomationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
@@ -647,7 +647,7 @@ public class AutomationPage
         update(aTarget);
         
         aTarget.add(gotoPageTextField);
-        annotationEditor.render(aTarget, editorCas);
+        annotationEditor.requestRender(aTarget);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
@@ -828,7 +828,7 @@ public class AutomationPage
             setCurationSegmentBeginEnd(aEditorCas);
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
-            annotationEditor.render(aTarget, aEditorCas);
+            annotationEditor.requestRender(aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

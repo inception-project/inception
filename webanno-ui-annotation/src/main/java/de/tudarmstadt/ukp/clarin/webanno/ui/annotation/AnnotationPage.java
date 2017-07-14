@@ -384,7 +384,7 @@ public class AnnotationPage
                 aTarget.add(getOrCreatePositionInfoLabel());
 
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                     annotationEditor.setHighlight(aTarget,
                             getModelObject().getSelection().getAnnotation());
                 }
@@ -398,7 +398,7 @@ public class AnnotationPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
@@ -642,7 +642,7 @@ public class AnnotationPage
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
     {
-        annotationEditor.render(aTarget, aEditorCas);
+        annotationEditor.requestRender(aTarget);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());

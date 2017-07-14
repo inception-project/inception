@@ -217,7 +217,7 @@ public class CorrectionPage
                     suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
-                    annotationEditor.render(aTarget, editorCas);
+                    annotationEditor.requestRender(aTarget);
                     aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
@@ -419,7 +419,7 @@ public class CorrectionPage
                     AnnotatorState state = getModelObject();
                     JCas editorCas = getEditorCas();
                     //JCas correctionCas = repository.readCorrectionCas(state.getDocument());
-                    annotationEditor.render(aTarget, editorCas);
+                    annotationEditor.requestRender(aTarget);
                     annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
 
                     // info(bratAnnotatorModel.getMessage());
@@ -444,7 +444,7 @@ public class CorrectionPage
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
                 try {
-                    annotationEditor.render(aTarget, getEditorCas());
+                    annotationEditor.requestRender(aTarget);
                 }
                 catch (Exception e) {
                     LOG.info("Error reading CAS: {} " + e.getMessage(), e);
@@ -546,7 +546,7 @@ public class CorrectionPage
         update(aTarget);
         
         aTarget.add(gotoPageTextField);
-        annotationEditor.render(aTarget, editorCas);
+        annotationEditor.requestRender(aTarget);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
@@ -744,7 +744,7 @@ public class CorrectionPage
             setCurationSegmentBeginEnd(aEditorCas);
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
-            annotationEditor.render(aTarget, aEditorCas);
+            annotationEditor.requestRender(aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

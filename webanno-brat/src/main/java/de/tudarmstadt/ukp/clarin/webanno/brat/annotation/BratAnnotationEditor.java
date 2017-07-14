@@ -123,7 +123,7 @@ public class BratAnnotationEditor
         
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
-        add(vis);
+        autoAdd(vis, null);
 
         requestHandler = new AbstractDefaultAjaxBehavior()
         {
@@ -548,18 +548,17 @@ public class BratAnnotationEditor
         aTarget.appendJavaScript(bratRenderLaterCommand());
     }
 
-    /**
-     * Render content as part of the current request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     * @param aJCas
-     *            the CAS to render.
-     */
     @Override
-    public void render(AjaxRequestTarget aTarget, JCas aJCas)
+    protected void render(AjaxRequestTarget aTarget)
     {
-        aTarget.appendJavaScript(bratRenderCommand(aJCas));
+        try {
+            aTarget.appendJavaScript(bratRenderCommand(getJCasProvider().get()));
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), FeedbackPanel.class);
+        }
     }
     
     /**
