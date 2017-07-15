@@ -511,12 +511,7 @@ public class AutomationPage
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                try {
-                    annotationEditor.requestRender(aTarget);
-                }
-                catch (Exception e) {
-                    handleException(this, aTarget, e);
-                }
+                annotationEditor.requestRender(aTarget);
             }
             
             @Override
@@ -817,7 +812,7 @@ public class AutomationPage
     }
     
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
+    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             AnnotatorState state = getModelObject();
@@ -825,7 +820,7 @@ public class AutomationPage
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(aEditorCas);
+            setCurationSegmentBeginEnd(getEditorCas());
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);

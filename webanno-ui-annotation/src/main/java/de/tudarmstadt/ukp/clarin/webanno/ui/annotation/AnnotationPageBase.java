@@ -180,7 +180,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowNextPage(AjaxRequestTarget aTarget)
@@ -188,7 +188,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowFirstPage(AjaxRequestTarget aTarget)
@@ -196,7 +196,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowLastPage(AjaxRequestTarget aTarget)
@@ -204,7 +204,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
     
     protected void actionResetDocument(AjaxRequestTarget aTarget)
@@ -251,7 +251,7 @@ public abstract class AnnotationPageBase
      * This method should be used while the editing process is ongoing. It does not upgrade the CAS
      * and it does not reset the annotator state.
      */
-    protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJcas);
+    protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
 
     /**
      * Checks if all required features on all annotations are set. If a required feature value is
@@ -280,7 +280,7 @@ public abstract class AnnotationPageBase
                         Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
                         // Put this sentence into the focus
                         state.setFirstVisibleUnit(s);
-                        actionRefreshDocument(aTarget, aJcas);
+                        actionRefreshDocument(aTarget);
                         // Inform the user
                         throw new IllegalStateException(
                                 "Document cannot be marked as finished. Annotation with ID ["

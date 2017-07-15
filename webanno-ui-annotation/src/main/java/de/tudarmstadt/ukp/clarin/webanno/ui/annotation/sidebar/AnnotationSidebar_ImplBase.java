@@ -126,6 +126,6 @@ public abstract class AnnotationSidebar_ImplBase
         state.setFirstVisibleUnit(sentence);
         state.setFocusUnitIndex(sentenceNumber);
 
-        annotationPage.actionRefreshDocument(aTarget, jCas);
+        annotationPage.actionRefreshDocument(aTarget);
     }
 }

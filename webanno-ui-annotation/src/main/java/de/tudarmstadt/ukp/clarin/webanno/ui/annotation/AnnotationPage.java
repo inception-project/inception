@@ -383,27 +383,15 @@ public class AnnotationPage
                 aTarget.addChildren(getPage(), FeedbackPanel.class);
                 aTarget.add(getOrCreatePositionInfoLabel());
 
-                try {
-                    annotationEditor.requestRender(aTarget);
-                    annotationEditor.setHighlight(aTarget,
-                            getModelObject().getSelection().getAnnotation());
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
-                    error("Error reading CAS: " + e.getMessage());
-                }
+                annotationEditor.requestRender(aTarget);
+                annotationEditor.setHighlight(aTarget,
+                        getModelObject().getSelection().getAnnotation());
             }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                try {
-                    annotationEditor.requestRender(aTarget);
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
-                    error("Error reading CAS " + e.getMessage());
-                }
+                annotationEditor.requestRender(aTarget);
             }
         };
     }
@@ -495,7 +483,7 @@ public class AnnotationPage
         state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
         state.setFocusUnitIndex(selectedSentence);        
         
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
@@ -640,7 +628,7 @@ public class AnnotationPage
     }
     
     @Override
-    public void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
+    public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         annotationEditor.requestRender(aTarget);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());

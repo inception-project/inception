@@ -443,13 +443,7 @@ public class CorrectionPage
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                try {
-                    annotationEditor.requestRender(aTarget);
-                }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS: {} " + e.getMessage(), e);
-                    error("Error reading CAS " + e.getMessage());
-                }
+                annotationEditor.requestRender(aTarget);
             }
         };
     }
@@ -733,7 +727,7 @@ public class CorrectionPage
     }
     
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aEditorCas)
+    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             AnnotatorState state = getModelObject();
@@ -741,7 +735,7 @@ public class CorrectionPage
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(aEditorCas);
+            setCurationSegmentBeginEnd(getEditorCas());
             curationContainer.setBratAnnotatorModel(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);

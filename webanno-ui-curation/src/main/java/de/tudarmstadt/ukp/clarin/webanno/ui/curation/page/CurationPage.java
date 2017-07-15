@@ -155,7 +155,7 @@ public class CurationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    actionRefreshDocument(aTarget, getEditorCas());
+                    actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {
                     handleException(aTarget, e);
@@ -507,7 +507,7 @@ public class CurationPage
         state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
         state.setFocusUnitIndex(selectedSentence);        
         
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
         
         curationPanel.updatePanel(aTarget, curationContainer);
     }
@@ -708,7 +708,7 @@ public class CurationPage
     }
 
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
+    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             aTarget.add(getOrCreatePositionInfoLabel());

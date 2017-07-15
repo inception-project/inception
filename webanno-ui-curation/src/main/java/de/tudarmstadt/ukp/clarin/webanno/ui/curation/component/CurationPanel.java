@@ -223,14 +223,8 @@ public class CurationPanel
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                try {
                     annotationEditor.requestRender(aTarget);
                 }
-                catch (Exception e) {
-                    LOG.info("Error reading CAS " + e.getMessage(), e);
-                    error("Error reading CAS " + e.getMessage());
-                }
-            }
     
             @Override
             protected void onConfigure()
