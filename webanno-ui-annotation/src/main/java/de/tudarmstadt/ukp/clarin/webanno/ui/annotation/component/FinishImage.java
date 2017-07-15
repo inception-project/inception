@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -29,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 /**
  * Show closed/not closed images on annoataion/correction pages
@@ -41,8 +41,6 @@ public class FinishImage
 
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
-
-    private WebMarkupContainer finish;
 
     public void setModel(IModel<AnnotatorState> aModel)
     {
@@ -69,31 +67,23 @@ public class FinishImage
     {
         super(id, aModel);
 
-        add(new AttributeModifier("src", new LoadableDetachableModel<String>()
-        {
-            private static final long serialVersionUID = 1562727305401900776L;
+        add(new AttributeModifier("src", LambdaModel.of(() -> {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userRepository.get(username);
 
-            @Override
-            protected String load()
-            {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                User user = userRepository.get(username);
-
-                if (aModel.getObject().getProject() != null
-                        && aModel.getObject().getDocument() != null) {
-                    if (isFinished(aModel, user, documentService)) {
-                        return "images/accept.png";
-                    }
-                    else {
-                        return "images/inprogress.png";
-                    }
+            if (aModel.getObject().getProject() != null
+                    && aModel.getObject().getDocument() != null) {
+                if (isFinished(aModel, user, documentService)) {
+                    return "images/accept.png";
                 }
                 else {
                     return "images/inprogress.png";
                 }
-
             }
-        }));
+            else {
+                return "images/inprogress.png";
+            }
+        })));
     }
 
     public static boolean isFinished(final IModel<AnnotatorState> aModel, User user,

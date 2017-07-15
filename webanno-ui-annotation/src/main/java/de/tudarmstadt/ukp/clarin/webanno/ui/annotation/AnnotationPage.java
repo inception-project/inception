@@ -39,7 +39,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -77,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
@@ -335,25 +335,18 @@ public class AnnotationPage
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
-        return new LoadableDetachableModel<List<DecoratedObject<Project>>>()
-        {
-            private static final long serialVersionUID = -2518743298741342852L;
-
-            @Override
-            protected List<DecoratedObject<Project>> load()
-            {
-                User user = userRepository.get(
-                        SecurityContextHolder.getContext().getAuthentication().getName());
-                List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
-                for (Project project : projectService.listProjects()) {
-                    if (SecurityUtil.isAnnotator(project, projectService, user)
-                            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
-                        allowedProject.add(DecoratedObject.of(project));
-                    }
+        return LambdaModel.of(() -> {
+            User user = userRepository
+                    .get(SecurityContextHolder.getContext().getAuthentication().getName());
+            List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
+            for (Project project : projectService.listProjects()) {
+                if (SecurityUtil.isAnnotator(project, projectService, user)
+                        && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
+                    allowedProject.add(DecoratedObject.of(project));
                 }
-                return allowedProject;
             }
-        };
+            return allowedProject;
+        });
     }
 
     public NumberTextField<Integer> getGotoPageTextField()

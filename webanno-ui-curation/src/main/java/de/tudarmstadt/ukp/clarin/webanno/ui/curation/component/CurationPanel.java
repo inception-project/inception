@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -223,8 +224,8 @@ public class CurationPanel
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                    annotationEditor.requestRender(aTarget);
-                }
+                annotationEditor.requestRender(aTarget);
+            }
     
             @Override
             protected void onConfigure()
@@ -243,34 +244,29 @@ public class CurationPanel
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         annotationViewCell.add(annotationEditor);
     
-        LoadableDetachableModel sentenceDiffModel = new LoadableDetachableModel()
-        {
-            @Override
-            protected Object load()
-            {
-                int fSN = bModel.getFirstVisibleUnitIndex();
-                int lSN = bModel.getLastVisibleUnitIndex();
-    
-                List<String> crossSentAnnos = new ArrayList<>();
-                if (SuggestionBuilder.crossSentenceLists != null) {
-                    for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
-                        if (sn >= fSN && sn <= lSN) {
-                            List<Integer> cr = new ArrayList<>();
-                            for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
-                                if (c < fSN || c > lSN) {
-                                    cr.add(c);
-                                }
+        IModel<List<String>> sentenceDiffModel = LambdaModel.of(() -> {
+            int fSN = bModel.getFirstVisibleUnitIndex();
+            int lSN = bModel.getLastVisibleUnitIndex();
+
+            List<String> crossSentAnnos = new ArrayList<>();
+            if (SuggestionBuilder.crossSentenceLists != null) {
+                for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
+                    if (sn >= fSN && sn <= lSN) {
+                        List<Integer> cr = new ArrayList<>();
+                        for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
+                            if (c < fSN || c > lSN) {
+                                cr.add(c);
                             }
-                            if (!cr.isEmpty()) {
-                                crossSentAnnos.add(sn + "-->" + cr);
-                            }
+                        }
+                        if (!cr.isEmpty()) {
+                            crossSentAnnos.add(sn + "-->" + cr);
                         }
                     }
                 }
-    
-                return crossSentAnnos;
             }
-        };
+
+            return crossSentAnnos;
+        });
     
         crossSentAnnoList = new ListView<String>("crossSentAnnoList", sentenceDiffModel)
         {

@@ -78,6 +78,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -114,7 +117,7 @@ public class AgreementPage
                 cachedCASes = null;
             }
             agreementForm.agreementTable2.getDefaultModel().detach();
-            if (aTarget != null) {
+            if (aTarget != null && agreementForm.agreementTable2.isVisibleInHierarchy()) {
                 aTarget.add(agreementForm.agreementTable2);
             }
         }
@@ -536,68 +539,41 @@ public class AgreementPage
 
         public ProjectSelectionForm(String id)
         {
-            super(id,
-                    new CompoundPropertyModel<>(new ProjectSelectionModel()));
+            super(id, new CompoundPropertyModel<>(new ProjectSelectionModel()));
 
-            add(new ListChoice<Project>("project")
-            {
-                private static final long serialVersionUID = 1L;
+            ListChoice<Project> projectList = new OverviewListChoice<>("project");
+            projectList.setChoiceRenderer(new ChoiceRenderer<>("name"));
+            projectList.setChoices(LambdaModel.of(this::listAllowedProjects));
+            projectList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::onSelectionChanged));
+            add(projectList);
+        }
+        
+        private void onSelectionChanged(AjaxRequestTarget aTarget)
+        {
+            agreementForm.setModelObject(new AgreementFormModel());
+            aTarget.add(agreementForm);
 
-                {
-                    setChoices(new LoadableDetachableModel<List<Project>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+            // Clear the cached CASes. When we switch to another project, we'll have to
+            // reload them.
+            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
+        }
+        
+        private List<Project> listAllowedProjects()
+        {
+            List<Project> allowedProject = new ArrayList<>();
 
-                        @Override
-                        protected List<Project> load()
-                        {
-                            List<Project> allowedProject = new ArrayList<>();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userRepository.get(username);
 
-                            String username = SecurityContextHolder.getContext().getAuthentication()
-                                    .getName();
-                            User user = userRepository.get(username);
-
-                            List<Project> allProjects = projectService.listProjects();
-                            for (Project project : allProjects) {
-                                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                                        || SecurityUtil.isCurator(project, projectService, user)) {
-                                    allowedProject.add(project);
-                                }
-                            }
-                            return allowedProject;
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<>("name"));
-                    setNullValid(false);
+            List<Project> allProjects = projectService.listProjects();
+            for (Project project : allProjects) {
+                if (SecurityUtil.isProjectAdmin(project, projectService, user)
+                        || SecurityUtil.isCurator(project, projectService, user)) {
+                    allowedProject.add(project);
                 }
-
-                @Override
-                protected void onSelectionChanged(Project aNewSelection)
-                {
-                    agreementForm.setModelObject(new AgreementFormModel());
-
-                    ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
-                            .getModelObject();
-                    projectSelectionModel.project = aNewSelection;
-                    ProjectSelectionForm.this.setVisible(true);
-
-                    // Clear the cached CASes. When we switch to another project, we'll have to
-                    // reload them.
-                    updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
+            }
+            return allowedProject;
         }
     }
 

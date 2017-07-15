@@ -21,11 +21,11 @@ import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
@@ -40,42 +40,42 @@ public class DocumentNamePanel
     {
         super(id, aModel);
         setOutputMarkupId(true);
-        add(new Label("doumentName", new LoadableDetachableModel<String>()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected String load()
-            {
-                StringBuilder sb = new StringBuilder();
-                
-                if (aModel.getObject().getProject() != null) {
-                    sb.append(aModel.getObject().getProject().getName());
-                }
-
-                sb.append("/");
-
-                if (aModel.getObject().getDocument() != null) {
-                    sb.append(aModel.getObject().getDocument().getName());
-                }
-                
-                if (RuntimeConfigurationType.DEVELOPMENT
-                        .equals(getApplication().getConfigurationType())) {
-                    sb.append(" (");
-                    if (aModel.getObject().getProject() != null) {
-                        sb.append(aModel.getObject().getProject().getId());
-                    }
-                    sb.append("/");
-                    if (aModel.getObject().getDocument() != null) {
-                        sb.append(aModel.getObject().getDocument().getId());
-                    }
-                    sb.append(")");
-                }
-                
-                return sb.toString();
-
-            }
-        }).setOutputMarkupId(true));
+        add(new Label("doumentName", LambdaModel.of(this::getLabel)).setOutputMarkupId(true));
+    }
+    
+    public AnnotatorState getModelObject()
+    {
+        return (AnnotatorState) getDefaultModelObject();
     }
 
+    private String getLabel()
+    {
+        StringBuilder sb = new StringBuilder();
+
+        AnnotatorState state = getModelObject();
+
+        if (state.getProject() != null) {
+            sb.append(state.getProject().getName());
+        }
+
+        sb.append("/");
+
+        if (state.getDocument() != null) {
+            sb.append(state.getDocument().getName());
+        }
+
+        if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+            sb.append(" (");
+            if (state.getProject() != null) {
+                sb.append(state.getProject().getId());
+            }
+            sb.append("/");
+            if (state.getDocument() != null) {
+                sb.append(state.getDocument().getId());
+            }
+            sb.append(")");
+        }
+
+        return sb.toString();
+    }
 }
