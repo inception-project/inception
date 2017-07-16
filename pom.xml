@@ -48,18 +48,17 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <jackson.version>2.8.6</jackson.version>
+    <jackson.version>2.8.9</jackson.version>
     <uima.version>2.9.0</uima.version>
     <uimafit.version>2.3.0</uimafit.version>
     <spring.version>4.3.6.RELEASE</spring.version>
     <spring.security.version>4.2.1.RELEASE</spring.security.version>
-    <slf4j.version>1.7.24</slf4j.version>
-    <log4j.version>2.8.1</log4j.version>
-    <jboss.logging.version>3.3.0.Final</jboss.logging.version>
-    <wicket.version>7.7.0</wicket.version>
-    <!-- wicket.version>6.26.0</wicket.version -->
+    <slf4j.version>1.7.25</slf4j.version>
+    <log4j.version>2.8.2</log4j.version>
+    <jboss.logging.version>3.3.1.Final</jboss.logging.version>
+    <wicket.version>7.8.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>7.7.0</wicket-jquery-ui.version>
     <hibernate.version>4.3.11.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
@@ -540,6 +539,10 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-aspects</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context-support</artifactId>
         <version>${spring.version}</version>
       </dependency>
 
