@@ -112,8 +112,16 @@
 		<filter-class>org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter</filter-class>
 	</filter>
 
+    <!--
+        6) Provide Spring with access to the session
+    -->
+    <filter>
+        <filter-name>springRequestContextFilter</filter-name>
+        <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+    </filter>
+    
 	<!--
-		6) Pass control to Wicket
+		7) Pass control to Wicket
 	-->
 	<filter>
 		<filter-name>wicket.filter</filter-name>
@@ -172,6 +180,11 @@
 		<filter-name>opensessioninview</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+
+    <filter-mapping>
+        <filter-name>springRequestContextFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
 	<filter-mapping>
 		<filter-name>wicket.filter</filter-name>
