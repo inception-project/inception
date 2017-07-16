@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -175,36 +173,7 @@ public abstract class WicketApplicationBase
         List<IStringResourceLoader> loaders = new ArrayList<>(
                 getResourceSettings().getStringResourceLoaders());
         NestedStringResourceLoader nestedLoader = new NestedStringResourceLoader(loaders,
-                Pattern.compile("#\\(([^ ]*?)\\)")) {
-            
-            // Workaround for https://issues.apache.org/jira/browse/WICKET-6393
-            // Can be remove with Wicket 7.8.0 or 8.0.0-M7
-            @Override
-            public String loadStringResource(Class<?> aClazz, String aKey, Locale aLocale,
-                    String aStyle, String aVariation)
-            {
-                try {
-                    return super.loadStringResource(aClazz, aKey, aLocale, aStyle, aVariation);
-                }
-                catch (MissingResourceException e) {
-                    return null;
-                }
-            }
-            
-            // Workaround for https://issues.apache.org/jira/browse/WICKET-6393
-            // Can be remove with Wicket 7.8.0 or 8.0.0-M7
-            @Override
-            public String loadStringResource(Component aComponent, String aKey,
-                    Locale aLocale, String aStyle, String aVariation)
-            {
-                try {
-                    return super.loadStringResource(aComponent, aKey, aLocale, aStyle, aVariation);
-                }
-                catch (MissingResourceException e) {
-                    return null;
-                }
-            }
-        };
+                Pattern.compile("#\\(([^ ]*?)\\)"));
         getResourceSettings().getStringResourceLoaders().clear();
         getResourceSettings().getStringResourceLoaders().add(nestedLoader);
     }
