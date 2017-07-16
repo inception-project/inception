@@ -225,28 +225,54 @@
     <dependency>
       <groupId>commons-dbcp</groupId>
       <artifactId>commons-dbcp</artifactId>
-      <version>1.4</version>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.40</version>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
-      <version>2.3.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>net.bull.javamelody</groupId>
-      <artifactId>javamelody-core</artifactId>
-      <version>1.52.0</version>
     </dependency>
 
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
+    </dependency>
+    
+    <!-- Spring Boot dependencies -->    
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.bull.javamelody</groupId>
+      <artifactId>javamelody-spring-boot-starter</artifactId>
+      <version>${javamelody.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -276,6 +302,20 @@
         </excludes>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>1.5.4.RELEASE</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -345,103 +385,6 @@
     </pluginManagement>
   </build>
   <profiles>
-    <profile>
-      <id>tomcat7-standalone</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.tomcat.maven</groupId>
-            <artifactId>tomcat7-maven-plugin</artifactId>
-            <version>2.1</version>
-            <executions>
-              <execution>
-                <id>tomcat-run</id>
-                <goals>
-                  <goal>exec-war-only</goal>
-                </goals>
-                <phase>package</phase>
-                <configuration>
-                  <path>/webanno</path>
-                  <enableNaming>false</enableNaming>
-                  <finalName>webanno-standalone-${project.version}.jar</finalName>
-                  <charset>utf-8</charset>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>winstone-standalone</id>
-      <activation>
-        <property>
-          <name>!disable-winstone-standalone</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>net.sf.alchim</groupId>
-            <artifactId>winstone-maven-plugin</artifactId>
-            <version>1.2</version>
-            <configuration>
-              <filename>webanno-standalone-${project.version}.jar</filename>
-              <cmdLineOptions>
-                <property>
-                  <name>ajp13Port</name>
-                  <value>-1</value>
-                </property>
-              </cmdLineOptions>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>embed</goal>
-                </goals>
-              </execution>
-            </executions>
-            <dependencies>
-              <dependency>
-                <groupId>net.sourceforge.winstone</groupId>
-                <artifactId>winstone</artifactId>
-                <version>0.9.10</version>
-              </dependency>
-            </dependencies>
-          </plugin>
-          <plugin>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>maven-jetty-plugin</artifactId>
-            <version>6.1.26</version>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <argLine>-Xmx1g</argLine>
-            </configuration>
-          </plugin>
-          <!--
-            <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>aspectj-maven-plugin</artifactId>
-            <version>1.10</version>
-            <configuration>
-            <source>${maven.compiler.source}</source>
-            <target>${maven.compiler.target}</target>
-            <aspectLibraries>
-            <aspectLibrary>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aspects</artifactId>
-            </aspectLibrary>
-            </aspectLibraries>
-            </configuration>
-            </plugin>
-          -->
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>docker</id>
       <activation>

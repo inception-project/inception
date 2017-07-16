@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.webapp;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.config;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,13 +45,7 @@ public class WebAnnoApplicationContextInitializer
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
         LoggingFilter.setLoggingUsername("SYSTEM");
-        
-        log.info("  _      __    __   ___                ");
-        log.info(" | | /| / /__ / /  / _ | ___  ___  ___ ");
-        log.info(" | |/ |/ / -_) _ \\/ __ |/ _ \\/ _ \\/ _ \\");
-        log.info(" |__/|__/\\__/_.__/_/ |_/_//_/_//_/\\___/");
-        log.info(SettingsUtil.getVersionString());
-        
+                
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
         File settings = SettingsUtil.getSettingsFile();

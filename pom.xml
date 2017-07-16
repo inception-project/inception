@@ -51,8 +51,8 @@
     <jackson.version>2.8.9</jackson.version>
     <uima.version>2.9.0</uima.version>
     <uimafit.version>2.3.0</uimafit.version>
-    <spring.version>4.3.6.RELEASE</spring.version>
-    <spring.security.version>4.2.1.RELEASE</spring.security.version>
+    <spring.version>4.3.9.RELEASE</spring.version>
+    <spring.security.version>4.2.3.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.8.2</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
@@ -64,6 +64,7 @@
     <dkpro.version>1.7.0</dkpro.version>
     <servlet.api.groupId>javax.servlet</servlet.api.groupId>
     <servlet.api.artifactId>javax.servlet-api</servlet.api.artifactId>
+    <javamelody.version>1.68.1</javamelody.version>
   </properties>
   <repositories>
     <repository>
@@ -272,20 +273,6 @@
         <version>3.3.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.wicket</groupId>
-        <artifactId>wicket-parent</artifactId>
-        <version>${wicket.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
         <artifactId>wicket-jquery-ui</artifactId>
         <version>${wicket-jquery-ui.version}</version>
@@ -342,6 +329,11 @@
         <version>${wicketstuff.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+        <artifactId>wicket-spring-boot-starter</artifactId>
+        <version>1.0.9</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.rjeschke</groupId>
         <artifactId>txtmark</artifactId>
         <version>0.13</version>
@@ -371,7 +363,7 @@
         <artifactId>jcommon</artifactId>
         <version>1.0.24</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
@@ -407,6 +399,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-core</artifactId>
         <version>${log4j.version}</version>
       </dependency>
@@ -419,7 +416,7 @@
       <dependency>
         <groupId>${servlet.api.groupId}</groupId>
         <artifactId>${servlet.api.artifactId}</artifactId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
       </dependency>
 
       <dependency>
@@ -438,6 +435,7 @@
         <version>${jackson.version}</version>
       </dependency>
 
+      <!-- 
       <dependency>
         <groupId>xerces</groupId>
         <artifactId>xercesImpl</artifactId>
@@ -453,6 +451,7 @@
         <artifactId>serializer</artifactId>
         <version>2.7.1</version>
       </dependency>
+       -->
 
       <dependency>
         <groupId>org.hibernate</groupId>
@@ -465,6 +464,11 @@
         <version>${hibernate.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator</artifactId>
+        <version>5.3.5.Final</version>
+      </dependency>
+      <dependency>
         <groupId>org.hibernate.javax.persistence</groupId>
         <artifactId>hibernate-jpa-2.1-api</artifactId>
         <version>1.0.0.Final</version>
@@ -475,7 +479,7 @@
         <version>3.19.0-GA</version>
       </dependency>
 
-      <!-- SPRING -->
+          <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
@@ -561,6 +565,49 @@
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hsqldb</groupId>
+        <artifactId>hsqldb</artifactId>
+        <version>2.3.1</version>
+      </dependency>
+      <!--  
+      <dependency>
+        <groupId>commons-dbcp</groupId>
+        <artifactId>commons-dbcp</artifactId>
+        <version>1.4</version>
+      </dependency>
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.40</version>
+      </dependency>
+      -->
+
+      <dependency>
+        <!-- Import dependency management from DKPro Core -->
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- Import dependency management from Wicket -->
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-parent</artifactId>
+        <version>${wicket.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- Import dependency management from Spring Boot -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>1.5.4.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -673,6 +720,11 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
         <!--
           Downgrade from 2.7 due to
           https://mail-archives.apache.org/mod_mbox/maven-users/201410.mbox/%3C5432C360.9080903@gmx.de%3E

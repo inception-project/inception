@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.RuntimeConfigurationType;
-import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
@@ -39,11 +38,12 @@ import org.apache.wicket.resource.DynamicJQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
-import org.apache.wicket.spring.injection.annot.SpringComponentInjector;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
+
+import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
  * configuration.
  */
 public abstract class WicketApplicationBase
-    extends AuthenticatedWebApplication
+    extends WicketBootSecuredWebApplication
 {
     protected boolean isInitialized = false;
 
@@ -67,7 +67,7 @@ public abstract class WicketApplicationBase
     {
         super.init();
         
-        initSpring();
+//        initSpring();
         
         initStatelessChecker();
         
@@ -185,10 +185,10 @@ public abstract class WicketApplicationBase
         }
     }
 
-    protected void initSpring()
-    {
-        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
-    }
+//    protected void initSpring()
+//    {
+//        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
+//    }
     
     @Override
     public Class<? extends WebPage> getSignInPageClass()
