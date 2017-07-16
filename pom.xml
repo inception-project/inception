@@ -62,6 +62,7 @@
     <hibernate.version>4.3.11.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
+    <springfox.version>2.7.0</springfox.version>
     <servlet.api.groupId>javax.servlet</servlet.api.groupId>
     <servlet.api.artifactId>javax.servlet-api</servlet.api.artifactId>
     <javamelody.version>1.68.1</javamelody.version>
