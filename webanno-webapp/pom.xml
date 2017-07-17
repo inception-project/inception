@@ -102,6 +102,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
@@ -112,22 +116,6 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-webmvc</artifactId>
     </dependency>
-
-    <!-- SPRING ASPECTS
-      <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aspects</artifactId>
-      </dependency>
-      <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aop</artifactId>
-      </dependency>
-      <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjrt</artifactId>
-      <version>1.6.10</version>
-      </dependency>
-    -->
 
     <!-- SPRING SECURITY -->
     <dependency>
@@ -170,12 +158,6 @@
       <scope>provided</scope>
     </dependency>
 
-
-    <dependency>
-      <groupId>${servlet.api.groupId}</groupId>
-      <artifactId>${servlet.api.artifactId}</artifactId>
-      <scope>provided</scope>
-    </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
 
@@ -243,6 +225,10 @@
     <!-- Spring Boot dependencies -->    
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
       <exclusions>
         <exclusion>
@@ -252,9 +238,25 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-tomcat</artifactId>
       <scope>provided</scope>
+    </dependency>
+    <!--  
+    <dependency>
+      <groupId>${servlet.api.groupId}</groupId>
+      <artifactId>${servlet.api.artifactId}</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>    
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -359,12 +361,15 @@
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-default</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
-              <!-- JavaMelody - used via web.xml -->
-              <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
+              <!-- Spring Boot stuff - used via reflection/classpath -->
+              <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
+              <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
+              <usedDependency>net.bull.javamelody:javamelody-spring-boot-starter</usedDependency>
               <!-- Standalone support - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-support-standalone</usedDependency>
               <!-- Spring configuration -->
-              <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
@@ -376,8 +381,6 @@
               <!-- Spring Security -->
               <usedDependency>org.springframework.security:spring-security-config</usedDependency>
               <usedDependency>org.springframework.security:spring-security-web</usedDependency>
-              <!-- Servlet API -->
-              <usedDependency>${servlet.api.groupId}:${servlet.api.artifactId}</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
