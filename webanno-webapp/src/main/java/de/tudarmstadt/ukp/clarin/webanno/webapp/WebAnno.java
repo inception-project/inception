@@ -74,7 +74,14 @@ public class WebAnno
     
     public static void main(String[] args) throws Exception
     {
+        // If running from the command line, we default do assuming that there is a head
+        if (System.getProperty("java.awt.headless") == null) {
+            System.setProperty("java.awt.headless", "false");
+        }
+        
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        // Signal that we may need the shutdown dialog
+        builder.properties("running.from.commandline=true");
         init(builder);
         builder.sources(WebAnno.class);
         builder.run(args);

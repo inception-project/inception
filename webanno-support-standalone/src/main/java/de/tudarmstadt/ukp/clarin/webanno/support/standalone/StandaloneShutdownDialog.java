@@ -21,7 +21,6 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -29,6 +28,7 @@ import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -42,6 +42,9 @@ public class StandaloneShutdownDialog
 
     private boolean running = false;
 
+    @Value(value = "${running.from.commandline}")
+    private boolean runningFromCommandline;    
+    
     @Override
     public void start()
     {
@@ -82,14 +85,12 @@ public class StandaloneShutdownDialog
 
     private void displayShutdownDialog()
     {
-        String serverId =  ServerDetector.getServerId();
-        log.info("Running in: " + (serverId != null ? serverId : "unknown server"));
         log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
         
         // Show this only when run from the standalone JAR via a double-click
         if (System.console() == null && !GraphicsEnvironment.isHeadless()
-                && ServerDetector.isWinstone()) {
+                && runningFromCommandline) {
             log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
 
             EventQueue.invokeLater(() -> {
