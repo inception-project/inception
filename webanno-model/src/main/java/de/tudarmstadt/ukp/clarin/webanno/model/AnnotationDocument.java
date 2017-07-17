@@ -152,5 +152,4 @@ public class AnnotationDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
-
 }

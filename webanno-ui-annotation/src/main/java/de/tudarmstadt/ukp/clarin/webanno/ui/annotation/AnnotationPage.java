@@ -562,8 +562,8 @@ public class AnnotationPage
             documentService.upgradeCas(editorCas.getCas(), annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), user, false);
+            documentService.writeAnnotationCas(editorCas.getCas().getJCas(), annotationDocument,
+                    false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.clearAllSelections();

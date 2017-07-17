@@ -639,28 +639,29 @@ public class DocumentServiceImpl
 
         return jcas;
     }
-    
+
     @Override
-    @Transactional
-    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser,
+    public void writeAnnotationCas(JCas aJCas, AnnotationDocument aAnnotationDocument,
             boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, aUser.getUsername());
+        casStorageService.writeCas(aAnnotationDocument.getDocument(), aJCas,
+                aAnnotationDocument.getUser());
         
-        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
         if (aUpdateTimestamp) {
-            annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
-            annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
-            entityManager.merge(annotationDocument);
+            // FIXME REC Does it really make sense to set the accessed sentence from the source
+            // document?!
+            aAnnotationDocument
+                    .setSentenceAccessed(aAnnotationDocument.getDocument().getSentenceAccessed());
+            aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            aAnnotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
+            entityManager.merge(aAnnotationDocument);
         }
         
         // Notify all relevant service so that they can update themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
+        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry.getBeans()) {
             try {
-                bean.afterAnnotationUpdate(annotationDocument, aJcas);
+                bean.afterAnnotationUpdate(aAnnotationDocument, aJCas);
             }
             catch (IOException e) {
                 throw e;
@@ -668,7 +669,17 @@ public class DocumentServiceImpl
             catch (Exception e) {
                 throw new IllegalStateException(e);
             }
-        }
+        }    
+    }
+    
+    @Override
+    @Transactional
+    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser,
+            boolean aUpdateTimestamp)
+        throws IOException
+    {
+        AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
+        writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
     }
 
     @Override
@@ -687,7 +698,7 @@ public class DocumentServiceImpl
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgradeCas(cas, annotationDocument);
-                writeAnnotationCas(cas.getJCas(), annotationDocument.getDocument(), user, false);
+                writeAnnotationCas(cas.getJCas(), annotationDocument, false);
 
                 // This is no longer needed because it is handled on the respective pages.
 //                if (aMode.equals(Mode.ANNOTATION)) {

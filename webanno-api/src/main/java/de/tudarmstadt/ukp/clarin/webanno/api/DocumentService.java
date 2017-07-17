@@ -216,6 +216,23 @@ public interface DocumentService
      *
      * @param jCas
      *            the JCas.
+     * @param annotationDocument
+     *            the annotation document.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void writeAnnotationCas(JCas jCas, AnnotationDocument annotationDocument,
+            boolean aUpdateTimestamp)
+        throws IOException;
+    
+    /**
+     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
+     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+     * documents are stored per project, user and document
+     *
+     * @param jCas
+     *            the JCas.
      * @param document
      *            the source document.
      * @param user
