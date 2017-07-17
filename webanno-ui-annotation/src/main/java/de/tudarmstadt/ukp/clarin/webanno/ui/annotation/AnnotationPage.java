@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -116,6 +117,7 @@ public class AnnotationPage
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
 
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private NumberTextField<Integer> gotoPageTextField;
     
     private long currentprojectId;
@@ -548,7 +550,7 @@ public class AnnotationPage
         User user = userRepository.get(username);
 
         state.setUser(user);
-
+        
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
@@ -608,6 +610,8 @@ public class AnnotationPage
             detailEditor.reset(aTarget);
             // Populate the layer dropdown box
             detailEditor.loadFeatureEditorModels(editorCas, aTarget);
+            
+            extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
         }
         catch (Exception e) {
             handleException(aTarget, e);

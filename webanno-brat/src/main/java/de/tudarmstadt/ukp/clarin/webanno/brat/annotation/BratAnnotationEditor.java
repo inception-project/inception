@@ -55,6 +55,7 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -112,7 +113,8 @@ public class BratAnnotationEditor
 
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
-
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
@@ -157,9 +159,17 @@ public class BratAnnotationEditor
                 else {
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
-                
+
                 // Record the action in the action context (which currently is persistent...)
                 getModelObject().getAction().setUserAction(action);
+
+                // REC I wonder if we need this here or of this cannot be deferred until we call
+                // ext.handleAction later.
+                if (paramId.isSet()) {
+                    extensionRegistry.fireAnnotationClicked(paramId, getModelObject());
+                    // Just in case the extension has changed the action
+                    action = getModelObject().getAction().getUserAction();
+                }
                 
                 // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
                 // calls that do not go through this AjaxBehavior do not see an active user action.
@@ -218,6 +228,12 @@ public class BratAnnotationEditor
                         }
                     }
 
+                    if (paramId.isSynthetic()) {
+                        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                        extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                                jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                    }
+
                     if (!skipImplicitSlotActions) {
                         // HACK: If an arc was clicked that represents a link feature, then open the
                         // associated span annotation instead.
@@ -252,17 +268,19 @@ public class BratAnnotationEditor
                                     offsets.getEnd(), paramId);
                         }
                         else {
-                            selection.selectSpan(paramId, jCas, offsets.getBegin(),
+                            if (!paramId.isSynthetic()) {
+                                selection.selectSpan(paramId, jCas, offsets.getBegin(),
                                     offsets.getEnd());
 
-                            if (selection.getAnnotation().isNotSet()) {
-                                // Create new annotation
-                                state.getAction().setAnnotate(true);
-                                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
-                            }
-                            else {
-                                state.getAction().setAnnotate(false);
-                                getActionHandler().actionSelect(aTarget, jCas);
+                                if (selection.getAnnotation().isNotSet()) {
+                                    // Create new annotation
+                                    state.getAction().setAnnotate(true);
+                                    getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                                }
+                                else {
+                                    state.getAction().setAnnotate(false);
+                                    getActionHandler().actionSelect(aTarget, jCas);
+                                }
                             }
                         }
                         
@@ -345,7 +363,7 @@ public class BratAnnotationEditor
     private Offsets getOffsetsFromRequest(IRequestParameters request, JCas jCas, VID aVid)
         throws  IOException
     {
-        if (aVid.isNotSet()) {
+        if (aVid.isNotSet() || aVid.isSynthetic()) {
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
@@ -478,7 +496,7 @@ public class BratAnnotationEditor
     {
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
-        
+        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
         BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
     }
 

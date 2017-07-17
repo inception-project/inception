@@ -50,11 +50,6 @@ public interface AnnotationEditorExtension
     void onAnnotationClicked(VID paramId, AnnotatorState aAnnotatorState);
 
     /**
-     * Maybe this method can be merged into the core code?
-     */
-    void setNewTimeStamp(AnnotatorState state);
-
-    /**
      * Initiatialize extension service
      */
     void onDocumentLoad(JCas jCas, AnnotatorState aState);

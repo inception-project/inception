@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
@@ -106,7 +107,8 @@ public class AnnotationDetailEditorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean AnnotationSchemaService annotationService;
-
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    
     private AnnotationFeatureForm annotationFeatureForm;
 
     public AnnotationDetailEditorPanel(String id, IModel<AnnotatorState> aModel)
@@ -290,12 +292,17 @@ public class AnnotationDetailEditorPanel
     @Override
     public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
         VID aVID)
-        throws AnnotationException
+        throws AnnotationException, IOException
     {
         assert aJCas != null;
 
         AnnotatorState state = getModelObject();
-
+    
+        // REC: I'm not sure this should be fired here. Leaving it commented in case we need it.
+        // Otherwise, should be removed in due time.
+        // extensionRegistry.fireAction(AnnotationDetailEditorPanel.this, getModelObject(), aTarget,
+        // aJCas, aVID, aBegin, aEnd);
+        
         // If this method is called when no slot is armed, it must be a bug!
         if (!state.isSlotArmed()) {
             throw new IllegalStateException("No slot is armed.");
