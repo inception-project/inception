@@ -62,6 +62,7 @@ public class WebAnno
     protected SpringApplicationBuilder createSpringApplicationBuilder()
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
+        builder.properties("running.from.commandline=false");
         init(builder);
         return builder;
     }
