@@ -727,6 +727,7 @@
                 </goals>
                 <configuration>
                   <excludes>
+                    <exclude>.checkstyle</exclude>
                     <exclude>.gitignore</exclude>
                     <!-- maven config files -->
                     <exclude>src/filter/**/*</exclude>
