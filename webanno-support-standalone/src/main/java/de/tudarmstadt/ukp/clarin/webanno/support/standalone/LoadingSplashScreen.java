@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.net.URL;
 import java.util.Optional;
@@ -31,6 +32,10 @@ public class LoadingSplashScreen
 {
     public static Optional<JWindow> setupScreen(URL aImage)
     {
+        if (GraphicsEnvironment.isHeadless()) {
+            return Optional.empty();
+        }
+        
         SplashWindow window = new SplashWindow(aImage);
         window.setVisible(true);
         
