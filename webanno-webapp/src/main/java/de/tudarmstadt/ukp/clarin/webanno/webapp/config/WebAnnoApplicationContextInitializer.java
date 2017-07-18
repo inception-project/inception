@@ -29,7 +29,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 public class WebAnnoApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
@@ -44,8 +43,6 @@ public class WebAnnoApplicationContextInitializer
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
-        LoggingFilter.setLoggingUsername("SYSTEM");
-                
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
         File settings = SettingsUtil.getSettingsFile();
