@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +69,6 @@ public class ProjectDocumentsPanel
     private ArrayList<String> documents = new ArrayList<>();
     private ArrayList<String> selectedDocuments = new ArrayList<>();
 
-    private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
     private ArrayList<String> readableFormats;
@@ -168,7 +167,7 @@ public class ProjectDocumentsPanel
     
     private void actionImport()
     {
-        uploadedFiles = fileUpload.getFileUploads();
+        List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
         Project project = ProjectDocumentsPanel.this.getModelObject();
         if (isEmpty(uploadedFiles)) {
             error("No document is selected to upload, please select a document first");
@@ -189,8 +188,6 @@ public class ProjectDocumentsPanel
             }
 
             try {
-                File uploadFile = documentToUpload.writeToTempFile();
-
                 String format = importExportService
                         .getReadableFormatId(readableFormatsChoice.getModelObject());
 
@@ -199,7 +196,9 @@ public class ProjectDocumentsPanel
                 document.setProject(project);
                 document.setFormat(format);
                 
-                documentService.uploadSourceDocument(uploadFile, document);
+                try (InputStream is = documentToUpload.getInputStream()) {
+                    documentService.uploadSourceDocument(is, document);
+                }
                 info("File [" + fileName + "] has been imported successfully!");
             }
             catch (Exception e) {
@@ -208,7 +207,6 @@ public class ProjectDocumentsPanel
                 LOG.error(fileName + ": " + e.getMessage(), e);
             }
         }
-
     }
 
     private void actionRemove()

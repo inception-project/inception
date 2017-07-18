@@ -20,10 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Button;
@@ -157,13 +161,23 @@ public class AnnotationGuideLinePanel
         }
 
         for (FileUpload guidelineFile : uploadedFiles) {
-
             try {
-                File tempFile = guidelineFile.writeToTempFile();
-                String fileName = guidelineFile.getClientFileName();
-                String username = SecurityContextHolder.getContext().getAuthentication()
-                        .getName();
-                projectRepository.createGuideline(project, tempFile, fileName, username);
+                // Workaround for WICKET-6425
+                File tempFile = File.createTempFile("webanno-guidelines", null);
+                try (
+                        InputStream is = guidelineFile.getInputStream();
+                        OutputStream os = new FileOutputStream(tempFile);
+                ) {
+                    IOUtils.copyLarge(is, os);
+                    
+                    String fileName = guidelineFile.getClientFileName();
+                    String username = SecurityContextHolder.getContext().getAuthentication()
+                            .getName();
+                    projectRepository.createGuideline(project, tempFile, fileName, username);
+                }
+                finally {
+                    tempFile.delete();
+                }
             }
             catch (Exception e) {
                 error("Unable to write guideline file "

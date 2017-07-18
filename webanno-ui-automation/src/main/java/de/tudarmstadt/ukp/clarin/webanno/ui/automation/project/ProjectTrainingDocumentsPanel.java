@@ -20,11 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -134,8 +138,6 @@ public class ProjectTrainingDocumentsPanel
                     }
 
                     try {
-                        File uploadFile = documentToUpload.writeToTempFile();
-
                         TrainingDocument document = new TrainingDocument();
                         document.setName(fileName);
                         document.setProject(project);
@@ -162,8 +164,22 @@ public class ProjectTrainingDocumentsPanel
                                     .getReadableFormatId(readableFormatsChoice.getModelObject());
                             document.setFormat(reader);
                         }
+
                         automationService.createTrainingDocument(document);
-                        importExportService.uploadTrainingDocument(uploadFile, document);
+
+                        // Workaround for WICKET-6425
+                        File tempFile = File.createTempFile("webanno-training", null);
+                        try (
+                                InputStream is = documentToUpload.getInputStream();
+                                OutputStream os = new FileOutputStream(tempFile);
+                        ) {
+                            IOUtils.copyLarge(is, os);
+                            importExportService.uploadTrainingDocument(tempFile, document);
+                        }
+                        finally {
+                            tempFile.delete();
+                        }
+
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (IOException e) {
