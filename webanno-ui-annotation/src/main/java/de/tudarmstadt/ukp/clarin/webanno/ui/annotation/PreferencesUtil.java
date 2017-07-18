@@ -93,7 +93,7 @@ public class PreferencesUtil
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
                     if (AnnotationPreference.class.getDeclaredField(propertyName)
-                    	.getGenericType() instanceof ParameterizedType) {
+                            .getGenericType() instanceof ParameterizedType) {
                         if (entry.getValue().toString().startsWith("[")) { // its a list
                             List<String> value = Arrays.asList(
                                     StringUtils.replaceChars(entry.getValue().toString(), "[]", "").split(","));
@@ -132,11 +132,15 @@ public class PreferencesUtil
 
             // Get color preferences for each layer, init with legacy if not found
             Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
-            if (colorPerLayer == null)
+            if (colorPerLayer == null) {
                 colorPerLayer = new HashMap<>();
-            for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aBModel.getProject()))
-                if(!colorPerLayer.containsKey(layer.getId()))
+            }
+            for (AnnotationLayer layer : aAnnotationService
+                    .listAnnotationLayer(aBModel.getProject())) {
+                if (!colorPerLayer.containsKey(layer.getId())) {
                     colorPerLayer.put(layer.getId(), ColoringStrategyType.LEGACY);
+                }
+            }
             preference.setColorPerLayer(colorPerLayer);
 
         }
@@ -149,9 +153,10 @@ public class PreferencesUtil
             preference.setWindowSize(aSettingsService.getNumberOfSentences());
             // add default coloring strategy
             Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
-            for (AnnotationLayer layer : aBModel.getAnnotationLayers())
+            for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
                 colorPerLayer.put(layer.getId(), ColoringStrategy
                         .getBestInitialStrategy(aAnnotationService, layer, preference));
+            }
             preference.setColorPerLayer(colorPerLayer);
 
         }

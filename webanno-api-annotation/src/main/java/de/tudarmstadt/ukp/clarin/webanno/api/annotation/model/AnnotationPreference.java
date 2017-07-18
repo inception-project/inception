@@ -63,7 +63,8 @@ public class AnnotationPreference
 
     private Map<Long, ColoringStrategyType> colorPerLayer;
 
-    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = ReadonlyColoringBehaviour.LEGACY;
+    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = 
+            ReadonlyColoringBehaviour.LEGACY;
 
     private int sidebarSize;
     private int fontSize;

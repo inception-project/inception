@@ -117,11 +117,14 @@ public class AnnotationPreferenceModalPanel
                     editorFactory.getDisplayName());
 
             bModel.getAnnotationLayers().stream()
-                .filter(layer -> layer.isEnabled()) // show onlyenabledlayers
-                .filter(layer -> !Token.class.getName().equals(layer.getName())) // hide Token layer
-                .filter(layer -> !(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)
+                    // show only enabled layers
+                    .filter(layer -> layer.isEnabled()) 
+                    // hide Token layer
+                    .filter(layer -> !Token.class.getName().equals(layer.getName())) 
+                    .filter(layer -> !(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)
                             && (bModel.getMode().equals(Mode.CORRECTION)
-                                    || bModel.getMode().equals(Mode.CURATION)))) // disable corefernce annotation for correction/curation pages for 0.4.0
+                            // disable coreference annotation for correction/curation pages
+                            || bModel.getMode().equals(Mode.CURATION)))) 
                     .forEach(layer -> getModelObject().annotationLayers.add(layer));
 
             windowSizeField = new NumberTextField<>("windowSize");
@@ -183,8 +186,8 @@ public class AnnotationPreferenceModalPanel
                         @Override
                         protected void onEvent(AjaxRequestTarget target)
                         {
-                            item.getModelObject().setEnabled(!item.getModelObject().isEnabled()); // deactivate
-                                                                                                  // layer
+                            // deactivate layer
+                            item.getModelObject().setEnabled(!item.getModelObject().isEnabled());
                         }
                     });
                     item.add(layer_cb);
@@ -197,8 +200,9 @@ public class AnnotationPreferenceModalPanel
                     Model<ColoringStrategyType> initialSelected = Model
                             .of(AnnotationLayerDetailForm.this.getModelObject().colorPerLayer
                                     .get(item.getModelObject().getId()));
-                    DropDownChoice<ColoringStrategyType> layer_color = new DropDownChoice<ColoringStrategyType>(
-                            "layercoloring", initialSelected, choices, choiceRenderer);
+                    DropDownChoice<ColoringStrategyType> layer_color = 
+                            new DropDownChoice<ColoringStrategyType>( "layercoloring", 
+                                    initialSelected, choices, choiceRenderer);
                     layer_color.add(new AjaxFormComponentUpdatingBehavior("change")
                     {
                         private static final long serialVersionUID = 1060397773470276585L;
@@ -233,8 +237,9 @@ public class AnnotationPreferenceModalPanel
                     EnumSet.allOf(ReadonlyColoringBehaviour.class));
             Model<ReadonlyColoringBehaviour> initialSelected = Model
                     .of(getModelObject().readonlyLayerColoringBehaviour);
-            DropDownChoice<ReadonlyColoringBehaviour> rolayer_color = new DropDownChoice<ReadonlyColoringBehaviour>(
-                    "readonlylayercoloring", initialSelected, choices, choiceRenderer);
+            DropDownChoice<ReadonlyColoringBehaviour> rolayer_color = 
+                    new DropDownChoice<ReadonlyColoringBehaviour>("readonlylayercoloring", 
+                            initialSelected, choices, choiceRenderer);
             rolayer_color.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 1060397773470276585L;
@@ -268,7 +273,8 @@ public class AnnotationPreferenceModalPanel
                      * getModelObject().curationWindowSize);
                      */
                     bModel.getPreferences().setColorPerLayer(getModelObject().colorPerLayer);
-                    bModel.getPreferences().setReadonlyLayerColoringBehaviour(getModelObject().readonlyLayerColoringBehaviour);
+                    bModel.getPreferences().setReadonlyLayerColoringBehaviour(
+                            getModelObject().readonlyLayerColoringBehaviour);
                     bModel.getPreferences().setEditor(getModelObject().editor.getKey());
                     try {
                         PreferencesUtil.savePreference(bModel, projectService);
