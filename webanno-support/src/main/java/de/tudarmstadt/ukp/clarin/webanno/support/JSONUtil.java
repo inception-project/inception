@@ -90,8 +90,8 @@ public class JSONUtil
     }
     public static MappingJackson2HttpMessageConverter getJsonConverter()
     {
-        return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
-                MappingJackson2HttpMessageConverter.class);
+        return ApplicationContextProvider.getApplicationContext()
+                .getBean(MappingJackson2HttpMessageConverter.class);
     }
     
     public static String toInterpretableJsonString(Object aObject)
