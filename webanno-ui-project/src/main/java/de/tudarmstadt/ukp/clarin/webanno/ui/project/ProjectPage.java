@@ -46,6 +46,7 @@ import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDa
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -386,12 +387,19 @@ public class ProjectPage
         private ChallengeResponseDialog deleteProjectDialog;
         private LambdaAjaxLink deleteProjectLink;
         private RadioChoice<String> projectType;
+        private Label idLabel;
         
         public ProjectDetailsPanel(String id)
         {
             super(id);
             TextField<String> projectNameTextField = new TextField<>("name");
             projectNameTextField.setRequired(true);
+            
+            // If we run in development mode, then also show the ID of the project
+            add(idLabel = new Label("id"));
+            idLabel.setVisible(RuntimeConfigurationType.DEVELOPMENT
+                    .equals(getApplication().getConfigurationType()));
+            
             add(projectNameTextField);
 
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));

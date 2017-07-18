@@ -22,9 +22,13 @@
 	<fieldset class="ui-widget-content ui-corner-all labels-left">
 		<legend><wicket:message key="general.label" /></legend>
 		<table class="hfill">
+            <tr wicket:enclosure="id">
+                <td><label>ID:</label></td>
+                <td><wicket:container wicket:id="id"/></td>
+            </tr>
 			<tr>
-				<td><label style="color: red"> Name: </label></td>
-				<td class="hfill"><input type="text" wicket:id="name" /></td>
+				<td><label style="color: red">Name:</label></td>
+				<td class="hfill"><input type="text" class="hfill" wicket:id="name" /></td>
 			</tr>
 			<tr>
 				<td style="vertical-align: top"><label> Description: </label></td>
