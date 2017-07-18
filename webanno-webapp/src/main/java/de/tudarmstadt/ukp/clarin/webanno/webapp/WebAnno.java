@@ -21,8 +21,6 @@ import javax.validation.Validator;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
@@ -49,13 +47,6 @@ public class WebAnno
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
-    }
-
-    @Bean
-    public EmbeddedServletContainerFactory servletContainer()
-    {
-        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
-        return tomcat;
     }
 
     @Override

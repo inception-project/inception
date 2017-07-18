@@ -387,6 +387,7 @@
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-default</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
               <!-- Spring Boot stuff - used via reflection/classpath -->
+              <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
