@@ -26,7 +26,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.api.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.model.User;
 
 @Component(SuccessfulLoginListener.SERVICE_NAME)
 public class SuccessfulLoginListener
