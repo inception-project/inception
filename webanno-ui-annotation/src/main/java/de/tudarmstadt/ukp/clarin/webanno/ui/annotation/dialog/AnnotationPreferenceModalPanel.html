@@ -27,8 +27,35 @@
               </tr>
             </wicket:enclosure>
             <tr class="border_bottom">
-				<td><label>Annotation Layers:</label></td>
-				<td><span wicket:id="annotationLayers"></span></td>
+				<td colspan="2">
+				<label>Annotation Layers:</label><br />
+				<div>
+				<table>
+					<tr>
+						<td style="border-bottom: None; padding-left: 10px;">
+							<b>Name:</b>
+						</td>
+						<td style="border-bottom: None; padding-left: 10px;">
+							<b>Show:</b>
+						</td>
+						<td style="border-bottom: None; padding-left: 10px;">
+							<b>Coloring Strategy:</b>
+						</td>
+					</tr>
+					<tr wicket:id="annotationLayers">
+						<td style="border-bottom: None; padding-left: 10px;">
+							<span wicket:id="annotationLayerDesc"></span>
+						</td>
+						<td style="border-bottom: None; padding-left: 10px;">
+							<input wicket:id="annotationLayerActive" type="checkbox" />
+						</td>
+						<td style="border-bottom: None; padding-left: 10px;">
+							<select wicket:id="layercoloring"></select>
+						</td>
+    				</tr>
+				</table>
+				</div>
+		        </td>
 			</tr>
 			<tr class="border_bottom">
 				<td><label>Remember layer:</label></td>
@@ -64,8 +91,8 @@
 				<td><input type="checkbox" wicket:id="scrollPage" /></td>
 			</tr>
 			<tr class="border_bottom">
-				<td><label> Use the same color for all tags in a layer </label></td>
-				<td><input type="checkbox" wicket:id="staticColor" /></td>
+				<td><label> Choose coloring strategy for read only layers </label></td>
+				<td><select wicket:id="readonlylayercoloring"></select></td>
 			</tr>
 		</table>
 		<div class="buttons">

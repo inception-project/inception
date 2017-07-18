@@ -21,9 +21,12 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapper;
@@ -34,6 +37,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -88,10 +93,20 @@ public class PreferencesUtil
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
                     if (AnnotationPreference.class.getDeclaredField(propertyName)
-                            .getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
+                    	.getGenericType() instanceof ParameterizedType) {
+                        if (entry.getValue().toString().startsWith("[")) { // its a list
+                            List<String> value = Arrays.asList(
+                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "").split(","));
+                            if (!value.get(0).equals("")) {
+                                wrapper.setPropertyValue(propertyName, value);
+                            }
+                        }
+                        else if (entry.getValue().toString().startsWith("{")) { // its a map
+                            String s = StringUtils.replaceChars(entry.getValue().toString(), "{}",
+                                    "");
+                            Map<String, String> value = Arrays.stream(s.split(","))
+                                    .map(x -> x.split("="))
+                                    .collect(Collectors.toMap(x -> x[0], x -> x[1]));
                             wrapper.setPropertyValue(propertyName, value);
                         }
                     }
@@ -114,6 +129,16 @@ public class PreferencesUtil
                         .getProject());
                 aBModel.setAnnotationLayers(layers);
             }
+
+            // Get color preferences for each layer, init with legacy if not found
+            Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
+            if (colorPerLayer == null)
+                colorPerLayer = new HashMap<>();
+            for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aBModel.getProject()))
+                if(!colorPerLayer.containsKey(layer.getId()))
+                    colorPerLayer.put(layer.getId(), ColoringStrategyType.LEGACY);
+            preference.setColorPerLayer(colorPerLayer);
+
         }
         // no preference found
         catch (Exception e) {
@@ -122,6 +147,13 @@ public class PreferencesUtil
                     .getProject());
             aBModel.setAnnotationLayers(layers);
             preference.setWindowSize(aSettingsService.getNumberOfSentences());
+            // add default coloring strategy
+            Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
+            for (AnnotationLayer layer : aBModel.getAnnotationLayers())
+                colorPerLayer.put(layer.getId(), ColoringStrategy
+                        .getBestInitialStrategy(aAnnotationService, layer, preference));
+            preference.setColorPerLayer(colorPerLayer);
+
         }
         
         aBModel.setPreferences(preference);

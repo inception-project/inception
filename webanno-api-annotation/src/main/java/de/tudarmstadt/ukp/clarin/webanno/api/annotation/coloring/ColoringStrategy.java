@@ -35,7 +35,65 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
 public abstract class ColoringStrategy
 {
-    public static ColoringStrategy labelHashBasedColor(final String[] aPalette)
+    public enum ReadonlyColoringBehaviour
+    {
+        LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(),
+                ColoringStrategyType.GRAY), 
+        NORMAL("normal", null), 
+        GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), 
+                ColoringStrategyType.GRAY),
+        // here could be more
+        ;
+
+        private String descriptiveName;
+        private ColoringStrategyType t;
+
+        private ReadonlyColoringBehaviour(String descriptiveName, ColoringStrategyType t)
+        {
+            this.descriptiveName = descriptiveName;
+            this.t = t;
+        }
+
+        public ColoringStrategyType getColoringStrategy()
+        {
+            return t;
+        }
+
+        public String getDescriptiveName()
+        {
+            return descriptiveName;
+        }
+
+    }
+
+    public enum ColoringStrategyType
+    {
+
+        STATIC("static"), STATIC_PASTELLE("static pastelle"),
+
+        DYNAMIC("dynamic"), DYNAMIC_PASTELLE("dynamic pastelle"),
+
+        GRAY("static gray"),
+
+        LEGACY("legacy"),
+
+        ;
+
+        private String descriptiveName;
+
+        private ColoringStrategyType(String descriptiveName)
+        {
+            this.descriptiveName = descriptiveName;
+        }
+
+        public String getDescriptiveName()
+        {
+            return descriptiveName;
+        }
+
+    }
+
+    public static final ColoringStrategy labelHashBasedColor(final String... aPalette)
     {
         return new ColoringStrategy()
         {
@@ -49,7 +107,10 @@ public abstract class ColoringStrategy
                 // tagsets. For layers that have features without tagsets, again, we can only use
                 // the actual label value...
                 int colorIndex = Math.abs(aLabel.hashCode());
-                if (colorIndex == Integer.MIN_VALUE) {
+                if (colorIndex == Integer.MIN_VALUE) { // FIXME: does that make sense?
+                                                       // Integer.MIN_VALUE is -2147483648, Math.abs
+                                                       // produces only positive numbers, doesn't
+                                                       // it?
                     colorIndex = 0;
                 }
                 return aPalette[colorIndex % aPalette.length];
@@ -57,58 +118,67 @@ public abstract class ColoringStrategy
         };
     }
 
-    public static ColoringStrategy staticColor(final String aColor) {
-        return new ColoringStrategy() {
-            @Override
-            public String getColor(VID aVid, String aLabel)
-            {
-                return aColor;
-            }
-        };
-    }
-
-    public static ColoringStrategy getBestStrategy(AnnotationSchemaService aService,
+    public static ColoringStrategy getStrategy(AnnotationSchemaService aService,
             AnnotationLayer aLayer, AnnotationPreference aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
-        // Decide on coloring strategy for the current layer
-        ColoringStrategy coloringStrategy;
-        if (aLayer.isReadonly()) {
-            coloringStrategy = staticColor(DISABLED);
-        }
-        else if (aPreferences.isStaticColor()) {
-            int threshold;
+        ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
+        ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
+        if (aLayer.isReadonly() && rt != ReadonlyColoringBehaviour.NORMAL)
+            t = rt.t;
+        if (t == ColoringStrategyType.LEGACY)
+            t = getBestInitialStrategy(aService, aLayer, aPreferences);
+        return getStrategy(aService, aLayer, t, aColorQueues);
+    }
 
+    public static ColoringStrategy getStrategy(AnnotationSchemaService aService,
+			AnnotationLayer aLayer, ColoringStrategyType colortype,
+			Map<String[], Queue<String>> aColorQueues)
+    {
+        // Decide on coloring strategy for the current layer
+        switch (colortype) {
+        case STATIC_PASTELLE: // ignore for the moment and fall through
+        case STATIC:
+            int threshold;
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())
-                    && !hasLinkFeature(aService, aLayer)) {
+                    && !hasLinkFeature(aService, aLayer))
                 threshold = Integer.MAX_VALUE; // No filtering
-            }
-            else {
+            else
                 // Chains and arcs contain relations that are rendered as lines on the light
                 // window background - need to make sure there is some contrast, so we cannot use
                 // the full palette.
                 threshold = LIGHTNESS_FILTER_THRESHOLD;
-            }
-
-            coloringStrategy = staticColor(
-                    nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold));
-        }
-        else {
+            return labelHashBasedColor(nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold));
+        case DYNAMIC_PASTELLE:
+        case DYNAMIC:
             String[] palette;
-
             if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())
-                    && !hasLinkFeature(aService, aLayer)) {
+                    && !hasLinkFeature(aService, aLayer))
                 palette = PALETTE_NORMAL;
-            }
-            else {
+            else
                 // Chains and arcs contain relations that are rendered as lines on the light
                 // window background - need to make sure there is some contrast, so we cannot use
                 // the full palette.
                 palette = PALETTE_NORMAL_FILTERED;
-            }
-
-            coloringStrategy = labelHashBasedColor(palette);
+            return labelHashBasedColor(palette);
+        case GRAY:
+        default:
+            return labelHashBasedColor(DISABLED);
         }
+    }
+
+    public static ColoringStrategyType getBestInitialStrategy(AnnotationSchemaService aService,
+            AnnotationLayer aLayer, AnnotationPreference aPreferences)
+    {
+        // Decide on coloring strategy for the current layer
+        ColoringStrategyType coloringStrategy;
+        if (aLayer.isReadonly()) {
+            coloringStrategy = ColoringStrategyType.GRAY;
+        }
+        else if (aPreferences.isStaticColor())
+            coloringStrategy = ColoringStrategyType.STATIC_PASTELLE;
+        else
+            coloringStrategy = ColoringStrategyType.DYNAMIC;
         return coloringStrategy;
     }
 

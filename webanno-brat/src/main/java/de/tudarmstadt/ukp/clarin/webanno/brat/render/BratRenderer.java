@@ -103,7 +103,7 @@ public class BratRenderer
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
-                    : ColoringStrategy.getBestStrategy(aAnnotationService, layer,
+                    : ColoringStrategy.getStrategy(aAnnotationService, layer,
                             aState.getPreferences(), colorQueues);
 
             TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
