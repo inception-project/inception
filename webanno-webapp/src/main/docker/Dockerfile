@@ -7,14 +7,14 @@
 ############################################################
 
 ################## BEGIN INSTALLATION ######################
-FROM tomcat:7-jre8
+FROM tomcat:8-jre8
 
 MAINTAINER WebAnno Team
 
 RUN apt-get update
-# Install tomcat utilities (we will need tomcat7-instance-create) and mysql
-#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat7-user tomcat7-admin authbind
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat7-user tomcat7-admin authbind
+# Install tomcat utilities (we will need tomcat8-instance-create) and mysql
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat8-user tomcat8-admin authbind
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat8-user tomcat8-admin authbind
 
 # Copy webanno and mysql settings to tmp
 # COPY create_webanno_db.sql mysql-init /tmp/
@@ -28,13 +28,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat7-user tomcat7-
 
 WORKDIR /opt
 
-# Create a tomcat7 instance of webanno to operate on port 18080 as
+# Create a tomcat8 instance of webanno to operate on port 18080 as
 # shown in the official admin guide
-RUN tomcat7-instance-create -p 18080 -c 18005 webanno && \
+RUN tomcat8-instance-create -p 18080 -c 18005 webanno && \
     chown -R www-data /opt/webanno
 
-# create some folders to get rid of tomcat7 warnings
-RUN mkdir -p /usr/share/tomcat7/common/classes /usr/share/tomcat7/server/classes /usr/share/tomcat7/shared/classes
+# create some folders to get rid of tomcat8 warnings
+RUN mkdir -p /usr/share/tomcat8/common/classes /usr/share/tomcat8/server/classes /usr/share/tomcat8/shared/classes
 
 # Rename the webanno webapp 
 COPY webanno_initd /etc/init.d/webanno
