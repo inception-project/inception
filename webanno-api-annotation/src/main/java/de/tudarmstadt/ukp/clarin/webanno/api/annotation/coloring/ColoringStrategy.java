@@ -93,6 +93,18 @@ public abstract class ColoringStrategy
 
     }
 
+    public static ColoringStrategy staticColor(final String aColor)
+    {
+        return new ColoringStrategy()
+        {
+            @Override
+            public String getColor(VID aVid, String aLabel)
+            {
+                return aColor;
+            }
+        };
+    }
+    
     public static final ColoringStrategy labelHashBasedColor(final String... aPalette)
     {
         return new ColoringStrategy()
@@ -107,10 +119,9 @@ public abstract class ColoringStrategy
                 // tagsets. For layers that have features without tagsets, again, we can only use
                 // the actual label value...
                 int colorIndex = Math.abs(aLabel.hashCode());
-                if (colorIndex == Integer.MIN_VALUE) { // FIXME: does that make sense?
-                                                       // Integer.MIN_VALUE is -2147483648, Math.abs
-                                                       // produces only positive numbers, doesn't
-                                                       // it?
+                if (colorIndex == Integer.MIN_VALUE) { 
+                    // Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE - we need to catch this
+                    // case here.
                     colorIndex = 0;
                 }
                 return aPalette[colorIndex % aPalette.length];
