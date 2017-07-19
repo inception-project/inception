@@ -390,8 +390,6 @@
               <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
               <usedDependency>net.bull.javamelody:javamelody-spring-boot-starter</usedDependency>
-              <!-- Standalone support - used via Spring -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-support-standalone</usedDependency>
               <!-- Spring configuration -->
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
