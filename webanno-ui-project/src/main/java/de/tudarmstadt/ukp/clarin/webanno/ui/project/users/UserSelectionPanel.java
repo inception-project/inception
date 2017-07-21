@@ -53,8 +53,8 @@ class UserSelectionPanel
     private @SpringBean ProjectService projectRepository;
     private @SpringBean UserDao userRepository;
 
-    private IModel<Project> project;
-    private IModel<User> user;
+    private IModel<Project> projectModel;
+    private IModel<User> userModel;
     
     private OverviewListChoice<User> overviewList;
 
@@ -64,12 +64,12 @@ class UserSelectionPanel
         
         setOutputMarkupId(true);
         
-        project = aProject;
-        user = aUser;
+        projectModel = aProject;
+        userModel = aUser;
 
         overviewList = new OverviewListChoice<>("user");
         overviewList.setChoiceRenderer(makeUserChoiceRenderer());
-        overviewList.setModel(user);
+        overviewList.setModel(userModel);
         overviewList.setChoices(LambdaModel.of(this::listUsersWithPermissions));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
@@ -104,7 +104,7 @@ class UserSelectionPanel
             public Object getDisplayValue(User aObject)
             {
                 List<ProjectPermission> projectPermissions = projectRepository
-                        .listProjectPermissionLevel(aObject, project.getObject());
+                        .listProjectPermissionLevel(aObject, projectModel.getObject());
                 List<String> permissionLevels = new ArrayList<>();
                 for (ProjectPermission projectPermission : projectPermissions) {
                     permissionLevels.add(projectPermission.getLevel().getName());
@@ -117,7 +117,7 @@ class UserSelectionPanel
 
     private List<User> listUsersWithPermissions()
     {
-        return projectRepository.listProjectUsersWithPermissions(project.getObject());
+        return projectRepository.listProjectUsersWithPermissions(projectModel.getObject());
     }
 
     private List<User> listUsersWithoutPermissions()
@@ -130,8 +130,8 @@ class UserSelectionPanel
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
     {
         for (User user : aForm.getModelObject()) {
-            projectRepository.createProjectPermission(new ProjectPermission(project.getObject(),
-                    user.getUsername(), PermissionLevel.USER));
+            projectRepository.createProjectPermission(new ProjectPermission(
+                    projectModel.getObject(), user.getUsername(), PermissionLevel.USER));
         }
         
         aForm.getModelObject().clear();

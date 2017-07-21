@@ -263,6 +263,8 @@ public class ProjectExportPanel
             }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
 
             final AJAXDownload exportProject = new AJAXDownload() {
+                private static final long serialVersionUID = 2005074740832698081L;
+
                 @Override
                 protected String getFileName() {
                     String name;
@@ -437,7 +439,7 @@ public class ProjectExportPanel
             return model.messages;
         }
 
-        public File generateZipFile(final ProjectExportModel aModel, AjaxRequestTarget target)
+        public File generateZipFile(final ProjectExportModel aModel, AjaxRequestTarget aTarget)
             throws IOException, UIMAException, ClassNotFoundException, ZippingException,
             InterruptedException, ProjectExportException
         {

@@ -59,7 +59,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
@@ -71,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
@@ -249,9 +247,6 @@ public class ProjectTagSetsPanel
                 {
                     uploadedFiles = fileUpload.getFileUploads();
                     Project project = ProjectTagSetsPanel.this.getModelObject();
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    User user = userRepository.get(username);
 
                     if (isEmpty(uploadedFiles)) {
                         error("Please choose file with tagset before uploading");
@@ -281,7 +276,6 @@ public class ProjectTagSetsPanel
                                         + ExceptionUtils.getRootCauseMessage(e));
                             }
                         }
-
                     }
                     else if (importTagsetFormat.getModelObject().equals(
                             ExportedTagSetConstant.TAB_FORMAT)) {
@@ -419,10 +413,6 @@ public class ProjectTagSetsPanel
                             error("Only one tagset per project is allowed!");
                         }
                         else {
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = userRepository.get(username);
-
                             tagSet.setProject(ProjectTagSetsPanel.this.getModelObject());
                             try {
                                 annotationService.createTagSet(tagSet);
@@ -559,6 +549,7 @@ public class ProjectTagSetsPanel
                         }
                         catch (IOException e1) {
                             error("Unable to create temporary File!!");
+                            return null;
 
                         }
                         if (ProjectTagSetsPanel.this.getModelObject().getId() == 0) {
@@ -674,11 +665,6 @@ public class ProjectTagSetsPanel
                             error("This tag is already added for this tagset!");
                         }
                         else {
-
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = userRepository.get(username);
-
                             try {
                                 annotationService.createTag(tag);
                             }

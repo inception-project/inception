@@ -139,7 +139,8 @@ public class ProjectImportPanel
         Project importedProject = new Project();
         ZipFile zip = new ZipFile(aProjectFile);
         InputStream projectInputStream = null;
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+        for (Enumeration<? extends ZipEntry> zipEnumerate = zip.entries(); zipEnumerate
+                .hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
             if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
                     && entry.toString().replace("/", "").endsWith(".json")) {
@@ -215,6 +216,7 @@ public class ProjectImportPanel
 
     static class Preferences implements Serializable
     {
+        private static final long serialVersionUID = 3821654370145608038L;
         boolean generateUsers;
     }
 }

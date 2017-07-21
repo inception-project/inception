@@ -196,12 +196,12 @@ public class ProjectLayersPanel
                             Project project = ProjectLayersPanel.this.getModelObject();
 
                             if (project.getId() != 0) {
-                                List<AnnotationLayer> layers = annotationService
+                                List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
                                 AnnotationLayer tokenLayer = annotationService.getLayer(
                                         Token.class.getName(), project);
-                                layers.remove(tokenLayer);
-                                for (AnnotationLayer layer : layers) {
+                                _layers.remove(tokenLayer);
+                                for (AnnotationLayer layer : _layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
                                         colors.put(layer, "green");
                                     }
@@ -212,7 +212,7 @@ public class ProjectLayersPanel
                                         colors.put(layer, "red");
                                     }
                                 }
-                                return layers;
+                                return _layers;
                             }
                             return new ArrayList<>();
                         }
@@ -400,7 +400,6 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        private Label name;
         private TextField<String> uiName;
         private static final String TYPE_PREFIX = "webanno.custom.";
         private String layerName;
@@ -440,7 +439,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(name = new Label("name")
+            add(new Label("name")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -850,10 +849,6 @@ public class ProjectLayersPanel
                             return;
                         }
 
-                        String username = SecurityContextHolder.getContext().getAuthentication()
-                                .getName();
-                        User user = userRepository.get(username);
-
                         layer.setProject(project);
                         try {
                             layer.setName(TYPE_PREFIX + layerName);
@@ -903,7 +898,7 @@ public class ProjectLayersPanel
                     }
                     catch (IOException e1) {
                         error("Unable to create temporary File!!");
-
+                        return null;
                     }
                     if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
                         error("Project not yet created. Please save project details first!");

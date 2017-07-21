@@ -36,18 +36,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.visit.IVisit;
 import org.apache.wicket.util.visit.IVisitor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -78,16 +71,9 @@ public class ProjectPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
+    // private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
-    private @SpringBean DocumentService documentService;
-    private @SpringBean ProjectService projectService;
-    private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean UserDao userRepository;
     private @SpringBean ProjectSettingsPanelRegistryService projectSettingsPanelRegistryService;
-    private @SpringBean ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
 
     private AjaxTabbedPanel<ITab> tabPanel;
     private ProjectSelectionPanel projects;
@@ -181,7 +167,7 @@ public class ProjectPage
         return tabs;
     }
 
-    /**
+    /*
      * Only admins and project managers can see this page
      */
     @MenuItemCondition

@@ -69,10 +69,7 @@ public class ProjectConstraintsPanel
     private @SpringBean ConstraintsService constraintsService;
 
     private SelectionForm selectionForm;
-    
     private DetailForm detailForm;
-    
-    private ImportForm importForm;
 
     public ProjectConstraintsPanel(String id, IModel<Project> aProjectModel)
     {
@@ -80,7 +77,7 @@ public class ProjectConstraintsPanel
         
         add(selectionForm = new SelectionForm("selectionForm"));
         add(detailForm = new DetailForm("detailForm"));
-        add(importForm = new ImportForm("importForm"));
+        add(new ImportForm("importForm"));
     }
 
     public class SelectionForm
