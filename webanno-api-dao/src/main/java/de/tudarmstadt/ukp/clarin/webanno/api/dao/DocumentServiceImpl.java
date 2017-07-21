@@ -417,7 +417,8 @@ public class DocumentServiceImpl
             }
         }
         
-        entityManager.remove(aDocument);
+        entityManager.remove(
+                entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
         String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
                 + aDocument.getId();
