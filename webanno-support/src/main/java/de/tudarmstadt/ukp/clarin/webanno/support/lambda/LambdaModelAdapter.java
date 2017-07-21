@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import java.io.Serializable;
 
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.IModel;
 
-public class LambdaModelAdapter<T extends Serializable>
-    extends Model<T>
+public class LambdaModelAdapter<T>
+    implements IModel<T>
 {
     private static final long serialVersionUID = -1455152622735082623L;
 
@@ -51,5 +51,11 @@ public class LambdaModelAdapter<T extends Serializable>
             SerializableSupplier<T> aSupplier, SerializableConsumer<T> aConsumer)
     {
         return new LambdaModelAdapter<T>(aSupplier, aConsumer);
+    }
+
+    @Override
+    public void detach()
+    {
+        // Nothing to do
     }
 }
