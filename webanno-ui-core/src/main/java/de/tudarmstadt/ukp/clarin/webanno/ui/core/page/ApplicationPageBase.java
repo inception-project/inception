@@ -32,7 +32,6 @@ import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.html.TransparentWebMarkupContainer;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
@@ -82,7 +81,7 @@ public abstract class ApplicationPageBase
     private Label embeddedDbWarning;
     private Label browserWarning;
     private ListView<ImageLinkDecl> links;
-    private TransparentWebMarkupContainer pageContent;
+    private PageContent pageContent;
 
     private @SpringBean SettingsService settingsService;
 
@@ -127,7 +126,7 @@ public abstract class ApplicationPageBase
             throw new RuntimeException(e1);
         }
 
-        pageContent = new TransparentWebMarkupContainer("pageContent");
+        pageContent = new PageContent("pageContent");
         pageContent.setOutputMarkupId(true);
         add(pageContent);
         
