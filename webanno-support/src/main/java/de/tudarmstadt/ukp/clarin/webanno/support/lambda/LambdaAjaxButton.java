@@ -62,4 +62,11 @@ public class LambdaAjaxButton<T>
             }
         }
     }
+    
+    @Override
+    protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        super.onError(aTarget, aForm);
+        aTarget.addChildren(getPage(), FeedbackPanel.class);
+    }
 }
