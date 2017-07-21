@@ -429,7 +429,7 @@ public class ProjectLayersPanel
 
             final Project project = ProjectLayersPanel.this.getModelObject();
             add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
-            uiName.add(new AjaxFormComponentUpdatingBehavior("keyup")
+            uiName.add(new AjaxFormComponentUpdatingBehavior("input")
             {
                 private static final long serialVersionUID = -1756244972577094229L;
 
