@@ -30,12 +30,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -282,6 +285,51 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
+    {
+        try {
+            String query = "SELECT level FROM ProjectPermission WHERE user =:user AND " + "project =:project";
+            return entityManager.createQuery(query, PermissionLevel.class)
+                    .setParameter("user", aUser.getUsername())
+                    .setParameter("project", aProject).getResultList();
+        }
+        catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public void setProjectPermissionLevels(User aUser, Project aProject,
+            Collection<PermissionLevel> aLevels)
+    {
+        Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
+        List<ProjectPermission> permissions = new ArrayList<>();
+        try {
+            permissions.addAll(listProjectPermissionLevel(aUser, aProject));
+        }
+        catch (NoResultException e) {
+            // Nothing to do
+        }
+        
+        // Remove permissions that no longer exist
+        for (ProjectPermission permission : permissions) {
+            if (!aLevels.contains(permission.getLevel())) {
+                removeProjectPermission(permission);
+            }
+            else {
+                levelsToBeGranted.remove(permission.getLevel());
+            }
+        }
+        
+        // Grant new permissions
+        for (PermissionLevel level : levelsToBeGranted) {
+            createProjectPermission(new ProjectPermission(aProject, aUser.getUsername(), level));
+        }
+    }
+
+    @Override
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
 
@@ -482,7 +530,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public void removeGuideline(Project aProject, String aFileName, String username)
+    public void removeGuideline(Project aProject, String aFileName)
         throws IOException
     {
         FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()

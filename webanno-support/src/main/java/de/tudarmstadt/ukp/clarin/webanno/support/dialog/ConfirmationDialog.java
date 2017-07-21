@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
@@ -44,6 +45,13 @@ public class ConfirmationDialog
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
 
+    public ConfirmationDialog(String aId)
+    {
+        this(aId, null, null);
+        titleModel = new StringResourceModel("title", this, null);
+        challengeModel = new StringResourceModel("text", this, null);
+    }
+    
     public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge)
     {
         super(aId);

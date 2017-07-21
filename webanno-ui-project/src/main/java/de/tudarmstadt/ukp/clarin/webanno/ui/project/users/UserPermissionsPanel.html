@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
-#Copyright 2012
+#Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -19,18 +19,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-  <wicket:extend>
-    <table class="hfill">
-      <tr style="vertical-align: top;">
-        <td width="20%">
-          <wicket:container wicket:id="projects" />
-          <wicket:container wicket:id="importPanel" />
-        </td>
-        <td width="80%">
-          <div wicket:id="tabPanel" class="tabpanel"></div>
-        </td>
-      </tr>
-    </table>
-  </wicket:extend>
+  <wicket:panel>
+    <form wicket:id="form" class="hfill">
+      <fieldset class="ui-widget-content ui-corner-all">
+        <legend>Permissions</legend>
+        <span wicket:id="permissions" class="hfill"> </span>
+        <div class="buttons" style="white-space: nowrap;">
+          <input type="submit" wicket:id="save" wicket:message="value:save"></input>
+          <input type="button" wicket:id="cancel" wicket:message="value:cancel"></input>
+        </div>
+      </fieldset>
+    </form>
+  </wicket:panel>
 </body>
 </html>

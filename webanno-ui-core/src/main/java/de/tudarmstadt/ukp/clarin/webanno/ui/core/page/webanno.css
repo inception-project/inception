@@ -105,7 +105,12 @@ select.hfill[multiple]{
  * Forms
  */
 
-.labels-top label, label.top{
+label.required {
+	color: red;
+}
+
+
+.labels-top label, label.top {
     white-space:nowrap;
     display: block;
     text-align:left;
@@ -126,33 +131,37 @@ select.hfill[multiple]{
     vertical-align: top;
 }
 
-label.inline{
+.labels-left td {
+    vertical-align: top;
+}
+
+label.inline {
     text-align:inherit;
     display:inline;
 }
 
-ul label{
+ul label {
     display:inline;
     text-align:left;
     font-weight:normal;
 }
 
-.inline-labels label{
+.inline-labels label {
     display:inline;
 }
 
-fieldset{
+fieldset {
     -moz-border-radius:6px;
     -webkit-border-radius:6px;
     -khtml-border-radius:6px;
     border-radius:6px;
 }
 
-.buttons{
+.buttons {
     text-align:right;
 }
 
-ul.vcheckboxgroup{
+ul.vcheckboxgroup {
     padding:0px;
     margin:0px;
     list-style:none;

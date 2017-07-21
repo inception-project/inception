@@ -17,31 +17,9 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-	<fieldset class="ui-widget-content ui-corner-all labels-left">
-		<legend><wicket:message key="importGuideline.label"/></legend>
-		<table class="hfill">
-			<tr>
-				<td><label>Guideline document:</label></td>
-				<td class="hfill"><input wicket:id="content" type="file" multiple /></td>
-			</tr>
-		</table>
-		<div class="buttons">
-			<input type="submit" wicket:id="importGuideline" />
-		</div>
-	</fieldset>
-
-	<fieldset class="ui-widget-content ui-corner-all">
-		<legend><wicket:message key="guidelines.label"/></legend>
-		<table class="hfill">
-			<tr>
-				<td><select class="hfill" wicket:id="documents" size="25"></select></td>
-			</tr>
-		</table>
-		<div class="buttons">
-			<input type="submit" wicket:id="remove" />
-		</div>
-	</fieldset>
+  <div wicket:id="import"></div>
+  <div wicket:id="guidelines"></div>
 </wicket:panel>
 </html>

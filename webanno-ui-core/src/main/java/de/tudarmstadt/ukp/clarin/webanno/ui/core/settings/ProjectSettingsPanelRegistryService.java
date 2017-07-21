@@ -45,6 +45,6 @@ public interface ProjectSettingsPanelRegistryService
     interface Condition
         extends Serializable
     {
-        boolean applies(Project aProject, boolean aExportInProgress);
+        boolean applies(Project aProject);
     }
 }

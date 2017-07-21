@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -109,6 +110,11 @@ public interface ProjectService
      */
     List<ProjectPermission> listProjectPermissionLevel(User user, Project project);
 
+    List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
+
+    void setProjectPermissionLevels(User aUser, Project aProject,
+            Collection<PermissionLevel> aLevels);
+    
     /**
      * List Users those with some {@link PermissionLevel}s in the project
      *
@@ -390,12 +396,10 @@ public interface ProjectService
      *            the project.
      * @param fileName
      *            the filename.
-     * @param username
-     *            the username.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void removeGuideline(Project project, String fileName, String username)
+    void removeGuideline(Project project, String fileName)
         throws IOException;
     
     // --------------------------------------------------------------------------------------------

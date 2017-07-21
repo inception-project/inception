@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
-#Copyright 2012
+#Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -19,18 +19,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-  <wicket:extend>
-    <table class="hfill">
-      <tr style="vertical-align: top;">
-        <td width="20%">
-          <wicket:container wicket:id="projects" />
-          <wicket:container wicket:id="importPanel" />
-        </td>
-        <td width="80%">
-          <div wicket:id="tabPanel" class="tabpanel"></div>
-        </td>
-      </tr>
-    </table>
-  </wicket:extend>
+  <wicket:panel>
+    <fieldset class="ui-widget-content ui-corner-all" wicket:enclosure="form">
+      <legend>Import Project</legend>
+      <form wicket:id="form">
+        <table class="hfill">
+          <tr>
+            <td><label>Files</label></td>
+            <td class="hfill"><input wicket:id="content" type="file" multiple /></td>
+          </tr>
+          <tr>
+            <td><input wicket:id="generateUsers" type="checkbox" /></td>
+            <td class="hfill"><label>Create missing users</label></td>
+          </tr>
+        </table>
+        <div class="buttons">
+          <input type="submit" wicket:id="import" wicket:message="value:import"/>
+        </div>
+      </form>
+    </fieldset>
+  </wicket:panel>
 </body>
 </html>

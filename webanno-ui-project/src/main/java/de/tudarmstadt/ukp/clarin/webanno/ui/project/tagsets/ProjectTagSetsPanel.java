@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
 
 /**
  * A Panel user to manage Tagsets.

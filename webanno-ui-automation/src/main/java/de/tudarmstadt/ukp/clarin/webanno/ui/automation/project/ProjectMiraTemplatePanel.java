@@ -809,9 +809,8 @@ public class ProjectMiraTemplatePanel
     }
     
     @ProjectSettingsPanelCondition
-    public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
+    public static boolean settingsPanelCondition(Project aProject)
     {
-        return !aExportInProgress
-                && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
+        return WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode());
     }
 }

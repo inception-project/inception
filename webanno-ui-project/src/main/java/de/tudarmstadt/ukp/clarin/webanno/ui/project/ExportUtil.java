@@ -61,7 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectExportPanel.ProjectExportModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.export.ProjectExportPanel.ProjectExportModel;
 
 public class ExportUtil
 {

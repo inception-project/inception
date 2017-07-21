@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -70,6 +70,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ExportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectExportException;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 
 /**
@@ -303,17 +307,11 @@ public class ProjectExportPanel
                         }
 
                         enabled = true;
-                        ProjectPage.exportInProgress = false;
-                        target.add(ProjectPage.projectSelectionForm.setEnabled(true));
-                        target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
                         info("Project export complete");
                     }
                     else if (canceled) {
                         enabled = true;
-                        ProjectPage.exportInProgress = false;
-                        target.add(ProjectPage.projectSelectionForm.setEnabled(true));
-                        target.add(ProjectPage.projectDetailForm);
                         target.addChildren(getPage(), FeedbackPanel.class);
                         info("Project export cancelled");
                     }
@@ -336,8 +334,6 @@ public class ProjectExportPanel
                     enabled = false;
                     canceled = true;
                     ProjectExportForm.this.getModelObject().progress = 0;
-                    ProjectPage.projectSelectionForm.setEnabled(false);
-                    ProjectPage.exportInProgress = true;
                     target.add(ProjectExportPanel.this.getPage());
                     fileGenerationProgress.start(target);
                     Authentication authentication = SecurityContextHolder.getContext()
@@ -360,13 +356,10 @@ public class ProjectExportPanel
                     }
                 }
 
-                /* (non-Javadoc)
-                 * @see org.apache.wicket.Component#isEnabled()
-                 */
                 @Override
                 public boolean isEnabled()
                 {
-//                    Enabled only if the export button has been disabled (during export)
+                    // Enabled only if the export button has been disabled (during export)
                     return (!enabled) ;
                 }
             });
@@ -378,10 +371,10 @@ public class ProjectExportPanel
     {
         private static final long serialVersionUID = -4486934192675904995L;
         
-        String format;
-        Project project;
-        int progress = 0;
-        Queue<String> messages;
+        public final String format;
+        public final Project project;
+        public int progress = 0;
+        public final Queue<String> messages;
                 
         public ProjectExportModel(Project aProject)
         {
@@ -516,7 +509,7 @@ public class ProjectExportPanel
     }
     
     @ProjectSettingsPanelCondition
-    public static boolean settingsPanelCondition(Project aProject, boolean aExportInProgress)
+    public static boolean settingsPanelCondition(Project aProject)
     {
         return true;
     }
