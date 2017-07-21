@@ -10,6 +10,7 @@
 # Please keep the list sorted.
     
 Aakash Sharma <aakash.y.sharma@gmail.com> [@aakashysharma]
+Aleks Stier [@astier]
 Andreas Straninger
 Anshul Tak [@anshul-tak]
 Benjamin Milde [@bmilde]
