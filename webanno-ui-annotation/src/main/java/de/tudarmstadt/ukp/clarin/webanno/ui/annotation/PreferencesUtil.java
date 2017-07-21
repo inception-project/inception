@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -116,19 +115,13 @@ public class PreferencesUtil
                 }
             }
 
-            // Get tagset using the id, from the properties file
-            aBModel.getAnnotationLayers().clear();
-            if (preference.getAnnotationLayers() != null) {
-                for (Long id : preference.getAnnotationLayers()) {
-                    aBModel.getAnnotationLayers().add(aAnnotationService.getLayer(id));
-                }
-            }
-            else {
-                // If no layer preferences are defined, then just assume all layers are enabled
-                List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
-                        .getProject());
-                aBModel.setAnnotationLayers(layers);
-            }
+            // set layers according to preferences
+            List<AnnotationLayer> layers = aAnnotationService
+                    .listAnnotationLayer(aBModel.getProject());
+            if (preference.getAnnotationLayers() != null)
+                layers.forEach(layer -> layer.setEnabled(
+                        preference.getAnnotationLayers().contains(layer.getId())));
+            aBModel.setAnnotationLayers(layers);
 
             // Get color preferences for each layer, init with legacy if not found
             Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
@@ -168,13 +161,6 @@ public class PreferencesUtil
         throws IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();
-        ArrayList<Long> layers = new ArrayList<>();
-
-        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-            layers.add(layer.getId());
-        }
-        preference.setAnnotationLayers(layers);
-
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
     }

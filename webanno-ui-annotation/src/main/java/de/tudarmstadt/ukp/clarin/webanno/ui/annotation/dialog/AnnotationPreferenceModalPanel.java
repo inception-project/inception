@@ -116,16 +116,18 @@ public class AnnotationPreferenceModalPanel
             getModelObject().editor = Pair.of(editorFactory.getBeanName(),
                     editorFactory.getDisplayName());
 
-            bModel.getAnnotationLayers().stream()
-                    // show only enabled layers
-                    .filter(layer -> layer.isEnabled()) 
+            getModelObject().annotationLayers = bModel.getAnnotationLayers().stream() 
                     // hide Token layer
                     .filter(layer -> !Token.class.getName().equals(layer.getName())) 
                     .filter(layer -> !(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)
                             && (bModel.getMode().equals(Mode.CORRECTION)
                             // disable coreference annotation for correction/curation pages
-                            || bModel.getMode().equals(Mode.CURATION)))) 
-                    .forEach(layer -> getModelObject().annotationLayers.add(layer));
+                            || bModel.getMode().equals(Mode.CURATION))))
+                    .collect(Collectors.toList());            
+            if (bModel.getPreferences().getAnnotationLayers() != null)
+                getModelObject().annotationLayers.forEach(l -> l.setEnabled(
+                        bModel.getPreferences().getAnnotationLayers()
+                            .contains(l.getId())));
 
             windowSizeField = new NumberTextField<>("windowSize");
             windowSizeField.setType(Integer.class);
@@ -188,6 +190,7 @@ public class AnnotationPreferenceModalPanel
                         {
                             // deactivate layer
                             item.getModelObject().setEnabled(!item.getModelObject().isEnabled());
+                            layer_cb.setModelObject(item.getModelObject().isEnabled());
                         }
                     });
                     item.add(layer_cb);
@@ -265,6 +268,9 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setScrollPage(getModelObject().scrollPage);
                     bModel.getPreferences().setRememberLayer(getModelObject().rememberLayer);
                     bModel.setAnnotationLayers(getModelObject().annotationLayers);
+                    bModel.getPreferences().setAnnotationLayers(getModelObject().annotationLayers
+                            .stream().filter(x -> x.isEnabled())
+                            .map(x -> x.getId()).collect(Collectors.toList()));
                     bModel.getPreferences().setWindowSize(getModelObject().windowSize);
                     bModel.getPreferences().setSidebarSize(getModelObject().sidebarSize);
                     bModel.getPreferences().setFontSize(getModelObject().fontSize);
@@ -326,7 +332,7 @@ public class AnnotationPreferenceModalPanel
         public int curationWindowSize;
         public boolean scrollPage;
         public boolean rememberLayer;
-        public List<AnnotationLayer> annotationLayers = new ArrayList<>();
+        public List<AnnotationLayer> annotationLayers;
         public ReadonlyColoringBehaviour readonlyLayerColoringBehaviour;
         public Map<Long, ColoringStrategyType> colorPerLayer;
     }
