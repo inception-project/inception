@@ -299,6 +299,11 @@
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-urlfragment</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-input-events</artifactId>
         <version>${wicketstuff.version}</version>
         <exclusions>
