@@ -31,7 +31,6 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -125,7 +125,7 @@ public class AnnotationPage
     // Open the dialog window on first load
     private boolean showOpenDocumentSelectionDialog = true;
     
-    private ModalWindow openDocumentsModal;
+    private OpenDocumentDialog openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
 
@@ -261,49 +261,39 @@ public class AnnotationPage
                 this::actionGotoPage));
         add(gotoPageTextFieldForm);
 
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
+        add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+        add(new ActionBarLink("showPreferencesDialog", this::actionShowPreferencesDialog));
 
-        add(new LambdaAjaxLink("showExportDialog", this::actionShowExportDialog) {
-            private static final long serialVersionUID = 7710813282552729256L;
+        add(new ActionBarLink("showExportDialog", this::actionShowExportDialog)
+                .onConfigure(_this -> {
+                    AnnotatorState state = AnnotationPage.this.getModelObject();
+                    _this.setVisible(state.getProject() != null
+                            && (SecurityUtil.isAdmin(state.getProject(), projectService,
+                                    state.getUser()) || !state.getProject().isDisableExport()));
+                }));
 
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = AnnotationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
-            }
-        });
-
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
+        add(new ActionBarLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
+        add(new ActionBarLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
 
-        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
+        add(new ActionBarLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
+        add(new ActionBarLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
+        add(new ActionBarLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
+        add(new ActionBarLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
-        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
+        add(new ActionBarLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(new GuidelineModalPanel("guidelineModalPanel", getModel()));
         
@@ -425,7 +415,7 @@ public class AnnotationPage
 
         String jQueryString = "";
         if (showOpenDocumentSelectionDialog) {
-            jQueryString += "jQuery('#showOpenDocumentModal').trigger('click');";
+            jQueryString += "jQuery('#showOpenDocumentDialog').trigger('click');";
             showOpenDocumentSelectionDialog = false;
         }
         aResponse.render(OnLoadHeaderItem.forScript(jQueryString));

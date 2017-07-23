@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -57,7 +57,7 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     
     private ChallengeResponseDialog resetDocumentDialog;
-    private LambdaAjaxLink resetDocumentLink;
+    private ActionBarLink resetDocumentLink;
     private Label numberOfPages;
     
     protected AnnotationPageBase()
@@ -135,10 +135,10 @@ public abstract class AnnotationPageBase
         return resetDocumentDialog;
     }
 
-    protected LambdaAjaxLink createOrGetResetDocumentLink()
+    protected ActionBarLink createOrGetResetDocumentLink()
     {
         if (resetDocumentLink == null) {
-            resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog", t -> 
+            resetDocumentLink = new ActionBarLink("showResetDocumentDialog", t -> 
                     resetDocumentDialog.show(t))
             {
                 private static final long serialVersionUID = 874573384012299998L;
