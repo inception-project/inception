@@ -139,20 +139,12 @@ public abstract class AnnotationPageBase
     {
         if (resetDocumentLink == null) {
             resetDocumentLink = new ActionBarLink("showResetDocumentDialog", t -> 
-                    resetDocumentDialog.show(t))
-            {
-                private static final long serialVersionUID = 874573384012299998L;
-    
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotatorState state = AnnotationPageBase.this.getModelObject();
-                    setEnabled(state.getDocument() != null && !documentService
-                            .isAnnotationFinished(state.getDocument(), state.getUser()));
-                }
-            };
-            resetDocumentLink.setOutputMarkupId(true);
+                resetDocumentDialog.show(t));
+            resetDocumentLink.onConfigure(_this -> {
+                AnnotatorState state = AnnotationPageBase.this.getModelObject();
+                _this.setEnabled(state.getDocument() != null && !documentService
+                        .isAnnotationFinished(state.getDocument(), state.getUser()));
+            });
         }
         return resetDocumentLink;
     }
