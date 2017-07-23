@@ -384,7 +384,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public void createGuideline(Project aProject, File aContent, String aFileName, String aUsername)
+    public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
         String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;

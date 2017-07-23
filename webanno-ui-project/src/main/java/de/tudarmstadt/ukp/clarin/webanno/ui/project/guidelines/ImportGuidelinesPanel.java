@@ -35,7 +35,6 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -92,9 +91,7 @@ public class ImportGuidelinesPanel
                     IOUtils.copyLarge(is, os);
 
                     String fileName = guidelineFile.getClientFileName();
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    projectRepository.createGuideline(project, tempFile, fileName, username);
+                    projectRepository.createGuideline(project, tempFile, fileName);
                 }
                 finally {
                     tempFile.delete();

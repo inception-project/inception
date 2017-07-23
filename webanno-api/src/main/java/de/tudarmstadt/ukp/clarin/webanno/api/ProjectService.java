@@ -352,12 +352,10 @@ public interface ProjectService
      *            the guidelines.
      * @param fileName
      *            the filename.
-     * @param username
-     *            the username.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName, String username)
+    void createGuideline(Project project, File content, String fileName)
         throws IOException;
 
     /**
