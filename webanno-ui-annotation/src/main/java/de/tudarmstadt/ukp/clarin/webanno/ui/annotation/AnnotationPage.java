@@ -505,8 +505,9 @@ public class AnnotationPage
             annotationEditor.replaceWith(newAnnotationEditor);
             annotationEditor = newAnnotationEditor;
             
-            // Re-render the whole page because the width of the sidebar may have changed
             aTarget.add(AnnotationPage.this);
+            //aTarget.add(annotationEditor);
+            //aTarget.add(getPageContent());
         }
         catch (Exception e) {
             LOG.info("Error reading CAS " + e.getMessage());
@@ -550,6 +551,10 @@ public class AnnotationPage
         User user = userRepository.get(username);
 
         state.setUser(user);
+
+        AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
+        annotationEditor.replaceWith(newAnnotationEditor);
+        annotationEditor = newAnnotationEditor;
         
         try {
             // Check if there is an annotation document entry in the database. If there is none,
@@ -594,10 +599,17 @@ public class AnnotationPage
 
             gotoPageTextField.setModelObject(1);
 
-            // Re-render the whole page because the font size
-            if (aTarget != null) {
-                aTarget.add(this);
-            }
+            // Partially reloading the page for some reason doesn't work... the preferences
+            // dialog remains unresponsive after a partial reload... so we reload the whole
+            // page still...
+            aTarget.add(this);
+            // Reload all AJAX-enabled children of the page but not the page itself!
+//            aTarget.add(getPageContent());
+//            forEach(child ->  {
+//                if (child.getOutputMarkupId()) {
+//                    aTarget.add(child);
+//                }
+//            });
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
@@ -616,10 +628,6 @@ public class AnnotationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-        
-        AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-        annotationEditor.replaceWith(newAnnotationEditor);
-        annotationEditor = newAnnotationEditor;
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }

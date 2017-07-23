@@ -24,7 +24,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +33,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -398,19 +396,19 @@ public class BratAnnotationEditor
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
-        
+                
         // Libraries
         aResponse.render(forReference(JQueryUIResourceReference.get()));
         aResponse.render(forReference(JQuerySvgResourceReference.get()));
         aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(forReference(JQueryJsonResourceReference.get()));
-
+        
         // BRAT helpers
         aResponse.render(forReference(BratConfigurationResourceReference.get()));
         aResponse.render(forReference(BratUtilResourceReference.get()));
         // aResponse.render(
         //    JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
-
+        
         // BRAT modules
         aResponse.render(forReference(BratDispatcherResourceReference.get()));
         aResponse.render(forReference(BratAjaxResourceReference.get()));
@@ -419,56 +417,38 @@ public class BratAnnotationEditor
         aResponse.render(forReference(BratAnnotatorUiResourceReference.get()));
         // aResponse.render(
         //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
-
-        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
-        // variable. If I put a "var" here, then communication fails with messages such as
-        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
-        // console.
-        String script = "(function() {" +
-            "var dispatcher = new Dispatcher();" +
-            // Each visualizer talks to its own Wicket component instance
-            "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
-            // We attach the JSON send back from the server to this HTML element
-            // because we cannot directly pass it from Wicket to the caller in ajax.js.
-            "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
-            "var ajax = new Ajax(dispatcher);" +
-            "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
-            "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
-            "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
-            //script.append("var logger = new AnnotationLog(dispatcher);");
-            "dispatcher.post('init');" +
-            "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
-            "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
-            "})();";
-
+        
         // Must be OnDomReader so that this is rendered before all other Javascript that is
         // appended to the same AJAX request which turns the annotator visible after a document
         // has been chosen.
-        aResponse.render(OnDomReadyHeaderItem.forScript(script));
+        aResponse.render(OnDomReadyHeaderItem.forScript(bratInitCommand()));
         
         // If the page is reloaded in the browser and a document was already open, we need
         // to render it. We use the "later" commands here to avoid polluting the Javascript
         // header items with document data and because loading times are not that critical
         // on a reload.
-        if (getModelObject().getProject() != null) {
+        // We only do this if we are *not* in a partial page reload. The case of a partial
+        // page reload is covered in onAfterRender()
+        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+        if (target == null && getModelObject().getProject() != null) {
             bratInitRenderLater(aResponse);
         }
     }
-
-//    private String bratInitCommand()
-//    {
-//        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
-//        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
-//                .getAnnotationLayers(), annotationService));
-//        String json = toJson(response);
-//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + 
-//                json + "]);";
-//    }
-//    
-//    public void bratInit(AjaxRequestTarget aTarget)
-//    {
-//        aTarget.appendJavaScript(bratInitCommand());
-//    }
+    
+    @Override
+    protected void onAfterRender()
+    {
+        super.onAfterRender();
+        
+        // If we are in a partial page request, then trigger re-initialization of the brat 
+        // rendering engine here. If we are in a full page reload, this is handled already
+        // by renderHead()
+        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+        if (target != null) {
+            target.appendJavaScript(bratLoadCollectionCommand());
+            render(target);
+        }
+    }
 
     private String bratRenderCommand(JCas aJCas)
     {
@@ -506,12 +486,47 @@ public class BratAnnotationEditor
         return layersToRender;
     }
     
+    private String bratInitCommand()
+    {
+        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
+        // variable. If I put a "var" here, then communication fails with messages such as
+        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
+        // console.
+        String script = "(function() {" +
+            "var dispatcher = new Dispatcher();" +
+            // Each visualizer talks to its own Wicket component instance
+            "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
+            // We attach the JSON send back from the server to this HTML element
+            // because we cannot directly pass it from Wicket to the caller in ajax.js.
+            "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
+            "var ajax = new Ajax(dispatcher);" +
+            "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
+            "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
+            "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
+            //script.append("var logger = new AnnotationLog(dispatcher);");
+            "dispatcher.post('init');" +
+            "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
+            "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
+            "})();";
+        return script;
+    }
+    
+    private String bratLoadCollectionCommand()
+    {
+        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
+        response.setEntityTypes(BratRenderer
+                .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+        String json = toJson(response);
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
+                + "]);";
+    }
+    
     /**
      * This triggers the loading of the metadata (colors, types, etc.)
      *
      * @return the init script.
      */
-    private String bratInitLaterCommand()
+    private String bratLoadCollectionLaterCommand()
     {
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
                 + "[{action: 'getCollectionInformation',collection: '" + getCollection()
@@ -537,7 +552,7 @@ public class BratAnnotationEditor
      */
     private void bratInitRenderLater(IHeaderResponse aResponse)
     {
-        aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
+        aResponse.render(OnLoadHeaderItem.forScript(bratLoadCollectionLaterCommand()));
         aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
     }
 
