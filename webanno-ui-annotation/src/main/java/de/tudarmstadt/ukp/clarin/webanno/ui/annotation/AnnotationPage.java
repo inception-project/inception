@@ -501,9 +501,14 @@ public class AnnotationPage
             annotationEditor.replaceWith(newAnnotationEditor);
             annotationEditor = newAnnotationEditor;
             
-            aTarget.add(AnnotationPage.this);
+            //aTarget.add(AnnotationPage.this);
             //aTarget.add(annotationEditor);
             //aTarget.add(getPageContent());
+            forEach(child ->  {
+                if (child.getOutputMarkupId()) {
+                    aTarget.add(child);
+                }
+            });
         }
         catch (Exception e) {
             LOG.info("Error reading CAS " + e.getMessage());
@@ -598,14 +603,14 @@ public class AnnotationPage
             // Partially reloading the page for some reason doesn't work... the preferences
             // dialog remains unresponsive after a partial reload... so we reload the whole
             // page still...
-            aTarget.add(this);
+//            aTarget.add(this);
             // Reload all AJAX-enabled children of the page but not the page itself!
 //            aTarget.add(getPageContent());
-//            forEach(child ->  {
-//                if (child.getOutputMarkupId()) {
-//                    aTarget.add(child);
-//                }
-//            });
+            forEach(child ->  {
+                if (child.getOutputMarkupId()) {
+                    aTarget.add(child);
+                }
+            });
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
