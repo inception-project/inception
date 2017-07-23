@@ -80,11 +80,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
@@ -127,6 +127,7 @@ public class AnnotationPage
     
     private ModalWindow openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
+    private ExportDocumentDialog exportDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -247,9 +248,25 @@ public class AnnotationPage
         
         add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
         preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
+        
+        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
 
-        add(new ExportModalPanel("exportModalPanel", getModel()) {
-            private static final long serialVersionUID = -468896211970839443L;
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
+        // FIXME minimum and maximum should be obtained from the annotator state
+        gotoPageTextField.setMinimum(1); 
+        gotoPageTextField.setOutputMarkupId(true); 
+        gotoPageTextFieldForm.add(gotoPageTextField);
+        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
+                this::actionGotoPage));
+        add(gotoPageTextFieldForm);
+
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
+
+        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+
+        add(new LambdaAjaxLink("showExportDialog", this::actionShowExportDialog) {
+            private static final long serialVersionUID = 7710813282552729256L;
 
             {
                 setOutputMarkupId(true);
@@ -265,20 +282,6 @@ public class AnnotationPage
                         projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
-
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
-                this::actionGotoPage));
-        add(gotoPageTextFieldForm);
-
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -462,6 +465,11 @@ public class AnnotationPage
     {
         getModelObject().getSelection().clear();
         preferencesModal.show(aTarget);
+    }
+
+    private void actionShowExportDialog(AjaxRequestTarget aTarget)
+    {
+        exportDialog.show(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)

@@ -90,11 +90,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
@@ -145,6 +145,7 @@ public class AutomationPage
 
     private ModalWindow openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
+    private ExportDocumentDialog exportDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -298,23 +299,7 @@ public class AutomationPage
         add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
         preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
-        add(new ExportModalPanel("exportModalPanel", getModel()) {
-            private static final long serialVersionUID = -468896211970839443L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
-            }
-        });
+        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
 
         Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
@@ -330,6 +315,24 @@ public class AutomationPage
        
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
 
+        add(new LambdaAjaxLink("showExportDialog", this::actionShowExportDialog) {
+            private static final long serialVersionUID = -3082002656840117267L;
+
+            {
+                setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
+            }
+
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                AnnotatorState state = AutomationPage.this.getModelObject();
+                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
+                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+            }
+        });
+        
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -612,6 +615,11 @@ public class AutomationPage
         preferencesModal.show(aTarget);
     }
     
+    private void actionShowExportDialog(AjaxRequestTarget aTarget)
+    {
+        exportDialog.show(aTarget);
+    }
+
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {

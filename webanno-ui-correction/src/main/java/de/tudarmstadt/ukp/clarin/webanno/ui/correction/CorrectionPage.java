@@ -83,11 +83,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
@@ -135,6 +135,7 @@ public class CorrectionPage
 
     private ModalWindow openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
+    private ExportDocumentDialog exportDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -287,8 +288,24 @@ public class CorrectionPage
         add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
         preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
-        add(new ExportModalPanel("exportModalPanel", getModel()) {
-            private static final long serialVersionUID = -468896211970839443L;
+        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
+
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
+        // FIXME minimum and maximum should be obtained from the annotator state
+        gotoPageTextField.setMinimum(1); 
+        gotoPageTextField.setOutputMarkupId(true); 
+        gotoPageTextFieldForm.add(gotoPageTextField);
+        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
+                this::actionGotoPage));
+        add(gotoPageTextFieldForm);
+
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
+        
+        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+
+        add(new LambdaAjaxLink("showExportDialog", this::actionShowExportDialog) {
+            private static final long serialVersionUID = -708400631769656072L;
 
             {
                 setOutputMarkupId(true);
@@ -304,20 +321,6 @@ public class CorrectionPage
                         projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
-
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
-                this::actionGotoPage));
-        add(gotoPageTextFieldForm);
-
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -517,6 +520,11 @@ public class CorrectionPage
         preferencesModal.show(aTarget);
     }
     
+    private void actionShowExportDialog(AjaxRequestTarget aTarget)
+    {
+        exportDialog.show(aTarget);
+    }
+
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {

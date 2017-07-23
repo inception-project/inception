@@ -31,6 +31,7 @@
 	<wicket:extend>
 		<div wicket:id=openDocumentsModal></div>
     <div wicket:id="preferencesDialog"></div>
+    <div wicket:id="exportDialog"></div>
 
     <div class="top-sticker">
       <div class="actionbar">
@@ -43,16 +44,15 @@
                   <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
                       src="images/drawer_open.png" title="Open" /><br />Open
                   </a></li>
-
                   <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
                       src="images/document_back.png" title="Previous document" /><br />Prev.
                   </a></li>
                   <li><a wicket:id="showNextDocument" title="press Shift+PgDown"> <img
                       src="images/document_next.png" title="Next document " /><br />Next
                   </a></li>
-
-                  <span wicket:id="exportModalPanel" />
-
+                  <li><a wicket:id="showExportDialog"> <img
+                      src="images/document_export.png" title="Export"  /><br />Export
+                  </a></li>
                   <li><a wicket:id="showPreferencesDialog"> <img src="images/cog.png"
                       title="Settings" /><br />Settings
                   </a></li>
