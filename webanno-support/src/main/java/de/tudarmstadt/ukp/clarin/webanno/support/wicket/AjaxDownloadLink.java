@@ -23,6 +23,8 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
+import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.FileSystemResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
 public class AjaxDownloadLink
@@ -33,6 +35,13 @@ public class AjaxDownloadLink
     private IModel<String> filename;
     private AbstractAjaxBehavior downloadBehavior;
     private boolean addAntiCache = true;
+    
+    public AjaxDownloadLink(String aId, IModel<IResourceStream> aData)
+    {
+        super(aId, aData);
+        filename = null;
+        commonInit();
+    }
     
     public AjaxDownloadLink(String aId, IModel<String> aFilename, IModel<IResourceStream> aData)
     {
@@ -74,8 +83,21 @@ public class AjaxDownloadLink
             @Override
             public void onRequest()
             {
+                String name = filename != null ? filename.getObject() : null;
+                
+                // If no filename has been set explicitly, try to get it from the resource
+                IResourceStream is = AjaxDownloadLink.this.getModelObject();
+                if (name == null) {
+                    if (is instanceof FileResourceStream) {
+                        name = ((FileResourceStream) is).getFile().getName();
+                    }
+                    else if (is instanceof FileSystemResourceStream) {
+                        name = ((FileSystemResourceStream) is).getPath().getFileName().toString();
+                    }
+                }
+                
                 ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
-                        AjaxDownloadLink.this.getModelObject(), filename.getObject());
+                        AjaxDownloadLink.this.getModelObject(), name);
                 handler.setContentDisposition(ContentDisposition.ATTACHMENT);
                 getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
             }
