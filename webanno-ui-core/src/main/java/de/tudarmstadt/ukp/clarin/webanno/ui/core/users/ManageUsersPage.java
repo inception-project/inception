@@ -45,7 +45,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -107,7 +106,8 @@ public class ManageUsersPage
                 {
                     // disable delete button when active user is selected
                     setEnabled(selectionForm.getModelObject().user != null
-                            && !selectionForm.getModelObject().user.equals(getActiveUser()));
+                            && !selectionForm.getModelObject().user
+                                    .equals(userRepository.getCurrentUser()));
                 }
 
                 @Override
@@ -202,7 +202,7 @@ public class ManageUsersPage
                                         .setMessage("Every user has to be a user."));
                             }
                             // don't let an admin user strip himself of admin rights
-                            if (getActiveUser().equals(getModelObject())
+                            if (userRepository.getCurrentUser().equals(getModelObject())
                                     && !newRoles.contains(Role.ROLE_ADMIN)) {
                                 aValidatable.error(new ValidationError()
                                         .setMessage("You can't remove your own admin status."));
@@ -217,7 +217,8 @@ public class ManageUsersPage
                 @Override
                 public void validate(IValidatable<Boolean> aValidatable)
                 {
-                    if (!aValidatable.getValue() && getActiveUser().equals(getModelObject())) {
+                    if (!aValidatable.getValue()
+                            && userRepository.getCurrentUser().equals(getModelObject())) {
                         aValidatable.error(new ValidationError()
                                 .setMessage("You can't disable your own account."));
                     }
@@ -283,7 +284,7 @@ public class ManageUsersPage
         }
         // else show only the own options
         else {
-            actionSelectionChanged(getActiveUser());
+            actionSelectionChanged(userRepository.getCurrentUser());
             selectionForm.setVisible(false);
         }
 
@@ -363,23 +364,16 @@ public class ManageUsersPage
 
     private boolean isAdmin()
     {
-        return SecurityUtil.isSuperAdmin(projectRepository, getActiveUser());
+        return SecurityUtil.isSuperAdmin(projectRepository, userRepository.getCurrentUser());
     }
 
-    private User getActiveUser()
-    {
-        String authedUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.get(authedUsername);
-    }
-    
     /**
      * Only admins and project managers can see this page
      */
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
+        User user = aUserRepo.getCurrentUser();
 
         List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
                 .getEnvironment().getActiveProfiles());

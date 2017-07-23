@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -100,5 +101,13 @@ public class UserDaoImpl
     {
         return entityManager.createQuery("FROM " + User.class.getName(), User.class)
                 .getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public User getCurrentUser()
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return get(username);
     }
 }

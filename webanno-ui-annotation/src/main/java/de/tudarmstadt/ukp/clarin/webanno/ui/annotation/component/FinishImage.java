@@ -21,7 +21,6 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -68,12 +67,9 @@ public class FinishImage
         super(id, aModel);
 
         add(new AttributeModifier("src", LambdaModel.of(() -> {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = userRepository.get(username);
-
             if (aModel.getObject().getProject() != null
                     && aModel.getObject().getDocument() != null) {
-                if (isFinished(aModel, user, documentService)) {
+                if (isFinished(aModel, aModel.getObject().getUser(), documentService)) {
                     return "images/accept.png";
                 }
                 else {

@@ -71,7 +71,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -287,9 +286,7 @@ public class ProjectLayersPanel
                 {
                     uploadedFiles = fileUpload.getFileUploads();
                     Project project = ProjectLayersPanel.this.getModelObject();
-                    String username = SecurityContextHolder.getContext().getAuthentication()
-                            .getName();
-                    User user = userRepository.get(username);
+                    User user = userRepository.getCurrentUser();
 
                     if (isEmpty(uploadedFiles)) {
                         error("Please choose file with layer details before uploading");

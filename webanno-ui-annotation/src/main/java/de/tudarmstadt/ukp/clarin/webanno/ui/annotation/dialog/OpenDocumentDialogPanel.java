@@ -46,7 +46,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -85,7 +84,6 @@ public class OpenDocumentDialogPanel
     // The first document in the project // auto selected in the first time.
     private SourceDocument selectedDocument;
 
-    private final String username;
     private final User user;
 
     private final AnnotatorState bModel;
@@ -98,8 +96,7 @@ public class OpenDocumentDialogPanel
         super(aId);
         
         bModel = aBModel;
-        username = SecurityContextHolder.getContext().getAuthentication().getName();
-        user = userRepository.get(username);
+        user = userRepository.getCurrentUser();
         projects = aProjects;
         
         List<DecoratedObject<Project>> allowedProjects = projects.getObject();

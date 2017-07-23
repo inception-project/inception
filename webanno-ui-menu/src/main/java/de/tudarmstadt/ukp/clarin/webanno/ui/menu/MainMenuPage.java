@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabele
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.StatelessLink;
@@ -34,7 +32,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -67,13 +64,9 @@ public class MainMenuPage
         setVersioned(false);
         
         // In case we restore a saved session, make sure the user actually still exists in the DB.
-        User user = null;
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            user = userRepository.get(username);
-        }
         // redirect to login page (if no usr is found, admin/admin will be created)
-        catch (NoResultException e) {
+        User user = userRepository.getCurrentUser();
+        if (user == null) {
             setResponsePage(LoginPage.class);
         }
         

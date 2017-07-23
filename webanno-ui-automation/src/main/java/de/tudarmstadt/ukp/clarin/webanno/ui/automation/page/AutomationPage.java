@@ -50,7 +50,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -389,8 +388,7 @@ public class AutomationPage
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return LambdaModel.of(() -> {
-            User user = userRepository
-                    .get(SecurityContextHolder.getContext().getAuthentication().getName());
+            User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
                 if (SecurityUtil.isAnnotator(project, projectService, user)
@@ -713,17 +711,14 @@ public class AutomationPage
 
         AnnotatorState state = getModelObject();
         
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-
-        state.setUser(user);
+        state.setUser(userRepository.getCurrentUser());
         state.setDocument(state.getDocument(), getListOfDocs());
 
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
             AnnotationDocument annotationDocument = documentService
-                    .createOrGetAnnotationDocument(state.getDocument(), user);
+                    .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
             JCas correctionCas;
@@ -737,7 +732,7 @@ public class AutomationPage
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
             JCas editorCas;
-            if (documentService.existsCas(state.getDocument(), user.getUsername())) {
+            if (documentService.existsCas(state.getDocument(), state.getUser().getUsername())) {
                 editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
@@ -754,7 +749,7 @@ public class AutomationPage
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), user, false);
+                    annotationDocument.getDocument(), state.getUser(), false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -764,8 +759,8 @@ public class AutomationPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, projectService,
-                    annotationService, state, state.getMode());
+            PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
+                    projectService, annotationService, state, state.getMode());
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
@@ -836,8 +831,7 @@ public class AutomationPage
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
+        User user = aUserRepo.getCurrentUser();
         return SecurityUtil.annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION);
     }
 }

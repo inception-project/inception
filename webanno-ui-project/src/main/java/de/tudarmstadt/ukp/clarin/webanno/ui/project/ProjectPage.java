@@ -36,7 +36,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.visit.IVisit;
 import org.apache.wicket.util.visit.IVisitor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -173,9 +172,7 @@ public class ProjectPage
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.projectSettingsEnabeled(aRepo, user);
+        return SecurityUtil.projectSettingsEnabeled(aRepo, aUserRepo.getCurrentUser());
     }
     
     /**

@@ -57,7 +57,6 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
@@ -87,8 +86,6 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- *
- *
  */
 public class AutomationUtil
 {
@@ -455,8 +452,7 @@ public class AutomationUtil
         }
         // This is SourceDocument to predict (in the suggestion pane)
         else {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = aUserDao.get(username);
+            User user = aUserDao.getCurrentUser();
             AnnotationDocument annodoc = aRepository.createOrGetAnnotationDocument(aSourceDocument,
                     user);
             JCas jCas = aRepository.readAnnotationCas(annodoc);
@@ -693,8 +689,7 @@ public class AutomationUtil
             FileUtils.forceMkdir(miraDir);
         }
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
+        User user = aUserDao.getCurrentUser();
         AnnotationFeature feature = aTemplate.getTrainFeature();
         AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
                 .getAdapter(feature.getLayer());
@@ -1675,8 +1670,7 @@ public class AutomationUtil
 
             LOG.info(annotations.size() + " Predictions found to be written to the CAS");
             JCas jCas = null;
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = aUserDao.get(username);
+            User user = aUserDao.getCurrentUser();
             try {
                 AnnotationDocument annoDocument = aRepository.getAnnotationDocument(document,
                         user);

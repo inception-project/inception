@@ -45,7 +45,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -151,8 +150,7 @@ public class AnnotationPage
         
         commonInit();
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
+        User user = userRepository.getCurrentUser();
         getModelObject().setUser(user);
 
         // Project has been specified when the page was opened
@@ -328,8 +326,7 @@ public class AnnotationPage
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return LambdaModel.of(() -> {
-            User user = userRepository
-                    .get(SecurityContextHolder.getContext().getAuthentication().getName());
+            User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
                 if (SecurityUtil.isAnnotator(project, projectService, user)
@@ -548,10 +545,7 @@ public class AnnotationPage
         
         AnnotatorState state = getModelObject();
         
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-
-        state.setUser(user);
+        state.setUser(userRepository.getCurrentUser());
 
         AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
         annotationEditor.replaceWith(newAnnotationEditor);
@@ -561,7 +555,7 @@ public class AnnotationPage
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
             AnnotationDocument annotationDocument = documentService
-                    .createOrGetAnnotationDocument(state.getDocument(), user);
+                    .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the CAS
             JCas editorCas = documentService.readAnnotationCas(annotationDocument);
@@ -580,8 +574,8 @@ public class AnnotationPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, projectService,
-                    annotationService, state, state.getMode());
+            PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
+                    projectService, annotationService, state, state.getMode());
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
@@ -645,8 +639,7 @@ public class AnnotationPage
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
+        User user = aUserRepo.getCurrentUser();
         return SecurityUtil.annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION);
     }
 }

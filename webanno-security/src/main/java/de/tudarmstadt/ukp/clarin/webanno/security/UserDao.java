@@ -26,6 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  */
 public interface UserDao
 {
+    User getCurrentUser();
+    
     /**
      * Create a new {@link User}
      * 

@@ -293,9 +293,7 @@ public class MonitoringPage
                         {
                             List<Project> allowedProject = new ArrayList<>();
 
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = userRepository.get(username);
+                            User user = userRepository.getCurrentUser();
 
                             List<Project> allProjects = projectService.listProjects();
                             for (Project project : allProjects) {
@@ -1113,8 +1111,7 @@ public class MonitoringPage
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
+        User user = aUserRepo.getCurrentUser();
         return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }

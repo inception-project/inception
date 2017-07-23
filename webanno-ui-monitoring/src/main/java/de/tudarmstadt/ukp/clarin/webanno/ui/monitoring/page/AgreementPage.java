@@ -563,8 +563,7 @@ public class AgreementPage
         {
             List<Project> allowedProject = new ArrayList<>();
 
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = userRepository.get(username);
+            User user = userRepository.getCurrentUser();
 
             List<Project> allProjects = projectService.listProjects();
             for (Project project : allProjects) {

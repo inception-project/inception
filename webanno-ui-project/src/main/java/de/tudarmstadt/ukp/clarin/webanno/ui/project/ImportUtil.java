@@ -39,7 +39,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -159,8 +158,7 @@ public class ImportUtil
             UserDao aRepository, AnnotationSchemaService aAnnotationService)
                 throws IOException
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aRepository.get(username);
+        User user = aRepository.getCurrentUser();
         List<ExportedTagSet> importedTagSets =
                 aImportedProjectSetting.getTagSets();
         if (aImportedProjectSetting.getVersion() == 0) {
