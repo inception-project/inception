@@ -141,13 +141,6 @@
       <artifactId>spring-tx</artifactId>
     </dependency>
 
-    <!-- Spring security dependencies -->
-
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
-
     <!-- WICKET DEPENDENCIES -->
     <dependency>
       <groupId>org.apache.wicket</groupId>
