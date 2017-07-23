@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferenceModalPanel;
@@ -47,69 +47,44 @@ public class AnnotationPreferencesModalPanel
         // dialog window to select annotation layer preferences
         final ModalWindow annotationLayerSelectionModal;
         add(annotationLayerSelectionModal = new ModalWindow("annotationLayerModal"));
-        annotationLayerSelectionModal.setOutputMarkupId(true);
         annotationLayerSelectionModal.setInitialWidth(450);
         annotationLayerSelectionModal.setInitialHeight(350);
         annotationLayerSelectionModal.setResizable(true);
         annotationLayerSelectionModal.setWidthUnit("px");
         annotationLayerSelectionModal.setHeightUnit("px");
         annotationLayerSelectionModal.setTitle("Settings");
-        annotationLayerSelectionModal.setCloseButtonCallback(new ModalWindow.CloseButtonCallback()
-        {
-            private static final long serialVersionUID = -5423095433535634321L;
-
-            @Override
-            public boolean onCloseButtonClicked(AjaxRequestTarget aTarget)
-            {
-                closeButtonClicked = true;
-                return true;
+        annotationLayerSelectionModal.setCloseButtonCallback((target) -> {
+            closeButtonClicked = true;
+            return true;
+        });
+        annotationLayerSelectionModal.setWindowClosedCallback((target) -> {
+            if (!closeButtonClicked) {
+                onChange(target);
             }
         });
 
-        add(new AjaxLink<Void>("showannotationLayerModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                if (aBModel.getObject().getProject() == null) {
-                    target.appendJavaScript("alert('Please open a project first!')");
-                }
-                else {
-                    closeButtonClicked = false;
-
-                    annotationLayerSelectionModal
-                            .setContent(new AnnotationPreferenceModalPanel(
-                                    annotationLayerSelectionModal.getContentId(),
-                                    annotationLayerSelectionModal, aBModel.getObject(), aEditor)
-                            {
-                                private static final long serialVersionUID = -3434069761864809703L;
-
-                                @Override
-                                protected void onCancel(AjaxRequestTarget aTarget)
-                                {
-                                    closeButtonClicked = true;
-                                }
-                            });
-
-                    annotationLayerSelectionModal
-                            .setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-                            {
-                                private static final long serialVersionUID = 1643342179335627082L;
-
-                                @Override
-                                public void onClose(AjaxRequestTarget target)
-                                {
-                                    if (!closeButtonClicked) {
-                                        onChange(target);
-                                    }
-                                }
-                            });
-                    annotationLayerSelectionModal.show(target);
-                }
+        add(new LambdaAjaxLink("showannotationLayerModal", (target) -> {
+            if (aBModel.getObject().getProject() == null) {
+                target.appendJavaScript("alert('Please open a project first!')");
             }
-        });
+            else {
+                closeButtonClicked = false;
+
+                annotationLayerSelectionModal.setContent(new AnnotationPreferenceModalPanel(
+                        annotationLayerSelectionModal.getContentId(), annotationLayerSelectionModal,
+                        aBModel.getObject(), aEditor)
+                {
+                    private static final long serialVersionUID = -3434069761864809703L;
+
+                    @Override
+                    protected void onCancel(AjaxRequestTarget aTarget)
+                    {
+                        closeButtonClicked = true;
+                    }
+                });
+                annotationLayerSelectionModal.show(target);
+            }
+        }));
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
