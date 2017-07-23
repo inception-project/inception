@@ -40,6 +40,9 @@ public class GetDocumentResponse
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
 
+    @JsonProperty("font_size")
+    private int fontSize;
+
     @JsonProperty("sentence_number_offset")
     private int sentenceNumberOffset;
 
@@ -299,6 +302,16 @@ public class GetDocumentResponse
     public void setRtlMode(boolean aRtlMode)
     {
         rtlMode = aRtlMode;
+    }
+
+    public int getFontSize()
+    {
+        return fontSize;
+    }
+
+    public void setFontSize(int aFontSize)
+    {
+        fontSize = aFontSize;
     }
 
     public static boolean is(String aCommand)

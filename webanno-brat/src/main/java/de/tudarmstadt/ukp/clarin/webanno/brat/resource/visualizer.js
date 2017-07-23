@@ -33,7 +33,11 @@ var Visualizer = (function($, window, undefined) {
 	// WEBANNO EXTENSION BEGIN - RTL support - DEV mode switch
 	var rtlmode = false;
 	// WEBANNO EXTENSION END
-    
+
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+	var fontSize = 13;
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+
     var DocumentData = function(text) {
       this.text = text;
       this.chunks = [];
@@ -1590,6 +1594,10 @@ Util.profileStart('init');
 // WEBANNO EXTENSION BEGIN - RTL support - mode switch
 	    rtlmode = sourceData.rtl_mode;
 // WEBANNO EXTENSION END
+
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+	    fontSize = sourceData.font_size;
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
         
         if (sourceData) setData(sourceData);
         showMtime();
@@ -1598,6 +1606,10 @@ Util.profileStart('init');
         svg.clear(true);
         if (!data || data.length == 0) return;
 
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+        $svg.css("font-size", fontSize);
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+        
         // establish the width according to the enclosing element
         canvasWidth = that.forceWidth || $svgDiv.width();
 // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 

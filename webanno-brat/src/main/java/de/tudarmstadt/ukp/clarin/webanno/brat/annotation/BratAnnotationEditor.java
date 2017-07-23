@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -399,18 +398,6 @@ public class BratAnnotationEditor
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
-        
-        // Override CSS
-        double textFontSize = getModelObject().getPreferences().getFontSize();
-        double spanFontSize = 10 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
-        double arcFontSize = 9 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
-        
-        aResponse.render(CssContentHeaderItem.forCSS(String.format(Locale.US,
-                ".span text { font-size: %.1fpx; }\n" +
-                ".arcs text { font-size: %.1fpx; }\n" +
-                "text { font-size: %.1fpx; }\n", 
-                spanFontSize, arcFontSize, textFontSize), 
-                "brat-font"));
         
         // Libraries
         aResponse.render(forReference(JQueryUIResourceReference.get()));

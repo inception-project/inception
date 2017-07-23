@@ -95,6 +95,7 @@ public class BratRenderer
             ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
+        aResponse.setFontSize(aState.getPreferences().getFontSize());
 
         // Render invisible baseline annotations (sentence, tokens)
         renderTokenAndSentence(aJCas, aResponse, aState);
