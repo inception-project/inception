@@ -81,10 +81,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
@@ -128,6 +128,7 @@ public class AnnotationPage
     private OpenDocumentDialog openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
+    private GuidelinesDialog guidelinesDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -251,6 +252,8 @@ public class AnnotationPage
         
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
 
+        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
+
         Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // FIXME minimum and maximum should be obtained from the annotator state
@@ -264,8 +267,10 @@ public class AnnotationPage
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
         add(new ActionBarLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+        
+        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
 
-        add(new ActionBarLink("showExportDialog", this::actionShowExportDialog)
+        add(new ActionBarLink("showExportDialog", exportDialog::show)
                 .onConfigure(_this -> {
                     AnnotatorState state = AnnotationPage.this.getModelObject();
                     _this.setVisible(state.getProject() != null
@@ -294,8 +299,6 @@ public class AnnotationPage
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new ActionBarLink("toggleScriptDirection", this::actionToggleScriptDirection));
-        
-        add(new GuidelineModalPanel("guidelineModalPanel", getModel()));
         
         add(createOrGetResetDocumentDialog());
         add(createOrGetResetDocumentLink());
@@ -455,11 +458,6 @@ public class AnnotationPage
     {
         getModelObject().getSelection().clear();
         preferencesModal.show(aTarget);
-    }
-
-    private void actionShowExportDialog(AjaxRequestTarget aTarget)
-    {
-        exportDialog.show(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)

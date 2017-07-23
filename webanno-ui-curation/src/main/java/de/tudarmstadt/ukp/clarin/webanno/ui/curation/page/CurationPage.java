@@ -72,15 +72,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
@@ -128,6 +129,7 @@ public class CurationPage
     private ModalWindow openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
+    private GuidelinesDialog guidelinesDialog;
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
@@ -226,6 +228,8 @@ public class CurationPage
         preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
+        
+        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
 
         Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
@@ -269,13 +273,13 @@ public class CurationPage
         });
         showreCreateMergeCasModal.setOutputMarkupId(true);
         
-        add(new GuidelineModalPanel("guidelineModalPanel", getModel()));        
-        
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
 
-        add(new LambdaAjaxLink("showExportDialog", this::actionShowExportDialog) {
+        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
+
+        add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
             private static final long serialVersionUID = -8443987117825945678L;
 
             {
@@ -495,11 +499,6 @@ public class CurationPage
         preferencesModal.show(aTarget);
     }
     
-    private void actionShowExportDialog(AjaxRequestTarget aTarget)
-    {
-        exportDialog.show(aTarget);
-    }
-
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {
