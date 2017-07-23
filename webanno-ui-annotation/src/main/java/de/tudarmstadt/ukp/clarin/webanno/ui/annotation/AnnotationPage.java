@@ -79,12 +79,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
@@ -126,6 +126,7 @@ public class AnnotationPage
     private boolean showOpenDocumentSelectionDialog = true;
     
     private ModalWindow openDocumentsModal;
+    private AnnotationPreferencesDialog preferencesModal;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -243,18 +244,9 @@ public class AnnotationPage
                 // setResponsePage(AnnotationPage.class, pageParameters);
             }
         });
-
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
-                detailEditor)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
-
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                actionCompletePreferencesChange(aTarget);
-            }
-        });
+        
+        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
+        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
         add(new ExportModalPanel("exportModalPanel", getModel()) {
             private static final long serialVersionUID = -468896211970839443L;
@@ -285,7 +277,9 @@ public class AnnotationPage
         add(gotoPageTextFieldForm);
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
+
+        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -462,6 +456,12 @@ public class AnnotationPage
     {
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
+    }
+
+    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
+    {
+        getModelObject().getSelection().clear();
+        preferencesModal.show(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)

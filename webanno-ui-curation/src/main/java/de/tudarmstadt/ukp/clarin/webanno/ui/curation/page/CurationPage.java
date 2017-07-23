@@ -77,10 +77,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
@@ -126,6 +126,7 @@ public class CurationPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
+    private AnnotationPreferencesDialog preferencesModal;
 
     private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
@@ -220,17 +221,8 @@ public class CurationPage
             }
         });        
 
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
-                curationPanel.editor)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
-
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                actionCompletePreferencesChange(aTarget);
-            }
-        });
+        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
+        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
         add(new ExportModalPanel("exportModalPanel", getModel())
         {
@@ -297,6 +289,8 @@ public class CurationPage
         
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
+        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
                         EventType.click)));
@@ -493,6 +487,12 @@ public class CurationPage
         openDocumentsModal.show(aTarget);
     }
 
+    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
+    {
+        getModelObject().getSelection().clear();
+        preferencesModal.show(aTarget);
+    }
+    
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {

@@ -42,6 +42,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -52,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -60,13 +60,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Modal Window to configure layers, window size, etc.
  */
-public class AnnotationPreferenceModalPanel
+public class AnnotationPreferencesDialogContent
     extends Panel
 {
     private static final long serialVersionUID = -2102136855109258306L;
@@ -82,19 +81,20 @@ public class AnnotationPreferenceModalPanel
     private NumberTextField<Integer> sidebarSizeField;
     private NumberTextField<Integer> fontSizeField;
 
-    private final AnnotatorState bModel;
+    private final IModel<AnnotatorState> state;
 
     private class AnnotationLayerDetailForm
         extends Form<AnnotationLayerDetailFormModel>
     {
         private static final long serialVersionUID = -683824912741426241L;
 
-        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow,
-                AnnotationDetailEditorPanel aEditor)
+        public AnnotationLayerDetailForm(String id, final ModalWindow modalWindow)
         {
             super(id, new CompoundPropertyModel<>(
                     new AnnotationLayerDetailFormModel()));
 
+            AnnotatorState bModel = state.getObject();
+            
             // Import current settings from the annotator
             getModelObject().windowSize = bModel.getPreferences().getWindowSize() < 1 ? 1
                     : bModel.getPreferences().getWindowSize();
@@ -124,10 +124,11 @@ public class AnnotationPreferenceModalPanel
                             // disable coreference annotation for correction/curation pages
                             || bModel.getMode().equals(Mode.CURATION))))
                     .collect(Collectors.toList());            
-            if (bModel.getPreferences().getAnnotationLayers() != null)
+            if (bModel.getPreferences().getAnnotationLayers() != null) {
                 getModelObject().annotationLayers.forEach(l -> l.setEnabled(
                         bModel.getPreferences().getAnnotationLayers()
                             .contains(l.getId())));
+            }
 
             windowSizeField = new NumberTextField<>("windowSize");
             windowSizeField.setType(Integer.class);
@@ -284,13 +285,11 @@ public class AnnotationPreferenceModalPanel
                     bModel.getPreferences().setEditor(getModelObject().editor.getKey());
                     try {
                         PreferencesUtil.savePreference(bModel, projectService);
-                        aEditor.loadFeatureEditorModels(aTarget);
                     }
-                    catch (IOException | AnnotationException e) {
+                    catch (IOException e) {
                         error("Preference file not found");
                     }
                     modalWindow.close(aTarget);                   
-                    aTarget.add(aEditor);
                 }
 
                 @Override
@@ -337,12 +336,12 @@ public class AnnotationPreferenceModalPanel
         public Map<Long, ColoringStrategyType> colorPerLayer;
     }
 
-    public AnnotationPreferenceModalPanel(String aId, final ModalWindow modalWindow,
-            AnnotatorState aBModel, AnnotationDetailEditorPanel aEditor)
+    public AnnotationPreferencesDialogContent(String aId, final ModalWindow modalWindow,
+            IModel<AnnotatorState> aModel)
     {
         super(aId);
-        this.bModel = aBModel;
-        tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow, aEditor);
+        state = aModel;
+        tagSelectionForm = new AnnotationLayerDetailForm("tagSelectionForm", modalWindow);
         add(tagSelectionForm);
     }
 }
