@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabe
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAnnotator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -29,10 +30,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -56,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
+import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -64,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -126,9 +129,8 @@ public class AnnotationPage
     
     private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean showOpenDocumentSelectionDialog = true;
-    
+    private boolean initialLoadCompleted = false;
+
     private OpenDocumentDialog openDocumentsModal;
     private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
@@ -146,6 +148,19 @@ public class AnnotationPage
         super();
         LOG.debug("Setting up annotation page without parameters");
         commonInit();
+        
+        Map<String, StringValue> fragmentParameters = Session.get()
+                .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+        if (fragmentParameters != null) {
+            // Clear the URL fragment parameters - we only use them once!
+            Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
+            
+            StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+            StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
+            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+            
+            handleParameters(null, project, document, focus, false);
+        }
     }
 
     public AnnotationPage(final PageParameters aPageParameters)
@@ -155,79 +170,21 @@ public class AnnotationPage
         
         commonInit();
 
-        getModelObject().setUser(userRepository.getCurrentUser());
-
-        // Project has been specified when the page was opened
-        Project project = null;
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        try {
-            project = getProjectFromParameters(projectParameter);
-        }
-        catch (NoResultException e) {
-            error("Project [" + projectParameter + "] does not exist");
-            return;
-        }
+        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
+        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
         
-        // Document has been specified when the page was opened
-        SourceDocument document = null;
-        StringValue documentParameter = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
-        if (project != null) {
-            try {
-                document = getDocumentFromParameters(project, documentParameter);
-            }
-            catch (NoResultException e) {
-                error("Document [" + documentParameter + "] does not exist in project ["
-                        + project.getId() + "]");
-            }
-        }
-        
-        handleParameters(null, project, document, true);
+        handleParameters(null, project, document, focus, true);
     }
     
     private void commonInit()
     {
-        add(new UrlParametersReceivingBehavior()
-        {
-            private static final long serialVersionUID = -3860933016636718816L;
-
-            @Override
-            protected void onParameterArrival(IRequestParameters aRequestParameters,
-                    AjaxRequestTarget aTarget)
-            {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                
-                // Project has been specified when the page was opened
-                Project project = null;
-                StringValue projectParameter = aRequestParameters
-                        .getParameterValue(PAGE_PARAM_PROJECT_ID);
-                try {
-                    project = getProjectFromParameters(projectParameter);
-                }
-                catch (NoResultException e) {
-                    error("Project [" + projectParameter + "] does not exist");
-                    return;
-                }
-                
-                // Document has been specified when the page was opened
-                SourceDocument document = null;
-                StringValue documentParameter = aRequestParameters
-                        .getParameterValue(PAGE_PARAM_DOCUMENT_ID);
-                if (project != null) {
-                    try {
-                        document = getDocumentFromParameters(project, documentParameter);
-                    }
-                    catch (NoResultException e) {
-                        error("Document [" + documentParameter + "] does not exist in project ["
-                                + project.getId() + "]");
-                    }
-                }
-
-                handleParameters(aTarget, project, document, false);
-            }
-        });        
-        
         setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
 
+        add(createUrlFragmentBehavior());      
+        
         add(createLeftSidebar());
         
         add(detailEditor = createDetailEditor());
@@ -246,17 +203,7 @@ public class AnnotationPage
             @Override
             public void onDocumentSelected(AjaxRequestTarget aTarget)
             {
-                // Reload the page using AJAX. This does not add the project/document ID to the URL,
-                // but being AJAX it flickers less.
                 actionLoadDocument(aTarget);
-                
-                // Load the document and add the project/document ID to the URL. This causes a full
-                // page reload. No AJAX.
-                // PageParameters pageParameters = new PageParameters();
-                // pageParameters.set(PAGE_PARAM_PROJECT_ID, getModelObject().getProject().getId());
-                // pageParameters.set(PAGE_PARAM_DOCUMENT_ID,
-                // getModelObject().getDocument().getId());
-                // setResponsePage(AnnotationPage.class, pageParameters);
             }
         });
         
@@ -276,6 +223,8 @@ public class AnnotationPage
         gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
                 this::actionGotoPage));
         add(gotoPageTextFieldForm);
+
+        add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
@@ -337,7 +286,7 @@ public class AnnotationPage
         finishDocumentIcon.setOutputMarkupId(true);
         finishDocumentLink.add(finishDocumentIcon);
     }
-    
+
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return LambdaModel.of(() -> {
@@ -377,16 +326,13 @@ public class AnnotationPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
-                aTarget.add(getOrCreatePositionInfoLabel());
-
-                annotationEditor.requestRender(aTarget);
+                actionRefreshDocument(aTarget);
             }
 
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {
-                annotationEditor.requestRender(aTarget);
+                actionRefreshDocument(aTarget);
             }
         };
     }
@@ -426,12 +372,11 @@ public class AnnotationPage
     {
         super.renderHead(aResponse);
 
-        String jQueryString = "";
-        if (showOpenDocumentSelectionDialog) {
-            jQueryString += "jQuery('#showOpenDocumentDialog').trigger('click');";
-            showOpenDocumentSelectionDialog = false;
+        if (!initialLoadCompleted) {
+            aResponse.render(OnLoadHeaderItem
+                    .forScript("jQuery('#initialLoadComplete').trigger('click');"));
+            initialLoadCompleted = true;
         }
-        aResponse.render(OnLoadHeaderItem.forScript(jQueryString));
         
         aResponse.render(CssContentHeaderItem.forCSS(
                         String.format(Locale.US, ".sidebarCell { flex-basis: %d%%; }",
@@ -456,6 +401,19 @@ public class AnnotationPage
 
         // If there is no CAS yet for the annotation document, create one.
         return documentService.readAnnotationCas(annotationDocument);
+    }
+
+    private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
+    {
+        // If the page has loaded and there is no document open yet, show the open-document
+        // dialog.
+        if (getModelObject().getDocument() == null) {
+            actionShowOpenDocumentDialog(aTarget);
+        }
+        else {
+            // Make sure the URL fragement parameters are up-to-date
+            updateUrlFragment(aTarget);
+        }
     }
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
@@ -491,7 +449,7 @@ public class AnnotationPage
             throws Exception
     {
         getModelObject().toggleScriptDirection();
-        annotationEditor.requestRender(aTarget);
+        actionRefreshDocument(aTarget);
     }
     
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
@@ -552,7 +510,12 @@ public class AnnotationPage
     @Override
     protected void actionLoadDocument(AjaxRequestTarget aTarget)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
+        actionLoadDocument(aTarget, 0);
+    }
+    
+    protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
+    {
+        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
         
@@ -579,7 +542,7 @@ public class AnnotationPage
                     false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.clearAllSelections();
+            state.reset();
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
@@ -589,7 +552,8 @@ public class AnnotationPage
                     projectService, annotationService, state, state.getMode());
 
             // Initialize the visible content
-            state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
+            state.moveToUnit(editorCas, aFocus);
+            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
             
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -602,17 +566,6 @@ public class AnnotationPage
                     + state.getFirstVisibleUnitIndex() + "] l:["
                     + state.getLastVisibleUnitIndex() + "] s:["
                     + state.getFocusUnitIndex() + "]");
-
-            gotoPageTextField.setModelObject(1);
-
-            // Reload all AJAX-enabled children of the page but not the page itself!
-            if (aTarget != null) {
-                forEach(child ->  {
-                    if (child.getOutputMarkupId()) {
-                        aTarget.add(child);
-                    }
-                });
-            }
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
@@ -628,17 +581,15 @@ public class AnnotationPage
             
             extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
 
-            // Update URL for current document
             if (aTarget != null) {
-                UrlFragment fragment = new UrlFragment(aTarget);
-                fragment.putParameter(PAGE_PARAM_PROJECT_ID,
-                        state.getDocument().getProject().getId());
-                fragment.putParameter(PAGE_PARAM_DOCUMENT_ID, state.getDocument().getId());
-                // If we do not manually set editedFragment to false, then changine the URL 
-                // manually or using the back/forward buttons in the browser only works every
-                // second time. Might be a but in wicketstuff urlfragment... not sure.
-                aTarget.appendJavaScript(
-                        "try{if(window.UrlUtil){window.UrlUtil.editedFragment = false;}}catch(e){}");
+                // Update URL for current document
+                updateUrlFragment(aTarget);
+                // Reload all AJAX-enabled children of the page but not the page itself!
+                forEach(child ->  {
+                    if (child.getOutputMarkupId()) {
+                        aTarget.add(child);
+                    }
+                });
             }
         }
         catch (Exception e) {
@@ -655,12 +606,16 @@ public class AnnotationPage
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
+        aTarget.addChildren(getPage(), FeedbackPanel.class);
+        
+        // Update URL for current document
+        updateUrlFragment(aTarget);
     }
 
     private Project getProjectFromParameters(StringValue projectParam)
     {
         Project project = null;
-        if (!projectParam.isEmpty()) {
+        if (projectParam != null && !projectParam.isEmpty()) {
             long projectId = projectParam.toLong();
             project = projectService.getProject(projectId);
         }
@@ -670,61 +625,152 @@ public class AnnotationPage
     private SourceDocument getDocumentFromParameters(Project aProject, StringValue documentParam)
     {
         SourceDocument document = null;
-        if (!documentParam.isEmpty()) {
+        if (documentParam != null && !documentParam.isEmpty()) {
             long documentId = documentParam.toLong();
             document = documentService.getSourceDocument(aProject.getId(), documentId);
         }
         return document;
     }
     
-    private void handleParameters(AjaxRequestTarget aTarget, Project aProject,
-            SourceDocument aDocument, boolean aInitial)
+    private UrlParametersReceivingBehavior createUrlFragmentBehavior()
     {
-        if (aProject == null || aDocument == null) {
+        return new UrlParametersReceivingBehavior()
+        {
+            private static final long serialVersionUID = -3860933016636718816L;
+
+            @Override
+            protected void onParameterArrival(IRequestParameters aRequestParameters,
+                    AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
+
+                StringValue project = aRequestParameters.getParameterValue(PAGE_PARAM_PROJECT_ID);
+                StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
+                StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
+
+                handleParameters(aTarget, project, document, focus, false);
+            }
+        };
+    }
+    
+    private void updateUrlFragment(AjaxRequestTarget aTarget)
+    {
+        if (aTarget != null) {
+            AnnotatorState state = getModelObject();
+            UrlFragment fragment = new UrlFragment(aTarget);
+
+            // Current project
+            fragment.putParameter(PAGE_PARAM_PROJECT_ID, state.getDocument().getProject().getId());
+
+            // Current document
+            fragment.putParameter(PAGE_PARAM_DOCUMENT_ID, state.getDocument().getId());
+
+            // Current focus unit
+            if (state.getFocusUnitIndex() > 0) {
+                fragment.putParameter(PAGE_PARAM_FOCUS, state.getFocusUnitIndex());
+            }
+            else {
+                fragment.removeParameter(PAGE_PARAM_FOCUS);
+            }
+
+            // If we do not manually set editedFragment to false, then changing the URL
+            // manually or using the back/forward buttons in the browser only works every
+            // second time. Might be a but in wicketstuff urlfragment... not sure.
+            aTarget.appendJavaScript(
+                    "try{if(window.UrlUtil){window.UrlUtil.editedFragment = false;}}catch(e){}");
+        }
+    }
+
+    private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
+            StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
+    {
+        // Get current project from parameters
+        Project project = null;
+        try {
+            project = getProjectFromParameters(aProjectParameter);
+        }
+        catch (NoResultException e) {
+            error("Project [" + aProjectParameter + "] does not exist");
             return;
         }
+        
+        // Get current document from parameters
+        SourceDocument document = null;
+        if (project != null) {
+            try {
+                document = getDocumentFromParameters(project, aDocumentParameter);
+            }
+            catch (NoResultException e) {
+                error("Document [" + aDocumentParameter + "] does not exist in project ["
+                        + project.getId() + "]");
+            }
+        }
+        
+        // Get current focus unit from parameters
+        int focus = 0;
+        if (aFocusParameter != null) {
+            focus = aFocusParameter.toInt(0);
+        }        
         
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (aDocument.equals(getModelObject().getDocument())) {
+        if (
+                document != null &&
+                document.equals(getModelObject().getDocument()) && 
+                focus == getModelObject().getFocusUnitIndex()
+        ) {
             return;
         }
         
         // Check access to project
-        if (aProject != null
-                && !isAnnotator(aProject, projectService, getModelObject().getUser())) {
-            error("You have no permission to access project [" + aProject.getId() + "]");
+        if (project != null
+                && !isAnnotator(project, projectService, getModelObject().getUser())) {
+            error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
         
         // Check if document is locked for the user
-        if (aProject != null && aDocument != null && documentService
-                .existsAnnotationDocument(aDocument, getModelObject().getUser())) {
-            AnnotationDocument adoc = documentService.getAnnotationDocument(aDocument,
+        if (project != null && document != null && documentService
+                .existsAnnotationDocument(document, getModelObject().getUser())) {
+            AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState())) {
-                error("Document [" + aDocument.getId() + "] in project [" + aProject.getId()
+                error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
                 return;
             }
         }
 
-        if (aProject != null) {
-            getModelObject().setProject(aProject);
-            if (aInitial) {
+        // Update project in state
+        // Mind that this is relevant if the project was specified as a query parameter
+        // i.e. not only in the case that it was a URL fragment parameter. 
+        if (project != null) {
+            getModelObject().setProject(project);
+            if (aLockIfPreset) {
                 getModelObject().setProjectLocked(true);
-                showOpenDocumentSelectionDialog = true;
             }
         }
         
-        if (aDocument != null) {
-            getModelObject().setDocument(aDocument, getListOfDocs());
-            if (aInitial) {
-                showOpenDocumentSelectionDialog = false;
+        if (document != null) {
+            // If we arrive here and the document is not null, then we have a change of document
+            // or a change of focus (or both)
+            if (!document.equals(getModelObject().getDocument())) {
+                getModelObject().setDocument(document, getListOfDocs());
+                actionLoadDocument(aTarget, focus);
             }
-            actionLoadDocument(aTarget);
+            else {
+                try {
+                    getModelObject().moveToUnit(getEditorCas(), focus);
+                    actionRefreshDocument(aTarget);
+                }
+                catch (Exception e) {
+                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                }
+            }
         }
     }
 

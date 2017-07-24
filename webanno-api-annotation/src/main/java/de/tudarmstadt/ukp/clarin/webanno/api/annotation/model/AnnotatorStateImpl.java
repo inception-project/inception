@@ -538,10 +538,20 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void clearAllSelections()
+    public void reset()
     {
         getSelection().clear();
         clearArmedSlot();
+        clearRememberedFeatures();
+        focusUnitIndex = 0;
+        firstVisibleUnitAddress = -1;
+        firstVisibleUnitBegin = 0;
+        firstVisibleUnitEnd = 0;
+        firstVisibleUnitIndex = 0;
+        lastVisibleUnitIndex = 0;
+        unitCount = 0;
+        windowBeginOffset = 0;
+        windowEndOffset = 0;
     }
 
     private AnnotationFeature armedFeature;

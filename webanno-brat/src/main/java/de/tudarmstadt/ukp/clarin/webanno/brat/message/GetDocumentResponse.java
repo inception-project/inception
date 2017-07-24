@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 
@@ -60,16 +63,6 @@ public class GetDocumentResponse
 
     private GetCollectionInformationResponse info;
 
-    public GetCollectionInformationResponse getInfo()
-    {
-        return info;
-    }
-
-    public void setInfo(GetCollectionInformationResponse aInfo)
-    {
-        info = aInfo;
-    }
-
     /**
      * [ 0, 3 ]
      */
@@ -92,11 +85,23 @@ public class GetDocumentResponse
     private List<Entity> entities = new ArrayList<>();
     private List<String> attributes = new ArrayList<>();
     private List<String> equivs = new ArrayList<>();
-
     private List<Comment> comments = new ArrayList<>();
+    
+    private Map<String, List<Marker>> args = new HashMap<>(); 
+    
     public GetDocumentResponse()
     {
         super(COMMAND);
+    }
+
+    public GetCollectionInformationResponse getInfo()
+    {
+        return info;
+    }
+
+    public void setInfo(GetCollectionInformationResponse aInfo)
+    {
+        info = aInfo;
     }
 
     public void addToken(int aBegin, int aEnd)
@@ -312,6 +317,26 @@ public class GetDocumentResponse
     public void setFontSize(int aFontSize)
     {
         fontSize = aFontSize;
+    }
+    
+    public void addMarker(Marker aMarker)
+    {
+        List<Marker> markers = args.get(aMarker.getType());
+        if (markers == null) {
+            markers = new ArrayList<>();
+            args.put(aMarker.getType(), markers);
+        }
+        markers.add(aMarker);
+    }
+    
+    public Map<String, List<Marker>> getArgs()
+    {
+        return args;
+    }
+
+    public void setArgs(Map<String, List<Marker>> aArgs)
+    {
+        args = aArgs;
     }
 
     public static boolean is(String aCommand)

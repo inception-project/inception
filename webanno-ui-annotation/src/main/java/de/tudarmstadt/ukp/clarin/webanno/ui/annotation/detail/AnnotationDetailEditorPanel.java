@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
@@ -89,7 +87,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -807,28 +804,11 @@ public class AnnotationDetailEditorPanel
      */
     private void autoScroll(JCas jCas, boolean aForward)
     {
-        AnnotatorState state = getModelObject();
-
         if (aForward) {
-            // Fetch the first sentence on screen
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
-                state.getFirstVisibleUnitAddress());
-            // Find the following one
-            int address = getNextSentenceAddress(jCas, sentence);
-            // Move to it
-            state.setFirstVisibleUnit(selectByAddr(jCas, Sentence.class, address));
+            getModelObject().moveForward(jCas);
         }
         else {
-            // Fetch the first sentence on screen
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
-                state.getFirstVisibleUnitAddress());
-            // Calculate the first sentence in the window in such a way that the annotation
-            // currently selected is in the center of the window
-            sentence = findWindowStartCenteringOnSelection(jCas, sentence,
-                state.getSelection().getBegin(), state.getProject(), state.getDocument(),
-                state.getPreferences().getWindowSize());
-            // Move to it
-            state.setFirstVisibleUnit(sentence);
+            getModelObject().moveToSelection(jCas);
         }
     }
 

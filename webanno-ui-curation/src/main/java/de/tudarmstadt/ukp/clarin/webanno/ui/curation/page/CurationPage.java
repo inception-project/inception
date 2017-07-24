@@ -673,7 +673,7 @@ public class CurationPage
                     randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.clearAllSelections();
+            state.reset();
             state.getPreferences()
                     .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             

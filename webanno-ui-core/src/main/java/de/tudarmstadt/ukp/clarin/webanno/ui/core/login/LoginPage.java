@@ -17,15 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.html.basic.MultiLineLabel;
+import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
@@ -33,7 +38,9 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.parameter.UrlRequestParametersAdapter;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -41,6 +48,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -64,10 +72,14 @@ public class LoginPage
     private @SpringBean UserDao userRepository;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
+    private LoginForm form;
+    
     public LoginPage()
     {
         setStatelessHint(true);
         setVersioned(false);
+        
+        add(form = new LoginForm("loginForm"));
         
         redirectIfAlreadyLoggedIn();
 
@@ -85,8 +97,6 @@ public class LoginPage
             info(msg);
             log.info(msg);
         }
-        
-        add(new LoginForm("loginForm"));
     }
     
     @Override
@@ -123,6 +133,7 @@ public class LoginPage
         private static final long serialVersionUID = 1L;
         private String username;
         private String password;
+        private String urlfragment;
 
         public LoginForm(String id)
         {
@@ -130,6 +141,7 @@ public class LoginPage
             setModel(new CompoundPropertyModel<>(this));
             add(new RequiredTextField<String>("username"));
             add(new PasswordTextField("password"));
+            add(new HiddenField<>("urlfragment"));
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
             add(new MultiLineLabel("loginMessage", loginMessage).setEscapeModelStrings(false));
@@ -169,6 +181,15 @@ public class LoginPage
             }
             else {
                 log.debug("Redirecting to saved URL: [{}]", redirectUrl);
+                if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
+                    Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
+                    UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);
+                    LinkedHashMap<String, StringValue> params = new LinkedHashMap<>();
+                    for (String name : adapter.getParameterNames()) {
+                        params.put(name, adapter.getParameterValue(name));
+                    }
+                    Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, params);
+                }
                 throw new NonResettingRestartException(redirectUrl);
             }
         }
@@ -177,7 +198,7 @@ public class LoginPage
     private String getRedirectUrl()
     {
         String redirectUrl = null;
-        
+
         HttpSession session = ((ServletWebRequest) RequestCycle.get().getRequest())
                 .getContainerRequest().getSession(false);
         if (session != null) {
@@ -187,7 +208,7 @@ public class LoginPage
                 redirectUrl = savedRequest.getRedirectUrl();
             }
         }
-        
+
         // There is some kind of bug that logs the user out again if the redirect page is
         // the context root and if that does not end in a slash. To avoid this, we add a slash
         // here. This is rather a hack, but I have no idea why this problem occurs. Figured this
@@ -196,7 +217,13 @@ public class LoginPage
         if (baseUrl.equals(redirectUrl)) {
             redirectUrl += "/";
         }
-        
+
+        // In case there was a URL fragment in the original URL, append it again to the redirect
+        // URL.
+        if (isNotBlank(form.urlfragment)) {
+            redirectUrl += "#" + form.urlfragment;
+        }
+
         return redirectUrl;
     }
 }

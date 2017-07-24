@@ -752,7 +752,7 @@ public class AutomationPage
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.clearAllSelections();
+            state.reset();
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));

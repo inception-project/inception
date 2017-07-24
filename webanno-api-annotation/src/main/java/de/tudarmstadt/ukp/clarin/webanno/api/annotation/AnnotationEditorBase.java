@@ -36,7 +36,7 @@ public abstract class AnnotationEditorBase
 
     private AnnotationActionHandler actionHandler;
     private JCasProvider jcasProvider;
-    private boolean enableHighlight;
+    private boolean enableHighlight = true;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)

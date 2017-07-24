@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -49,13 +51,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -99,7 +102,7 @@ public class BratRenderer
 
         // Render invisible baseline annotations (sentence, tokens)
         renderTokenAndSentence(aJCas, aResponse, aState);
-
+        
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
@@ -135,21 +138,30 @@ public class BratRenderer
             }
         }
         
+        List<Sentence> sentences = new ArrayList<>(select(aJCas, Sentence.class));
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
             case ERROR:
-                type = Comment.ANNOTATION_ERROR;
+                type = AnnotationComment.ANNOTATION_ERROR;
                 break;
             case INFO:
-                type = Comment.ANNOTATOR_NOTES;
+                type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
             default:
-                type = Comment.ANNOTATOR_NOTES;
+                type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
             }
             
-            aResponse.addComment(new Comment(vcomment.getVid(), type, vcomment.getComment()));
+            AnnotationFS fs = selectByAddr(aJCas, vcomment.getVid().getId());
+            if (fs instanceof Sentence) {
+                int index = sentences.indexOf(fs) + 1;
+                aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
+            }
+            else {
+                aResponse.addComment(
+                        new AnnotationComment(vcomment.getVid(), type, vcomment.getComment()));
+            }
         }
     }
     

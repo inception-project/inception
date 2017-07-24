@@ -127,8 +127,8 @@ public class RelationRenderer
                 sortedDepFs.sort(comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
 
                 String cm = getYieldMessage(aJcas, sortedDepFs);
-                aResponse.add(
-                        new VComment(governorFs, VCommentType.YIELD, "Yield of relation:" + cm));
+                aResponse.add(new VComment(governorFs, VCommentType.YIELD,
+                        "Yield of relation:" + cm));
             }
         }
     }

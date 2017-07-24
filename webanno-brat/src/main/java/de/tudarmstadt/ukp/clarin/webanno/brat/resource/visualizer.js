@@ -1598,7 +1598,11 @@ Util.profileStart('init');
 // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
 	    fontSize = sourceData.font_size;
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
-        
+
+// WEBANNO EXTENSION BEGIN - #406 - Sharable link for annotation documents  
+	    args = sourceData.args;
+// WEBANNO EXTENSION END - #406 - Sharable link for annotation documents  
+
         if (sourceData) setData(sourceData);
         showMtime();
 

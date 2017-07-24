@@ -11,6 +11,7 @@
   "attributes" : [ ],
   "equivs" : [ ],
   "comments" : [ ],
+  "args" : { },
   "rtl_mode" : false,
   "font_size" : 0,
   "sentence_number_offset" : 1,

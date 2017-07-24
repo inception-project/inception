@@ -70,8 +70,11 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -131,6 +134,10 @@ public class BratAnnotationEditor
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
+                if (getModelObject().getDocument() == null) {
+                    return;
+                }
+                
                 long timerStart = System.currentTimeMillis();
                 
                 // We always refresh the feedback panel - only doing this in the case were actually
@@ -443,6 +450,10 @@ public class BratAnnotationEditor
         // If we are in a partial page request, then trigger re-initialization of the brat 
         // rendering engine here. If we are in a full page reload, this is handled already
         // by renderHead()
+        //
+        // Mind that using AnnotationEditorBase#requestRender() is a better alternative to
+        // adding the editor to the AJAX request because it creates less initialization 
+        // overhead (e.g. it doesn't have to send the collection info again).
         AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
         if (target != null) {
             target.appendJavaScript(bratLoadCollectionCommand());
@@ -465,6 +476,19 @@ public class BratAnnotationEditor
         preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
         extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
         BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
+        
+        if (isHighlightEnabled()) {
+            AnnotatorState state = getModelObject();
+            
+            if (state.getFocusUnitIndex() > 0) {
+                response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
+            }
+            
+            if (state.getSelection().getAnnotation().isSet()) {
+                response.addMarker(new AnnotationMarker(
+                        Marker.FOCUS, state.getSelection().getAnnotation()));
+            }
+        }
     }
 
     private List<AnnotationLayer> getLayersToRender()
@@ -561,7 +585,6 @@ public class BratAnnotationEditor
     {
         try {
             aTarget.appendJavaScript(bratRenderCommand(getJCasProvider().get()));
-            renderHighlight(aTarget, getModelObject().getSelection().getAnnotation());
         }
         catch (IOException e) {
             LOG.error("Unable to load data", e);
@@ -570,30 +593,6 @@ public class BratAnnotationEditor
         }
     }
     
-    /**
-     * Render content as part of the current request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     * @param aAnnotationId
-     *            the annotation ID to highlight.
-     */
-    private void renderHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
-    {
-        if (isHighlightEnabled()) {
-            if (!aAnnotationId.isSet()) {
-                aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                        + "').dispatcher.post('current', " + "['" + getCollection()
-                        + "', '1234', {edited:[]}, false]);");
-            }
-            else {
-                aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                        + "').dispatcher.post('current', " + "['" + getCollection()
-                        + "', '1234', {edited:[[\"" + aAnnotationId + "\"]]}, false]);");
-            }
-        }
-    }
-
     private String getCollection()
     {
         if (getModelObject().getProject() != null) {
