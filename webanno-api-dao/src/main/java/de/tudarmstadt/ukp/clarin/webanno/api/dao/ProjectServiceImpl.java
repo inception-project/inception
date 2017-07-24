@@ -583,30 +583,33 @@ public class ProjectServiceImpl
         throws IOException
     {
         BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
-        Properties property = new Properties();
+        Properties props = new Properties();
         for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
             if (wrapper.getPropertyValue(value.getName()) == null) {
                 continue;
             }
-            property.setProperty(aSubject + "." + value.getName(),
+            props.setProperty(aSubject + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
         String propertiesPath = dir.getAbsolutePath() + PROJECT + aProject.getId() + SETTINGS
                 + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
-            // aSubject = aSubject.equals(Mode.ANNOTATION) ? Mode.CURATION :
-            // Mode.ANNOTATION;
             for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
                 String key = entry.getKey().toString();
                 // Maintain other Modes of annotations confs than this one
                 if (!key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
-                    property.put(entry.getKey(), entry.getValue());
+                    props.put(entry.getKey(), entry.getValue());
                 }
             }
         }
+        
+//        for (String name : props.stringPropertyNames()) {
+//            log.info("{} = {}", name, props.getProperty(name));
+//        }
+        
         FileUtils.forceMkdir(new File(propertiesPath));
-        property.store(new FileOutputStream(new File(propertiesPath,
+        props.store(new FileOutputStream(new File(propertiesPath,
                 annotationPreferencePropertiesFileName)), null);
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,

@@ -16,89 +16,66 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-	<form wicket:id="tagSelectionForm">
-		<table style="border-collapse: separate; empty-cells: hide;">
-            <wicket:enclosure child="editor">
-              <tr class="border_bottom">
-                  <td><label>Editor:</label></td>
-                  <td><select wicket:id="editor"></select></td>
+  <form wicket:id="form">
+    <table style="border-collapse: separate; empty-cells: hide;">
+      <wicket:enclosure child="editor">
+        <tr class="border_bottom">
+          <td><label>Editor:</label></td>
+          <td><select wicket:id="editor"></select></td>
+        </tr>
+      </wicket:enclosure>
+      <tr class="border_bottom">
+        <td colspan="2"><label>Annotation Layers:</label><br />
+          <div>
+            <table>
+              <tr>
+                <td style="border-bottom: None; padding-left: 10px;"><b>Name:</b></td>
+                <td style="border-bottom: None; padding-left: 10px;"><b>Show:</b></td>
+                <td style="border-bottom: None; padding-left: 10px;"><b>Coloring Strategy:</b>
+                </td>
               </tr>
-            </wicket:enclosure>
-            <tr class="border_bottom">
-				<td colspan="2">
-				<label>Annotation Layers:</label><br />
-				<div>
-				<table>
-					<tr>
-						<td style="border-bottom: None; padding-left: 10px;">
-							<b>Name:</b>
-						</td>
-						<td style="border-bottom: None; padding-left: 10px;">
-							<b>Show:</b>
-						</td>
-						<td style="border-bottom: None; padding-left: 10px;">
-							<b>Coloring Strategy:</b>
-						</td>
-					</tr>
-					<tr wicket:id="annotationLayers">
-						<td style="border-bottom: None; padding-left: 10px;">
-							<span wicket:id="annotationLayerDesc"></span>
-						</td>
-						<td style="border-bottom: None; padding-left: 10px;">
-							<input wicket:id="annotationLayerActive" type="checkbox" />
-						</td>
-						<td style="border-bottom: None; padding-left: 10px;">
-							<select wicket:id="layercoloring"></select>
-						</td>
-    				</tr>
-				</table>
-				</div>
-		        </td>
-			</tr>
-			<tr class="border_bottom">
-				<td><label>Remember layer:</label></td>
-				<td><input type="checkbox" wicket:id="rememberLayer" /></td>
-			</tr>
-			
-            <tr class="border_bottom">
-                <td><label>Sidebar size:</label></td>
-                <td><input type="number" wicket:id="sidebarSize" style="width: 100px;"/>%</td>
-            </tr>
-
-            <tr class="border_bottom">
-                <td><label>Font size:</label></td>
-                <td><input type="number" wicket:id="fontSize" style="width: 100px;" /></td>
-            </tr>
-            
-			<tr class="border_bottom">
-				<td><label>Number of Sentences:</label></td>
-
-				<td><input type="number" wicket:id="windowSize"
-					style="width: 100px;" /></td>
-			</tr>
-			<!-- 
-			<tr class="border_bottom">
-				<td><label> Number of Curation sentences list: </label></td>
-
-				<td><input type="number" wicket:id="curationWindowSize"
-					style="width: 100px;" /></td>
-			</tr>
-			 -->
-			<tr class="border_bottom">
-				<td><label wicket:id="scrollPageLabel"> </label></td>
-				<td><input type="checkbox" wicket:id="scrollPage" /></td>
-			</tr>
-			<tr class="border_bottom">
-				<td><label> Choose coloring strategy for read only layers </label></td>
-				<td><select wicket:id="readonlylayercoloring"></select></td>
-			</tr>
-		</table>
-		<div class="buttons">
-			<button wicket:id="saveButton">Save</button>
-			<button wicket:id="cancelButton">Cancel</button>
-		</div>
-	</form>
+              <tr wicket:id="annotationLayers">
+                <td style="border-bottom: None; padding-left: 10px;"><span
+                  wicket:id="annotationLayerDesc"></span></td>
+                <td style="border-bottom: None; padding-left: 10px;"><input
+                  wicket:id="annotationLayerActive" type="checkbox"></input></td>
+                <td style="border-bottom: None; padding-left: 10px;"><select
+                  wicket:id="layercoloring"></select></td>
+              </tr>
+            </table>
+          </div></td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Remember layer:</label></td>
+        <td><input type="checkbox" wicket:id="rememberLayer"></input></td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Sidebar size:</label></td>
+        <td><input type="number" wicket:id="sidebarSize" style="width: 100px;"></input>%</td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Font size:</label></td>
+        <td><input type="number" wicket:id="fontSize" style="width: 100px;"></input></td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Number of Sentences:</label></td>
+        <td><input type="number" wicket:id="windowSize" style="width: 100px;"></input></td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Auto-scroll document while annotating:</label></td>
+        <td><input type="checkbox" wicket:id="scrollPage"></input></td>
+      </tr>
+      <tr class="border_bottom">
+        <td><label>Choose coloring strategy for read only layers:</label></td>
+        <td><select wicket:id="readonlylayercoloring"></select></td>
+      </tr>
+    </table>
+    <div class="buttons">
+      <input type="submit" wicket:id="save" wicket:message="value:save"></input>
+      <input type="button" wicket:id="cancel" wicket:message="value:cancel"></input>
+    </div>
+  </form>
 </wicket:panel>
 </html>
