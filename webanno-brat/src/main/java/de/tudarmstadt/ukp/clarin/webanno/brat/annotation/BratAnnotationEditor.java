@@ -561,6 +561,7 @@ public class BratAnnotationEditor
     {
         try {
             aTarget.appendJavaScript(bratRenderCommand(getJCasProvider().get()));
+            renderHighlight(aTarget, getModelObject().getSelection().getAnnotation());
         }
         catch (IOException e) {
             LOG.error("Unable to load data", e);
@@ -577,18 +578,19 @@ public class BratAnnotationEditor
      * @param aAnnotationId
      *            the annotation ID to highlight.
      */
-    @Override
-    public void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
+    private void renderHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
     {
-        if (!aAnnotationId.isSet()) {
-            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                    + "').dispatcher.post('current', " + "['" + getCollection()
-                    + "', '1234', {edited:[]}, false]);");
-        }
-        else {
-            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                    + "').dispatcher.post('current', " + "['" + getCollection()
-                    + "', '1234', {edited:[[\"" + aAnnotationId + "\"]]}, false]);");
+        if (isHighlightEnabled()) {
+            if (!aAnnotationId.isSet()) {
+                aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                        + "').dispatcher.post('current', " + "['" + getCollection()
+                        + "', '1234', {edited:[]}, false]);");
+            }
+            else {
+                aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
+                        + "').dispatcher.post('current', " + "['" + getCollection()
+                        + "', '1234', {edited:[[\"" + aAnnotationId + "\"]]}, false]);");
+            }
         }
     }
 

@@ -421,7 +421,6 @@ public class CorrectionPage
                     JCas editorCas = getEditorCas();
                     //JCas correctionCas = repository.readCorrectionCas(state.getDocument());
                     annotationEditor.requestRender(aTarget);
-                    annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
 
                     // info(bratAnnotatorModel.getMessage());
                     SuggestionBuilder builder = new SuggestionBuilder(documentService,

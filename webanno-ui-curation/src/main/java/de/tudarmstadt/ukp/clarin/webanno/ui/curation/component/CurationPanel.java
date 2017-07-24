@@ -241,6 +241,7 @@ public class CurationPanel
     
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(bModel), editor,
             this::getEditorCas);
+        annotationEditor.setHighlightEnabled(false);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         annotationViewCell.add(annotationEditor);
     
@@ -476,7 +477,6 @@ public class CurationPanel
         aTarget.add(suggestionViewPanel);
         if (annotate) {
             annotationEditor.requestRender(aTarget);
-            annotationEditor.setHighlight(aTarget, bModel.getSelection().getAnnotation());
         }
         else {
             annotationEditor.requestRender(aTarget);

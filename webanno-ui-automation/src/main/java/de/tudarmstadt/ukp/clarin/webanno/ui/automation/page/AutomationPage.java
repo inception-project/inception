@@ -415,7 +415,6 @@ public class AutomationPage
                 
                 try {
                     annotationEditor.requestRender(aTarget);
-                    annotationEditor.setHighlight(aTarget, state.getSelection().getAnnotation());
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);

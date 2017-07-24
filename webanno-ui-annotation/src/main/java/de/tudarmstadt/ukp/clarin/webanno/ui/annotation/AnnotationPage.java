@@ -381,8 +381,6 @@ public class AnnotationPage
                 aTarget.add(getOrCreatePositionInfoLabel());
 
                 annotationEditor.requestRender(aTarget);
-                annotationEditor.setHighlight(aTarget,
-                        getModelObject().getSelection().getAnnotation());
             }
 
             @Override

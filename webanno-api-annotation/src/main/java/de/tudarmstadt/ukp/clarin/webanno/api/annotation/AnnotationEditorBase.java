@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationEditorBase
     extends Panel
@@ -37,6 +36,7 @@ public abstract class AnnotationEditorBase
 
     private AnnotationActionHandler actionHandler;
     private JCasProvider jcasProvider;
+    private boolean enableHighlight;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
@@ -100,13 +100,16 @@ public abstract class AnnotationEditorBase
      * JSON via {@link AjaxRequestTarget#appendJavaScript(CharSequence)}.
      */
     protected abstract void render(AjaxRequestTarget aTarget);
-
-    /**
-     * Put some focus/highlight on the annotation with the specified visual ID. This typically
-     * happens by sending a suitable JavaScript command via
-     * {@link AjaxRequestTarget#appendJavaScript(CharSequence)}.
-     */
-    public abstract void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId);
+    
+    public void setHighlightEnabled(boolean aValue)
+    {
+        enableHighlight = aValue;
+    }
+    
+    public boolean isHighlightEnabled()
+    {
+        return enableHighlight;
+    }
     
     /**
      * This is a special AJAX target response listener which implements hashCode and equals.
