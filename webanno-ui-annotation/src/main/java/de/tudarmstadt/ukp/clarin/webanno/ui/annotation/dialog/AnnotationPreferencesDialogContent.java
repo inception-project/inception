@@ -111,11 +111,11 @@ public class AnnotationPreferencesDialogContent
             sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
             add(sidebarSizeField);
 
-            NumberTextField<Integer> fontSizeField = new NumberTextField<>("fontSize");
-            fontSizeField.setType(Integer.class);
-            fontSizeField.setMinimum(AnnotationPreference.FONT_SIZE_MIN);
-            fontSizeField.setMaximum(AnnotationPreference.FONT_SIZE_MAX);
-            add(fontSizeField);
+            NumberTextField<Integer> fontZoomField = new NumberTextField<>("fontZoom");
+            fontZoomField.setType(Integer.class);
+            fontZoomField.setMinimum(AnnotationPreference.FONT_ZOOM_MIN);
+            fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
+            add(fontZoomField);
 
             List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
                     .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
@@ -192,7 +192,7 @@ public class AnnotationPreferencesDialogContent
         model.windowSize = bModel.getPreferences().getWindowSize() < 1 ? 1
                 : bModel.getPreferences().getWindowSize();
         model.sidebarSize = bModel.getPreferences().getSidebarSize();
-        model.fontSize = bModel.getPreferences().getFontSize();
+        model.fontZoom = bModel.getPreferences().getFontZoom();
         model.scrollPage = bModel.getPreferences().isScrollPage();
         model.colorPerLayer = bModel.getPreferences().getColorPerLayer();
         model.readonlyLayerColoringBehaviour = bModel.getPreferences()
@@ -234,7 +234,7 @@ public class AnnotationPreferencesDialogContent
                 .map(x -> x.getId()).collect(Collectors.toList()));
         prefs.setWindowSize(model.windowSize);
         prefs.setSidebarSize(model.sidebarSize);
-        prefs.setFontSize(model.fontSize);
+        prefs.setFontZoom(model.fontZoom);
         prefs.setColorPerLayer(model.colorPerLayer);
         prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
         prefs.setEditor(model.editor.getKey());
@@ -310,7 +310,7 @@ public class AnnotationPreferencesDialogContent
         private Pair<String, String> editor;
         private int windowSize;
         private int sidebarSize;
-        private int fontSize;
+        private int fontZoom;
         private boolean scrollPage;
         private boolean rememberLayer;
         private List<AnnotationLayer> annotationLayers;

@@ -35,9 +35,9 @@ public class AnnotationPreference
 {
     private static final long serialVersionUID = 2202236699782758271L;
 
-    public static final int FONT_SIZE_MIN = 10;
-    public static final int FONT_SIZE_MAX = 17;
-    public static final int FONT_SIZE_DEFAULT = 13;
+    public static final int FONT_ZOOM_MIN = 10;
+    public static final int FONT_ZOOM_MAX = 1000;
+    public static final int FONT_ZOOM_DEFAULT = 120;
     
     public static final int SIDEBAR_SIZE_MIN = 10;
     public static final int SIDEBAR_SIZE_MAX = 50;
@@ -67,7 +67,7 @@ public class AnnotationPreference
             ReadonlyColoringBehaviour.LEGACY;
 
     private int sidebarSize;
-    private int fontSize;
+    private int fontZoom;
     
     private String editor;
 
@@ -190,26 +190,26 @@ public class AnnotationPreference
         }
     }
     
-    public int getFontSize()
+    public int getFontZoom()
     {
-        if (fontSize < FONT_SIZE_MIN || fontSize > FONT_SIZE_MAX) {
-            return FONT_SIZE_DEFAULT;
+        if (fontZoom < FONT_ZOOM_MIN || fontZoom > FONT_ZOOM_MAX) {
+            return FONT_ZOOM_DEFAULT;
         }
         else {
-            return fontSize;
+            return fontZoom;
         }
     }
 
-    public void setFontSize(int aFontSize)
+    public void setFontZoom(int aFontZoom)
     {
-        if (aFontSize > FONT_SIZE_MAX) {
-            fontSize = FONT_SIZE_MAX;
+        if (aFontZoom > FONT_ZOOM_MAX) {
+            fontZoom = FONT_ZOOM_MAX;
         }
-        else if (aFontSize < FONT_SIZE_MIN) {
-            fontSize = FONT_SIZE_MIN;
+        else if (aFontZoom < FONT_ZOOM_MIN) {
+            fontZoom = FONT_ZOOM_MIN;
         }
         else {
-            fontSize = aFontSize;
+            fontZoom = aFontZoom;
         }
     }
     

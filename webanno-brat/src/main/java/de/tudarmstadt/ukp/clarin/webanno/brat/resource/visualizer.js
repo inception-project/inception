@@ -35,7 +35,7 @@ var Visualizer = (function($, window, undefined) {
 	// WEBANNO EXTENSION END
 
 // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
-	var fontSize = 13;
+	var fontZoom = 100;
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
     var DocumentData = function(text) {
@@ -1596,7 +1596,7 @@ Util.profileStart('init');
 // WEBANNO EXTENSION END
 
 // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
-	    fontSize = sourceData.font_size;
+	    fontZoom = sourceData.font_zoom;
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
 // WEBANNO EXTENSION BEGIN - #406 - Sharable link for annotation documents  
@@ -1611,7 +1611,7 @@ Util.profileStart('init');
         if (!data || data.length == 0) return;
 
 // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
-        $svg.css("font-size", fontSize);
+        $svg.css("font-size", fontZoom+"%");
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
         
         // establish the width according to the enclosing element
@@ -1811,7 +1811,14 @@ Util.profileStart('chunks');
               // * non-first word in a line
               // don't indent if
               // * the first word in a non-paragraph line
+// WEBANNO EXTENSION BEGIN - #564 - Improvements to brat visualization with large font size 
+/*
               for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
+*/
+              for (var i = spacePos; i < spaceLen; i++) {
+            	    spaceWidth += spaceWidths[chunk.lastSpace[i]] * (fontZoom / 100.0) || 0;
+              }
+// WEBANNO EXTENSION END - #564 - Improvements to brat visualization with large font size 
 // WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spaceWidth             
 /*
               currentX += spaceWidth;

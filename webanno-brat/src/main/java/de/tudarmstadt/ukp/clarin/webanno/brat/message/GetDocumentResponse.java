@@ -43,8 +43,8 @@ public class GetDocumentResponse
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
 
-    @JsonProperty("font_size")
-    private int fontSize;
+    @JsonProperty("font_zoom")
+    private int fontZoom;
 
     @JsonProperty("sentence_number_offset")
     private int sentenceNumberOffset;
@@ -309,14 +309,14 @@ public class GetDocumentResponse
         rtlMode = aRtlMode;
     }
 
-    public int getFontSize()
+    public int getFontZoom()
     {
-        return fontSize;
+        return fontZoom;
     }
 
-    public void setFontSize(int aFontSize)
+    public void setFontZoom(int aFontZoom)
     {
-        fontSize = aFontSize;
+        fontZoom = aFontZoom;
     }
     
     public void addMarker(Marker aMarker)
