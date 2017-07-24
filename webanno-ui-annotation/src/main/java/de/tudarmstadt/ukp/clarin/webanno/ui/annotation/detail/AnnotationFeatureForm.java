@@ -93,6 +93,7 @@ public class AnnotationFeatureForm
     private Label selectedAnnotationLayer;
     private TextField<String> forwardAnnotationText;
     private ModalWindow deleteModal;
+    private LayerSelector layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
@@ -111,7 +112,7 @@ public class AnnotationFeatureForm
         add(createDeleteButton());
         add(createReverseButton());
         add(createClearButton());
-        add(createDefaultAnnotationLayerSelector());
+        add(layerSelector = createDefaultAnnotationLayerSelector());
         add(featureEditorPanel = createFeatureEditorPanel());
     }
 
@@ -586,7 +587,7 @@ public class AnnotationFeatureForm
         }
     }
 
-    private class LayerSelector
+    protected class LayerSelector
         extends DropDownChoice<AnnotationLayer>
     {
         private static final long serialVersionUID = 2233133653137312264L;
@@ -864,5 +865,10 @@ public class AnnotationFeatureForm
     protected WebMarkupContainer getFeatureEditorPanel()
     {
         return featureEditorPanel;
+    }
+    
+    protected LayerSelector getLayerSelector()
+    {
+        return layerSelector;
     }
 }

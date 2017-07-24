@@ -86,8 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
  * Annotation Detail Editor Panel.
@@ -364,6 +362,10 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         state.getAction().setAnnotate(true);
 
+        // Re-set the selected layer from the drop-down since it might have changed if we have
+        // previously created a relation annotation
+        state.setSelectedAnnotationLayer(annotationFeatureForm.getLayerSelector().getModelObject());
+        
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
         if (state.getSelection().isArc()) {
@@ -391,25 +393,9 @@ public class AnnotationDetailEditorPanel
             // It is possible because currently only a single relation layer is allowed to attach to
             // any given span layer.
 
-            // If we drag an arc between POS annotations, then the relation must be a dependency
-            // relation.
-            // FIXME - Actually this case should be covered by the last case - the database lookup!
-            if (
-                spanLayer.isBuiltIn() &&
-                    spanLayer.getName().equals(POS.class.getName()))
-            {
-                AnnotationLayer depLayer = annotationService.getLayer(Dependency.class.getName(),
-                    state.getProject());
-                if (state.getAnnotationLayers().contains(depLayer)) {
-                    state.setSelectedAnnotationLayer(depLayer);
-                }
-                else {
-                    state.setSelectedAnnotationLayer(null);
-                }
-            }
             // If we drag an arc in a chain layer, then the arc is of the same layer as the span
             // Chain layers consist of arcs and spans
-            else if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 // one layer both for the span and arc annotation
                 state.setSelectedAnnotationLayer(spanLayer);
             }
@@ -417,7 +403,11 @@ public class AnnotationDetailEditorPanel
             else {
                 for (AnnotationLayer l : annotationService.listAnnotationLayer(state
                     .getProject())) {
-                    if (l.getAttachType() != null && l.getAttachType().equals(spanLayer)) {
+                    if (
+                            (l.getAttachType() != null && l.getAttachType().equals(spanLayer)) ||
+                            (l.getAttachFeature() != null && 
+                                    l.getAttachFeature().getType().equals(spanLayer.getName()))
+                    ) {
                         if (state.getAnnotationLayers().contains(l)) {
                             state.setSelectedAnnotationLayer(l);
                         }
@@ -438,9 +428,9 @@ public class AnnotationDetailEditorPanel
         }
 
         LOG.trace("actionAnnotate() selectedLayer: {}",
-            state.getSelectedAnnotationLayer().getUiName());
+                state.getSelectedAnnotationLayer().getUiName());
         LOG.trace("actionAnnotate() defaultLayer: {}",
-            state.getDefaultAnnotationLayer().getUiName());
+                state.getDefaultAnnotationLayer().getUiName());
 
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
