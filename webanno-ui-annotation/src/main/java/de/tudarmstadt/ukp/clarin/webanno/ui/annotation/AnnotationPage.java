@@ -35,11 +35,13 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -187,9 +189,9 @@ public class AnnotationPage
         
         add(createLeftSidebar());
         
-        add(detailEditor = createDetailEditor());
-        
         add(annotationEditor = createAnnotationEditor());
+        
+        add(createRightSidebar());
 
         add(createDocumentInfoLabel());
 
@@ -352,8 +354,24 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        return new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> getEditorCas(),
-                AnnotationPage.this);
+        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> 
+                getEditorCas(), AnnotationPage.this);
+        // Override sidebar width from preferences
+        leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        return leftSidebar;
+    }
+    
+    private WebMarkupContainer createRightSidebar()
+    {
+        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        rightSidebar.setOutputMarkupId(true);
+        // Override sidebar width from preferences
+        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        detailEditor = createDetailEditor();
+        rightSidebar.add(detailEditor);
+        return rightSidebar;
     }
 
     @Override
