@@ -50,6 +50,17 @@
       <artifactId>commons-lang3</artifactId>
     </dependency>
 
+    <!-- Wicket dependencies -->
+
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-util</artifactId>
+    </dependency>
+
     <!-- Hibernate dependencies -->
 
     <dependency>
