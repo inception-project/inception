@@ -483,6 +483,9 @@ public class AnnotationPage
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             
+            // The selection of layers may have changed. Update the dropdown
+            detailEditor.getAnnotationFeatureForm().updateLayersDropdown();
+            
             AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
             annotationEditor.replaceWith(newAnnotationEditor);
             annotationEditor = newAnnotationEditor;

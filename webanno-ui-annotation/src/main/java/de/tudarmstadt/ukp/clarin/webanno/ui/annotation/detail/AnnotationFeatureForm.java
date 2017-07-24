@@ -527,7 +527,7 @@ public class AnnotationFeatureForm
         }
     }
 
-    void updateLayersDropdown()
+    public void updateLayersDropdown()
     {
         editorPanel.getLog().trace("updateLayersDropdown()");
 
