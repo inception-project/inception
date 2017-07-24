@@ -16,10 +16,10 @@
 #limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <head>
 <wicket:head>
-	<script type="text/javascript">
+  <script type="text/javascript">
 	$(document).ready(function() {
 		// Based on this accepted answer of so
 		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
@@ -47,65 +47,65 @@
 </wicket:head>
 </head>
 <body>
-	<wicket:panel>
-		<form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
-			<div wicket:id=yesNoModal></div>
-				<fieldset>
-					<legend>Actions</legend>
-					<table>
-						<tr>
-							<td colspan="3">
-								<button type="button"  wicket:id="delete">Delete</button>
-								<button class="buttons" wicket:id="reverse">Reverse</button>
-								<button class="buttons" wicket:id="clear">Clear</button>
-							</td>
-						</tr>
-						<tr>
-							<td>Layer</td>
-							<td><select wicket:id="defaultAnnotationLayer"
-								style="width: 100%"></select></td>
-						</tr>
-						<tr>
-							<td colspan="2">Forward annotation ?</td>
-							<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
-						</tr>					 				
-					</table>
-			    </fieldset>		
-			    <fieldset>
-				<legend>Annotation</legend>
-				  <span wicket:id="noAnnotationWarning"></span>
-	              <div style="width: 1px; height: 1px; overflow: hidden;">
-	                  <input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
-	              </div>
-				  <div wicket:id="featureEditorsContainer">
-					<table class="hfill">
-						<tr>
-							<td colspan="2"><label wicket:id="layerName"></label></td>
-	                        <td class="hfill"><div class="hfill k-textbox"
-	                                style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
-	                                wicket:id="selectedAnnotationLayer"></div></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="white-space: nowrap;">Text</td>
-							<td class="hfill"><div class="hfill k-textbox"
-		                            style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
-		                            wicket:id="selectedText"></div></td>
-						</tr>
-					</table>
-	                <table class="hfill">
-						<tr>
-						   <td colspan="3"><hr></hr></td>
-						</tr>
-	                    <tr>
-	                       <td colspan="3"><span wicket:id="noFeaturesWarning"></span></td>
-	                    </tr>
-						<tr wicket:id="featureValues" id="featureValues">
-							<td wicket:id="editor"></td>
-						</tr>
-					</table>
-				</div>
-			</fieldset>
-	    </form>
-	</wicket:panel>
+  <wicket:panel>
+    <form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
+      <div wicket:id=yesNoModal></div>
+      <fieldset>
+        <legend>Actions</legend>
+        <table class="hfill">
+          <tr>
+            <td colspan="3">
+              <button type="button" wicket:id="delete">Delete</button>
+              <button class="buttons" wicket:id="reverse">Reverse</button>
+              <button class="buttons" wicket:id="clear">Clear</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Layer</td>
+            <td><select wicket:id="defaultAnnotationLayer" class="hfill"></select></td>
+          </tr>
+          <tr>
+            <td colspan="3"><input type="checkbox" wicket:id="forwardAnnotation"></input>
+              Forward annotation</td>
+          </tr>
+        </table>
+      </fieldset>
+      <fieldset>
+        <legend>Annotation</legend>
+        <span wicket:id="noAnnotationWarning"></span>
+        <div style="width: 1px; height: 1px; overflow: hidden;">
+          <input style="width: 100%; display: block; overflow: hidden; height: 1px"
+            wicket:id=forwardAnno></input>
+        </div>
+        <div wicket:id="featureEditorsContainer">
+          <table class="hfill">
+            <tr>
+              <td colspan="2"><label wicket:id="layerName"></label></td>
+              <td class="hfill"><div class="hfill k-textbox"
+                  style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
+                  wicket:id="selectedAnnotationLayer"></div></td>
+            </tr>
+            <tr>
+              <td colspan="2" style="white-space: nowrap;">Text</td>
+              <td class="hfill"><div class="hfill k-textbox"
+                  style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em; max-height: 5em; padding-left: 0.3em; padding-right: 0.3em; overflow-y: auto;"
+                  wicket:id="selectedText"></div></td>
+            </tr>
+          </table>
+          <table class="hfill">
+            <tr>
+              <td colspan="3"><hr></hr></td>
+            </tr>
+            <tr>
+              <td colspan="3"><span wicket:id="noFeaturesWarning"></span></td>
+            </tr>
+            <tr wicket:id="featureValues" id="featureValues">
+              <td wicket:id="editor"></td>
+            </tr>
+          </table>
+        </div>
+      </fieldset>
+    </form>
+  </wicket:panel>
 </body>
 </html>
