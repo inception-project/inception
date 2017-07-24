@@ -506,10 +506,6 @@ div.navigator{
     text-align:center;
 }
 
-tr.border_bottom td {
-    border-bottom: 2pt solid green;
-}
-
 /* -------------------------------------------------------------------------------------------------
  * Tab panel top
  */

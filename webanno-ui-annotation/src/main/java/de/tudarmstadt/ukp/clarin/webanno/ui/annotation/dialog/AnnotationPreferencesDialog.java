@@ -49,8 +49,8 @@ public class AnnotationPreferencesDialog
         state = aModel;
         
         // dialog window to select annotation layer preferences
-        setInitialWidth(450);
-        setInitialHeight(350);
+        setInitialWidth(600);
+        setInitialHeight(450);
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
