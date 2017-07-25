@@ -24,6 +24,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -31,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 /**
  * Implementation of methods defined in the {@link UserDao} interface
  */
+@Component("userRepository")
 public class UserDaoImpl
     implements UserDao
 {
