@@ -361,6 +361,7 @@
               <!-- WebAnno Documentation module - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
+              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-automation</usedDependency>
               <!-- WebAnno IO Modules - they are required via the formats.properties file -->
