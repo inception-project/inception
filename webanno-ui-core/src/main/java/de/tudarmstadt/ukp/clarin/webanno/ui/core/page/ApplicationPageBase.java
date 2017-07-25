@@ -32,7 +32,6 @@ import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -81,7 +80,6 @@ public abstract class ApplicationPageBase
     private Label embeddedDbWarning;
     private Label browserWarning;
     private ListView<ImageLinkDecl> links;
-    private PageContent pageContent;
 
     private @SpringBean DatabaseDriverService dbDriverService;
 
@@ -126,10 +124,6 @@ public abstract class ApplicationPageBase
             throw new RuntimeException(e1);
         }
 
-        pageContent = new PageContent("pageContent");
-        pageContent.setOutputMarkupId(true);
-        add(pageContent);
-        
         feedbackPanel = new FeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
         feedbackPanel.add(new AttributeModifier("class", "error"));
@@ -271,10 +265,5 @@ public abstract class ApplicationPageBase
         // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
         aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
-    }
-    
-    public WebMarkupContainer getPageContent()
-    {
-        return pageContent;
     }
 }

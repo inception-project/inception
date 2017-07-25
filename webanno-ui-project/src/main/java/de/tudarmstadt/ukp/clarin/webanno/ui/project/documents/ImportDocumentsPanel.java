@@ -28,7 +28,6 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -42,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class ImportDocumentsPanel extends Panel
 {
@@ -129,7 +128,7 @@ public class ImportDocumentsPanel extends Panel
             }
         }
         
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
-        aTarget.add(((ApplicationPageBase) getPage()).getPageContent());
+        //aTarget.addChildren(getPage(), FeedbackPanel.class);
+        WicketUtil.refreshPage(aTarget, getPage());
     }
 }
