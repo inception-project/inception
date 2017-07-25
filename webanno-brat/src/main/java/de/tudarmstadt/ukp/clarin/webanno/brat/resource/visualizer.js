@@ -3530,7 +3530,7 @@ Util.profileStart('finish');
         // Originally, this code was within the oversized > 0 block above, but we moved it here
         // to prevent erratic jumping
         $svgDiv.css("padding-bottom", "16px");
-        $svgDiv.height(y+16); // Need to take the padding into account here
+        $svgDiv.height(y+20); // Need to take the padding into account here
         // WEBANNO END #331 - Interface jumps to the top
         
 // WEBANNO EXTENSION END        
