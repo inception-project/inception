@@ -36,7 +36,6 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
@@ -425,11 +424,6 @@ public class BratAnnotationEditor
         // aResponse.render(
         //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         
-        // Must be OnDomReader so that this is rendered before all other Javascript that is
-        // appended to the same AJAX request which turns the annotator visible after a document
-        // has been chosen.
-        aResponse.render(OnDomReadyHeaderItem.forScript(bratInitCommand()));
-        
         // If the page is reloaded in the browser and a document was already open, we need
         // to render it. We use the "later" commands here to avoid polluting the Javascript
         // header items with document data and because loading times are not that critical
@@ -453,11 +447,32 @@ public class BratAnnotationEditor
         //
         // Mind that using AnnotationEditorBase#requestRender() is a better alternative to
         // adding the editor to the AJAX request because it creates less initialization 
-        // overhead (e.g. it doesn't have to send the collection info again).
+        // overhead (e.g. it doesn't have to send the collection info again and doesn't require
+        // a delay).
         AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
         if (target != null) {
-            target.appendJavaScript(bratLoadCollectionCommand());
-            render(target);
+            try {
+                String script = "setTimeout(function() { " +
+                        bratInitCommand() +
+                        bratLoadCollectionCommand() +
+                        // Even with a timeout, brat will try to grab too much space if the view
+                        // contains a *very* long annotation which explodes the view (cf. 
+                        // https://github.com/webanno/webanno/issues/500) - so as a last resort,
+                        // we schedule a delayed rendering. Since this only happens on a document
+                        // switch and after closing the preferences dialog, it is kind of
+                        // acceptable, although actually a faster document switch would be
+                        // desirable.
+                        // bratRenderCommand(getJCasProvider().get()) +
+                        bratRenderLaterCommand() +
+                        "}, 0);";
+                target.appendJavaScript(script);
+                LOG.debug("Delayed rendering in partial page update...");
+            }
+            catch (Exception e) {
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                target.addChildren(getPage(), FeedbackPanel.class);
+            }
         }
     }
 
@@ -545,17 +560,17 @@ public class BratAnnotationEditor
                 + "]);";
     }
     
-    /**
-     * This triggers the loading of the metadata (colors, types, etc.)
-     *
-     * @return the init script.
-     */
-    private String bratLoadCollectionLaterCommand()
-    {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
-                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
-                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
-    }
+//    /**
+//     * This triggers the loading of the metadata (colors, types, etc.)
+//     *
+//     * @return the init script.
+//     */
+//    private String bratLoadCollectionLaterCommand()
+//    {
+//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
+//                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
+//                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
+//    }
 
     /**
      * This one triggers the loading of the actual document data
@@ -576,15 +591,27 @@ public class BratAnnotationEditor
      */
     private void bratInitRenderLater(IHeaderResponse aResponse)
     {
-        aResponse.render(OnLoadHeaderItem.forScript(bratLoadCollectionLaterCommand()));
-        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+        // Must be OnDomReader so that this is rendered before all other Javascript that is
+        // appended to the same AJAX request which turns the annotator visible after a document
+        // has been chosen.
+//        aResponse.render(OnDomReadyHeaderItem.forScript(bratInitCommand()));
+//        aResponse.render(OnLoadHeaderItem.forScript(bratLoadCollectionLaterCommand()));
+//        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+        String script = "setTimeout(function() { " +
+                bratInitCommand() +
+                bratLoadCollectionCommand() +
+                bratRenderLaterCommand() +
+                "}, 0);";
+        aResponse.render(OnDomReadyHeaderItem.forScript(script));
+        
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
         try {
-            aTarget.appendJavaScript(bratRenderCommand(getJCasProvider().get()));
+            aTarget.appendJavaScript("setTimeout(function() { "
+                    + bratRenderCommand(getJCasProvider().get()) + " }, 0);");
         }
         catch (IOException e) {
             LOG.error("Unable to load data", e);

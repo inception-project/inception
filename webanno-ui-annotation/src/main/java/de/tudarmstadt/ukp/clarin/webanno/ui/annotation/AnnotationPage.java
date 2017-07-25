@@ -87,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
@@ -491,11 +492,7 @@ public class AnnotationPage
             annotationEditor = newAnnotationEditor;
             
             // Reload all AJAX-enabled children of the page but not the page itself!
-            forEach(child ->  {
-                if (child.getOutputMarkupId()) {
-                    aTarget.add(child);
-                }
-            });
+            WicketUtil.refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
             LOG.info("Error reading CAS " + e.getMessage());
@@ -595,22 +592,18 @@ public class AnnotationPage
                 documentService.createSourceDocument(state.getDocument());
             }
             
-            // Reset the editor
-            detailEditor.reset(aTarget);
+            // Reset the editor (we reload the page content below, so in order not to schedule
+            // a double-update, we pass null here)
+            detailEditor.reset(null);
             // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, aTarget);
+            detailEditor.loadFeatureEditorModels(editorCas, null);
             
             extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
 
             if (aTarget != null) {
                 // Update URL for current document
                 updateUrlFragment(aTarget);
-                // Reload all AJAX-enabled children of the page but not the page itself!
-                forEach(child ->  {
-                    if (child.getOutputMarkupId()) {
-                        aTarget.add(child);
-                    }
-                });
+                WicketUtil.refreshPage(aTarget, getPage());
             }
         }
         catch (Exception e) {
