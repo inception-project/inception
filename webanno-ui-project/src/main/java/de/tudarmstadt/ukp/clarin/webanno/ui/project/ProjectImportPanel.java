@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,10 +37,12 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +89,7 @@ public class ProjectImportPanel
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         form.add(new CheckBox("generateUsers"));
-        form.add(fileUpload = new FileUploadField("content"));
+        form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
         fileUpload.setRequired(true);
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
         add(form);
@@ -103,7 +106,7 @@ public class ProjectImportPanel
                 // Workaround for WICKET-6425
                 File tempFile = File.createTempFile("webanno-training", null);
                 try (
-                        InputStream is = exportedProject.getInputStream();
+                        InputStream is = new BufferedInputStream(exportedProject.getInputStream());
                         OutputStream os = new FileOutputStream(tempFile);
                 ) {
                     if (!ZipUtils.isZipStream(is)) {
@@ -123,6 +126,7 @@ public class ProjectImportPanel
                 }
             }
             catch (Exception e) {
+                aTarget.addChildren(getPage(), FeedbackPanel.class);
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing project", e);
             }

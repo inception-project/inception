@@ -164,8 +164,10 @@ public class RemoteApiController
         }
 
         // Check archive
-        if (!ZipUtils.isZipStream(aFile.getInputStream())) {
-            return ResponseEntity.badRequest().body("Invalid ZIP file");
+        try (InputStream is = new BufferedInputStream(aFile.getInputStream())) {
+            if (!ZipUtils.isZipStream(is)) {
+                return ResponseEntity.badRequest().body("Invalid ZIP file");
+            }
         }
 
         // Create the project and initialize tags

@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.support;
 
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -46,26 +46,26 @@ public class ZipUtils
      * @param in the stream.
      * @return if it is a ZIP file.
      */
-    public static boolean isZipStream(InputStream in)
+    public static boolean isZipStream(InputStream in) throws IOException
     {
         if (!in.markSupported()) {
-            in = new BufferedInputStream(in);
+            throw new IllegalArgumentException("Mark is not supported.");
         }
-        boolean isZip = true;
-        try {
-            in.mark(MAGIC.length);
-            for (byte element : MAGIC) {
-                if (element != (byte) in.read()) {
-                    isZip = false;
-                    break;
-                }
+
+        byte[] buf = new byte[MAGIC.length];
+        in.mark(MAGIC.length);
+        for (int i = 0; i < MAGIC.length; i++) {
+            int b = in.read();
+            if (b == -1) {
+                break;
             }
-            in.reset();
+            else {
+                buf[i] = (byte) b;
+            }
         }
-        catch (IOException e) {
-            isZip = false;
-        }
-        return isZip;
+        in.reset();
+
+        return Arrays.equals(buf, MAGIC);
     }
 
     /**
