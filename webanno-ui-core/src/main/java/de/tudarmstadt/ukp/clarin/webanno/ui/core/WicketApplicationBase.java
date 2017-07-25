@@ -39,6 +39,7 @@ import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
@@ -109,8 +110,14 @@ public abstract class WicketApplicationBase
             public void onBeginRequest(RequestCycle cycle)
             {
                 ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
-                DocumentService repo = ctx.getBean(DocumentService.class);
-                MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
+                try {
+                    DocumentService repo = ctx.getBean(DocumentService.class);
+                    MDC.put(Logging.KEY_REPOSITORY_PATH, repo.getDir().getAbsolutePath());
+                }
+                catch (NoSuchBeanDefinitionException e) {
+                    // Well, if the document service is not there, then we don't need to
+                    // configure the logging placeholder
+                }
             }
 
             @Override
