@@ -15,15 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.support.db;
 
-public interface SettingsService
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.hibernate.Session;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DatabaseDriverServiceImpl
+    implements DatabaseDriverService
 {
-    String SERVICE_NAME = "settingsService";
-    
-    /**
-     * Get default number of sentences to display per page, set by administrator, which is read from
-     * settings.properties file
-     */
-    int getNumberOfSentences();
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Override
+    public String getDatabaseDriverName()
+    {
+        final StringBuilder sb = new StringBuilder();
+        Session session = entityManager.unwrap(Session.class);
+        session.doWork(aConnection -> sb.append(aConnection.getMetaData().getDriverName()));
+
+        return sb.toString();
+    }
 }

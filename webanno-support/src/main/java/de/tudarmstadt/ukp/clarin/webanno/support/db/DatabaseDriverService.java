@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.support.db;
 
-public interface SettingsService
+public interface DatabaseDriverService
 {
-    String SERVICE_NAME = "settingsService";
-    
     /**
-     * Get default number of sentences to display per page, set by administrator, which is read from
-     * settings.properties file
+     * Get the name of the database driver in use.
+     *
+     * @return the driver name.
      */
-    int getNumberOfSentences();
+    String getDatabaseDriverName();
 }

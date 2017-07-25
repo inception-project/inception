@@ -56,10 +56,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.db.DatabaseDriverService;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
 
@@ -83,7 +83,7 @@ public abstract class ApplicationPageBase
     private ListView<ImageLinkDecl> links;
     private PageContent pageContent;
 
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean DatabaseDriverService dbDriverService;
 
     protected ApplicationPageBase()
     {
@@ -161,7 +161,7 @@ public abstract class ApplicationPageBase
                 + "AN EMBEDDED DATABASE IS NOT RECOMMENDED FOR PRODUCTION USE");
         embeddedDbWarning.setVisible(false);
         try {
-            String driver = settingsService.getDatabaseDriverName();
+            String driver = dbDriverService.getDatabaseDriverName();
             embeddedDbWarning.setVisible(StringUtils.contains(driver.toLowerCase(Locale.US),
                     "hsql"));
         }

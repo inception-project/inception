@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -33,22 +29,9 @@ public class SettingsServiceImpl
     @Value(value = "${ui.brat.sentences.number}")
     private int numberOfSentences;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     public SettingsServiceImpl()
     {
         // Nothing to do
-    }
-
-    @Override
-    public String getDatabaseDriverName()
-    {
-        final StringBuilder sb = new StringBuilder();
-        Session session = entityManager.unwrap(Session.class);
-        session.doWork(aConnection -> sb.append(aConnection.getMetaData().getDriverName()));
-
-        return sb.toString();
     }
 
     @Override
