@@ -87,30 +87,15 @@ JavaScript files take effect immediately and you just have to refresh the browse
 
 === Checkstyle
 
-* Install Checkstyle Eclipse plugin from here: http://eclipse-cs.sourceforge.net
-* Go to Eclipse Preferences
-** Go to Checkstyle pane
-** Add new *Global Check Configuration*
-** Select Type *Project relative*
-** Go to the project*webanno-build*
-** Enter the name *WebAnno checkstyle file*
-** Select file *src/main/resources/webanno/checkstyle.xml*
-* Configure one WebAnno module as a blueprint
-** Right-click on top-level WebAnno project
-** Select *Properties* from the popup
-** Go to *Checkstyle* pane
-** Select *WebAnno checkstyle file*
-** Apply and close
-* Apply blueprint to the other WebAnno modules
-** Select all WebAnno projects except the top-level project in the package explorer
-** Right-click on the selected projects
-** Select *Checkstyle->Configure project(s) from blueprint*
-** In the popup, select top-level WebAnno project
-** Apply and close
-* Enable Checkstyle for all WebAnno modules
-** Select all WebAnno projects in the package explorer
-** Right-click on the selected projects
-** Select *Checkstyle->Activate checkstyle*
+* Install *Checkstyle Eclipse plugin* from here: http://eclipse-cs.sourceforge.net
+* Install the *Checkstyle configuration plugin for M2Eclipse* from here: http://m2e-code-quality.github.com/m2e-code-quality/site/latest/
+* Select all WebAnno projects, right click and do a *Maven -> Update project*
+
+NOTE: Should the steps mentioned above not have been sufficient, close all the WebAnno projects
+      in Eclipse, then remove them form the workspace (not from the disk), delete any `.checkstyle` files
+      in the WebAnno modules, and then re-import them into Eclipse again using *Import->Existing Maven
+      projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
+      properly set up the `.checkstyle` files and activate checkstyle. 
 
 === Troubleshooting
 
