@@ -106,9 +106,8 @@ select.hfill[multiple]{
  */
 
 label.required {
-	color: red;
+    color: red;
 }
-
 
 .labels-top label, label.top {
     white-space:nowrap;
