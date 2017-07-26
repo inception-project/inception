@@ -29,11 +29,6 @@ public class SettingsServiceImpl
     @Value(value = "${ui.brat.sentences.number}")
     private int numberOfSentences;
 
-    public SettingsServiceImpl()
-    {
-        // Nothing to do
-    }
-
     @Override
     public int getNumberOfSentences()
     {

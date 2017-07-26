@@ -25,10 +25,10 @@
         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd">
   <!--  SWAGGER  -->
   
-  <mvc:annotation-driven enable-matrix-variables="true"/>
   
   <!-- Required to enable Spring post processing on @Configuration classes. -->
   <context:annotation-config/>
+  <mvc:annotation-driven enable-matrix-variables="true"/>
 
   <!-- Enables swagger ui-->
   <mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/"/>

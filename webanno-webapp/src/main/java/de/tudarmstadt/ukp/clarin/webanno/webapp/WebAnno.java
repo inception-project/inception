@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
 /**
  * Boots WebAnno in standalone JAR or WAR modes.
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "de.tudarmstadt.ukp.clarin.webanno")
 @ImportResource({ 
         "classpath:/META-INF/application-context.xml",
         "classpath:/META-INF/rest-context.xml", 
