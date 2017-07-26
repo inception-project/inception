@@ -58,6 +58,7 @@
     <wicket.version>7.8.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>7.7.0</wicket-jquery-ui.version>
+    <wicket-spring-boot.version>1.0.9</wicket-spring-boot.version>
     <hibernate.version>4.3.11.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
@@ -341,7 +342,7 @@
       <dependency>
         <groupId>com.giffing.wicket.spring.boot.starter</groupId>
         <artifactId>wicket-spring-boot-starter</artifactId>
-        <version>1.0.9</version>
+        <version>${wicket-spring-boot.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.rjeschke</groupId>
