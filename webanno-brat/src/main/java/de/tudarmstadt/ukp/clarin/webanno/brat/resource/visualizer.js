@@ -3149,6 +3149,9 @@ Util.profileStart('rows');
           }
 
           rowBoxHeight += rowPadding;
+
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin
+/*
           var bgClass;
           if (data.markedSent[currentSent]) {
             // specifically highlighted
@@ -3165,6 +3168,39 @@ Util.profileStart('rows');
             canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
             'class': bgClass,
           });
+*/
+
+          var bgClass;
+          if (Configuration.textBackgrounds == "striped") {
+            // give every other sentence a different bg class
+            bgClass = 'background'+ row.backgroundIndex;
+          } else {
+            // plain "standard" bg
+            bgClass = 'background0';
+          }
+          svg.rect(backgroundGroup,
+            0, y + sizes.texts.y + sizes.texts.height,
+            canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
+            'class': bgClass,
+          });
+
+          if (row.sentence && data.markedSent[currentSent]) {
+            if (rtlmode) {
+	          svg.rect(backgroundGroup,
+	            canvasWidth - sentNumMargin, y + sizes.texts.y + sizes.texts.height,
+	            sentNumMargin, rowBoxHeight + sizes.texts.height + 1, {
+	            'class': 'backgroundHighlight'
+	          });
+            } else {
+	          svg.rect(backgroundGroup,
+	            0, y + sizes.texts.y + sizes.texts.height,
+	            sentNumMargin, rowBoxHeight + sizes.texts.height + 1, {
+	            'class': 'backgroundHighlight'
+	          });
+            }
+          }
+// WEBANNO EXTENSION END
+
           y += rowBoxHeight;
           y += sizes.texts.height;
           row.textY = y - rowPadding;
@@ -3175,7 +3211,7 @@ Util.profileStart('rows');
             var link = svg.link(sentNumGroup, sentence_hash.getHash());
 */
         	var link = sentNumGroup;
-// WEBANNO EXTENSION END            
+// WEBANNO EXTENSION END
 // WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin           
 /*
             var text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
@@ -3190,7 +3226,10 @@ Util.profileStart('rows');
               text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                   '' + row.sentence, { 'data-sent': row.sentence });
             }
-// WEBANNO EXTENSION END            
+// WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+            $(text).css('cursor', 'pointer');
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
             var sentComment = data.sentComment[row.sentence];
             if (sentComment) {
               var box = text.getBBox();
@@ -3220,9 +3259,11 @@ Util.profileStart('rows');
               } else {
                 text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                     '' + row.sentence, { 'data-sent': row.sentence });
-
               }
 // WEBANNO EXTENSION END            
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+            $(text).css('cursor', 'pointer');
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
             }
           }
 

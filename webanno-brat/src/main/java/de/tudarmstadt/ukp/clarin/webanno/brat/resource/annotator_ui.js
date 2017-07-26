@@ -211,17 +211,28 @@ var AnnotatorUI = (function($, window, undefined) {
         if (that.user === null) return;
         var target = $(evt.target);
         var id;
-        // single click actions currently only for spans
-	    if (id = target.attr('data-span-id')) {
-	      preventDefault(evt);
-	    	  editedSpan = data.spans[id];    		  
-	    	  dispatcher.post('ajax', [ {
-	    	    action: 'doAction',
-	        	id: id,
-	        	labelText: editedSpan.labelText,
-	        	type: editedSpan.type
-	      }, 'serverResult']);
-	    	}
+        // single click actions for spans
+        if (id = target.attr('data-span-id')) {
+          preventDefault(evt);
+          editedSpan = data.spans[id];    		  
+          dispatcher.post('ajax', [ {
+            action: 'doAction',
+            	id: id,
+            	labelText: editedSpan.labelText,
+            	type: editedSpan.type
+          }, 'serverResult']);
+        	}
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+        // single click action on sentence id
+        else if (id = target.attr('data-sent')) {
+          preventDefault(evt);
+          if (window.UrlUtil) {
+        	    window.UrlUtil.putFragmentParameter('f', id);
+        	    window.UrlUtil.sentParametersOnInitialPageLoad = false;
+        	    window.UrlUtil.sendUrlParameters();
+        	  }
+        }
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
       }      
 // WEBANNO EXTENSION END - #520 Perform javascript action on click 
 
