@@ -349,8 +349,7 @@ public class AnnotationPage
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        return factory.create("embedder1", getModel(),
-                detailEditor, this::getEditorCas);
+        return factory.create("editor", getModel(), detailEditor, this::getEditorCas);
     }
 
     private SidebarPanel createLeftSidebar()
@@ -539,10 +538,6 @@ public class AnnotationPage
         
         state.setUser(userRepository.getCurrentUser());
 
-        AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-        annotationEditor.replaceWith(newAnnotationEditor);
-        annotationEditor = newAnnotationEditor;
-        
         try {
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
@@ -569,21 +564,22 @@ public class AnnotationPage
             PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
                     projectService, annotationService, state, state.getMode());
 
-            // Initialize the visible content
-            state.moveToUnit(editorCas, aFocus);
-            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
-            
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
+                currentprojectId = state.getProject().getId();
             }
 
-            currentprojectId = state.getProject().getId();
+            // Initialize the visible content
+            state.moveToUnit(editorCas, aFocus);
+            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
 
-            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
-                    + state.getFirstVisibleUnitIndex() + "] l:["
-                    + state.getLastVisibleUnitIndex() + "] s:["
-                    + state.getFocusUnitIndex() + "]");
+            // Set the actual editor component. This has to happen *before* any AJAX refreshs are
+            // scheduled and *after* the preferences have been loaded (because the current editor
+            // type is set in the preferences.
+            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
+            annotationEditor.replaceWith(newAnnotationEditor);
+            annotationEditor = newAnnotationEditor;
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
@@ -598,13 +594,18 @@ public class AnnotationPage
             // Populate the layer dropdown box
             detailEditor.loadFeatureEditorModels(editorCas, null);
             
-            extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
-
             if (aTarget != null) {
                 // Update URL for current document
                 updateUrlFragment(aTarget);
                 WicketUtil.refreshPage(aTarget, getPage());
             }
+            
+            extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
+            
+            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
+                    + state.getFirstVisibleUnitIndex() + "] l:["
+                    + state.getLastVisibleUnitIndex() + "] s:["
+                    + state.getFocusUnitIndex() + "]");
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -787,7 +788,6 @@ public class AnnotationPage
             }
         }
     }
-
     
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
