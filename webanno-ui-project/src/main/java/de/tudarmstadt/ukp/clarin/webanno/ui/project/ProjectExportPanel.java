@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -789,6 +791,37 @@ public class ProjectExportPanel extends Panel {
             int i = 1;
             int initProgress = progress;
             for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+                //
+                // Export initial CASes
+                //
+                
+                // The initial CAS must always be exported to ensure that the converted source document
+                // will *always* have the state it had at the time of the initial import. We we do have
+                // a reliably initial CAS and instead lazily convert whenever an annotator starts
+                // annotating, then we could end up with two annotators having two different versions of
+                // their CAS e.g. if there was a code change in the reader component that affects its
+                // output.
+
+                // If the initial CAS does not exist yet, it must be created before export.
+                repository.createOrReadInitialCas(sourceDocument);
+                
+                File targetDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
+                        + sourceDocument.getName());
+                FileUtils.forceMkdir(targetDir);
+                
+                File initialCasFile = repository.getCasFile(sourceDocument,
+                        INITIAL_CAS_PSEUDO_USER);
+                
+                FileUtils.copyFileToDirectory(initialCasFile, targetDir);
+                
+                LOG.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
+                        + "] for source document [" + sourceDocument.getId() + "] in project ["
+                        + aModel.project.getName() + "] with id [" + aModel.project.getId() + "]");
+                
+                //
+                // Export per-user annotation document
+                // 
+                
                 // Determine which format to use for export
                 String formatId;
                 if (FORMAT_AUTO.equals(aModel.format)) {
