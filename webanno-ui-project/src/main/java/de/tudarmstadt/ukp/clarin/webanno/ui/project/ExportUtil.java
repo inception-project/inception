@@ -352,6 +352,37 @@ public class ExportUtil
         int i = 1;
         int initProgress = aModel.progress;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            //
+            // Export initial CASes
+            //
+            
+            // The initial CAS must always be exported to ensure that the converted source document
+            // will *always* have the state it had at the time of the initial import. We we do have
+            // a reliably initial CAS and instead lazily convert whenever an annotator starts
+            // annotating, then we could end up with two annotators having two different versions of
+            // their CAS e.g. if there was a code change in the reader component that affects its
+            // output.
+
+            // If the initial CAS does not exist yet, it must be created before export.
+            documentService.createOrReadInitialCas(sourceDocument);
+            
+            File targetDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
+                    + sourceDocument.getName());
+            FileUtils.forceMkdir(targetDir);
+            
+            File initialCasFile = documentService.getCasFile(sourceDocument,
+                    INITIAL_CAS_PSEUDO_USER);
+            
+            FileUtils.copyFileToDirectory(initialCasFile, targetDir);
+            
+            LOG.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
+                    + "] for source document [" + sourceDocument.getId() + "] in project ["
+                    + aModel.project.getName() + "] with id [" + aModel.project.getId() + "]");
+
+            //
+            // Export per-user annotation document
+            // 
+            
             // Determine which format to use for export
             String formatId;
             if (FORMAT_AUTO.equals(aModel.format)) {
@@ -370,27 +401,6 @@ public class ExportUtil
                     aModel.messages.add(msg);
                 }
                 writer = WebannoTsv3Writer.class;
-            }
-
-            // Export initial CASes - the initial CAS must always be exported if it exists
-            // to ensure that the converted source document will *always* have the state it
-            // had at the time of the initial import. We we do have a reliably initial CAS
-            // and instead lazily convert whenever an annotator starts annotating, then we
-            // could end up with two annotators having two different versions of their CAS
-            // e.g. if there was a code change in the reader component that affects its output.
-            if (documentService.existsInitialCas(sourceDocument)) {
-                File targetDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
-                        + sourceDocument.getName());
-                FileUtils.forceMkdir(targetDir);
-                
-                File initialCasFile = documentService.getCasFile(sourceDocument,
-                        INITIAL_CAS_PSEUDO_USER);
-                
-                FileUtils.copyFileToDirectory(initialCasFile, targetDir);
-                
-                LOG.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
-                        + "] for source document [" + sourceDocument.getId() + "] in project ["
-                        + aModel.project.getName() + "] with id [" + aModel.project.getId() + "]");
             }
 
             // Export annotations from regular users
