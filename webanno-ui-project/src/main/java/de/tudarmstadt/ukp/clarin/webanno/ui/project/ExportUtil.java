@@ -279,17 +279,22 @@ public class ExportUtil
                         sourceDocumentDir);
                 model.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
                 i++;
-            } catch (FileNotFoundException e) {
-//              error(e.getMessage());
+                LOG.info("Exported content for source document ["
+                        + sourceDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
+            catch (FileNotFoundException e) {
+                // error(e.getMessage());
                 StringBuilder errorMessage = new StringBuilder();
                 errorMessage.append("Source file '");
                 errorMessage.append(sourceDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
                 LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
                 model.messages.add(errorMessage.toString());
-                throw new ProjectExportException("Couldn't find some source file(s) related to project");
-//              continue;
-                
+                throw new ProjectExportException(
+                        "Couldn't find some source file(s) related to project");
+                // continue;
+
             }
         }
     }
@@ -314,6 +319,9 @@ public class ExportUtil
                         trainDocumentDir);
                 model.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
                 i++;
+                LOG.info("Imported content for training document ["
+                        + trainingDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
             } catch (FileNotFoundException e) {
 //              error(e.getMessage());
                 StringBuilder errorMessage = new StringBuilder();
@@ -367,10 +375,11 @@ public class ExportUtil
                     documentService.listAnnotationDocuments(sourceDocument)) {
                 // copy annotation document only for ACTIVE users and the state of the 
                 // annotation document is not NEW/IGNORE
-                if (userRepository.get(annotationDocument.getUser()) != null
-                        && !annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                        && !annotationDocument.getState()
-                                .equals(AnnotationDocumentState.IGNORE)) {
+                if (
+                        userRepository.get(annotationDocument.getUser()) != null && 
+                        !annotationDocument.getState().equals(AnnotationDocumentState.NEW) && 
+                        !annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)
+                ) {
                     File annotationDocumentAsSerialisedCasDir = new File(
                             aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
                                     + sourceDocument.getName());
@@ -389,15 +398,20 @@ public class ExportUtil
                                 sourceDocument, annotationDocument.getUser(), writer,
                                 annotationDocument.getUser(), Mode.ANNOTATION, false);
                     }
+                    
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
                         if (writer != null) {
-                            FileUtils
-                                    .copyFileToDirectory(annotationFile, annotationDocumentDir);
+                            FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
                             FileUtils.forceDelete(annotationFile);
                         }
                     }
+                    
+                    LOG.info("Exported annotation document content for user ["
+                            + annotationDocument.getUser() + "] for source document ["
+                            + sourceDocument.getId() + "] in project [" + aModel.project.getName()
+                            + "] with id [" + aModel.project.getId() + "]");
                 }
             }
             

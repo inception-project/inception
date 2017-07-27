@@ -181,7 +181,7 @@ public class ImportExportServiceImpl
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(project.getId()))) {
-            log.info("Exported annotation document [{}]({}) for user [{}] from project [{}]({})",
+            log.info("Exported annotation document content [{}]({}) for user [{}] from project [{}]({})",
                     aDocument.getName(), aDocument.getId(), aUser, project.getName(),
                     project.getId());
         }

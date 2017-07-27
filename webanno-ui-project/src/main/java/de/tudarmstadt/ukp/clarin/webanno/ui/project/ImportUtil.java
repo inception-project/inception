@@ -594,7 +594,7 @@ public class ImportUtil
                 File sourceFilePath = aRepository.getSourceDocumentFile(sourceDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
                 
-                LOG.info("Imported source document content for source document ["
+                LOG.info("Imported content for source document ["
                         + sourceDocument.getId() + "] in project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
@@ -621,9 +621,9 @@ public class ImportUtil
                 File trainigFilePath = aRepository.getTrainingDocumentFile(trainingDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), trainigFilePath);
                 
-                LOG.info("Imported source document content for source document ["
-                        + trainingDocument.getId() + "] in project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
+                LOG.info("Imported content for training document [" + trainingDocument.getId()
+                        + "] in project [" + aProject.getName() + "] with id [" + aProject.getId()
+                        + "]");
             }
         }
     }
@@ -652,8 +652,8 @@ public class ImportUtil
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                // the user annotated the document is file name minus extension
-                // (anno1.ser)
+                
+                // the user annotated the document is file name minus extension (anno1.ser)
                 String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
 
                 // name of the annotation document
