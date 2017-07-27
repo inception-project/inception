@@ -220,7 +220,7 @@ public class LoginPage
 
         // In case there was a URL fragment in the original URL, append it again to the redirect
         // URL.
-        if (isNotBlank(form.urlfragment)) {
+        if (redirectUrl != null && isNotBlank(form.urlfragment)) {
             redirectUrl += "#" + form.urlfragment;
         }
 
