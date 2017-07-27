@@ -285,7 +285,7 @@ public interface DocumentService
      *            the username.
      * @return the serialized CAS file.
      */
-    File getCasFile(SourceDocument document, String user);
+    File getCasFile(SourceDocument document, String user) throws IOException;
 
     /**
      * Get the annotation document.
