@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.OrderComparator;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -65,11 +66,7 @@ public class ProjectLifecycleAwareRegistryImpl
     public List<ProjectLifecycleAware> getBeans()
     {
         if (!sorted) {
-            beans.sort((a, b) -> {
-                int phaseA = (a instanceof Ordered) ? ((Ordered) a).getOrder() : 0;
-                int phaseB = (b instanceof Ordered) ? ((Ordered) b).getOrder() : 0;
-                return phaseB - phaseA;
-            });
+            OrderComparator.sort(beans);
             sorted = true;
         }
         return beans;
