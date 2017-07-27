@@ -153,16 +153,13 @@ public class BratRenderer
                 break;
             }
             
-            if (!vcomment.getVid().isSynthetic()) {
-                AnnotationFS fs = selectByAddr(aJCas, vcomment.getVid().getId());
-                if (fs instanceof Sentence) {
-                    int index = sentences.indexOf(fs) + 1;
-                    aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
-                }
-                else {
-                    aResponse.addComment(
-                            new AnnotationComment(vcomment.getVid(), type, vcomment.getComment()));
-                }
+            AnnotationFS fs;
+            if (
+                    !vcomment.getVid().isSynthetic() && 
+                    ((fs = selectByAddr(aJCas, vcomment.getVid().getId())) instanceof Sentence)
+            ) {
+                int index = sentences.indexOf(fs) + 1;
+                aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
             }
             else {
                 aResponse.addComment(
