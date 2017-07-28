@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,8 +16,10 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <wicket:head>
+<html
+    xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
     <script type="text/javascript">
       function LogoutTimer(sessionTimeout) {
     	  var instance = this;
@@ -28,9 +31,8 @@
           this.tick = function() {
         	  var remaining = timeout - Math.floor((new Date() - started) / 1000);
         	  var remaining2 = Math.max(0, remaining);
-              var sec = (remaining2 % 60).toString();
               var min = Math.floor(remaining2 / 60).toString();
-              $('#timer').text(min + ':' + ('00'+sec).substring(sec.length));
+              $('#timer').text(min);
               
               // Wait an additional couple of seconds before reload to avoid reloading before the
               // server-side session has *really* expired.
@@ -56,12 +58,11 @@
 	      }
       }
     </script>
-  </wicket:head>
-  <body>
-    <wicket:panel>
-      User: <span wicket:id="username"></span>
-      | <a wicket:id="logout">Log out</a> 
-      <span wicket:id="logoutTimer">| Auto-logout in <span id="timer"></span></span>
-    </wicket:panel>
-  </body>
+</wicket:head>
+<body>
+  <wicket:panel>
+    <li><i class="fa fa-user" aria-hidden="true"></i> <span wicket:id="username"></span></li>
+    <li><a wicket:id="logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Log out</a><span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span></li>
+  </wicket:panel>
+</body>
 </html>

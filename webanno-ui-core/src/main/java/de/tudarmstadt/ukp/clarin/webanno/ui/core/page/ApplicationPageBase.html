@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
  - Copyright 2012
  - Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -20,42 +20,71 @@
     xmlns="http://www.w3.org/1999/xhtml" 
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <head>
-  <link rel="icon" href="favicon.ico" type="image/x-icon"/>
-  <meta name="google" content="notranslate">
+  <meta charset="utf-8"></meta>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+  <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+  <meta name="google" content="notranslate"></meta>
+  
+  <link rel="icon" href="favicon.ico" type="image/x-icon"/>  
   <title><wicket:message key="product.name" /> - <wicket:message key="page.title" /></title>
 </head>
 <body>
-  <div><img id="spinner" src="images/spinner.gif" /></div>
-  <div class="pageheader">
-    <div class="pagetitle">
-      <img class="pageicon" wicket:message="src:page.icon" />
-      <img class="logo" src="assets/logo.png"  />
-      <wicket:message key="page.title"></wicket:message>
-      <span wicket:id="links" class="headerlink"><span wicket:id="link"></span></span>
-    </div>
-    <div wicket:id="menubar"/>
+  <div>
+    <img id="spinner" src="images/spinner.gif" />
   </div>
-  <div class="pagecontent" style="padding-bottom: 38px;">
-    <wicket:child>
-      [CONTENT]
-    </wicket:child>
-  </div>
-  <div class="pagefooter" >
-    <div wicket:id="feedbackPanel">
-      [Feedback]
+  
+  <nav class="nav navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">
+          <span>
+            <img class="pageicon" wicket:message="src:page.icon" />
+            <wicket:message key="page.title"></wicket:message>
+          </span>
+        </a>
+      </div>
+      <wicket:container wicket:id="menubar"></wicket:container>
+      <div wicket:id="links">
+        <span wicket:id="link"></span>
+      </div>
     </div>
-    <div>
-      Technische Universität Darmstadt -- Computer Science Department -- <wicket:message key="product.name" /> --
-      <span wicket:id="version">
-        [Copyright]
-      </span>
-    </div>
-    <div wicket:id="embeddedDbWarning" style="background-color: red; color: white; font-weight: bold;">
-      [Embedded DB Warning]
-    </div>
-    <div wicket:id="browserWarning" style="background-color: red; color: white; font-weight: bold;">
-      [Browser Warning]
+  </nav>
+  
+  <div class="container-fluid">
+    <div class="pagecontent">
+      <wicket:child>
+        [CONTENT]
+      </wicket:child>
     </div>
   </div>
+  
+  <nav class="navbar navbar-default navbar-fixed-bottom">
+    <div class="container-fluid">
+      <p wicket:id="feedbackPanel" class="navbar-text feedback-panel">
+        [Feedback]
+      </p>
+      <p class="navbar-text">
+        Technische Universität Darmstadt -- Computer Science Department -- <wicket:message key="product.name" /> --
+        <span wicket:id="version">
+          [Copyright]
+        </span>
+      </p>
+      <p class="navbar-right">
+        <img class="logo" src="assets/logo.png" />
+      </p>
+      <p class="navbar-text bg-warning">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        <span wicket:id="embeddedDbWarning">
+          [Embedded DB Warning]
+        </span>
+      </p>
+      <p class="navbar-text bg-warning">
+        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+        <span wicket:id="browserWarning">
+          [Browser Warning]
+        </span>
+      </p>
+    </div>
+  </nav>
 </body>
 </html>
