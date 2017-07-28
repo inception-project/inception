@@ -14,7 +14,7 @@ MAINTAINER WebAnno Team
 RUN apt-get update
 # Install tomcat utilities (we will need tomcat8-instance-create) and mysql
 #RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat8-user tomcat8-admin authbind
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat8-user tomcat8-admin authbind
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget tomcat8-user tomcat8-admin authbind libservlet3.1-java
 
 # Copy webanno and mysql settings to tmp
 # COPY create_webanno_db.sql mysql-init /tmp/
