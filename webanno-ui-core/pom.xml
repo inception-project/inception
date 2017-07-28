@@ -134,6 +134,16 @@
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+      <version>0.10.6</version>
+    </dependency>
+   <dependency>
+       <groupId>de.agilecoders.wicket</groupId>
+       <artifactId>wicket-bootstrap-extensions</artifactId>
+       <version>0.10.6</version>
+   </dependency>
   </dependencies>
   <build>
     <resources>

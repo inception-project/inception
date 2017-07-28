@@ -46,6 +46,7 @@ import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 
+import de.agilecoders.wicket.core.Bootstrap;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
@@ -77,6 +78,8 @@ public abstract class WicketApplicationBase
             
             isInitialized = true;
         }
+        
+        Bootstrap.install(this);
     }
 
     protected void initOnce()
