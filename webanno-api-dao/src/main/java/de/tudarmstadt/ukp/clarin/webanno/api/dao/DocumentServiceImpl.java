@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
@@ -207,8 +206,7 @@ public class DocumentServiceImpl
     public boolean existsCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        return new File(casStorageService.getAnnotationFolder(aSourceDocument), aUsername + ".ser")
-                .exists();
+        return getCasFile(aSourceDocument, aUsername).exists();
     }
 
     @Override
@@ -245,11 +243,9 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public File getCasFile(SourceDocument aDocument, String aUser)
+    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT
-                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + ANNOTATION);
-        return new File(documentUri, aUser + ".ser");
+        return new File(casStorageService.getAnnotationFolder(aDocument), aUser + ".ser");
     }
     
     @Override

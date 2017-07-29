@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -279,17 +281,22 @@ public class ExportUtil
                         sourceDocumentDir);
                 model.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
                 i++;
-            } catch (FileNotFoundException e) {
-//              error(e.getMessage());
+                LOG.info("Exported content for source document ["
+                        + sourceDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
+            }
+            catch (FileNotFoundException e) {
+                // error(e.getMessage());
                 StringBuilder errorMessage = new StringBuilder();
                 errorMessage.append("Source file '");
                 errorMessage.append(sourceDocument.getName());
                 errorMessage.append("' related to project couldn't be located in repository");
                 LOG.error(errorMessage.toString(), ExceptionUtils.getRootCause(e));
                 model.messages.add(errorMessage.toString());
-                throw new ProjectExportException("Couldn't find some source file(s) related to project");
-//              continue;
-                
+                throw new ProjectExportException(
+                        "Couldn't find some source file(s) related to project");
+                // continue;
+
             }
         }
     }
@@ -314,6 +321,9 @@ public class ExportUtil
                         trainDocumentDir);
                 model.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
                 i++;
+                LOG.info("Imported content for training document ["
+                        + trainingDocument.getId() + "] in project [" + aProject.getName()
+                        + "] with id [" + aProject.getId() + "]");
             } catch (FileNotFoundException e) {
 //              error(e.getMessage());
                 StringBuilder errorMessage = new StringBuilder();
@@ -342,6 +352,37 @@ public class ExportUtil
         int i = 1;
         int initProgress = aModel.progress;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            //
+            // Export initial CASes
+            //
+            
+            // The initial CAS must always be exported to ensure that the converted source document
+            // will *always* have the state it had at the time of the initial import. We we do have
+            // a reliably initial CAS and instead lazily convert whenever an annotator starts
+            // annotating, then we could end up with two annotators having two different versions of
+            // their CAS e.g. if there was a code change in the reader component that affects its
+            // output.
+
+            // If the initial CAS does not exist yet, it must be created before export.
+            documentService.createOrReadInitialCas(sourceDocument);
+            
+            File targetDir = new File(aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
+                    + sourceDocument.getName());
+            FileUtils.forceMkdir(targetDir);
+            
+            File initialCasFile = documentService.getCasFile(sourceDocument,
+                    INITIAL_CAS_PSEUDO_USER);
+            
+            FileUtils.copyFileToDirectory(initialCasFile, targetDir);
+            
+            LOG.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
+                    + "] for source document [" + sourceDocument.getId() + "] in project ["
+                    + aModel.project.getName() + "] with id [" + aModel.project.getId() + "]");
+
+            //
+            // Export per-user annotation document
+            // 
+            
             // Determine which format to use for export
             String formatId;
             if (FORMAT_AUTO.equals(aModel.format)) {
@@ -367,10 +408,11 @@ public class ExportUtil
                     documentService.listAnnotationDocuments(sourceDocument)) {
                 // copy annotation document only for ACTIVE users and the state of the 
                 // annotation document is not NEW/IGNORE
-                if (userRepository.get(annotationDocument.getUser()) != null
-                        && !annotationDocument.getState().equals(AnnotationDocumentState.NEW)
-                        && !annotationDocument.getState()
-                                .equals(AnnotationDocumentState.IGNORE)) {
+                if (
+                        userRepository.get(annotationDocument.getUser()) != null && 
+                        !annotationDocument.getState().equals(AnnotationDocumentState.NEW) && 
+                        !annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)
+                ) {
                     File annotationDocumentAsSerialisedCasDir = new File(
                             aCopyDir.getAbsolutePath() + ANNOTATION_CAS_FOLDER
                                     + sourceDocument.getName());
@@ -389,15 +431,20 @@ public class ExportUtil
                                 sourceDocument, annotationDocument.getUser(), writer,
                                 annotationDocument.getUser(), Mode.ANNOTATION, false);
                     }
+                    
                     if (annotationFileAsSerialisedCas.exists()) {
                         FileUtils.copyFileToDirectory(annotationFileAsSerialisedCas,
                                 annotationDocumentAsSerialisedCasDir);
                         if (writer != null) {
-                            FileUtils
-                                    .copyFileToDirectory(annotationFile, annotationDocumentDir);
+                            FileUtils.copyFileToDirectory(annotationFile, annotationDocumentDir);
                             FileUtils.forceDelete(annotationFile);
                         }
                     }
+                    
+                    LOG.info("Exported annotation document content for user ["
+                            + annotationDocument.getUser() + "] for source document ["
+                            + sourceDocument.getId() + "] in project [" + aModel.project.getName()
+                            + "] with id [" + aModel.project.getId() + "]");
                 }
             }
             

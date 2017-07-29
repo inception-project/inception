@@ -153,8 +153,11 @@ public class BratRenderer
                 break;
             }
             
-            AnnotationFS fs = selectByAddr(aJCas, vcomment.getVid().getId());
-            if (fs instanceof Sentence) {
+            AnnotationFS fs;
+            if (
+                    !vcomment.getVid().isSynthetic() && 
+                    ((fs = selectByAddr(aJCas, vcomment.getVid().getId())) instanceof Sentence)
+            ) {
                 int index = sentences.indexOf(fs) + 1;
                 aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
             }
