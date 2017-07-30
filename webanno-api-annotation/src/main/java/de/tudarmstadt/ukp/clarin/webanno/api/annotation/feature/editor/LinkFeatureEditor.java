@@ -48,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
@@ -210,10 +211,12 @@ public class LinkFeatureEditor
                 }
 
                 @Override
-                protected void onConfigure()
+                public void onConfigure(JQueryBehavior aBehavior)
                 {
-                    super.onConfigure();
-
+                    super.onConfigure(aBehavior);
+                    
+                    aBehavior.setOption("placeholder", Options.asString("Select role"));
+                    
                     // If a slot is armed, then load the slot's role into the dropdown
                     AnnotatorState state = stateModel.getObject();
                     if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature

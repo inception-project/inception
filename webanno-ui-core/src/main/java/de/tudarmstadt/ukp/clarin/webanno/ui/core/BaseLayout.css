@@ -1,0 +1,628 @@
+/*******************************************************************************
+ * Copyright 2017
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+/* -------------------------------------------------------------------------------------------------
+ * Generic classes
+ */
+
+.top-sticker {
+    width: 100%;
+}
+
+.hfill{
+    width:100%;
+    max-width:none;
+}
+
+.dfill{
+    width:30%;
+    max-width:none;
+}
+
+.vfill{
+    height:100%;
+    max-height:none;
+}
+
+/* 
+ * Safari does not apply height:100% in table cells, but relative positioning works. In Firefox
+ * this does not work.
+ */
+.webkit td.vfill{
+    position:relative;
+}
+
+.webkit td.vfill > *{
+    top:0px;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    position:absolute;
+}
+
+select.hfill{
+    min-width:100%;
+}
+
+select.hfill[multiple]{
+    width:auto;
+    /* If the select content is very large, this forces the select to accomodate the
+ *  full expanded content... usually not what we want, only the popup should be full-width. But
+ *  for multiple selection, we really want to show the full with by default*/
+}
+
+.nowrap{
+    white-space:nowrap;
+}
+
+.centering{
+    text-align:center;
+}
+
+.centering table{
+    margin-left:auto;
+    margin-right:auto;
+    text-align:left;
+}
+
+.centering .wicketstuff-progressbar{
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Forms
+ */
+
+label.required {
+    color: red;
+}
+
+.labels-top label, label.top {
+    white-space:nowrap;
+    display: block;
+    text-align:left;
+    font-weight: bold;
+}
+
+.labels-left label, label.left {
+    white-space:nowrap;
+    display: block;
+    text-align: right;
+    font-weight: bold;
+}
+
+.labels-left th {
+  padding: 1px;
+    padding-right: 1em;
+    width: 1em;
+    vertical-align: top;
+}
+
+.labels-left td {
+    vertical-align: top;
+}
+
+label.inline {
+    text-align:inherit;
+    display:inline;
+}
+
+ul label {
+    display:inline;
+    text-align:left;
+    font-weight:normal;
+}
+
+.inline-labels label {
+    display:inline;
+}
+
+fieldset {
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    -khtml-border-radius:6px;
+    border-radius:6px;
+}
+
+.buttons {
+    text-align:right;
+}
+
+ul.vcheckboxgroup {
+    padding:0px;
+    margin:0px;
+    list-style:none;
+    white-space:nowrap;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Page layout
+ */
+
+#spinner {
+  display: none;
+  position: fixed;
+  right:10px;
+  top: 55px;
+  z-index:9999;
+}
+
+.headerlink {
+  float: right;
+    margin-right: 0.2em;
+}
+
+.headerlink img {
+  height: 40px;
+}
+
+ul.feedbackPanel {
+    background-color:#fe8;
+    border:1px solid #900;
+    color:#900;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: left;
+    max-height: 100px;
+    overflow: scroll;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Menu
+ */
+.locationbar {
+    text-align: left; 
+    /*color: maroon;*/
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-top: 0.2em;
+}
+
+.actionbar {
+    text-align:center;
+    background-color:#DFDFDF;
+    vertical-align:middle;
+    border-bottom: 1px solid #BFBFBF;
+    /*box-shadow:0px 10px 10px 5px white;*/
+    /* margin-top:8px; */
+    margin-bottom:13px;
+    padding-top:2px;
+    /* padding-bottom:2px; */
+}
+
+.actionbar fieldset {
+    border-width:2px;
+    border-style:ridge;
+    border-color:#BFBFBF;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    margin:0px;
+    padding:2px;
+}
+
+.actionbar fieldset legend {
+    font-weight:bold;
+    font-size:90%;
+    -moz-border-radius:3px;
+    -webkit-border-radius:3px;
+    border-radius:3px;
+    background-color:#4D4D4D;
+    color:white;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    margin-bottom: 0px;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Welcome page icon menu
+ */
+
+/* Use for a horizontal list of icons */
+ul.horizontal{
+    margin:0px;
+    padding:0px;
+}
+
+ul.horizontal li{
+    margin-left:0.5em;
+    margin-right:0.5em;
+    display:inline-block;
+    text-align:center;
+}
+
+a.menulink {
+    text-decoration: none;
+}
+
+a.menulink > span {
+  font-size: 120%;
+    text-decoration: none;
+    color: white;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tables
+ */
+
+th{
+    padding:3px;
+}
+
+tr.odd{
+    background:#EEEEEE;
+}
+
+tr.even{
+    background:#DDDDDD;
+}
+
+tr.odd:hover{
+    background:#CCCCAA;
+}
+
+tr.even:hover{
+    background:#CCCCAA;
+}
+
+.headers,
+.headers a:link,
+.headers a:visited{
+    background-color:#B90F22;
+    color:white;
+    vertical-align:bottom;
+}
+
+tr.headers th.wicket_orderDown a{
+    padding-right:24px;
+    background-image:url(../images/descending.png);
+    background-position:right;
+    background-repeat:no-repeat;
+}
+
+tr.headers th.wicket_orderUp a{
+    padding-right:24px;
+    background-image:url(../images/ascending.png);
+    background-position:right;
+    background-repeat:no-repeat;
+}
+
+div.navigatorLabel{
+    float:left;
+}
+
+div.navigator{
+    text-align:right;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * JQuery UI overrides - Probably should roll own theme instead...
+ */
+.ui-widget {
+    font-size: 1.0em;
+}
+  
+.ui-widget-content {
+  background: #fff;
+  color: #000;
+}
+
+.ui-tooltip {
+  padding: 0px;
+    -webkit-box-shadow: 0 0 5px #4D4D4D;
+    box-shadow: 0 0 5px #4D4D4D;
+    border: 1px solid #4D4D4D;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * DescriptionTooltipBehavior
+ */
+ 
+.ui-tooltip .tooltip-title {
+  text-align: center;
+    font-weight: bold;
+    color: #fff;
+    background-color: #B90F22;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+.ui-tooltip .tooltip-content {
+    padding: 4px;
+}
+
+.ui-tooltip .tooltip-pre {
+  word-break: keep-all; /* webkit */
+  word-wrap: break-word;
+  white-space: pre;
+  white-space: -moz-pre-wrap; /* fennec */
+  white-space: pre-wrap;
+    white-space: pre\9; /* IE7+ */  
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel top
+ */
+div.tabpanel div.tab-row li{
+    margin:0;
+    padding:0;
+    display:inline;
+    list-style-type:none;
+}
+
+div.tabpanel div.tab-row a:link,
+div.tabpanel div.tab-row a:visited{
+    float:left;
+    background:#f3f3f3;
+    font-size:12px;
+    line-height:14px;
+    font-weight:bold;
+    padding:2px 10px 2px 10px;
+    margin-right:4px;
+    border:1px solid #ccc;
+    text-decoration:none;
+    color:#666;
+}
+
+div.tabpanel div.tab-row li.selected a:link,
+div.tabpanel div.tab-row a:visited.active
+{
+    border-bottom:1px solid #fff;
+    background:#fff;
+    color:#000;
+}
+
+div.tabpanel div.tab-row a:hover{
+    background:#fff;
+}
+
+div.tabpanel .tab-panel {
+    border: solid #666 1px;
+    clear: both;
+    padding: 1em;
+    margin: 1em;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel left
+ */
+div.left-tabpanel {
+    display: table;
+    width: 100%;
+    vertical-align: top;
+    border-collapse: collapse;
+}
+
+div.left-tabpanel div.tab-row {
+  display: table-cell;
+  width: 39px;
+  vertical-align: top;
+}
+
+div.left-tabpanel div.tab-row ul {
+  display: block;
+    padding: 0px;
+    margin: 0px;
+}
+
+div.left-tabpanel .tab-panel {
+    display: table-cell;
+}
+
+div.left-tabpanel div.tab-row li {
+  width: 100%;
+  display: block;
+}
+
+div.left-tabpanel div.tab-row li img {
+    display: block;
+    padding: 3px;
+}
+
+div.left-tabpanel div.tab-row a:link,
+div.left-tabpanel div.tab-row a:visited {
+    display: block;
+    background:#f3f3f3;
+    padding: 0px;
+    margin: 0px;
+    text-decoration:none;
+    color:#666;
+}
+
+div.left-tabpanel div.tab-row li.selected a:link,
+div.left-tabpanel div.tab-row a:visited.active {
+    background:#fff;
+    color:#000;
+}
+
+div.left-tabpanel div.tab-row a:hover {
+    background:#fff;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * MB's bootstrap refix
+ */
+html, body {
+  font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  display: table;
+  margin-bottom: 20px; /* Match the bottom navbar (footer)*/
+}
+
+.navbar-fixed-bottom {
+  min-height: 20px; 
+  height: 20px;
+}
+
+.navbar-fixed-bottom .navbar-text {
+  margin-top: 0px; 
+  margin-bottom: 0px; 
+  text-align: center; 
+  font-size: 14px; 
+  float: none;
+}
+
+.page-header {
+  display: table-row;
+}
+
+.page-content {
+  display: table-row;
+  min-height: 100%;
+  height: 100%;
+}
+ 
+.navbar {
+  margin-bottom: 0px;
+}
+
+.navbar .navbar-extra-link img {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 15px;
+  	height: 40px;
+}
+ 
+.navbar-header .navbar-brand {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  line-height: 40px;
+  font-size: 25px;
+} 
+
+.navbar-trailer .navbar-brand {
+  padding-top: 5px;
+  padding-bottom: 5px;
+} 
+
+@media (min-width: 768px) {
+  .navbar > .container .navbar-trailer .navbar-brand,
+  .navbar > .container-fluid .navbar-trailer .navbar-brand {
+    margin-left: 15px;
+  }
+} 
+.nav .breadcrumb {
+  margin:7px 10px !important;
+  background-color:transparent;
+}
+
+.nav .logo {
+  height: 40px;
+}
+
+.nav .pageicon {
+  height: 40px;
+}
+
+.nav .breadcrumb select {
+  display: initial;
+  width: initial;
+  padding: initial;
+  height: initial;
+  line-height: initial;
+  font-size: 11px;
+}
+
+.nav-pills img {
+  padding-right: 15px;
+}
+
+.page-content > .row {
+  margin-right: 0px;
+  margin-left: 0px;
+}
+
+/* More compact forms*/
+.page-content .form-group {
+  margin-bottom: 5px;
+}
+
+/* More compact forms */
+.page-content .form-control {
+  height: 28px;
+  padding: 3px 6px;
+}
+
+/* More compact forms - ensure that the selects still size properly*/
+.page-content select[multiple], select[size] {
+  height: auto !important;
+}
+
+.annotatation-detail-panel {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.annotatation-detail-panel fieldset {
+  border: 1px solid #c0c0c0;
+  padding: .35em .625em .75em;
+  margin: 0 2px;
+}
+
+.annotatation-detail-panel legend {
+  width: auto;
+  font-size: 14px;
+  border: none;
+  margin: 0px;
+}
+
+.form-group .k-widget,.k-textbox {
+  width: 100%;
+}
+
+/* Fix header font in Wicket modal windows */
+.w_caption h3 {
+	font-size: 18px;
+}
+
+.w_content_container .fluid-container {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.panel-heading {
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+.panel-small {
+	margin-bottom: 5px;
+}
+
+.panel-small .panel-title {
+	font-size: 12px;
+}
+
+.panel-small .panel-heading {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.panel-body {
+	padding: 5px;
+}
+
+.form-horizontal hr {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}

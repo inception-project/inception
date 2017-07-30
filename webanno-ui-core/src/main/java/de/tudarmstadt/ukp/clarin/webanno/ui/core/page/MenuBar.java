@@ -21,9 +21,17 @@ import java.util.MissingResourceException;
 
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.link.PopupSettings;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.UrlResourceReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
+import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 
 public class MenuBar
@@ -32,6 +40,7 @@ public class MenuBar
     private static final long serialVersionUID = -8018701379688272826L;
 
     private ExternalLink helpLink;
+    private ListView<ImageLinkDecl> links;
 
     public MenuBar(String aId)
     {
@@ -59,5 +68,19 @@ public class MenuBar
             }
         });
         helpLink.setPopupSettings(new PopupSettings("_blank"));
+        
+        links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
+        {
+            private static final long serialVersionUID = 1768830545639450786L;
+
+            @Override
+            protected void populateItem(ListItem<ImageLinkDecl> aItem)
+            {
+                aItem.add(new ImageLink("link",
+                        new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
+                        Model.of(aItem.getModelObject().getLinkUrl())));
+            }
+        };
+        add(links);
     }
 }

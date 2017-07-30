@@ -125,13 +125,33 @@ public abstract class WicketApplicationBase
         initFontAwesome();
         
         initCssBrowserSelector();
+        
+        // Loading base layout CSS here so it can override JQuery/Kendo CSS
+        initBaseLayoutCss();
     }
     
     protected void initBootstrap()
     {
         Bootstrap.install(this);
     }
-    
+
+    protected void initBaseLayoutCss()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        aResponse.render(CssHeaderItem.forReference(BaseLayoutCssReference.get()));
+                    }
+                });
+            }
+        });
+    }
     protected void initKendo()
     {
         getComponentInstantiationListeners().add(component -> {

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,21 +16,49 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
-	<wicket:head>
-	<style type="text/css">
-		.anno-view {
-			background-color: #DFDFDF;
-		}
-	</style>
-</wicket:head>
+  <wicket:head>
+    <style>
+      html {
+        overflow-y: scroll;
+      }
+    
+      #annotationEditorContent {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      
+      #annotationEditorContent .editorCell {
+        flex-grow: 1;
+        margin-left: 15px;
+      }
+      
+      #annotationEditorContent .sidebar {
+        flex-basis: 20%;
+        flex-shrink: 0;
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+      
+      #annotationEditorContent .sidebar-left {
+        margin-left: 0px;
+      }
+
+      #annotationEditorContent .sidebar-right {
+        margin-left: 0px;
+        margin-right: 0px;
+      }
+      
+      #annotationEditorContent .collapsed {
+        flex-basis: 39px !important;
+      }
+    </style>
+  </wicket:head>
 </head>
 <body>
-	<wicket:extend>
-		<div wicket:id=openDocumentsModal></div>
+  <wicket:extend>
+    <div wicket:id=openDocumentsModal></div>
     <div wicket:id="preferencesDialog"></div>
     <div wicket:id="exportDialog"></div>
     <div wicket:id="guidelinesDialog"></div>
@@ -54,7 +83,7 @@
                       src="images/document_next.png" title="Next document " /><br />Next
                   </a></li>
                   <li><a wicket:id="showExportDialog"> <img
-                      src="images/document_export.png" title="Export"  /><br />Export
+                      src="images/document_export.png" title="Export" /><br />Export
                   </a></li>
                   <li><a wicket:id="showPreferencesDialog"> <img src="images/cog.png"
                       title="Settings" /><br />Settings
@@ -138,25 +167,28 @@
         </div>
       </div>
     </div>
-    <table class="hfill">
-			<tr style="vertical-align: top;">
-				<td wicket:id="annotationViewCell" width="80%">
-					<fieldset class="anno-view">
-						<legend> Annotation</legend>
-						<div class="merge-view" wicket:id="mergeView" />
-					</fieldset>
-					<div wicket:id="automateView">
-						<div class="sentence-list-view" wicket:id="sentenceListView">
-							<div wicket:id="sentence" />
-						</div>
-					</div>
-				</td>
-				<td wicket:id="sidebarCell" width="20%">
-					<div id="annotationDetailEditorPanel"
-						wicket:id="annotationDetailEditorPanel"></div>
-				</td>
-			</tr>
-		</table>
-	</wicket:extend>
+    
+    <div id="annotationEditorContent">
+      <div class="editorCell">
+        <div class="panel panel-primary" wicket:enclosure="mergeView">
+          <div class="panel-heading">
+            <h3 class="panel-title">Annotation</h3>
+          </div>
+          <div class="panel-body">
+            <div class="merge-view" wicket:id="mergeView"></div>
+          </div>
+        </div>
+        
+        <div wicket:id="automateView">
+          <div wicket:id="sentenceListView">
+            <div wicket:id="sentence"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar sidebar-right" wicket:id="rightSidebar">
+        <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
+      </div>
+    </div>
+  </wicket:extend>
 </body>
 </html>

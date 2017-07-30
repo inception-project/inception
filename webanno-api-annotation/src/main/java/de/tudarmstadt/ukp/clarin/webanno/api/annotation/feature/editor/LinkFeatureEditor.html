@@ -18,38 +18,37 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <td colspan="2">
-    <fieldset>
-      <legend>
+  <div class="panel panel-default panel-small">
+    <div class="panel-heading">
+      <h3 class="panel-title">
         <span wicket:id="feature"></span>
         <span wicket:id="linkIndicator" class="" style=""></span>
-      </legend>
+      </h3>
+    </div>
+    <div class="panel-body">
       <div wicket:id="content">
-        <table class="hfill">
-          <tr wicket:id="slots">
-            <td><span wicket:id="role"></span></td>
-            <td><div class="hfill k-textbox"
-                style="display: block; white-space: nowrap; background: 0; line-height: 2.13em; max-width: 20em; max-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%; overflow:hidden; text-overflow: ellipsis;"
-                wicket:id="label"></div></td>
-          </tr>
-          <tr>
-            <td colspan="2" class="hfill">
-              <table class="hfill">
-                <tr>
-                  <td class="hfill"><input style="width: 100%"
-                      wicket:id="newRole" placeholder="Select role"></input></td>
-                  <td>
-                    <button style="" wicket:id="add">Add</button>
-                    <button style="" wicket:id="del">Del</button>
-                    <button style="" wicket:id="set">Set</button>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
+        <div wicket:id="slots">
+          <div class="form-group">
+            <label wicket:for="value" class="col-sm-3 control-label">
+              <span wicket:id="role"></span>	
+            </label>
+            <div class="col-sm-9">
+              <span wicket:id="label" class="form-control" style="white-space: nowrap; max-width: 20em; overflow:hidden; text-overflow: ellipsis;"></span>
+            </div>
+          </div>
+        </div>
+        <div style="display: table;">
+          <div style="display: table-cell; width: 100%;">
+            <input wicket:id="newRole" style="width: 100%;"></input>
+          </div>
+          <div style="display: table-cell; padding-left: 15px; white-space: nowrap;">
+            <button wicket:id="add" class="btn btn-xs">Add</button>
+            <button wicket:id="del" class="btn btn-xs">Del</button>
+            <button wicket:id="set" class="btn btn-xs">Set</button>
+          </div>
+        </div>
       </div>
-    </fieldset>
-  </td>
+    </div>
+  </div>
 </wicket:panel>
 </html>

@@ -17,7 +17,7 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
+<head>
   <wicket:head>
     <style>
       html {
@@ -25,24 +25,37 @@
       }
     
       #annotationEditorContent {
-      	  display: flex;
-      	  margin-bottom: 20px;
+          display: flex;
+          margin-bottom: 20px;
       }
       
       #annotationEditorContent .editorCell {
-      	  flex-grow: 1;
+          flex-grow: 1;
       }
       
-      #annotationEditorContent .sidebarCell {
-      	  flex-basis: 20%;
-      	  flex-shrink: 0;
+      #annotationEditorContent .sidebar {
+          flex-basis: 20%;
+          flex-shrink: 0;
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+      
+      #annotationEditorContent .sidebar-left {
+        margin-left: 0px;
+      }
+
+      #annotationEditorContent .sidebar-right {
+        margin-left: 0px;
+        margin-right: 0px;
       }
       
       #annotationEditorContent .collapsed {
-      	  flex-basis: 39px !important;
+          flex-basis: 39px !important;
       }
     </style>
   </wicket:head>
+</head>
+<body>
   <wicket:extend>
     <div wicket:id=openDocumentsModal></div>
     <div wicket:id="preferencesDialog"></div>
@@ -137,12 +150,13 @@
         </div>
       </div>
     </div>
+    
     <div id="annotationEditorContent">
-      <div class="sidebarCell" wicket:id="leftSidebar"></div>
+      <div class="sidebar sidebar-left" wicket:id="leftSidebar"></div>
       <div class="editorCell">
         <div class="hfill" wicket:id="editor"></div>
       </div>
-      <div class="sidebarCell" wicket:id="rightSidebar">
+      <div class="sidebar sidebar-right" wicket:id="rightSidebar">
         <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
       </div>
     </div>

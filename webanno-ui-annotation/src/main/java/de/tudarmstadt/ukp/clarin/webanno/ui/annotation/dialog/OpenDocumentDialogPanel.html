@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,46 +16,45 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-	<table align="left" class="hfill">
-        <col width="50%">
-        <col width="50%">
-		<tr VALIGN=TOP>
-            <wicket:enclosure child="projectSelectionForm">
-    			<td>
-                    <div style="color: blue; font-weight: bold;">Projects:</div>
-    				<form wicket:id="projectSelectionForm">
-    					<select wicket:id="projectSelection" size="25" class="hfill"
-    						style="background-color: white; overflow:auto">
-    						<span wicket:id="projects">
-    							<option wicket:id="project"></option>
-    					   </span>
-    					</select>
-    				</form>
-                </td>
-            </wicket:enclosure>
-            <wicket:enclosure child="documentSelectionForm">
-    			<td>
-                    <div style="color: blue; font-weight: bold;">Documents:</div>
-    				<form wicket:id="documentSelectionForm">
-    					<select wicket:id="documentSelection" size="25" class="hfill"
-    						style="overflow: auto">
-    						<span wicket:id="documents">
-    							<option wicket:id="document"></option>
-    					   </span>
-    					</select>
-    				</form>
-    			</td>
-            </wicket:enclosure>
-		</tr>
-	</table>
-    <div class="buttons">
-	    <form wicket:id="buttonsForm">
-	        <button wicket:id="openButton">Open</button>
-	        <button wicket:id="cancelButton">Cancel</button>
-	    </form>
+  <div class="fluid-container">
+    <div class="row">
+      <div class="col-sm-6" wicket:enclosure="projectSelectionForm">
+        <form wicket:id="projectSelectionForm">
+          <div class="form-group">
+            <label>Projects:</label>
+            <select wicket:id="projectSelection" size="18" class="form-control" style="overflow: auto">
+              <span wicket:id="projects">
+                <option wicket:id="project"></option>
+              </span>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="col-sm-6" wicket:enclosure="documentSelectionForm">
+        <form wicket:id="documentSelectionForm">
+          <div class="form-group">
+            <label>Documents:</label>
+            <select wicket:id="documentSelection" size="18" class="form-control" style="overflow: auto">
+              <span wicket:id="documents">
+                <option wicket:id="document"></option>
+              </span>
+            </select>
+          </div>
+        </form>
+      </div>
     </div>
+    <div class="row">
+      <form wicket:id="buttonsForm" class="col-sm-12">
+        <div class="form-group pull-right">
+          <div>
+            <button wicket:id="openButton" class="btn">Open</button>
+            <button wicket:id="cancelButton" class="btn">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </wicket:panel>
 </html>

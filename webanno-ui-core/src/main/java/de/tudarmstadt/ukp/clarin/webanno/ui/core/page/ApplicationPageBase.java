@@ -31,17 +31,12 @@ import org.apache.wicket.Session;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
-import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -49,10 +44,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.db.DatabaseDriverService;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -71,7 +64,6 @@ public abstract class ApplicationPageBase
     private Label versionLabel;
     private Label embeddedDbWarning;
     private Label browserWarning;
-    private ListView<ImageLinkDecl> links;
 
     private @SpringBean DatabaseDriverService dbDriverService;
 
@@ -184,18 +176,6 @@ public abstract class ApplicationPageBase
             browserWarning.setVisible(false);
         }
         
-        links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
-        {
-            @Override
-            protected void populateItem(ListItem<ImageLinkDecl> aItem)
-            {
-                aItem.add(new ImageLink("link",
-                        new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
-                        Model.of(aItem.getModelObject().getLinkUrl())));
-            }
-        };
-        
-        add(links);
         add(feedbackPanel);
         add(versionLabel);
         add(embeddedDbWarning);

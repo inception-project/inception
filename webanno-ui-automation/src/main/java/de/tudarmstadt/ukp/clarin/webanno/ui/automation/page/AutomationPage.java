@@ -35,9 +35,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -174,34 +174,13 @@ public class AutomationPage
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.AUTOMATION)));
 
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
-            private static final long serialVersionUID = 1L;
+        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        // Override sidebar width from preferences
+        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        rightSidebar.setOutputMarkupId(true);
+        add(rightSidebar);
 
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
-            }
-        };
-        sidebarCell.setOutputMarkupId(true);
-        add(sidebarCell);
-
-        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
-            }
-        };
-        annotationViewCell.setOutputMarkupId(true);
-        add(annotationViewCell);
-        
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
                 new CurationUserSegmentForAnnotationDocument();
@@ -241,13 +220,13 @@ public class AutomationPage
             }
         };
         suggestionView.setOutputMarkupId(true);
-        annotationViewCell.add(suggestionView);
+        add(suggestionView);
 
-        sidebarCell.add(detailEditor = createDetailEditor());
+        rightSidebar.add(detailEditor = createDetailEditor());
 
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
             this::getEditorCas);
-        annotationViewCell.add(annotationEditor);
+        add(annotationEditor);
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());

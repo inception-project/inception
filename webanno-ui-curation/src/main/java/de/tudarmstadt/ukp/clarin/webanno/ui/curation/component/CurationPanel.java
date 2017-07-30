@@ -119,29 +119,12 @@ public class CurationPanel
         
         setOutputMarkupId(true);
         
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
-            private static final long serialVersionUID = 1L;
-    
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                aTag.put("width", bModel.getPreferences().getSidebarSize() + "%");
-            }
-        };
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
+        sidebarCell.setOutputMarkupId(true);
+        // Override sidebar width from preferences
+        sidebarCell.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", bModel.getPreferences().getSidebarSize()))));
         add(sidebarCell);
-    
-        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
-            private static final long serialVersionUID = 1L;
-    
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                aTag.put("width", (100 - bModel.getPreferences().getSidebarSize()) + "%");
-            }
-        };
-        add(annotationViewCell);
         
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
@@ -149,11 +132,10 @@ public class CurationPanel
         add(sentencesListView);
     
         // add container for the list of sentences where annotations exists crossing multiple
-        // sentences
-        // outside of the current page
+        // sentences outside of the current page
         corssSentAnnoView = new WebMarkupContainer("corssSentAnnoView");
         corssSentAnnoView.setOutputMarkupId(true);
-        annotationViewCell.add(corssSentAnnoView);
+        add(corssSentAnnoView);
     
         bModel = getModelObject().getBratAnnotatorModel();
     
@@ -195,7 +177,7 @@ public class CurationPanel
         };
     
         suggestionViewPanel.setOutputMarkupId(true);
-        annotationViewCell.add(suggestionViewPanel);
+        add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<>(bModel))
@@ -243,7 +225,7 @@ public class CurationPanel
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
-        annotationViewCell.add(annotationEditor);
+        add(annotationEditor);
     
         IModel<List<String>> sentenceDiffModel = LambdaModel.of(() -> {
             int fSN = bModel.getFirstVisibleUnitIndex();

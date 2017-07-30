@@ -32,9 +32,9 @@ import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -80,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
@@ -165,32 +166,13 @@ public class CorrectionPage
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
 
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
-            private static final long serialVersionUID = 1L;
+        WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
+        // Override sidebar width from preferences
+        rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
+        rightSidebar.setOutputMarkupId(true);
+        add(rightSidebar);
 
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                aTag.put("width", state.getPreferences().getSidebarSize() + "%");
-            }
-        };
-        add(sidebarCell);
-
-        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                aTag.put("width", (100 - state.getPreferences().getSidebarSize()) + "%");
-            }
-        };
-        add(annotationViewCell);
-        
         LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
                 new CurationUserSegmentForAnnotationDocument();
@@ -237,13 +219,13 @@ public class CorrectionPage
         };
 
         suggestionView.setOutputMarkupId(true);
-        annotationViewCell.add(suggestionView);
+        add(suggestionView);
 
-        sidebarCell.add(detailEditor = createDetailEditor());
+        rightSidebar.add(detailEditor = createDetailEditor());
         
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
             this::getEditorCas);
-        annotationViewCell.add(annotationEditor);
+        add(annotationEditor);
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());

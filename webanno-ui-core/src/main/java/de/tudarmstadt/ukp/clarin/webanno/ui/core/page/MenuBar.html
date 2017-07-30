@@ -38,7 +38,11 @@
       </div>
     </div>
     
-    <p class="navbar-text navbar-right">
+    <div class="navbar-right" wicket:id="links">
+      <span class="navbar-extra-link" wicket:id="link"></span>
+    </div>
+    
+    <p class="navbar-text navbar-right" wicket:enclosure="helpLink">
       <i class="fa fa-question-circle" aria-hidden="true"></i>
       <a class="navbar-link" wicket:id="helpLink"></a>
     </p>
