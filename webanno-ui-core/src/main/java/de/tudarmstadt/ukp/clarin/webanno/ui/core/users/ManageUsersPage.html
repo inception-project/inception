@@ -19,82 +19,88 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="row">
-      <div class="col-sm-4 col-md-3 col-lg-2">
-        <form wicket:id="selectionForm">
-          <fieldset>
-            <legend>Users</legend>
-            <div class="form-group">
-              <select wicket:id="user" size="20" class="form-control"></select>
+    <div class="master-detail-container">
+      <div class="master-detail-overview">
+        <form wicket:id="selectionForm" style="height: 100%;">
+          <div class="panel panel-default panel-flex" style="height: 100%;">
+            <div class="panel-heading">
+              <h3 class="panel-title">Users</h3>
             </div>
-            <div class="form-group pull-right">
-              <div>
+            <div class="panel-body" style="margin: 5px; position: relative; min-height: 30em; overflow: auto;">
+              <select wicket:id="user" size="20" class="form-control" style="position: absolute; top: 0px; bottom: 5px; left: 0px; right: 0px;"></select>
+            </div>
+            <div class="panel-footer">
+              <div class="form-group pull-right">
                 <input wicket:id="create" type="submit" class="btn btn-primary"/> 
                 <input wicket:id="delete" type="submit" class="btn btn-danger"/>
               </div>
             </div>            
-          </fieldset>
+          </div>
         </form>
       </div>
-      <div class="col-sm-8 col-md-9 col-lg-10">
-        <fieldset>
-          <legend>User details</legend>
-          <form wicket:id="detailForm" class="form-horizontal">
-            <div class="form-group">
-              <label wicket:for="username" class="col-sm-2 control-label">Username</label>
-              <div class="col-sm-10">
-                <input wicket:id="username" type="text" class="form-control"/>
-              </div>
+      <div class="master-detail-editor">
+        <form id="detail-editor" wicket:id="detailForm" style="height: 100%;">
+          <div class="panel panel-default panel-flex" style="height: 100%;">
+            <div class="panel-heading">
+              <h3 class="panel-title">User details</h3>
             </div>
-            <div class="form-group">
-              <label wicket:for="password" class="col-sm-2 control-label">Password</label>
-              <div class="col-sm-10">
-                <input wicket:id="password" type="password" class="form-control" autocomplete="off"/>
-              </div>
-            </div>
-            <div class="form-group">
-              <label wicket:for="repeatPassword" class="col-sm-2 control-label">Repeat password</label>
-              <div class="col-sm-10">
-                <input wicket:id="repeatPassword" type="password" class="form-control" autocomplete="off"/>
-              </div>
-            </div>
-            <div class="form-group">
-              <label wicket:for="email" class="col-sm-2 control-label">Email address</label>
-              <div class="col-sm-10">
-                <input wicket:id="email" type="email" class="form-control"/>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="col-sm-2 control-label">Last login</label>
-              <div class="col-sm-10">
-                <span class="form-control"><wicket:container wicket:id="lastLogin"/></span>
-              </div>
-            </div>
-            <wicket:container wicket:id="adminOnly">
+            <div class="panel-body form-horizontal">
               <div class="form-group">
-                <label wicket:for="roles" class="col-sm-2 control-label">Roles</label>
+                <label wicket:for="username" class="col-sm-2 control-label">Username</label>
                 <div class="col-sm-10">
-                  <select wicket:id="roles" class="form-control"></select>
+                  <input wicket:id="username" type="text" class="form-control"/>
                 </div>
               </div>
               <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
-                  <div class="checkbox">
-                    <label wicket:for="enabled">
-                      <input wicket:id="enabled" type="checkbox"> Enable account
-                    </label>
-                  </div>
-                </div>              
+                <label wicket:for="password" class="col-sm-2 control-label">Password</label>
+                <div class="col-sm-10">
+                  <input wicket:id="password" type="password" class="form-control" autocomplete="off"/>
+                </div>
               </div>
-            </wicket:container>
-            <div class="form-group">
-              <div class="col-sm-offset-2 col-sm-10">
+              <div class="form-group">
+                <label wicket:for="repeatPassword" class="col-sm-2 control-label">Repeat password</label>
+                <div class="col-sm-10">
+                  <input wicket:id="repeatPassword" type="password" class="form-control" autocomplete="off"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label wicket:for="email" class="col-sm-2 control-label">Email address</label>
+                <div class="col-sm-10">
+                  <input wicket:id="email" type="email" class="form-control"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Last login</label>
+                <div class="col-sm-10">
+                  <span class="form-control" readonly><wicket:container wicket:id="lastLogin"/></span>
+                </div>
+              </div>
+              <wicket:container wicket:id="adminOnly">
+                <div class="form-group">
+                  <label wicket:for="roles" class="col-sm-2 control-label">Roles</label>
+                  <div class="col-sm-10">
+                    <select wicket:id="roles" class="form-control"></select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                      <label wicket:for="enabled">
+                        <input wicket:id="enabled" type="checkbox"> Enable account
+                      </label>
+                    </div>
+                  </div>              
+                </div>
+              </wicket:container>
+            </div>
+            <div class="panel-footer">
+              <div class="form-group pull-right">
                 <input wicket:id="save" type="submit" class="btn btn-primary"/> 
                 <input wicket:id="cancel" type="submit" class="btn"/>
-              </div>
-            </div>            
-          </form>
-        </fieldset>
+              </div>            
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   </wicket:extend>
