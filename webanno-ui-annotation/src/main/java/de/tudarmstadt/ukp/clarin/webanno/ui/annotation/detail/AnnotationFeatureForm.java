@@ -138,25 +138,9 @@ public class AnnotationFeatureForm
         container.add(createNoFeaturesWarningLabel());
         container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
         container.add(createSelectedTextLabel());
-        container.add(createLayerNameLabel());
         container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
 
         return container;
-    }
-
-    private Label createLayerNameLabel()
-    {
-        return new Label("layerName", "Layer")
-        {
-            private static final long serialVersionUID = 6084341323607243784L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getPreferences().isRememberLayer());
-            }
-        };
     }
 
     private Label createNoFeaturesWarningLabel()

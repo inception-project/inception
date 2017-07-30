@@ -300,7 +300,7 @@
       </dependency>
       <dependency>
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui-theme-default</artifactId>
+        <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
       </dependency>
       <dependency>

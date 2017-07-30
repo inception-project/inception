@@ -16,9 +16,7 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<html
-    xmlns="http://www.w3.org/1999/xhtml" 
-    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
   <meta charset="utf-8"></meta>
   <meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
@@ -33,54 +31,42 @@
     <img id="spinner" src="images/spinner.gif" />
   </div>
   
-  <nav class="nav navbar navbar-default" role="navigation">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">
-          <span>
-            <img class="pageicon" wicket:message="src:page.icon" />
-            <wicket:message key="page.title"></wicket:message>
-          </span>
-        </a>
+  <div class="page-header">
+    <nav class="nav navbar navbar-inverse" role="navigation" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <wicket:container wicket:id="menubar"/>
+        <div class="navbar-right" wicket:id="links">
+          <span wicket:id="link"></span>
+        </div>
       </div>
-      <wicket:container wicket:id="menubar"></wicket:container>
-      <div wicket:id="links">
-        <span wicket:id="link"></span>
-      </div>
-    </div>
-  </nav>
-  
-  <div class="container-fluid">
-    <div class="pagecontent">
-      <wicket:child>
-        [CONTENT]
-      </wicket:child>
-    </div>
+    </nav>
   </div>
   
+  <div class="container-fluid page-content">
+    <wicket:child>
+      [CONTENT]
+    </wicket:child>
+  </div>
+
+  <div wicket:enclosure="embeddedDbWarning" class="alert alert-warning" role="alert">
+      <wicket:container wicket:id="embeddedDbWarning"/>
+  </div>
+  <div wicket:enclosure="browserWarning" class="alert alert-warning" role="alert">
+    <wicket:container wicket:id="browserWarning"/>
+  </div>
+ 
+  <div wicket:id="feedbackPanel" class="navbar-text feedback-panel">
+    [Feedback]
+  </div>
+
   <nav class="navbar navbar-default navbar-fixed-bottom">
     <div class="container-fluid">
-      <p wicket:id="feedbackPanel" class="navbar-text feedback-panel">
-        [Feedback]
-      </p>
-      <p class="navbar-text">
-        Technische Universität Darmstadt -- Computer Science Department -- <wicket:message key="product.name" /> --
-        <span wicket:id="version">
-          [Copyright]
-        </span>
-      </p>
-      <p class="navbar-text bg-warning">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        <span wicket:id="embeddedDbWarning">
-          [Embedded DB Warning]
-        </span>
-      </p>
-      <p class="navbar-text bg-warning">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        <span wicket:id="browserWarning">
-          [Browser Warning]
-        </span>
-      </p>
+      <div class="navbar-text">
+        Technische Universität Darmstadt -- 
+        Computer Science Department -- 
+        <wicket:message key="product.name" /> --
+        <wicket:container wicket:id="version"/>
+      </div>
     </div>
   </nav>
 </body>

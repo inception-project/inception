@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
  - Copyright 2012
  - Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -21,15 +21,31 @@
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="menubar">
-      <wicket:message key="product.name" /> | <a href="welcome.html"> Home </a>
-      <span style="float: right;">
-        <a wicket:id="helpLink"></a>
-        <wicket:enclosure child="logoutPanel">
-        | <span wicket:id="logoutPanel"></span>
-        </wicket:enclosure>
-      </span>
+    <div class="navbar-header">
+      <a class="navbar-brand" href="welcome.html">
+        <span>
+          <img class="pageicon" wicket:message="src:page.icon" />
+          <wicket:message key="product.name"/>
+        </span>
+      </a>
     </div>
+    
+    <p class="navbar-text"><wicket:message key="page.title" /></p>
+    
+    <div class="navbar-trailer">
+      <div class="navbar-brand navbar-right">
+        <img class="logo" src="assets/logo.png" />
+      </div>
+    </div>
+    
+    <p class="navbar-text navbar-right">
+      <i class="fa fa-question-circle" aria-hidden="true"></i>
+      <a class="navbar-link" wicket:id="helpLink"></a>
+    </p>
+    
+    <wicket:enclosure child="logoutPanel">
+      <wicket:container wicket:id="logoutPanel" />
+    </wicket:enclosure>
   </wicket:panel>
 </body>
 </html>

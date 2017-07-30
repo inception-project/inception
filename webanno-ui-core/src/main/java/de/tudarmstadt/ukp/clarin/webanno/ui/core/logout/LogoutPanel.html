@@ -61,8 +61,13 @@
 </wicket:head>
 <body>
   <wicket:panel>
-    <li><i class="fa fa-user" aria-hidden="true"></i> <span wicket:id="username"></span></li>
-    <li><a wicket:id="logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Log out</a><span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span></li>
+    <p class="navbar-text navbar-right">
+      <a class="navbar-link" wicket:id="logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Log out</a>
+      <span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span>
+    </p>
+    <p class="navbar-text navbar-right">
+      <i class="fa fa-user" aria-hidden="true"></i> <wicket:container wicket:id="username"/>
+    </p>
   </wicket:panel>
 </body>
 </html>

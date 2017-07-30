@@ -25,9 +25,14 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
@@ -45,13 +50,17 @@ import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
+import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
@@ -78,8 +87,6 @@ public abstract class WicketApplicationBase
             
             isInitialized = true;
         }
-        
-        Bootstrap.install(this);
     }
 
     protected void initOnce()
@@ -91,10 +98,8 @@ public abstract class WicketApplicationBase
 //        getResourceSettings().setThrowExceptionOnMissingResource(false);
 //        getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
         
-        // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
-        // identification. 
-        initDynamicJQueryResourceReference();
-
+        initWebFrameworks();
+        
         initDefaultPageMounts();
         
         initLogoReference();
@@ -104,7 +109,127 @@ public abstract class WicketApplicationBase
 
         initMDCLifecycle();
     }
+    
+    protected void initWebFrameworks()
+    {
+        // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
+        // identification. 
+        initDynamicJQueryResourceReference();
+ 
+        initBootstrap();
+        
+        initKendo();
+        
+        initJQueryUI();
+        
+        initFontAwesome();
+        
+        initCssBrowserSelector();
+    }
+    
+    protected void initBootstrap()
+    {
+        Bootstrap.install(this);
+    }
+    
+    protected void initKendo()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
 
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        // We use Kendo TextFields, but they do not automatically load the Kendo
+                        // JS/CSS, so
+                        // we do it manually here and for all the pages.
+                        KendoUILibrarySettings kendoCfg = KendoUILibrarySettings.get();
+
+                        if (kendoCfg.getCommonStyleSheetReference() != null) {
+                            aResponse.render(CssHeaderItem
+                                    .forReference(kendoCfg.getCommonStyleSheetReference()));
+                        }
+
+                        if (kendoCfg.getThemeStyleSheetReference() != null) {
+                            aResponse.render(CssHeaderItem
+                                    .forReference(kendoCfg.getThemeStyleSheetReference()));
+                        }
+
+                        if (kendoCfg.getJavaScriptReference() != null) {
+                            aResponse.render(JavaScriptHeaderItem
+                                    .forReference(kendoCfg.getJavaScriptReference()));
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    protected void initFontAwesome()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        aResponse.render(CssHeaderItem.forReference(FontAwesomeCssReference.get()));
+                    }
+                });
+            }
+        });
+    }
+    
+    protected void initCssBrowserSelector()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        aResponse.render(JavaScriptHeaderItem
+                                .forReference(CssBrowserSelectorResourceReference.get()));
+                    }
+                });
+            }
+        });
+    }
+    
+    protected void initJQueryUI()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        // We also load the JQuery CSS always just to get a consistent look across
+                        // the app
+                        JQueryUILibrarySettings jqueryCfg = JQueryUILibrarySettings.get();
+
+                        if (jqueryCfg.getStyleSheetReference() != null) {
+                            aResponse.render(
+                                    CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
     protected void initMDCLifecycle()
     {
         getRequestCycleListeners().add(new AbstractRequestCycleListener()

@@ -17,17 +17,23 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.springframework.stereotype.Component;
+import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoCssReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.menu.MainMenuPage;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
  * configuration.
  */
-@Component("wicketApplication")
+@org.springframework.stereotype.Component("wicketApplication")
 public class WicketApplication
     extends WicketApplicationBase
 {
@@ -38,5 +44,34 @@ public class WicketApplication
     public Class<? extends Page> getHomePage()
     {
         return MainMenuPage.class;
+    }
+
+    @Override
+    protected void initWebFrameworks()
+    {
+        super.initWebFrameworks();
+
+        initWebAnnoResources();
+    }
+
+    protected void initWebAnnoResources()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new Behavior()
+                {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+                    {
+                        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
+                        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
+                        aResponse.render(JavaScriptHeaderItem
+                                .forReference(WebAnnoJavascriptReference.get()));
+                    }
+                });
+            }
+        });
     }
 }

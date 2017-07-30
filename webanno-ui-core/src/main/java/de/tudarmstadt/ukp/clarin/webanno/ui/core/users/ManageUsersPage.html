@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+﻿<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,78 +16,87 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:extend>
-		<table class="hfill">
-			<tr style="vertical-align: top;">
-				<td width="20%">
-					<form wicket:id="selectionForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-                            <legend>Users</legend>
-							<div>
-								<select class="hfill" wicket:id="user" size="29"></select>
-							</div>
-							<div class="buttons">
-								<input type="submit" wicket:id="create" /> <input type="submit"
-									wicket:id="delete" />
-							</div>
-						</fieldset>
-					</form>
-				</td>
-				<td width="80%">
-					<form wicket:id="detailForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-                            <legend>User details</legend>
-							<table class="hfill">
-								<tr>
-									<td><label wicket:for="username">Username:</label></td>
-									<td class="hfill"><input type="text" class="hfill"
-										wicket:id="username" /></td>
-								</tr>
-								<tr>
-									<td><label wicket:for="password">Password:</label></td>
-									<td class="hfill"><input type="password" class="hfill"
-										autocomplete="off" wicket:id="password" /></td>
-								</tr>
-								<tr>
-									<td><label wicket:for="repeatPassword">Repeat
-											password:</label></td>
-									<td class="hfill"><input type="password" class="hfill"
-										wicket:id="repeatPassword" /></td>
-								</tr>
-								<tr>
-									<td><label wicket:for="email">E-Mail:</label></td>
-									<td class="hfill"><input type="email" class="hfill"
-										wicket:id="email" /></td>
-								</tr>
-                                <tr>
-                                    <td><label wicket:for="email">Last login:</label></td>
-                                    <td class="hfill"><span wicket:id="lastLogin" /></td>
-                                </tr>
-								<wicket:container wicket:id="adminOnly">
-									<tr>
-										<td><label wicket:for="roles">Roles:</label></td>
-										<td class="hfill"><select wicket:id="roles"></select></td>
-									</tr>
-									<tr>
-										<td><label wicket:for="enabled">Enable account:</label></td>
-										<td class="hfill"><input type="checkbox"
-											wicket:id="enabled" /></td>
-									</tr>
-								</wicket:container>
-							</table>
-							<div class="buttons">
-								<input type="submit" wicket:id="save" /> <input type="submit"
-									wicket:id="cancel" />
-							</div>
-						</fieldset>
-					</form>
-				</td>
-			</tr>
-		</table>
-
-	</wicket:extend>
+  <wicket:extend>
+    <div class="row">
+      <div class="col-sm-4 col-md-3 col-lg-2">
+        <form wicket:id="selectionForm">
+          <fieldset>
+            <legend>Users</legend>
+            <div class="form-group">
+              <select wicket:id="user" size="20" class="form-control"></select>
+            </div>
+            <div class="form-group pull-right">
+              <div>
+                <input wicket:id="create" type="submit" class="btn btn-primary"/> 
+                <input wicket:id="delete" type="submit" class="btn btn-danger"/>
+              </div>
+            </div>            
+          </fieldset>
+        </form>
+      </div>
+      <div class="col-sm-8 col-md-9 col-lg-10">
+        <fieldset>
+          <legend>User details</legend>
+          <form wicket:id="detailForm" class="form-horizontal">
+            <div class="form-group">
+              <label wicket:for="username" class="col-sm-2 control-label">Username</label>
+              <div class="col-sm-10">
+                <input wicket:id="username" type="text" class="form-control"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label wicket:for="password" class="col-sm-2 control-label">Password</label>
+              <div class="col-sm-10">
+                <input wicket:id="password" type="password" class="form-control" autocomplete="off"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label wicket:for="repeatPassword" class="col-sm-2 control-label">Repeat password</label>
+              <div class="col-sm-10">
+                <input wicket:id="repeatPassword" type="password" class="form-control" autocomplete="off"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label wicket:for="email" class="col-sm-2 control-label">Email address</label>
+              <div class="col-sm-10">
+                <input wicket:id="email" type="email" class="form-control"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Last login</label>
+              <div class="col-sm-10">
+                <span class="form-control"><wicket:container wicket:id="lastLogin"/></span>
+              </div>
+            </div>
+            <wicket:container wicket:id="adminOnly">
+              <div class="form-group">
+                <label wicket:for="roles" class="col-sm-2 control-label">Roles</label>
+                <div class="col-sm-10">
+                  <select wicket:id="roles" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <div class="checkbox">
+                    <label wicket:for="enabled">
+                      <input wicket:id="enabled" type="checkbox"> Enable account
+                    </label>
+                  </div>
+                </div>              
+              </div>
+            </wicket:container>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <input wicket:id="save" type="submit" class="btn btn-primary"/> 
+                <input wicket:id="cancel" type="submit" class="btn"/>
+              </div>
+            </div>            
+          </form>
+        </fieldset>
+      </div>
+    </div>
+  </wicket:extend>
 </body>
 </html>
