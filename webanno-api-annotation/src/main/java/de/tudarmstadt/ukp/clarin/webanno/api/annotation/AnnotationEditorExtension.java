@@ -53,6 +53,4 @@ public interface AnnotationEditorExtension
      * Initiatialize extension service
      */
     void onDocumentLoad(JCas jCas, AnnotatorState aState);
-
-    void onBeforeRender(AnnotatorState aState);
 }
