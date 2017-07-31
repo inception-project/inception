@@ -20,45 +20,43 @@
 <head>
   <wicket:head>
     <style>
-      .login-form-container {
+      .page-content {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 100%;
       }
+    
       .login-form {
         text-align: center;
         display: inline-block;
       }
      </style>
-  </wicket:head>
-</head>
-<body>
-  <wicket:extend>
     <script>
       $(document).ready(function() {
         $("#urlfragment").attr("value", unescape(self.document.location.hash.substring(1)));
       });    
     </script>
-      <div class="login-form-container">
-        <form wicket:id="loginForm" method="post" class="login-form well">
-          <input type="hidden" id="urlfragment" wicket:id="urlfragment"/>
-          <div class="form-group">
-            <label wicket:for="username" style="color: black;">Username</label>
-            <input wicket:id="username" type="text" class="form-control"/>
-          </div>
-          <div class="form-group">
-            <label wicket:for="password" style="color: black;">Password</label>
-            <input wicket:id="password" type="password" class="form-control"/>
-          </div>
-          <div class="form-group text-center">
-            <input type="submit" value="Log in" class="btn btn-primary" />
-          </div>
-          <div class="form-group">
-            <span wicket:id="loginMessage"></span>
-          </div>
-        </form>
+  </wicket:head>
+</head>
+<body>
+  <wicket:extend>
+    <form wicket:id="loginForm" method="post" class="login-form well">
+      <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
+      <div class="form-group">
+        <label wicket:for="username" style="color: black;">Username</label> <input
+          wicket:id="username" type="text" class="form-control" />
       </div>
+      <div class="form-group">
+        <label wicket:for="password" style="color: black;">Password</label> <input
+          wicket:id="password" type="password" class="form-control" />
+      </div>
+      <div class="form-group text-center">
+        <input type="submit" value="Log in" class="btn btn-primary" />
+      </div>
+      <div class="form-group">
+        <span wicket:id="loginMessage"></span>
+      </div>
+    </form>
   </wicket:extend>
 </body>
 </html>

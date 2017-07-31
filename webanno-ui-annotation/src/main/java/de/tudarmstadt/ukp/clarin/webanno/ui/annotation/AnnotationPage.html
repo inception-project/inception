@@ -20,24 +20,32 @@
 <head>
   <wicket:head>
     <style>
-      html {
-        overflow-y: scroll;
+      .page-content {
+        display: flex;
+        flex-direction: column;
       }
     
       #annotationEditorContent {
-          display: flex;
-          margin-bottom: 20px;
+        flex: 1;
+      
+        display: flex;
       }
       
       #annotationEditorContent .editorCell {
-          flex-grow: 1;
+        flex-grow: 1;
+        overflow: auto;
+        margin-top: 15px;
+        margin-bottom: 15px;
       }
       
       #annotationEditorContent .sidebar {
-          flex-basis: 20%;
-          flex-shrink: 0;
-        margin-left: 15px;
-        margin-right: 15px;
+        flex-basis: 20%;
+        flex-shrink: 0;
+        overflow: auto;
+        margin: 15px;
+        
+        display: flex;
+        flex-direction: column;
       }
       
       #annotationEditorContent .sidebar-left {
@@ -50,7 +58,7 @@
       }
       
       #annotationEditorContent .collapsed {
-          flex-basis: 39px !important;
+        flex-basis: 39px !important;
       }
     </style>
   </wicket:head>
@@ -67,94 +75,92 @@
       <a wicket:id="initialLoadComplete" id="initialLoadComplete"></a>
     </div>
 
-    <div class="top-sticker">
-      <div class="actionbar">
-        <div>
-          <ul class="horizontal">
-            <li>
-              <fieldset>
-                <legend>Document</legend>
-                <ul class="horizontal">
-                  <li><a wicket:id="showOpenDocumentDialog" id="showOpenDocumentDialog"> <img
-                      src="images/drawer_open.png" title="Open" /><br />Open
-                  </a></li>
-                  
-                  <li wicket:id="showPreviousDocument" />
-                  <li wicket:id="showNextDocument" />
-                  <li wicket:id="showExportDialog" />
-                  <li wicket:id="showPreferencesDialog" />
-                </ul>
-              </fieldset>
-            </li>
+    <div class="actionbar">
+      <div>
+        <ul class="horizontal">
+          <li>
+            <fieldset>
+              <legend>Document</legend>
+              <ul class="horizontal">
+                <li><a wicket:id="showOpenDocumentDialog" id="showOpenDocumentDialog"> <img
+                    src="images/drawer_open.png" title="Open" /><br />Open
+                </a></li>
+                
+                <li wicket:id="showPreviousDocument" />
+                <li wicket:id="showNextDocument" />
+                <li wicket:id="showExportDialog" />
+                <li wicket:id="showPreferencesDialog" />
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Page</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showFirst" />
-                  <li wicket:id="showPrevious" />
+          <li>
+            <fieldset>
+              <legend>Page</legend>
+              <ul class="horizontal">
+                <li wicket:id="showFirst" />
+                <li wicket:id="showPrevious" />
 
-                  <li>
-                    <form wicket:id="gotoPageTextFieldForm">
-                      <div style="height: 32px;">
-                        <input type="number" wicket:id="gotoPageText"
-                          style="width: 4em; text-align: right;" title="press Enter" />
-                      </div>
-                      <div>
-                        <a wicket:id="gotoPageLink">Go to</a>
-                      </div>
-                    </form>
-                  </li>
+                <li>
+                  <form wicket:id="gotoPageTextFieldForm">
+                    <div style="height: 32px;">
+                      <input type="number" wicket:id="gotoPageText"
+                        style="width: 4em; text-align: right;" title="press Enter" />
+                    </div>
+                    <div>
+                      <a wicket:id="gotoPageLink">Go to</a>
+                    </div>
+                  </form>
+                </li>
 
-                  <li wicket:id="showNext" />
-                  <li wicket:id="showLast" />
-                </ul>
-              </fieldset>
-            </li>
+                <li wicket:id="showNext" />
+                <li wicket:id="showLast" />
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Script</legend>
-                <ul class="horizontal">
-                  <li wicket:id="toggleScriptDirection" />
-                </ul>
-              </fieldset>
-            </li>
+          <li>
+            <fieldset>
+              <legend>Script</legend>
+              <ul class="horizontal">
+                <li wicket:id="toggleScriptDirection" />
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Help</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showGuidelinesDialog" />
-                </ul>
-              </fieldset>
-            </li>
+          <li>
+            <fieldset>
+              <legend>Help</legend>
+              <ul class="horizontal">
+                <li wicket:id="showGuidelinesDialog" />
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Workflow</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showResetDocumentDialog" />
+          <li>
+            <fieldset>
+              <legend>Workflow</legend>
+              <ul class="horizontal">
+                <li wicket:id="showResetDocumentDialog" />
 
-                  <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
-          </ul>
-        </div>
-        <div class="locationbar">
-          <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
-            wicket:id="numberOfPages"></span>
-          </span>
-        </div>
+                <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
+                </a></li>
+              </ul>
+            </fieldset>
+          </li>
+        </ul>
+      </div>
+      <div class="locationbar">
+        <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
+          wicket:id="numberOfPages"></span>
+        </span>
       </div>
     </div>
     
     <div id="annotationEditorContent">
       <div class="sidebar sidebar-left" wicket:id="leftSidebar"></div>
       <div class="editorCell">
-        <div class="hfill" wicket:id="editor"></div>
+        <div wicket:id="editor" style="margin-right: 15px;"></div>
       </div>
       <div class="sidebar sidebar-right" wicket:id="rightSidebar">
         <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>

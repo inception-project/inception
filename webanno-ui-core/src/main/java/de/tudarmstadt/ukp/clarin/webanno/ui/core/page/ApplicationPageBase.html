@@ -39,32 +39,31 @@
     </nav>
   </div>
   
-  <div class="container-fluid page-content">
+  <div class="page-content">
     <wicket:child>
       [CONTENT]
     </wicket:child>
   </div>
 
-  <div wicket:enclosure="embeddedDbWarning" class="alert alert-warning" role="alert">
-      <wicket:container wicket:id="embeddedDbWarning"/>
-  </div>
-  <div wicket:enclosure="browserWarning" class="alert alert-warning" role="alert">
-    <wicket:container wicket:id="browserWarning"/>
-  </div>
- 
-  <div wicket:id="feedbackPanel" class="navbar-text feedback-panel">
-    [Feedback]
+  <div class="notice-container">
+    <div wicket:enclosure="embeddedDbWarning" class="alert alert-warning" role="alert">
+        <wicket:container wicket:id="embeddedDbWarning"/>
+    </div>
+    <div wicket:enclosure="browserWarning" class="alert alert-warning" role="alert">
+      <wicket:container wicket:id="browserWarning"/>
+    </div>
+    <div wicket:id="feedbackPanel" class="navbar-text feedback-panel">
+      [Feedback]
+    </div>
   </div>
 
-  <nav class="navbar navbar-default navbar-fixed-bottom">
-    <div class="container-fluid">
-      <div class="navbar-text">
-        Technische Universität Darmstadt -- 
-        Computer Science Department -- 
-        <wicket:message key="product.name" /> --
-        <wicket:container wicket:id="version"/>
-      </div>
+  <div class="page-footer">
+    <div>
+      Technische Universität Darmstadt -- 
+      Computer Science Department -- 
+      <wicket:message key="product.name" /> --
+      <wicket:container wicket:id="version"/>
     </div>
-  </nav>
+  </div>
 </body>
 </html>

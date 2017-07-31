@@ -25,9 +25,13 @@
 
 /* Styling for the user-interface */
 
+/* WEBANNO EXTENSION BEGIN - Adds unnecessary scroll bar*/
+/*
 html {
   overflow-y: scroll;
 }
+*/
+/* WEBANNO EXTENSION END  */
 
 #navbuttons * {
   vertical-align: middle;

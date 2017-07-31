@@ -17,22 +17,35 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-  <body>
-    <wicket:extend>
-      <table align="center">
-        <tr>
-          <td>
-            <ul wicket:id="menu" class="nav nav-pills nav-stacked">
-              <li role="presentation">
-                <a wicket:id="menulink">
-                  <img wicket:id="icon"></img>
-                  <wicket:container wicket:id="label"/>
-                </a>
-              </li>
-            </ul>
-          </td>
-        </tr>
-      </table>
-    </wicket:extend>
-  </body>
+<head>
+  <wicket:head>
+    <style>
+      .page-content {
+        display: flex;
+        /*align-items: center;*/
+        justify-content: center;
+        overflow: auto;
+      }
+    
+      .main-menu {
+        text-align: center;
+        display: inline-block;
+      }
+    </style>
+  </wicket:head>
+</head>
+<body>
+  <wicket:extend>
+    <div class="main-menu">
+      <ul wicket:id="menu" class="nav nav-pills nav-stacked">
+        <li role="presentation">
+          <a wicket:id="menulink">
+            <img wicket:id="icon"></img>
+            <wicket:container wicket:id="label"/>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </wicket:extend>
+</body>
 </html>

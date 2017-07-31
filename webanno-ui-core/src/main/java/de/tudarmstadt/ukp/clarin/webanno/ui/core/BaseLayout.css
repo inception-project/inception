@@ -18,10 +18,6 @@
  * Generic classes
  */
 
-.top-sticker {
-    width: 100%;
-}
-
 .hfill{
     width:100%;
     max-width:none;
@@ -193,15 +189,11 @@ ul.feedbackPanel {
 }
 
 .actionbar {
-    text-align:center;
-    background-color:#DFDFDF;
-    vertical-align:middle;
+    text-align: center;
+    background-color: #DFDFDF;
+    vertical-align: middle;
     border-bottom: 1px solid #BFBFBF;
-    /*box-shadow:0px 10px 10px 5px white;*/
-    /* margin-top:8px; */
-    margin-bottom:13px;
-    padding-top:2px;
-    /* padding-bottom:2px; */
+    padding-top: 2px;
 }
 
 .actionbar fieldset {
@@ -405,26 +397,27 @@ div.tabpanel .tab-panel {
  * Tab panel left
  */
 div.left-tabpanel {
-    display: table;
-    width: 100%;
-    vertical-align: top;
-    border-collapse: collapse;
+    display: flex;
 }
 
 div.left-tabpanel div.tab-row {
-  display: table-cell;
+	flex: none;
   width: 39px;
-  vertical-align: top;
+  
+  display: flex;
+  flex-direction: column;
 }
 
 div.left-tabpanel div.tab-row ul {
   display: block;
-    padding: 0px;
-    margin: 0px;
+  padding: 0px;
+  margin: 0px;
 }
 
 div.left-tabpanel .tab-panel {
-    display: table-cell;
+	flex: 1;
+	
+  display: flex;
 }
 
 div.left-tabpanel div.tab-row li {
@@ -463,12 +456,14 @@ div.left-tabpanel div.tab-row a:hover {
 html, body {
   font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
   min-height: 100%;
+  max-height: 100%;
   height: 100%;
   width: 100%;
-  display: table;
-  margin-bottom: 20px; /* Match the bottom navbar (footer)*/
+  display: flex;
+  flex-direction: column;
 }
 
+/*
 .navbar-fixed-bottom {
   min-height: 20px; 
   height: 20px;
@@ -481,15 +476,34 @@ html, body {
   font-size: 14px; 
   float: none;
 }
+*/
 
 .page-header {
-  display: table-row;
+	margin: 0px;
+	padding: 0px;
+  flex: none;
 }
 
 .page-content {
-  display: table-row;
-  min-height: 100%;
-  height: 100%;
+	flex: 1;
+	height: 100%;
+	width: 100%;
+}
+
+.page-footer {
+	flex: none;
+	color: #777;
+  min-height: 21px; 
+  height: 21px;
+  margin-top: 0px; 
+  margin-bottom: 0px; 
+  padding-left: 15px;
+  padding-right: 15px;
+  text-align: center; 
+  font-size: 14px; 
+  background-color: #f8f8f8;
+  border-color: #e7e7e7;
+  border-top: 1px solid;
 }
  
 .navbar {
@@ -651,13 +665,25 @@ html, body {
 .w_flex .w_flex_footer { flex: none; } 
 
 /* Full-page master-detail view */
-.master-detail-container { display: flex; max-height: 100%; height: 100%; width: 100%; padding-bottom: 10px; }
-.master-detail-overview { flex-basis: 15%; flex-shrink: 0; flex-grow: 0; vertical-align: top; height: 100%; padding: 15px; padding-right: 0px; }
-.master-detail-editor { flex-grow: 1; height: 100%; padding: 15px; }
+.master-detail-container { display: flex; max-height: 100%; height: 100%; width: 100%; }
+.master-detail-overview { flex-basis: 20%; flex-shrink: 0; flex-grow: 0; height: 100%; }
+.master-detail-overview > * { display: none }
+.master-detail-editor { flex-grow: 1; padding: 15px; }
 
 /* Flexed Bootstrap panel */
 .panel-flex { display: flex; flex-direction: column; }
-.panel-flex .panel-heading { flex-grow: 0; flex-shrink: 0; }
-.panel-flex .panel-body { flex-grow: 1; }
-.panel-flex .panel-footer { flex-grow: 0; flex-shrink: 0; }
+.panel-flex .panel-heading { flex: none; }
+.panel-flex .panel-body { flex: 1; }
+.panel-flex .panel-footer { flex: none; }
 .panel-flex .panel-footer .form-group { margin-bottom: 0px; }
+
+.min-content-height {
+  height: -moz-min-content;
+  height: -webkit-min-content;
+  height: min-content;
+}
+
+.notice-container {
+	position: absolute;
+	bottom: 20px;
+}
