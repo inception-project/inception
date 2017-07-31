@@ -48,6 +48,8 @@ public class ExportDocumentDialog
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
+        setCssClassName("w_blue w_flex");
+        showUnloadConfirmation(false);
         setTitle(new StringResourceModel("export"));
     }
     
