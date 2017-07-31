@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,32 +16,37 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-<wicket:head>
-  <script type="text/javascript">
-			Wicket.Window.unloadConfirmation = false;
-		</script>
-</wicket:head>
-</head>
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form">
-      <table class="labels-left">
-        <tr wicket:enclosure="documentType">
-          <td><label wicket:for="documentType"> <wicket:label key="documentType.label" />:
-          </label></td>
-          <td><select wicket:id="documentType"></select></td>
-        </tr>
-        <tr wicket:enclosure="format">
-          <td><label wicket:for="format"> <wicket:label key="format" />:
-          </label></td>
-          <td><select wicket:id="format"></select></td>
-        </tr>
-      </table>
-      <div class="buttons">
-        <input type="button" wicket:id="export" wicket:message="value:export" />
-        <input type="button" wicket:id="cancel" wicket:message="value:cancel" />
+    <form wicket:id="form" class="w_flex_container">
+      <div class="w_flex_content">
+        <div class="fluid-container">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="form-horizontal">
+                <div class="form-group" wicket:enclosure="documentType">
+                  <label wicket:for="documentType" class="col-sm-4 control-label"><wicket:label key="documentType.label" /></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="documentType" class="form-control"></select>
+                  </div>
+                </div>
+                <div class="form-group" wicket:enclosure="format">
+                  <label wicket:for="format" class="col-sm-4 control-label"><wicket:label key="format" /></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="format" class="form-control"></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w_flex_footer panel-footer">
+        <div class="form-group pull-right">
+        <input wicket:id="export" type="button" class="btn btn-primary" wicket:message="value:export" />
+        <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel" />
+        </div>
       </div>
     </form>
   </wicket:panel>

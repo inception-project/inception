@@ -18,40 +18,44 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="fluid-container">
-    <div class="row">
-      <div class="col-sm-6" wicket:enclosure="projectSelectionForm">
-        <form wicket:id="projectSelectionForm">
-          <div class="form-group">
-            <label>Projects:</label>
-            <select wicket:id="projectSelection" size="18" class="form-control" style="overflow: auto">
-              <span wicket:id="projects">
-                <option wicket:id="project"></option>
-              </span>
-            </select>
+  <div class="w_flex_container">
+    <div class="w_flex_content">
+      <div class="fluid-container">
+        <div class="row">
+          <div class="col-sm-12" style="display: flex;">
+            <div style="flex: 1; margin-right: 15px;" wicket:enclosure="projectSelectionForm">
+              <form wicket:id="projectSelectionForm">
+                <div class="form-group">
+                  <label>Projects:</label>
+                  <select wicket:id="projectSelection" size="18" class="form-control" style="overflow: auto">
+                    <span wicket:id="projects">
+                      <option wicket:id="project"></option>
+                    </span>
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div style="flex: 1;" wicket:enclosure="documentSelectionForm">
+              <form wicket:id="documentSelectionForm">
+                <div class="form-group">
+                  <label>Documents:</label>
+                  <select wicket:id="documentSelection" size="18" class="form-control" style="overflow: auto">
+                    <span wicket:id="documents">
+                      <option wicket:id="document"></option>
+                    </span>
+                  </select>
+                </div>
+              </form>
+            </div>
           </div>
-        </form>
-      </div>
-      <div class="col-sm-6" wicket:enclosure="documentSelectionForm">
-        <form wicket:id="documentSelectionForm">
-          <div class="form-group">
-            <label>Documents:</label>
-            <select wicket:id="documentSelection" size="18" class="form-control" style="overflow: auto">
-              <span wicket:id="documents">
-                <option wicket:id="document"></option>
-              </span>
-            </select>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
-    <div class="row">
-      <form wicket:id="buttonsForm" class="col-sm-12">
+    <div class="w_flex_footer panel-footer">
+      <form wicket:id="buttonsForm">
         <div class="form-group pull-right">
-          <div>
-            <button wicket:id="openButton" class="btn">Open</button>
-            <button wicket:id="cancelButton" class="btn">Cancel</button>
-          </div>
+          <button wicket:id="openButton" class="btn btn-primary">Open</button>
+          <button wicket:id="cancelButton" class="btn btn-default">Cancel</button>
         </div>
       </form>
     </div>

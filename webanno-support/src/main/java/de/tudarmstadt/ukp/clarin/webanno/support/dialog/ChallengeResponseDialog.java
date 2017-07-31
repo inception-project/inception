@@ -62,6 +62,7 @@ public class ChallengeResponseDialog
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
+        setCssClassName("w_blue w_flex");
         showUnloadConfirmation(false);
         
         setModel(new CompoundPropertyModel<>(null));
