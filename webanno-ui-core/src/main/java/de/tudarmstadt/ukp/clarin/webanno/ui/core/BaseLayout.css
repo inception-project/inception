@@ -403,7 +403,9 @@ div.left-tabpanel {
 div.left-tabpanel div.tab-row {
 	flex: none;
   width: 39px;
-  
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;  
+	
   display: flex;
   flex-direction: column;
 }
@@ -550,17 +552,24 @@ html, body {
   margin-left: 0px;
 }
 
-/* More compact forms*/
+/* More compact Bootstrap forms*/
 .page-content .form-group,
 .w_content .form-group {
   margin-bottom: 5px;
 }
 
-/* More compact forms */
+/* More compact Bootstrap forms */
 .page-content .form-control,
 .w_content .form-control {
 	height: 28px;
   padding: 3px 6px;
+}
+
+/* Allow form-control-styled labels to grow to content while maintaining the 
+   default height as minimum */
+span.form-control {
+  min-height: 28px;
+	height: auto !important;
 }
 
 /* More compact forms - ensure that the selects still size properly*/
