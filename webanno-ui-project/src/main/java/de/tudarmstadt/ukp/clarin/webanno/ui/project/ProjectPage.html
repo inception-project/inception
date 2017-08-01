@@ -20,17 +20,16 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:extend>
-    <table class="hfill">
-      <tr style="vertical-align: top;">
-        <td width="20%">
+  
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-2">
           <wicket:container wicket:id="projects" />
           <wicket:container wicket:id="importPanel" />
-        </td>
-        <td width="80%">
-          <div wicket:id="tabPanel" class="tabpanel"></div>
-        </td>
-      </tr>
-    </table>
+        </div>
+        <div wicket:id="tabPanel" class="col-sm-10 tabpanel"></div>
+      </div>
+    </div>
   </wicket:extend>
 </body>
 </html>
