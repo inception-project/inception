@@ -20,24 +20,35 @@
 <head>
 <wicket:head>
   <style type="text/css">
-      html {
-        overflow-y: scroll;
-      }
-    
       #annotationEditorContent {
-          display: flex;
-          margin-bottom: 20px;
+        flex: 1;
+      
+        display: flex;
       }
       
       #annotationEditorContent .editorCell {
-          flex-grow: 1;
+        flex-grow: 1;
+        overflow: auto;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        margin-left: 15px;
+        
+        display: flex;
+        flex-direction: column;
       }
       
       #annotationEditorContent .sidebar {
-          flex-basis: 20%;
-          flex-shrink: 0;
-          margin-left: 15px;
-          margin-right: 15px;
+        flex-basis: 20%;
+        flex-shrink: 0;
+        overflow: auto;
+        margin: 15px;
+        
+        display: flex;
+        flex-direction: column;
+      }
+      
+      #annotationEditorContent .sidebar-left {
+        margin-left: 0px;
       }
 
       #annotationEditorContent .sidebar-right {
@@ -46,7 +57,7 @@
       }
       
       #annotationEditorContent .collapsed {
-          flex-basis: 39px !important;
+        flex-basis: 39px !important;
       }
   
     .curation-sentence-item {

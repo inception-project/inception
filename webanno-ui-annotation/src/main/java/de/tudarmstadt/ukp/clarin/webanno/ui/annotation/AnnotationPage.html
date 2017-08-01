@@ -160,7 +160,14 @@
     <div id="annotationEditorContent">
       <div class="sidebar sidebar-left" wicket:id="leftSidebar"></div>
       <div class="editorCell">
-        <div wicket:id="editor" style="margin-right: 15px;"></div>
+        <div class="panel panel-primary panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Annotation</h3>
+          </div>
+          <div class="panel-body">
+            <div wicket:id="editor" style="text-align: center;"></div>
+          </div>
+        </div>
       </div>
       <div class="sidebar sidebar-right" wicket:id="rightSidebar">
         <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>

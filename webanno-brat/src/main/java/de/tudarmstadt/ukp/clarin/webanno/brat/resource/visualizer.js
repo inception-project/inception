@@ -38,6 +38,10 @@ var Visualizer = (function($, window, undefined) {
 	var fontZoom = 100;
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
+// WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
+	var scrollBarWidth = 15; // FIXME
+// WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
+	
     var DocumentData = function(text) {
       this.text = text;
       this.chunks = [];
@@ -1614,8 +1618,16 @@ Util.profileStart('init');
         $svg.css("font-size", fontZoom+"%");
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
         
+// WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
+/*
         // establish the width according to the enclosing element
         canvasWidth = that.forceWidth || $svgDiv.width();
+*/
+        // establish the width according to the enclosing element
+        canvasWidth = that.forceWidth || ($svgDiv.width() - scrollBarWidth);
+// WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
+        
+        
 // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 
         // Take hairline border of SVG into account
         canvasWidth -= 2;
@@ -3584,7 +3596,6 @@ Util.profileReport();
         drawing = false;
         if (redraw) {
           redraw = false;
-          renderDataReal();
         }
         $svg.find('animate').each(function() {
           if (this.beginElement) { // protect against non-SMIL browsers

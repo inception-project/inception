@@ -31,15 +31,15 @@
         display: inline-block;
       }
      </style>
+  </wicket:head>
+</head>
+<body>
+  <wicket:extend>
     <script>
       $(document).ready(function() {
         $("#urlfragment").attr("value", unescape(self.document.location.hash.substring(1)));
       });    
     </script>
-  </wicket:head>
-</head>
-<body>
-  <wicket:extend>
     <form wicket:id="loginForm" method="post" class="login-form well">
       <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
       <div class="form-group">

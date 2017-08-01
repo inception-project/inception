@@ -463,21 +463,6 @@ html, body {
   flex-direction: column;
 }
 
-/*
-.navbar-fixed-bottom {
-  min-height: 20px; 
-  height: 20px;
-}
-
-.navbar-fixed-bottom .navbar-text {
-  margin-top: 0px; 
-  margin-bottom: 0px; 
-  text-align: center; 
-  font-size: 14px; 
-  float: none;
-}
-*/
-
 .page-header {
 	margin: 0px;
 	padding: 0px;
@@ -508,6 +493,8 @@ html, body {
  
 .navbar {
   margin-bottom: 0px;
+  
+  position: relative;
 }
 
 .navbar .navbar-extra-link img {
@@ -516,15 +503,22 @@ html, body {
   margin-left: 15px;
   	height: 40px;
 }
- 
-.navbar-header .navbar-brand {
+
+.navbar .navbar-header .navbar-center {
+  position: absolute;
+  left: calc(50% - 400px / 2);
+  width: 400px;
+  text-align: center;
+} 
+
+.navbar .navbar-header .navbar-brand {
   padding-top: 5px;
   padding-bottom: 5px;
   line-height: 40px;
   font-size: 25px;
 } 
 
-.navbar-trailer .navbar-brand {
+.navbar .navbar-trailer .navbar-brand {
   padding-top: 5px;
   padding-bottom: 5px;
 } 
