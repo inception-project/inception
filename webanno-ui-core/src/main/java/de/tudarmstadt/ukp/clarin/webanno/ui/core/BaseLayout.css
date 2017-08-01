@@ -516,19 +516,9 @@ html, body {
   padding-bottom: 5px;
   line-height: 40px;
   font-size: 25px;
+  line-height: unset;
 } 
 
-.navbar .navbar-trailer .navbar-brand {
-  padding-top: 5px;
-  padding-bottom: 5px;
-} 
-
-@media (min-width: 768px) {
-  .navbar > .container .navbar-trailer .navbar-brand,
-  .navbar > .container-fluid .navbar-trailer .navbar-brand {
-    margin-left: 15px;
-  }
-} 
 .nav .breadcrumb {
   margin:7px 10px !important;
   background-color:transparent;
