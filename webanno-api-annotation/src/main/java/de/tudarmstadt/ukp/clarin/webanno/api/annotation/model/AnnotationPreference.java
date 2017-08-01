@@ -37,7 +37,7 @@ public class AnnotationPreference
 
     public static final int FONT_ZOOM_MIN = 10;
     public static final int FONT_ZOOM_MAX = 1000;
-    public static final int FONT_ZOOM_DEFAULT = 120;
+    public static final int FONT_ZOOM_DEFAULT = 100;
     
     public static final int SIDEBAR_SIZE_MIN = 10;
     public static final int SIDEBAR_SIZE_MAX = 50;
