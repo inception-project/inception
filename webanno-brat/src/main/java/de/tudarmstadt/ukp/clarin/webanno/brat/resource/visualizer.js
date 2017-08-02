@@ -1624,6 +1624,7 @@ Util.profileStart('init');
         canvasWidth = that.forceWidth || $svgDiv.width();
 */
         // establish the width according to the enclosing element
+        baseCanvasWidth = that.forceWidth || $svgDiv.width();
         canvasWidth = that.forceWidth || ($svgDiv.width() - scrollBarWidth);
 // WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
         
@@ -3543,7 +3544,7 @@ Util.profileStart('finish');
 */ 
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
-          $svgDiv.width(canvasWidth);
+          $svgDiv.width(baseCanvasWidth);
           canvasWidth = width;
           // Allow some extra space for arcs
           canvasWidth += 32;
