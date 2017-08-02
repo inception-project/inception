@@ -46,7 +46,11 @@ import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+
 import de.agilecoders.wicket.core.Bootstrap;
+import de.agilecoders.wicket.core.settings.IBootstrapSettings;
+import de.agilecoders.wicket.less.BootstrapLess;
+import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
@@ -57,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBeh
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
@@ -128,7 +133,11 @@ public abstract class WicketApplicationBase
     
     protected void initBootstrap()
     {
+        WicketWebjars.install(this);
+        BootstrapLess.install(this);
         Bootstrap.install(this);
+        IBootstrapSettings settings = Bootstrap.getSettings(this);
+        settings.setCssResourceReference(CustomBootstrapLessReference.get());
     }
 
     protected void initBaseLayoutCss()

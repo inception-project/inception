@@ -58,6 +58,8 @@
     <wicket.version>7.8.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>7.7.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>0.10.16</wicket-bootstrap.version>
+    <wicket-webjars.version>0.5.6</wicket-webjars.version>    
     <wicket-spring-boot.version>1.0.9</wicket-spring-boot.version>
     <hibernate.version>4.3.11.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -338,6 +340,31 @@
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-annotation</artifactId>
         <version>${wicketstuff.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-core</artifactId>
+        <version>${wicket-bootstrap.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>de.agilecoders.wicket</groupId>
+         <artifactId>wicket-bootstrap-extensions</artifactId>
+         <version>${wicket-bootstrap.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-themes</artifactId>
+        <version>${wicket-bootstrap.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-less</artifactId>
+        <version>${wicket-bootstrap.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket.webjars</groupId>
+        <artifactId>wicket-webjars</artifactId>
+        <version>${wicket-webjars.version}</version>
       </dependency>
       <dependency>
         <groupId>com.giffing.wicket.spring.boot.starter</groupId>
