@@ -680,3 +680,13 @@ span.form-control {
 	position: absolute;
 	bottom: 20px;
 }
+
+
+.dev-warnings > .alert {
+	padding: 0;
+	border: none;
+	background-color:initial;
+}
+.dev-warnings .popover-content ul {
+	padding-left: 18px;
+}
