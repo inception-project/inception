@@ -253,17 +253,6 @@ public class AgreementPage
             add(exportFormat = new DropDownChoice<>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
-            exportFormat.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = -1L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    // Actually nothing to do, we just want the Ajax behavior to update the model
-                    // object.
-                }
-            });
 
             add(excludeIncomplete = new CheckBox("excludeIncomplete")
             {

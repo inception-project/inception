@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,92 +16,117 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:extend>
-		<table class="hfill">
-			<tr style="vertical-align: top;">
-				<td width="20%">
-					<form wicket:id="projectSelectionForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend><wicket:message key="projects" /></legend>
-							<select class="hfill" wicket:id="project" size="29"></select>
-						</fieldset>
-					</form>
-				</td>
-				<td width="80%">
-                    <form wicket:id="agreementForm" class="hfill">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>
-								<wicket:message key="agreement" />: (<a target="_blank"
-									wicket:message="href:agreement.help.link"><wicket:message
-										key="help" /></a>)
-							</legend>
-							<table class="hfill">
-								<tr style="vertical-align: top;">
-									<td width="20%"> 
-										<table>
-											<tr class="labels-top">
-											  <td colspan="2">
-											    <label wicket:for="feature"><wicket:label key="feature" />:</label>
-											    <select class="hfill" wicket:id="feature"></select>
-											  </td>
-											</tr>
-											<tr class="labels-left">
-												<td><label wicket:for="measure"> <wicket:label
-															key="measure" />:
-												</label></td>
-												<td><select wicket:id="measure"></select></td>
-											</tr>
-											<tr class="labels-left">
-												<td><label wicket:for="excludeIncomplete"> <wicket:label
-															key="excludeIncomplete" />:
-												</label></td>
-												<td><input type="checkbox"
-													wicket:id="excludeIncomplete"></input></td>
-											</tr>
-											<tr class="labels-left" wicket:enclosure="linkCompareBehavior">
-												<td><label wicket:for="linkCompareBehavior"> <wicket:label
-															key="linkCompareBehavior" />:
-												</label></td>
-												<td><select wicket:id="linkCompareBehavior"></select></td>
-											</tr>
-                                            <tr class="labels-left">
-                                                <td><label wicket:for="exportFormat"> <wicket:label
-                                                            key="exportFormat" />:
-                                                </label></td>
-                                                <td><select wicket:id="exportFormat"></select></td>
-                                            </tr>
-											<tr>
-												<td colspan="2">
-													<p>
-														<b>Legend:</b>
-													</p>
-													<ul>
-														<li>Lower triangle: Positions included in agreement /
-															total number of positions</li>
-														<li>Upper triangle: Agreement score - click on cell
-															to export agreement report</li>
-													</ul>
+  <wicket:extend>
+    <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container">
+      <div class="flex-content panel panel-default panel-flex" style="margin: 15px; margin-right: 0px; min-height: 10em;">
+        <div class="panel-heading">
+          <h3 class="panel-title"><wicket:message key="projects" /></h3>
+        </div>
+        <div class="scrolling panel-body fit-child-snuck" >
+          <select wicket:id="project" size="20" class="form-control"></select>
+        </div>
+      </div>
+    </form>
+    <form wicket:id="agreementForm" class="scrolling flex-content">
+      <div class="panel panel-default" style=" margin: 15px;">
+        <div class="panel-heading">
+          <h3 class="panel-title"><wicket:message key="settings" />
+          <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
+              <wicket:message key="help" /></a></span></h3>
+        </div>
+        <div class="panel-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-sm-6 form-group" wicket:enclosure="feature">
+                <label wicket:for="feature" ><wicket:label key="feature"/></label>
+                <select wicket:id="feature" size="5" class="form-control"></select>
+              </div>
+              <div class="col-sm-6 form-horizontal" wicket:enclosure="measure">
+                <div class="form-group">
+                  <label wicket:for="measure" class="col-sm-4 control-label">
+                  <wicket:label key="measure"/></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="measure" class="form-control"></select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-4 col-sm-8">
+                    <div class="checkbox">
+                      <label wicket:for="excludeIncomplete">
+                        <input wicket:id="excludeIncomplete" type="checkbox"/>
+                        <wicket:label key="excludeIncomplete"/>
+                      </label>
+                    </div>
+                  </div>              
+                </div>
+                <div class="form-group" wicket:enclosure="linkCompareBehavior">
+                  <label wicket:for="linkCompareBehavior" class="col-sm-4 control-label">
+                      <wicket:label key="linkCompareBehavior"/></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="linkCompareBehavior" class="form-control"></select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        
+      <div class="panel panel-default" 
+          style=" margin: 15px; margin-top: 0px;" wicket:enclosure="exportAll">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <wicket:message key="agreement" />
+            <span class="pull-right">
+              <a role="button"
+                 data-toggle="popover"
+                 data-placement="left"
+                 data-trigger="focus"
+                 tabindex="0"
+                 title="Legend"
+                 data-html="true"
+                 data-popover-content="#legend-popover">Legend</a>
+            </span>
+          </h3>
+        </div>
+        <div class="panel-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="form-group form-horizontal" wicket:enclosure="exportFormat">
+                <label wicket:for="exportFormat" class="col-sm-2 control-label">
+                    <wicket:label key="exportFormat"/></label>
+                <div class="col-sm-4">
+                  <select wicket:id="exportFormat" class="form-control"></select>
+                </div>
+                <div class="col-sm-6">
+                  <div class="pull-right">
+                    <input wicket:id="exportAll" type="submit" class="btn btn-default" style="height: 28px;" wicket:message="value:exportAll"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+              
+            <div class="row">
+              <table wicket:id="agreementTable" style="width: 100%; margin-top: 15px;"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
 
-												</td>
-											</tr>
-										</table>
-								    </td>
-									<td width="80%">
-                        	            <div class="buttons">
-                                            <input type="submit" wicket:id="exportAll" wicket:message="value:exportAll"></input>
-									    </div>
-										<table wicket:id="agreementTable" class="hfill"></table>
-									</td>
-								</tr>
-							</table>
-                        </fieldset>						
-    				</form>
-				</td>
-			</tr>
-		</table>
-	</wicket:extend>
+    
+    <div id="legend-popover" class="hidden">
+      <div class="popover-body">
+        <ul>
+          <li>Lower triangle: Positions included in agreement / total number
+            of positions</li>
+          <li>Upper triangle: Agreement score - click on cell to export
+            agreement report</li>
+        </ul>
+      </div>
+    </div>    
+  </wicket:extend>
 </body>
 </html>
