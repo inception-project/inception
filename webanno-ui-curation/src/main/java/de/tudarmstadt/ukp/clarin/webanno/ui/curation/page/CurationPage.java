@@ -34,7 +34,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
@@ -44,6 +43,7 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -88,8 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.dialog.ReCreateMergeCASModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -131,12 +130,11 @@ public class CurationPage
     private ExportDocumentDialog exportDialog;
     private GuidelinesDialog guidelinesDialog;
 
-    private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
 
     private CurationPanel curationPanel;
-    private AjaxLink<Void> showreCreateMergeCasModal;
-    private ModalWindow reCreateMergeCas;
+    private ChallengeResponseDialog remergeDocumentDialog;
+    private ActionBarLink remergeDocumentLink;
 
     private WebMarkupContainer finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -145,7 +143,6 @@ public class CurationPage
     public CurationPage()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
-        reMerge = new ReMergeCasModel();
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
@@ -241,38 +238,23 @@ public class CurationPage
                 this::actionGotoPage));
         add(gotoPageTextFieldForm);
 
-        add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
-        reCreateMergeCas.setOutputMarkupId(true);
-        //Change size if you change text here
-        reCreateMergeCas.setInitialWidth(580);
-        reCreateMergeCas.setInitialHeight(40);
-        reCreateMergeCas.setResizable(true);
-        reCreateMergeCas.setWidthUnit("px");
-        reCreateMergeCas.setHeightUnit("px");
-        reCreateMergeCas
-                .setTitle("Are you sure? All curation annotations for this document will be lost.");
-
-        add(showreCreateMergeCasModal = new AjaxLink<Void>("showreCreateMergeCasModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            protected void onConfigure()
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !state.getDocument().getState()
-                                .equals(SourceDocumentState.CURATION_FINISHED));
-            }
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                actionRemergeDocument(aTarget);
-            }
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        remergeDocumentDialog = new ChallengeResponseDialog("remergeDocumentDialog",
+                new StringResourceModel("RemergeDocumentDialog.title", this),
+                new StringResourceModel("RemergeDocumentDialog.text", this).setModel(getModel())
+                        .setParameters(documentNameModel),
+                documentNameModel);
+        remergeDocumentDialog.setConfirmAction(this::actionRemergeDocument);
+        add(remergeDocumentDialog);
+        remergeDocumentLink = new ActionBarLink("showRemergeDocumentDialog", t -> 
+            remergeDocumentDialog.show(t));
+        remergeDocumentLink.onConfigure(_this -> {
+            AnnotatorState state = CurationPage.this.getModelObject();
+            _this.setEnabled(state.getDocument() != null && !state.getDocument().getState()
+                    .equals(SourceDocumentState.CURATION_FINISHED));
         });
-        showreCreateMergeCasModal.setOutputMarkupId(true);
-        
+        add(remergeDocumentLink);
+
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
@@ -577,41 +559,19 @@ public class CurationPage
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
             aCallbackTarget.add(curationPanel.editor);
-            aCallbackTarget.add(showreCreateMergeCasModal);
+            aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
     }
 
-    private void actionRemergeDocument(AjaxRequestTarget aTarget)
+    private void actionRemergeDocument(AjaxRequestTarget aTarget) throws IOException
     {
-        reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas.getContentId(),
-                reCreateMergeCas, reMerge));
-        reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = 4816615910398625993L;
-
-            @Override
-            public void onClose(AjaxRequestTarget aCallbackTarget)
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                if (reMerge.isReMerege()) {
-                    try {
-                        aCallbackTarget.add(getFeedbackPanel());
-                        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                                state.getUser().getUsername());
-                        actionLoadDocument(aCallbackTarget);
-
-                        aCallbackTarget.appendJavaScript("alert('Re-merge finished!')");
-                    }
-                    catch (Exception e) {
-                        aCallbackTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        });
-        reCreateMergeCas.show(aTarget);
+        AnnotatorState state = CurationPage.this.getModelObject();
+        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
+                state.getUser().getUsername());
+        actionLoadDocument(aTarget);
+        info("Re-merge finished!");
+        aTarget.add(getFeedbackPanel());
     }
 
     /**
@@ -703,7 +663,7 @@ public class CurationPage
     
             aTarget.add(getOrCreatePositionInfoLabel());
             aTarget.add(documentNamePanel);
-            aTarget.add(showreCreateMergeCasModal);
+            aTarget.add(remergeDocumentLink);
             aTarget.add(finishDocumentLink);
         }
         catch (Exception e) {

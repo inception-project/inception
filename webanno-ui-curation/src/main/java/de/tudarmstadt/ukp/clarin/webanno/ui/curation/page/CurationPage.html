@@ -29,7 +29,7 @@
 <body>
   <wicket:extend>
     <div wicket:id=openDocumentsModal></div>
-    <div wicket:id=reCreateMergeCasModal></div>
+    <div wicket:id=remergeDocumentDialog></div>
     <div wicket:id="preferencesDialog"></div>
     <div wicket:id="exportDialog"></div>
     <div wicket:id="guidelinesDialog"></div>
@@ -45,10 +45,7 @@
                 <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
                     src="images/drawer_open.png" title="Open" /><br />Open
                 </a></li>
-                <li><a wicket:id="showreCreateMergeCasModal" id="showreCreateMergeCasModal">
-                    <img src="images/recycle.png" title="Re-Create Merge Annotation" /><br />Re-create
-                    Merge
-                </a></li>
+                <li wicket:id="showRemergeDocumentDialog" />
                 <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
                     src="images/document_back.png" title="Previous document" /><br />Prev.
                 </a></li>
