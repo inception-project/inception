@@ -35,13 +35,13 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -164,7 +164,7 @@ public class CurationPanel
                 try {
                     // update begin/end of the curationsegment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), IFeedback.class);
                     CurationPanel.this.updatePanel(aTarget, curationContainer);
                 }
                 catch (UIMAException e) {
@@ -187,7 +187,7 @@ public class CurationPanel
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 annotate = true;
     
                 try {

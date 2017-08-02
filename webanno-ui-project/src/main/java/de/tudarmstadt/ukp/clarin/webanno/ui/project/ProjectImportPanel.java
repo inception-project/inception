@@ -33,6 +33,7 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -126,7 +127,7 @@ public class ProjectImportPanel
                 }
             }
             catch (Exception e) {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing project", e);
             }

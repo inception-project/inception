@@ -37,10 +37,10 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.link.DownloadLink;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -309,12 +309,12 @@ public class ProjectExportPanel
                         }
 
                         enabled = true;
-                        target.addChildren(getPage(), FeedbackPanel.class);
+                        target.addChildren(getPage(), IFeedback.class);
                         info("Project export complete");
                     }
                     else if (canceled) {
                         enabled = true;
-                        target.addChildren(getPage(), FeedbackPanel.class);
+                        target.addChildren(getPage(), IFeedback.class);
                         info("Project export cancelled");
                     }
                 }

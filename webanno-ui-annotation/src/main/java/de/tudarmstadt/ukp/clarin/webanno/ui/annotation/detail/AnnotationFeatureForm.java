@@ -38,13 +38,13 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -293,7 +293,7 @@ public class AnnotationFeatureForm
             @Override
             public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 try {
                     editorPanel.actionClear(aTarget);
                 }
@@ -332,7 +332,7 @@ public class AnnotationFeatureForm
             @Override
             public void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 try {
                     editorPanel.actionReverse(aTarget);
                 }

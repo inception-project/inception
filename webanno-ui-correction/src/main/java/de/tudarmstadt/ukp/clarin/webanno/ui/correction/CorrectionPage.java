@@ -35,12 +35,12 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -192,7 +192,7 @@ public class CorrectionPage
             {
                 AnnotatorState state = CorrectionPage.this.getModelObject();
                 
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 try {
                     // update begin/end of the curation segment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
@@ -246,7 +246,7 @@ public class CorrectionPage
                 // but being AJAX it flickers less.
                 actionLoadDocument(aTarget);
                 
-//                aCallbackTarget.addChildren(getPage(), FeedbackPanel.class);
+//                aCallbackTarget.addChildren(getPage(), IFeedback.class);
 //                try {
 //                    actionLoadDocument(aCallbackTarget);
 //
@@ -394,7 +394,7 @@ public class CorrectionPage
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 aTarget.add(getOrCreatePositionInfoLabel());
                 aTarget.add(suggestionView);
 

@@ -20,9 +20,12 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <fieldset class="ui-widget-content ui-corner-all" wicket:enclosure="form">
-      <legend>Import Project</legend>
-      <form wicket:id="form">
+    <div class="panel panel-default panel-flex" style="flex: 1; margin: 15px; margin-right: 0px; min-height: 10em;" wicket:enclosure="form">
+      <div class="panel-heading">
+        <h3 class="panel-title">Import Project</h3>
+      </div>
+      <form wicket:id="form" >
+      <div class="panel-body" style="margin: 5px; position: relative; overflow: auto;">
         <table class="hfill">
           <tr>
             <td><label>Files</label></td>
@@ -32,12 +35,15 @@
             <td><input wicket:id="generateUsers" type="checkbox" /></td>
             <td class="hfill"><label>Create missing users</label></td>
           </tr>
-        </table>
-        <div class="buttons">
-          <input type="submit" wicket:id="import" wicket:message="value:import"/>
+        </table>        
+      </div>
+      <div class="panel-footer">
+        <div class="pull-right">
+          <input wicket:id="import" type="submit" wicket:message="value:import" class="btn btn-primary"/>
         </div>
-      </form>
-    </fieldset>
+      </div> 
+      </form>           
+    </div>
   </wicket:panel>
 </body>
 </html>

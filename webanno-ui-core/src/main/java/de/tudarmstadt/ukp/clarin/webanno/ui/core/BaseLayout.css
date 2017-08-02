@@ -134,10 +134,6 @@ fieldset {
     border-radius:6px;
 }
 
-.buttons {
-    text-align:right;
-}
-
 ul.vcheckboxgroup {
     padding:0px;
     margin:0px;
@@ -164,17 +160,6 @@ ul.vcheckboxgroup {
 
 .headerlink img {
   height: 40px;
-}
-
-ul.feedbackPanel {
-    background-color:#fe8;
-    border:1px solid #900;
-    color:#900;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: left;
-    max-height: 100px;
-    overflow: scroll;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -478,8 +463,8 @@ html, body {
 }
 
 .page-footer {
-	flex: none;
-	color: #777;
+  flex: none;
+  color: #777;
   min-height: 21px; 
   height: 21px;
   margin-top: 0px; 
@@ -491,6 +476,19 @@ html, body {
   background-color: #f8f8f8;
   border-color: #e7e7e7;
   border-top: 1px solid;
+}
+
+.feedback-panel {
+	position: absolute;
+	bottom: 21px;
+	z-index: 1;
+}
+.feedback-panel ul.feedbackPanel {
+	list-style:none;
+}
+.feedback-panel .alert {
+	padding: 5px;
+	margin-bottom: 10px;
 }
  
 .navbar {
@@ -521,26 +519,12 @@ html, body {
   line-height: unset;
 } 
 
-.nav .breadcrumb {
-  margin:7px 10px !important;
-  background-color:transparent;
-}
-
 .nav .logo {
   height: 40px;
 }
 
 .nav .pageicon {
   height: 40px;
-}
-
-.nav .breadcrumb select {
-  display: initial;
-  width: initial;
-  padding: initial;
-  height: initial;
-  line-height: initial;
-  font-size: 11px;
 }
 
 .nav-pills img {
@@ -700,8 +684,18 @@ span.form-control {
   flex-basis: 39px !important;
 }
 
+/* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
+   control its parents dimensions but shouldn't, e.g SVG or multi-select*/
 .fit-child-snuck { position: relative; }
 .fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top 0px; bottom 0px; }
-
 .fit-child-loose { position: relative; }
 .fit-child-loose > * { position: absolute; left: 5px; right: 5px; top 5px; bottom 5px; }
+
+.dev-warnings > .alert {
+	padding: 0;
+	border: none;
+	background-color:initial;
+}
+.dev-warnings .popover-content ul {
+	padding-left: 18px;
+}

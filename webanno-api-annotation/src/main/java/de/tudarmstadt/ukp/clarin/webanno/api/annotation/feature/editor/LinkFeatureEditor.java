@@ -31,11 +31,11 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -456,7 +456,7 @@ public class LinkFeatureEditor
     {
         if (StringUtils.isBlank((String) field.getModelObject())) {
             error("Must set slot label before adding!");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         else {
             @SuppressWarnings("unchecked")

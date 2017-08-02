@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxFormChoiceComponentUpdatingBehavior
@@ -59,7 +59,7 @@ public class LambdaAjaxFormChoiceComponentUpdatingBehavior
                 LoggerFactory.getLogger(component.getPage().getClass())
                         .error("Error: " + e.getMessage(), e);
                 component.error("Error: " + e.getMessage());
-                aTarget.addChildren(component.getPage(), FeedbackPanel.class);
+                aTarget.addChildren(component.getPage(), IFeedback.class);
             }
         }
     }

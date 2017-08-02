@@ -128,7 +128,7 @@ public class ImportDocumentsPanel extends Panel
             }
         }
         
-        //aTarget.addChildren(getPage(), FeedbackPanel.class);
+        //aTarget.addChildren(getPage(), IFeedback.class);
         WicketUtil.refreshPage(aTarget, getPage());
     }
 }

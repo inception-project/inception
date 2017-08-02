@@ -23,15 +23,16 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
@@ -78,7 +79,6 @@ public abstract class ApplicationPageBase
         commonInit();
     }
 
-    @SuppressWarnings({ "serial" })
     private void commonInit()
     {
         Properties settings = SettingsUtil.getSettings();
@@ -108,9 +108,8 @@ public abstract class ApplicationPageBase
             throw new RuntimeException(e1);
         }
 
-        feedbackPanel = new FeedbackPanel("feedbackPanel");
+        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "error"));
         feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth != null ? auth.getName() : "SYSTEM";
@@ -131,55 +130,25 @@ public abstract class ApplicationPageBase
             }
             return true;
         });
+        add(feedbackPanel);
         
         versionLabel = new Label("version", SettingsUtil.getVersionString());
-
-        embeddedDbWarning = new Label("embeddedDbWarning",
-                "USE THIS INSTALLATION FOR TESTING ONLY -- "
-                + "AN EMBEDDED DATABASE IS NOT RECOMMENDED FOR PRODUCTION USE");
-        embeddedDbWarning.setVisible(false);
-        try {
-            String driver = dbDriverService.getDatabaseDriverName();
-            embeddedDbWarning.setVisible(StringUtils.contains(driver.toLowerCase(Locale.US),
-                    "hsql"));
-        }
-        catch (Throwable e) {
-            LOG.warn("Unable to determine which database is being used", e);
-        }
-
-        // Override warning about embedded database.
-        if ("false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE))) {
-            embeddedDbWarning.setVisible(false);
-        }
-        
-        // Display a warning when using an unsupported browser
-        RequestCycle requestCycle = RequestCycle.get();
-        WebClientInfo clientInfo;
-        if (Session.exists()) {
-            WebSession session = WebSession.get();
-            clientInfo = session.getClientInfo();
-        }
-        else {
-            clientInfo = new WebClientInfo(requestCycle);
-        }
-        ClientProperties clientProperties = clientInfo.getProperties();
-
-        browserWarning = new Label("browserWarning", "THIS BROWSER IS NOT SUPPORTED -- "
-                + "PLEASE USE CHROME OR SAFARI");
-        browserWarning.setVisible(!clientProperties.isBrowserSafari()
-                && !clientProperties.isBrowserChrome());
-
-        // Override warning about browser.
-        if ("false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER))) {
-            browserWarning.setVisible(false);
-        }
-        
-        add(feedbackPanel);
         add(versionLabel);
+        
+        // set up warnings shown when using an embedded DB or some unsupported browser
+        boolean isBrowserWarningVisible = isBrowserWarningVisible(settings);
+        boolean isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
+        
+        embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
+        embeddedDbWarning.setVisible(isDatabaseWarningVisible);
         add(embeddedDbWarning);
+        browserWarning = new Label("browserWarning", new ResourceModel("warning.browser"));
+        browserWarning.setVisible(isBrowserWarningVisible);
         add(browserWarning);
+        
+        WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
+        warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);  
+        add(warningsContainer);
     }
 
     @Override
@@ -199,5 +168,39 @@ public abstract class ApplicationPageBase
     public FeedbackPanel getFeedbackPanel()
     {
         return feedbackPanel;
+    }
+    
+    private boolean isDatabaseWarningVisible(Properties settings) {
+        boolean isUsingEmbeddedDatabase;
+        try {
+            String driver = dbDriverService.getDatabaseDriverName();
+            isUsingEmbeddedDatabase = StringUtils.contains(driver.toLowerCase(Locale.US), "hsql");
+        } catch (Throwable e) {
+            LOG.warn("Unable to determine which database is being used", e);
+            isUsingEmbeddedDatabase = false;
+        }
+        boolean ignoreWarning = "false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE));
+
+        return isUsingEmbeddedDatabase && !ignoreWarning;
+    }
+    
+    private boolean isBrowserWarningVisible(Properties settings) { 
+        RequestCycle requestCycle = RequestCycle.get();
+        WebClientInfo clientInfo;
+        if (Session.exists()) {
+            WebSession session = WebSession.get();
+            clientInfo = session.getClientInfo();
+        } else {
+            clientInfo = new WebClientInfo(requestCycle);
+        }
+        ClientProperties clientProperties = clientInfo.getProperties();
+        boolean isUsingUnsupportedBrowser = !clientProperties.isBrowserSafari()
+                && !clientProperties.isBrowserChrome();
+        
+        boolean ignoreWarning = "false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
+
+        return isUsingUnsupportedBrowser && !ignoreWarning;
     }
 }
