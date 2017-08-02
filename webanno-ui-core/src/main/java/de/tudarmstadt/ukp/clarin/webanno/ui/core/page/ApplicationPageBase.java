@@ -23,7 +23,6 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
@@ -109,9 +108,8 @@ public abstract class ApplicationPageBase
             throw new RuntimeException(e1);
         }
 
-        feedbackPanel = new FeedbackPanel("feedbackPanel");
+        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "error"));
         feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth != null ? auth.getName() : "SYSTEM";

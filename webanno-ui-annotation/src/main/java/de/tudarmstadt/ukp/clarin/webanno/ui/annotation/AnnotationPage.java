@@ -38,13 +38,13 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -621,7 +621,7 @@ public class AnnotationPage
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
+        aTarget.addChildren(getPage(), IFeedback.class);
         
         // Update URL for current document
         updateUrlFragment(aTarget);
@@ -657,7 +657,7 @@ public class AnnotationPage
             protected void onParameterArrival(IRequestParameters aRequestParameters,
                     AjaxRequestTarget aTarget)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
 
                 StringValue project = aRequestParameters.getParameterValue(PAGE_PARAM_PROJECT_ID);
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
@@ -781,7 +781,7 @@ public class AnnotationPage
                     actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), IFeedback.class);
                     LOG.info("Error reading CAS " + e.getMessage());
                     error("Error reading CAS " + e.getMessage());
                 }

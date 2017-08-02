@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxButton<T>
@@ -58,7 +58,7 @@ public class LambdaAjaxButton<T>
             else {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -67,6 +67,6 @@ public class LambdaAjaxButton<T>
     protected void onError(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         super.onError(aTarget, aForm);
-        aTarget.addChildren(getPage(), FeedbackPanel.class);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 }

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.feedback.IFeedback;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxLink
@@ -72,7 +72,7 @@ public class LambdaAjaxLink
             else {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
     }

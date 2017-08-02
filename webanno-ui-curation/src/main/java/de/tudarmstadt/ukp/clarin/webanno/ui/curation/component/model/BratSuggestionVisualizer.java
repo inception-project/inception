@@ -22,11 +22,11 @@ import java.io.IOException;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 
 import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
@@ -84,7 +84,7 @@ public class BratSuggestionVisualizer
                 }
                 catch (UIMAException | ClassNotFoundException | IOException
                         | AnnotationException e) {
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), IFeedback.class);
                     error("Error: " + e.getMessage());
                 }
             }

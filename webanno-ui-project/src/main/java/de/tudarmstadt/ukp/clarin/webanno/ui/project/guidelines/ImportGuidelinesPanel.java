@@ -101,7 +101,7 @@ public class ImportGuidelinesPanel
             }
         }
 
-        //aTarget.addChildren(getPage(), FeedbackPanel.class);
+        //aTarget.addChildren(getPage(), IFeedback.class);
         WicketUtil.refreshPage(aTarget, getPage());
     }
 }

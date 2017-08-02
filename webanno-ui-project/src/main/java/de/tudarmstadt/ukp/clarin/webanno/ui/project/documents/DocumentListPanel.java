@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -88,7 +88,7 @@ public class DocumentListPanel
     {
         if (document.getObject() == null) {
             error("No document selected");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
         
@@ -98,7 +98,7 @@ public class DocumentListPanel
         catch (IOException e) {
             LOG.error("Unable to delete document", e);
             error("Unable to delete document: " + e.getMessage());
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         document.setObject(null);
         aTarget.add(getPage());

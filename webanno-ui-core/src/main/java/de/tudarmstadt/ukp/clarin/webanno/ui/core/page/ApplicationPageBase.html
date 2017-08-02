@@ -61,17 +61,15 @@
     </wicket:child>
   </div>
 
-  <div class="notice-container">
-    <div wicket:id="feedbackPanel" class="navbar-text feedback-panel">
-      [Feedback]
-    </div>
-  </div>
+  <div wicket:id="feedbackPanel" class="feedback-panel"></div>
 
   <div class="page-footer">
-    Technische Universität Darmstadt -- 
-    Computer Science Department -- 
-    <wicket:message key="product.name" /> --
-    <wicket:container wicket:id="version"/>
+    <span>
+      Technische Universität Darmstadt -- 
+      Computer Science Department -- 
+      <wicket:message key="product.name" /> --
+      <wicket:container wicket:id="version"/>
+    </span>   
     
     <wicket:container wicket:id="warnings">
       <div class="dev-warnings pull-right">

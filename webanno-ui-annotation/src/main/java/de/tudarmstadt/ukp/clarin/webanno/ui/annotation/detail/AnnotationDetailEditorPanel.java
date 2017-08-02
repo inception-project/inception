@@ -49,8 +49,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -157,7 +157,7 @@ public class AnnotationDetailEditorPanel
             if (aAdapter instanceof SpanAdapter) {
                 error("Layer [" + aAdapter.getLayer().getUiName()
                     + "] does not support arc annotation.");
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
             else if (aAdapter instanceof ArcAdapter) {
                 createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas);
@@ -434,13 +434,13 @@ public class AnnotationDetailEditorPanel
 
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
         if (state.getSelectedAnnotationLayer().isReadonly()) {
             error("Layer is not editable.");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 

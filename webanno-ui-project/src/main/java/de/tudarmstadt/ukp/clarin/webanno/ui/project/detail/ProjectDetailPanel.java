@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -34,7 +35,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -129,7 +129,7 @@ public class ProjectDetailPanel
             catch (IOException e) {
                 LOG.error("Unable to remove project :" + ExceptionUtils.getRootCauseMessage(e));
                 error("Unable to remove project " + ":" + ExceptionUtils.getRootCauseMessage(e));
-                target.addChildren(getPage(), FeedbackPanel.class);
+                target.addChildren(getPage(), IFeedback.class);
             }
         });
     }
@@ -155,7 +155,7 @@ public class ProjectDetailPanel
     {
         aTarget.add(getPage());
         // aTarget.add(((ApplicationPageBase) getPage()).getPageContent());
-        // aTarget.addChildren(getPage(), FeedbackPanel.class);
+        // aTarget.addChildren(getPage(), IFeedback.class);
         
         Project project = aForm.getModelObject();
         if (project.getId() == 0) {

@@ -31,13 +31,13 @@ import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxButton;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -631,7 +631,7 @@ public class ProjectMiraTemplatePanel
                     MiraTemplate template = miraTemplateDetailForm.getModelObject();
                     if (!template.getTrainFeature().getLayer().getType()
                             .equals(WebAnnoConst.SPAN_TYPE)) {
-                        aTarget.addChildren(getPage(), FeedbackPanel.class);
+                        aTarget.addChildren(getPage(), IFeedback.class);
                         error("Relation automation is not supported yet, but you can use the copy annotator.");
                         // No support yet for relation automation
                         return;

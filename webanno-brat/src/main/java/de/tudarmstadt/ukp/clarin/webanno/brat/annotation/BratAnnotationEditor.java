@@ -33,11 +33,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
@@ -141,7 +141,7 @@ public class BratAnnotationEditor
                 
                 // We always refresh the feedback panel - only doing this in the case were actually
                 // something worth reporting occurs is too much of a hassel...
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
 
                 final IRequestParameters request = getRequest().getPostParameters();
                 
@@ -471,7 +471,7 @@ public class BratAnnotationEditor
             catch (Exception e) {
                 LOG.error("Unable to load data", e);
                 error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                target.addChildren(getPage(), FeedbackPanel.class);
+                target.addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -616,7 +616,7 @@ public class BratAnnotationEditor
         catch (IOException e) {
             LOG.error("Unable to load data", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
     

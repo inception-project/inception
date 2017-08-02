@@ -166,17 +166,6 @@ ul.vcheckboxgroup {
   height: 40px;
 }
 
-ul.feedbackPanel {
-    background-color:#fe8;
-    border:1px solid #900;
-    color:#900;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: left;
-    max-height: 100px;
-    overflow: scroll;
-}
-
 /* -------------------------------------------------------------------------------------------------
  * Menu
  */
@@ -478,8 +467,8 @@ html, body {
 }
 
 .page-footer {
-	flex: none;
-	color: #777;
+  flex: none;
+  color: #777;
   min-height: 21px; 
   height: 21px;
   margin-top: 0px; 
@@ -491,6 +480,18 @@ html, body {
   background-color: #f8f8f8;
   border-color: #e7e7e7;
   border-top: 1px solid;
+}
+
+.feedback-panel {
+	position: absolute;
+	bottom: 21px;
+	z-index: 1;
+}
+.feedback-panel ul.feedbackPanel {
+	list-style:none;
+}
+.feedback-panel .alert {
+	padding: 5px;
 }
  
 .navbar {
@@ -521,26 +522,12 @@ html, body {
   line-height: unset;
 } 
 
-.nav .breadcrumb {
-  margin:7px 10px !important;
-  background-color:transparent;
-}
-
 .nav .logo {
   height: 40px;
 }
 
 .nav .pageicon {
   height: 40px;
-}
-
-.nav .breadcrumb select {
-  display: initial;
-  width: initial;
-  padding: initial;
-  height: initial;
-  line-height: initial;
-  font-size: 11px;
 }
 
 .nav-pills img {
@@ -675,12 +662,6 @@ span.form-control {
   height: -webkit-min-content;
   height: min-content;
 }
-
-.notice-container {
-	position: absolute;
-	bottom: 20px;
-}
-
 
 .dev-warnings > .alert {
 	padding: 0;
