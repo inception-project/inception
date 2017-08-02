@@ -492,6 +492,7 @@ html, body {
 }
 .feedback-panel .alert {
 	padding: 5px;
+	margin-bottom: 10px;
 }
  
 .navbar {
