@@ -636,6 +636,7 @@ span.form-control {
 .panel-flex .panel-footer { flex: none; }
 .panel-flex .panel-footer .form-group { margin-bottom: 0px; }
 .flex-v-container .panel:last-child { margin-bottom: 0px; }
+.panel { margin-bottom: 15px; }
 
 .min-content-height {
   height: -moz-min-content;
@@ -686,9 +687,9 @@ span.form-control {
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
 .fit-child-snuck { position: relative; }
-.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top 0px; bottom 0px; }
+.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; }
 .fit-child-loose { position: relative; }
-.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top 5px; bottom 5px; }
+.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; }
 
 .dev-warnings > .alert {
 	padding: 0;

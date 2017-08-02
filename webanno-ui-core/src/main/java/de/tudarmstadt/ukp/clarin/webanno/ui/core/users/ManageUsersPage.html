@@ -24,8 +24,8 @@
         <div class="panel-heading">
           <h3 class="panel-title">Users</h3>
         </div>
-        <div class="panel-body" style="margin: 5px; position: relative; overflow: auto;">
-          <select wicket:id="user" size="20" class="form-control" style="position: absolute; top: 0px; bottom: 5px; left: 0px; right: 0px;"></select>
+        <div class="scrolling panel-body fit-child-snuck">
+          <select wicket:id="user" size="20" class="form-control"></select>
         </div>
         <div class="panel-footer">
           <div class="form-group pull-right">
@@ -36,7 +36,7 @@
       </div>
     </form>
     <form id="detail-editor" wicket:id="detailForm" class="scrolling flex-content flex-h-container">
-      <div class="panel panel-default panel-flex min-content-height" style="flex: 1; margin: 15px;">
+      <div class="flex-content panel panel-default panel-flex min-content-height" style=" margin: 15px;">
         <div class="panel-heading">
           <h3 class="panel-title">User details</h3>
         </div>
@@ -82,7 +82,7 @@
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
                   <label wicket:for="enabled">
-                    <input wicket:id="enabled" type="checkbox"> Enable account
+                    <input wicket:id="enabled" type="checkbox" class="form-control"> Enable account
                   </label>
                 </div>
               </div>              
