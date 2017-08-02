@@ -17,16 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoCssReference;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.menu.MainMenuPage;
 
 /**
@@ -58,19 +51,7 @@ public class WicketApplication
     {
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
-                component.add(new Behavior()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public void renderHead(Component aComponent, IHeaderResponse aResponse)
-                    {
-                        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
-                        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
-                        aResponse.render(JavaScriptHeaderItem
-                                .forReference(WebAnnoJavascriptReference.get()));
-                    }
-                });
+                component.add(new WebAnnoResourcesBehavior());
             }
         });
     }
