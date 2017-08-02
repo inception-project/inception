@@ -21,45 +21,7 @@
   <wicket:head>
     <style>
       .page-content {
-        display: flex;
-        flex-direction: column;
-      }
-    
-      #annotationEditorContent {
-        flex: 1;
-      
-        display: flex;
-      }
-      
-      #annotationEditorContent .editorCell {
-        flex-grow: 1;
-        overflow: auto;
-        margin-top: 15px;
-        margin-bottom: 15px;
-        margin-left: 15px;
-      }
-      
-      #annotationEditorContent .sidebar {
-        flex-basis: 20%;
-        flex-shrink: 0;
-        overflow: auto;
-        margin: 15px;
-        
-        display: flex;
-        flex-direction: column;
-      }
-      
-      #annotationEditorContent .sidebar-left {
-        margin-left: 0px;
-      }
-
-      #annotationEditorContent .sidebar-right {
-        margin-left: 0px;
-        margin-right: 0px;
-      }
-      
-      #annotationEditorContent .collapsed {
-        flex-basis: 39px !important;
+        flex-direction: column !important;
       }
     </style>
   </wicket:head>
@@ -173,15 +135,15 @@
         </span>
       </div>
     </div>
-    
-    <div id="annotationEditorContent">
-      <div class="editorCell">
-        <div class="panel panel-primary panel-flex" wicket:enclosure="mergeView">
+
+    <div class="annotation-editor-container flex-content flex-h-container">
+      <div class="scrolling flex-content flex-v-container annotation-editor-center">
+        <div class="panel panel-primary" wicket:enclosure="mergeView">
           <div class="panel-heading">
             <h3 class="panel-title">Annotation</h3>
           </div>
-          <div class="panel-body">
-            <div style="flex: 1;" class="merge-view" wicket:id="mergeView"></div>
+          <div class="h-scrolling panel-body text-center">
+            <div wicket:id="mergeView"></div>
           </div>
         </div>
         
@@ -191,8 +153,8 @@
           </div>
         </div>
       </div>
-      <div class="sidebar sidebar-right" wicket:id="rightSidebar">
-        <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
+      <div class="flex-sidebar flex-v-container annotation-editor-right" wicket:id="rightSidebar">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
       </div>
     </div>
   </wicket:extend>
