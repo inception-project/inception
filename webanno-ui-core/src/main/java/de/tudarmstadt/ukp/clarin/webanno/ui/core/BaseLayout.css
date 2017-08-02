@@ -577,24 +577,6 @@ span.form-control {
   height: auto !important;
 }
 
-.annotatation-detail-panel {
-  margin-left: 15px;
-  margin-right: 15px;
-}
-
-.annotatation-detail-panel fieldset {
-  border: 1px solid #c0c0c0;
-  padding: .35em .625em .75em;
-  margin: 0 2px;
-}
-
-.annotatation-detail-panel legend {
-  width: auto;
-  font-size: 14px;
-  border: none;
-  margin: 0px;
-}
-
 .form-group .k-widget,
 .form-group .k-textbox {
   width: 100%;
@@ -669,6 +651,7 @@ span.form-control {
 .panel-flex .panel-body { flex: 1; }
 .panel-flex .panel-footer { flex: none; }
 .panel-flex .panel-footer .form-group { margin-bottom: 0px; }
+.flex-v-container .panel:last-child { margin-bottom: 0px; }
 
 .min-content-height {
   height: -moz-min-content;
@@ -680,3 +663,45 @@ span.form-control {
 	position: absolute;
 	bottom: 20px;
 }
+
+/* Flex layout helpers as CSS classes */
+.flex-h-container { display: flex; flex-direction: row; }
+.flex-v-container { display: flex; flex-direction: column; }
+.flex-static-item { flex: none; }
+.flex-growing-item { flex: 1; }
+.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; }
+.flex-content { flex: 1; }
+.flex-tile-container { display: flex; flex-flow: row wrap; }
+.flex-tile { box-sizing: border-box; flex: 1; flex-basis: 30em; }
+.scrolling { overflow: auto; }
+.v-scrolling { overflow-y: auto; }
+.h-scrolling { overflow-x: auto; }
+
+/* Annotation editor pages - general layout */
+.annotation-editor-center { margin: 15px; }
+.annotation-editor-container .flex-sidebar .form-horizontal {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.annotation-editor-container .flex-sidebar .form-horizontal .form-group {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.annotation-editor-left {
+  margin: 15px;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+.annotation-editor-right {
+  margin: 15px;
+  margin-left: 0px;
+}
+.annotation-editor-container .collapsed {
+  flex-basis: 39px !important;
+}
+
+.fit-child-snuck { position: relative; }
+.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top 0px; bottom 0px; }
+
+.fit-child-loose { position: relative; }
+.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top 5px; bottom 5px; }

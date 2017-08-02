@@ -17,33 +17,9 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-  <wicket:head>
-    <style>
-      .page-content {
-        display: flex;
-      }
-      
-      .xx-sidebar {
-        flex-basis: 20%; 
-        flex-grow: 0; 
-        overflow: auto;
-        
-        display: flex; 
-      }
-      
-      .xx-content {
-        flex: 1;
-        overflow: auto;
-
-        display: flex;
-      }
-    </style>
-  </wicket:head>
-</head>
 <body>
   <wicket:extend>
-    <form wicket:id="selectionForm" class="xx-sidebar">
+    <form wicket:id="selectionForm" class="flex-sidebar flex-v-container">
       <div class="panel panel-default panel-flex" style="flex: 1; margin: 15px; margin-right: 0px; min-height: 10em;">
         <div class="panel-heading">
           <h3 class="panel-title">Users</h3>
@@ -59,7 +35,7 @@
         </div>            
       </div>
     </form>
-    <form id="detail-editor" wicket:id="detailForm" class="xx-content">
+    <form id="detail-editor" wicket:id="detailForm" class="scrolling flex-content flex-h-container">
       <div class="panel panel-default panel-flex min-content-height" style="flex: 1; margin: 15px;">
         <div class="panel-heading">
           <h3 class="panel-title">User details</h3>

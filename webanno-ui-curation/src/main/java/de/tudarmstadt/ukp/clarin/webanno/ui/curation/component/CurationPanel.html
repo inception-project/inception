@@ -20,46 +20,6 @@
 <head>
 <wicket:head>
   <style type="text/css">
-      #annotationEditorContent {
-        flex: 1;
-      
-        display: flex;
-      }
-      
-      #annotationEditorContent .editorCell {
-        flex-grow: 1;
-        overflow: auto;
-        margin-top: 15px;
-        margin-bottom: 15px;
-        margin-left: 15px;
-        
-        display: flex;
-        flex-direction: column;
-      }
-      
-      #annotationEditorContent .sidebar {
-        flex-basis: 20%;
-        flex-shrink: 0;
-        overflow: auto;
-        margin: 15px;
-        
-        display: flex;
-        flex-direction: column;
-      }
-      
-      #annotationEditorContent .sidebar-left {
-        margin-left: 15px;
-      }
-
-      #annotationEditorContent .sidebar-right {
-        margin-left: 0px;
-        margin-right: 0px;
-      }
-      
-      #annotationEditorContent .collapsed {
-        flex-basis: 39px !important;
-      }
-  
     .curation-sentence-item {
       	margin: 2px 2px;
       	padding: 2px 2px;
@@ -112,9 +72,9 @@
 </head>
 <body>
   <wicket:panel>
-    <div id="annotationEditorContent">
+    <div class="annotation-editor-container flex-content flex-h-container">
 
-      <div class="sidebar sidebar-left">
+      <div class="flex-sidebar flex-v-container annotation-editor-left">
         <div class="panel panel-default" wicket:enclosure="sentencesListView">
           <div class="panel-heading">
             <h3 class="panel-title">Sentences</h3>
@@ -129,12 +89,12 @@
         </div>
       </div>
 
-      <div class="editorCell">
-        <div class="panel panel-primary" wicket:enclosure="sentencesListView">
+      <div class="scrolling flex-content flex-v-container annotation-editor-center">
+        <div class="flex-content panel panel-primary">
           <div class="panel-heading">
             <h3 class="panel-title">Annotation</h3>
           </div>
-          <div class="panel-body">
+          <div class="h-scrolling panel-body">
             <div wicket:id="mergeView"></div>
           </div>
         </div>
@@ -159,8 +119,8 @@
         </div>
       </div>
 
-      <div class="sidebar sidebar-right" wicket:id="rightSidebar">
-        <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
+      <div class="flex-sidebar flex-v-container annotation-editor-right" wicket:id="rightSidebar">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
       </div>
     </div>
   </wicket:panel>

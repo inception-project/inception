@@ -3538,22 +3538,30 @@ Util.profileStart('finish');
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Add scrolling box
+/*
+        if (width > canvasWidth) canvasWidth = width;
+*/ 
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
-	        $svgDiv.width(canvasWidth);
-	        $svgDiv.css("overflow-x", "auto");
-        	canvasWidth = width;
-        	// Allow some extra space for arcs
-        	canvasWidth += 32;
-        	oversized += 32;
+          $svgDiv.width(canvasWidth);
+          canvasWidth = width;
+          // Allow some extra space for arcs
+          canvasWidth += 32;
+          oversized += 32;
         }
-//        if (width > canvasWidth) {canvasWidth = width;
 // WEBANNO EXTENSION END        
         
         $svg.width(canvasWidth);
         $svg.height(y);
         $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
-// WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
+
+        // WEBANNO BEGIN #331 - Interface jumps to the top
+        // Originally, this code was within the oversized > 0 block above, but we moved it here
+        // to prevent erratic jumping
+        $svgDiv.height(y+2); // Need to take the hairline border into account here
+        // WEBANNO END #331 - Interface jumps to the top
+        
+        // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
         if (rtlmode) {
           $svg.attr("direction", "rtl");
 // WEBANNO EXTENSION BEGIN - #300 - RTL, line breaks and Scrollbars          
@@ -3565,7 +3573,7 @@ Util.profileStart('finish');
               $(highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-	          $svgDiv.scrollLeft(oversized+4);
+	          findClosestHorizontalScrollable($svgDiv).scrollLeft(oversized+4);
           }
 // WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars          
         }
@@ -3576,16 +3584,8 @@ Util.profileStart('finish');
 	        $(backgroundGroup).attr('width', canvasWidth);
 	        $(backgroundGroup).children().each(function(index,element) {
 	      	  $(element).attr('width', canvasWidth);
-	        })
+	        });
         }
-        
-        // WEBANNO BEGIN #331 - Interface jumps to the top
-        // Originally, this code was within the oversized > 0 block above, but we moved it here
-        // to prevent erratic jumping
-        $svgDiv.css("padding-bottom", "16px");
-        $svgDiv.height(y+20); // Need to take the padding into account here
-        // WEBANNO END #331 - Interface jumps to the top
-        
 // WEBANNO EXTENSION END        
 
 Util.profileEnd('finish');
@@ -4134,6 +4134,26 @@ Util.profileStart('before render');
       return (yiq >= 128) ? '#000000' : '#ffffff';
     }    
 // WEBANNO EXTENSION END
+    
+// WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
+// https://stackoverflow.com/a/35940276/2511197
+    function findClosestHorizontalScrollable(node) {
+      if (node === null) {
+        return null;
+      }
+
+      if (
+    	    (node.css('overflow') == 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
+    	    (node.css('overflow-x') == 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
+    	    (node.css('overflow') == 'scroll')
+    	    (node.css('overflow-x') == 'scroll')
+    	  ) {
+        return node;
+      } else {
+        return findClosestHorizontalScrollable(node.parent());
+      }
+    }
+// WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
     
     return Visualizer;
 })(jQuery, window);
