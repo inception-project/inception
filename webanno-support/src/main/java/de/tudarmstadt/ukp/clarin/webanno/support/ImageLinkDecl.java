@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
 
+import java.io.Serializable;
+
 public class ImageLinkDecl
+    implements Serializable
 {
+    private static final long serialVersionUID = -194642089829169443L;
+    
     private String id;
     private String linkUrl;
     private String imageUrl;
