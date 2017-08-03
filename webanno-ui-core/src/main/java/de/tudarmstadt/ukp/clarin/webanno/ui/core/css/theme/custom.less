@@ -242,6 +242,7 @@ html, body {
 .fit-child-loose { position: relative; }
 .fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; }
 
+/* style for the warning popover in the page footer */
 .dev-warnings > .alert {
   padding: 0;
   border: none;
@@ -249,4 +250,9 @@ html, body {
 }
 .dev-warnings .popover-content ul {
   padding-left: 18px;
+}
+
+/* remove top border in tabbed panels */
+ul.nav.nav-tabs + div.panel.panel-default {
+  border-top:none;
 }

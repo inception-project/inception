@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2012
+#Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -19,14 +19,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-  <wicket:extend>
-    <div class="flex-sidebar flex-v-container">
-      <wicket:container wicket:id="projects" />
-      <wicket:container wicket:id="importPanel" />
-    </div>
-    <div class="flex-content">
-      <div wicket:id="tabPanel" style="margin:15px"></div>
-    </div>
-  </wicket:extend>
+  <wicket:panel xmlns:wicket="http://wicket.apache.org">
+    <ul class="nav nav-tabs" wicket:id="tabs-container">
+      <li wicket:id="tabs">
+        <a data-toggle="tab" wicket:id="link"><span wicket:id="title"></span></a>
+      </li>
+    </ul>
+    <div wicket:id="panel" class="panel panel-default panel-flex"></div>
+  </wicket:panel>
 </body>
 </html>
