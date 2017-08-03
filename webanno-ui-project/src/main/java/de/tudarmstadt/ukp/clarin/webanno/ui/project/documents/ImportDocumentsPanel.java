@@ -75,7 +75,7 @@ public class ImportDocumentsPanel extends Panel
         
         form.add(fileUpload = new FileUploadField("documents"));
 
-        DropDownChoice<String> formats = new DropDownChoice<String>("formats");
+        DropDownChoice<String> formats = new DropDownChoice<String>("format");
         formats.setModel(format);
         formats.setChoices(LambdaModel.of(this::listReadableFormats));
         form.add(formats);

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,22 +16,18 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-  <div wicket:id="confirmationDialog"></div>
-  <form wicket:id="form">
-    <fieldset class="ui-widget-content ui-corner-all">
-      <legend>Documents</legend>
-      <table class="hfill">
-        <tr>
-          <td><select class="hfill" wicket:id="guidelines" size="25"></select></td>
-        </tr>
-      </table>
-      <div class="buttons">
-        <input type="submit" wicket:id="delete" wicket:message="value:delete"></input>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div wicket:id="confirmationDialog"></div>
+    <form wicket:id="form" class="flex-content flex-v-container">
+      <div class="flex-content fit-child-snuck">
+        <select wicket:id="guidelines"></select>
       </div>
-    </fieldset>
-  </form>
-</wicket:panel>
+       <div class="panel-footer text-right">
+        <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete" />
+      </div>            
+    </form>
+  </wicket:panel>
+</body>
 </html>

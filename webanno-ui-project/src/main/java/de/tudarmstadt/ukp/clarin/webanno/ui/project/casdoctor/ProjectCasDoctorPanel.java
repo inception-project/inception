@@ -30,6 +30,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -78,13 +79,19 @@ public class ProjectCasDoctorPanel
         Form<FormModel> form = new Form<>("casDoctorForm", PropertyModel.of(this, "formModel"));
         add(form);
 
-        form.add(new CheckBoxMultipleChoice<>("repairs",
-            PropertyModel.of(this, "formModel.repairs"),
-            CasDoctor.scanRepairs(),
-            new ChoiceRenderer<>("simpleName")).setPrefix("<div>").setSuffix("</div>"));
+        CheckBoxMultipleChoice<Class<? extends Repair>> repairs = new CheckBoxMultipleChoice<>(
+                "repairs");
+        repairs.setModel(PropertyModel.of(this, "formModel.repairs"));
+        repairs.setChoices(CasDoctor.scanRepairs());
+        repairs.setChoiceRenderer(new ChoiceRenderer<>("simpleName"));
+        repairs.setPrefix("<div class=\"checkbox\">");
+        repairs.setSuffix("</div>");
+        repairs.setLabelPosition(LabelPosition.WRAP_AFTER);
+        form.add(repairs);
+            
         form.add(new LambdaAjaxButton<FormModel>("check", this::actionCheck));
         form.add(new LambdaAjaxButton<FormModel>("repair", this::actionRepair));
-        form.add(createMessageSetsView());
+        add(createMessageSetsView());
     }
     
     private ListView<LogMessageSet> createMessageSetsView()

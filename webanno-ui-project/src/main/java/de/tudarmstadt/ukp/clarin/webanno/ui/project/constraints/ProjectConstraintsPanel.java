@@ -41,7 +41,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,7 +189,7 @@ public class ProjectConstraintsPanel
             add(new DownloadLink("export", exportFileModel, exportFilenameModel)
                     .setDeleteAfterDownload(true));
             
-            Button deleteButton = new Button("delete", new StringResourceModel("label")) {
+            Button deleteButton = new Button("delete") {
 
                 private static final long serialVersionUID = -1195565364207114557L;
 
@@ -215,7 +214,7 @@ public class ProjectConstraintsPanel
 
             add(deleteButton);
 
-            add(new Button("save", new StringResourceModel("label")) {
+            add(new Button("save") {
                 private static final long serialVersionUID = 1L;
                 
                 @Override
@@ -238,7 +237,7 @@ public class ProjectConstraintsPanel
                     }
                 }
             });
-            add(new Button("cancel", new StringResourceModel("label")) {
+            add(new Button("cancel") {
                 private static final long serialVersionUID = 1L;
                 
                 {
@@ -276,7 +275,7 @@ public class ProjectConstraintsPanel
             super(aId);
 
             add(new FileUploadField("uploads", PropertyModel.of(this, "uploads")));
-            add(new Button("import", new StringResourceModel("label"))
+            add(new Button("import")
             {
                 private static final long serialVersionUID = 1L;
 
