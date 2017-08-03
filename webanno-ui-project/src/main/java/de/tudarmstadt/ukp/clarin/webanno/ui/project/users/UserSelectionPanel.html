@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,27 +16,23 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <fieldset class="ui-widget-content ui-corner-all">
-      <legend>Users</legend>
+    <div class="flex-content flex-v-container flex-gutter">
       <form wicket:id="form">
-        <div style="display: table;" class="hfill labels-left">
-          <label style="display: table-cell; vertical-align: middle;">Add users:</label>
-          <div style="display: table-cell; vertical-align: middle;" class="hfill">
-            <select wicket:id="usersToAdd"></select>
-          </div>
-          <div style="display: table-cell; vertical-align: middle;">
-            <input  type="submit" wicket:id="add" wicket:message="value:add"></input>
-          </div>
+        <div class="flex-h-container flex-centered flex-gutter">
+          <label wicket:for="usersToAdd">
+            <wicket:label key="usersToAdd"/>
+          </label>
+          <select class="flex-content" wicket:id="usersToAdd"></select>
+          <input wicket:id="add" type="submit" class="btn btn-primary" wicket:message="value:add"></input>
         </div>
       </form>
-      <div>
-        <select class="hfill" wicket:id="user" size="29"></select>
+      <div class="flex-content fit-child-snuck">
+        <select wicket:id="user"></select>
       </div>
-    </fieldset>
+    </div>
   </wicket:panel>
 </body>
 </html>

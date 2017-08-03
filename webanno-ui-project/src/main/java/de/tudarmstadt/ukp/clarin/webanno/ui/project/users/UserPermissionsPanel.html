@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,19 +16,24 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="hfill">
-      <fieldset class="ui-widget-content ui-corner-all">
-        <legend>Permissions</legend>
-        <span wicket:id="permissions" class="hfill"> </span>
-        <div class="buttons" style="white-space: nowrap;">
-          <input type="submit" wicket:id="save" wicket:message="value:save"></input>
-          <input type="button" wicket:id="cancel" wicket:message="value:cancel"></input>
+    <form wicket:id="form" class="flex-content flex-v-container flex-gutter">
+      <div class="flex-content panel panel-default panel-flex">
+        <div class="panel-heading">
+          <h3 class="panel-title"><wicket:message key="permissions"/></h3>
         </div>
-      </fieldset>
+        <div class="panel-body">
+          <div class="form-group">
+            <div wicket:id="permissions"></div>
+          </div>
+        </div>
+        <div class="panel-footer text-right">
+          <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"></input>
+          <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel"></input>
+        </div>
+      </div>
     </form>
   </wicket:panel>
 </body>

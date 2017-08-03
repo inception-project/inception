@@ -31,8 +31,8 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -98,15 +98,14 @@ public class ProjectDetailPanel
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
         
-        // FIXME Use EnumChoiceRenderer?
-        form.add(new DropDownChoice<>("scriptDirection", Arrays.asList(ScriptDirection.values()))
-                .setOutputMarkupId(true));
+        DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
+        scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
+        form.add(scriptDirection);
         
         form.add(new CheckBox("disableExport"));
         
-        RadioChoice<String> projectTypes = makeProjectTypeChoice();
-        projectTypes.setRequired(true);
-        form.add(projectTypes);
+        form.add(makeProjectTypeChoice());
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
@@ -134,10 +133,10 @@ public class ProjectDetailPanel
         });
     }
         
-    private RadioChoice<String> makeProjectTypeChoice()
+    private DropDownChoice<String> makeProjectTypeChoice()
     {
-        return new RadioChoice<String>("mode", projectService.listProjectTypes().stream()
-                .map(t -> t.id()).collect(Collectors.toList()))
+        DropDownChoice<String> projectTypes = new DropDownChoice<String>("mode", projectService
+                .listProjectTypes().stream().map(t -> t.id()).collect(Collectors.toList()))
         {
             private static final long serialVersionUID = -8268365384613932108L;
 
@@ -149,6 +148,10 @@ public class ProjectDetailPanel
                         projectModel.getObject() != null && projectModel.getObject().getId() == 0);
             }
         };
+
+        projectTypes.setRequired(true);
+        return projectTypes;
+
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)

@@ -20,25 +20,25 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="panel panel-default" style="margin: 15px; margin-right: 0px; min-height: 10em;" wicket:enclosure="form">
+    <div class="panel panel-default panel-flex" style="margin: 15px; margin-right: 0px; margin-top: 0px; " wicket:enclosure="form">
       <div class="panel-heading">
         <h3 class="panel-title"><wicket:message key="projects.import.title" /></h3>
       </div>
       <form wicket:id="form">
         <div class="panel-body">
-            <div class="form-group">
-              <label wicket:for="content"><wicket:label key="projects.import.fileinput"/></label>
-              <input wicket:id="content" type="file" multiple="multiple" />
-            </div>
-            <div class="checkbox">
-              <label>
-                <input wicket:id="generateUsers" type="checkbox"></input><wicket:message key="projects.import.missingusers" />
-              </label>
-            </div>
+          <div class="form-group" wicket:enclosure="content">
+            <label wicket:for="content"><wicket:label key="content"/></label>
+            <input wicket:id="content" type="file" multiple="multiple" />
+          </div>
+          <div class="checkbox" wicket:enclosure="generateUsers">
+            <label wicket:for="generateUsers">
+              <input wicket:id="generateUsers" type="checkbox"></input>
+              <wicket:label key="generateUsers" />
+            </label>
+          </div>
         </div>        
-        <!-- see https://stackoverflow.com/a/23872811 -->
-        <div class="panel-footer clearfix">
-            <input wicket:id="import" type="submit" wicket:message="value:import" class="pull-right btn btn-primary"/>
+        <div class="panel-footer text-right">
+          <input wicket:id="import" type="submit" wicket:message="value:import" class="btn btn-primary"/>
         </div>
       </form>           
     </div>

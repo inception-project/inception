@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,50 +16,76 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
 <wicket:panel>
-  <div wicket:id="deleteProjectDialog" />
-
-  <form wicket:id="form">
-    <fieldset class="ui-widget-content ui-corner-all labels-left">
-      <legend><wicket:message key="general" /></legend>
-      <table class="hfill labels-left">
-        <tr wicket:enclosure="id">
-          <td><label><wicket:message key="id"/>:</label></td>
-          <td><wicket:container wicket:id="id" /></td>
-        </tr>
-        <tr>
-          <td><label wicket:for="name"><wicket:label key="name"/>:</label></td>
-          <td class="hfill"><input type="text" class="hfill" wicket:id="name" /></td>
-        </tr>
-        <tr>
-          <td><label wicket:for="description"><wicket:label key="description"/>:</label></td>
-          <td class="hfill"><textarea class="hfill" wicket:id="description" rows="10">
-            </textarea></td>
-        </tr>
-        <tr>
-          <td><label wicket:for="scriptDirection"><wicket:label key="scriptDirection"/>:</label></td>
-          <td class="hfill"><select wicket:id="scriptDirection"></select></td>
-        </tr>
-        <tr>
-          <td><label><wicket:message key="options"/>:</label></td>
-          <td class="hfill">
-            <input type="checkbox" wicket:id="disableExport" /> <wicket:message key="disableExport"/>
-          </td>
-        </tr>
-      </table>
-    </fieldset>
-    <fieldset>
-      <legend><wicket:message key="projectType" /></legend>
-      <span valign="top" wicket:id="mode"> </span>
-    </fieldset>
-
-    <div class="buttons">
-      <input type="submit" wicket:id="save" wicket:message="value:save" />
-      <input type="button" wicket:id="delete" wicket:message="value:delete" />
-      <input type="button" wicket:id="cancel" wicket:message="value:cancel" />
+  <div wicket:id="deleteProjectDialog"></div>
+  
+  <form wicket:id="form" class="flex-content flex-v-container">
+    <div class="flex-content scrolling panel-body">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="form-horizontal col-sm-12">
+            <div class="form-group" wicket:enclosure="id">
+              <label class="col-sm-2 control-label">
+                <wicket:message key="id"/>
+              </label>
+              <div class="col-sm-10">
+                <span class="form-control" readonly><wicket:container wicket:id="id" /></span>
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="name">
+              <label wicket:for="name" class="col-sm-2 control-label">
+                <wicket:label key="name"/>
+              </label>
+              <div class="col-sm-10">
+                <input wicket:id="name" class="form-control"/>
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="mode">
+              <label wicket:for="mode" class="col-sm-2 control-label">
+                <wicket:label key=mode/>
+              </label>
+              <div class="col-sm-10">
+                <select wicket:id="mode" class="form-control"></select>
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="description">
+              <label wicket:for="description" class="col-sm-2 control-label">
+                <wicket:label key="description"/>
+              </label>
+              <div class="col-sm-10">
+                <textarea wicket:id="description" class="form-control" rows="10"></textarea>
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="scriptDirection">
+              <label wicket:for="scriptDirection" class="col-sm-2 control-label">
+                <wicket:label key="scriptDirection"/>
+              </label>
+              <div class="col-sm-10">
+                <select wicket:id="scriptDirection" class="form-control"></select>
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="disableExport">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                  <label wicket:for="disableExport">
+                    <input wicket:id="disableExport" type="checkbox"/>
+                    <wicket:label key="disableExport"/>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+    <div class="panel-footer text-right">
+      <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save" />
+      <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete" />
+      <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel" />
+    </div>            
   </form>
 </wicket:panel>
+</body>
 </html>

@@ -85,37 +85,32 @@
       <form wicket:id="trainingResultForm" class="scrolling flex-content">
         <div class="panel panel-default" style="margin: 15px; margin-top: 0px;">
           <div class="panel-heading">
-            <h3 class="panel-title">
-              <wicket:message key="project" />
-            </h3>
+            <h3 class="panel-title">Training results /status</h3>
           </div>
           <div class="panel-body">
-            <fieldset>
-              <legend>Training results /status</legend>
-              <table class="hfill" style="border-collapse: separate;">
-                <tr style="vertical-align: top;">
-                  <td><select class="hfill" wicket:id="layerResult"></select></td>
-                  <td><span wicket:id="resultLabel"></span></td>
-                </tr>
-  
-                <tr class="border_bottom">
-                  <td>Train.Doc</td>
-                  <td>Anno.Doc</td>
-                  <td>Total.Doc</td>
-                  <td>Start time</td>
-                  <td>End time</td>
-                  <td>Status</td>
-                </tr>
-                <tr class="border_bottom">
-                  <td><span wicket:id="trainDocs"></span></td>
-                  <td><span wicket:id="annoDocs"></span></td>
-                  <td><span wicket:id="totalDocs"></span></td>
-                  <td><span wicket:id="startTime"></span></td>
-                  <td><span wicket:id="endTime"></span></td>
-                  <td><span wicket:id="status"></span></td>
-                </tr>
-              </table>
-            </fieldset>
+            <table class="hfill" style="border-collapse: separate;">
+              <tr style="vertical-align: top;">
+                <td><select class="hfill" wicket:id="layerResult"></select></td>
+                <td><span wicket:id="resultLabel"></span></td>
+              </tr>
+
+              <tr class="border_bottom">
+                <td>Train.Doc</td>
+                <td>Anno.Doc</td>
+                <td>Total.Doc</td>
+                <td>Start time</td>
+                <td>End time</td>
+                <td>Status</td>
+              </tr>
+              <tr class="border_bottom">
+                <td><span wicket:id="trainDocs"></span></td>
+                <td><span wicket:id="annoDocs"></span></td>
+                <td><span wicket:id="totalDocs"></span></td>
+                <td><span wicket:id="startTime"></span></td>
+                <td><span wicket:id="endTime"></span></td>
+                <td><span wicket:id="status"></span></td>
+              </tr>
+            </table>
           </div>
         </div>
       </form>
