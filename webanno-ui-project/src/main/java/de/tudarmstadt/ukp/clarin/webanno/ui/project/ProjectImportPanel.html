@@ -20,28 +20,26 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="panel panel-default panel-flex" style="flex: 1; margin: 15px; margin-right: 0px; min-height: 10em;" wicket:enclosure="form">
+    <div class="panel panel-default" style="margin: 15px; margin-right: 0px; min-height: 10em;" wicket:enclosure="form">
       <div class="panel-heading">
-        <h3 class="panel-title">Import Project</h3>
+        <h3 class="panel-title"><wicket:message key="projects.import.title" /></h3>
       </div>
-      <form wicket:id="form" >
-      <div class="panel-body" style="margin: 5px; position: relative; overflow: auto;">
-        <table class="hfill">
-          <tr>
-            <td><label>Files</label></td>
-            <td class="hfill"><input wicket:id="content" type="file" multiple /></td>
-          </tr>
-          <tr>
-            <td><input wicket:id="generateUsers" type="checkbox" /></td>
-            <td class="hfill"><label>Create missing users</label></td>
-          </tr>
-        </table>        
-      </div>
-      <div class="panel-footer">
-        <div class="pull-right">
-          <input wicket:id="import" type="submit" wicket:message="value:import" class="btn btn-primary"/>
+      <form wicket:id="form">
+        <div class="panel-body">
+            <div class="form-group">
+              <label wicket:for="content"><wicket:label key="projects.import.fileinput"/></label>
+              <input wicket:id="content" type="file" multiple="multiple" />
+            </div>
+            <div class="checkbox">
+              <label>
+                <input wicket:id="generateUsers" type="checkbox"></input><wicket:message key="projects.import.missingusers" />
+              </label>
+            </div>
+        </div>        
+        <!-- see https://stackoverflow.com/a/23872811 -->
+        <div class="panel-footer clearfix">
+            <input wicket:id="import" type="submit" wicket:message="value:import" class="pull-right btn btn-primary"/>
         </div>
-      </div> 
       </form>           
     </div>
   </wicket:panel>

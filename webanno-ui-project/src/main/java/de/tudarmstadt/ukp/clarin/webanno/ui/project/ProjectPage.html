@@ -18,33 +18,9 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-  <wicket:head>
-    <style>
-      .page-content {
-        display: flex;
-      }
-      
-      .xx-sidebar {
-        flex-basis: 20%; 
-        flex-grow: 0; 
-        overflow: auto;
-        
-        display: flex; 
-      }
-      
-      .xx-content {
-        flex: 1;
-        overflow: auto;
-
-        display: flex;
-      }
-    </style>
-  </wicket:head>
-</head>
 <body>
   <wicket:extend>
-    <div class="xx-sidebar">
+    <div class="flex-sidebar flex-v-container">
       <wicket:container wicket:id="projects" />
       <wicket:container wicket:id="importPanel" />
     </div>
