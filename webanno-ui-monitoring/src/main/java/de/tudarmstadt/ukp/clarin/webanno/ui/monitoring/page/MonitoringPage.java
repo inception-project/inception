@@ -156,10 +156,7 @@ public class MonitoringPage
     private final Image overallProjectProgressImage;
     private  TrainingResultForm trainingResultForm;
 
-    private Label overview;
     private Panel annotationDocumentStatusTable;
-//    private DefaultDataTable<?,?> annotationDocumentStatusTable;
-    private final Label projectName;
 
     private String result;
 
@@ -223,10 +220,8 @@ public class MonitoringPage
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
         overallProjectProgressImage.setVisible(true);
         add(overallProjectProgressImage);
-        add(overview = new Label("overview", "overview of projects"));
 
         add(projectSelectionForm);
-        projectName = new Label("projectName", "");
 
         if (!projectService.listProjects().isEmpty()) {
             Project project = projectService.listProjects().get(0);
@@ -255,7 +250,7 @@ public class MonitoringPage
             annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm.add(annotatorsProgressImage)
-                    .add(annotatorsProgressPercentageImage).add(projectName)
+                    .add(annotatorsProgressPercentageImage)
                     .add(annotationDocumentStatusTable));
             annotationDocumentStatusTable.setVisible(false);
         } else {
@@ -342,9 +337,7 @@ public class MonitoringPage
                         projectSelectionModel.annotatorsProgress
                                 .putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
                     }
-                    projectName.setDefaultModelObject(projectSelectionModel.project.getName());
                     overallProjectProgressImage.setVisible(false);
-                    overview.setVisible(false);
 
                     annotatorsProgressImage.setImageResource(createProgressChart(
                             projectSelectionModel.annotatorsProgress,
