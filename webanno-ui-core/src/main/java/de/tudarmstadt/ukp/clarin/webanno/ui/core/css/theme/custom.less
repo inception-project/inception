@@ -176,7 +176,6 @@ html, body {
   .panel-footer { flex: none; }
   .panel-footer .form-group { margin-bottom: 0px; }
 }
-.flex-v-container .panel:last-child { margin-bottom: 0px; }
 .panel { margin-bottom: 15px; }
 
 .min-content-height {
@@ -193,10 +192,12 @@ html, body {
 /* Flex layout helpers as CSS classes */
 .flex-h-container { display: flex; flex-direction: row; }
 .flex-h-container.flex-gutter > * { margin-left: ceil(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > *:last-child { margin-right: floor(@grid-gutter-width / 2) }
 .flex-v-container { display: flex; flex-direction: column; }
 .flex-v-container.flex-gutter > * { margin-top: (@grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > *:last-child { margin-bottom: floor(@grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > .panel:not(:last-child) { margin-bottom: 0px !important; }
 .flex-centered { align-items: center; }
 .flex-static-item { flex: none; }
 .flex-growing-item { flex: 1; }
@@ -243,9 +244,9 @@ html, body {
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
 .fit-child-snuck { position: relative; }
-.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; }
+.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; resize: none; }
 .fit-child-loose { position: relative; }
-.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; }
+.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; resize: none; }
 
 /* style for the warning popover in the page footer */
 .dev-warnings > .alert {
