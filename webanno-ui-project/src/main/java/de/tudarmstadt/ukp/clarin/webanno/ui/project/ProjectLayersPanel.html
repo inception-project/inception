@@ -16,233 +16,235 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel> 
-  <div class="panel-body">
-    <div class="container-fluid">
-      <div class="row">
-      
-        <!-- Layer select/import -->
-        <div class="col-sm-2">
-          <div class="row">
-            <div class="col-xs-12">
-              <form wicket:id="layerSelectionForm">
-                <fieldset class="ui-widget-content ui-corner-all">
-                  <legend>
-                    Layers (<a target="_blank" wicket:message="href:layers.help.link"><wicket:message
-                        key="help.label" /></a>)
-                  </legend>
-      
-                  <div>
-                    <select wicket:id="layerSelection" size="10" style="width:100%">
-                      <span wicket:id="layers">
-                        <option wicket:id="layer"></option>
-                    </span>
-                    </select>
-                  </div>
-                  <div class="buttons">
-                    <input type="submit" wicket:id="create"></input>
-                  </div>
-                </fieldset>
-              </form>          
-            </div>
-            <div class="col-xs-12">
-              <form wicket:id="importLayerForm">
-                <fieldset class="ui-widget-content ui-corner-all labels-left">
-                  <legend>Import layer</legend>
-                  <table class="hfill">
-                    <tr>
-                      <td><label>Files:</label></td>
-                      <td class="hfill"><input wicket:id="content" type="file" multiple></input></td>
-                    </tr>
-                  </table>
-                  <div class="buttons">
-                    <input type="submit" wicket:id="import"></input>
-                  </div>
-                </fieldset>
-              </form>          
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="panel-body">
+      <div class="container-fluid">
+        <div class="row">
+
+          <!-- Layer select/import -->
+          <div class="col-sm-2">
+            <div class="row">
+              <div class="col-xs-12">
+                <form wicket:id="layerSelectionForm">
+                  <fieldset class="ui-widget-content ui-corner-all">
+                    <legend>
+                      Layers (<a target="_blank" wicket:message="href:layers.help.link"><wicket:message
+                          key="help.label" /></a>)
+                    </legend>
+
+                    <div>
+                      <select wicket:id="layerSelection" size="10" style="width: 100%">
+                        <span wicket:id="layers">
+                          <option wicket:id="layer"></option>
+                      </span>
+                      </select>
+                    </div>
+                    <div class="buttons">
+                      <input type="submit" wicket:id="create"></input>
+                    </div>
+                  </fieldset>
+                </form>
+              </div>
+              <div class="col-xs-12">
+                <form wicket:id="importLayerForm">
+                  <fieldset class="ui-widget-content ui-corner-all labels-left">
+                    <legend>Import layer</legend>
+                    <table class="hfill">
+                      <tr>
+                        <td><label>Files:</label></td>
+                        <td class="hfill"><input wicket:id="content" type="file" multiple></input></td>
+                      </tr>
+                    </table>
+                    <div class="buttons">
+                      <input type="submit" wicket:id="import"></input>
+                    </div>
+                  </fieldset>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Layer detail -->
-        <div class="col-sm-5">
-          <form wicket:id="layerDetailForm">
-            <fieldset class="ui-widget-content ui-corner-all labels-left">
-              <legend>
-                Properties (<a target="_blank" wicket:message="href:properties.help.link"><wicket:message
-                    key="help.label" /></a>)
-              </legend>
-              <table class="hfill">
-                <tr>
-                  <td style="color: red">Layer name:</td>
-                  <td><input class="hfill" type="text" wicket:id="uiName"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;">Description:</td>
-                  <td><textarea class="hfill" wicket:id="description" rows="2"></textarea></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;">Enabled:</td>
-                  <td><input type="checkbox" wicket:id="enabled"></input></td>
-                </tr>
-              </table>
-            </fieldset>
-            <fieldset class="ui-widget-content ui-corner-all labels-left">
-              <legend>
-                Technical Properties (<a target="_blank" wicket:message="href:properties.help.link"><wicket:message
-                    key="help.label" /></a>)
-              </legend>
-              <table class="hfill">
-                <tr>
-                  <td style="color: gray; font-style: italic;">Internal name:</td>
-                  <td colspan="2"><span class="hfill" style="color: gray; font-style: italic;"
-                    wicket:id="name"></span></td>
-                </tr>
-                <tr>
-                  <td style="color: red">Type:</td>
-                  <td><select wicket:id="type"></select></td>
-                </tr>
-                <tr>
-                  <td>Attach to layer:</td>
-                  <td><select wicket:id="attachType"></select></td>
-                </tr>
-              </table>
-            </fieldset>
-            <fieldset class="ui-widget-content ui-corner-all labels-left">
-              <legend>
-                Behaviors (<a target="_blank" wicket:message="href:behaviours.help.link"><wicket:message
-                    key="help.label" /></a>)
-              </legend>
-              <table class="hfill">
-                <tr>
-                  <td style="vertical-align: top;">Read-only:</td>
-                  <td><input type="checkbox" wicket:id="readonly"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;"><span wicket:id="lockToTokenOffsetLabel"></span></td>
-                  <td><input type="checkbox" wicket:id="lockToTokenOffset"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;"><span wicket:id="allowStackingLabel"></span></td>
-                  <td><input type="checkbox" wicket:id="allowStacking"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;"><span wicket:id="crossSentenceLabel"></span></td>
-                  <td><input type="checkbox" wicket:id="crossSentence"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;"><span wicket:id="multipleTokensLabel"></span></td>
-                  <td><input type="checkbox" wicket:id="multipleTokens"></input></td>
-                </tr>
-                <tr>
-                  <td style="vertical-align: top;"><span wicket:id="linkedListBehaviorLabel"></span></td>
-                  <td><input type="checkbox" wicket:id="linkedListBehavior"></input></td>
-                </tr>
-                <!--  tr>
+
+          <!-- Layer detail -->
+          <div class="col-sm-5">
+            <form wicket:id="layerDetailForm">
+              <fieldset class="ui-widget-content ui-corner-all labels-left">
+                <legend>
+                  Properties (<a target="_blank" wicket:message="href:properties.help.link"><wicket:message
+                      key="help.label" /></a>)
+                </legend>
+                <table class="hfill">
+                  <tr>
+                    <td style="color: red">Layer name:</td>
+                    <td><input class="hfill" type="text" wicket:id="uiName"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;">Description:</td>
+                    <td><textarea class="hfill" wicket:id="description" rows="2"></textarea></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;">Enabled:</td>
+                    <td><input type="checkbox" wicket:id="enabled"></input></td>
+                  </tr>
+                </table>
+              </fieldset>
+              <fieldset class="ui-widget-content ui-corner-all labels-left">
+                <legend>
+                  Technical Properties (<a target="_blank"
+                    wicket:message="href:properties.help.link"><wicket:message key="help.label" /></a>)
+                </legend>
+                <table class="hfill">
+                  <tr>
+                    <td style="color: gray; font-style: italic;">Internal name:</td>
+                    <td colspan="2"><span class="hfill"
+                      style="color: gray; font-style: italic;" wicket:id="name"></span></td>
+                  </tr>
+                  <tr>
+                    <td style="color: red">Type:</td>
+                    <td><select wicket:id="type"></select></td>
+                  </tr>
+                  <tr>
+                    <td>Attach to layer:</td>
+                    <td><select wicket:id="attachType"></select></td>
+                  </tr>
+                </table>
+              </fieldset>
+              <fieldset class="ui-widget-content ui-corner-all labels-left">
+                <legend>
+                  Behaviors (<a target="_blank" wicket:message="href:behaviours.help.link"><wicket:message
+                      key="help.label" /></a>)
+                </legend>
+                <table class="hfill">
+                  <tr>
+                    <td style="vertical-align: top;">Read-only:</td>
+                    <td><input type="checkbox" wicket:id="readonly"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;"><span wicket:id="lockToTokenOffsetLabel"></span></td>
+                    <td><input type="checkbox" wicket:id="lockToTokenOffset"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;"><span wicket:id="allowStackingLabel"></span></td>
+                    <td><input type="checkbox" wicket:id="allowStacking"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;"><span wicket:id="crossSentenceLabel"></span></td>
+                    <td><input type="checkbox" wicket:id="crossSentence"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;"><span wicket:id="multipleTokensLabel"></span></td>
+                    <td><input type="checkbox" wicket:id="multipleTokens"></input></td>
+                  </tr>
+                  <tr>
+                    <td style="vertical-align: top;"><span wicket:id="linkedListBehaviorLabel"></span></td>
+                    <td><input type="checkbox" wicket:id="linkedListBehavior"></input></td>
+                  </tr>
+                  <!--  tr>
                   <td style="vertical-align: top;"><span wicket:id="isZeroWidthOnlyLabel"></span></td>
                   <td><input type="checkbox" wicket:id="isZeroWidthOnly" /></td>
                 </tr -->
-                <tr>              
-                  <td colspan="2">
-                    <div wicket:id="onClickJavascriptActionLabel"></div>
-                    <textarea class="hfill" wicket:id="onClickJavascriptAction" rows="6" cols="40"></textarea>
-                  </td>
-                </tr>
-              </table>
-            </fieldset>
-  
-            <div class="buttons">
-              <input type="submit" wicket:id="save"> </input> <input type="submit" wicket:id="export"
-                value="Export layer"></input> <input type="submit" wicket:id="cancel" value="Cancel"></input>
-            </div>
-          </form>     
-        </div>
-        
-        <!-- Feature select/detail -->
-        <div class="col-sm-5">
-          <div class="row">
-            <div class="col-sm-12">
-              <form wicket:id="featureSelectionForm">
-                <fieldset class="ui-widget-content ui-corner-all">
-                  <legend>
-                    Feature overview (<a target="_blank" wicket:message="href:features.help.link"><wicket:message
-                        key="help.label" /></a>)
-                  </legend>
-                  <div class="hfill">
-                    <select class="hfill" wicket:id="feature" size="10"></select>
-                  </div>
-                  <div class="buttons">
-                    <input type="submit" wicket:id="new"></input>
-                  </div>
-                </fieldset>
-              </form>
-            </div>
-  
-            <div class="col-sm-12">
-              <form wicket:id="featureDetailForm">
-                <fieldset class="ui-widget-content ui-corner-all labels-left">
-                  <legend>
-                    Feature details (<a target="_blank" wicket:message="href:features.help.link"><wicket:message
-                        key="help.label" /></a>)
-                  </legend>
-                  <table class="hfill">
-                    <tr>
-                      <td style="color: gray; font-style: italic;">Internal name:</td>
-                      <td><span class="hfill" style="color: gray; font-style: italic;"
-                        wicket:id="name"></span></td>
-                    </tr>
-                    <tr>
-                      <td style="color: red">Feature name:</td>
-                      <td><input class="hfill" type="text" wicket:id="uiName"></input></td>
-                    </tr>
-                    <tr>
-                      <td style="color: red">Type:</td>
-                      <td><select wicket:id="type"></select></td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align: top;">Description:</td>
-                      <td><textarea class="hfill" wicket:id="description" rows="2"></textarea></td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align: top;">Enabled:</td>
-                      <td><input type="checkbox" wicket:id="enabled"></input></td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align: top;">Show:</td>
-                      <td><input type="checkbox" wicket:id="visible"></input></td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align: top;">Remember:</td>
-                      <td><input type="checkbox" wicket:id="remember"></input></td>
-                    </tr>
-                    <wicket:enclosure child="required">
+                  <tr>
+                    <td colspan="2">
+                      <div wicket:id="onClickJavascriptActionLabel"></div> <textarea class="hfill"
+                        wicket:id="onClickJavascriptAction" rows="6" cols="40"></textarea>
+                    </td>
+                  </tr>
+                </table>
+              </fieldset>
+
+              <div class="buttons">
+                <input type="submit" wicket:id="save"> </input> <input type="submit"
+                  wicket:id="export" value="Export layer"></input> <input type="submit"
+                  wicket:id="cancel" value="Cancel"></input>
+              </div>
+            </form>
+          </div>
+
+          <!-- Feature select/detail -->
+          <div class="col-sm-5">
+            <div class="row">
+              <div class="col-sm-12">
+                <form wicket:id="featureSelectionForm">
+                  <fieldset class="ui-widget-content ui-corner-all">
+                    <legend>
+                      Feature overview (<a target="_blank" wicket:message="href:features.help.link"><wicket:message
+                          key="help.label" /></a>)
+                    </legend>
+                    <div class="hfill">
+                      <select class="hfill" wicket:id="feature" size="10"></select>
+                    </div>
+                    <div class="buttons">
+                      <input type="submit" wicket:id="new"></input>
+                    </div>
+                  </fieldset>
+                </form>
+              </div>
+
+              <div class="col-sm-12">
+                <form wicket:id="featureDetailForm">
+                  <fieldset class="ui-widget-content ui-corner-all labels-left">
+                    <legend>
+                      Feature details (<a target="_blank" wicket:message="href:features.help.link"><wicket:message
+                          key="help.label" /></a>)
+                    </legend>
+                    <table class="hfill">
                       <tr>
-                        <td style="vertical-align: top;">Required:</td>
-                        <td><input type="checkbox" wicket:id="required"></input></td>
+                        <td style="color: gray; font-style: italic;">Internal name:</td>
+                        <td><span class="hfill" style="color: gray; font-style: italic;"
+                          wicket:id="name"></span></td>
                       </tr>
-                    </wicket:enclosure>
-                    <tr>
-                      <td style="vertical-align: top;">Hide Un-constraint feature:</td>
-                      <td><input type="checkbox" wicket:id="hideUnconstraintFeature"></input></td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align: top;">Tagset:</td>
-                      <td class="hfill"><select wicket:id="tagset"></select></td>
-                    </tr>
-                  </table>
-                </fieldset>
-                <div class="buttons">
-                  <input type="submit" wicket:id="save"></input> <input type="submit" wicket:id="cancel"
-                    value="Cancel"></input>
-                </div>
-              </form>
+                      <tr>
+                        <td style="color: red">Feature name:</td>
+                        <td><input class="hfill" type="text" wicket:id="uiName"></input></td>
+                      </tr>
+                      <tr>
+                        <td style="color: red">Type:</td>
+                        <td><select wicket:id="type"></select></td>
+                      </tr>
+                      <tr>
+                        <td style="vertical-align: top;">Description:</td>
+                        <td><textarea class="hfill" wicket:id="description" rows="2"></textarea></td>
+                      </tr>
+                      <tr>
+                        <td style="vertical-align: top;">Enabled:</td>
+                        <td><input type="checkbox" wicket:id="enabled"></input></td>
+                      </tr>
+                      <tr>
+                        <td style="vertical-align: top;">Show:</td>
+                        <td><input type="checkbox" wicket:id="visible"></input></td>
+                      </tr>
+                      <tr>
+                        <td style="vertical-align: top;">Remember:</td>
+                        <td><input type="checkbox" wicket:id="remember"></input></td>
+                      </tr>
+                      <wicket:enclosure child="required">
+                        <tr>
+                          <td style="vertical-align: top;">Required:</td>
+                          <td><input type="checkbox" wicket:id="required"></input></td>
+                        </tr>
+                      </wicket:enclosure>
+                      <tr>
+                        <td style="vertical-align: top;">Hide Un-constraint feature:</td>
+                        <td><input type="checkbox" wicket:id="hideUnconstraintFeature"></input></td>
+                      </tr>
+                      <tr>
+                        <td style="vertical-align: top;">Tagset:</td>
+                        <td class="hfill"><select wicket:id="tagset"></select></td>
+                      </tr>
+                    </table>
+                  </fieldset>
+                  <div class="buttons">
+                    <input type="submit" wicket:id="save"></input> <input type="submit"
+                      wicket:id="cancel" value="Cancel"></input>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>
-      </div>  
+      </div>
     </div>
-  </div>
-</wicket:panel>
+  </wicket:panel>
+</body>
 </html>

@@ -198,6 +198,8 @@ html, body {
 .flex-v-container.flex-gutter > * { margin-top: (@grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > *:last-child { margin-bottom: floor(@grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > .panel:not(:last-child) { margin-bottom: 0px !important; }
+.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter *:first-child { margin-left: 0px; }
+.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter *:last-child { margin-right: 0px; }
 .flex-centered { align-items: center; }
 .flex-static-item { flex: none; }
 .flex-growing-item { flex: 1; }

@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,124 +16,128 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<table class="hfill">
-		<tr>
-			<td style="vertical-align: top">
-				<form wicket:id="tagSetSelectionForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Tagsets</legend>
-						<div>
-							<select class="hfill" wicket:id="tagSet" size="6"></select>
-						</div>
-						<div class="buttons">
-							<input type="submit" wicket:id="create" />
-						</div>
-					</fieldset>
-				</form>
-				<form wicket:id="importTagSetForm">
-					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Import tagsets</legend>
-						<table class="hfill">
-							<tr>
-								<td><label>Format:</label></td>
-								<td class="hfill"><select wicket:id="importTagsetFormat"></select></td>
-							</tr>
-							<tr>
-								<td><label>Files:</label></td>
-								<td class="hfill"><input wicket:id="content" type="file"
-									multiple /></td>
-							</tr>
-							<tr>
-								<td colspan="1"><input type="checkbox" wicket:id="overwriteTagset">Overwrite</input></td>
-								<td><div class="buttons">
-										<input type="submit" wicket:id="import" />
-									</div></td>
-							</tr>
-						</table>
-						
-					</fieldset>
-				</form>
-			</td>
-
-			<td class="hfill" style="vertical-align: top">
-				<form wicket:id="tagSetDetailForm">
-					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Tagset details</legend>
-						<table class="hfill">
-							<tr>
-								<td><label style="color:red" >Name:</label></td>
-								<td class="hfill"><input type="text" wicket:id="name" /></td>
-							</tr>
-							<tr>
-								<td><label>Language:</label></td>
-								<td class="hfill"><input type="text" wicket:id="language" /></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><label>Description:</label></td>
-								<td><textarea class="hfill"
-										wicket:id="description" rows="7"></textarea></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><label>Extendible tagset?:</label></td>
-								<td><input type="checkbox" wicket:id="createTag" /></td>
-							</tr>
-						</table>
-						<div class="buttons">
-							<label class="inline">Export as:</label> <select
-								wicket:id="exportTagsetFormat"></select> <input type="submit"
-								wicket:id="export" value="Export tagset" />
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-							<input type="submit" wicket:id="save" /> <input type="submit"
-								wicket:id="remove" />
-								<input type="submit" wicket:id="cancel" value="Cancel" />
-						</div>
-					</fieldset>
-				</form>
-			</td>
-		</tr>
-	</table>
-
-
-	<table class="hfill">
-		<tr>
-			<td style="vertical-align: top">
-				<form wicket:id="tagSelectionForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Tags</legend>
-						<select wicket:id="tag" size="8"></select> <input type="submit"
-							wicket:id="new" />
-					</fieldset>
-				</form>
-			</td>
-
-			<td class="hfill" style="vertical-align: top">
-				<form wicket:id="tagDetailForm">
-					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend>Tag details</legend>
-						<table class="hfill">
-							<tr>
-								<td><label>Name:</label></td>
-								<td class="hfill"><input type="text" class="hfill"
-									wicket:id="name" /></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><label>Description:</label></td>
-								<td class="hfill"><textarea class="hfill"
-										wicket:id="description" rows="4"></textarea></td>
-							</tr>
-						</table>
-						<div class="buttons">
-							<input type="submit" wicket:id="save" /> <input type="submit"
-								wicket:id="remove" />
-								<input type="submit" wicket:id="cancel" value="Cancel"/>
-						</div>
-					</fieldset>
-				</form>
-			</td>
-		</tr>
-	</table>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-content flex-h-container flex-gutter">
+      <div class="flex-v-container flex-gutter">
+        <form wicket:id="tagSetSelectionForm" class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Tagsets</h3>
+          </div>
+          <div class="panel-body fit-child-snuck">
+            <select wicket:id="tagSet" size="6"></select>
+          </div>
+          <div class="panel-footer text-right">
+            <input wicket:id="create" type="submit" class="btn btn-primary"/>
+          </div>            
+        </form>
+    
+        <form wicket:id="importTagSetForm" class="panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Import tagsets</h3>
+          </div>
+          <div class="panel-body">
+            <table>
+              <tr>
+                <td><label>Format:</label></td>
+                <td><select wicket:id="importTagsetFormat"></select></td>
+              </tr>
+              <tr>
+                <td><label>Files:</label></td>
+                <td><input wicket:id="content" type="file" multiple /></td>
+              </tr>
+              <tr>
+                <td colspan="1">
+                  <input type="checkbox" wicket:id="overwriteTagset">Overwrite</input>
+                </td>
+                <td><div class="buttons">
+                    
+                  </div></td>
+              </tr>
+            </table>
+          </div>
+          <div class="panel-footer text-right">
+            <input wicket:id="import" type="submit" class="btn btn-primary"/>
+          </div>            
+        </form>
+      </div>
+    
+      <div class="flex-content flex-v-container flex-gutter">
+        <form wicket:id="tagSetDetailForm" class="panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Tagset details</h3>
+          </div>
+          <div class="panel-body">
+            <table class="hfill">
+              <tr>
+                <td><label style="color: red">Name:</label></td>
+                <td class="hfill"><input type="text" wicket:id="name" /></td>
+              </tr>
+              <tr>
+                <td><label>Language:</label></td>
+                <td class="hfill"><input type="text" wicket:id="language" /></td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;"><label>Description:</label></td>
+                <td><textarea class="hfill" wicket:id="description" rows="7"></textarea></td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;"><label>Extendible tagset?:</label></td>
+                <td><input type="checkbox" wicket:id="createTag" /></td>
+              </tr>
+            </table>
+            <div class="buttons">
+              <label class="inline">Export as:</label> <select wicket:id="exportTagsetFormat"></select>
+            </div>
+          </div>
+          <div class="panel-footer text-right">
+              <input wicket:id="export" type="submit" class="btn btn-default" wicket:message="value:export"/>
+              <input wicket:id="save"type="submit" class="btn btn-primary" wicket:message="value:save"/> 
+              <input wicket:id="remove"type="submit" class="btn btn-danger" wicket:message="value:delete"/>
+              <input wicket:id="cancel" type="submit" class="btn btn-default" wicket:message="value:cancel"/>
+          </div>            
+        </form>
+        
+        <div class="flex-content flex-h-container flex-gutter">
+          <form wicket:id="tagSelectionForm" class="panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">Tags</h3>
+            </div>
+            <div class="panel-body fit-child-snuck">
+              <select wicket:id="tag"></select>
+            </div>
+            <div class="panel-footer text-right">
+              <input wicket:id="new" type="submit" class="btn btn-primary"/>
+            </div>
+          </form>
+          <form wicket:id="tagDetailForm" class="flex-content panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">Tag details</h3>
+            </div>
+            <div class="panel-body fit-child-snuck">
+              <table class="hfill">
+                <tr>
+                  <td><label>Name:</label></td>
+                  <td><input type="text" class="hfill" wicket:id="name" /></td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;"><label>Description:</label></td>
+                  <td>
+                    <textarea wicket:id="description" rows="4"></textarea>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="panel-footer text-right">
+              <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/>
+              <input wicket:id="remove" type="submit" class="btn btn-danger" wicket:message="value:delete"/>
+              <input wicket:id="cancel" type="submit" class="btn btn-default" wicket:message="value:cancel"/>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
 </html>
