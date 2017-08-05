@@ -26,21 +26,20 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon"/>  
   <title><wicket:message key="product.name" /> - <wicket:message key="page.title" /></title>
   
+  <wicket:header-items/>
   
-  <wicket:head>
-    <script>
-      /* see https://stackoverflow.com/a/26408903 */
-      $(function () {
-        $('[data-toggle="popover"]').popover({
-        	html : true,
-        	content: function() {
-                var content = $(this).attr("data-popover-content");
-                return $(content).children(".popover-body").html();
-              }
-        });
+  <script>
+    /* see https://stackoverflow.com/a/26408903 */
+    $(function () {
+      $('[data-toggle="popover"]').popover({
+        html : true,
+        content: function() {
+              var content = $(this).attr("data-popover-content");
+              return $(content).children(".popover-body").html();
+            }
       });
-    </script>
-  </wicket:head>
+    });
+  </script>
 </head>
 <body>
   <div>
