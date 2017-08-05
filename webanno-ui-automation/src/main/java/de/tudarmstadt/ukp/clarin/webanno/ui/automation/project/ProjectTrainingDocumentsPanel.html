@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,36 +16,54 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<fieldset class="ui-widget-content ui-corner-all labels-left">
-		<legend>Import new documents</legend>
-		<table class="hfill">
-			<tr>
-				<td><label style="color:red">Format:</label></td>
-				<td> <select wicket:id="readableFormats"></select></td>
-			</tr>
-			<tr>
-				<td><label style="color:red" >Files:</label></td>
-				<td><input wicket:id="content" type="file" multiple /></td>
-			</tr>
-		</table>
-		<div class="buttons">
-			<input type="submit" wicket:id="import" value="Import" />
-		</div>
-	</fieldset>
-	
-	<fieldset class="ui-widget-content ui-corner-all">
-		<legend>Documents</legend>
-		<table class="hfill">
-			<tr>
-				<td><select class="hfill" wicket:id="documents" size="13"></select></td>
-			</tr>
-		</table>
-		<div class="buttons">
-			<input type="submit" wicket:id="remove" value ="Delete" />
-		</div>
-	</fieldset>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="panel panel-default panel-flex">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <wicket:message key="import" />
+        </h3>
+      </div>
+      <div class="panel-body form-horizontal">
+        <div class="col-sm-12">
+          <div class="form-group" wicket:enclosure="readableFormats">
+            <label wicket:for="readableFormats" class="col-sm-3 control-label">
+              <wicket:label key="format"/>
+            </label>
+            <div class="col-sm-9">
+              <select wicket:id="readableFormats" class="form-control"></select>
+            </div>
+          </div>
+          <div class="form-group" wicket:enclosure="content">
+            <label wicket:for="content" class="col-sm-3 control-label">
+              <wicket:label key="filesToImport"/>
+            </label>
+            <div class="col-sm-9">
+              <input wicket:id="content" type="file" multiple/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer text-right">
+        <input wicket:id="import" type="submit" class="btn btn-primary"
+          wicket:message="value:import" />
+      </div>
+    </div>
+
+    <div class="flex-content panel panel-default panel-flex">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <wicket:message key="documents" />
+        </h3>
+      </div>
+      <div class="panel-body fit-child-snuck">
+        <select wicket:id="documents" class="form-control"></select>
+      </div>
+      <div class="panel-footer text-right">
+        <input wicket:id="remove" type="submit" class="btn btn-danger" wicket:message="value:delete" />
+      </div>
+    </div>
+  </wicket:panel>
+</body>
 </html>

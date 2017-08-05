@@ -28,7 +28,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxButton;
-import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.feedback.IFeedback;
@@ -65,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
@@ -103,7 +103,7 @@ public class ProjectMiraTemplatePanel
 
     @SuppressWarnings("unused")
     private final ApplyForm applyForm;
-    private DropDownChoice<AnnotationFeature> features;
+    private ListChoice<AnnotationFeature> features;
     private DropDownChoice<AnnotationFeature> otherFeatures;
 
     public ProjectMiraTemplatePanel(String id, final IModel<Project> aProjectModel)
@@ -163,7 +163,7 @@ public class ProjectMiraTemplatePanel
             super(id, new CompoundPropertyModel<>(new SelectionModel()));
             final Project project = ProjectMiraTemplatePanel.this.getModelObject();
 
-            add(features = new DropDownChoice<AnnotationFeature>("features")
+            add(features = new ListChoice<AnnotationFeature>("features")
             {
                 private static final long serialVersionUID = 1L;
 
@@ -243,7 +243,7 @@ public class ProjectMiraTemplatePanel
     {
         private static final long serialVersionUID = -4655869081345550397L;
         @SuppressWarnings("rawtypes")
-        private AjaxTabbedPanel autoTabs;
+        private BootstrapAjaxTabbedPanel<ITab> autoTabs;
 
         public TargetLaerDetailForm(String id)
         {
@@ -294,8 +294,8 @@ public class ProjectMiraTemplatePanel
                 }
             });
 
-            add(autoTabs = (AjaxTabbedPanel) new AjaxTabbedPanel<>("autoTabs", tabs)
-                    .setOutputMarkupPlaceholderTag(true));
+            add(autoTabs = new BootstrapAjaxTabbedPanel<>("autoTabs", tabs));
+            autoTabs.setOutputMarkupPlaceholderTag(true);
         }
     }
 
