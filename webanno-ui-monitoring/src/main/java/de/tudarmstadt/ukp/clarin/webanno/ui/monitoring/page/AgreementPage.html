@@ -81,14 +81,7 @@
             <h3 class="panel-title">
               <wicket:message key="agreement" />
               <span class="pull-right">
-                <a role="button"
-                   data-toggle="popover"
-                   data-placement="left"
-                   data-trigger="focus"
-                   tabindex="0"
-                   title="Legend"
-                   data-html="true"
-                   data-popover-content="#legend-popover">Legend</a>
+                <a wicket:id="legend"><wicket:message key="legend"/></a> 
               </span>
             </h3>
           </div>
@@ -106,17 +99,6 @@
         </div>
       </form>
     </div>
-    
-    <div id="legend-popover" class="hidden">
-      <div class="popover-body">
-        <ul>
-          <li>Lower triangle: Positions included in agreement / total number
-            of positions</li>
-          <li>Upper triangle: Agreement score - click on cell to export
-            agreement report</li>
-        </ul>
-      </div>
-    </div>    
   </wicket:extend>
 </body>
 </html>

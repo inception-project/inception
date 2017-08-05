@@ -35,6 +35,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -44,6 +45,8 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
@@ -54,6 +57,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -223,6 +229,13 @@ public class AgreementPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            PopoverConfig config = new PopoverConfig().withPlacement(Placement.left)
+                    .withHtml(true);
+            WebMarkupContainer legend = new WebMarkupContainer("legend");
+            legend.add(new PopoverBehavior(new ResourceModel("legend"), 
+                    new StringResourceModel("legend.content", legend), config));
+            add(legend);
+            
             add(measureDropDown = new DropDownChoice<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
