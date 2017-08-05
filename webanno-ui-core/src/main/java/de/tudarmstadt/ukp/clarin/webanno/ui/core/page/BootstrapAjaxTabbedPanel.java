@@ -24,31 +24,34 @@ import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.model.IModel;
 
 /**
- * Bootstrap-compatible {@code AjaxTabbedPanel}.<br />
+ * Bootstrap-compatible {@code AjaxTabbedPanel}.
+ * 
  * Mildly inspired by <a href="https://gist.github.com/raphw/7824600">this Github Gist</a>.
- *
- * @param <T>
  */
-public class BootstrapAjaxTabbedPanel<T extends ITab> extends AjaxTabbedPanel<T> {
-
+public class BootstrapAjaxTabbedPanel<T extends ITab>
+    extends AjaxTabbedPanel<T>
+{
     private static final long serialVersionUID = -1207096969482559390L;
 
-    public BootstrapAjaxTabbedPanel(String id, List<T> tabs) {
+    public BootstrapAjaxTabbedPanel(String id, List<T> tabs)
+    {
         super(id, tabs);
     }
 
-    public BootstrapAjaxTabbedPanel(String id, List<T> tabs, IModel<Integer> model) {
+    public BootstrapAjaxTabbedPanel(String id, List<T> tabs, IModel<Integer> model)
+    {
         super(id, tabs, model);
     }
-    
+
     @Override
-    protected String getSelectedTabCssClass() {
+    protected String getSelectedTabCssClass()
+    {
         return "active";
     }
-    
+
     @Override
-    protected String getTabContainerCssClass() {
+    protected String getTabContainerCssClass()
+    {
         return "nav nav-tabs";
     }
-
 }
