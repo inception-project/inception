@@ -121,6 +121,13 @@ html, body {
   width: 100%;
 }
 
+/* Allow text in non-editable span values in forms to break. Maintain minimial height. */
+span.form-control {
+  word-break: break-word;
+  height: auto;
+  min-height: @input-height-base;
+}
+
 /* Fix header font in Wicket modal windows */
 .w_caption h3 {
   font-size: 18px;
@@ -131,8 +138,12 @@ html, body {
   margin-right: 15px;
 }
 
+.panel { 
+  margin-bottom: ceil(@grid-gutter-width / 2);
+}
+
 .panel-small {
-  margin-bottom: 5px;
+  margin-bottom: ceil(@grid-gutter-width / 4);
   
   .panel-title {
     font-size: @font-size-small;
@@ -176,12 +187,11 @@ html, body {
   .panel-footer { flex: none; }
   .panel-footer .form-group { margin-bottom: 0px; }
 }
-.panel { margin-bottom: 15px; }
 
 .min-content-height {
-  height: -moz-min-content;
-  height: -webkit-min-content;
-  height: min-content;
+  min-height: -moz-min-content;
+  min-height: -webkit-min-content;
+  min-height: min-content;
 }
 
 .notice-container {
@@ -189,65 +199,53 @@ html, body {
   bottom: 20px;
 }
 
-/* Flex layout helpers as CSS classes */
+/* Flex layout helpers as CSS classes - order matters! */
 .flex-h-container { display: flex; flex-direction: row; }
 .flex-h-container.flex-gutter > * { margin-left: ceil(@grid-gutter-width / 2) }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > *:last-child { margin-right: floor(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
+.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
+.flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
+.flex-h-container.flex-only-internal-gutter > *:first-child { margin-left: 0px; }
+.flex-h-container.flex-only-internal-gutter > *:last-child { margin-right: 0px; }
+
+.flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
 .flex-v-container.flex-gutter > * { margin-top: (@grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > *:last-child { margin-bottom: floor(@grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > .panel:not(:last-child) { margin-bottom: 0px !important; }
-.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter *:first-child { margin-left: 0px; }
-.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter *:last-child { margin-right: 0px; }
+.flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
+.flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
+.flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }
+.flex-v-container.flex-only-internal-gutter > *:last-child { margin-bottom: 0px; }
+
 .flex-centered { align-items: center; }
+.flex-centered > * { margin: 0px; }
+
 .flex-static-item { flex: none; }
 .flex-growing-item { flex: 1; }
 .flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; }
 .flex-content { flex: 1; }
+
 .flex-tile-container { display: flex; flex-flow: row wrap; }
 .flex-tile { box-sizing: border-box; flex: 1; flex-basis: 30em; }
+
 .scrolling { overflow: auto; }
 .v-scrolling { overflow-y: auto; }
 .h-scrolling { overflow-x: auto; }
 
 /* Annotation editor pages - general layout */
 .annotation-editor-container {
-  .flex-sidebar {
-    .form-horizontal {
-      margin-left: 0px;
-      margin-right: 0px;
-    }
-  
-    .form-horizontal .form-group {
-      margin-left: 0px;
-      margin-right: 0px;
-    }
-  }
-  
   .collapsed {
     flex-basis: 39px !important;
   }
 }
 
-.annotation-editor-center { 
-  margin: floor((@grid-gutter-width / 2));
-}
-
-.annotation-editor-left {
-  margin: floor((@grid-gutter-width / 2));
-  margin-right: 0px;
-}
-.annotation-editor-right {
-  margin: floor((@grid-gutter-width / 2));
-  margin-left: 0px;
-}
-
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
-.fit-child-snuck { position: relative; }
-.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; resize: none; }
-.fit-child-loose { position: relative; }
+.fit-child-snuck { position: relative; min-height: 6em; }
+.fit-child-snuck > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; resize: none; border: none; }
+.fit-child-loose { position: relative; min-height: 6em; }
 .fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; resize: none; }
 
 /* style for the warning popover in the page footer */
@@ -265,4 +263,8 @@ ul.nav.nav-tabs + div.panel.panel-default {
   border-top:none;
   border-top-left-radius:0;
   border-top-right-radius:0;
+}
+
+.nav.nav-tabs > li > a {
+  padding: 2px 15px; 
 }

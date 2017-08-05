@@ -19,103 +19,93 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container">
-      <div class="flex-content panel panel-default panel-flex" style="margin: 15px; margin-right: 0px; min-height: 10em;">
-        <div class="panel-heading">
-          <h3 class="panel-title"><wicket:message key="projects" /></h3>
+    <div class="flex-content flex-h-container flex-gutter">
+      <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title"><wicket:message key="projects" /></h3>
+          </div>
+          <div class="scrolling panel-body fit-child-snuck" >
+            <select wicket:id="project" size="20" class="form-control"></select>
+          </div>
         </div>
-        <div class="scrolling panel-body fit-child-snuck" >
-          <select wicket:id="project" size="20" class="form-control"></select>
-        </div>
-      </div>
-    </form>
-    <form wicket:id="agreementForm" class="scrolling flex-content">
-      <div class="panel panel-default" style=" margin: 15px;">
-        <div class="panel-heading">
-          <h3 class="panel-title"><wicket:message key="settings" />
-          <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
-              <wicket:message key="help" /></a></span></h3>
-        </div>
-        <div class="panel-body">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-sm-6 form-group" wicket:enclosure="feature">
-                <label wicket:for="feature" ><wicket:label key="feature"/></label>
-                <select wicket:id="feature" size="5" class="form-control"></select>
-              </div>
-              <div class="col-sm-6 form-horizontal" wicket:enclosure="measure">
-                <div class="form-group">
-                  <label wicket:for="measure" class="col-sm-4 control-label">
-                  <wicket:label key="measure"/></label>
-                  <div class="col-sm-8">
-                    <select wicket:id="measure" class="form-control"></select>
-                  </div>
+      </form>
+      
+      <form wicket:id="agreementForm" class="scrolling flex-content flex-v-container flex-gutter">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title"><wicket:message key="settings" />
+            <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
+                <wicket:message key="help" /></a></span></h3>
+          </div>
+          <div class="panel-body">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-sm-6 form-group" wicket:enclosure="feature">
+                  <label wicket:for="feature" ><wicket:label key="feature"/></label>
+                  <select wicket:id="feature" size="5" class="form-control"></select>
                 </div>
-                <div class="form-group">
-                  <div class="col-sm-offset-4 col-sm-8">
-                    <div class="checkbox">
-                      <label wicket:for="excludeIncomplete">
-                        <input wicket:id="excludeIncomplete" type="checkbox"/>
-                        <wicket:label key="excludeIncomplete"/>
-                      </label>
+                <div class="col-sm-6 form-horizontal" wicket:enclosure="measure">
+                  <div class="form-group">
+                    <label wicket:for="measure" class="col-sm-4 control-label">
+                    <wicket:label key="measure"/></label>
+                    <div class="col-sm-8">
+                      <select wicket:id="measure" class="form-control"></select>
                     </div>
-                  </div>              
-                </div>
-                <div class="form-group" wicket:enclosure="linkCompareBehavior">
-                  <label wicket:for="linkCompareBehavior" class="col-sm-4 control-label">
-                      <wicket:label key="linkCompareBehavior"/></label>
-                  <div class="col-sm-8">
-                    <select wicket:id="linkCompareBehavior" class="form-control"></select>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-offset-4 col-sm-8">
+                      <div class="checkbox">
+                        <label wicket:for="excludeIncomplete">
+                          <input wicket:id="excludeIncomplete" type="checkbox"/>
+                          <wicket:label key="excludeIncomplete"/>
+                        </label>
+                      </div>
+                    </div>              
+                  </div>
+                  <div class="form-group" wicket:enclosure="linkCompareBehavior">
+                    <label wicket:for="linkCompareBehavior" class="col-sm-4 control-label">
+                        <wicket:label key="linkCompareBehavior"/></label>
+                    <div class="col-sm-8">
+                      <select wicket:id="linkCompareBehavior" class="form-control"></select>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-        
-      <div class="panel panel-default" 
-          style=" margin: 15px; margin-top: 0px;" wicket:enclosure="exportAll">
-        <div class="panel-heading">
-          <h3 class="panel-title">
-            <wicket:message key="agreement" />
-            <span class="pull-right">
-              <a role="button"
-                 data-toggle="popover"
-                 data-placement="left"
-                 data-trigger="focus"
-                 tabindex="0"
-                 title="Legend"
-                 data-html="true"
-                 data-popover-content="#legend-popover">Legend</a>
-            </span>
-          </h3>
-        </div>
-        <div class="panel-body">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="form-group form-horizontal" wicket:enclosure="exportFormat">
-                <label wicket:for="exportFormat" class="col-sm-2 control-label">
-                    <wicket:label key="exportFormat"/></label>
-                <div class="col-sm-4">
-                  <select wicket:id="exportFormat" class="form-control"></select>
-                </div>
-                <div class="col-sm-6">
-                  <div class="pull-right">
-                    <input wicket:id="exportAll" type="submit" class="btn btn-default" style="height: 28px;" wicket:message="value:exportAll"/>
-                  </div>
-                </div>
-              </div>
-            </div>
-              
-            <div class="row">
+          
+        <div class="flex-content panel panel-default panel-flex" wicket:enclosure="exportAll">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <wicket:message key="agreement" />
+              <span class="pull-right">
+                <a role="button"
+                   data-toggle="popover"
+                   data-placement="left"
+                   data-trigger="focus"
+                   tabindex="0"
+                   title="Legend"
+                   data-html="true"
+                   data-popover-content="#legend-popover">Legend</a>
+              </span>
+            </h3>
+          </div>
+          <div class="scrolling panel-body">
+            <div class="col-sm-12">
               <table wicket:id="agreementTable" style="width: 100%; margin-top: 15px;"></table>
             </div>
           </div>
+          <div class="panel-footer flex-h-container flex-gutter flex-centered flex-only-internal-gutter">
+            <label wicket:for="exportFormat" class="control-label text-nowrap">
+                <wicket:label key="exportFormat"/></label>
+            <select wicket:id="exportFormat" class="form-control"></select>
+            <input wicket:id="exportAll" type="submit" class="btn btn-default" wicket:message="value:exportAll"/>
+          </div>
         </div>
-      </div>
-    </form>
-
+      </form>
+    </div>
     
     <div id="legend-popover" class="hidden">
       <div class="popover-body">
