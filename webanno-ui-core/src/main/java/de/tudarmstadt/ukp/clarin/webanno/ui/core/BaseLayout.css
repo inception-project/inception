@@ -18,65 +18,8 @@
  * Generic classes
  */
 
-.hfill{
-    width:100%;
-    max-width:none;
-}
-
-.dfill{
-    width:30%;
-    max-width:none;
-}
-
-.vfill{
-    height:100%;
-    max-height:none;
-}
-
-/* 
- * Safari does not apply height:100% in table cells, but relative positioning works. In Firefox
- * this does not work.
- */
-.webkit td.vfill{
-    position:relative;
-}
-
-.webkit td.vfill > *{
-    top:0px;
-    bottom:0px;
-    left:0px;
-    right:0px;
-    position:absolute;
-}
-
-select.hfill{
-    min-width:100%;
-}
-
-select.hfill[multiple]{
-    width:auto;
-    /* If the select content is very large, this forces the select to accomodate the
- *  full expanded content... usually not what we want, only the popup should be full-width. But
- *  for multiple selection, we really want to show the full with by default*/
-}
-
 .nowrap{
     white-space:nowrap;
-}
-
-.centering{
-    text-align:center;
-}
-
-.centering table{
-    margin-left:auto;
-    margin-right:auto;
-    text-align:left;
-}
-
-.centering .wicketstuff-progressbar{
-    margin-left:auto;
-    margin-right:auto;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -85,60 +28,6 @@ select.hfill[multiple]{
 
 label.required {
     color: red;
-}
-
-.labels-top label, label.top {
-    white-space:nowrap;
-    display: block;
-    text-align:left;
-    font-weight: bold;
-}
-
-.labels-left label, label.left {
-    white-space:nowrap;
-    display: block;
-    text-align: right;
-    font-weight: bold;
-}
-
-.labels-left th {
-  padding: 1px;
-    padding-right: 1em;
-    width: 1em;
-    vertical-align: top;
-}
-
-.labels-left td {
-    vertical-align: top;
-}
-
-label.inline {
-    text-align:inherit;
-    display:inline;
-}
-
-ul label {
-    display:inline;
-    text-align:left;
-    font-weight:normal;
-}
-
-.inline-labels label {
-    display:inline;
-}
-
-fieldset {
-    -moz-border-radius:6px;
-    -webkit-border-radius:6px;
-    -khtml-border-radius:6px;
-    border-radius:6px;
-}
-
-ul.vcheckboxgroup {
-    padding:0px;
-    margin:0px;
-    list-style:none;
-    white-space:nowrap;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -151,15 +40,6 @@ ul.vcheckboxgroup {
   right:10px;
   top: 55px;
   z-index:9999;
-}
-
-.headerlink {
-  float: right;
-    margin-right: 0.2em;
-}
-
-.headerlink img {
-  height: 40px;
 }
 
 /* -------------------------------------------------------------------------------------------------
