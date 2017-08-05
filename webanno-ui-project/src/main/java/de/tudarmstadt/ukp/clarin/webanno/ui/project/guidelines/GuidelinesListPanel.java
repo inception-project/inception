@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -85,7 +85,7 @@ public class GuidelinesListPanel
     {
         if (guideline.getObject() == null) {
             error("No guideline selected");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
         
@@ -95,7 +95,7 @@ public class GuidelinesListPanel
         catch (IOException e) {
             LOG.error("Unable to delete document", e);
             error("Unable to delete document: " + e.getMessage());
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         guideline.setObject(null);
         aTarget.add(getPage());

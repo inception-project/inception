@@ -51,6 +51,7 @@ public abstract class OpenDocumentDialog
         setWidthUnit("px");
         setHeightUnit("px");
         setTitle("Open document");
+        setCssClassName("w_blue w_flex");
         setCloseButtonCallback((t) -> {
             closeButtonClicked = true;
             return true;

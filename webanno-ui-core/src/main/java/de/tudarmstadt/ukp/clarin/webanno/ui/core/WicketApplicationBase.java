@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
@@ -46,11 +47,21 @@ import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 
+import de.agilecoders.wicket.core.Bootstrap;
+import de.agilecoders.wicket.core.settings.IBootstrapSettings;
+import de.agilecoders.wicket.less.BootstrapLess;
+import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.BaseLayoutCssResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
@@ -88,10 +99,8 @@ public abstract class WicketApplicationBase
 //        getResourceSettings().setThrowExceptionOnMissingResource(false);
 //        getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
         
-        // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
-        // identification. 
-        initDynamicJQueryResourceReference();
-
+        initWebFrameworks();
+        
         initDefaultPageMounts();
         
         initLogoReference();
@@ -101,7 +110,80 @@ public abstract class WicketApplicationBase
 
         initMDCLifecycle();
     }
+    
+    protected void initWebFrameworks()
+    {
+        // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
+        // identification. 
+        initDynamicJQueryResourceReference();
+ 
+        initBootstrap();
+        
+        initKendo();
+        
+        initJQueryUI();
+        
+        initFontAwesome();
+        
+        initCssBrowserSelector();
+        
+        // Loading base layout CSS here so it can override JQuery/Kendo CSS
+        initBaseLayoutCss();
+    }
+    
+    protected void initBootstrap()
+    {
+        WicketWebjars.install(this);
+        BootstrapLess.install(this);
+        Bootstrap.install(this);
+        IBootstrapSettings settings = Bootstrap.getSettings(this);
+        settings.setCssResourceReference(CustomBootstrapLessReference.get());
+    }
 
+    protected void initBaseLayoutCss()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(BaseLayoutCssResourceBehavior.get());
+            }
+        });
+    }
+    protected void initKendo()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new KendoResourceBehavior());
+            }
+        });
+    }
+
+    protected void initFontAwesome()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new FontAwesomeResourceBehavior());
+            }
+        });
+    }
+    
+    protected void initCssBrowserSelector()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new CssBrowserSelectorResourceBehavior());
+            }
+        });
+    }
+    
+    protected void initJQueryUI()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new JQueryUIResourceBehavior());
+            }
+        });
+    }
+    
     protected void initMDCLifecycle()
     {
         getRequestCycleListeners().add(new AbstractRequestCycleListener()

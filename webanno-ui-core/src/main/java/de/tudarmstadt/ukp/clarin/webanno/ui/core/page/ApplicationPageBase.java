@@ -23,28 +23,21 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
-import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -52,15 +45,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
-import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
-
-import de.tudarmstadt.ukp.clarin.webanno.fontawesome.FontAwesomeCssReference;
-import de.tudarmstadt.ukp.clarin.webanno.support.ImageLinkDecl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.db.DatabaseDriverService;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.CssBrowserSelectorResourceReference;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -79,7 +65,6 @@ public abstract class ApplicationPageBase
     private Label versionLabel;
     private Label embeddedDbWarning;
     private Label browserWarning;
-    private ListView<ImageLinkDecl> links;
 
     private @SpringBean DatabaseDriverService dbDriverService;
 
@@ -94,7 +79,6 @@ public abstract class ApplicationPageBase
         commonInit();
     }
 
-    @SuppressWarnings({ "serial" })
     private void commonInit()
     {
         Properties settings = SettingsUtil.getSettings();
@@ -124,9 +108,8 @@ public abstract class ApplicationPageBase
             throw new RuntimeException(e1);
         }
 
-        feedbackPanel = new FeedbackPanel("feedbackPanel");
+        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
-        feedbackPanel.add(new AttributeModifier("class", "error"));
         feedbackPanel.setFilter((IFeedbackMessageFilter) aMessage -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth != null ? auth.getName() : "SYSTEM";
@@ -147,67 +130,25 @@ public abstract class ApplicationPageBase
             }
             return true;
         });
+        add(feedbackPanel);
         
         versionLabel = new Label("version", SettingsUtil.getVersionString());
-
-        embeddedDbWarning = new Label("embeddedDbWarning",
-                "USE THIS INSTALLATION FOR TESTING ONLY -- "
-                + "AN EMBEDDED DATABASE IS NOT RECOMMENDED FOR PRODUCTION USE");
-        embeddedDbWarning.setVisible(false);
-        try {
-            String driver = dbDriverService.getDatabaseDriverName();
-            embeddedDbWarning.setVisible(StringUtils.contains(driver.toLowerCase(Locale.US),
-                    "hsql"));
-        }
-        catch (Throwable e) {
-            LOG.warn("Unable to determine which database is being used", e);
-        }
-
-        // Override warning about embedded database.
-        if ("false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE))) {
-            embeddedDbWarning.setVisible(false);
-        }
-        
-        // Display a warning when using an unsupported browser
-        RequestCycle requestCycle = RequestCycle.get();
-        WebClientInfo clientInfo;
-        if (Session.exists()) {
-            WebSession session = WebSession.get();
-            clientInfo = session.getClientInfo();
-        }
-        else {
-            clientInfo = new WebClientInfo(requestCycle);
-        }
-        ClientProperties clientProperties = clientInfo.getProperties();
-
-        browserWarning = new Label("browserWarning", "THIS BROWSER IS NOT SUPPORTED -- "
-                + "PLEASE USE CHROME OR SAFARI");
-        browserWarning.setVisible(!clientProperties.isBrowserSafari()
-                && !clientProperties.isBrowserChrome());
-
-        // Override warning about browser.
-        if ("false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER))) {
-            browserWarning.setVisible(false);
-        }
-        
-        links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
-        {
-            @Override
-            protected void populateItem(ListItem<ImageLinkDecl> aItem)
-            {
-                aItem.add(new ImageLink("link",
-                        new UrlResourceReference(Url.parse(aItem.getModelObject().getImageUrl())),
-                        Model.of(aItem.getModelObject().getLinkUrl())));
-            }
-        };
-        
-        add(links);
-        add(feedbackPanel);
         add(versionLabel);
+        
+        // set up warnings shown when using an embedded DB or some unsupported browser
+        boolean isBrowserWarningVisible = isBrowserWarningVisible(settings);
+        boolean isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
+        
+        embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
+        embeddedDbWarning.setVisible(isDatabaseWarningVisible);
         add(embeddedDbWarning);
+        browserWarning = new Label("browserWarning", new ResourceModel("warning.browser"));
+        browserWarning.setVisible(isBrowserWarningVisible);
         add(browserWarning);
+        
+        WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
+        warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);  
+        add(warningsContainer);
     }
 
     @Override
@@ -228,42 +169,38 @@ public abstract class ApplicationPageBase
     {
         return feedbackPanel;
     }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        // We also load the JQuery CSS always just to get a consistent look across the app
-        JQueryUILibrarySettings jqueryCfg = JQueryUILibrarySettings.get();
-
-        if (jqueryCfg.getStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
+    
+    private boolean isDatabaseWarningVisible(Properties settings) {
+        boolean isUsingEmbeddedDatabase;
+        try {
+            String driver = dbDriverService.getDatabaseDriverName();
+            isUsingEmbeddedDatabase = StringUtils.contains(driver.toLowerCase(Locale.US), "hsql");
+        } catch (Throwable e) {
+            LOG.warn("Unable to determine which database is being used", e);
+            isUsingEmbeddedDatabase = false;
         }
+        boolean ignoreWarning = "false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE));
 
-        // We use Kendo TextFields, but they do not automatically load the Kendo JS/CSS, so
-        // we do it manually here and for all the pages.
-        KendoUILibrarySettings kendoCfg = KendoUILibrarySettings.get();
-
-        if (kendoCfg.getCommonStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem.forReference(kendoCfg.getCommonStyleSheetReference()));
+        return isUsingEmbeddedDatabase && !ignoreWarning;
+    }
+    
+    private boolean isBrowserWarningVisible(Properties settings) { 
+        RequestCycle requestCycle = RequestCycle.get();
+        WebClientInfo clientInfo;
+        if (Session.exists()) {
+            WebSession session = WebSession.get();
+            clientInfo = session.getClientInfo();
+        } else {
+            clientInfo = new WebClientInfo(requestCycle);
         }
-
-        if (kendoCfg.getThemeStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem.forReference(kendoCfg.getThemeStyleSheetReference()));
-        }
-
-        if (kendoCfg.getJavaScriptReference() != null) {
-            aResponse.render(JavaScriptHeaderItem.forReference(kendoCfg.getJavaScriptReference()));
-        }
+        ClientProperties clientProperties = clientInfo.getProperties();
+        boolean isUsingUnsupportedBrowser = !clientProperties.isBrowserSafari()
+                && !clientProperties.isBrowserChrome();
         
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(CssBrowserSelectorResourceReference.get()));
-        
-        aResponse.render(CssHeaderItem.forReference(FontAwesomeCssReference.get()));
+        boolean ignoreWarning = "false".equalsIgnoreCase(
+                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
 
-        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
-        aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
+        return isUsingUnsupportedBrowser && !ignoreWarning;
     }
 }

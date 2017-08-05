@@ -1,5 +1,6 @@
+<!DOCTYPE html>
 <!--
-#Copyright 2012
+#Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -15,24 +16,17 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
   <wicket:panel>
-    <table style=" margin-left:auto; margin-right:auto;">
-      <tr>
-        <td>
-        </td>
-        <td>
-          <form wicket:id="yesNoButtonsForm" >
-            <button wicket:id="yesButton">
-              Yes
-            </button>
-            <button wicket:id="noButton">
-              No
-            </button>
-          </form>
-        </td>
-      </tr>
-    </table>
+    <ul class="nav nav-tabs" wicket:id="tabs-container">
+      <li wicket:id="tabs">
+        <a wicket:id="link"><span wicket:id="title"></span></a>
+      </li>
+    </ul>
+    <div class="panel panel-default flex-content flex-h-container" style="margin: 0px;">
+      <div wicket:id="panel" class="flex-content flex-h-container"></div>
+    </div>
   </wicket:panel>
+</body>
 </html>

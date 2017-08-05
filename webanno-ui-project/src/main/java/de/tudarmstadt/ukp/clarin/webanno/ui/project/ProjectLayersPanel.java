@@ -403,19 +403,10 @@ public class ProjectLayersPanel
         private DropDownChoice<String> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
 
-        private Label lockToTokenOffsetLabel;
         private CheckBox lockToTokenOffset;
-
-        private Label allowStackingLabel;
         private CheckBox allowStacking;
-
-        private Label crossSentenceLabel;
         private CheckBox crossSentence;
-
-        private Label multipleTokensLabel;
         private CheckBox multipleTokens;
-
-        private Label linkedListBehaviorLabel;
         private CheckBox linkedListBehavior;
 
         public LayerDetailForm(String id)
@@ -469,21 +460,11 @@ public class ProjectLayersPanel
                 protected void onUpdate(AjaxRequestTarget target)
                 {
                     layerType = getModelObject().getType();
-                    target.add(lockToTokenOffsetLabel);
                     target.add(lockToTokenOffset);
-
-                    target.add(allowStackingLabel);
                     target.add(allowStacking);
-
-                    target.add(crossSentenceLabel);
                     target.add(crossSentence);
-
-                    target.add(multipleTokensLabel);
                     target.add(multipleTokens);
-
-                    target.add(linkedListBehaviorLabel);
                     target.add(linkedListBehavior);
-
                     target.add(attachTypes);
                 }
             });
@@ -552,31 +533,6 @@ public class ProjectLayersPanel
             // Behaviors of layers
             add(new CheckBox("readonly"));
 
-            add(lockToTokenOffsetLabel = new Label("lockToTokenOffsetLabel",
-                    "Lock to token offsets:")
-            {
-                private static final long serialVersionUID = -1290883833837327207L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relation layers or layers that attach to tokens
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType())
-                            && layer.getAttachFeature() == null);
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()));
-                }
-            });
             add(lockToTokenOffset = new CheckBox("lockToTokenOffset")
             {
                 private static final long serialVersionUID = -4934708834659137207L;
@@ -602,31 +558,6 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(allowStackingLabel = new Label("allowStackingLabel", "Allow stacking:")
-            {
-                private static final long serialVersionUID = -5354062154610496880L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    setVisible(!isBlank(layer.getType()));
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) && 
-                            // Not configurable for layers that attach to tokens (currently that is
-                            // the only layer on which we use the attach feature)
-                            layer.getAttachFeature() == null);
-                }
-            });
             add(allowStacking = new CheckBox("allowStacking")
             {
                 private static final long serialVersionUID = 7800627916287273008L;
@@ -653,32 +584,6 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(crossSentenceLabel = new Label("crossSentenceLabel",
-                    "Allow crossing sentence boundary:")
-            {
-                private static final long serialVersionUID = -5354062154610496880L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    setVisible(!isBlank(layer.getType()));
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) 
-                            // Not configurable for layers that attach to tokens (currently that
-                            // is the only layer on which we use the attach feature)
-                            && layer.getAttachFeature() == null);
-                }
-            });
             add(crossSentence = new CheckBox("crossSentence")
             {
                 private static final long serialVersionUID = -5986386642712152491L;
@@ -705,32 +610,6 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(multipleTokensLabel = new Label("multipleTokensLabel", "Allow multiple tokens:")
-            {
-                private static final long serialVersionUID = -5354062154610496880L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    // Makes no sense for relations
-                    setVisible(!isBlank(layer.getType()) && !RELATION_TYPE.equals(layer.getType()));
-                    setEnabled(
-                            // Surface form must be locked to token boundaries for CONLL-U writer
-                            // to work.
-                            !SurfaceForm.class.getName().equals(layer.getName()) &&
-                            // Not configurable for chains
-                            !CHAIN_TYPE.equals(layer.getType()) 
-                            // Not configurable for layers that attach to tokens (currently that
-                            // is the only layer on which we use the attach feature)
-                            && layer.getAttachFeature() == null);
-                }
-            });
             add(multipleTokens = new CheckBox("multipleTokens")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
@@ -758,23 +637,6 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(linkedListBehaviorLabel = new Label("linkedListBehaviorLabel",
-                    "Behave like a linked list:")
-            {
-                private static final long serialVersionUID = -5354062154610496880L;
-
-                {
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                    setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
-                }
-            });
             add(linkedListBehavior = new CheckBox("linkedListBehavior")
             {
                 private static final long serialVersionUID = 1319818165277559402L;
@@ -804,10 +666,10 @@ public class ProjectLayersPanel
                 }
             });
             
-            //add(new Label("isZeroWidthOnlyLabel", "Only allow zero with annotations:"));
-            //add(new CheckBox("isZeroWidthOnly"));
-            add(new Label("onClickJavascriptActionLabel", "Run Javascript action on click:"));
-            add(new TextArea<String>("onClickJavascriptAction").add(new AttributeModifier("placeholder", "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + $PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
+            add(new TextArea<String>("onClickJavascriptAction").add(new AttributeModifier(
+                    "placeholder",
+                    "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                    + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
             
             // -- 
 

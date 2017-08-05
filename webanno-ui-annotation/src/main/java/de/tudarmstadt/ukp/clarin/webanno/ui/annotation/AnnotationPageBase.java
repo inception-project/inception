@@ -26,8 +26,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -222,7 +222,7 @@ public abstract class AnnotationPageBase
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);
         error("Error: " + aException.getMessage());
         if (aTarget != null) {
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 

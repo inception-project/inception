@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,21 +16,18 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <table class="hfill">
-      <tr style="vertical-align: top;">
-        <td width="20%">
-          <wicket:container wicket:id="projects" />
-          <wicket:container wicket:id="importPanel" />
-        </td>
-        <td width="80%">
-          <div wicket:id="tabPanel" class="tabpanel"></div>
-        </td>
-      </tr>
-    </table>
+    <div class="flex-content flex-h-container flex-gutter">
+      <div class="flex-sidebar flex-v-container flex-gutter">
+        <wicket:container wicket:id="projects" />
+        <wicket:container wicket:id="importPanel" />
+      </div>
+      <div class="flex-content flex-v-container flex-gutter">
+        <div wicket:id="tabPanel" class="flex-content flex-v-container"></div>
+      </div>
+    </div>
   </wicket:extend>
 </body>
 </html>

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,10 +16,13 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-  <div wicket:id="import"></div>
-  <div wicket:id="documents"></div>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="scrolling flex-content flex-v-container">
+      <div wicket:id="import" class="flex-h-container"></div>
+      <div wicket:id="documents" class="flex-content flex-h-container">></div>
+    </div>
+  </wicket:panel>
+</body>
 </html>

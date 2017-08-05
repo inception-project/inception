@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,28 +16,31 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <fieldset class="ui-widget-content ui-corner-all" wicket:enclosure="form">
-      <legend>Import Project</legend>
+    <div class="panel panel-default panel-flex min-content-height" wicket:enclosure="form">
+      <div class="panel-heading">
+        <h3 class="panel-title"><wicket:message key="projects.import.title" /></h3>
+      </div>
       <form wicket:id="form">
-        <table class="hfill">
-          <tr>
-            <td><label>Files</label></td>
-            <td class="hfill"><input wicket:id="content" type="file" multiple /></td>
-          </tr>
-          <tr>
-            <td><input wicket:id="generateUsers" type="checkbox" /></td>
-            <td class="hfill"><label>Create missing users</label></td>
-          </tr>
-        </table>
-        <div class="buttons">
-          <input type="submit" wicket:id="import" wicket:message="value:import"/>
+        <div class="panel-body">
+          <div class="form-group" wicket:enclosure="content">
+            <label wicket:for="content"><wicket:label key="content"/></label>
+            <input wicket:id="content" type="file" multiple="multiple" />
+          </div>
+          <div class="checkbox" wicket:enclosure="generateUsers">
+            <label wicket:for="generateUsers">
+              <input wicket:id="generateUsers" type="checkbox"></input>
+              <wicket:label key="generateUsers" />
+            </label>
+          </div>
+        </div>        
+        <div class="panel-footer text-right">
+          <input wicket:id="import" type="submit" wicket:message="value:import" class="btn btn-primary"/>
         </div>
-      </form>
-    </fieldset>
+      </form>           
+    </div>
   </wicket:panel>
 </body>
 </html>

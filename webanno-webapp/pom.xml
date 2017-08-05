@@ -94,7 +94,7 @@
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-kendo-ui-theme-default</artifactId>
+      <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -386,7 +386,7 @@
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Themes -->
-              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-default</usedDependency>
+              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
               <!-- Spring Boot stuff - used via reflection/classpath -->
               <usedDependency>org.springframework:spring-webmvc</usedDependency>

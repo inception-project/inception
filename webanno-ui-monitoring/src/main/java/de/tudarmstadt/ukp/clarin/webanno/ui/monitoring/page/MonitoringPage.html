@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,95 +16,121 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:extend>
-		<table class="hfill">
-			<tr style="vertical-align: top;">
-				<td width="20%">
-					<form wicket:id="projectSelectionForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend><wicket:message key="projects" /></legend>
-							<select class="hfill" wicket:id="project" size="29"></select>
-						</fieldset>
-					</form>
-				</td>
-				<td width="80%">
-                    <wicket:enclosure child="overallProjectProgressImage">
-      					<fieldset class="ui-widget-content ui-corner-all">
-  	     					<legend wicket:id=overview></legend>
-    						<img wicket:id="overallProjectProgressImage"
-    							alt="Overall Project Progress"></img>
-    					</fieldset>
-                    </wicket:enclosure>
-					<form wicket:id="monitoringDetailForm" class="hfill">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend><wicket:message key="project" /></legend>
-							<div>
-								<span wicket:id="projectName"></span>
-							</div>
-						</fieldset>
-						<table class="hfill">
-							<tr>
-								<td>
-									<fieldset class="ui-widget-content ui-corner-all">
-										<legend>Documents finished</legend>
-										<img wicket:id="annotator" alt="Annotation Progress"></img>
-									</fieldset>
-								</td>
-								<td>
-									<fieldset class="ui-widget-content ui-corner-all">
-										<legend>Progress</legend>
-										<img wicket:id="annotatorPercentage"
-											alt="Annotation Progress percentage"></img>
-									</fieldset>
-								</td>
-							</tr>
-						</table>
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend><wicket:message key="document_status" /> (<a target="_blank" wicket:message="href:document_status.help.link"><wicket:message key="help"/></a>)</legend>
-							<p><b><wicket:message key="document_status.hint">[Status hint]</wicket:message></b></p>
-							<table wicket:id="rsTable" class="hfill"></table>
-						</fieldset>
-					</form>
-				</td>
-			</tr>
-			<tr>
-				<td></td>
-				<td>
-					<form wicket:id="trainingResultForm" class="hfill">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Training results /status</legend>
-							<table class="hfill" style="border-collapse: separate;">
-								<tr style="vertical-align: top;">
-									<td><select class="hfill" wicket:id="layerResult"></select>
-									</td>
-									<td><span wicket:id="resultLabel"></span></td>
-								</tr>
-								
-								<tr class="border_bottom">
-									<td>Train.Doc</td>
-									<td>Anno.Doc</td>
-									<td>Total.Doc</td>
-									<td>Start time</td>
-									<td>End time</td>
-									<td>Status</td>
-								</tr>
-								<tr class="border_bottom">
-									<td><span wicket:id="trainDocs"></span></td>
-									<td><span wicket:id="annoDocs"></span></td>
-									<td><span wicket:id="totalDocs"></span></td>
-									<td><span wicket:id="startTime"></span></td>
-									<td><span wicket:id="endTime"></span></td>
-									<td><span wicket:id="status"></span></td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
-				</td>
-			</tr>
-		</table>
-	</wicket:extend>
+  <wicket:extend>
+    <div class="flex-content flex-h-container flex-gutter">
+      <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <wicket:message key="projects" />
+            </h3>
+          </div>
+          <div class="scrolling panel-body fit-child-snuck">
+            <select wicket:id="project" size="20" class="form-control"></select>
+          </div>
+        </div>
+      </form>
+  
+      <div class="flex-content flex-v-container flex-gutter">
+        <div class="flex-v-container flex-gutter" wicket:enclosure="overallProjectProgressImage">
+          <div class="panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title"><wicket:message key="progress" /></h3>
+            </div>
+            <div class="scrolling panel-body">
+              <img wicket:id="overallProjectProgressImage" alt="Overall Project Progress"></img>
+            </div>
+          </div>
+        </div>
+    
+        <form wicket:id="monitoringDetailForm" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+          <div class="flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px;">
+            <div class="flex-content panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Documents finished</h3>
+              </div>
+              <div class="panel-body">
+                <img wicket:id="annotator" alt="Annotation Progress"></img>
+              </div>
+            </div>
+            
+            <div class="flex-content panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">Progress</h3>
+              </div>
+              <div class="panel-body">
+                <img wicket:id="annotatorPercentage" alt="Annotation Progress percentage"></img>
+              </div>
+            </div>
+          </div>
+  
+          <div class="flex-content panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <wicket:message key="document_status" />
+                <span class="pull-right"><a target="_blank"
+                  wicket:message="href:document_status.help.link"><wicket:message key="help" /></a></span>
+              </h3>
+            </div>
+            <div class="scrolling panel-body">
+              <p>
+                <b><wicket:message key="document_status.hint">[Status hint]</wicket:message></b>
+              </p>
+              <div class="table-responsive">
+                <table class="table table-condensed" wicket:id="rsTable"></table>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <form wicket:id="trainingResultForm" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="panel panel-default panel-flex" style="flex: 0.5; margin-left: 0px;">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <wicket:message key="features" />
+              </h3>
+            </div>
+            <div class="scrolling panel-body fit-child-snuck">
+              <select wicket:id="layerResult" class="form-control"></select>
+            </div>
+          </div>
+          
+          <div class="flex-content panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">Training results /status</h3>
+            </div>
+            <div class="scrolling panel-body flex-v-container">
+                <div wicket:id="resultLabel"></div>
+              
+                <table class="table table-condensed">
+                  <thead>
+                    <tr>
+                      <th>Train.Doc</th>
+                      <th>Anno.Doc</th>
+                      <th>Total.Doc</th>
+                      <th>Start time</th>
+                      <th>End time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span wicket:id="trainDocs"></span></td>
+                      <td><span wicket:id="annoDocs"></span></td>
+                      <td><span wicket:id="totalDocs"></span></td>
+                      <td><span wicket:id="startTime"></span></td>
+                      <td><span wicket:id="endTime"></span></td>
+                      <td><span wicket:id="status"></span></td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </wicket:extend>
 </body>
 </html>

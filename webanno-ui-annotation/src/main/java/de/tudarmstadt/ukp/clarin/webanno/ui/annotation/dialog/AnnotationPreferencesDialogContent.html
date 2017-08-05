@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,72 +16,105 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
 <wicket:panel>
-  <form wicket:id="form" class="hfill">
-    <fieldset>
-      <legend><wicket:message key="generalPreferences"/></legend>
-      <table class="labels-left hfill" style="border-collapse: separate; empty-cells: hide;">
-        <wicket:enclosure child="editor">
-          <tr>
-            <td><label wicket:for="editor"><wicket:label key="editor"/>:</label></td>
-            <td><select wicket:id="editor"></select></td>
-          </tr>
-        </wicket:enclosure>
-        <tr>
-          <td><label wicket:for="sidebarSize"><wicket:label key="sidebarSize"/>:</label></td>
-          <td>
-            <input type="number" wicket:id="sidebarSize" style="width: 4em; text-align: right;"></input>
-            <span style="vertical-align: middle; padding-left: 0.2em;">%</span>
-          </td>
-        </tr>
-        <tr>
-          <td><label wicket:for="fontZoom"><wicket:label key="fontZoom"/>:</label></td>
-          <td>
-            <input type="number" wicket:id="fontZoom" style="width: 4em; text-align: right;"></input>
-            <span style="vertical-align: middle; padding-left: 0.2em;">%</span>
-          </td>
-        </tr>
-        <tr>
-          <td><label wicket:for="windowSize"><wicket:label key="windowSize"/>:</label></td>
-          <td>
-            <input type="number" wicket:id="windowSize" style="width: 4em; text-align: right;"></input>
-          </td>
-        </tr>
-        <tr>
-          <td><label wicket:for="rememberLayer"><wicket:label key="rememberLayer"/>:</label></td>
-          <td><input type="checkbox" wicket:id="rememberLayer"></input></td>
-        </tr>
-        <tr>
-          <td><label wicket:for="scrollPage"><wicket:label key="scrollPage"/>:</label></td>
-          <td><input type="checkbox" wicket:id="scrollPage"></input></td>
-        </tr>
-        <tr>
-          <td><label wicket:for="readonlylayercoloring"><wicket:label key="readonlylayercoloring"/>:</label></td>
-          <td><select wicket:id="readonlylayercoloring"></select></td>
-        </tr>
-      </table>
-    </fieldset>
-    <fieldset>
-      <legend><wicket:message key="layerPreferences"/></legend>
-      <table class="labels-top hfill">
-        <tr>
-          <th><label><wicket:message key="layer"/></label></th>
-          <th><label style="text-align: center;"><wicket:message key="show"/></label></th>
-          <th><label><wicket:message key="palette"/></label></th>
-        </tr>
-        <tr wicket:id="annotationLayers">
-          <td><span wicket:id="annotationLayerDesc"></span></td>
-          <td align="center"><input wicket:id="annotationLayerActive" type="checkbox"></input></td>
-          <td><select class="hfill" wicket:id="layercoloring"></select></td>
-        </tr>
-      </table>
-    </fieldset>
-    <div class="buttons">
-      <input type="submit" wicket:id="save" wicket:message="value:save"></input>
-      <input type="button" wicket:id="cancel" wicket:message="value:cancel"></input>
+  <form wicket:id="form" class="w_flex_container">
+    <div class="w_flex_content">
+      <div class="fluid-container">
+        <div class="row">
+          <div class="col-sm-12">
+            <fieldset class="form-horizontal">
+              <legend><wicket:message key="generalPreferences"/></legend>
+              <div class="form-group" wicket:enclosure="editor">
+                <label wicket:for="editor" class="col-sm-4 control-label"><wicket:label key="editor"/></label>
+                <div class="col-sm-8">
+                  <select wicket:id="editor" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-group" wicket:enclosure="sidebarSize">
+                <label wicket:for="sidebarSize" class="col-sm-4 control-label"><wicket:label key="sidebarSize"/></label>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <input wicket:id="sidebarSize" type="number" class="form-control text-right"></input>
+                    <span class="input-group-addon">%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" wicket:enclosure="fontZoom">
+                <label wicket:for="fontZoom" class="col-sm-4 control-label"><wicket:label key="fontZoom"/></label>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <input wicket:id="fontZoom" type="number" class="form-control text-right"></input>
+                    <span class="input-group-addon">%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" wicket:enclosure="windowSize">
+                <label wicket:for="windowSize" class="col-sm-4 control-label"><wicket:label key="windowSize"/></label>
+                <div class="col-sm-8">
+                  <div class="input-group">
+                    <input wicket:id="windowSize" type="number" class="form-control text-right"></input>
+                    <span class="input-group-addon">rows</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-4 col-sm-8">
+                  <div class="checkbox">
+                    <label wicket:for="rememberLayer">
+                      <input wicket:id="rememberLayer" type="checkbox"/> <wicket:label key="rememberLayer"/>
+                    </label>
+                  </div>
+                </div>              
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-4 col-sm-8">
+                  <div class="checkbox">
+                    <label wicket:for="scrollPage">
+                      <input wicket:id="scrollPage" type="checkbox"/> <wicket:label key="scrollPage"/>
+                    </label>
+                  </div>
+                </div>              
+              </div>
+              <div class="form-group" wicket:enclosure="readonlylayercoloring">
+                <label wicket:for="readonlylayercoloring" class="col-sm-4 control-label"><wicket:label key="editor"/></label>
+                <div class="col-sm-8">
+                  <select wicket:id="readonlylayercoloring" class="form-control"></select>
+                </div>
+              </div>
+            </fieldset>
+            
+            <fieldset>
+              <legend><wicket:message key="layerPreferences"/></legend>
+              <table class="table table-condensed table-hover">
+                <thead>
+                  <tr>
+                    <th><wicket:message key="layer"/></th>
+                    <th><wicket:message key="show"/></th>
+                    <th><wicket:message key="palette"/></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr wicket:id="annotationLayers" >
+                    <td class="vert-aligned"><wicket:container wicket:id="annotationLayerDesc"/></td>
+                    <td class="vert-aligned"><input wicket:id="annotationLayerActive" type="checkbox"></input></td>
+                    <td class="vert-aligned"><select wicket:id="layercoloring" class="form-control" ></select></td>
+                  </tr>
+                </tbody>
+              </table>
+            </fieldset>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w_flex_footer panel-footer">
+      <div class="form-group pull-right">
+        <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"></input>
+        <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel"></input>
+      </div>
     </div>
   </form>
 </wicket:panel>
+</body>
 </html>

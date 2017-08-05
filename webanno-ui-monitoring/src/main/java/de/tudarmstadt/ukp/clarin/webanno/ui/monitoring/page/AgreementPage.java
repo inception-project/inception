@@ -34,13 +34,13 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -125,7 +125,7 @@ public class AgreementPage
             LOG.error("Error updating agreement table", e);
             error("Error updating agreement table: " + ExceptionUtils.getRootCauseMessage(e));
             if (aTarget != null) {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -253,17 +253,6 @@ public class AgreementPage
             add(exportFormat = new DropDownChoice<>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
-            exportFormat.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = -1L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    // Actually nothing to do, we just want the Ajax behavior to update the model
-                    // object.
-                }
-            });
 
             add(excludeIncomplete = new CheckBox("excludeIncomplete")
             {

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,17 +16,17 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:panel>
-		<fieldset class="ui-widget-content ui-corner-all">
-			<legend>
-				User: <span wicket:id="username"></span>
-			</legend>
-
-			<div wicket:id="vis"></div>
-		</fieldset>
-	</wicket:panel>
+  <wicket:panel>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><wicket:container wicket:id="username"/></h3>
+      </div>
+      <div class="h-scrolling panel-body text-center">
+        <div wicket:id="vis"></div>
+      </div>
+    </div>
+  </wicket:panel>
 </body>
 </html>

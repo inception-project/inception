@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,21 +16,29 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-  <body>
-    <wicket:extend>
-      <table align="center">
-        <tr>
-          <td>
-            <div wicket:id="menu">
-              <a wicket:id="menulink" class="menulink">
-                <span><img wicket:id="icon"></img></span>
-                <span wicket:id="label"></span>
-              </a>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </wicket:extend>
-  </body>
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .page-content {
+        justify-content: center;
+        overflow: auto;
+      }
+    </style>
+  </wicket:head>
+</head>
+<body>
+  <wicket:extend>
+    <div>
+      <ul wicket:id="menu" class="nav nav-pills nav-stacked">
+        <li role="presentation">
+          <a wicket:id="menulink">
+            <img wicket:id="icon"></img>
+            <wicket:container wicket:id="label"/>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </wicket:extend>
+</body>
 </html>

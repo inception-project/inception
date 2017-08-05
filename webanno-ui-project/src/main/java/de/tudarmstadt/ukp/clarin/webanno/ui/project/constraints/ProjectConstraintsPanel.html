@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <!--
 #Copyright 2015
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -16,60 +16,45 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<table class="hfill">
-		<tr style="vertical-align: top;">
-			<td width="20%">
-				<form wicket:id="selectionForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend><wicket:message key="selectionForm.label" /></legend>
-						<div>
-							<select class="hfill" wicket:id="ruleset" size="29"></select>
-						</div>
-					</fieldset>
-				</form>
-				<form wicket:id="importForm">
-					<fieldset class="ui-widget-content ui-corner-all labels-left">
-						<legend><wicket:message key="importForm.label" /></legend>
-						<table class="hfill">
-							<tr>
-								<td><label wicket:for="uploads"><wicket:label key="importForm.uploads.label" /></label></td>
-								<td class="hfill"><input wicket:id="uploads" type="file"
-									multiple /></td>
-							</tr>
-						</table>
-						<div class="buttons">
-							<input type="submit" wicket:id="import" />
-						</div>
-					</fieldset>
-				</form>
-			</td>
-			<td width="80%">
-				<form wicket:id="detailForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend><wicket:message key="detailForm.label" /></legend>
-						<table class="hfill">
-							<tr>
-								<td><label wicket:for="name"><wicket:label key="detailForm.name.label" /></label></td>
-								<td class="hfill"><input type="text" class="hfill"
-									wicket:id="name" /></td>
-							</tr>
-						</table>
-						<div>
-						  <textarea rows="20" class="hfill" wicket:id="script"></textarea>
-						</div>
-						<div class="buttons">
-							<input type="submit" wicket:id="save" />
-							<input type="submit" wicket:id="delete" />
-							<input type="submit" wicket:id="export" value="Export"/>
-							<input type="submit" wicket:id="cancel" />
-						</div>
-					</fieldset>
-				</form>
-			</td>
-		</tr>
-	</table>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-content flex-h-container">
+      <div class="flex-v-container">
+        <form wicket:id="importForm" class="panel-default">
+          <div class="panel-heading flex-h-container flex-centered flex-gutter">
+            <label wicket:for="uploads" class="text-nowrap">
+              <wicket:label key="filesToImport"/>
+            </label>
+            <input wicket:id="uploads" type="file" multiple class="flex-content"></input>
+            
+            <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
+          </div>
+        </form>
+        <form wicket:id="selectionForm" class="flex-content flex-v-container">
+          <div class="flex-content fit-child-snuck">
+            <select wicket:id="ruleset"></select>
+          </div>
+        </form>
+      </div>
+      <div class="flex-content flex-v-container">
+        <form wicket:id="detailForm" class="flex-content flex-v-container panel-default">
+          <div class="panel-heading flex-h-container flex-centered flex-gutter">
+            <label wicket:for="name" class="control-label"><wicket:label key="name"/></label>
+            <input wicket:id="name" class="form-control flex-content"/>
+            <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:save"/>
+          </div>
+          <div class="flex-content fit-child-snuck">
+            <textarea wicket:id="script"></textarea>
+          </div>
+          <div class="panel-footer text-right">
+            <input type="submit" wicket:id="delete" class="btn btn-danger" wicket:message="value:delete"/>
+            <input type="submit" wicket:id="export" class="btn btn-default" wicket:message="value:export"/>
+            <input type="submit" wicket:id="cancel" class="btn btn-default" wicket:message="value:cancel"/>
+          </div>
+        </form>
+      </div>
+    </div>  
+  </wicket:panel>
+</body>
 </html>

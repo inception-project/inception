@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,13 +16,15 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <td>
-      <span wicket:id="feature"></span>
-      <span wicket:id="textIndicator" class="" style=""></span>
-  </td>
-  <td><input  style="width: 100%;" wicket:id="value"></input></td>
+  <div class="form-group" wicket:enclosure="value">
+    <label wicket:for="value" class="col-sm-3 control-label">
+      <wicket:container wicket:id="feature"/>&nbsp;<span wicket:id="textIndicator"></span>
+    </label>
+    <div class="col-sm-9">
+      <input wicket:id="value"/>
+    </div>
+  </div>
 </wicket:panel>
 </html>

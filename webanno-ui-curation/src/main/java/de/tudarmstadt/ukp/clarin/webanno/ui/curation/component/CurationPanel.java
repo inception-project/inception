@@ -35,13 +35,13 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -119,29 +119,12 @@ public class CurationPanel
         
         setOutputMarkupId(true);
         
-        WebMarkupContainer sidebarCell = new WebMarkupContainer("sidebarCell") {
-            private static final long serialVersionUID = 1L;
-    
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                aTag.put("width", bModel.getPreferences().getSidebarSize() + "%");
-            }
-        };
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
+        sidebarCell.setOutputMarkupId(true);
+        // Override sidebar width from preferences
+        sidebarCell.add(new AttributeModifier("style", LambdaModel.of(() -> String
+                .format("flex-basis: %d%%;", bModel.getPreferences().getSidebarSize()))));
         add(sidebarCell);
-    
-        WebMarkupContainer annotationViewCell = new WebMarkupContainer("annotationViewCell") {
-            private static final long serialVersionUID = 1L;
-    
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                aTag.put("width", (100 - bModel.getPreferences().getSidebarSize()) + "%");
-            }
-        };
-        add(annotationViewCell);
         
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
@@ -149,11 +132,10 @@ public class CurationPanel
         add(sentencesListView);
     
         // add container for the list of sentences where annotations exists crossing multiple
-        // sentences
-        // outside of the current page
+        // sentences outside of the current page
         corssSentAnnoView = new WebMarkupContainer("corssSentAnnoView");
         corssSentAnnoView.setOutputMarkupId(true);
-        annotationViewCell.add(corssSentAnnoView);
+        add(corssSentAnnoView);
     
         bModel = getModelObject().getBratAnnotatorModel();
     
@@ -182,7 +164,7 @@ public class CurationPanel
                 try {
                     // update begin/end of the curationsegment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
-                    aTarget.addChildren(getPage(), FeedbackPanel.class);
+                    aTarget.addChildren(getPage(), IFeedback.class);
                     CurationPanel.this.updatePanel(aTarget, curationContainer);
                 }
                 catch (UIMAException e) {
@@ -195,7 +177,7 @@ public class CurationPanel
         };
     
         suggestionViewPanel.setOutputMarkupId(true);
-        annotationViewCell.add(suggestionViewPanel);
+        add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel(
                 "annotationDetailEditorPanel", new Model<>(bModel))
@@ -205,7 +187,7 @@ public class CurationPanel
             @Override
             protected void onChange(AjaxRequestTarget aTarget)
             {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
                 annotate = true;
     
                 try {
@@ -243,7 +225,7 @@ public class CurationPanel
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
-        annotationViewCell.add(annotationEditor);
+        add(annotationEditor);
     
         IModel<List<String>> sentenceDiffModel = LambdaModel.of(() -> {
             int fSN = bModel.getFirstVisibleUnitIndex();

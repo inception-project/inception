@@ -31,11 +31,11 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -48,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
@@ -210,10 +211,12 @@ public class LinkFeatureEditor
                 }
 
                 @Override
-                protected void onConfigure()
+                public void onConfigure(JQueryBehavior aBehavior)
                 {
-                    super.onConfigure();
-
+                    super.onConfigure(aBehavior);
+                    
+                    aBehavior.setOption("placeholder", Options.asString("Select role"));
+                    
                     // If a slot is armed, then load the slot's role into the dropdown
                     AnnotatorState state = stateModel.getObject();
                     if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
@@ -453,7 +456,7 @@ public class LinkFeatureEditor
     {
         if (StringUtils.isBlank((String) field.getModelObject())) {
             error("Must set slot label before adding!");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         else {
             @SuppressWarnings("unchecked")

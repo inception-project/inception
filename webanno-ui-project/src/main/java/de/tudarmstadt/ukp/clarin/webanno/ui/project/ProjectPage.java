@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.BootstrapAjaxTabbedPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryService.ProjectSettingsPanelDecl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
@@ -84,7 +85,7 @@ public class ProjectPage
     {
         selectedProject = Model.of();
         
-        tabPanel = new AjaxTabbedPanel<ITab>("tabPanel", makeTabs()) {
+        tabPanel = new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()) {
             private static final long serialVersionUID = -7356420977522213071L;
 
             @Override
@@ -95,7 +96,6 @@ public class ProjectPage
             }
         };
         tabPanel.setOutputMarkupPlaceholderTag(true);
-        tabPanel.setOutputMarkupId(true);
         add(tabPanel);
         
         projects = new ProjectSelectionPanel("projects", selectedProject);

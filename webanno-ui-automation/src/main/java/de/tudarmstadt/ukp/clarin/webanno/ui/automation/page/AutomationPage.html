@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,148 +16,147 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
-	<wicket:head>
-	<style type="text/css">
-		.anno-view {
-			background-color: #DFDFDF;
-		}
-	</style>
-</wicket:head>
+  <wicket:head>
+    <style>
+      .page-content {
+        flex-direction: column !important;
+      }
+    </style>
+  </wicket:head>
 </head>
 <body>
-	<wicket:extend>
-		<div wicket:id=openDocumentsModal></div>
+  <wicket:extend>
+    <div wicket:id=openDocumentsModal></div>
     <div wicket:id="preferencesDialog"></div>
     <div wicket:id="exportDialog"></div>
     <div wicket:id="guidelinesDialog"></div>
     <div wicket:id="resetDocumentDialog"></div>
     <div wicket:id="finishDocumentDialog"></div>
 
-    <div class="top-sticker">
-      <div class="actionbar">
-        <div>
-          <ul class="horizontal">
-            <li>
-              <fieldset>
-                <legend>Document</legend>
-                <ul class="horizontal">
-                  <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
-                      src="images/drawer_open.png" title="Open" /><br />Open
-                  </a></li>
-                  <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
-                      src="images/document_back.png" title="Previous document" /><br />Prev.
-                  </a></li>
-                  <li><a wicket:id="showNextDocument" title="press Shift+PgDown"> <img
-                      src="images/document_next.png" title="Next document " /><br />Next
-                  </a></li>
-                  <li><a wicket:id="showExportDialog"> <img
-                      src="images/document_export.png" title="Export"  /><br />Export
-                  </a></li>
-                  <li><a wicket:id="showPreferencesDialog"> <img src="images/cog.png"
-                      title="Settings" /><br />Settings
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
+    <div class="actionbar">
+      <div>
+        <ul class="horizontal">
+          <li>
+            <fieldset>
+              <legend>Document</legend>
+              <ul class="horizontal">
+                <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
+                    src="images/drawer_open.png" title="Open" /><br />Open
+                </a></li>
+                <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
+                    src="images/document_back.png" title="Previous document" /><br />Prev.
+                </a></li>
+                <li><a wicket:id="showNextDocument" title="press Shift+PgDown"> <img
+                    src="images/document_next.png" title="Next document " /><br />Next
+                </a></li>
+                <li><a wicket:id="showExportDialog"> <img
+                    src="images/document_export.png" title="Export" /><br />Export
+                </a></li>
+                <li><a wicket:id="showPreferencesDialog"> <img src="images/cog.png"
+                    title="Settings" /><br />Settings
+                </a></li>
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Page</legend>
-                <ul class="horizontal">
-                  <li><a wicket:id="showFirst" title="press Home"> <img
-                      src="images/document_page.png" title="First page" /><br />First
-                  </a></li>
+          <li>
+            <fieldset>
+              <legend>Page</legend>
+              <ul class="horizontal">
+                <li><a wicket:id="showFirst" title="press Home"> <img
+                    src="images/document_page.png" title="First page" /><br />First
+                </a></li>
 
-                  <li><a wicket:id="showPrevious" title="press PgUp"> <img
-                      src="images/document_page_previous.png" title="Previous page" /><br />Prev.
-                  </a></li>
+                <li><a wicket:id="showPrevious" title="press PgUp"> <img
+                    src="images/document_page_previous.png" title="Previous page" /><br />Prev.
+                </a></li>
 
-                  <li>
-                    <form wicket:id="gotoPageTextFieldForm">
-                      <div style="height: 32px;">
-                        <input type="number" wicket:id="gotoPageText"
-                          style="width: 4em; text-align: right;" title="press Enter" />
-                      </div>
-                      <div>
-                        <a wicket:id="gotoPageLink">Go to</a>
-                      </div>
-                    </form>
-                  </li>
+                <li>
+                  <form wicket:id="gotoPageTextFieldForm">
+                    <div style="height: 32px;">
+                      <input type="number" wicket:id="gotoPageText"
+                        style="width: 4em; text-align: right;" title="press Enter" />
+                    </div>
+                    <div>
+                      <a wicket:id="gotoPageLink">Go to</a>
+                    </div>
+                  </form>
+                </li>
 
-                  <li><a wicket:id="showNext" title="press PgDown"> <img
-                      src="images/document_page_next.png" title="Next page" /><br />Next
-                  </a></li>
+                <li><a wicket:id="showNext" title="press PgDown"> <img
+                    src="images/document_page_next.png" title="Next page" /><br />Next
+                </a></li>
 
-                  <li><a wicket:id="showLast" title="press End"> <img
-                      src="images/document_page_last.png" title="Last page" /><br />Last
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
+                <li><a wicket:id="showLast" title="press End"> <img
+                    src="images/document_page_last.png" title="Last page" /><br />Last
+                </a></li>
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Script</legend>
-                <ul class="horizontal">
-                  <li><a wicket:id="toggleScriptDirection"> <img
-                      src="images/text_width.png" title="Script direction" /><br />LTR/RTL
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
+          <li>
+            <fieldset>
+              <legend>Script</legend>
+              <ul class="horizontal">
+                <li><a wicket:id="toggleScriptDirection"> <img
+                    src="images/text_width.png" title="Script direction" /><br />LTR/RTL
+                </a></li>
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Help</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showGuidelinesDialog" />
-                </ul>
-              </fieldset>
-            </li>
+          <li>
+            <fieldset>
+              <legend>Help</legend>
+              <ul class="horizontal">
+                <li wicket:id="showGuidelinesDialog" />
+              </ul>
+            </fieldset>
+          </li>
 
-            <li>
-              <fieldset>
-                <legend>Workflow</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showResetDocumentDialog" />
+          <li>
+            <fieldset>
+              <legend>Workflow</legend>
+              <ul class="horizontal">
+                <li wicket:id="showResetDocumentDialog" />
 
-                  <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
-                  </a></li>
-                </ul>
-              </fieldset>
-            </li>
-          </ul>
-        </div>
-        <div class="locationbar">
-          <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
-            wicket:id="numberOfPages"></span>
-          </span>
-        </div>
+                <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
+                </a></li>
+              </ul>
+            </fieldset>
+          </li>
+        </ul>
+      </div>
+      <div class="locationbar">
+        <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
+          wicket:id="numberOfPages"></span>
+        </span>
       </div>
     </div>
-    <table class="hfill">
-			<tr style="vertical-align: top;">
-				<td wicket:id="annotationViewCell" width="80%">
-					<fieldset class="anno-view">
-						<legend> Annotation</legend>
-						<div class="merge-view" wicket:id="mergeView" />
-					</fieldset>
-					<div wicket:id="automateView">
-						<div class="sentence-list-view" wicket:id="sentenceListView">
-							<div wicket:id="sentence" />
-						</div>
-					</div>
-				</td>
-				<td wicket:id="sidebarCell" width="20%">
-					<div id="annotationDetailEditorPanel"
-						wicket:id="annotationDetailEditorPanel"></div>
-				</td>
-			</tr>
-		</table>
-	</wicket:extend>
+
+    <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
+      <div class="scrolling flex-content flex-v-container flex-gutter">
+        <div class="panel panel-primary" wicket:enclosure="mergeView">
+          <div class="panel-heading">
+            <h3 class="panel-title">Annotation</h3>
+          </div>
+          <div class="h-scrolling panel-body text-center">
+            <div wicket:id="mergeView"></div>
+          </div>
+        </div>
+        
+        <div wicket:id="automateView">
+          <div wicket:id="sentenceListView">
+            <div wicket:id="sentence"></div>
+          </div>
+        </div>
+      </div>
+      <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+      </div>
+    </div>
+  </wicket:extend>
 </body>
 </html>

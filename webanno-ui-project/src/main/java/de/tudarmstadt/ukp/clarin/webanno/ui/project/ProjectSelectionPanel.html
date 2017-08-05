@@ -20,15 +20,20 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <fieldset class="ui-widget-content ui-corner-all">
-      <legend>Projects</legend>
-      <div>
-        <select class="hfill" wicket:id="project" size="29"></select>
+    <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <wicket:message key="projects" />
+        </h3>
       </div>
-      <div class="buttons">
-        <input type="button" wicket:id="create" wicket:message="value:create"/>
+      <div class="scrolling panel-body fit-child-snuck">
+        <select wicket:id="project" class="form-control"></select>
       </div>
-    </fieldset>
+      <div class="panel-footer text-right">
+        <input type="button" wicket:id="create" wicket:message="value:create"
+          class="btn btn-primary" />
+      </div>
+    </div>
   </wicket:panel>
 </body>
 </html>

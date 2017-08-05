@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2017
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,22 +16,19 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-  <form wicket:id="form">
-    <fieldset class="ui-widget-content ui-corner-all labels-left">
-      <legend>Import new guidelines</legend>
-      <table class="hfill">
-        <tr>
-          <td><label>Files:</label></td>
-          <td><input wicket:id="guidelines" type="file" multiple></input></td>
-        </tr>
-      </table>
-      <div class="buttons">
-        <input type="submit" wicket:id="import" wicket:message="value:import"></input>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <form wicket:id="form" class="flex-content panel-default">
+      <div class="panel-heading flex-h-container flex-centered flex-gutter">
+        <label wicket:for="guidelines" class="text-nowrap">
+          <wicket:label key="filesToImport"/>
+        </label>
+        <input wicket:id="guidelines" type="file" multiple class="flex-content"></input>
+        
+        <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
       </div>
-    </fieldset>
-  </form>
-</wicket:panel>
+    </form>
+  </wicket:panel>
+</body>
 </html>

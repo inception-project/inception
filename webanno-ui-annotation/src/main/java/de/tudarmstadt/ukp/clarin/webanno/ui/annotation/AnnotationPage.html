@@ -18,39 +18,18 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:head>
-    <style>
-      #annotationEditorContent {
-      	  display: flex;
-      	  margin-bottom: 20px;
-      }
-      
-      #annotationEditorContent .editorCell {
-      	  flex-grow: 1;
-      }
-      
-      #annotationEditorContent .sidebarCell {
-      	  flex-basis: 20%;
-      	  flex-shrink: 0;
-      }
-      
-      #annotationEditorContent .collapsed {
-      	  flex-basis: 39px !important;
-      }
-    </style>
-  </wicket:head>
   <wicket:extend>
-    <div wicket:id=openDocumentsModal></div>
-    <div wicket:id="preferencesDialog"></div>
-    <div wicket:id="exportDialog"></div>
-    <div wicket:id="guidelinesDialog"></div>
-    <div wicket:id="resetDocumentDialog"></div>
-    <div wicket:id="finishDocumentDialog"></div>
-    <div style="display: none;">
-      <a wicket:id="initialLoadComplete" id="initialLoadComplete"></a>
-    </div>
-
-    <div class="top-sticker">
+    <div class="flex-content flex-v-container">
+      <div wicket:id=openDocumentsModal></div>
+      <div wicket:id="preferencesDialog"></div>
+      <div wicket:id="exportDialog"></div>
+      <div wicket:id="guidelinesDialog"></div>
+      <div wicket:id="resetDocumentDialog"></div>
+      <div wicket:id="finishDocumentDialog"></div>
+      <div style="display: none;">
+        <a wicket:id="initialLoadComplete" id="initialLoadComplete"></a>
+      </div>
+  
       <div class="actionbar">
         <div>
           <ul class="horizontal">
@@ -69,14 +48,14 @@
                 </ul>
               </fieldset>
             </li>
-
+  
             <li>
               <fieldset>
                 <legend>Page</legend>
                 <ul class="horizontal">
                   <li wicket:id="showFirst" />
                   <li wicket:id="showPrevious" />
-
+  
                   <li>
                     <form wicket:id="gotoPageTextFieldForm">
                       <div style="height: 32px;">
@@ -88,13 +67,13 @@
                       </div>
                     </form>
                   </li>
-
+  
                   <li wicket:id="showNext" />
                   <li wicket:id="showLast" />
                 </ul>
               </fieldset>
             </li>
-
+  
             <li>
               <fieldset>
                 <legend>Script</legend>
@@ -103,7 +82,7 @@
                 </ul>
               </fieldset>
             </li>
-
+  
             <li>
               <fieldset>
                 <legend>Help</legend>
@@ -112,13 +91,13 @@
                 </ul>
               </fieldset>
             </li>
-
+  
             <li>
               <fieldset>
                 <legend>Workflow</legend>
                 <ul class="horizontal">
                   <li wicket:id="showResetDocumentDialog" />
-
+  
                   <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
                   </a></li>
                 </ul>
@@ -132,14 +111,22 @@
           </span>
         </div>
       </div>
-    </div>
-    <div id="annotationEditorContent">
-      <div class="sidebarCell" wicket:id="leftSidebar"></div>
-      <div class="editorCell">
-        <div class="hfill" wicket:id="editor"></div>
-      </div>
-      <div class="sidebarCell" wicket:id="rightSidebar">
-        <div id="annotationDetailEditorPanel" wicket:id="annotationDetailEditorPanel"></div>
+      
+      <div class="annotation-editor-container flex-content flex-h-container flex-gutter flex-no-initial-gutter">
+        <div wicket:id="leftSidebar" class="flex-sidebar flex-v-container flex-gutter"></div>
+        <div class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content panel panel-primary panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">Annotation</h3>
+            </div>
+            <div class="scrolling panel-body flex-v-container fit-child-loose text-center">
+              <div wicket:id="editor"></div>
+            </div>
+          </div>
+        </div>
+        <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+          <wicket:container wicket:id="annotationDetailEditorPanel"/>
+        </div>
       </div>
     </div>
   </wicket:extend>

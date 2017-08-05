@@ -1,43 +1,55 @@
+<!DOCTYPE html>
 <!--
-  #Copyright 2012 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology #Technische Universität
-  Darmstadt # #Licensed under the Apache License, Version 2.0 (the "License"); #you may not use this file except in
-  compliance with the License. #You may obtain a copy of the License at # # http://www.apache.org/licenses/LICENSE-2.0 #
-  #Unless required by applicable law or agreed to in writing, software #distributed under the License is distributed on
-  an "AS IS" BASIS, #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #See the License for the
-  specific language governing permissions and #limitations under the License.
+#Copyright 2012
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<fieldset class="ui-widget-content ui-corner-all labels-left">
-		<table>
-			<tr>
-				<td style="vertical-align: top" width="50%">
-					<form wicket:id="miraTemplateDetailForm">
-						<fieldset class="ui-widget-content ui-corner-all">
-							<legend>Automation layer details </legend>
-							<table>
-								<tr>
-									<td>repeat annotation:</td>
-									<td><input type="checkbox" wicket:id="annotateAndRepeat" /></td>
-								</tr>
-								<tr>
-									<td>
-										<div class="buttons">
-											<input type="submit" wicket:id="save" value ="Save" />
-
-										</div>
-									</td>
-									<td></td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
-				</td>
-				<td style="vertical-align: top" width="50%"><span
-					wicket:id="targetLayerTarinDocumentsPanel"></span></td>
-			</tr>
-		</table>
-	</fieldset>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-content flex-h-container flex-gutter">
+      <div class="flex-content flex-v-container flex-gutter">
+        <form wicket:id="miraTemplateDetailForm" class="panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              <wicket:message key="layer.details" />
+            </h3>
+          </div>
+          <div class="panel-body flex-h-container form-horizontal">
+            <div class="flex-content col-sm-12">
+              <div class="form-group" wicket:enclosure="annotateAndRepeat">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <div class="checkbox">
+                    <label wicket:for="annotateAndRepeat">
+                      <input wicket:id="annotateAndRepeat" type="checkbox">
+                      <wicket:label key="repeatAnnotation"/>
+                    </label>
+                  </div>
+                </div>  
+              </div>
+            </div>
+          </div>
+          <div class="panel-footer text-right">
+            <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save" />
+          </div>
+        </form>
+        
+        <div wicket:id="targetLayerTarinDocumentsPanel" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
+      
+      </div>
+    </div>
+  </wicket:panel>
+</body>
 </html>

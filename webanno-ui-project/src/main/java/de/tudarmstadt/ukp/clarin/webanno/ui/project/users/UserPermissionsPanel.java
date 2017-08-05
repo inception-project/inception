@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -61,7 +62,9 @@ public class UserPermissionsPanel
         add(form);
 
         CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>("permissions");
-        levels.setSuffix("<br>");
+        levels.setPrefix("<div class=\"checkbox\">");
+        levels.setSuffix("</div>");
+        levels.setLabelPosition(LabelPosition.WRAP_AFTER);
         // This model adapter handles loading/saving permissions directly to the DB
         levels.setModel(new LambdaModelAdapter<Collection<PermissionLevel>>(() -> {
             return projectRepository.getProjectPermissionLevels(user.getObject(),
