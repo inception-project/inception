@@ -37,6 +37,24 @@
       <groupId>com.github.rjeschke</groupId>
       <artifactId>txtmark</artifactId>
     </dependency>
+    
+    <!-- JFreeChart dependencies -->
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-dom</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-svggen</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
 
     <!-- Spring dependencies -->
     <dependency>

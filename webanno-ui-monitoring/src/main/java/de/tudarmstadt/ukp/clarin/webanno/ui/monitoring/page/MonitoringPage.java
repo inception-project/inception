@@ -59,8 +59,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.image.Image;
-import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
@@ -107,10 +105,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
 
@@ -125,8 +124,6 @@ public class MonitoringPage
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
     
     private static final long serialVersionUID = -2102136855109258306L;
-
-    private static final int CHART_WIDTH = 300;
 
     /**
      * The user column in the user-document status table
@@ -151,9 +148,9 @@ public class MonitoringPage
     
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
-    private final Image annotatorsProgressImage;
-    private final Image annotatorsProgressPercentageImage;
-    private final Image overallProjectProgressImage;
+    private final SvgChart annotatorsProgressImage;
+    private final SvgChart annotatorsProgressPercentageImage;
+    private final SvgChart overallProjectProgressImage;
     private  TrainingResultForm trainingResultForm;
 
     private Panel annotationDocumentStatusTable;
@@ -200,23 +197,27 @@ public class MonitoringPage
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
+        monitoringDetailForm.setOutputMarkupId(true);
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
         add(trainingResultForm);
 
-        annotatorsProgressImage = new NonCachingImage("annotator");
+        annotatorsProgressImage = new SvgChart("annotator",
+                LambdaModel.of(this::renderAnnotatorAbsoluteProgress));
+        annotatorsProgressImage.setOutputMarkupId(true);
         annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressImage.setVisible(false);
 
-        annotatorsProgressPercentageImage = new NonCachingImage("annotatorPercentage");
+        annotatorsProgressPercentageImage = new SvgChart("annotatorPercentage",
+                LambdaModel.of(this::renderAnnotatorPercentageProgress));
+        annotatorsProgressPercentageImage.setOutputMarkupId(true);
         annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressPercentageImage.setVisible(false);
 
-        overallProjectProgressImage = new NonCachingImage("overallProjectProgressImage");
-        final Map<String, Integer> overallProjectProgress = getOverallProjectProgress();
-        overallProjectProgressImage.setImageResource(createProgressChart(overallProjectProgress,
-                100, true));
+        overallProjectProgressImage = new SvgChart("overallProjectProgressImage",
+                LambdaModel.of(this::renderProjectProgress));
+        overallProjectProgressImage.setOutputMarkupId(true);
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
         overallProjectProgressImage.setVisible(true);
         add(overallProjectProgressImage);
@@ -263,6 +264,30 @@ public class MonitoringPage
             info("No project exists in your instance of WebAnno. Please create/import project using Projects page.");
         }
 
+    }
+    
+    private JFreeChart renderProjectProgress()
+    {
+        Map<String, Integer> data = getOverallProjectProgress();
+        overallProjectProgressImage.getOptions().withViewBox(600, 30 + (data.size() * 18));
+        return createProgressChart(data, 100, true);
+    }
+    
+    private JFreeChart renderAnnotatorAbsoluteProgress()
+    {
+        Map<String, Integer> data = projectSelectionForm.getModelObject().annotatorsProgress;
+        annotatorsProgressImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
+        return createProgressChart(data, projectSelectionForm.getModelObject().totalDocuments,
+                false);
+    }
+    
+    private JFreeChart renderAnnotatorPercentageProgress()
+    {
+        Map<String, Integer> data = projectSelectionForm
+                .getModelObject().annotatorsProgressInPercent;
+        annotatorsProgressPercentageImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
+        return createProgressChart(
+                projectSelectionForm.getModelObject().annotatorsProgressInPercent, 100, true);
     }
 
     private class ProjectSelectionForm
@@ -338,14 +363,7 @@ public class MonitoringPage
                                 .putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
                     }
                     overallProjectProgressImage.setVisible(false);
-
-                    annotatorsProgressImage.setImageResource(createProgressChart(
-                            projectSelectionModel.annotatorsProgress,
-                            projectSelectionModel.totalDocuments, false));
                     annotatorsProgressImage.setVisible(true);
-
-                    annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                            projectSelectionModel.annotatorsProgressInPercent, 100, true));
                     annotatorsProgressPercentageImage.setVisible(true);
 
                     List<String> documentListAsColumnHeader = new ArrayList<>();
@@ -760,7 +778,7 @@ public class MonitoringPage
 
     }
     
-    private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
+    private JFreeChart createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
             boolean aIsPercentage)
     {
         // fill dataset
@@ -798,7 +816,7 @@ public class MonitoringPage
         renderer.setSeriesPaint(0, Color.BLUE);
         chart.getCategoryPlot().setRenderer(renderer);
 
-        return new ChartImageResource(chart, CHART_WIDTH, 30 + (chartValues.size() * 18));
+        return chart;
     }
     
     /**
@@ -1030,18 +1048,14 @@ public class MonitoringPage
         {
             aModel.annotatorsProgress.clear();
             aModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
-            annotatorsProgressImage.setImageResource(createProgressChart(aModel.annotatorsProgress,
-                    aModel.totalDocuments, false));
-            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
+            aTarget.add(annotatorsProgressImage);
 
             aModel.annotatorsProgressInPercent.clear();
             aModel.annotatorsProgressInPercent
                     .putAll(getPercentageOfFinishedDocumentsPerUser(project));
-            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                    aModel.annotatorsProgressInPercent, 100, true));
-            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
+            aTarget.add(annotatorsProgressPercentageImage);
 
-            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
+            aTarget.add(monitoringDetailForm);
         }
         
         /**

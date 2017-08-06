@@ -32,19 +32,21 @@
           </div>
         </div>
       </form>
-  
+
       <div class="flex-content flex-v-container flex-gutter">
-        <div class="flex-v-container flex-gutter" wicket:enclosure="overallProjectProgressImage">
-          <div class="panel panel-default panel-flex">
+        <div class="flex-content flex-v-container" wicket:enclosure="overallProjectProgressImage">
+          <div class="flex-content panel panel-default panel-flex">
             <div class="panel-heading">
-              <h3 class="panel-title"><wicket:message key="progress" /></h3>
+              <h3 class="panel-title">
+                <wicket:message key="progress" />
+              </h3>
             </div>
             <div class="scrolling panel-body">
-              <img wicket:id="overallProjectProgressImage" alt="Overall Project Progress"></img>
+              <div wicket:id="overallProjectProgressImage" style="max-width: 600px;"></div>
             </div>
           </div>
         </div>
-    
+     
         <form wicket:id="monitoringDetailForm" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
           <div class="flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px;">
             <div class="flex-content panel panel-default">
@@ -52,16 +54,18 @@
                 <h3 class="panel-title">Documents finished</h3>
               </div>
               <div class="panel-body">
-                <img wicket:id="annotator" alt="Annotation Progress"></img>
+                <div wicket:id="annotator" style="max-width: 300px;"></div>
               </div>
             </div>
             
             <div class="flex-content panel panel-default">
               <div class="panel-heading">
-                <h3 class="panel-title">Progress</h3>
+                <h3 class="panel-title">
+                  <wicket:message key="progress" />
+                </h3>
               </div>
               <div class="panel-body">
-                <img wicket:id="annotatorPercentage" alt="Annotation Progress percentage"></img>
+                <div wicket:id="annotatorPercentage" style="max-width: 300px;"></div>
               </div>
             </div>
           </div>
