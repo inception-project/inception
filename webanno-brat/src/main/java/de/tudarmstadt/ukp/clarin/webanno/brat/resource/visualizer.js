@@ -3199,17 +3199,19 @@ Util.profileStart('rows');
 
           if (row.sentence && data.markedSent[currentSent]) {
             if (rtlmode) {
-	          svg.rect(backgroundGroup,
-	            canvasWidth - sentNumMargin, y + sizes.texts.y + sizes.texts.height,
-	            sentNumMargin, rowBoxHeight + sizes.texts.height + 1, {
-	            'class': 'backgroundHighlight'
-	          });
+              svg.rect(backgroundGroup,
+                canvasWidth - sentNumMargin,            // x
+                y + sizes.texts.y + sizes.texts.height, // y
+                sentNumMargin,                          // width
+                rowBoxHeight + sizes.texts.height + 1,  // height
+                { 'class': 'backgroundHighlight' });
             } else {
-	          svg.rect(backgroundGroup,
-	            0, y + sizes.texts.y + sizes.texts.height,
-	            sentNumMargin, rowBoxHeight + sizes.texts.height + 1, {
-	            'class': 'backgroundHighlight'
-	          });
+              svg.rect(backgroundGroup,
+                0, 
+                y + sizes.texts.y + sizes.texts.height,
+                sentNumMargin, 
+                rowBoxHeight + sizes.texts.height + 1, 
+                { 'class': 'backgroundHighlight' });
             }
           }
 // WEBANNO EXTENSION END
@@ -3574,7 +3576,10 @@ Util.profileStart('finish');
               $(highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-	          findClosestHorizontalScrollable($svgDiv).scrollLeft(oversized+4);
+              var scrollable = findClosestHorizontalScrollable($svgDiv);
+              if (scrollable) {
+                  scrollable.scrollLeft(oversized+4);
+              }
           }
 // WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars          
         }
@@ -3582,10 +3587,19 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
         if (oversized > 0) {
-	        $(backgroundGroup).attr('width', canvasWidth);
-	        $(backgroundGroup).children().each(function(index,element) {
-	      	  $(element).attr('width', canvasWidth);
-	        });
+            $(backgroundGroup).attr('width', canvasWidth);
+            $(backgroundGroup).children().each(function(index,element) {
+              // We render the backgroundHighlight only in the margin, so we have to translate
+              // it instead of transforming it.
+              if ($(element).attr('class') == 'backgroundHighlight') {
+                if (rtlmode) {
+                  $(element).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+                }
+              }
+              else {
+                $(element).attr('width', canvasWidth);
+              }
+            });
         }
 // WEBANNO EXTENSION END        
 
@@ -4139,16 +4153,14 @@ Util.profileStart('before render');
 // WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
 // https://stackoverflow.com/a/35940276/2511197
     function findClosestHorizontalScrollable(node) {
-      if (node === null) {
+      if (node === null || node.is('html')) {
         return null;
       }
 
       if (
-    	    (node.css('overflow') == 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
-    	    (node.css('overflow-x') == 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
-    	    (node.css('overflow') == 'scroll')
-    	    (node.css('overflow-x') == 'scroll')
-    	  ) {
+        (node.css('overflow-x') == 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
+        (node.css('overflow-x') == 'scroll')
+      ) {
         return node;
       } else {
         return findClosestHorizontalScrollable(node.parent());
