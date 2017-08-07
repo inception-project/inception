@@ -282,8 +282,10 @@ public class CorrectionPage
         gotoPageTextField.setMinimum(1); 
         gotoPageTextField.setOutputMarkupId(true); 
         gotoPageTextFieldForm.add(gotoPageTextField);
-        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
-                this::actionGotoPage));
+        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
+                gotoPageTextFieldForm, this::actionGotoPage);
+        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
+        gotoPageTextFieldForm.add(gotoPageLink);
         add(gotoPageTextFieldForm);
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));

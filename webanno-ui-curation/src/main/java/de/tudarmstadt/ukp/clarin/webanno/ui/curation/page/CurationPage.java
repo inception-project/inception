@@ -234,8 +234,10 @@ public class CurationPage
         gotoPageTextField.setMinimum(1); 
         gotoPageTextField.setOutputMarkupId(true); 
         gotoPageTextFieldForm.add(gotoPageTextField);
-        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
-                this::actionGotoPage));
+        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
+                gotoPageTextFieldForm, this::actionGotoPage);
+        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
+        gotoPageTextFieldForm.add(gotoPageLink);
         add(gotoPageTextFieldForm);
 
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
