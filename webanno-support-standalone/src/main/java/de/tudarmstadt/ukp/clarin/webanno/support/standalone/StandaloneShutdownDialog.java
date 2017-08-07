@@ -21,6 +21,8 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import javax.annotation.Resource;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -29,6 +31,7 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -42,6 +45,9 @@ public class StandaloneShutdownDialog
 
     private boolean running = false;
 
+    @Resource
+    private ApplicationEventPublisher eventPublisher;
+    
     @Value(value = "${running.from.commandline}")
     private boolean runningFromCommandline;    
     
@@ -92,6 +98,8 @@ public class StandaloneShutdownDialog
         if (System.console() == null && !GraphicsEnvironment.isHeadless()
                 && runningFromCommandline) {
             log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
+            eventPublisher.publishEvent(
+                    new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
 
             EventQueue.invokeLater(() -> {
                 final JOptionPane optionPane = new JOptionPane(

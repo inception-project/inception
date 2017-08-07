@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
+import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoApplicationContextInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
 
@@ -81,7 +82,8 @@ public class WebAnno
         init(builder);
         builder.sources(WebAnno.class);
         builder.listeners(event -> {
-            if (event instanceof ApplicationReadyEvent) {
+            if (event instanceof ApplicationReadyEvent
+                    || event instanceof ShutdownDialogAvailableEvent) {
                 splash.ifPresent(it -> it.dispose());
             }
         });
