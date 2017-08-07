@@ -59,6 +59,7 @@ import org.apache.wicket.util.time.Duration;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -93,12 +94,14 @@ public class AnnotationFeatureForm
     private Label selectedAnnotationLayer;
     private TextField<String> forwardAnnotationText;
     private ModalWindow deleteModal;
+    private Label relationHint;
     private LayerSelector layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean AnnotationSchemaService annotationService;
 
     AnnotationFeatureForm(AnnotationDetailEditorPanel aEditorPanel, String id,
         IModel<AnnotatorState> aBModel)
@@ -112,6 +115,7 @@ public class AnnotationFeatureForm
         add(createDeleteButton());
         add(createReverseButton());
         add(createClearButton());
+        add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
         add(featureEditorPanel = createFeatureEditorPanel());
     }
@@ -262,6 +266,45 @@ public class AnnotationFeatureForm
         };
     }
 
+    private Label createRelationHint()
+    {
+        return new Label("relationHint", Model.of()) {
+            private static final long serialVersionUID = 1L;
+            
+            {
+                setOutputMarkupId(true);
+                setEscapeModelStrings(false);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                
+                if (layerSelector.getModelObject() != null) {
+                    List<AnnotationLayer> relLayers = annotationService
+                            .listAttachedRelationLayers(layerSelector.getModelObject());
+                    if (relLayers.isEmpty()) {
+                        setVisible(false);
+                    }
+                    else if (relLayers.size() == 1) {
+                        setDefaultModelObject("Create a <b>" + relLayers.get(0).getUiName()
+                                + "</b> relation by drawing an arc between annotations of this layer.");
+                        setVisible(true);
+                    }
+                    else {
+                        setDefaultModelObject(
+                                "Whoops! Found more than one relation layer attaching to this span layer!");
+                        setVisible(true);
+                    }
+                }
+                else {
+                    setVisible(false);
+                }
+            }
+        };
+    }
+    
     private LayerSelector createDefaultAnnotationLayerSelector()
     {
         return new LayerSelector("defaultAnnotationLayer",
@@ -589,6 +632,8 @@ public class AnnotationFeatureForm
                 {
                     AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
 
+                    aTarget.add(relationHint);
+                    
                     // If "remember layer" is set, the we really just update the selected
                     // layer...
                     // we do not touch the selected annotation not the annotation detail panel

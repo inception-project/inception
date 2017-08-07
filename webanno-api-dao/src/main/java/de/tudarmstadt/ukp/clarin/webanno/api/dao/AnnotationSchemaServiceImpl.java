@@ -776,12 +776,14 @@ public class AnnotationSchemaServiceImpl
         return entityManager
                 .createQuery(
                         "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f "
-                        + "WHERE l.type = :type AND "
+                        + "WHERE l.type = :type AND l.project = :project AND "
                         + "(l.attachType = :attachType OR f.type = :attachTypeName) "
                         + "ORDER BY l.uiName",
                         AnnotationLayer.class).setParameter("type", RELATION_TYPE)
                 .setParameter("attachType", aLayer)
-                .setParameter("attachTypeName", aLayer.getName()).getResultList();
+                .setParameter("attachTypeName", aLayer.getName())
+                // Checking for project is necessary because type match is string-based
+                .setParameter("project", aLayer.getProject()).getResultList();
     }
 
     @Override
