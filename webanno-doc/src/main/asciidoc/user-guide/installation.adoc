@@ -63,13 +63,27 @@ If you have Docker installed, you can run WebAnno using
 
 [source,text,subs="+attributes"]
 ----
-docker run -it --name webanno -p8080:18080 webanno/webanno:{revnumber}
+docker run -it --name webanno -p8080:8080 webanno/webanno:{revnumber}
 ----
 
 The command download WebAnno from Dockerhub and starts it on port 8080. If this port is not
 available on your machine, you should provide another port to the `-p` parameter. 
 
 The logs will be printed to the console. To stop the container, press `CTRL-C`.
+
+To run the WebAnno docker in the background use 
+
+[source,text,subs="+attributes"]
+----
+docker run -d --name webanno -p8080:8080 webanno/webanno:{revnumber}
+----
+
+Logs are accessible by typing 
+
+[source,text,subs="+attributes"]
+----
+docker logs webanno
+----
 
 NOTE: Use `docker run` only the first time that you run WebAnno. If you try it a second time, Docker
       will complain about the name `webanno` already being in use. If you follow Docker`s suggestion
@@ -83,7 +97,12 @@ When you want to run WebAnno again later, use the command
 docker start -ai webanno
 ----
 
-Again, the logs will be printed to the console. To stop the container, press `CTRL-C`.
+or for the background mode 
+
+[source,text,subs="+attributes"]
+----
+docker start webanno
+----
 
 ==== Storing data on the host
 
@@ -103,7 +122,7 @@ When you run WebAnno via Docker, you then mount this folder into the container:
 
 [source,text,subs="+attributes"]
 ----
-docker run -it --name webanno -v /srv/webanno:/export -p8080:18080 webanno/webanno:{revnumber}
+docker run -it --name webanno -v /srv/webanno:/export -p8080:8080 webanno/webanno:{revnumber}
 ----
 
 ==== Connecting to a MySQL database
@@ -112,18 +131,33 @@ By default, WebAnno uses an embedded SQL database to store its metadata (not the
 annotations, these are stored in files on disk). For production use, it is highly recommended to
 use a separate MySQL database instead of the embedded SQL database.
 
-To configure WebAnno to use a separate database, place a file called `settings.properties` into the
-data folder that you mount into the WebAnno container. It should contain the following contents:
+You can do so by providing a second Docker for mysql (see for example https://hub.docker.com/_/mysql/).
+We provide a docker-compose example file, which combines the two containers. In order to use this, download https://raw.githubusercontent.com/webanno/webanno/master/webanno-webapp/src/main/docker/docker-compose.yml and place it into any folder, change to that folder, and issue the commands 
 
+[source,text,subs="+attributes"]
 ----
-database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
-database.driver=com.mysql.jdbc.Driver
-database.url=jdbc:mysql://localhost:3306/webanno
-database.username=webanno
-database.password=t0t4llYSecreT
+export WEBANNO_HOME=/srv/webanno
+export WEBANNO_PORT=8080
+docker-compose -p webanno up -d
 ----
 
-NOTE: The settings are just examples. Adjust the database URL, username, and password according to
-      your MySQL setup.
+This will start two docker containers: webanno_mysqlserver_1, and webanno_webserver_1. You can check the logs of each by running 
+
+[source,text,subs="+attributes"]
+----
+docker logs webanno_mysqlserver_1
+docker logs webanno_webserver_1
+----
+
+Two directories in your WebAnno home folder will be created: mysql-data and webserver-data. No data is stored in the containers themselves, you are safe to delete them with 
+
+[source,text,subs="+attributes"]
+----
+docker-compose -p webanno down
+----
+
+You can also just stop or pause them, please see the docker-compose reference for details: https://docs.docker.com/compose/.
+
+NOTE: The settings within the docker-compose.yml file are just examples. Adjust the database URL, username, and password accordingly.
 
 
