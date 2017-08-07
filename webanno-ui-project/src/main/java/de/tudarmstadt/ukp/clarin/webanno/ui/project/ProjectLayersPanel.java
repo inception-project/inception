@@ -397,9 +397,7 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -1L;
 
-        private TextField<String> uiName;
         private static final String TYPE_PREFIX = "webanno.custom.";
-        private String layerName;
         private DropDownChoice<String> layerTypes;
         private DropDownChoice<AnnotationLayer> attachTypes;
 
@@ -415,17 +413,9 @@ public class ProjectLayersPanel
                     new AnnotationLayer())));
 
             final Project project = ProjectLayersPanel.this.getModelObject();
-            add(uiName = (TextField<String>) new TextField<String>("uiName").setRequired(true));
-            uiName.add(new AjaxFormComponentUpdatingBehavior("input")
-            {
-                private static final long serialVersionUID = -1756244972577094229L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget target)
-                {
-                    layerName = StringUtils.capitalize(getModelObject().getUiName());
-                }
-            });
+            
+            add(new TextField<String>("uiName").setRequired(true));
+            add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
             add(new Label("name")
             {
@@ -439,7 +429,6 @@ public class ProjectLayersPanel
                 }
             });
             
-            add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(layerTypes = (DropDownChoice<String>) new DropDownChoice<String>("type",
                     Arrays.asList(new String[] { SPAN_TYPE, RELATION_TYPE, CHAIN_TYPE }))
@@ -687,6 +676,9 @@ public class ProjectLayersPanel
                     }
 
                     if (layer.getId() == 0) {
+                        String layerName = StringUtils
+                                .capitalize(LayerDetailForm.this.getModelObject().getUiName());
+                        
                         layerName = layerName.replaceAll("\\W", "");
                         if (layerName.isEmpty() || !isAscii(layerName)) {
                             error("Non ASCII characters can not be used as layer name!");
