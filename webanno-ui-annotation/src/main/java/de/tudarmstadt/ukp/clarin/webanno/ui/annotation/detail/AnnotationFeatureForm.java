@@ -624,6 +624,7 @@ public class AnnotationFeatureForm
                                 // Create the replacement annotation
                                 editorPanel.actionCreateOrUpdate(_target,
                                         editorPanel.getEditorCas());
+                                LayerSelector.this.modelChanged();
                                 _target.add(AnnotationFeatureForm.this);
                             });
                             replaceAnnotationDialog.setCancelAction((_target) -> {
