@@ -131,8 +131,8 @@ By default, WebAnno uses an embedded SQL database to store its metadata (not the
 annotations, these are stored in files on disk). For production use, it is highly recommended to
 use a separate MySQL database instead of the embedded SQL database.
 
-You can do so by providing a second Docker for mysql (see for example https://hub.docker.com/_/mysql/).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download https://raw.githubusercontent.com/webanno/webanno/master/webanno-webapp/src/main/docker/docker-compose.yml and place it into any folder, change to that folder, and issue the commands 
+You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
+We provide a docker-compose example file, which combines the two containers. In order to use this, download link:https://raw.githubusercontent.com/webanno/webanno/master/webanno-webapp/src/main/docker/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands 
 
 [source,text,subs="+attributes"]
 ----
@@ -141,7 +141,7 @@ export WEBANNO_PORT=8080
 docker-compose -p webanno up -d
 ----
 
-This will start two docker containers: webanno_mysqlserver_1, and webanno_webserver_1. You can check the logs of each by running 
+This will start two docker containers: `webanno_mysqlserver_1`, and `webanno_webserver_1`. You can check the logs of each by running 
 
 [source,text,subs="+attributes"]
 ----
@@ -149,14 +149,14 @@ docker logs webanno_mysqlserver_1
 docker logs webanno_webserver_1
 ----
 
-Two directories in your WebAnno home folder will be created: mysql-data and webserver-data. No data is stored in the containers themselves, you are safe to delete them with 
+Two directories in your WebAnno home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
 
 [source,text,subs="+attributes"]
 ----
 docker-compose -p webanno down
 ----
 
-You can also just stop or pause them, please see the docker-compose reference for details: https://docs.docker.com/compose/.
+You can also just stop or pause them, please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
 
 NOTE: The settings within the docker-compose.yml file are just examples. Adjust the database URL, username, and password accordingly.
 
