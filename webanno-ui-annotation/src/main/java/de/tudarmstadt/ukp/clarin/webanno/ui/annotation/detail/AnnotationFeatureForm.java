@@ -273,6 +273,7 @@ public class AnnotationFeatureForm
             
             {
                 setOutputMarkupId(true);
+                setOutputMarkupPlaceholderTag(true);
                 setEscapeModelStrings(false);
             }
             
