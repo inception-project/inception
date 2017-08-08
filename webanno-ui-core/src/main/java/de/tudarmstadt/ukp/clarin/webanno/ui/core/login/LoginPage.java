@@ -119,7 +119,7 @@ public class LoginPage
         }
         
         String redirectUrl = getRedirectUrl();
-        if (redirectUrl != null) {
+        if (redirectUrl == null) {
             log.debug("Authentication required");
         }
         else {
