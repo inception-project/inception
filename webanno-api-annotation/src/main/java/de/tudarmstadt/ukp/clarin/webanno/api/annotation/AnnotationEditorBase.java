@@ -38,7 +38,7 @@ public abstract class AnnotationEditorBase
     private JCasProvider jcasProvider;
     // Disabling for 3.3.0 by default per #406
     // FIXME: should be enabled by default and made optional per #606
-    private boolean enableHighlight = true;
+    private boolean enableHighlight = false;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
