@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -495,13 +494,15 @@ public class BratAnnotationEditor
         if (isHighlightEnabled()) {
             AnnotatorState state = getModelObject();
             
-            if (state.getFocusUnitIndex() > 0) {
-                response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-            }
+            // Disabling for 3.3.0 by default per #406
+            // FIXME: should be enabled by default and made optional per #606
+            // if (state.getFocusUnitIndex() > 0) {
+            // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
+            // }
             
             if (state.getSelection().getAnnotation().isSet()) {
-                response.addMarker(new AnnotationMarker(
-                        Marker.FOCUS, state.getSelection().getAnnotation()));
+                response.addMarker(
+                        new AnnotationMarker(Marker.FOCUS, state.getSelection().getAnnotation()));
             }
         }
     }
