@@ -28,18 +28,9 @@ such a configuration for production use. Instead, please configure WebAnno to us
 when using it in production. For more information, please refer to the <<admin-guide.adoc#sect_database,Administrator Guide>>.
 ====
 
-Get the standalone jar from the [WebAnnoInstFile downloads] and start it simply with a *double-click* in your file manager. WebAnno stores its data in a folder called `.webanno` (_dot webanno_) within your home folder,
+Get the stand-alone JAR from the link:https://webanno.github.io/webanno/downloads/[WebAnno downloads page] and start it simply with a *double-click* in your file manager. WebAnno stores its data in a folder called `.webanno` (_dot webanno_) within your home folder,
 
-You can start with the [SampleProjects example projects] to explore some of the functionalities. 
-
-[NOTE]
-====
-If you have previously used an older version of the WebAnno standalone, make sure to clean up the temporary installation before running the new version:
-
-   * On OS X: `rm -R "$TMPDIR/winstoneEmbeddedWAR"`
-   * On Linux: `rm -R /tmp/winstoneEmbeddedWAR`
-   * On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
-====
+You can start with the link:https://webanno.github.io/webanno/downloads/[WebAnno downloads page][example projects] to explore some of the functionalities. 
 
 ==== Optional configuration
 
@@ -51,9 +42,9 @@ java -Xmx1g -Dwebanno.home=/my/webanno/home -jar webanno-XXX-standalone.jar
 
 Mind to replace `/my/webanno/home` with path of a folder where WebAnno can store its data.
 
-By default the server starts on port 8080 and you can access it via a browser at `http://localhost:8080` after you started it. You can add the parameter `--httpPort=9999` at the end of the command line to start the server on port 9999 (or choose any other port).
+By default the server starts on port 8080 and you can access it via a browser at `http://localhost:8080` after you started it. You can add the parameter `-Dserver.port=9999` at the end of the command line to start the server on port 9999 (or choose any other port).
 
-A full list of the command line parameters can be found in the link:http://winstone.sourceforge.net/#commandLine[Winstone documentation].
+WebAnno uses link:https://projects.spring.io/spring-boot/[Spring Boot]. If you need to set additional parameters of the embedded webserver of the stand-alone version, please refer to the link:https://docs.spring.io/spring-boot/docs/current/reference/html/howto-embedded-servlet-containers.html[Spring Boot embedded container documentation].
 
 === Run using Docker
 
