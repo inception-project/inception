@@ -50,7 +50,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -699,6 +698,8 @@ public class AnnotationDetailEditorPanel
     public void actionReverse(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        
         JCas jCas = getEditorCas();
 
         AnnotatorState state = getModelObject();
@@ -753,6 +754,7 @@ public class AnnotationDetailEditorPanel
         throws AnnotationException
     {
         reset(aTarget);
+        aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(annotationFeatureForm);
         onChange(aTarget);
     }
@@ -1254,11 +1256,6 @@ public class AnnotationDetailEditorPanel
     public AnnotationFeatureForm getAnnotationFeatureForm()
     {
         return annotationFeatureForm;
-    }
-
-    public Label getSelectedAnnotationLayer()
-    {
-        return annotationFeatureForm.getSelectedAnnotationLayer();
     }
 
     boolean isForwardable()

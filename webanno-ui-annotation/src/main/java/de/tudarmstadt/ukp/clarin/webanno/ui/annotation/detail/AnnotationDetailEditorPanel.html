@@ -51,7 +51,8 @@
     <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
       <form wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
           class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
-        <div wicket:id=yesNoModal></div>
+        <div wicket:id=deleteAnnotationDialog></div>
+        <div wicket:id=replaceAnnotationDialog></div>
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Actions</h3>
@@ -60,14 +61,16 @@
             <div class="col-sm-12">
               <div class="form-group">
                 <div>
-                  <button wicket:id="delete" class="btn">Delete</button>
-                  <button wicket:id="reverse" class="btn">Reverse</button>
-                  <button wicket:id="clear" class="btn">Clear</button>
+                  <input wicket:id="delete" type="button" class="btn" wicket:message="value:delete"/>
+                  <input wicket:id="reverse" type="button" class="btn" wicket:message="value:reverse"/>
+                  <input wicket:id="clear" type="button" class="btn" wicket:message="value:clear"/>
                 </div>
               </div>
               <div class="form-horizontal">
                 <div class="form-group">
-                  <label wicket:for="defaultAnnotationLayer" class="col-sm-3 control-label">Layer</label>
+                  <label wicket:for="defaultAnnotationLayer" class="col-sm-3 control-label">
+                    <wicket:label key="layer"/>
+                  </label>
                   <div class="col-sm-9">
                     <select wicket:id="defaultAnnotationLayer" class="form-control"></select>
                   </div>
