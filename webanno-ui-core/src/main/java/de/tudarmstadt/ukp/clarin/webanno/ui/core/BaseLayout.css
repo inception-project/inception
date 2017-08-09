@@ -15,15 +15,7 @@
  ******************************************************************************/
 
 /* -------------------------------------------------------------------------------------------------
- * Generic classes
- */
-
-.nowrap{
-    white-space:nowrap;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * Forms
+ * Wicket Forms
  */
 
 label.required {
@@ -213,49 +205,6 @@ div.navigator{
   white-space: -moz-pre-wrap; /* fennec */
   white-space: pre-wrap;
     white-space: pre\9; /* IE7+ */  
-}
-
-/* -------------------------------------------------------------------------------------------------
- * Tab panel top
- */
-div.tabpanel div.tab-row li{
-    margin:0;
-    padding:0;
-    display:inline;
-    list-style-type:none;
-}
-
-div.tabpanel div.tab-row a:link,
-div.tabpanel div.tab-row a:visited{
-    float:left;
-    background:#f3f3f3;
-    font-size:12px;
-    line-height:14px;
-    font-weight:bold;
-    padding:2px 10px 2px 10px;
-    margin-right:4px;
-    border:1px solid #ccc;
-    text-decoration:none;
-    color:#666;
-}
-
-div.tabpanel div.tab-row li.selected a:link,
-div.tabpanel div.tab-row a:visited.active
-{
-    border-bottom:1px solid #fff;
-    background:#fff;
-    color:#000;
-}
-
-div.tabpanel div.tab-row a:hover{
-    background:#fff;
-}
-
-div.tabpanel .tab-panel {
-    border: solid #666 1px;
-    clear: both;
-    padding: 1em;
-    margin: 1em;
 }
 
 /* -------------------------------------------------------------------------------------------------
