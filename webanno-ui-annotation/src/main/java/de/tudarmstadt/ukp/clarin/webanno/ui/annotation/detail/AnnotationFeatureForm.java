@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -242,8 +243,7 @@ public class AnnotationFeatureForm
     private ConfirmationDialog createDeleteDialog()
     {
         return new ConfirmationDialog("deleteAnnotationDialog",
-                new StringResourceModel("DeleteDialog.title", this, null),
-                new StringResourceModel("DeleteDialog.text", this, null));
+                new StringResourceModel("DeleteDialog.title", this, null));
     }
 
     private ConfirmationDialog createReplaceDialog()
@@ -365,12 +365,18 @@ public class AnnotationFeatureForm
     private void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
         AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+        
+        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        TypeAdapter adapter = annotationService.getAdapter(layer);
+
         JCas jCas = editorPanel.getEditorCas();
         AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
-        AnnotationLayer layer = state.getSelectedAnnotationLayer();
-        TypeAdapter adapter = editorPanel.getAnnotationService().getAdapter(layer);
-        if (adapter instanceof SpanAdapter
-                && editorPanel.getAttachedRels(jCas, fs, layer).size() > 0) {
+        Set<AnnotationFS> attachedRels = editorPanel.getAttachedRels(jCas, fs, layer);
+        
+        if (adapter instanceof SpanAdapter && attachedRels.size() > 0) {
+            deleteAnnotationDialog.setContentModel(
+                    new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
+                            .setParameters(attachedRels.size()));
             deleteAnnotationDialog.setConfirmAction((aCallbackTarget) -> {
                 editorPanel.actionDelete(aCallbackTarget);
             });
@@ -379,6 +385,51 @@ public class AnnotationFeatureForm
         else {
             editorPanel.actionDelete(aTarget);
         }
+    }
+    
+    private void actionReplace(AjaxRequestTarget aTarget) throws IOException
+    {
+        AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+
+        AnnotationLayer newLayer = layerSelector.getModelObject();
+
+        JCas jCas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
+        Set<AnnotationFS> attachedRels = editorPanel.getAttachedRels(jCas, fs, currentLayer);
+
+        replaceAnnotationDialog.setContentModel(
+                new StringResourceModel("ReplaceDialog.text", AnnotationFeatureForm.this)
+                        .setParameters(currentLayer.getUiName(), newLayer.getUiName(),
+                                attachedRels.size()));
+        replaceAnnotationDialog.setConfirmAction((_target) -> {
+            // The delete action clears the selection, but we need it to create
+            // the new annotation - so we save it.
+            Selection savedSel = editorPanel.getModelObject().getSelection().copy();
+
+            // Delete current annotation
+            editorPanel.actionDelete(_target);
+
+            // Set up the action to create the replacement annotation
+            AnnotationLayer layer = layerSelector.getModelObject();
+            state.getSelection().set(savedSel);
+            state.getSelection().setAnnotation(VID.NONE_ID);
+            state.getAction().setAnnotate(true);
+            state.setSelectedAnnotationLayer(layer);
+            state.setDefaultAnnotationLayer(layer);
+            selectedAnnotationLayer.setDefaultModelObject(layer.getUiName());
+            editorPanel.loadFeatureEditorModels(_target);
+
+            // Create the replacement annotation
+            editorPanel.actionCreateOrUpdate(_target, editorPanel.getEditorCas());
+            layerSelector.modelChanged();
+            _target.add(AnnotationFeatureForm.this);
+        });
+        replaceAnnotationDialog.setCancelAction((_target) -> {
+            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+            _target.add(AnnotationFeatureForm.this);
+        });
+        replaceAnnotationDialog.show(aTarget);
     }
 
     private Label createNoAnnotationWarningLabel()
@@ -467,12 +518,12 @@ public class AnnotationFeatureForm
 
     Map<String, String> getBindTags()
     {
-        AnnotationFeature f = editorPanel.getAnnotationService()
-            .listAnnotationFeature(getModelObject().getSelectedAnnotationLayer()).get(0);
+        AnnotationFeature f = annotationService
+                .listAnnotationFeature(getModelObject().getSelectedAnnotationLayer()).get(0);
         TagSet tagSet = f.getTagset();
         Map<Character, String> tagNames = new LinkedHashMap<>();
         Map<String, String> bindTag2Key = new LinkedHashMap<>();
-        for (Tag tag : editorPanel.getAnnotationService().listTags(tagSet)) {
+        for (Tag tag : annotationService.listTags(tagSet)) {
             if (tagNames.containsKey(tag.getName().toLowerCase().charAt(0))) {
                 String oldBinding = tagNames.get(tag.getName().toLowerCase().charAt(0));
                 String newBinding = oldBinding + tag.getName().toLowerCase().charAt(0);
@@ -520,8 +571,7 @@ public class AnnotationFeatureForm
             }
             // manage chain type
             else if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                for (AnnotationFeature feature : editorPanel.getAnnotationService()
-                    .listAnnotationFeature(layer)) {
+                for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
                     if (!feature.isEnabled()) {
                         continue;
                     }
@@ -592,46 +642,17 @@ public class AnnotationFeatureForm
                     // want to change the type of the currently selected annotation
                     else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
                         && state.getSelection().getAnnotation().isSet()) {
-                        if (state.getSelection().isArc()) {
-                            try {
+                        try {
+                            if (state.getSelection().isArc()) {
                                 editorPanel.actionClear(aTarget);
                             }
-                            catch (Exception e) {
-                                handleException(AnnotationFeatureForm.LayerSelector.this,
-                                    aTarget, e);
+                            else {
+                                actionReplace(aTarget);
                             }
                         }
-                        else {
-                            replaceAnnotationDialog.setConfirmAction((_target) -> {
-                                // The delete action clears the selection, but we need it to create
-                                // the new annotation - so we save it.
-                                Selection savedSel = editorPanel.getModelObject().getSelection()
-                                        .copy();
-                                
-                                // Delete current annotation
-                                editorPanel.actionDelete(_target);
-                                
-                                // Set up the action to create the replacement annotation
-                                AnnotationLayer layer = LayerSelector.this.getModelObject();
-                                state.getSelection().set(savedSel);
-                                state.getSelection().setAnnotation(VID.NONE_ID);
-                                state.getAction().setAnnotate(true);
-                                state.setSelectedAnnotationLayer(layer);
-                                state.setDefaultAnnotationLayer(layer);
-                                selectedAnnotationLayer.setDefaultModelObject(layer.getUiName());
-                                editorPanel.loadFeatureEditorModels(_target);
-                                
-                                // Create the replacement annotation
-                                editorPanel.actionCreateOrUpdate(_target,
-                                        editorPanel.getEditorCas());
-                                LayerSelector.this.modelChanged();
-                                _target.add(AnnotationFeatureForm.this);
-                            });
-                            replaceAnnotationDialog.setCancelAction((_target) -> {
-                                state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
-                                _target.add(AnnotationFeatureForm.this);
-                            });
-                            replaceAnnotationDialog.show(aTarget);
+                        catch (Exception e) {
+                            handleException(AnnotationFeatureForm.LayerSelector.this,
+                                aTarget, e);
                         }
                     }
                     // If no annotation is selected, then prime the annotation detail panel for
