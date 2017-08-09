@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class ChallengeResponseDialog
     extends ModalWindow
@@ -47,6 +48,8 @@ public class ChallengeResponseDialog
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
 
+    private ContentPanel contentPanel;
+    
     public ChallengeResponseDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
             IModel<String> aExpectedResponse)
     {
@@ -67,7 +70,12 @@ public class ChallengeResponseDialog
         
         setModel(new CompoundPropertyModel<>(null));
         
-        setContent(new ContentPanel(getContentId(), getModel()));
+        setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
+        
+        setCloseButtonCallback((_target) -> {
+            onCancelInternal(_target);
+            return true;
+        });
     }
     
     public void setModel(IModel<State> aModel)
@@ -162,7 +170,7 @@ public class ChallengeResponseDialog
         }
     }
 
-    protected void onCancelInternal(AjaxRequestTarget aTarget, Form<State> aForm)
+    protected void onCancelInternal(AjaxRequestTarget aTarget)
     {
         if (cancelAction != null) {
             try {
@@ -170,7 +178,7 @@ public class ChallengeResponseDialog
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                aForm.getModelObject().feedback = "Error: " + e.getMessage();
+                contentPanel.form.getModelObject().feedback = "Error: " + e.getMessage();
             }
         }
         close(aTarget);
@@ -193,18 +201,19 @@ public class ChallengeResponseDialog
         private static final long serialVersionUID = 5202661827792148838L;
 
         private FeedbackPanel feedbackPanel;
+        private Form<State> form;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
-            Form<State> form = new Form<>("form", aModel);
+            form = new Form<>("form", aModel);
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
             form.add(new LambdaAjaxButton<>("confirm",
                     ChallengeResponseDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxButton<>("cancel",
+            form.add(new LambdaAjaxLink("cancel",
                     ChallengeResponseDialog.this::onCancelInternal));
             
             add(form);

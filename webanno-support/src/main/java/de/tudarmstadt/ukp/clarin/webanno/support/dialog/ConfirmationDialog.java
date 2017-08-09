@@ -28,11 +28,13 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class ConfirmationDialog
     extends ModalWindow
@@ -40,24 +42,31 @@ public class ConfirmationDialog
     private static final long serialVersionUID = 5194857538069045172L;
 
     private IModel<String> titleModel;
-    private IModel<String> challengeModel;
+    private IModel<String> contentModel;
     
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
+    
+    private ContentPanel contentPanel;
 
     public ConfirmationDialog(String aId)
     {
         this(aId, null, null);
         titleModel = new StringResourceModel("title", this, null);
-        challengeModel = new StringResourceModel("text", this, null);
+        contentModel = new StringResourceModel("text", this, null);
     }
     
-    public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge)
+    public ConfirmationDialog(String aId, IModel<String> aTitle)
+    {
+        this(aId, aTitle, Model.of());
+    }
+    
+    public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aContent)
     {
         super(aId);
         
         titleModel = aTitle;
-        challengeModel = aChallenge;
+        contentModel = aContent;
         
         setOutputMarkupId(true);
         setInitialWidth(620);
@@ -70,9 +79,34 @@ public class ConfirmationDialog
         
         setModel(new CompoundPropertyModel<>(null));
         
-        setContent(new ContentPanel(getContentId(), getModel()));
+        setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
+        
+        setCloseButtonCallback((_target) -> {
+            onCancelInternal(_target);
+            return true;
+        });
     }
     
+    public IModel<String> getTitleModel()
+    {
+        return titleModel;
+    }
+
+    public void setTitleModel(IModel<String> aTitleModel)
+    {
+        titleModel = aTitleModel;
+    }
+
+    public IModel<String> getContentModel()
+    {
+        return contentModel;
+    }
+
+    public void setContentModel(IModel<String> aContentModel)
+    {
+        contentModel = aContentModel;
+    }
+
     public void setModel(IModel<State> aModel)
     {
         setDefaultModel(aModel);
@@ -97,10 +131,10 @@ public class ConfirmationDialog
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
-        challengeModel.detach();
+        contentModel.detach();
         
         State state = new State();
-        state.challenge = challengeModel.getObject();
+        state.content = contentModel.getObject();
         state.feedback = null;
         setModelObject(state);
 
@@ -153,7 +187,7 @@ public class ConfirmationDialog
         }
     }
 
-    protected void onCancelInternal(AjaxRequestTarget aTarget, Form<State> aForm)
+    protected void onCancelInternal(AjaxRequestTarget aTarget)
     {
         if (cancelAction != null) {
             try {
@@ -161,7 +195,7 @@ public class ConfirmationDialog
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                aForm.getModelObject().feedback = "Error: " + e.getMessage();
+                contentPanel.form.getModelObject().feedback = "Error: " + e.getMessage();
             }
         }
         close(aTarget);
@@ -172,8 +206,7 @@ public class ConfirmationDialog
     {
         private static final long serialVersionUID = 4483229579553569947L;
 
-        private String challenge;
-        private String expectedResponse;
+        private String content;
         private String feedback;
     }
 
@@ -183,16 +216,17 @@ public class ConfirmationDialog
         private static final long serialVersionUID = 5202661827792148838L;
 
         private FeedbackPanel feedbackPanel;
+        private Form<State> form;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
-            Form<State> form = new Form<>("form", aModel);
-            form.add(new Label("challenge").setEscapeModelStrings(false));
+            form = new Form<>("form", aModel);
+            form.add(new Label("content").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxButton<>("cancel", ConfirmationDialog.this::onCancelInternal));
+            form.add(new LambdaAjaxLink("cancel", ConfirmationDialog.this::onCancelInternal));
             
             add(form);
         }
