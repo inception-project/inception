@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -38,6 +37,7 @@ import org.apache.wicket.ajax.attributes.IAjaxCallListener;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class AnnotationFeatureForm
@@ -371,12 +372,24 @@ public class AnnotationFeatureForm
 
         JCas jCas = editorPanel.getEditorCas();
         AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
-        Set<AnnotationFS> attachedRels = editorPanel.getAttachedRels(jCas, fs, layer);
         
-        if (adapter instanceof SpanAdapter && attachedRels.size() > 0) {
+        if (layer.isReadonly()) {
+            error("Cannot replace an annotation on a read-only layer.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        AttachStatus attachStatus = editorPanel.checkAttachStatus(aTarget, state.getProject(), fs);
+        if (attachStatus.readOnlyAttached) {
+            error("Cannot delete an annotation to which annotations on read-only layers attach.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }        
+        
+        if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
             deleteAnnotationDialog.setContentModel(
                     new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
-                            .setParameters(attachedRels.size()));
+                            .setParameters(attachStatus.attachCount));
             deleteAnnotationDialog.setConfirmAction((aCallbackTarget) -> {
                 editorPanel.actionDelete(aCallbackTarget);
             });
@@ -396,12 +409,24 @@ public class AnnotationFeatureForm
         JCas jCas = editorPanel.getEditorCas();
         AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
         AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
-        Set<AnnotationFS> attachedRels = editorPanel.getAttachedRels(jCas, fs, currentLayer);
-
+        
+        if (currentLayer.isReadonly()) {
+            error("Cannot replace an annotation on a read-only layer.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        AttachStatus attachStatus = editorPanel.checkAttachStatus(aTarget, state.getProject(), fs);
+        if (attachStatus.readOnlyAttached) {
+            error("Cannot replace an annotation to which annotations on read-only layers attach.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
         replaceAnnotationDialog.setContentModel(
                 new StringResourceModel("ReplaceDialog.text", AnnotationFeatureForm.this)
                         .setParameters(currentLayer.getUiName(), newLayer.getUiName(),
-                                attachedRels.size()));
+                                attachStatus.attachCount));
         replaceAnnotationDialog.setConfirmAction((_target) -> {
             // The delete action clears the selection, but we need it to create
             // the new annotation - so we save it.

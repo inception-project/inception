@@ -82,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -571,6 +572,46 @@ public class AnnotationDetailEditorPanel
         }
     }
 
+    public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
+            AnnotationFS aFS)
+    {
+        AnnotationLayer layer = annotationService.getLayer(aProject, aFS);
+        
+        AttachStatus attachStatus = new AttachStatus();
+        
+        Set<AnnotationFS> attachedRels = getAttachedRels(aFS, layer);
+        boolean attachedToReadOnlyRels = attachedRels.stream().anyMatch(relFS -> {
+            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            return relLayer.isReadonly();
+        });
+        if (attachedToReadOnlyRels) {
+            attachStatus.readOnlyAttached |= true;
+        }
+        attachStatus.attachCount += attachedRels.size();
+        
+        Set<AnnotationFS> attachedSpans = getAttachedSpans(aFS, layer);
+        boolean attachedToReadOnlySpans = attachedSpans.stream().anyMatch(relFS -> {
+            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            return relLayer.isReadonly();
+        });
+        if (attachedToReadOnlySpans) {
+            attachStatus.readOnlyAttached |= true;
+        }
+        attachStatus.attachCount += attachedSpans.size();
+
+        Set<AnnotationFS> attachedLinks = getAttachedLinks(aFS, layer);
+        boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
+            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            return relLayer.isReadonly();
+        });
+        if (attachedToReadOnlyLinks) {
+            attachStatus.readOnlyAttached |= true;
+        }
+        attachStatus.attachCount += attachedLinks.size();
+        
+        return attachStatus;
+    }
+    
     @Override
     public void actionDelete(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
@@ -580,12 +621,21 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
 
         AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
-
-        // TODO We assume here that the selected annotation layer corresponds to the type of the
-        // FS to be deleted. It would be more robust if we could get the layer from the FS itself.
-        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        AnnotationLayer layer = annotationService.getLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
+        if (layer.isReadonly()) {
+            error("Cannot delete an annotation on a read-only layer.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        if (checkAttachStatus(aTarget, state.getProject(), fs).readOnlyAttached) {
+            error("Cannot delete an annotation to which annotations on read-only layers attach.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
         // == DELETE ATTACHED RELATIONS ==
         // If the deleted FS is a span, we must delete all relations that
         // point to it directly or indirectly via the attachFeature.
@@ -593,7 +643,7 @@ public class AnnotationDetailEditorPanel
         // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFS attachedFs : getAttachedRels(jCas, fs, layer)) {
+            for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
                 jCas.getCas().removeFsFromIndexes(attachedFs);
                 info("The attached annotation for relation type [" + annotationService
                     .getLayer(attachedFs.getType().getName(), state.getProject()).getUiName()
@@ -611,18 +661,14 @@ public class AnnotationDetailEditorPanel
         // attachFeature in the other span must be set to null. Typical example: POS is deleted, so
         // the pos feature of Token must be set to null. This is a quick case, because we only need
         // to look at span annotations that have the same offsets as the FS to be deleted.
-        if (adapter instanceof SpanAdapter && layer.getAttachType() != null) {
+        if (layer.getAttachType() != null) {
             Type spanType = CasUtil.getType(jCas.getCas(), layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
                 .getName());
-
-            for (AnnotationFS attachedFs : selectAt(jCas.getCas(), spanType, fs.getBegin(),
-                fs.getEnd())) {
-                if (isSame(attachedFs.getFeatureValue(attachFeature), fs)) {
-                    attachedFs.setFeatureValue(attachFeature, null);
-                    LOG.debug("Unattached [" + attachFeature.getShortName() + "] on annotation ["
-                        + getAddr(attachedFs) + "]");
-                }
+            for (AnnotationFS attachedFs : getAttachedSpans(fs, layer)) {
+                attachedFs.setFeatureValue(attachFeature, null);
+                LOG.debug("Unattached [" + attachFeature.getShortName() + "] on annotation ["
+                    + getAddr(attachedFs) + "]");
             }
         }
 
@@ -1199,12 +1245,51 @@ public class AnnotationDetailEditorPanel
         clearFeatureEditorModels(aTarget);
     }
 
-    Set<AnnotationFS> getAttachedRels(JCas aJCas, AnnotationFS aFs, AnnotationLayer aLayer) {
+    private Set<AnnotationFS> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
+    {
+        CAS cas = aFs.getCAS();
+        Set<AnnotationFS> attachedLinks = new HashSet<>();
+        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        if (adapter instanceof SpanAdapter) {
+            for (AnnotationFeature linkFeature : annotationService
+                    .listAttachedLinkFeatures(aLayer)) {
+                Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
+
+                for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
+                    attachedLinks.add(linkFS);
+                }
+            }
+        }
+        return attachedLinks;
+    }
+    
+    private Set<AnnotationFS> getAttachedSpans(AnnotationFS aFs, AnnotationLayer aLayer)
+    {
+        CAS cas = aFs.getCAS();
+        Set<AnnotationFS> attachedSpans = new HashSet<>();
+        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        if (adapter instanceof SpanAdapter && aLayer.getAttachType() != null) {
+            Type spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
+            Feature attachFeature = spanType.getFeatureByBaseName(aLayer.getAttachFeature()
+                .getName());
+
+            for (AnnotationFS attachedFs : selectAt(cas, spanType, aFs.getBegin(), aFs.getEnd())) {
+                if (isSame(attachedFs.getFeatureValue(attachFeature), aFs)) {
+                    attachedSpans.add(attachedFs);
+                }
+            }
+        }
+        return attachedSpans;
+    }
+    
+    public Set<AnnotationFS> getAttachedRels(AnnotationFS aFs, AnnotationLayer aLayer)
+    {
+        CAS cas = aFs.getCAS();
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
         for (AnnotationLayer relationLayer : annotationService
             .listAttachedRelationLayers(aLayer)) {
             ArcAdapter relationAdapter = (ArcAdapter) annotationService.getAdapter(relationLayer);
-            Type relationType = CasUtil.getType(aJCas.getCas(), relationLayer.getName());
+            Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
                 .getSourceFeatureName());
             Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
@@ -1222,7 +1307,7 @@ public class AnnotationDetailEditorPanel
                     relationAdapter.getAttachFeatureName());
             }
 
-            for (AnnotationFS relationFS : CasUtil.select(aJCas.getCas(), relationType)) {
+            for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
                 // Here we get the annotations that the relation is pointing to in the UI
                 FeatureStructure sourceFS;
                 if (relationSourceAttachFeature != null) {
@@ -1342,5 +1427,10 @@ public class AnnotationDetailEditorPanel
 
     AnnotationSchemaService getAnnotationService() {
         return annotationService;
+    }
+    
+    public static class AttachStatus {
+        boolean readOnlyAttached;
+        int attachCount;
     }
 }
