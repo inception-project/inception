@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
@@ -92,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 

@@ -27,5 +27,4 @@
 
   <mvc:annotation-driven />
   <mvc:default-servlet-handler />
-  <mvc:resources mapping="/doc/**" location="classpath:/de/tudarmstadt/ukp/clarin/webanno/doc/" />
 </beans>
