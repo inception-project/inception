@@ -25,15 +25,25 @@
       </div>
       <form wicket:id="form">
         <div class="panel-body">
-          <div class="form-group" wicket:enclosure="content">
-            <label wicket:for="content"><wicket:label key="content"/></label>
-            <input wicket:id="content" type="file" multiple="multiple" />
-          </div>
-          <div class="checkbox" wicket:enclosure="generateUsers">
-            <label wicket:for="generateUsers">
-              <input wicket:id="generateUsers" type="checkbox"></input>
-              <wicket:label key="generateUsers" />
-            </label>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label wicket:for="content" class="col-sm-4 control-label">
+                <wicket:label key="content"/>
+              </label>
+              <div class="col-sm-8">
+                <input wicket:id="content" type="file" multiple />
+              </div>
+            </div>
+            <div class="form-group" wicket:enclosure="generateUsers">
+              <div class="col-sm-offset-4 col-sm-8">
+                <div class="checkbox">
+                  <label wicket:for="generateUsers">
+                    <input wicket:id="generateUsers" type="checkbox">
+                    <wicket:label key="generateUsers"/>
+                  </label>
+                </div>
+              </div>  
+            </div>
           </div>
         </div>        
         <div class="panel-footer text-right">
