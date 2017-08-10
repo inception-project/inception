@@ -21,11 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectCreator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
 import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -35,12 +38,12 @@ import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.persistence.NoResultException;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -58,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -74,6 +76,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -91,7 +95,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.RemoteApi
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import io.swagger.annotations.ApiOperation;
@@ -108,6 +114,7 @@ public class RemoteApiController2
     private static final String PROJECTS = "projects";
     private static final String DOCUMENTS = "documents";
     private static final String ANNOTATIONS = "annotations";
+    private static final String CURATION = "curation";
     
     private static final String PARAM_FILE = "file";
     private static final String PARAM_NAME = "name";
@@ -129,42 +136,31 @@ public class RemoteApiController2
     
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    @Resource(name = "documentService")
-    private DocumentService documentService;
+    private @Resource DocumentService documentService;
+    private @Resource CurationDocumentService curationService;
+    private @Resource ProjectService projectService;
+    private @Resource ImportExportService importExportService;
+    private @Resource AnnotationSchemaService annotationService;
+    private @Resource UserDao userRepository;
 
-    @Resource(name = "projectService")
-    private ProjectService projectService;
-
-    @Resource(name = "importExportService")
-    private ImportExportService importExportService;
-
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
-    
     @ExceptionHandler(value = RemoteApiException.class)
-    public void handleException(RemoteApiException aException, HttpServletResponse aResponse) 
+    public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
         throws IOException
     {
         LOG.error(aException.getMessage(), aException);
-        aResponse.setStatus(aException.getStatus().value());
-        try (PrintWriter out = aResponse.getWriter()) {
-            out.print(aException.getMessage());
-        }
+        return ResponseEntity.status(aException.getStatus())
+                .contentType(APPLICATION_JSON_UTF8)
+                .body(new RResponse<>(RMessage.ERROR, aException.getMessage()));
     }
 
     @ExceptionHandler
-    public void handleException(Exception aException, HttpServletResponse aResponse)
-        throws IOException
+    public ResponseEntity<RResponse<Void>> handleException(Exception aException) throws IOException
     {
         LOG.error(aException.getMessage(), aException);
-        aResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        try (PrintWriter out = aResponse.getWriter()) {
-            out.print("Internal server error: ");
-            out.print(aException.getMessage());
-        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(APPLICATION_JSON_UTF8)
+                .body(new RResponse<>(RMessage.ERROR, "Internal server error: " + 
+                        aException.getMessage()));
     }
 
     private User getCurrentUser()
@@ -252,8 +248,8 @@ public class RemoteApiController2
     @RequestMapping(
             value = ("/" + PROJECTS), 
             method = RequestMethod.GET, 
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)    
-    public ResponseEntity<List<RProject>> projectList()
+            produces = APPLICATION_JSON_UTF8_VALUE)    
+    public ResponseEntity<RResponse<List<RProject>>> projectList()
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -267,16 +263,16 @@ public class RemoteApiController2
         for (Project project : accessibleProjects) {
             projectList.add(new RProject(project));
         }
-        return ResponseEntity.ok(projectList);
+        return ResponseEntity.ok(new RResponse<>(projectList));
     }
     
     @ApiOperation(value = "Create a new project")
     @RequestMapping(
             value = ("/" + PROJECTS), 
             method = RequestMethod.POST, 
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)    
-    public ResponseEntity<RProject> projectCreate(
+            consumes = MULTIPART_FORM_DATA_VALUE,
+            produces = APPLICATION_JSON_UTF8_VALUE)    
+    public ResponseEntity<RResponse<RProject>> projectCreate(
             @RequestParam(PARAM_NAME) String aName, 
             @RequestParam(PARAM_CREATOR) Optional<String> aCreator,
             UriComponentsBuilder aUcb)
@@ -317,7 +313,7 @@ public class RemoteApiController2
         projectService.createProjectPermission(
                 new ProjectPermission(project, owner, PermissionLevel.USER));
         
-        RProject response = new RProject(project);
+        RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")
                 .buildAndExpand(project.getId()).toUri()).body(response);
     }
@@ -326,24 +322,23 @@ public class RemoteApiController2
     @RequestMapping(
             value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"), 
             method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)    
-    public ResponseEntity<RProject> projectRead(
+            produces = APPLICATION_JSON_UTF8_VALUE)    
+    public ResponseEntity<RResponse<RProject>> projectRead(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
 
-        RProject response = new RProject(project);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new RResponse<>(new RProject(project)));
     }
     
     @ApiOperation(value = "Delete an existing project")
     @RequestMapping(
             value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"), 
             method = RequestMethod.DELETE,
-            produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> projectDelete(
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<Void>> projectDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {
@@ -351,15 +346,17 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
         
         projectService.removeProject(project);
-        return ResponseEntity.ok("Project [" + aProjectId + "] deleted.");
+        
+        return ResponseEntity
+                .ok(new RResponse<>(RMessage.INFO, "Project [" + aProjectId + "] deleted."));
     }
 
     @ApiOperation(value = "List documents in a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
             method = RequestMethod.GET, 
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<List<RDocument>> documentList(
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<List<RDocument>>> documentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
     {               
@@ -373,16 +370,16 @@ public class RemoteApiController2
             documentList.add(new RDocument(document));
         }
         
-        return ResponseEntity.ok(documentList);
+        return ResponseEntity.ok(new RResponse<>(documentList));
     }
     
     @ApiOperation(value = "Create a new document in a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, 
             method = RequestMethod.POST,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<RDocument> documentCreate(
+            consumes = MULTIPART_FORM_DATA_VALUE,
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @RequestParam(value = PARAM_FILE) MultipartFile aFile,
             @RequestParam(value = PARAM_NAME) String aName,
@@ -413,7 +410,7 @@ public class RemoteApiController2
             documentService.uploadSourceDocument(is, document);
         }
         
-        RDocument rDocument = new RDocument(document);
+        RResponse<RDocument> rDocument = new RResponse<>(new RDocument(document));
         
         return ResponseEntity
                 .created(aUcb.path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}")
@@ -426,7 +423,7 @@ public class RemoteApiController2
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}",
             method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity documentRead(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
@@ -512,8 +509,8 @@ public class RemoteApiController2
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
                     + PARAM_DOCUMENT_ID + "}/", 
             method = RequestMethod.DELETE,
-            produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> documentDelete(
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<Void>> documentDelete(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
         throws Exception
@@ -524,8 +521,8 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         documentService.removeSourceDocument(doc);
         
-        return ResponseEntity
-                .ok("Document [" + aDocumentId + "] deleted from project [" + aProjectId + "].");
+        return ResponseEntity.ok(new RResponse<>(RMessage.INFO,
+                "Document [" + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }
     
     @ApiOperation(value = "List annotations of a document in a project")
@@ -533,8 +530,8 @@ public class RemoteApiController2
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS,
             method = RequestMethod.GET, 
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<List<RAnnotation>> annotationsList(
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<List<RAnnotation>>> annotationsList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
         throws Exception
@@ -551,7 +548,7 @@ public class RemoteApiController2
             annotationList.add(new RAnnotation(annotation));                                 
         }
         
-        return ResponseEntity.ok(annotationList);
+        return ResponseEntity.ok(new RResponse<>(annotationList));
     }
     
     @ApiOperation(value = "Create annotations for a document in a project")
@@ -559,9 +556,9 @@ public class RemoteApiController2
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
             method = RequestMethod.POST,
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<RAnnotation> annotationsCreate(
+            consumes = MULTIPART_FORM_DATA_VALUE,
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<RAnnotation>> annotationsCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
@@ -653,7 +650,7 @@ public class RemoteApiController2
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator, false);
         
-        RAnnotation response = new RAnnotation(anno);
+        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + ANNOTATIONS
                         + "{aid}")
@@ -666,7 +663,7 @@ public class RemoteApiController2
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}",
             method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
     public ResponseEntity<byte[]> annotationsRead(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
@@ -674,6 +671,31 @@ public class RemoteApiController2
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
         throws Exception
     {               
+        return readAnnotation(aProjectId, aDocumentId, aAnnotatorId, Mode.ANNOTATION, aFormat);
+
+    }
+    
+    @ApiOperation(value = "Get curated annotations of a document in a project", 
+            response = byte[].class)
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + CURATION,
+            method = RequestMethod.GET,
+            produces = { APPLICATION_OCTET_STREAM_VALUE, APPLICATION_JSON_UTF8_VALUE })
+    public ResponseEntity<byte[]> curationRead(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
+            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat)
+        throws Exception
+    {               
+        return readAnnotation(aProjectId, aDocumentId, WebAnnoConst.CURATION_USER, Mode.CURATION,
+                aFormat);
+    }
+
+    private ResponseEntity<byte[]> readAnnotation(long aProjectId, long aDocumentId,
+            String aAnnotatorId, Mode aMode, Optional<String> aFormat)
+        throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
+    {
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
                 
@@ -704,13 +726,15 @@ public class RemoteApiController2
         
         // In principle we don't need this call - but it makes sure that we check that the
         // annotation document entry is actually properly set up in the database.
-        AnnotationDocument anno = getAnnotation(doc, aAnnotatorId, false);
+        if (Mode.ANNOTATION.equals(aMode)) {
+            getAnnotation(doc, aAnnotatorId, false);
+        }
         
         // Create a temporary export file from the annotations
         File exportedAnnoFile = null;
         byte[] resource;
         try {
-            exportedAnnoFile = importExportService.exportAnnotationDocument(doc, anno.getUser(),
+            exportedAnnoFile = importExportService.exportAnnotationDocument(doc, aAnnotatorId,
                     writer, doc.getName(), Mode.ANNOTATION);
             resource = FileUtils.readFileToByteArray(exportedAnnoFile);
         }
@@ -721,7 +745,7 @@ public class RemoteApiController2
         }
 
         String filename = FilenameUtils.removeExtension(doc.getName());
-        filename += "-" + anno.getUser();
+        filename += "-" + aAnnotatorId;
         filename += "." + FilenameUtils.getExtension(doc.getName());
         
         HttpHeaders httpHeaders = new HttpHeaders();
