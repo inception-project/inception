@@ -49,10 +49,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-support</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-curation</artifactId>
     </dependency>
     <dependency>
