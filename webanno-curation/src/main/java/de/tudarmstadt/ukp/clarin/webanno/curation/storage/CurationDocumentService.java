@@ -65,6 +65,9 @@ public interface CurationDocumentService
     JCas readCurationCas(SourceDocument document)
         throws IOException;
 
+    void deleteCurationCas(SourceDocument document)
+            throws IOException;
+
     /**
      * Remove a curation annotation document from the file system, for this {@link SourceDocument}
      *

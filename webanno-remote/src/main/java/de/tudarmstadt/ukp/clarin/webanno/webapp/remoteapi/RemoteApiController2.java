@@ -676,7 +676,7 @@ public class RemoteApiController2
 
     }
     
-    @ApiOperation(value = "Delete a document from a project")
+    @ApiOperation(value = "Delete a user's annotations of one document from a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
                     + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", 
@@ -701,7 +701,6 @@ public class RemoteApiController2
                         + "] deleted from project [" + aProjectId + "]."));
     }
     
-    
     @ApiOperation(value = "Get curated annotations of a document in a project", 
             response = byte[].class)
     @RequestMapping(
@@ -718,6 +717,28 @@ public class RemoteApiController2
         return readAnnotation(aProjectId, aDocumentId, WebAnnoConst.CURATION_USER, Mode.CURATION,
                 aFormat);
     }
+    
+    @ApiOperation(value = "Delete a user's annotations of one document from a project")
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
+                    + PARAM_DOCUMENT_ID + "}/" + CURATION, 
+            method = RequestMethod.DELETE,
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<Void>> curationDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId)
+        throws Exception
+    {               
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+        
+        SourceDocument doc = getDocument(project, aDocumentId);
+        curationService.deleteCurationCas(doc);
+        
+        return ResponseEntity
+                .ok(new RResponse<>(RMessageLevel.INFO, "Curated annotations for document ["
+                        + aDocumentId + "] deleted from project [" + aProjectId + "]."));
+    }    
 
     private ResponseEntity<byte[]> readAnnotation(long aProjectId, long aDocumentId,
             String aAnnotatorId, Mode aMode, Optional<String> aFormat)
