@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectCreator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.ERROR;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel.INFO;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
@@ -87,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
@@ -98,7 +101,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.RemoteApi
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -122,6 +124,7 @@ public class RemoteApiController2
     private static final String PARAM_FILE = "file";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_FORMAT = "format";
+    private static final String PARAM_STATE = "state";
     private static final String PARAM_CREATOR = "creator";
     private static final String PARAM_PROJECT_ID = "projectId";
     private static final String PARAM_ANNOTATOR_ID = "userId";
@@ -153,7 +156,7 @@ public class RemoteApiController2
         LOG.error(aException.getMessage(), aException);
         return ResponseEntity.status(aException.getStatus())
                 .contentType(APPLICATION_JSON_UTF8)
-                .body(new RResponse<>(RMessageLevel.ERROR, aException.getMessage()));
+                .body(new RResponse<>(ERROR, aException.getMessage()));
     }
 
     @ExceptionHandler
@@ -162,7 +165,7 @@ public class RemoteApiController2
         LOG.error(aException.getMessage(), aException);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
                 .contentType(APPLICATION_JSON_UTF8)
-                .body(new RResponse<>(RMessageLevel.ERROR, "Internal server error: " + 
+                .body(new RResponse<>(ERROR, "Internal server error: " + 
                         aException.getMessage()));
     }
 
@@ -351,7 +354,7 @@ public class RemoteApiController2
         projectService.removeProject(project);
         
         return ResponseEntity
-                .ok(new RResponse<>(RMessageLevel.INFO, "Project [" + aProjectId + "] deleted."));
+                .ok(new RResponse<>(INFO, "Project [" + aProjectId + "] deleted."));
     }
 
     @ApiOperation(value = "List documents in a project")
@@ -387,6 +390,7 @@ public class RemoteApiController2
             @RequestParam(value = PARAM_FILE) MultipartFile aFile,
             @RequestParam(value = PARAM_NAME) String aName,
             @RequestParam(value = PARAM_FORMAT) String aFormat,
+            @RequestParam(value = PARAM_STATE) Optional<SourceDocumentState> aState,
             UriComponentsBuilder aUcb)
         throws Exception
     {               
@@ -408,12 +412,22 @@ public class RemoteApiController2
         document.setName(aName);
         document.setFormat(aFormat);
         
+        // Set state if one was provided
+        if (aState.isPresent()) {
+            document.setState(aState.get());
+        }
+        
         // Import source document to the project repository folder
         try (InputStream is = aFile.getInputStream()) {
             documentService.uploadSourceDocument(is, document);
         }
         
         RResponse<RDocument> rDocument = new RResponse<>(new RDocument(document));
+        
+        if (aState.isPresent()) {
+            rDocument.addMessage(INFO,
+                    "State of document [" + document.getId() + "] set to [" + aState.get() + "]");
+        }
         
         return ResponseEntity
                 .created(aUcb.path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}")
@@ -524,7 +538,7 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         documentService.removeSourceDocument(doc);
         
-        return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO,
+        return ResponseEntity.ok(new RResponse<>(INFO,
                 "Document [" + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }
     
@@ -567,6 +581,7 @@ public class RemoteApiController2
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
             @RequestParam(value = PARAM_FILE) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(value = PARAM_STATE) Optional<AnnotationDocumentState> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
@@ -579,8 +594,20 @@ public class RemoteApiController2
         
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator, false);
+
+        // Set state if one was provided
+        if (aState.isPresent()) {
+            anno.setState(aState.get());
+            documentService.createAnnotationDocument(anno);
+        }
         
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        
+        if (aState.isPresent()) {
+            response.addMessage(INFO, "State of annotations of user [" + aAnnotatorId
+                    + "] on document [" + document.getId() + "] set to [" + aState.get() + "]");
+        }
+        
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + ANNOTATIONS
                         + "{aid}")
@@ -625,7 +652,7 @@ public class RemoteApiController2
         documentService.removeAnnotationDocument(anno);
         documentService.deleteAnnotationCas(anno);
         
-        return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO,
+        return ResponseEntity.ok(new RResponse<>(INFO,
                 "Annotations of user [" + aAnnotatorId + "] on document [" + aDocumentId
                         + "] deleted from project [" + aProjectId + "]."));
     }
@@ -696,7 +723,7 @@ public class RemoteApiController2
         curationService.deleteCurationCas(doc);
         
         return ResponseEntity
-                .ok(new RResponse<>(RMessageLevel.INFO, "Curated annotations for document ["
+                .ok(new RResponse<>(INFO, "Curated annotations for document ["
                         + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }    
 

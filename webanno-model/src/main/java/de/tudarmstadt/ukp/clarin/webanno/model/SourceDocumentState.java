@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -28,11 +30,13 @@ public enum SourceDocumentState
     /**
      * No annotation document has been created for this document
      */
+    @JsonProperty("NEW")
     NEW("NEW", "black"),
     
     /**
      * At least one annotation document has been created for the document
      */
+    @JsonProperty("ANNOTATION-IN-PROGRESS")
     ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
     
     /**
@@ -44,17 +48,20 @@ public enum SourceDocumentState
      *             marked their annotation documents as done. This is nothing we can record
      *             statically in the source document.
      */
+    @JsonProperty("ANNOTATION-COMPLETE")
     ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
     
     /**
      * curator claims to have curated all annotations
      */
+    @JsonProperty("CURATION-COMPLETE")
     CURATION_FINISHED("CURATION_FINISHED", "red"),
     
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
+    @JsonProperty("CURATION-IN-PROGRESS")
     CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
     
     private final String id;
