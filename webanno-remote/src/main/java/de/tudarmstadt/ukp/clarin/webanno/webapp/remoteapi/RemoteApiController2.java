@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -572,81 +574,8 @@ public class RemoteApiController2
         Project project = getProject(aProjectId);
         SourceDocument document = getDocument(project, aDocumentId);
         AnnotationDocument anno = getAnnotation(document, aAnnotatorId, true);
-    
-        // Check if the format is supported
-        String format = aFormat.orElse(FORMAT_DEFAULT);
-        Map<String, Class<CollectionReader>> readableFormats = importExportService
-                .getReadableFormats();
-        if (readableFormats.get(format) == null) {
-            throw new UnsupportedFormatException(
-                    "Format [%s] not supported. Acceptable formats are %s.", format,
-                    readableFormats.keySet());
-        }
         
-        // Convert the uploaded annotation document into a CAS
-        File tmpFile = null;
-        JCas annotationCas;
-        try {
-            tmpFile = File.createTempFile("upload", ".bin");
-            aFile.transferTo(tmpFile);
-            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
-        }
-        finally {
-            if (tmpFile != null) {
-                FileUtils.forceDelete(tmpFile);
-            }
-        }
-        
-        // Check if the uploaded file is compatible with the source document. They are compatible
-        // if the text is the same and if all the token and sentence annotations have the same
-        // offsets.
-        JCas initialCas = documentService.createOrReadInitialCas(document);
-        String initialText = initialCas.getDocumentText();
-        String annotationText = annotationCas.getDocumentText();
-        
-        // If any of the texts contains tailing line breaks, we ignore that. We assume at the moment
-        // that nobody will have created annotations over that trailing line breaks.
-        initialText = StringUtils.chomp(initialText);
-        annotationText = StringUtils.chomp(annotationText);
-        
-        if (ObjectUtils.notEqual(initialText, annotationText)) {
-            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
-            String expected = initialText.substring(diffIndex,
-                    Math.min(initialText.length(), diffIndex + 20));
-            String actual = annotationText.substring(diffIndex,
-                    Math.min(annotationText.length(), diffIndex + 20));
-            throw new IncompatibleDocumentException(
-                    "Text of annotation document does not match text of source document at offset "
-                            + "[%d]. Expected [%s] but found [%s].",
-                    diffIndex, expected, actual);
-        }
-        
-        // Just in case we really had to chomp off a trailing line break from the annotation CAS,
-        // make sure we copy over the proper text from the initial CAS
-        // NOT AT HOME THIS YOU SHOULD TRY
-        // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
-        forceSetFeatureValue(annotationCas.getSofa(), CAS.FEATURE_BASE_NAME_SOFASTRING,
-                initialCas.getDocumentText());
-        FSUtil.setFeature(annotationCas.getDocumentAnnotationFs(), CAS.FEATURE_BASE_NAME_END,
-                initialCas.getDocumentText().length());
-        
-        Collection<Sentence> annotationSentences = select(annotationCas, Sentence.class);
-        Collection<Sentence> initialSentences = select(initialCas, Sentence.class);
-        if (annotationSentences.size() != initialSentences.size()) {
-            throw new IncompatibleDocumentException(
-                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
-                    initialSentences.size(), annotationSentences.size());
-        }
-        assertCompatibleOffsets(initialSentences, annotationSentences);
-        
-        Collection<Token> annotationTokens = select(annotationCas, Token.class);
-        Collection<Token> initialTokens = select(initialCas, Token.class);
-        if (annotationTokens.size() != initialTokens.size()) {
-            throw new IncompatibleDocumentException(
-                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
-                    initialSentences.size(), annotationSentences.size());
-        }
-        assertCompatibleOffsets(initialTokens, annotationTokens);
+        JCas annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
         
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator, false);
@@ -699,6 +628,37 @@ public class RemoteApiController2
         return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO,
                 "Annotations of user [" + aAnnotatorId + "] on document [" + aDocumentId
                         + "] deleted from project [" + aProjectId + "]."));
+    }
+    
+    @ApiOperation(value = "Create curation for a document in a project")
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
+                    + PARAM_DOCUMENT_ID + "}/" + CURATION,
+            method = RequestMethod.POST,
+            consumes = MULTIPART_FORM_DATA_VALUE,
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<RAnnotation>> curationCreate(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
+            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
+            UriComponentsBuilder aUcb) 
+        throws Exception
+    {
+        Project project = getProject(aProjectId);
+        SourceDocument document = getDocument(project, aDocumentId);
+        
+        JCas annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        
+        // If they are compatible, then we can store the new annotations
+        curationService.writeCurationCas(annotationCas, document, false);
+        
+        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(
+                WebAnnoConst.CURATION_USER, AnnotationDocumentState.NEW, new Date()));
+        return ResponseEntity.created(aUcb
+                .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
+                .buildAndExpand(project.getId(), document.getId()).toUri())
+                .body(response);
     }
     
     @ApiOperation(value = "Get curated annotations of a document in a project", 
@@ -801,6 +761,91 @@ public class RemoteApiController2
         httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         
         return new ResponseEntity<>(resource, httpHeaders, OK);
+    }
+    
+    private JCas createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
+            Optional<String> aFormat)
+        throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
+    {
+        Project project = getProject(aProjectId);
+        SourceDocument document = getDocument(project, aDocumentId);
+    
+        // Check if the format is supported
+        String format = aFormat.orElse(FORMAT_DEFAULT);
+        Map<String, Class<CollectionReader>> readableFormats = importExportService
+                .getReadableFormats();
+        if (readableFormats.get(format) == null) {
+            throw new UnsupportedFormatException(
+                    "Format [%s] not supported. Acceptable formats are %s.", format,
+                    readableFormats.keySet());
+        }
+        
+        // Convert the uploaded annotation document into a CAS
+        File tmpFile = null;
+        JCas annotationCas;
+        try {
+            tmpFile = File.createTempFile("upload", ".bin");
+            aFile.transferTo(tmpFile);
+            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
+        }
+        finally {
+            if (tmpFile != null) {
+                FileUtils.forceDelete(tmpFile);
+            }
+        }
+        
+        // Check if the uploaded file is compatible with the source document. They are compatible
+        // if the text is the same and if all the token and sentence annotations have the same
+        // offsets.
+        JCas initialCas = documentService.createOrReadInitialCas(document);
+        String initialText = initialCas.getDocumentText();
+        String annotationText = annotationCas.getDocumentText();
+        
+        // If any of the texts contains tailing line breaks, we ignore that. We assume at the moment
+        // that nobody will have created annotations over that trailing line breaks.
+        initialText = StringUtils.chomp(initialText);
+        annotationText = StringUtils.chomp(annotationText);
+        
+        if (ObjectUtils.notEqual(initialText, annotationText)) {
+            int diffIndex = StringUtils.indexOfDifference(initialText, annotationText);
+            String expected = initialText.substring(diffIndex,
+                    Math.min(initialText.length(), diffIndex + 20));
+            String actual = annotationText.substring(diffIndex,
+                    Math.min(annotationText.length(), diffIndex + 20));
+            throw new IncompatibleDocumentException(
+                    "Text of annotation document does not match text of source document at offset "
+                            + "[%d]. Expected [%s] but found [%s].",
+                    diffIndex, expected, actual);
+        }
+        
+        // Just in case we really had to chomp off a trailing line break from the annotation CAS,
+        // make sure we copy over the proper text from the initial CAS
+        // NOT AT HOME THIS YOU SHOULD TRY
+        // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
+        forceSetFeatureValue(annotationCas.getSofa(), CAS.FEATURE_BASE_NAME_SOFASTRING,
+                initialCas.getDocumentText());
+        FSUtil.setFeature(annotationCas.getDocumentAnnotationFs(), CAS.FEATURE_BASE_NAME_END,
+                initialCas.getDocumentText().length());
+        
+        Collection<Sentence> annotationSentences = select(annotationCas, Sentence.class);
+        Collection<Sentence> initialSentences = select(initialCas, Sentence.class);
+        if (annotationSentences.size() != initialSentences.size()) {
+            throw new IncompatibleDocumentException(
+                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
+                    initialSentences.size(), annotationSentences.size());
+        }
+        assertCompatibleOffsets(initialSentences, annotationSentences);
+        
+        Collection<Token> annotationTokens = select(annotationCas, Token.class);
+        Collection<Token> initialTokens = select(initialCas, Token.class);
+        if (annotationTokens.size() != initialTokens.size()) {
+            throw new IncompatibleDocumentException(
+                    "Expected [%d] sentences, but annotation document contains [%d] sentences.",
+                    initialSentences.size(), annotationSentences.size());
+        }
+        assertCompatibleOffsets(initialTokens, annotationTokens);
+        
+        return annotationCas;
     }
     
     private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,
