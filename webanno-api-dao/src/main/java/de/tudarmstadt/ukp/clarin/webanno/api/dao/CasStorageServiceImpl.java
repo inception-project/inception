@@ -398,6 +398,16 @@ public class CasStorageServiceImpl
     }
     
     @Override
+    public boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException
+    {
+        if (isCacheEnabled()) {
+            getCache().remove(JCasCacheKey.of(aDocument, aUsername));
+        }
+        
+        return new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
+    }
+    
+    @Override
     public void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas)
     {
         analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUsername,

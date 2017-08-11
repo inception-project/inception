@@ -316,6 +316,9 @@ public interface DocumentService
     JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
         throws IOException;
     
+    void deleteAnnotationCas(AnnotationDocument annotationDocument)
+        throws IOException;
+    
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
      * necessary. If necessary, no annotation document exists, one is created. The source document

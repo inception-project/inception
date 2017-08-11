@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectAdmin;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProjectCreator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isSuperAdmin;
 import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -60,7 +62,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -157,7 +158,7 @@ public class RemoteApiController2
     public ResponseEntity<RResponse<Void>> handleException(Exception aException) throws IOException
     {
         LOG.error(aException.getMessage(), aException);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR)
                 .contentType(APPLICATION_JSON_UTF8)
                 .body(new RResponse<>(RMessageLevel.ERROR, "Internal server error: " + 
                         aException.getMessage()));
@@ -462,7 +463,7 @@ public class RemoteApiController2
             httpHeaders.set("Content-Disposition",
                     "attachment; filename=\"" + doc.getName() + "\"");
             return new ResponseEntity<org.springframework.core.io.Resource>(resource, httpHeaders,
-                    HttpStatus.OK);
+                    OK);
         }
         else {
             // Export a converted file - here we first export to a local temporary file and then
@@ -494,7 +495,7 @@ public class RemoteApiController2
                 httpHeaders.set("Content-Disposition",
                         "attachment; filename=\"" + exportedFile.getName() + "\"");
                 
-                return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
+                return new ResponseEntity<>(resource, httpHeaders, OK);
             }
             finally {
                 if (exportedFile != null) {
@@ -675,6 +676,32 @@ public class RemoteApiController2
 
     }
     
+    @ApiOperation(value = "Delete a document from a project")
+    @RequestMapping(
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", 
+            method = RequestMethod.DELETE,
+            produces = APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<RResponse<Void>> annotationsDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId)
+        throws Exception
+    {               
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+        
+        SourceDocument doc = getDocument(project, aDocumentId);
+        AnnotationDocument anno = getAnnotation(doc, aAnnotatorId, false);
+        documentService.removeAnnotationDocument(anno);
+        documentService.deleteAnnotationCas(anno);
+        
+        return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO,
+                "Annotations of user [" + aAnnotatorId + "] on document [" + aDocumentId
+                        + "] deleted from project [" + aProjectId + "]."));
+    }
+    
+    
     @ApiOperation(value = "Get curated annotations of a document in a project", 
             response = byte[].class)
     @RequestMapping(
@@ -752,7 +779,7 @@ public class RemoteApiController2
         httpHeaders.setContentLength(resource.length);
         httpHeaders.set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         
-        return new ResponseEntity<>(resource, httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(resource, httpHeaders, OK);
     }
     
     private static <T extends AnnotationFS> void assertCompatibleOffsets(Collection<T> aExpected,

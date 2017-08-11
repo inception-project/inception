@@ -62,6 +62,9 @@ public interface CasStorageService
     JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException;
     
+    boolean deleteCas(SourceDocument aDocument, String aUsername)
+        throws IOException;
+    
     File getAnnotationFolder(SourceDocument aDocument)
             throws IOException;
     
