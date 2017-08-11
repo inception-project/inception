@@ -94,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IncompatibleDocumentException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.ObjectExistsException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.ObjectNotFoundException;
@@ -414,7 +415,19 @@ public class RemoteApiController2
         
         // Set state if one was provided
         if (aState.isPresent()) {
-            document.setState(aState.get());
+            switch (aState.get()) {
+            case NEW: // fallthrough
+            case ANNOTATION_IN_PROGRESS: // fallthrough
+            case ANNOTATION_FINISHED: // fallthrough
+                document.setState(aState.get());
+                documentService.createSourceDocument(document);
+                break;
+            case CURATION_IN_PROGRESS: // fallthrough
+            case CURATION_FINISHED:
+            default: 
+                throw new IllegalObjectStateException(
+                        "State [%s] not valid when uploading a curation.", aState.get());
+            }
         }
         
         // Import source document to the project repository folder
@@ -669,6 +682,7 @@ public class RemoteApiController2
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @RequestParam(value = PARAM_FILE) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
+            @RequestParam(value = PARAM_STATE) Optional<SourceDocumentState> aState,
             UriComponentsBuilder aUcb) 
         throws Exception
     {
@@ -679,6 +693,26 @@ public class RemoteApiController2
         
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
+
+        if (aState.isPresent()) {
+            switch (aState.get()) {
+            case CURATION_IN_PROGRESS: // fallthrough
+            case CURATION_FINISHED:
+                document.setState(aState.get());
+                documentService.createSourceDocument(document);
+                break;
+            case NEW: // fallthrough
+            case ANNOTATION_IN_PROGRESS: // fallthrough
+            case ANNOTATION_FINISHED: // fallthrough
+            default: 
+                throw new IllegalObjectStateException(
+                        "State [%s] not valid when uploading a curation.", aState.get());
+            }
+        }
+        else {
+            document.setState(SourceDocumentState.CURATION_IN_PROGRESS);
+            documentService.createSourceDocument(document);
+        }
         
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(
                 WebAnnoConst.CURATION_USER, AnnotationDocumentState.NEW, new Date()));
