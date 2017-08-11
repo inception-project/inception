@@ -17,14 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
 
-public class RMessage
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public enum RMessageLevel
 {
-    public RMessageLevel level;
-    public String message;
+    @JsonProperty("DEBUG")
+    DEBUG,
     
-    public RMessage(RMessageLevel aLevel, String aMsg)
-    {
-        level = aLevel;
-        message = aMsg;
-    }
+    @JsonProperty("INFO")
+    INFO,
+
+    @JsonProperty("WARN")
+    WARN,
+
+    @JsonProperty("ERROR")
+    ERROR;
 }

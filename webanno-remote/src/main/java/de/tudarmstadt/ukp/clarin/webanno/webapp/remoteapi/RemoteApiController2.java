@@ -95,7 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.RemoteApi
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RDocument;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RMessageLevel;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model.RResponse;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -150,7 +150,7 @@ public class RemoteApiController2
         LOG.error(aException.getMessage(), aException);
         return ResponseEntity.status(aException.getStatus())
                 .contentType(APPLICATION_JSON_UTF8)
-                .body(new RResponse<>(RMessage.ERROR, aException.getMessage()));
+                .body(new RResponse<>(RMessageLevel.ERROR, aException.getMessage()));
     }
 
     @ExceptionHandler
@@ -159,7 +159,7 @@ public class RemoteApiController2
         LOG.error(aException.getMessage(), aException);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(APPLICATION_JSON_UTF8)
-                .body(new RResponse<>(RMessage.ERROR, "Internal server error: " + 
+                .body(new RResponse<>(RMessageLevel.ERROR, "Internal server error: " + 
                         aException.getMessage()));
     }
 
@@ -348,7 +348,7 @@ public class RemoteApiController2
         projectService.removeProject(project);
         
         return ResponseEntity
-                .ok(new RResponse<>(RMessage.INFO, "Project [" + aProjectId + "] deleted."));
+                .ok(new RResponse<>(RMessageLevel.INFO, "Project [" + aProjectId + "] deleted."));
     }
 
     @ApiOperation(value = "List documents in a project")
@@ -521,7 +521,7 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         documentService.removeSourceDocument(doc);
         
-        return ResponseEntity.ok(new RResponse<>(RMessage.INFO,
+        return ResponseEntity.ok(new RResponse<>(RMessageLevel.INFO,
                 "Document [" + aDocumentId + "] deleted from project [" + aProjectId + "]."));
     }
     

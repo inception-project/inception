@@ -34,7 +34,7 @@ public class RResponse<T>
         // Nothing to do
     }
 
-    public RResponse(String aLevel, String aMessage)
+    public RResponse(RMessageLevel aLevel, String aMessage)
     {
         addMessage(aLevel, aMessage);
     }
@@ -54,7 +54,7 @@ public class RResponse<T>
         return content;
     }
     
-    public void addMessage(String aLevel, String aMessage)
+    public void addMessage(RMessageLevel aLevel, String aMessage)
     {
         messages.add(new RMessage(aLevel, aMessage));
     }
