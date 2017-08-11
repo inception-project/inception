@@ -89,32 +89,34 @@
         </div>
       </div>
 
-      <div class="scrolling flex-content flex-v-container flex-gutter">
-        <div class="panel panel-primary">
-          <div class="panel-heading">
-            <h3 class="panel-title">Annotation</h3>
+      <div class="flex-content flex-v-container">
+        <div class="scrolling flex-content flex-v-container flex-gutter">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Annotation</h3>
+            </div>
+            <div class="h-scrolling panel-body text-center">
+              <div wicket:id="mergeView"></div>
+            </div>
           </div>
-          <div class="h-scrolling panel-body text-center">
-            <div wicket:id="mergeView"></div>
-          </div>
-        </div>
-
-        <div class="panel panel-default" wicket:enclosure="sentencesListView">
-          <div class="panel-heading">
-            <h3 class="panel-title">Invisible annotations on other pages</h3>
-          </div>
-          <div class="panel-body">
-            <span wicket:id="corssSentAnnoView">
-              <span wicket:id="crossSentAnnoList">
-                <span wicket:id="crossAnnoSent"></span>
+  
+          <div class="panel panel-default" wicket:enclosure="sentencesListView">
+            <div class="panel-heading">
+              <h3 class="panel-title">Invisible annotations on other pages</h3>
+            </div>
+            <div class="panel-body">
+              <span wicket:id="corssSentAnnoView">
+                <span wicket:id="crossSentAnnoList">
+                  <span wicket:id="crossAnnoSent"></span>
+                </span>
               </span>
-            </span>
+            </div>
           </div>
-        </div>
-        
-        <div wicket:id="suggestionViewPanel">
-          <div class="sentence-list-view" wicket:id="sentenceListView">
-            <div wicket:id="sentence"></div>
+          
+          <div wicket:id="suggestionViewPanel">
+            <div class="sentence-list-view" wicket:id="sentenceListView">
+              <div wicket:id="sentence"></div>
+            </div>
           </div>
         </div>
       </div>
