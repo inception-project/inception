@@ -265,3 +265,12 @@ div.left-tabpanel div.tab-row a:visited.active {
 div.left-tabpanel div.tab-row a:hover {
     background:#fff;
 }
+
+/* Remove left border from panel so it attaches nicely to the sidebar controls */
+.left-tabpanel > .tab-panel > .flex-v-container > .panel,
+.left-tabpanel > .tab-panel > .flex-h-container > .panel {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius:  0px;
+  border-left: none;
+}
+
