@@ -98,6 +98,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
+        <artifactId>uimaj-json</artifactId>
+        <version>${uima.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.uima</groupId>
         <artifactId>uimaj-document-annotation</artifactId>
         <version>${uima.version}</version>
       </dependency>
@@ -129,6 +134,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-doc</artifactId>
+        <version>3.3.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-io-json</artifactId>
         <version>3.3.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -683,6 +693,7 @@
     <!-- Build -->
     <module>webanno-build</module>
     <!-- IO -->
+    <module>webanno-io-json</module>
     <module>webanno-io-tcf</module>
     <module>webanno-io-tei</module>
     <module>webanno-io-text</module>
