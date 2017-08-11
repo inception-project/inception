@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryScrollbarWidthReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -407,6 +408,7 @@ public class BratAnnotationEditor
         aResponse.render(forReference(JQuerySvgResourceReference.get()));
         aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(forReference(JQueryJsonResourceReference.get()));
+        aResponse.render(forReference(JQueryScrollbarWidthReference.get()));
         
         // BRAT helpers
         aResponse.render(forReference(BratConfigurationResourceReference.get()));

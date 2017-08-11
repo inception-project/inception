@@ -38,10 +38,6 @@ var Visualizer = (function($, window, undefined) {
 	var fontZoom = 100;
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
 
-// WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
-	var scrollBarWidth = 15; // FIXME
-// WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
-	
     var DocumentData = function(text) {
       this.text = text;
       this.chunks = [];
@@ -1625,13 +1621,13 @@ Util.profileStart('init');
 */
         // establish the width according to the enclosing element
         baseCanvasWidth = that.forceWidth || $svgDiv.width();
-        canvasWidth = that.forceWidth || ($svgDiv.width() - scrollBarWidth);
+        canvasWidth = that.forceWidth || ($svgDiv.width() - $.scrollbarWidth());
 // WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
         
         
 // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 
         // Take hairline border of SVG into account
-        canvasWidth -= 2;
+        canvasWidth -= 4;
 // WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered 
 
         var defs = addHeaderAndDefs();
@@ -3561,7 +3557,7 @@ Util.profileStart('finish');
         // WEBANNO BEGIN #331 - Interface jumps to the top
         // Originally, this code was within the oversized > 0 block above, but we moved it here
         // to prevent erratic jumping
-        $svgDiv.height(y+2); // Need to take the hairline border into account here
+        $svgDiv.height(y + 4); // Need to take the hairline border into account here
         // WEBANNO END #331 - Interface jumps to the top
         
         // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
