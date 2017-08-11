@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.json;
 
 import static de.tudarmstadt.ukp.dkpro.core.testing.IOTestRunner.testOneWay;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2000Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
+@Ignore
 public class JsonWriterTest
 {
     @Test
