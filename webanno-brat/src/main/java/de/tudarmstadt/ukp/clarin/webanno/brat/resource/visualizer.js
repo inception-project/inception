@@ -3774,11 +3774,20 @@ Util.profileStart('before render');
               equivSelector.push('[data-arc-ed^="' + equiv + '"]');
             });
 
+// BEGIN WEBANNO EXTENSION - #246 - Highlighting in curation confused
+/*
             highlightArcs = $svg.
                 find(equivSelector.join(', ')).
                 parent().
                 add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
                 addClass('highlight');
+*/
+            highlightArcs = $svg.
+                find(equivSelector.join(', ')).
+                parent().
+                add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, $svg).
+                addClass('highlight');
+// END WEBANNO EXTENSION - #246 - Highlighting in curation confused 
 
             $.each(spans, function(spanId, dummy) {
                 spanIds.push('rect[data-span-id="' + spanId + '"]');
