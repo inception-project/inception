@@ -17,20 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static org.apache.uima.fit.util.JCasUtil.select;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.uima.jcas.JCas;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -38,14 +28,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Covers information about the state of the annotation editor component that is relevant across
  * cycles.
  */
 public interface AnnotatorState
-    extends Serializable, AnnotatorViewState
+    extends Serializable, AnnotatorViewState, AnnotatorDocumentNavigation
 {
     void reset();
 
@@ -103,8 +92,10 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // Document
     // ---------------------------------------------------------------------------------------------
+    @Override
     SourceDocument getDocument();
 
+    @Override
     void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
 
     int getDocumentIndex();
@@ -114,6 +105,7 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // Project
     // ---------------------------------------------------------------------------------------------
+    @Override
     Project getProject();
 
     void setProject(Project aProject);
@@ -134,6 +126,7 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // Selection
     // ---------------------------------------------------------------------------------------------
+    @Override
     Selection getSelection();
 
     void setArmedSlot(AnnotationFeature aName, int aIndex);
@@ -151,6 +144,7 @@ public interface AnnotatorState
     // ---------------------------------------------------------------------------------------------
     // User preferences
     // ---------------------------------------------------------------------------------------------
+    @Override
     AnnotationPreference getPreferences();
 
     void setPreferences(AnnotationPreference aPreferences);
@@ -170,162 +164,4 @@ public interface AnnotatorState
     // Access to transient context
     // ---------------------------------------------------------------------------------------------
     TransientActionContext getAction();
-
-    // ---------------------------------------------------------------------------------------------
-    // Navigation within or across a document
-    // ---------------------------------------------------------------------------------------------
-    default void moveToPreviousDocument(List<SourceDocument> aDocuments)
-    {
-        // Index of the current source document in the list
-        int currentDocumentIndex = aDocuments.indexOf(getDocument());
-
-        // If the first the document
-        if (currentDocumentIndex <= 0) {
-            throw new IllegalStateException("This is the first document!");
-        }
-
-        setDocument(aDocuments.get(currentDocumentIndex - 1), aDocuments);
-    }
-
-    default void moveToNextDocument(List<SourceDocument> aDocuments)
-    {
-        // Index of the current source document in the list
-        int currentDocumentIndex = aDocuments.indexOf(getDocument());
-
-        // If the last document
-        if (currentDocumentIndex >= aDocuments.size() - 1) {
-            throw new IllegalStateException("This is the last document!");
-        }
-
-        setDocument(aDocuments.get(currentDocumentIndex + 1), aDocuments);
-    }
-
-    default void moveToPreviousPage(JCas aJCas)
-    {
-        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
-
-        int previousSentenceAddress = WebAnnoCasUtil.getPreviousDisplayWindowSentenceBeginAddress(
-                aJCas, getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
-        // Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same
-        // address
-        // if there are not much sentences to go back to as defined in windowSize
-        if (previousSentenceAddress == getFirstVisibleUnitAddress() &&
-        // Check whether it's not the beginning of document
-                getFirstVisibleUnitAddress() != firstSentenceAddress) {
-            previousSentenceAddress = firstSentenceAddress;
-        }
-
-        if (getFirstVisibleUnitAddress() == previousSentenceAddress) {
-            throw new IllegalStateException("This is First Page!");
-        }
-
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, previousSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-    }
-
-    default void moveToNextPage(JCas aJCas)
-    {
-        int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(aJCas,
-                getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
-
-        if (getFirstVisibleUnitAddress() == nextSentenceAddress) {
-            throw new IllegalStateException("This is last page!");
-        }
-
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, nextSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-    }
-
-    default void moveToFirstPage(JCas aJCas)
-    {
-        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
-
-        if (firstSentenceAddress == getFirstVisibleUnitAddress()) {
-            throw new IllegalStateException("This is first page!");
-        }
-
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, firstSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-    }
-
-    default void moveToLastPage(JCas aJCas)
-    {
-        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                .getLastDisplayWindowFirstSentenceAddress(aJCas, getPreferences().getWindowSize());
-        if (lastDisplayWindowBeginingSentenceAddress == getFirstVisibleUnitAddress()) {
-            throw new IllegalStateException("This is last page!");
-        }
-
-        Sentence sentence = selectByAddr(aJCas, Sentence.class,
-                lastDisplayWindowBeginingSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
-    }
-
-    default void moveToUnit(JCas aJCas, int aIndex)
-    {
-        // Index is 1-based!
-        // The code below sets the focus unit index explicitly - see comment on getSentenceNumber
-        // in moveToOffset for an explanation. We already know the index here, so no need to
-        // calculate it (wrongly) using getSentenceNumber.
-        if (aIndex <= 0) {
-            moveToOffset(aJCas, 0);
-            setFocusUnitIndex(1);
-            return;
-        }
-        
-        List<Sentence> units = new ArrayList<>(select(aJCas, Sentence.class));
-        if (aIndex > units.size()) {
-            moveToOffset(aJCas, units.get(units.size() - 1).getBegin());
-            setFocusUnitIndex(units.size());
-        }
-        else {
-            moveToOffset(aJCas, units.get(aIndex - 1).getBegin());
-            setFocusUnitIndex(aIndex);
-        }
-    }
-    
-    default void moveToOffset(JCas aJCas, int aOffset)
-    {
-        // Fetch the first sentence on screen or first sentence
-        Sentence sentence;
-        if (getFirstVisibleUnitAddress() > -1) {
-            sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());
-        }
-        else {
-            sentence = getFirstSentence(aJCas);
-        }
-        
-        // Calculate the first sentence in the window in such a way that the annotation
-        // currently selected is in the center of the window
-        sentence = findWindowStartCenteringOnSelection(aJCas, sentence, aOffset,
-                getProject(), getDocument(), getPreferences().getWindowSize());
-        
-        // Move to it
-        setFirstVisibleUnit(sentence);
-        
-        // FIXME getSentenceNumber is not a good option... if we aim for the begin offset of the
-        // very last unit, then we get (max-units - 1) instead of (max-units). However, this
-        // method is used also in curation and I dimly remember that things broke when I tried
-        // to fix it. Probably better to move away from it in the long run. -- REC
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, aOffset));
-    }
-
-    default void moveToSelection(JCas aJCas)
-    {
-        moveToOffset(aJCas, getSelection().getBegin());
-    }
-
-    default void moveForward(JCas aJCas)
-    {
-        // Fetch the first sentence on screen
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());
-        // Find the following one
-        int address = getNextSentenceAddress(aJCas, sentence);
-        // Move to it
-        setFirstVisibleUnit(selectByAddr(aJCas, Sentence.class, address));
-    }
 }
