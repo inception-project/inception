@@ -46,11 +46,13 @@ import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
+import com.github.sommeri.less4j.LessCompiler.Configuration;
 import com.googlecode.wicket.kendo.ui.settings.KendoUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.less.BootstrapLess;
+import de.agilecoders.wicket.less.LessCompilerConfigurationFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -135,9 +137,17 @@ public abstract class WicketApplicationBase
     
     protected void initBootstrap()
     {
+        LessCompilerConfigurationFactory lessConfigFactory = () -> {
+            Configuration lessConfig = new Configuration();
+            lessConfig.setCompressing(
+                    RuntimeConfigurationType.DEPLOYMENT.equals(getConfigurationType()));
+            return lessConfig;
+        };
+        
         WicketWebjars.install(this);
-        BootstrapLess.install(this);
+        BootstrapLess.install(this, lessConfigFactory);
         Bootstrap.install(this);
+        
         IBootstrapSettings settings = Bootstrap.getSettings(this);
         settings.setCssResourceReference(CustomBootstrapLessReference.get());
     }
