@@ -36,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -46,71 +45,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
  * cycles.
  */
 public interface AnnotatorState
-    extends Serializable
+    extends Serializable, AnnotatorViewState
 {
     void reset();
-
-    // ---------------------------------------------------------------------------------------------
-    // Window of visible annotations
-    // ---------------------------------------------------------------------------------------------
-
-    // REC: sentenceNumber/sentenceAddress can probably be dropped in favor of
-    // firstSentenceNumber/firstSentenceAddress?
-
-    /**
-     * @param aUnit the first unit in the display window.
-     */
-    void setFirstVisibleUnit(Sentence aUnit);
-
-    /**
-     * @param aIndex the 1-based index of the focus unit
-     */
-    void setFocusUnitIndex(int aIndex);
-
-    /**
-     * @return the 1-based index of the focus unit
-     */
-    int getFocusUnitIndex();
-
-    /**
-     * @return the UIMA address of the first unit in the display window.
-     */
-    int getFirstVisibleUnitAddress();
-
-    /**
-     * @return the begin character offset of the first unit in the display window.
-     */
-    int getFirstVisibleUnitBegin();
-
-    /**
-     * @return the end character offset of the first unit in the display window.
-     */
-    int getFirstVisibleUnitEnd();
-
-    /**
-     * @return the index of the first unit in the display window.
-     */
-    int getFirstVisibleUnitIndex();
-
-    /**
-     * @return the index of the last unit in the display window.
-     */
-    int getLastVisibleUnitIndex();
-
-    /**
-     * @return the total number of units in the document.
-     */
-    int getUnitCount();
-
-    /**
-     * @return the begin character offset of the first unit in the display window.
-     */
-    int getWindowBeginOffset();
-
-    /**
-     * @return the end character offset of the last unit in the display window.
-     */
-    int getWindowEndOffset();
 
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
@@ -210,17 +147,6 @@ public interface AnnotatorState
     AnnotationFeature getArmedFeature();
 
     int getArmedSlot();
-
-    // ---------------------------------------------------------------------------------------------
-    // Rendering
-    // - script direction can be changed by the user at will - it defaults to the direction
-    // configured in the project
-    // ---------------------------------------------------------------------------------------------
-    ScriptDirection getScriptDirection();
-
-    void setScriptDirection(ScriptDirection aScriptDirection);
-
-    void toggleScriptDirection();
 
     // ---------------------------------------------------------------------------------------------
     // User preferences
