@@ -333,9 +333,8 @@
         <executions>
           <execution>
             <!-- 
-              Also create the standalone file under the old name. In particular, OSes do not in
-              general consider WAR files as executable and won't allow starting them via a 
-              double-click. So having the same file again with the ending ".jar" is convenient.
+              We want the original file to be the WAR and the repackaged all-inclusive runnable
+              thing with the embedded Tomcat to be the JAR.
              -->
             <id>copy-war-to-jar</id>
             <phase>package</phase>
@@ -344,7 +343,8 @@
             </goals>
             <configuration>
               <target>
-                <copy file="target/webanno-webapp-${project.version}.war" tofile="target/webanno-standalone-${project.version}.jar" />
+                <move file="target/webanno-webapp-${project.version}.war" tofile="target/webanno-standalone-${project.version}.jar" />
+                <move file="target/webanno-webapp-${project.version}.war.original" tofile="target/webanno-webapp-${project.version}.war" />
               </target>
             </configuration>
           </execution>
