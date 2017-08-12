@@ -16,42 +16,41 @@
  * limitations under the License.
  */
 $(document)
-	.ready(
-		function() {
-			function hideBusysign() {
-				document.getElementById('spinner').style.display = 'none';
-			}
+  .ready(
+    function() {
+      function hideBusysign() {
+        document.getElementById('spinner').style.display = 'none';
+      }
 
-			function showBusysign() {
-				document.getElementById('spinner').style.display = 'inline';
-			}
+      function showBusysign() {
+        document.getElementById('spinner').style.display = 'inline';
+      }
 
-			function clickFunc(eventData) {
-				var clickedElement = (window.event) ? event.srcElement : eventData.target;
-				if (clickedElement.parentNode && ((
-						clickedElement.parentNode.tagName.toUpperCase() == 'A' 
-						|| clickedElement.tagName.toUpperCase() == 'BUTTON'
-						|| clickedElement.tagName.toUpperCase() == 'A'
-						|| (clickedElement.tagName.toUpperCase() == 'INPUT' && (
-								clickedElement.type.toUpperCase() == 'BUTTON' 
-								|| clickedElement.type.toUpperCase() == 'SUBMIT'))
-					)
-					&& clickedElement.parentNode.id.toUpperCase() != 'NOBUSY'))
-				{
-					showBusysign();
-				}
-			}
+      function clickFunc(eventData) {
+        var clickedElement = (window.event) ? event.srcElement : eventData.target;
+        if (clickedElement.parentNode && ((
+            clickedElement.tagName.toUpperCase() == 'BUTTON'
+            || (clickedElement.tagName.toUpperCase() == 'INPUT' && (
+                clickedElement.type.toUpperCase() == 'BUTTON' 
+                || clickedElement.type.toUpperCase() == 'SUBMIT'))
+          )
+          && clickedElement.parentNode.id.toUpperCase() != 'NOBUSY'))
+        {
+          showBusysign();
+        }
+      }
 
-			document.getElementsByTagName('body')[0].onclick = clickFunc;
-			hideBusysign();
-			if (typeof Wicket != 'undefined') {
-				Wicket.Event.subscribe('/ajax/call/beforeSend', function(
-						attributes, jqXHR, settings) {
-					showBusysign()
-				});
-				Wicket.Event.subscribe('/ajax/call/complete', function(
-						attributes, jqXHR, textStatus) {
-					hideBusysign()
-				});
-			}
-		});
+      document.getElementsByTagName('body')[0].onclick = clickFunc;
+      hideBusysign();
+      if (typeof Wicket != 'undefined') {
+        Wicket.Event.subscribe('/ajax/call/beforeSend', function(
+            attributes, jqXHR, settings) {
+          showBusysign()
+        });
+        Wicket.Event.subscribe('/ajax/call/complete', function(
+            attributes, jqXHR, textStatus) {
+          hideBusysign()
+        });
+      }
+    });
+
