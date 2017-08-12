@@ -24,6 +24,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface AnnotatorDocumentNavigation
 {
     // ---------------------------------------------------------------------------------------------
+    // Document
+    // ---------------------------------------------------------------------------------------------
+    SourceDocument getDocument();
+
+    void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
+
+    int getDocumentIndex();
+
+    int getNumberOfDocuments();
+    
+    // ---------------------------------------------------------------------------------------------
     // Navigation within or across a document
     // ---------------------------------------------------------------------------------------------
     default void moveToPreviousDocument(List<SourceDocument> aDocuments)
@@ -51,10 +62,4 @@ public interface AnnotatorDocumentNavigation
 
         setDocument(aDocuments.get(currentDocumentIndex + 1), aDocuments);
     }
-    
-    // ---------------------------------------------------------------------------------------------
-    // Auxiliary methods
-    // ---------------------------------------------------------------------------------------------
-    SourceDocument getDocument();
-    void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
 }

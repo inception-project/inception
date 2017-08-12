@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -88,19 +87,6 @@ public interface AnnotatorState
     User getUser();
 
     void setUser(User aUser);
-
-    // ---------------------------------------------------------------------------------------------
-    // Document
-    // ---------------------------------------------------------------------------------------------
-    @Override
-    SourceDocument getDocument();
-
-    @Override
-    void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments);
-
-    int getDocumentIndex();
-
-    int getNumberOfDocuments();
 
     // ---------------------------------------------------------------------------------------------
     // Project
