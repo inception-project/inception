@@ -22,8 +22,12 @@ import java.util.Optional;
 import javax.swing.JWindow;
 import javax.validation.Validator;
 
+import org.apache.catalina.connector.Connector;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
+import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -48,11 +52,28 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
 public class WebAnno
     extends SpringBootServletInitializer
 {
+    private static final String PROTOCOL = "AJP/1.3";
+    
+    @Value("${tomcat.ajp.port:-1}")
+    private int ajpPort;
+    
     @Bean
     @Primary
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+    
+    @Bean
+    public EmbeddedServletContainerFactory servletContainer()
+    {
+        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
+        if (ajpPort > 0) {
+            Connector ajpConnector = new Connector(PROTOCOL);
+            ajpConnector.setPort(ajpPort);
+            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+        }
+        return tomcat;
     }
 
     @Override

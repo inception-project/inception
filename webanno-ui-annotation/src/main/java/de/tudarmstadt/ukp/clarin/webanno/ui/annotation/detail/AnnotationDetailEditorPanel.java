@@ -589,6 +589,9 @@ public class AnnotationDetailEditorPanel
         }
         attachStatus.attachCount += attachedRels.size();
         
+        // We do not count these atm since they only exist for built-in layers and are not 
+        // visible in the UI for the user.
+        /*
         Set<AnnotationFS> attachedSpans = getAttachedSpans(aFS, layer);
         boolean attachedToReadOnlySpans = attachedSpans.stream().anyMatch(relFS -> {
             AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
@@ -598,6 +601,7 @@ public class AnnotationDetailEditorPanel
             attachStatus.readOnlyAttached |= true;
         }
         attachStatus.attachCount += attachedSpans.size();
+        */
 
         Set<AnnotationFS> attachedLinks = getAttachedLinks(aFS, layer);
         boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
