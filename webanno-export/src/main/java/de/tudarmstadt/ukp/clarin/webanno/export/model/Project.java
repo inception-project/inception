@@ -18,7 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -72,6 +76,14 @@ public class Project
     @JsonProperty("script_direction")
     private ScriptDirection scriptDirection;
 
+    @JsonProperty("created")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+
+    @JsonProperty("updated")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updated;
+    
     public String getName()
     {
         return name;
@@ -200,5 +212,25 @@ public class Project
     public void setScriptDirection(ScriptDirection aScriptDirection)
     {
         scriptDirection = aScriptDirection;
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
     }
 }

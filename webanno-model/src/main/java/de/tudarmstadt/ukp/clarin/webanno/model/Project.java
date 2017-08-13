@@ -18,13 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
@@ -60,6 +65,14 @@ public class Project
     
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date updated;
 
     public Project()
     {
@@ -133,6 +146,53 @@ public class Project
         this.scriptDirection = scriptDirection;
     }
 
+    public String getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(String aMode)
+    {
+        this.mode = aMode;
+    }
+
+    @PrePersist
+    protected void onCreate()
+    {
+        // When we import data, we set the fields via setters and don't want these to be 
+        // overwritten by this event handler.
+        if (created != null) {
+            created = new Date();
+            updated = created;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updated = new Date();
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
+    }
+    
     @Override
     public int hashCode()
     {
@@ -164,16 +224,6 @@ public class Project
             return false;
         }
         return true;
-    }
-
-    public String getMode()
-    {
-        return mode;
-    }
-
-    public void setMode(String aMode)
-    {
-        this.mode = aMode;
     }
 
     @Override

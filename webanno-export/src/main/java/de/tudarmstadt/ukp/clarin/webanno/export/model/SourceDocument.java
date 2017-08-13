@@ -53,6 +53,14 @@ public class SourceDocument
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
+    @JsonProperty("created")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+
+    @JsonProperty("updated")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updated;
+    
     public String getName()
     {
         return name;
@@ -103,4 +111,23 @@ public class SourceDocument
         this.sentenceAccessed = sentenceAccessed;
     }
 
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
+    }
 }
