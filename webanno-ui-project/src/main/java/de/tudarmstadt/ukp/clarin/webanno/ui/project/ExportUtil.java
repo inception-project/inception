@@ -105,6 +105,8 @@ public class ExportUtil
         exProjekt.setScriptDirection(aProject.getScriptDirection());
         exProjekt.setVersion(aProject.getVersion());
         exProjekt.setDisableExport(aProject.isDisableExport());
+        exProjekt.setCreated(aProject.getCreated());
+        exProjekt.setUpdated(aProject.getUpdated());
 
         List<de.tudarmstadt.ukp.clarin.webanno.export.model.AnnotationLayer> exLayers = 
                 new ArrayList<>();
@@ -169,6 +171,8 @@ public class ExportUtil
             exDocument.setState(sourceDocument.getState());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
             exDocument.setSentenceAccessed(sourceDocument.getSentenceAccessed());
+            exDocument.setCreated(sourceDocument.getCreated());
+            exDocument.setUpdated(sourceDocument.getUpdated());
 
             // add annotation document to Project
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
@@ -180,6 +184,8 @@ public class ExportUtil
                 annotationDocumentToExport.setTimestamp(annotationDocument.getTimestamp());
                 annotationDocumentToExport
                         .setSentenceAccessed(annotationDocument.getSentenceAccessed());
+                annotationDocumentToExport.setCreated(annotationDocument.getCreated());
+                annotationDocumentToExport.setUpdated(annotationDocument.getUpdated());
                 annotationDocuments.add(annotationDocumentToExport);
             }
             sourceDocuments.add(exDocument);

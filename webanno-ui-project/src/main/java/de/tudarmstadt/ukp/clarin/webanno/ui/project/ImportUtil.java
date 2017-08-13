@@ -402,6 +402,8 @@ public class ImportUtil
         // during export but as lower-case in the database. This is compensating for this case.
         project.setMode(StringUtils.lowerCase(aProject.getMode(), Locale.US));
         project.setDisableExport(aProject.isDisableExport());
+        project.setCreated(aProject.getCreated());
+        project.setUpdated(aProject.getUpdated());
         
         // Set default to LTR on import from old WebAnno versions
         if (aProject.getScriptDirection() == null) {
@@ -456,6 +458,8 @@ public class ImportUtil
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
             sourceDocument.setSentenceAccessed(importedSourceDocument.getSentenceAccessed());
+            sourceDocument.setCreated(importedSourceDocument.getCreated());
+            sourceDocument.setUpdated(importedSourceDocument.getUpdated());
           
             aRepository.createSourceDocument(sourceDocument);
         }
@@ -541,6 +545,8 @@ public class ImportUtil
                     importedAnnotationDocument.getName()));
             annotationDocument
                     .setSentenceAccessed(importedAnnotationDocument.getSentenceAccessed());
+            annotationDocument.setCreated(importedAnnotationDocument.getCreated());
+            annotationDocument.setUpdated(importedAnnotationDocument.getUpdated());
             aRepository.createAnnotationDocument(annotationDocument);
         }
     }

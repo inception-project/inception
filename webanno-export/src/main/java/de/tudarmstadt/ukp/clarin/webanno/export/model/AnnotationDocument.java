@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.Date;
 
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -35,16 +38,27 @@ public class AnnotationDocument
 {
     @JsonProperty("name")
     String name;
+    
     @JsonProperty("user")
     String user;
+    
     @JsonProperty("state")
     AnnotationDocumentState state;
+    
     @JsonProperty("timestamp")
     private Date timestamp;
 
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
+    @JsonProperty("created")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date created;
+
+    @JsonProperty("updated")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updated;
+    
     public String getName()
     {
         return name;
@@ -93,5 +107,25 @@ public class AnnotationDocument
     public void setSentenceAccessed(int sentenceAccessed)
     {
         this.sentenceAccessed = sentenceAccessed;
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
     }
 }
