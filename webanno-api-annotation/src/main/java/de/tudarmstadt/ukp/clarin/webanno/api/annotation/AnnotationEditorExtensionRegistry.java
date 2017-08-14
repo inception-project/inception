@@ -35,8 +35,6 @@ public interface AnnotationEditorExtensionRegistry
     
     AnnotationEditorExtension getExtension(String aName);
 
-    void fireAnnotationClicked(VID aParamId, AnnotatorState aModelObject);
-
     void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
             AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, int aBegin, int aEnd)
         throws IOException, AnnotationException;

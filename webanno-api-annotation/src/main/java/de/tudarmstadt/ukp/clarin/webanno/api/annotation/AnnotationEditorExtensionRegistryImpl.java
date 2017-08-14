@@ -89,14 +89,6 @@ public class AnnotationEditorExtensionRegistryImpl
     }
     
     @Override
-    public void fireAnnotationClicked(VID aParamId, AnnotatorState aModelObject)
-    {
-        for (AnnotationEditorExtension ext: getExtensions()) {
-            ext.onAnnotationClicked(aParamId, aModelObject);
-        }
-    }
-    
-    @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
             AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, int aBegin, int aEnd)
         throws IOException, AnnotationException

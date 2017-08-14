@@ -47,8 +47,6 @@ public interface AnnotationEditorExtension
      */
     void render(JCas jCas, AnnotatorState aState, VDocument vdoc);
 
-    void onAnnotationClicked(VID paramId, AnnotatorState aAnnotatorState);
-
     /**
      * Initiatialize extension service
      */
