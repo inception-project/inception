@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -166,14 +167,6 @@ public class BratAnnotationEditor
                 // Record the action in the action context (which currently is persistent...)
                 getModelObject().getAction().setUserAction(action);
 
-                // REC I wonder if we need this here or of this cannot be deferred until we call
-                // ext.handleAction later.
-                if (paramId.isSet()) {
-                    extensionRegistry.fireAnnotationClicked(paramId, getModelObject());
-                    // Just in case the extension has changed the action
-                    action = getModelObject().getAction().getUserAction();
-                }
-                
                 // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
                 // calls that do not go through this AjaxBehavior do not see an active user action.
                 RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
@@ -201,136 +194,54 @@ public class BratAnnotationEditor
                     }
                 }
                 
-                
                 Object result = null;
                 try {
-                    boolean skipImplicitSlotActions = false;
-                    
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (DoActionResponse.is(action)) {
-                        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
-                        if (!layerParam.isEmpty()) {
-                            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
-                            AnnotationLayer layer = annotationService.getLayer(layerId);
-                            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
-                                // parse the action
-                                List<AnnotationFeature> features = annotationService
-                                        .listAnnotationFeature(layer);
-                                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas,
-                                        paramId.getId());
-                                Map<String, Object> functionParams = OnClickActionParser.parse(
-                                        layer, features, aModel.getObject().getDocument(), anno);
-                                // define anonymous function, fill the body and immediately execute
-                                String js = String.format("(function ($PARAM){ %s })(%s)",
-                                        layer.getOnClickJavascriptAction(),
-                                        JSONUtil.toJsonString(functionParams));
-                                aTarget.appendJavaScript(js);
-                                skipImplicitSlotActions = true;
+                        actionDoAction(aTarget, request, jCas, paramId);
+                    }
+                    else {
+                        if (paramId.isSynthetic()) {
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                        }
+                        else {
+                            // HACK: If an arc was clicked that represents a link feature, then 
+                            // open the associated span annotation instead.
+                            if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
+                                action = SpanAnnotationResponse.COMMAND;
+                                paramId = new VID(paramId.getId());
+                            }
+
+                            // Doing anything but selecting or creating a span annotation when a
+                            // slot is armed will unarm it
+                            if (getModelObject().isSlotArmed()
+                                    && !SpanAnnotationResponse.is(action)) {
+                                getModelObject().clearArmedSlot();
+                            }
+        
+                            if (WhoamiResponse.is(action)) {
+                                result = actionWhoami();
+                            }
+                            else if (SpanAnnotationResponse.is(action)) {
+                                result = actionSpan(aTarget, request, jCas, paramId);
+                            }
+                            else if (ArcAnnotationResponse.is(action)) {
+                                result = actionArc(aTarget, request, jCas, paramId);
+                            }
+                            else if (LoadConfResponse.is(action)) {
+                                result = new LoadConfResponse();
+                            }
+                            else if (GetCollectionInformationResponse.is(action)) {
+                                result = actionGetCollectionInformation();
+                            }
+                            else if (GetDocumentResponse.is(action)) {
+                                result = actionGetDocument(jCas);
                             }
                         }
                     }
-
-                    if (paramId.isSynthetic()) {
-                        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                                jCas, paramId, offsets.getBegin(), offsets.getEnd());
-                    }
-
-                    if (!skipImplicitSlotActions) {
-                        // HACK: If an arc was clicked that represents a link feature, then open the
-                        // associated span annotation instead.
-                        if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
-                            action = SpanAnnotationResponse.COMMAND;
-                            paramId = new VID(paramId.getId());
-                        }
-    
-                        // Doing anything but selecting or creating a span annotation when a slot is
-                        // armed
-                        // will unarm it
-                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
-                            getModelObject().clearArmedSlot();
-                        }
-                    }
-
-                    if (WhoamiResponse.is(action)) {
-                        result = new WhoamiResponse(
-                                SecurityContextHolder.getContext().getAuthentication().getName());
-                    }
-                    else if (SpanAnnotationResponse.is(action)) {
-                        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        
-                        AnnotatorState state = getModelObject();
-                        Selection selection = state.getSelection();
-                        
-                        if (state.isSlotArmed()) {
-                            // When filling a slot, the current selection is *NOT* changed. The
-                            // Span annotation which owns the slot that is being filled remains
-                            // selected!
-                            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(),
-                                    offsets.getEnd(), paramId);
-                        }
-                        else {
-                            if (!paramId.isSynthetic()) {
-                                selection.selectSpan(paramId, jCas, offsets.getBegin(),
-                                    offsets.getEnd());
-
-                                if (selection.getAnnotation().isNotSet()) {
-                                    // Create new annotation
-                                    state.getAction().setAnnotate(true);
-                                    getActionHandler().actionCreateOrUpdate(aTarget, jCas);
-                                }
-                                else {
-                                    state.getAction().setAnnotate(false);
-                                    getActionHandler().actionSelect(aTarget, jCas);
-                                }
-                            }
-                        }
-                        
-                        result = new SpanAnnotationResponse();
-                    }
-                    else if (ArcAnnotationResponse.is(action)) {
-                        AnnotationFS originFs = selectByAddr(jCas,
-                                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
-                        AnnotationFS targetFs = selectByAddr(jCas,
-                                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
-                        
-                        AnnotatorState state = getModelObject();
-                        Selection selection = state.getSelection();
-                        selection.selectArc(paramId, originFs, targetFs);
-                        
-                        if (selection.getAnnotation().isNotSet()) {
-                            // Create new annotation
-                            state.getAction().setAnnotate(true);
-                            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
-                        }
-                        else {
-                            state.getAction().setAnnotate(false);
-                            getActionHandler().actionSelect(aTarget, jCas);
-                        }
-
-                        result = new ArcAnnotationResponse();
-                    }
-                    else if (LoadConfResponse.is(action)) {
-                        result = new LoadConfResponse();
-                    }
-                    else if (GetCollectionInformationResponse.is(action)) {
-                        GetCollectionInformationResponse info = 
-                                new GetCollectionInformationResponse();
-                        if (getModelObject().getProject() != null) {
-                            info.setEntityTypes(BratRenderer.buildEntityTypes(
-                                    getModelObject().getAnnotationLayers(), annotationService));
-                        }
-                        result = info;
-                    }
-                    else if (GetDocumentResponse.is(action)) {
-                        GetDocumentResponse response = new GetDocumentResponse();
-                        if (getModelObject().getProject() != null) {
-                            render(response, jCas);
-                        }
-                        result = response;
-                    }
-
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
@@ -358,6 +269,115 @@ public class BratAnnotationEditor
         add(requestHandler);
     }
 
+    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, JCas jCas,
+            VID paramId)
+        throws IOException
+    {
+        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        if (!layerParam.isEmpty()) {
+            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+            AnnotationLayer layer = annotationService.getLayer(layerId);
+            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
+                // parse the action
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas, paramId.getId());
+                Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
+                        getModelObject().getDocument(), anno);
+                // define anonymous function, fill the body and immediately execute
+                String js = String.format("(function ($PARAM){ %s })(%s)",
+                        layer.getOnClickJavascriptAction(), JSONUtil.toJsonString(functionParams));
+                aTarget.appendJavaScript(js);
+            }
+        }
+        
+        return null;
+    }
+    
+    private WhoamiResponse actionWhoami()
+    {
+        return new WhoamiResponse(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+    
+    private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
+            JCas jCas, VID paramId)
+        throws IOException, AnnotationException
+    {
+        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+
+        if (state.isSlotArmed()) {
+            // When filling a slot, the current selection is *NOT* changed. The
+            // Span annotation which owns the slot that is being filled remains
+            // selected!
+            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(), offsets.getEnd(),
+                    paramId);
+        }
+        else {
+            if (!paramId.isSynthetic()) {
+                selection.selectSpan(paramId, jCas, offsets.getBegin(), offsets.getEnd());
+
+                if (selection.getAnnotation().isNotSet()) {
+                    // Create new annotation
+                    state.getAction().setAnnotate(true);
+                    getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                }
+                else {
+                    state.getAction().setAnnotate(false);
+                    getActionHandler().actionSelect(aTarget, jCas);
+                }
+            }
+        }
+
+        return new SpanAnnotationResponse();
+    }
+    
+    private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
+            JCas jCas, VID paramId)
+        throws IOException, AnnotationException
+    {
+        AnnotationFS originFs = selectByAddr(jCas,
+                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
+        AnnotationFS targetFs = selectByAddr(jCas,
+                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        selection.selectArc(paramId, originFs, targetFs);
+
+        if (selection.getAnnotation().isNotSet()) {
+            // Create new annotation
+            state.getAction().setAnnotate(true);
+            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+        }
+        else {
+            state.getAction().setAnnotate(false);
+            getActionHandler().actionSelect(aTarget, jCas);
+        }
+
+        return new ArcAnnotationResponse();
+    }
+    
+    private GetCollectionInformationResponse actionGetCollectionInformation()
+    {
+        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+        if (getModelObject().getProject() != null) {
+            info.setEntityTypes(BratRenderer
+                    .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+        }
+        return info;
+    }
+    
+    private GetDocumentResponse actionGetDocument(JCas jCas)
+    {
+        GetDocumentResponse response = new GetDocumentResponse();
+        if (getModelObject().getProject() != null) {
+            render(response, jCas);
+        }
+        return response;
+    }
+    
     /**
      * Extract offset information from the current request. These are either offsets of an existing
      * selected annotations or offsets contained in the request for the creation of a new
