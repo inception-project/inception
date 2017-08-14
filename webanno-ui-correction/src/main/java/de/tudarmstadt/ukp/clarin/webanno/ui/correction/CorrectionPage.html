@@ -23,6 +23,11 @@
       .page-content {
         flex-direction: column !important;
       }
+      
+      .suggestion-panel-body {
+        overflow: auto;
+        flex-basis: 0 !important;
+      }
     </style>
   </wicket:head>
 </head>
@@ -138,19 +143,17 @@
 
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
       <div class="flex-content flex-v-container">
-        <div class="scrolling flex-content flex-v-container flex-gutter">
-          <div class="panel panel-primary" wicket:enclosure="mergeView">
+        <div class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content panel panel-primary panel-flex" wicket:enclosure="mergeView">
             <div class="panel-heading">
               <h3 class="panel-title">Annotation</h3>
             </div>
-            <div class="h-scrolling panel-body text-center">
-              <div wicket:id="mergeView"></div>
-            </div>
+            <div wicket:id="mergeView" class="panel-body text-center flex-v-container"></div>
           </div>
           
-          <div wicket:id="correctionView">
-            <div wicket:id="sentenceListView">
-              <div wicket:id="sentence"></div>
+          <div wicket:id="correctionView" class="flex-content flex-v-container">
+            <div wicket:id="sentenceListView" class="flex-content flex-v-container">
+              <div wicket:id="sentence" class="flex-content flex-v-container"></div>
             </div>
           </div>
         </div>

@@ -23,6 +23,11 @@
       .page-content {
         flex-direction: column !important;
       }
+      
+      .suggestion-panel-body {
+        overflow: auto;
+        flex-basis: 0 !important;
+      }
     </style>
   </wicket:head>
 </head>
@@ -143,9 +148,7 @@
             <div class="panel-heading">
               <h3 class="panel-title">Annotation</h3>
             </div>
-            <div class="h-scrolling panel-body text-center">
-              <div wicket:id="mergeView"></div>
-            </div>
+            <div wicket:id="mergeView" class="panel-body text-center flex-v-container"></div>
           </div>
           
           <div wicket:id="automateView">
