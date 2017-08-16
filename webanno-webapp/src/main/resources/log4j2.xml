@@ -39,22 +39,6 @@
 
   <Loggers>
     <Logger name="de.tudarmstadt" level="INFO"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistryServiceImpl" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemServiceImpl" level="DEBUG"/>
-    <Logger name="de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel" level="TRACE"/>
-    
-    <!--
-    <Logger name="org.apache.wicket" level="DEBUG"/>
-    <Logger name="org.apache.wicket.resource.loader.ComponentStringResourceLoader" level="WARN" />
-    <Logger name="org.apache.wicket.Localizer" level="WARN" />
-    <Logger name="org.apache.wicket.core.util.resource.locator.ResourceStreamLocator" level="WARN" />
-    <Logger name="org.apache.wicket.Component" level="WARN"/>
-    <Logger name="org.apache.wicket.MarkupContainer" level="WARN" />
-    <Logger name="org.apache.wicket.markup" level="WARN" />
-    -->
-    
-    <!-- Logger name="org.springframework.boot.web.servlet.ServletContextInitializerBeans" level="DEBUG"/ -->
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     
