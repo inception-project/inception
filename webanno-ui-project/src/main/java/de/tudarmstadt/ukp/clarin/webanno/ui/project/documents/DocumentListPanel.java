@@ -24,9 +24,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 
 public class DocumentListPanel
     extends Panel
@@ -48,9 +49,10 @@ public class DocumentListPanel
 
     private @SpringBean DocumentService documentService;
 
-    private OverviewListChoice<SourceDocument> overviewList;
+    private ListMultipleChoice<SourceDocument> overviewList;
     private IModel<Project> project;
-    private IModel<SourceDocument> document;
+    private CollectionModel<SourceDocument> selectedDocuments;
+    private ConfirmationDialog confirmationDialog;
     
     public DocumentListPanel(String aId, IModel<Project> aProject)
     {
@@ -59,24 +61,22 @@ public class DocumentListPanel
         setOutputMarkupId(true);
         
         project = aProject;
-        document = Model.of();
+        selectedDocuments = new CollectionModel<>();
 
         Form<Void> form = new Form<>("form");
         add(form);
         
-        overviewList = new OverviewListChoice<>("documents");
+        overviewList = new ListMultipleChoice<>("documents");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        overviewList.setModel(document);
+        overviewList.setModel(selectedDocuments);
         overviewList.setChoices(LambdaModel.of(this::listSourceDocuments));
         form.add(overviewList);
 
-        ConfirmationDialog confirmationDialog = new ConfirmationDialog("confirmationDialog");
-        confirmationDialog.setConfirmAction(this::actionDelete);
+        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
         add(confirmationDialog);
 
-        LambdaAjaxButton<Void> delete = new LambdaAjaxButton<>("delete", (t, f) -> 
-                confirmationDialog.show(t));
-        form.add(delete);
+        form.add(new LambdaAjaxButton<>("delete", this::actionDelete));
     }
     
     private List<SourceDocument> listSourceDocuments()
@@ -84,23 +84,31 @@ public class DocumentListPanel
         return documentService.listSourceDocuments(project.getObject());
     }
     
-    private void actionDelete(AjaxRequestTarget aTarget)
+    private void actionDelete(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
-        if (document.getObject() == null) {
-            error("No document selected");
+        if (selectedDocuments.getObject() == null || selectedDocuments.getObject().isEmpty()) {
+            error("No documents selected");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
         
-        try {
-            documentService.removeSourceDocument(document.getObject());
-        }
-        catch (IOException e) {
-            LOG.error("Unable to delete document", e);
-            error("Unable to delete document: " + e.getMessage());
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
-        document.setObject(null);
-        aTarget.add(getPage());
+        confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
+                .setParameters(selectedDocuments.getObject().size()));
+        confirmationDialog.show(aTarget);
+        
+        confirmationDialog.setConfirmAction((_target) -> {
+            for (SourceDocument sourceDocument : selectedDocuments.getObject()) {
+                try {
+                    documentService.removeSourceDocument(sourceDocument);
+                }
+                catch (IOException e) {
+                    LOG.error("Unable to delete document", e);
+                    error("Unable to delete document: " + e.getMessage());
+                    _target.addChildren(getPage(), IFeedback.class);
+                }
+            }
+            selectedDocuments.getObject().clear();
+            _target.add(getPage());
+        });
     }
 }
