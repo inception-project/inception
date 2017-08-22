@@ -45,6 +45,8 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -60,6 +62,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
+    private static final Logger LOG = LoggerFactory.getLogger(WebAnnoCasUtil.class);
+
     /**
      * Annotation a and annotation b are the same if they have the same address.
      *
@@ -431,7 +435,7 @@ public class WebAnnoCasUtil
      *            the CAS object
      * @param aSentence
      *            the old sentence
-     * @param aFocosOffset
+     * @param aFocusOffset
      *            the actual offset of the sentence.
      * @param aProject
      *            the project.
@@ -442,46 +446,33 @@ public class WebAnnoCasUtil
      * @return the ID of the first sentence.
      */
     public static Sentence findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
-            int aFocosOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
+            int aFocusOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
     {
-        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, aSentence);
-
-        // no auto-forward for single sentence window
-        Sentence s = si.get();
         if (aWindowSize == 1) {
-            return s;
+            return aSentence;
         }
 
         // Seek the sentence that contains the current focus
-        while (si.isValid()) {
-            if (s.getEnd() < aFocosOffset) {
-                // Focus after current sentence
-                si.moveToNext();
-            }
-            else if (aFocosOffset < s.getBegin()) {
-                // Focus before current sentence
-                si.moveToPrevious();
-            }
-            else {
-                // Focus must be in current sentence
-                break;
-            }
-            s = si.get();
+        Sentence s = getSentence(aJcas, aFocusOffset);
+        
+        // If the focus is outside any sentence, then we just return the reference sentence.
+        // This should actually never happen, but in case it does, we log a warning and try to
+        // behave.
+        if (s == null) {
+            LOG.warn("Focus [{}] is outside any unit, using first unit.", aFocusOffset);
+            return aSentence;
         }
 
         // Center sentence
-        Sentence n = s;
-
-        if (aWindowSize == 2 && n.getBegin() > aSentence.getBegin()) {
+        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, s);
+        if (aWindowSize == 2 && s.getBegin() > aSentence.getBegin()) {
             return s;
         }
-
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
             si.moveToPrevious();
             if (si.isValid()) {
                 s = si.get();
-
             }
 
             count++;
