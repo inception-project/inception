@@ -124,7 +124,6 @@ public class ProjectLayersPanel
             CAS.TYPE_NAME_INTEGER, CAS.TYPE_NAME_FLOAT, CAS.TYPE_NAME_BOOLEAN);
 
     private String layerType = WebAnnoConst.SPAN_TYPE;
-    private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
@@ -285,7 +284,7 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    uploadedFiles = fileUpload.getFileUploads();
+                    List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
                     Project project = ProjectLayersPanel.this.getModelObject();
                     User user = userRepository.getCurrentUser();
 

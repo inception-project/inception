@@ -8,3 +8,4 @@ target
 /repository/
 webanno-doc/src/main/resources
 .checkstyle
+log4j2-dev.xml

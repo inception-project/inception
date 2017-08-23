@@ -25,32 +25,31 @@ import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.resource.JQueryPluginResourceReference;
 
-import com.googlecode.wicket.kendo.ui.resource.KendoUIJavaScriptResourceReference;
-
+import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.core.util.Dependencies;
 
 /**
- * Customized {@link KendoUIJavaScriptResourceReference} that depends on Bootstrap such that
- *  bootstrap is loaded before Kendo UI. This is necessary in order for the  Kendo UI tooltip
- *  that we use e.g. on the annotation page to take precedence over the less powerful Bootstrap
- *  tooltip (both are JQuery plugins using the same name!)
+ * Customized {@link JQueryUIResourceReference} that depends on Bootstrap such that
+ * bootstrap is loaded before JQuery UI. This is necessary in order for the JQuery UI tooltip
+ * that we use e.g. on the annotation page to take precedence over the less powerful Bootstrap
+ * tooltip (both are JQuery plugins using the same name!)
  */
-public class BootstrapAwareKendoUIJavaScriptResourceReference
+public class BootstrapAwareJQueryUIJavaScriptResourceReference
     extends JQueryPluginResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BootstrapAwareKendoUIJavaScriptResourceReference INSTANCE = 
-            new BootstrapAwareKendoUIJavaScriptResourceReference();
+    private static final BootstrapAwareJQueryUIJavaScriptResourceReference INSTANCE = 
+            new BootstrapAwareJQueryUIJavaScriptResourceReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static BootstrapAwareKendoUIJavaScriptResourceReference get()
+    public static BootstrapAwareJQueryUIJavaScriptResourceReference get()
     {
         return INSTANCE;
     }
@@ -68,8 +67,8 @@ public class BootstrapAwareKendoUIJavaScriptResourceReference
     /**
      * Private constructor
      */
-    private BootstrapAwareKendoUIJavaScriptResourceReference()
+    private BootstrapAwareJQueryUIJavaScriptResourceReference()
     {
-        super(KendoUIJavaScriptResourceReference.class, "kendo.ui.core.min.js");
+        super(JQueryUIResourceReference.class, "jquery-ui.js");
     }
 }

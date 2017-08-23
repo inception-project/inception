@@ -183,18 +183,17 @@ public interface AnnotatorViewState
 
     default void moveToUnit(JCas aJCas, int aIndex)
     {
+        List<Sentence> units = new ArrayList<>(select(aJCas, Sentence.class));
+        
         // Index is 1-based!
         // The code below sets the focus unit index explicitly - see comment on getSentenceNumber
         // in moveToOffset for an explanation. We already know the index here, so no need to
         // calculate it (wrongly) using getSentenceNumber.
         if (aIndex <= 0) {
-            moveToOffset(aJCas, 0);
+            moveToOffset(aJCas, units.get(0).getBegin());
             setFocusUnitIndex(1);
-            return;
         }
-        
-        List<Sentence> units = new ArrayList<>(select(aJCas, Sentence.class));
-        if (aIndex > units.size()) {
+        else if (aIndex > units.size()) {
             moveToOffset(aJCas, units.get(units.size() - 1).getBegin());
             setFocusUnitIndex(units.size());
         }

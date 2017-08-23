@@ -70,7 +70,6 @@ public class ProjectTrainingDocumentsPanel
     private ArrayList<String> documents = new ArrayList<>();
     private ArrayList<String> selectedDocuments = new ArrayList<>();
 
-    private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
     private ArrayList<String> readableFormats;
@@ -117,7 +116,7 @@ public class ProjectTrainingDocumentsPanel
             @Override
             public void onSubmit()
             {
-                uploadedFiles = fileUpload.getFileUploads();
+                List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
                 Project project = selectedProjectModel.getObject();
                 if (isEmpty(uploadedFiles)) {
                     error("No document is selected to upload, please select a document first");
