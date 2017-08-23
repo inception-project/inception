@@ -90,7 +90,6 @@ public class ProjectTagSetsPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
     DropDownChoice<String> importTagsetFormat;
     DropDownChoice<String> exportTagsetFormat;
@@ -245,7 +244,7 @@ public class ProjectTagSetsPanel
                 @Override
                 public void onSubmit()
                 {
-                    uploadedFiles = fileUpload.getFileUploads();
+                    List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
                     Project project = ProjectTagSetsPanel.this.getModelObject();
 
                     if (isEmpty(uploadedFiles)) {

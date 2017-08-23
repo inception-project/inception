@@ -40,7 +40,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,13 +267,13 @@ public class ProjectConstraintsPanel
     {
         private static final long serialVersionUID = 8121850699963791359L;
         
-        private List<FileUpload> uploads;
+        private FileUploadField uploads;
         
         public ImportForm(String aId)
         {
             super(aId);
 
-            add(new FileUploadField("uploads", PropertyModel.of(this, "uploads")));
+            add(uploads = new FileUploadField("uploads", Model.of()));
             add(new Button("import")
             {
                 private static final long serialVersionUID = 1L;
@@ -301,17 +300,19 @@ public class ProjectConstraintsPanel
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
 
+            List<FileUpload> uploadedFiles = uploads.getFileUploads();
+
             if (project.getId() == 0) {
                 error("Project not yet created, please save project Details!");
                 return;
             }
 
-            if (isEmpty(uploads)) {
+            if (isEmpty(uploadedFiles)) {
                 error("No document is selected to upload, please select a document first");
                 return;
             }
 
-            for (FileUpload constraintRulesFile : uploads) {
+            for (FileUpload constraintRulesFile : uploadedFiles) {
                 // Checking if file is OK as per Constraints Grammar specification
                 boolean constraintRuleFileIsOK = false;
                 //Handling Windows BOM
