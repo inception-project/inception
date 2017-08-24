@@ -25,6 +25,16 @@
       <span wicket:id="message">A message</span>
     </li>
   </ul>
+  <script>
+    setTimeout(function() {
+      	$(".alert.alert-success").fadeTo(600, 0, function(){
+        $(".alert.alert-success").alert('close');
+      });
+      $(".alert.alert-info").fadeTo(600, 0, function(){
+        $(".alert.alert-info").alert('close');
+      });
+    }, 2000);
+  </script>
 </wicket:panel>
 </body>
 </html>
