@@ -19,3 +19,7 @@
 # Binary files
 *.png  binary
 *.jpg  binary
+*.ttf  binary
+*.woff  binary
+*.woff2  binary
+*.otf  binary
