@@ -232,8 +232,8 @@
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
     </dependency>
-    
-    <!-- Spring Boot dependencies -->    
+
+    <!-- Spring Boot dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
@@ -258,7 +258,7 @@
       <artifactId>spring-boot-starter-tomcat</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!--  
+    <!--
     <dependency>
       <groupId>${servlet.api.groupId}</groupId>
       <artifactId>${servlet.api.artifactId}</artifactId>
@@ -268,7 +268,7 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
@@ -336,7 +336,7 @@
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
-            <!-- 
+            <!--
               We want the original file to be the WAR and the repackaged all-inclusive runnable
               thing with the embedded Tomcat to be the JAR.
              -->
@@ -434,7 +434,7 @@
         </property>
       </activation>
       <properties>
-        <docker.warfile>maven/webanno-webapp-${project.version}.war</docker.warfile>
+        <docker.jarfile>maven/webanno-standalone-${project.version}.jar</docker.jarfile>
       </properties>
       <build>
         <plugins>
@@ -454,6 +454,13 @@
                     <filter>@</filter>
                     <assembly>
                       <descriptorRef>artifact</descriptorRef>
+                      <inline>
+                        <files>
+                          <file>
+                            <source>${project.build.directory}/webanno-standalone-${project.version}.jar</source>
+                          </file>
+                        </files>
+                      </inline>
                     </assembly>
                   </build>
                 </image>

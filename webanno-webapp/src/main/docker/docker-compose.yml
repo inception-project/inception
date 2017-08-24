@@ -17,7 +17,7 @@ services:
       - MYSQL_PORT=3306
       - MYSQL_PASSWORD=webanno
     volumes:
-      - ${WEBANNO_HOME}./mysql-data:/var/lib/mysql
+      - ${WEBANNO_HOME}/mysql-data:/var/lib/mysql
     command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pwebanno", "-uwebanno"]
@@ -38,12 +38,12 @@ services:
       - WEBANNO_DB_USERNAME=webanno
       - WEBANNO_DB_PASSWORD=webanno
     volumes:
-      - ${WEBANNO_HOME}./server-data:/export
+      - ${WEBANNO_HOME}/server-data:/export
     depends_on:
       mysqlserver:
         condition: service_healthy
-    mem_limit: 4g
-    memswap_limit: 5g
+    mem_limit: 1g
+    memswap_limit: 1g
     restart: unless-stopped
     networks:
       webanno-net:
