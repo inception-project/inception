@@ -8,9 +8,20 @@ FROM openjdk:8
 
 MAINTAINER WebAnno Team
 
+# make sure webanno is running in en_US.UTF-8 locale
+RUN set -ex \
+      && DEBIAN_FRONTEND=noninteractive \
+      && apt-get update \
+      && apt-get install -y --no-install-recommends locales
+RUN set -ex \
+      && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+      && dpkg-reconfigure --frontend=noninteractive locales \
+      && update-locale LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+
 WORKDIR /opt/webanno
 
-COPY @docker.warfile@ webanno-standalone.jar
+COPY @docker.jarfile@ webanno-standalone.jar
 
 # this will be the WebAnno home folder
 RUN mkdir /export
