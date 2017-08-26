@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * Annotation Detail Editor Panel.
- *
  */
 public class AnnotationDetailEditorPanel
     extends Panel
@@ -362,10 +361,6 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         state.getAction().setAnnotate(true);
 
-        // Re-set the selected layer from the drop-down since it might have changed if we have
-        // previously created a relation annotation
-        state.setSelectedAnnotationLayer(annotationFeatureForm.getLayerSelector().getModelObject());
-        
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
         if (state.getSelection().isArc()) {
@@ -423,8 +418,16 @@ public class AnnotationDetailEditorPanel
 
             // If we switched layers, we need to initialize the feature editors for the new layer
             if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
+                LOG.trace("Layer changed from {} to {} - need to reload feature editors",
+                        previousLayer, state.getSelectedAnnotationLayer());
                 loadFeatureEditorModels(aJCas, aTarget);
             }
+        }
+        else {
+            // Re-set the selected layer from the drop-down since it might have changed if we
+            // have previously created a relation annotation
+            state.setSelectedAnnotationLayer(
+                    annotationFeatureForm.getLayerSelector().getModelObject());
         }
 
         LOG.trace("actionAnnotate() selectedLayer: {}",

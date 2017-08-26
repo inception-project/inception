@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -90,6 +91,8 @@ public class ImportDocumentsPanel extends Panel
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
         Project project = projectModel.getObject();
         if (isEmpty(uploadedFiles)) {
@@ -128,7 +131,6 @@ public class ImportDocumentsPanel extends Panel
             }
         }
         
-        //aTarget.addChildren(getPage(), IFeedback.class);
         WicketUtil.refreshPage(aTarget, getPage());
     }
 }
