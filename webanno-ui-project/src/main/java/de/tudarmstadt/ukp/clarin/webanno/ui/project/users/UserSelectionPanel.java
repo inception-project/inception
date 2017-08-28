@@ -57,6 +57,7 @@ class UserSelectionPanel
     private IModel<User> userModel;
     
     private OverviewListChoice<User> overviewList;
+    private MultiSelect<User> usersToAdd;
 
     public UserSelectionPanel(String id, IModel<Project> aProject, IModel<User> aUser)
     {
@@ -77,7 +78,7 @@ class UserSelectionPanel
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
-        MultiSelect<User> usersToAdd = new MultiSelect<User>("usersToAdd") {
+        usersToAdd = new MultiSelect<User>("usersToAdd") {
             private static final long serialVersionUID = 8231304829756188352L;
 
             @Override
@@ -85,6 +86,8 @@ class UserSelectionPanel
             {
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("placeholder", Options.asString(getString("placeholder")));
+                aBehavior.setOption("filter", Options.asString("contains"));
+                aBehavior.setOption("autoClose", false);
             }
         };
         usersToAdd.setModel(usersToAddModel);
@@ -135,6 +138,7 @@ class UserSelectionPanel
         }
         
         aForm.getModelObject().clear();
+        usersToAdd.getChoicesModel().detach();
         
         aTarget.add(this);
     }
