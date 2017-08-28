@@ -535,9 +535,7 @@ public class CurationPage
             updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
         }
         catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            handleException(aTarget, e);
         }
     }
 
