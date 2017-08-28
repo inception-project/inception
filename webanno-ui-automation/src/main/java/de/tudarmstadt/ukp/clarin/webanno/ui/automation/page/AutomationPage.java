@@ -151,7 +151,7 @@ public class AutomationPage
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
-    
+
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
@@ -638,16 +638,21 @@ public class AutomationPage
     {
         try {
             AnnotatorState state = getModelObject();
-            curationContainer.setBratAnnotatorModel(state);
 
             JCas editorCas = getEditorCas();
-            setCurationSegmentBeginEnd(editorCas);
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
             Sentence sentence = selectByAddr(editorCas, Sentence.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
+            
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
+                    userRepository);
+            curationContainer = builder.buildCurationContainer(state);
+            setCurationSegmentBeginEnd(editorCas);
+            curationContainer.setBratAnnotatorModel(state);
             
             update(aTarget);
             aTarget.appendJavaScript(
