@@ -22,6 +22,7 @@ import java.util.Date;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
 
 public class RAnnotation
 {
@@ -44,7 +45,7 @@ public class RAnnotation
     {
         super();
         user = aUser;
-        state = aState.name();
+        state = RemoteApiController2.annotationDocumentStateToString(aState);
         if (aTimestamp != null) {
             timestamp = FORMAT.format(aTimestamp);
         }
