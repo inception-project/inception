@@ -31,7 +31,6 @@ import java.util.Queue;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -58,22 +57,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
@@ -92,6 +89,7 @@ public class ProjectExportPanel
     private @SpringBean AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
+    private @SpringBean ExportService exportService;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userRepository;
@@ -142,7 +140,7 @@ public class ProjectExportPanel
         public ProjectExportForm(String id, Project aProject)
         {
             super(id, new CompoundPropertyModel<>(
-                    new ProjectExportRequest(aProject)));
+                    new ProjectExportRequest(aProject, ProjectExportRequest.FORMAT_AUTO)));
             
             add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
             {
@@ -337,7 +335,7 @@ public class ProjectExportPanel
                     fileGenerationProgress.start(target);
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
-                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(), target,
+                    runnable = new FileGenerator(ProjectExportForm.this.getModelObject(),
                             authentication.getName());
                     thread = new Thread(runnable);
                     thread.start();
@@ -370,13 +368,10 @@ public class ProjectExportPanel
     {
         private String username;
         private ProjectExportRequest model;
-        private AjaxRequestTarget target;
 
-        public FileGenerator(ProjectExportRequest aModel, AjaxRequestTarget aTarget,
-                String aUsername)
+        public FileGenerator(ProjectExportRequest aModel, String aUsername)
         {
             model = aModel;
-            target = aTarget;
             username = aUsername;
         }
 
@@ -391,7 +386,7 @@ public class ProjectExportPanel
             File file;
             try {
                 Thread.sleep(100); // Why do we sleep here?
-                file = generateZipFile(model, target);
+                file = exportService.generateZipFile(model);
                 fileName = file.getAbsolutePath();
                 projectName = model.project.getName();
                 canceled = false;
@@ -416,76 +411,6 @@ public class ProjectExportPanel
         public Queue<String> getMessages()
         {
             return model.messages;
-        }
-
-        public File generateZipFile(final ProjectExportRequest aModel, AjaxRequestTarget aTarget)
-            throws IOException, UIMAException, ClassNotFoundException, ZippingException,
-            InterruptedException, ProjectExportException
-        {
-            File exportTempDir = null;
-            // all metadata and project settings data from the database as JSON file
-            File projectSettings = null;
-            projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
-            // Directory to store source documents and annotation documents
-            exportTempDir = File.createTempFile("webanno-project", "export");
-            exportTempDir.delete();
-            exportTempDir.mkdirs();
-
-            File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-            if (aModel.project.getId() == 0) {
-                throw new ProjectExportException(
-                        "Project not yet created. Please save project details first!");
-            }
-
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = ExportUtil
-                    .exportProjectSettings(annotationService, automationService, documentService,
-                            projectService, aModel.project, projectSettings, exportTempDir);
-            try {
-                JSONUtil.generatePrettyJson(exProjekt, projectSettings);
-                FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
-            }
-            catch (IOException e) {
-                error("File Path not found or no permision to save the file!");
-            }
-            
-            model.progress = 9;
-            ExportUtil.exportSourceDocuments(documentService, automationService, aModel,
-                    aModel.project, exportTempDir);
-            ExportUtil.exportTrainingDocuments(automationService, aModel, aModel.project,
-                    exportTempDir);
-            ExportUtil.exportAnnotationDocuments(documentService, importExportService,
-                    userRepository, aModel, exportTempDir);
-            ExportUtil.exportProjectLog(projectService, aModel.project, exportTempDir);
-            ExportUtil.exportGuideLine(projectService, aModel.project, exportTempDir);
-            ExportUtil.exportProjectMetaInf(projectService, aModel.project, exportTempDir);
-            ExportUtil.exportProjectConstraints(constraintsService, aModel.project, exportTempDir);
-            model.progress = 90;
-            try {
-                ExportUtil.exportCuratedDocuments(documentService, importExportService, aModel,
-                        exportTempDir, true);
-            }
-            catch (ProjectExportException e) {
-                // cancel export operation here
-                error("Error: " + e.getMessage());
-                if (thread != null) {
-                    model.progress = 100;
-                    thread.interrupt();
-                }
-            }
-            try {
-                ZipUtils.zipFolder(exportTempDir, projectZipFile);
-            }
-            catch (Exception e) {
-                throw new ZippingException("Unable to Zip the file");
-            }
-            finally {
-                FileUtils.forceDelete(projectSettings);
-                System.gc();
-                FileUtils.forceDelete(exportTempDir);
-            }
-            model.progress = 100;
-
-            return projectZipFile;
         }
     }
     

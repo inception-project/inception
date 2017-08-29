@@ -17,29 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
-import java.io.Serializable;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.io.File;
+import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import org.apache.uima.UIMAException;
 
-public class ProjectExportRequest
-    implements Serializable
+public interface ExportService
 {
-    private static final long serialVersionUID = -4486934192675904995L;
+    String SERVICE_NAME = "exportService";
     
-    public static final String FORMAT_AUTO = "AUTO";
-    
-    public String format;
-    public Project project;
-    public int progress = 0;
-    public final Queue<String> messages;
-            
-    public ProjectExportRequest(Project aProject, String aFormat)
-    {
-        format = aFormat;
-        project = aProject;
-        progress = 0;
-        messages = new ConcurrentLinkedQueue<>();
-    }
+    File generateZipFile(final ProjectExportRequest aRequest)
+        throws IOException, UIMAException, ClassNotFoundException, ProjectExportException;
 }

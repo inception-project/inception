@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest.FORMAT_AUTO;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -67,8 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
 public class ExportUtil
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExportUtil.class);
-    
-    private static final String FORMAT_AUTO = "AUTO";
     
     private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
     private static final String CONSTRAINTS = "/constraints/";

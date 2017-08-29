@@ -32,6 +32,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,7 +69,10 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -86,8 +90,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -129,6 +135,7 @@ public class RemoteApiController2
     private static final String ANNOTATIONS = "annotations";
     private static final String CURATION = "curation";
     private static final String IMPORT = "import";
+    private static final String EXPORT = "export.zip";
     
     private static final String PARAM_FILE = "file";
     private static final String PARAM_NAME = "name";
@@ -158,6 +165,7 @@ public class RemoteApiController2
     private @Resource AnnotationSchemaService annotationService;
     private @Resource UserDao userRepository;
     private @Resource ImportService importService;
+    private @Resource ExportService exportService;
 
     @ExceptionHandler(value = RemoteApiException.class)
     public ResponseEntity<RResponse<Void>> handleException(RemoteApiException aException)
@@ -407,6 +415,41 @@ public class RemoteApiController2
         }
 
         return ResponseEntity.ok(new RResponse<>(new RProject(importedProject)));
+    }
+    
+    @ApiOperation(value = "Export a project to a ZIP file")
+    @RequestMapping(
+            value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + EXPORT), 
+            method = RequestMethod.GET,
+            produces = { "application/zip", APPLICATION_JSON_UTF8_VALUE })
+    public ResponseEntity<InputStreamResource> projectExport(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+        
+        ProjectExportRequest per = new ProjectExportRequest(project, "bin");
+        File exportedFile = exportService.generateZipFile(per);
+        
+        // Turn the file into a resource and auto-delete the file when the resource closes the
+        // stream.
+        InputStreamResource result = new InputStreamResource(new FileInputStream(exportedFile) {
+            @Override
+            public void close() throws IOException
+            {
+                super.close();
+                FileUtils.forceDelete(exportedFile);
+            } 
+        });
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.valueOf("application/zip"));
+        httpHeaders.setContentLength(exportedFile.length());
+        httpHeaders.set("Content-Disposition",
+                "attachment; filename=\"" + exportedFile.getName() + "\"");
+
+        return new ResponseEntity<>(result, httpHeaders, HttpStatus.OK);
     }
     
     @ApiOperation(value = "List documents in a project")
