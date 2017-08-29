@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -60,6 +58,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportException;
+import de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -70,9 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelCondition;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ExportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.util.ZippingException;
 
@@ -86,8 +85,6 @@ public class ProjectExportPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
-
-    private static final String FORMAT_AUTO = "AUTO";
 
     public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
 
@@ -138,14 +135,14 @@ public class ProjectExportPanel
     }
     
     public class ProjectExportForm
-        extends Form<ProjectExportModel>
+        extends Form<ProjectExportRequest>
     {
         private static final long serialVersionUID = 9151007311548196811L;
 
         public ProjectExportForm(String id, Project aProject)
         {
             super(id, new CompoundPropertyModel<>(
-                    new ProjectExportModel(aProject)));
+                    new ProjectExportRequest(aProject)));
             
             add(new DropDownChoice<String>("format", new LoadableDetachableModel<List<String>>()
             {
@@ -156,7 +153,7 @@ public class ProjectExportPanel
                 {                    
                     List<String> formats = new ArrayList<>(
                             importExportService.getWritableFormatLabels());
-                    formats.add(0, FORMAT_AUTO);
+                    formats.add(0, ProjectExportRequest.FORMAT_AUTO);
                     return formats;
                 }
             }) {
@@ -368,33 +365,15 @@ public class ProjectExportPanel
         }
     }
     
-    public static class ProjectExportModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -4486934192675904995L;
-        
-        public final String format;
-        public final Project project;
-        public int progress = 0;
-        public final Queue<String> messages;
-                
-        public ProjectExportModel(Project aProject)
-        {
-            format = FORMAT_AUTO;
-            project = aProject;
-            progress = 0;
-            messages = new ConcurrentLinkedQueue<>();
-        }
-    }
-
     public class FileGenerator
         implements Runnable
     {
         private String username;
-        private ProjectExportModel model;
+        private ProjectExportRequest model;
         private AjaxRequestTarget target;
 
-        public FileGenerator(ProjectExportModel aModel, AjaxRequestTarget aTarget, String aUsername)
+        public FileGenerator(ProjectExportRequest aModel, AjaxRequestTarget aTarget,
+                String aUsername)
         {
             model = aModel;
             target = aTarget;
@@ -439,7 +418,7 @@ public class ProjectExportPanel
             return model.messages;
         }
 
-        public File generateZipFile(final ProjectExportModel aModel, AjaxRequestTarget aTarget)
+        public File generateZipFile(final ProjectExportRequest aModel, AjaxRequestTarget aTarget)
             throws IOException, UIMAException, ClassNotFoundException, ZippingException,
             InterruptedException, ProjectExportException
         {

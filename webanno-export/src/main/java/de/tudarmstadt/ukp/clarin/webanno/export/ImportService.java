@@ -1,6 +1,6 @@
 /*
- * Copyright 2014
- * FG Language Technology and Ubiquitous Knowledge Processing (UKP) Lab
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.export;
 
-package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+import java.io.File;
 
-/**
- * Exception thrown while exporting the whole project
- */
-public class ProjectExportException
-    extends Exception
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public interface ImportService
 {
-    private static final long serialVersionUID = -4242850260003049868L;
-
-    public ProjectExportException(String message)
-    {
-        super(message);
-    }
+    String SERVICE_NAME = "importService";
+    
+    Project importProject(File aProjectFile, boolean aGenerateUsers) throws Exception;
 }
