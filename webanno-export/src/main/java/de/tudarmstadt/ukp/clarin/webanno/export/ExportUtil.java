@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project;
+package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.export.ProjectExportRequest.FORMAT_AUTO;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,13 +64,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.export.ProjectExportPanel.ProjectExportModel;
 
 public class ExportUtil
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
-    
-    private static final String FORMAT_AUTO = "AUTO";
+    private static final Logger LOG = LoggerFactory.getLogger(ExportUtil.class);
     
     private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
     private static final String CONSTRAINTS = "/constraints/";
@@ -271,7 +269,7 @@ public class ExportUtil
      * Copy source documents from the file system of this project to the export folder
      */
     public static void exportSourceDocuments(DocumentService documentService,
-            AutomationService automationService, ProjectExportModel model, Project aProject,
+            AutomationService automationService, ProjectExportRequest model, Project aProject,
             File aCopyDir)
         throws IOException, ProjectExportException
     {
@@ -311,7 +309,7 @@ public class ExportUtil
      */
     
     public static void exportTrainingDocuments(AutomationService automationService,
-            ProjectExportModel model, Project aProject, File aCopyDir)
+            ProjectExportRequest model, Project aProject, File aCopyDir)
         throws IOException, ProjectExportException
     {
         File trainDocumentDir = new File(aCopyDir + TRAIN_FOLDER);
@@ -350,7 +348,7 @@ public class ExportUtil
      */
     public static void exportAnnotationDocuments(DocumentService documentService,
             ImportExportService importExportService, UserDao userRepository,
-            ProjectExportModel aModel, File aCopyDir)
+            ProjectExportRequest aModel, File aCopyDir)
         throws IOException, UIMAException, ClassNotFoundException
     {
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
@@ -563,7 +561,7 @@ public class ExportUtil
      *            The folder where curated documents are copied to be exported as Zip File
      */
     public static void exportCuratedDocuments(DocumentService documentService,
-            ImportExportService importExportService, ProjectExportModel aModel, File aCopyDir,
+            ImportExportService importExportService, ProjectExportRequest aModel, File aCopyDir,
             boolean aIncludeInProgress)
         throws UIMAException, IOException, ClassNotFoundException,
         ProjectExportException

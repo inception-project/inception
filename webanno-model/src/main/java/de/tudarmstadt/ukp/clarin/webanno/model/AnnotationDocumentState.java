@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
@@ -30,26 +28,21 @@ public enum AnnotationDocumentState implements PersistentEnum
      * For every source document, there will be a NEW annotation document, untill the user start
      * annotating it.
      */
-    @JsonProperty("NEW")
     NEW("NEW", "black"),
     
     /**
-     *
      * annotation document has been created for this document for this annotator
      */
-    @JsonProperty("IN-PROGRESS")
     IN_PROGRESS("INPROGRESS", "blue"),
     
     /**
      * annotator has marked annotation document as complete
      */
-    @JsonProperty("COMPLETE")
     FINISHED("FINISHED", "red"),
     
     /**
      * Ignore this annotation document from further processing such as curation
      */
-    @JsonProperty("LOCKED")
     IGNORE("IGNORE", "black");
 
     private final String id;

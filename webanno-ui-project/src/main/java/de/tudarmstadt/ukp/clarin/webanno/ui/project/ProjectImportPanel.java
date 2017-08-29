@@ -20,15 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -47,17 +42,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
+import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 
@@ -68,13 +55,7 @@ public class ProjectImportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectImportPanel.class);
     
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
-    private @SpringBean DocumentService documentService;
-    private @SpringBean ProjectService projectService;
-    private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
+    private @SpringBean ImportService importService;
     
     private IModel<Project> selectedModel;
     private IModel<Preferences> preferences;
@@ -119,7 +100,7 @@ public class ProjectImportPanel
                         error("Incompatible to webanno ZIP file");
                     }
                     
-                    importedProject = importProject(tempFile, aGenerateUsers);
+                    importedProject = importService.importProject(tempFile, aGenerateUsers);
                 }
                 finally {
                     tempFile.delete();
@@ -136,86 +117,6 @@ public class ProjectImportPanel
             selectedModel.setObject(importedProject);
             aTarget.add(getPage());
         }
-    }
-    
-    private Project importProject(File aProjectFile, boolean aGenerateUsers) throws Exception
-    {
-        Project importedProject = new Project();
-        ZipFile zip = new ZipFile(aProjectFile);
-        InputStream projectInputStream = null;
-        for (Enumeration<? extends ZipEntry> zipEnumerate = zip.entries(); zipEnumerate
-                .hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
-                    && entry.toString().replace("/", "").endsWith(".json")) {
-                projectInputStream = zip.getInputStream(entry);
-                break;
-            }
-        }
-
-        // Load the project model from the JSON file
-        String text = IOUtils.toString(projectInputStream, "UTF-8");
-        de.tudarmstadt.ukp.clarin.webanno.export.model.Project importedProjectSetting = JSONUtil
-                .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.Project.class);
-
-        // Import the project itself
-        importedProject = ImportUtil.createProject(importedProjectSetting, projectService);
-
-        // Import additional project things
-        projectService.onProjectImport(zip, importedProjectSetting, importedProject);
-
-        // Import missing users
-        if (aGenerateUsers) {
-            ImportUtil.createMissingUsers(importedProjectSetting, userRepository);
-        }
-
-        // Notify all relevant service so that they can initialize themselves for the given
-        // project
-        for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
-            try {
-                bean.onProjectImport(zip, importedProjectSetting, importedProject);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
-        // Import layers
-        Map<String, AnnotationFeature> featuresMap = ImportUtil.createLayer(importedProject,
-                importedProjectSetting, userRepository, annotationService);
-        /*
-         * for (TagSet tagset : importedProjectSetting.getTagSets()) {
-         * ImportUtil.createTagset(importedProject, tagset, projectRepository, annotationService); }
-         */
-
-        // Import source document
-        ImportUtil.createSourceDocument(importedProjectSetting, importedProject, documentService);
-
-        // Import Training document
-        ImportUtil.createTrainingDocument(importedProjectSetting, importedProject,
-                automationService, featuresMap);
-        // Import source document content
-        ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
-        // Import training document content
-        ImportUtil.createTrainingDocumentContent(zip, importedProject, automationService);
-
-        // Import automation settings
-        ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
-
-        // Import annotation document content
-        ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,
-                documentService);
-        // Import annotation document content
-        ImportUtil.createAnnotationDocumentContent(zip, importedProject, documentService);
-
-        // Import curation document content
-        ImportUtil.createCurationDocumentContent(zip, importedProject, documentService);
-
-        return importedProject;
     }
 
     static class Preferences implements Serializable
