@@ -158,10 +158,6 @@
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.tokit-asl</artifactId>
-    </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
     <dependency>
@@ -169,8 +165,13 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-    	<artifactId>webanno-api-automation</artifactId>
+      	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      	<artifactId>webanno-api-automation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

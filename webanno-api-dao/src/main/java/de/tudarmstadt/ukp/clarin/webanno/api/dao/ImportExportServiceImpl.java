@@ -21,19 +21,21 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -44,7 +46,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
-import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -90,7 +91,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 @Component(ImportExportService.SERVICE_NAME)
 public class ImportExportServiceImpl
@@ -369,15 +369,112 @@ public class ImportExportServiceImpl
         boolean hasTokens = JCasUtil.exists(jCas, Token.class);
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
 
-        if (!hasTokens || !hasSentences) {
-            AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
-                    !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
-            pipeline.process(jCas);
+//        if (!hasTokens || !hasSentences) {
+//            AnalysisEngine pipeline = createEngine(createEngineDescription(
+//                    BreakIteratorSegmenter.class, 
+//                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens,
+//                    BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
+//            pipeline.process(jCas);
+//        }
+        
+        if (!hasSentences) {
+            splitSentences(jCas);
+        }
+
+        if (!hasTokens) {
+            tokenize(jCas);
         }
 
         return jCas;
     }
+    
+    public static void splitSentences(JCas aJCas)
+    {
+        BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
+        bi.setText(aJCas.getDocumentText());
+        int last = bi.first();
+        int cur = bi.next();
+        while (cur != BreakIterator.DONE) {
+            int[] span = new int[] { last, cur };
+            trim(aJCas.getDocumentText(), span);
+            if (!isEmpty(span[0], span[1])) {
+                Sentence seg = new Sentence(aJCas, span[0], span[1]);
+                seg.addToIndexes(aJCas);
+            }
+            last = cur;
+            cur = bi.next();
+        }
+    }
+    
+    public static void tokenize(JCas aJCas)
+    {
+        BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
+        for (Sentence s : select(aJCas, Sentence.class)) {
+            bi.setText(s.getCoveredText());
+            int last = bi.first();
+            int cur = bi.next();
+            while (cur != BreakIterator.DONE) {
+                int[] span = new int[] { last, cur };
+                trim(s.getCoveredText(), span);
+                if (!isEmpty(span[0], span[1])) {
+                    Token seg = new Token(aJCas, span[0] + s.getBegin(), span[1] + s.getBegin());
+                    seg.addToIndexes(aJCas);
+                }
+                last = cur;
+                cur = bi.next();
+            }
+        }
+    }
+    
+    /**
+     * Remove trailing or leading whitespace from the annotation.
+     * 
+     * @param aText
+     *            the text.
+     * @param aSpan
+     *            the offsets.
+     */
+    public static void trim(String aText, int[] aSpan)
+    {
+        String data = aText;
+
+        int begin = aSpan[0];
+        int end = aSpan[1] - 1;
+
+        // Remove whitespace at end
+        while ((end > 0) && trimChar(data.charAt(end))) {
+            end--;
+        }
+        end++;
+
+        // Remove whitespace at start
+        while ((begin < end) && trimChar(data.charAt(begin))) {
+            begin++;
+        }
+
+        aSpan[0] = begin;
+        aSpan[1] = end;
+    }
+
+    public static boolean isEmpty(int aBegin, int aEnd)
+    {
+        return aBegin >= aEnd;
+    }
+
+    public static boolean trimChar(final char aChar)
+    {
+        switch (aChar) {
+        case '\n':     return true; // Line break
+        case '\r':     return true; // Carriage return
+        case '\t':     return true; // Tab
+        case '\u200E': return true; // LEFT-TO-RIGHT MARK
+        case '\u200F': return true; // RIGHT-TO-LEFT MARK
+        case '\u2028': return true; // LINE SEPARATOR
+        case '\u2029': return true; // PARAGRAPH SEPARATOR
+        default:
+            return  Character.isWhitespace(aChar);
+        }
+    }    
     
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
