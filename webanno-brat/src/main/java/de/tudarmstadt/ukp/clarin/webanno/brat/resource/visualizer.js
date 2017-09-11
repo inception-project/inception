@@ -607,6 +607,9 @@ var Visualizer = (function($, window, undefined) {
           if (entity[4]) {
         	  span.color = entity[4];
           }
+          if (entity[5]){
+        	  span.hoverSpantext = entity[5];
+          }
 // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
           data.spans[entity[0]] = span;
@@ -3715,9 +3718,12 @@ Util.profileStart('before render');
         if (id = target.attr('data-span-id')) {
           commentId = id;
           var span = data.spans[id];
+          var spantext = span.text;
+          if(span.hoverSpantext)
+        	  spantext = span.hoverSpantext
           dispatcher.post('displaySpanComment', [
               evt, target, id, span.type, span.attributeText,
-              span.text,
+              spantext,
               span.comment && span.comment.text,
               span.comment && span.comment.type,
               span.normalizations]);

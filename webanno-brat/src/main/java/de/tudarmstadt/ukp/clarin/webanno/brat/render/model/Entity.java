@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color" })
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color", "hoverSpantext" })
 public class Entity
 {
     private VID vid;
@@ -44,6 +44,7 @@ public class Entity
     // WEBANNO EXTENSION BEGIN
     private String labelText;
     private String color;
+    private String hoverSpantext;
     // WEBANNO EXTENSION END
 
     public Entity()
@@ -51,28 +52,33 @@ public class Entity
         // Nothing to do
     }
 
-    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor)
+    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor,
+            String aHoverSpantext)
     {
-        this(aId, aType, asList(aOffsets), aLabelText, aColor);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
     }
 
-    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
+    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
+            String aHoverSpantext)
     {
-        this(new VID(aId), aType, aOffsets, aLabelText, aColor);
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext);
     }
 
-    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
+    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor,
+            String aHoverSpantext)
     {
-        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
     }
 
-    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
+    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
+            String aHoverSpantext)
     {
         vid = aVid;
         type = aType;
         offsets = aOffsets;
         labelText = aLabelText;
         color = aColor;
+        hoverSpantext = aHoverSpantext;
     }
 
     @Deprecated
@@ -121,7 +127,7 @@ public class Entity
     {
         labelText = aLabelText;
     }
-    
+
     public String getLabelText()
     {
         return labelText;
@@ -135,5 +141,15 @@ public class Entity
     public void setColor(String aColor)
     {
         color = aColor;
+    }
+    
+    public void setHoverSpantext(String aHoverSpantext)
+    {
+        hoverSpantext = aHoverSpantext;
+    }
+
+    public String getHoverSpantext()
+    {
+        return hoverSpantext;
     }
 }

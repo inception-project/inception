@@ -122,7 +122,8 @@ public class BratRenderer
                     color = vspan.getColorHint();
                 }
                 aResponse.addEntity(
-                        new Entity(vspan.getVid(), vspan.getType(), offsets, bratLabelText, color));
+                        new Entity(vspan.getVid(), vspan.getType(), offsets,
+                                bratLabelText, color, null));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
