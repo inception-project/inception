@@ -101,7 +101,7 @@ public class AnnotationLayer
 
     private boolean crossSentence;
     
-    private boolean showHover;
+    private boolean showHover = true;
 
     private boolean multipleTokens;
     
