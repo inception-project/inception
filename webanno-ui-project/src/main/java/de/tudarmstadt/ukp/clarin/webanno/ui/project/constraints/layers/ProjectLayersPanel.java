@@ -873,6 +873,7 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
+            add(new CheckBox("showHover"));
             add(new CheckBox("remember"));
             add(required = new CheckBox("required") {
                 private static final long serialVersionUID = -2716373442353375910L;
