@@ -69,6 +69,9 @@ public class AnnotationLayer
 
     @JsonProperty("cross_sentence")
     private boolean crossSentence;
+    
+    @JsonProperty("show_hover")
+    private boolean showHover = true;
 
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
@@ -190,6 +193,16 @@ public class AnnotationLayer
     public void setCrossSentence(boolean crossSentence)
     {
         this.crossSentence = crossSentence;
+    }
+
+    public boolean isShowHover()
+    {
+        return showHover;
+    }
+
+    public void setShowHover(boolean showHover)
+    {
+        this.showHover = showHover;
     }
 
     public boolean isMultipleTokens()

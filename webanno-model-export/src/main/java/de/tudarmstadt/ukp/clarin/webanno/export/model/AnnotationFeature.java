@@ -47,6 +47,9 @@ public class AnnotationFeature
 
     @JsonProperty("visible")
     private boolean visible = false;
+    
+    @JsonProperty("feature_show_hover")
+    private boolean featureShowHover = false;
 
     @JsonProperty("required")
     private boolean required = false;
@@ -126,6 +129,16 @@ public class AnnotationFeature
     public void setVisible(boolean visible)
     {
         this.visible = visible;
+    }
+
+    public boolean isFeatureShowHover()
+    {
+        return featureShowHover;
+    }
+
+    public void setFeatureShowHover(boolean featureShowHover)
+    {
+        this.featureShowHover = featureShowHover;
     }
 
     public String getDescription()
