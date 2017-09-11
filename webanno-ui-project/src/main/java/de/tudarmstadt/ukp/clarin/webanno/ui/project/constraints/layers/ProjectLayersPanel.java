@@ -418,6 +418,7 @@ public class ProjectLayersPanel
         private CheckBox lockToTokenOffset;
         private CheckBox allowStacking;
         private CheckBox crossSentence;
+        private CheckBox showHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
 
@@ -466,6 +467,7 @@ public class ProjectLayersPanel
                     target.add(lockToTokenOffset);
                     target.add(allowStacking);
                     target.add(crossSentence);
+                    target.add(showHover);
                     target.add(multipleTokens);
                     target.add(linkedListBehavior);
                     target.add(attachTypes);
@@ -610,6 +612,25 @@ public class ProjectLayersPanel
                             // Not configurable for layers that attach to tokens (currently that
                             // is the only layer on which we use the attach feature)
                             && layer.getAttachFeature() == null);
+                }
+            });
+            
+            add(showHover = new CheckBox("showHover")
+            {
+                
+                private static final long serialVersionUID = -7739913125218251672L;
+
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    setVisible(!isBlank(layer.getType()));
+                    setEnabled(true);
                 }
             });
 
