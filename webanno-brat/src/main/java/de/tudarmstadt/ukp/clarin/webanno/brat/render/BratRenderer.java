@@ -115,6 +115,7 @@ public class BratRenderer
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = toOffsets(vspan.getRanges());
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
+                String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, vspan.getFeatures());
                 String color;
                 if (vspan.getColorHint() == null) {
                     color = getColor(vspan, coloringStrategy, bratLabelText);
@@ -123,7 +124,7 @@ public class BratRenderer
                 }
                 aResponse.addEntity(
                         new Entity(vspan.getVid(), vspan.getType(), offsets,
-                                bratLabelText, color, null));
+                                bratLabelText, color, bratHoverText));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {

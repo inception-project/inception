@@ -73,6 +73,7 @@ public class SpanRenderer
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             Map<String, String> features = getFeatures(typeAdapter, fs, aFeatures);
+            Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
             
             Sentence beginSent = null;
             Sentence endSent = null;
@@ -122,14 +123,15 @@ public class SpanRenderer
                     }
                 }
                 aResponse.add(
-                        new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features));
+                        new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features, 
+                                hoverFeatures));
             }
             else {
                 // FIXME It should be possible to remove this case and the if clause because
                 // the case that a FS is inside a single sentence is just a special case
                 aResponse.add(new VSpan(typeAdapter.getLayer(), fs, bratTypeName,
                         new VRange(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin),
-                        features));
+                        features, hoverFeatures));
             }
             
             // Render errors if required features are missing

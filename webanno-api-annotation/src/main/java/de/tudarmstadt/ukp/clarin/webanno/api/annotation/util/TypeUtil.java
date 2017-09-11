@@ -73,6 +73,19 @@ public final class TypeUtil
     }
     
     /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, Map<String, String> aFeatures)
+    {
+        // TODO FIXME: implement me
+        return "";
+    }
+    
+    /**
      * Construct the label text used in the brat user interface.
      *
      * @param aAdapter the adapter.
@@ -108,6 +121,21 @@ public final class TypeUtil
             // If there are no label features at all, then use the layer UI name
             return "(" + aAdapter.getLayer().getUiName() + ")";
         }
+    }
+    
+    /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aFs the annotation.
+     * @param aFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        // TODO FIXME: implement me
+        return "";
     }
 
     /**

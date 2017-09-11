@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isRequiredFeatureMissing;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,13 @@ public interface Renderer
         }
         
         return features;
+    }
+    
+    default Map<String, String> getHoverFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        // FIXME: TODO: implement me 
+        return Collections.emptyMap();
     }
     
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
