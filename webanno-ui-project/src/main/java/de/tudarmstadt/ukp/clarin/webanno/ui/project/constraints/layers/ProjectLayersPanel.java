@@ -630,7 +630,13 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()));
-                    setEnabled(true);
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()) &&
+                            // Currently not configurable for chains or relations
+                            !CHAIN_TYPE.equals(layer.getType()) &&
+                            !RELATION_TYPE.equals(layer.getType()));
                 }
             });
 
