@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isRequiredFeatureMissing;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,8 +87,26 @@ public interface Renderer
     default Map<String, String> getHoverFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
-        // FIXME: TODO: implement me 
-        return Collections.emptyMap();
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
+        Map<String, String> hoverfeatures = new LinkedHashMap<>();
+
+        if (aAdapter.getLayer().isShowHover())
+            hoverfeatures.put("__spantext__", aFs.getCoveredText());
+
+        for (AnnotationFeature feature : aFeatures) {
+            if (!feature.isEnabled() || !feature.isFeatureShowHover()
+                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                continue;
+            }
+            
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            String text = defaultString(
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+            
+            hoverfeatures.put(feature.getName(), text);
+        }
+        
+        return hoverfeatures;
     }
     
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,

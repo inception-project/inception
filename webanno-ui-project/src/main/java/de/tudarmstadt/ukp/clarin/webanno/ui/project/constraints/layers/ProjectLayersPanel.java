@@ -630,7 +630,7 @@ public class ProjectLayersPanel
                     super.onConfigure();
                     AnnotationLayer layer = LayerDetailForm.this.getModelObject();
                     setVisible(!isBlank(layer.getType()) &&
-                         // Currently not configurable for chains or relations
+                            // Not configurable for chains or relations
                             !CHAIN_TYPE.equals(layer.getType()) &&
                             !RELATION_TYPE.equals(layer.getType()));
                     setEnabled(
@@ -879,7 +879,21 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
-            add(new CheckBox("showHover"));
+            add(new CheckBox("featureShowHover") {
+
+                private static final long serialVersionUID = -8273152168889478682L;
+                
+                @Override
+                protected void onConfigure()
+                {
+                    String layertype = layerDetailForm.getModelObject().getType();
+                    // Currently not configurable for chains or relations 
+                    // TODO: technically it is possible
+                    setVisible(!CHAIN_TYPE.equals(layertype) &&
+                            !RELATION_TYPE.equals(layertype));
+                }
+                
+            });
             add(new CheckBox("remember"));
             add(required = new CheckBox("required") {
                 private static final long serialVersionUID = -2716373442353375910L;
