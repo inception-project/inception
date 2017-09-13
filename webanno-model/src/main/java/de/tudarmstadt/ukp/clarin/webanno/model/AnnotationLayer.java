@@ -101,7 +101,6 @@ public class AnnotationLayer
 
     private boolean crossSentence;
     
-    @Column(name = "showHover", nullable = false)
     private boolean showHover = true;
 
     private boolean multipleTokens;
