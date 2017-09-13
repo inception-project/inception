@@ -600,7 +600,7 @@ var Visualizer = (function($, window, undefined) {
           var span =
               //      (id,        type,      offsets,   generalType)
               new Span(entity[0], entity[1], entity[2], 'entity');
-// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
           if (entity[3]) {
         	  span.labelText = entity[3];
           }
