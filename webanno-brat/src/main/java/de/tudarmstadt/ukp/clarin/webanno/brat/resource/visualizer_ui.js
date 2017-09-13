@@ -335,7 +335,7 @@ var VisualizerUI = (function($, window, undefined) {
                 }
 
             var displaySpanComment = function(
-                evt, target, spanId, spanType, mods, spanText, hoverSpantext, commentText, commentType, normalizations) {
+                evt, target, spanId, spanType, mods, spanText, hoverText, commentText, commentType, normalizations) {
 
                     var immediately = false;
                     var comment = ('<div><span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, spanType)) + '</span>' + ' ' + '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>');
@@ -344,11 +344,13 @@ var VisualizerUI = (function($, window, undefined) {
                     }
 
                     comment += '</div>';
-                    if(hoverSpantext) {
-                        comment += ('<div class="comment_text">' + Util.escapeHTML(hoverSpantext) + '</div>');
-                    } else if(spanText) {
-                    	    comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
+                    
+                    if (hoverText) {
+                        comment += ('<div class="comment_text">' + Util.escapeHTML(hoverText) + '</div>');
+                    } else if(spanText) {}
+                        comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
                     }
+
                     var validArcTypesForDrag = dispatcher.post('getValidArcTypesForDrag', [spanId, spanType]);
                     if (validArcTypesForDrag && validArcTypesForDrag[0]) {
                         if (validArcTypesForDrag[0].length) {
