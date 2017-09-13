@@ -83,7 +83,6 @@ public class AnnotationFeature
 
     private boolean visible = true;
     
-    @Column(nullable = false)
     private boolean featureShowHover = false;
     
     private boolean remember;
