@@ -83,7 +83,7 @@ public class AnnotationFeature
 
     private boolean visible = true;
     
-    private boolean featureShowHover = false;
+    private boolean includeInHover = false;
     
     private boolean remember;
     
@@ -267,14 +267,14 @@ public class AnnotationFeature
         this.visible = visible;
     }
 
-    public boolean isFeatureShowHover()
+    public boolean isIncludeInHover()
     {
-        return featureShowHover;
+        return includeInHover;
     }
 
-    public void setFeatureShowHover(boolean featureShowHover)
+    public void setIncludeInHover(boolean includeInHover)
     {
-        this.featureShowHover = featureShowHover;
+        this.includeInHover = includeInHover;
     }
 
     /**

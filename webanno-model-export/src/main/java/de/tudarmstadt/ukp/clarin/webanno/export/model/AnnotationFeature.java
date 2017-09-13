@@ -48,8 +48,8 @@ public class AnnotationFeature
     @JsonProperty("visible")
     private boolean visible = false;
     
-    @JsonProperty("feature_show_hover")
-    private boolean featureShowHover = false;
+    @JsonProperty("include_in_hover")
+    private boolean includeInHover = false;
 
     @JsonProperty("required")
     private boolean required = false;
@@ -131,14 +131,14 @@ public class AnnotationFeature
         this.visible = visible;
     }
 
-    public boolean isFeatureShowHover()
+    public boolean isIncludeInHover()
     {
-        return featureShowHover;
+        return includeInHover;
     }
 
-    public void setFeatureShowHover(boolean featureShowHover)
+    public void setIncludeInHover(boolean includeInHover)
     {
-        this.featureShowHover = featureShowHover;
+        this.includeInHover = includeInHover;
     }
 
     public String getDescription()

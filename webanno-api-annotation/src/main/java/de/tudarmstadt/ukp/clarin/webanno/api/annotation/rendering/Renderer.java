@@ -94,7 +94,7 @@ public interface Renderer
             hoverfeatures.put("__spantext__", aFs.getCoveredText());
 
         for (AnnotationFeature feature : aFeatures) {
-            if (!feature.isEnabled() || !feature.isFeatureShowHover()
+            if (!feature.isEnabled() || !feature.isIncludeInHover()
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
