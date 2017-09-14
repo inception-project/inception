@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color", "hoverSpantext" })
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color", "hovertext" })
 public class Entity
 {
     private VID vid;
@@ -44,7 +44,7 @@ public class Entity
     // WEBANNO EXTENSION BEGIN
     private String labelText;
     private String color;
-    private String hoverSpantext;
+    private String hovertext;
     // WEBANNO EXTENSION END
 
     public Entity()
@@ -71,14 +71,14 @@ public class Entity
     }
 
     public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+            String aHovertext)
     {
         vid = aVid;
         type = aType;
         offsets = aOffsets;
         labelText = aLabelText;
         color = aColor;
-        hoverSpantext = aHoverSpantext;
+        hovertext = aHovertext;
     }
 
     @Deprecated
@@ -143,13 +143,13 @@ public class Entity
         color = aColor;
     }
     
-    public void setHoverSpantext(String aHoverSpantext)
+    public void setHovertext(String aHovertext)
     {
-        hoverSpantext = aHoverSpantext;
+        hovertext = aHovertext;
     }
 
-    public String getHoverSpantext()
+    public String getHovertext()
     {
-        return hoverSpantext;
+        return hovertext;
     }
 }
