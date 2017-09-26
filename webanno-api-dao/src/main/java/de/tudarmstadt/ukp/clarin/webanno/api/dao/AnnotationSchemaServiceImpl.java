@@ -106,7 +106,6 @@ public class AnnotationSchemaServiceImpl
     @Override
     @Transactional
     public void createTag(Tag aTag)
-        throws IOException
     {
         entityManager.persist(aTag);
 
@@ -123,7 +122,6 @@ public class AnnotationSchemaServiceImpl
     @Override
     @Transactional
     public void createTagSet(TagSet aTagSet)
-        throws IOException
     {
 
         if (aTagSet.getId() == 0) {
@@ -860,7 +858,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeTag(Tag aTag)
     {
-        entityManager.remove(aTag);
+        entityManager.remove(entityManager.contains(aTag) ? aTag : entityManager.merge(aTag));
     }
 
     @Override
@@ -870,7 +868,8 @@ public class AnnotationSchemaServiceImpl
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
-        entityManager.remove(aTagSet);
+        entityManager
+                .remove(entityManager.contains(aTagSet) ? aTagSet : entityManager.merge(aTagSet));
     }
 
     @Override

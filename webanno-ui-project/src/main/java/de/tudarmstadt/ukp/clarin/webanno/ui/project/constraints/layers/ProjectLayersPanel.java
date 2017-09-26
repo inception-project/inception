@@ -129,6 +129,7 @@ public class ProjectLayersPanel
     public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
+        
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm");
 
         featureSelectionForm = new FeatureSelectionForm("featureSelectionForm");
@@ -152,6 +153,19 @@ public class ProjectLayersPanel
         add(importLayerForm);
     }
 
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        layerSelectionForm.getModelObject().layerSelection = null;
+        featureSelectionForm.getModelObject().feature = null;
+        layerDetailForm.setModelObject(new AnnotationLayer());
+        layerDetailForm.setVisible(false);
+        featureSelectionForm.setVisible(false);
+        featureDetailForm.setModelObject(new AnnotationFeature());
+        featureDetailForm.setVisible(false);
+    }
+    
     private class LayerSelectionForm
         extends Form<SelectionModel>
     {

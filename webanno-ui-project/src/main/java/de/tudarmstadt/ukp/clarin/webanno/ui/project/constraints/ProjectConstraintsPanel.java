@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
@@ -68,14 +67,25 @@ public class ProjectConstraintsPanel
 
     private SelectionForm selectionForm;
     private DetailForm detailForm;
+    
+    private IModel<ConstraintSet> selectedConstraints;
 
     public ProjectConstraintsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
         
-        add(selectionForm = new SelectionForm("selectionForm"));
-        add(detailForm = new DetailForm("detailForm"));
+        selectedConstraints = Model.of();
+        
+        add(selectionForm = new SelectionForm("selectionForm", selectedConstraints));
+        add(detailForm = new DetailForm("detailForm", selectedConstraints));
         add(new ImportForm("importForm"));
+    }
+    
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        selectedConstraints.setObject(null);
     }
 
     public class SelectionForm
@@ -83,9 +93,9 @@ public class ProjectConstraintsPanel
     {
         private static final long serialVersionUID = -4835473062143674510L;
 
-        public SelectionForm(String aId)
+        public SelectionForm(String aId, IModel<ConstraintSet> aModel)
         {
-            super(aId, Model.of((ConstraintSet) null));
+            super(aId, aModel);
 
             LoadableDetachableModel<List<ConstraintSet>> rulesets = 
                     new LoadableDetachableModel<List<ConstraintSet>>()
@@ -111,7 +121,7 @@ public class ProjectConstraintsPanel
                 @Override
                 protected void onSelectionChanged(ConstraintSet aNewSelection)
                 {
-                    ProjectConstraintsPanel.this.detailForm.setModelObject(aNewSelection);
+                    // Nothing to do - model already updated automatically
                 }
 
                 @Override
@@ -136,9 +146,9 @@ public class ProjectConstraintsPanel
 
         private TextArea<String> script;
         
-        public DetailForm(String aId)
+        public DetailForm(String aId, IModel<ConstraintSet> aModel)
         {
-            super(aId, new CompoundPropertyModel<>(new EntityModel<>(null)));
+            super(aId, new CompoundPropertyModel<>(aModel));
             TextField<String> constraintNameTextField = new TextField<>("name");
             add(constraintNameTextField);
             
@@ -197,7 +207,6 @@ public class ProjectConstraintsPanel
                 {
                     constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
                     DetailForm.this.setModelObject(null);
-                    selectionForm.setModelObject(null);
                 }
                 
                 @Override
@@ -341,7 +350,6 @@ public class ProjectConstraintsPanel
                         constraintsService.createConstraintSet(constraintSet);
                         constraintsService.writeConstraintSet(constraintSet,
                                 constraintRulesFile.getInputStream());
-                        detailForm.setModelObject(constraintSet);
                         selectionForm.setModelObject(constraintSet);
                     }
                     catch (IOException e) {

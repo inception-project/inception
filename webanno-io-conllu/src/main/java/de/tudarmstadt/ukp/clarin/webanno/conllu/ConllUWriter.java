@@ -102,11 +102,11 @@ public class ConllUWriter
     private static final int UNUSED_INT = -1;
 
     /**
-     * Name of configuration parameter that contains the character encoding used by the input files.
+     * Character encoding of the output data.
      */
-    public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
-    @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
-    private String encoding;
+    public static final String PARAM_TARGET_ENCODING = ComponentParameters.PARAM_TARGET_ENCODING;
+    @ConfigurationParameter(name = PARAM_TARGET_ENCODING, mandatory = true, defaultValue = "UTF-8")
+    private String targetEncoding;
 
     public static final String PARAM_FILENAME_SUFFIX = "filenameSuffix";
     @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".conll")
@@ -153,7 +153,7 @@ public class ConllUWriter
         PrintWriter out = null;
         try {
             out = new PrintWriter(new OutputStreamWriter(getOutputStream(aJCas, filenameSuffix),
-                    encoding));
+                    targetEncoding));
             convert(aJCas, out);
         }
         catch (Exception e) {
