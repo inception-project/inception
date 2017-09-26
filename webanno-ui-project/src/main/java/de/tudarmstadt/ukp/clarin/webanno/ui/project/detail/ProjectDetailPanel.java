@@ -229,7 +229,7 @@ public class ProjectDetailPanel
             if (!StringUtils.equals(newName, oldName) && isNotBlank(newName)
                     && projectService.existsProject(newName)) {
                 aValidatable.error(new ValidationError(
-                        "Another project with same name exists. Please try a different name"));
+                        "Another project with the same name exists. Please try a different name"));
             }
         }
     }
