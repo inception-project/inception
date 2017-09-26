@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
 
 public abstract class ListPanel_ImplBase
-    extends Panel
+    extends LambdaPanel
 {
     private static final long serialVersionUID = 414323323271754324L;
     

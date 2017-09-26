@@ -48,24 +48,18 @@ public interface AnnotationSchemaService
      *
      * @param tag
      *            the tag.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createTag(Tag tag)
-        throws IOException;
+    void createTag(Tag tag);
 
     /**
      * creates a {@link TagSet} object in the database
      *
      * @param tagset
      *            the tagset.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createTagSet(TagSet tagset)
-        throws IOException;
+    void createTagSet(TagSet tagset);
 
     /**
      * creates a type which will be a span, chain, or arc(relation) type. Currently the annotation
