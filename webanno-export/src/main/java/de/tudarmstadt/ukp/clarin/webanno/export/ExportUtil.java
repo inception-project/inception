@@ -351,8 +351,10 @@ public class ExportUtil
             ProjectExportRequest aModel, File aCopyDir)
         throws IOException, UIMAException, ClassNotFoundException
     {
+        Project project = aModel.project.getObject();
+        
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(aModel.project);
+                .listSourceDocuments(project);
         int i = 1;
         int initProgress = aModel.progress;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
@@ -381,7 +383,7 @@ public class ExportUtil
             
             LOG.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
                     + "] for source document [" + sourceDocument.getId() + "] in project ["
-                    + aModel.project.getName() + "] with id [" + aModel.project.getId() + "]");
+                    + project.getName() + "] with id [" + project.getId() + "]");
 
             //
             // Export per-user annotation document
@@ -447,8 +449,8 @@ public class ExportUtil
                     
                     LOG.info("Exported annotation document content for user ["
                             + annotationDocument.getUser() + "] for source document ["
-                            + sourceDocument.getId() + "] in project [" + aModel.project.getName()
-                            + "] with id [" + aModel.project.getId() + "]");
+                            + sourceDocument.getId() + "] in project [" + project.getName()
+                            + "] with id [" + project.getId() + "]");
                 }
             }
             
@@ -456,8 +458,8 @@ public class ExportUtil
             // annotation_ser
             // If this project is a correction project, add the auto-annotated CAS to same
             // folder as CURATION_FOLDER
-            if (WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aModel.project.getMode())
-                    || WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(aModel.project.getMode())) {
+            if (WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())
+                    || WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                 File correctionCasFile = documentService.getCasFile(sourceDocument,
                         CORRECTION_USER);
                 if (correctionCasFile.exists()) {
@@ -566,9 +568,11 @@ public class ExportUtil
         throws UIMAException, IOException, ClassNotFoundException,
         ProjectExportException
     {
+        Project project = aModel.project.getObject();
+        
         // Get all the source documents from the project
         List<de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument> documents = documentService
-                .listSourceDocuments(aModel.project);
+                .listSourceDocuments(project);
 
         // Determine which format to use for export.
         Class<?> writer;
