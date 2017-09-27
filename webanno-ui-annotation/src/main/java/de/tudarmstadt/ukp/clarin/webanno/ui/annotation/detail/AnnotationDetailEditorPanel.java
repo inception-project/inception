@@ -668,7 +668,11 @@ public class AnnotationDetailEditorPanel
         // attachFeature in the other span must be set to null. Typical example: POS is deleted, so
         // the pos feature of Token must be set to null. This is a quick case, because we only need
         // to look at span annotations that have the same offsets as the FS to be deleted.
-        if (layer.getAttachType() != null) {
+        if (
+                adapter instanceof SpanAdapter && 
+                layer.getAttachType() != null && 
+                layer.getAttachFeature() != null
+        ) {
             Type spanType = CasUtil.getType(jCas.getCas(), layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
                 .getName());
