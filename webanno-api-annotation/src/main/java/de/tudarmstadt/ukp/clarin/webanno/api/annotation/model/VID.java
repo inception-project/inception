@@ -48,11 +48,12 @@ public class VID
 
     public static final Pattern PATTERN_VID = Pattern.compile(
             "(?:(?<EXT>\\w+)\\:)?" + 
-            "((?<LAYER>\\d+)\\.)?" +
             "(?<ID>-?\\d+)" +
             "(?:\\-(?<SUB>\\d+))?" +
             "(?:\\.(?<ATTR>\\d+))?" +
-            "(?:\\.(?<SLOT>\\d+))?");
+            "(?:\\.(?<SLOT>\\d+))?" +
+            "(@(?<LAYER>\\d+))?"
+            );
 
     public static final int NONE = -1;
 
@@ -247,11 +248,6 @@ public class VID
             sb.append(':');
         }
 
-        if (layerId >= 0) {
-            sb.append(layerId);
-            sb.append('.');
-        }
-
         sb.append(annotationId);
 
         if (subAnnotationId >= 0) {
@@ -269,6 +265,11 @@ public class VID
             sb.append(slot);
         }
 
+        if (layerId >= 0) {
+            sb.append('@');
+            sb.append(layerId);
+        }
+        
         return sb.toString();
     }
 
