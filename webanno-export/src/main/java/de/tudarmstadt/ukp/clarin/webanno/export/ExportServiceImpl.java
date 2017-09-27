@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
@@ -74,30 +75,30 @@ public class ExportServiceImpl implements ExportService
             File projectSettings = null;
             projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
     
-            if (aRequest.project.getId() == 0) {
+            Project project = aRequest.project.getObject();
+            
+            if (project.getId() == 0) {
                 throw new ProjectExportException(
                         "Project not yet created. Please save project details first!");
             }
     
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = ExportUtil
                     .exportProjectSettings(annotationService, automationService, documentService,
-                            projectService, aRequest.project, projectSettings, exportTempDir);
+                            projectService, project, projectSettings, exportTempDir);
     
             JSONUtil.generatePrettyJson(exProjekt, projectSettings);
             FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
             
             aRequest.progress = 9;
-            ExportUtil.exportSourceDocuments(documentService, automationService, aRequest,
-                    aRequest.project, exportTempDir);
-            ExportUtil.exportTrainingDocuments(automationService, aRequest, aRequest.project,
+            ExportUtil.exportSourceDocuments(documentService, automationService, aRequest, project,
                     exportTempDir);
+            ExportUtil.exportTrainingDocuments(automationService, aRequest, project, exportTempDir);
             ExportUtil.exportAnnotationDocuments(documentService, importExportService,
                     userRepository, aRequest, exportTempDir);
-            ExportUtil.exportProjectLog(projectService, aRequest.project, exportTempDir);
-            ExportUtil.exportGuideLine(projectService, aRequest.project, exportTempDir);
-            ExportUtil.exportProjectMetaInf(projectService, aRequest.project, exportTempDir);
-            ExportUtil.exportProjectConstraints(constraintsService, aRequest.project,
-                    exportTempDir);
+            ExportUtil.exportProjectLog(projectService, project, exportTempDir);
+            ExportUtil.exportGuideLine(projectService, project, exportTempDir);
+            ExportUtil.exportProjectMetaInf(projectService, project, exportTempDir);
+            ExportUtil.exportProjectConstraints(constraintsService, project, exportTempDir);
             aRequest.progress = 90;
             
             ExportUtil.exportCuratedDocuments(documentService, importExportService, aRequest,

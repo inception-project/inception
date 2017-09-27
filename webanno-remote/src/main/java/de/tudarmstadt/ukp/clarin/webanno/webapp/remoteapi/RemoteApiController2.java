@@ -66,6 +66,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
@@ -429,7 +430,7 @@ public class RemoteApiController2
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest per = new ProjectExportRequest(project, "bin");
+        ProjectExportRequest per = new ProjectExportRequest(Model.of(project), "bin");
         File exportedFile = exportService.generateZipFile(per);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the

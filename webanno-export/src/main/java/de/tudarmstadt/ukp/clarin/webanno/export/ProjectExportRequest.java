@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.wicket.model.IModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class ProjectExportRequest
@@ -31,11 +33,11 @@ public class ProjectExportRequest
     public static final String FORMAT_AUTO = "AUTO";
     
     public String format;
-    public Project project;
+    public IModel<Project> project;
     public int progress = 0;
     public final Queue<String> messages;
             
-    public ProjectExportRequest(Project aProject, String aFormat)
+    public ProjectExportRequest(IModel<Project> aProject, String aFormat)
     {
         format = aFormat;
         project = aProject;

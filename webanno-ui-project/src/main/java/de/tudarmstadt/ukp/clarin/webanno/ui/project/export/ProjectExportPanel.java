@@ -112,7 +112,7 @@ public class ProjectExportPanel
     public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-        add(new ProjectExportForm("exportForm", aProjectModel.getObject()));
+        add(new ProjectExportForm("exportForm", aProjectModel));
     }
 
     private boolean existsCurationDocument(Project aProject)
@@ -137,7 +137,7 @@ public class ProjectExportPanel
     {
         private static final long serialVersionUID = 9151007311548196811L;
 
-        public ProjectExportForm(String id, Project aProject)
+        public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(aProject, ProjectExportRequest.FORMAT_AUTO)));
@@ -179,7 +179,7 @@ public class ProjectExportPanel
                         exportTempDir.mkdirs();
 
                         boolean curationDocumentExist = existsCurationDocument(
-                                ProjectExportForm.this.getModelObject().project);
+                                ProjectExportForm.this.getModelObject().project.getObject());
 
                         if (!curationDocumentExist) {
                             error("No curation document created yet for this document");
@@ -226,7 +226,7 @@ public class ProjectExportPanel
                 protected String load()
                 {
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-                    return ProjectExportForm.this.getModelObject().project.getName() +
+                    return ProjectExportForm.this.getModelObject().project.getObject().getName() +
                         "_curated_documents_" + fmt.format(new Date()) + ".zip";
                 }
             }) {
@@ -235,7 +235,7 @@ public class ProjectExportPanel
                 @Override
                 public boolean isVisible() {
                     return existsCurationDocument(ProjectExportForm.this
-                            .getModelObject().project);
+                            .getModelObject().project.getObject());
                 }
 
                 @Override
@@ -265,8 +265,8 @@ public class ProjectExportPanel
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
                     try {
-                        name = URLEncoder.encode(
-                                ProjectExportForm.this.getModelObject().project.getName(), "UTF-8");
+                        name = URLEncoder.encode(ProjectExportForm.this.getModelObject().project
+                                .getObject().getName(), "UTF-8");
                     }
                     catch (UnsupportedEncodingException e) {
                         name = super.getFileName();
@@ -380,7 +380,7 @@ public class ProjectExportPanel
         {
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(Logging.KEY_USERNAME, username);
-            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.project.getId()));
+            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.project.getObject().getId()));
             MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
             
             File file;
@@ -388,7 +388,7 @@ public class ProjectExportPanel
                 Thread.sleep(100); // Why do we sleep here?
                 file = exportService.generateZipFile(model);
                 fileName = file.getAbsolutePath();
-                projectName = model.project.getName();
+                projectName = model.project.getObject().getName();
                 canceled = false;
             }
             catch (FileNotFoundException e) {
