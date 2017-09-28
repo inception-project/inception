@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -48,13 +49,11 @@ public class PreRenderer
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             
-            // FIXME: is this really necessary here??
-//            for (AnnotationFeature feature : features) {
-//                if (!feature.isVisible()) {
-//                    invisibleFeatures.add(feature);
-//                }
-//            }
-//            features.removeAll(invisibleFeatures);
+            for (Iterator<AnnotationFeature> iter = features.iterator(); iter.hasNext();) {
+                if (!iter.next().isVisible()) {
+                    iter.remove();
+                }
+            }
 
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = getRenderer(adapter);
