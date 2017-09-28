@@ -418,7 +418,7 @@ public class ProjectLayersPanel
         private CheckBox lockToTokenOffset;
         private CheckBox allowStacking;
         private CheckBox crossSentence;
-        private CheckBox showHover;
+        private CheckBox showTextInHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
 
@@ -467,7 +467,7 @@ public class ProjectLayersPanel
                     target.add(lockToTokenOffset);
                     target.add(allowStacking);
                     target.add(crossSentence);
-                    target.add(showHover);
+                    target.add(showTextInHover);
                     target.add(multipleTokens);
                     target.add(linkedListBehavior);
                     target.add(attachTypes);
@@ -615,7 +615,7 @@ public class ProjectLayersPanel
                 }
             });
             
-            add(showHover = new CheckBox("showHover")
+            add(showTextInHover = new CheckBox("showTextInHover")
             {
                 
                 private static final long serialVersionUID = -7739913125218251672L;

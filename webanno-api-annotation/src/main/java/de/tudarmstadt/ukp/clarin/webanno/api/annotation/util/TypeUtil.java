@@ -181,7 +181,7 @@ public final class TypeUtil
         }
 
         if (bratHoverText.length() > 0) {
-            if (aAdapter.getLayer().isShowHover())
+            if (aAdapter.getLayer().isShowTextInHover())
                 return String.format("\"%s\" %s", aFs.getCoveredText(), bratHoverText.toString());
             return bratHoverText.toString();
         }

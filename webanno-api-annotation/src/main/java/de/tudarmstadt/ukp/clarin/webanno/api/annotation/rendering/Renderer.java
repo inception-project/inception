@@ -90,7 +90,7 @@ public interface Renderer
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
         Map<String, String> hoverfeatures = new LinkedHashMap<>();
 
-        if (aAdapter.getLayer().isShowHover())
+        if (aAdapter.getLayer().isShowTextInHover())
             hoverfeatures.put("__spantext__", aFs.getCoveredText());
 
         for (AnnotationFeature feature : aFeatures) {
