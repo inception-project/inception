@@ -384,7 +384,12 @@ public class ImportExportServiceImpl
         if (!hasTokens) {
             tokenize(jCas);
         }
-
+        
+        if (!JCasUtil.exists(jCas, Token.class) || !JCasUtil.exists(jCas, Sentence.class)) {
+            throw new IOException("The document appears to be empty. Unable to detect any "
+                    + "tokens or sentences. Empty documents cannot be imported.");
+        }
+        
         return jCas;
     }
     
