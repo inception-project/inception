@@ -197,6 +197,11 @@
                             <input wicket:id="crossSentence" type="checkbox"> <wicket:label key="allowCrossSentence"/>
                           </label>
                         </div>
+                        <div class="checkbox" wicket:enclosure="showTextInHover">
+                          <label wicket:for="showTextInHover">
+                            <input wicket:id="showTextInHover" type="checkbox"> <wicket:label key="showTextInHover"/>
+                          </label>
+                        </div>
                         <div class="checkbox" wicket:enclosure="linkedListBehavior">
                           <label wicket:for="linkedListBehavior">
                             <input wicket:id="linkedListBehavior" type="checkbox"> <wicket:label key="linkedListBehavior"/>
@@ -315,6 +320,12 @@
                     <label wicket:for="visible">
                       <input wicket:id="visible" type="checkbox">
                       <wicket:label key="visible"/>
+                    </label>
+                  </div>
+                  <div class="checkbox" wicket:enclosure="includeInHover">
+                    <label wicket:for="includeInHover">
+                      <input wicket:id="includeInHover" type="checkbox">
+                      <wicket:label key="includeInHover"/>
                     </label>
                   </div>
                   <div class="checkbox" wicket:enclosure="remember">

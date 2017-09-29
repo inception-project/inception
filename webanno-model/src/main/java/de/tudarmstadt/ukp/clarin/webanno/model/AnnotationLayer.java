@@ -100,6 +100,8 @@ public class AnnotationLayer
     private boolean allowStacking;
 
     private boolean crossSentence;
+    
+    private boolean showTextInHover = true;
 
     private boolean multipleTokens;
     
@@ -411,6 +413,16 @@ public class AnnotationLayer
     public void setCrossSentence(boolean crossSentence)
     {
         this.crossSentence = crossSentence;
+    }
+
+    public boolean isShowTextInHover()
+    {
+        return showTextInHover;
+    }
+
+    public void setShowTextInHover(boolean showTextInHover)
+    {
+        this.showTextInHover = showTextInHover;
     }
 
     public boolean isMultipleTokens()

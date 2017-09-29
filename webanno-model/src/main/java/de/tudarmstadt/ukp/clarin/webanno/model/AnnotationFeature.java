@@ -83,6 +83,8 @@ public class AnnotationFeature
 
     private boolean visible = true;
     
+    private boolean includeInHover = false;
+    
     private boolean remember;
     
     private boolean hideUnconstraintFeature;
@@ -263,6 +265,16 @@ public class AnnotationFeature
     public void setVisible(boolean visible)
     {
         this.visible = visible;
+    }
+
+    public boolean isIncludeInHover()
+    {
+        return includeInHover;
+    }
+
+    public void setIncludeInHover(boolean includeInHover)
+    {
+        this.includeInHover = includeInHover;
     }
 
     /**

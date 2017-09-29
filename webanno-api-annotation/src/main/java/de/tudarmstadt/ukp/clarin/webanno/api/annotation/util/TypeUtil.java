@@ -73,6 +73,47 @@ public final class TypeUtil
     }
     
     /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aHoverFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, Map<String, String> aHoverFeatures)
+    {
+        StringBuilder bratHoverText = new StringBuilder();
+        if (aHoverFeatures.containsKey("__spantext__")) {
+            bratHoverText
+                .append("\"")
+                .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
+                .append("\" ");
+        }
+        
+        boolean featuresToShowAvailable = false;
+        for (Entry<String, String> feature : aHoverFeatures.entrySet()) {
+            if ("__spantext__".equals(feature.getKey()))
+                    continue;
+            String text = StringUtils.defaultString(feature.getValue());
+            
+            if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
+                bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratHoverText.append(text);
+            featuresToShowAvailable = true;
+        }
+
+        if (featuresToShowAvailable) {
+            return bratHoverText.toString();
+        }
+        else {
+            // If there are no hover features at all, then use the spantext, which 
+            // is the default if no hover text is provided
+            return null;
+        }
+    }
+    
+    /**
      * Construct the label text used in the brat user interface.
      *
      * @param aAdapter the adapter.
@@ -107,6 +148,47 @@ public final class TypeUtil
         else {
             // If there are no label features at all, then use the layer UI name
             return "(" + aAdapter.getLayer().getUiName() + ")";
+        }
+    }
+    
+    /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aFs the annotation.
+     * @param aFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        StringBuilder bratHoverText = new StringBuilder();
+        for (AnnotationFeature feature : aFeatures) {
+
+            if (!feature.isEnabled() || !feature.isIncludeInHover()
+                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                continue;
+            }
+
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            String text = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
+            
+            if (bratHoverText.length() > 0 && text.length() > 0) {
+                bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratHoverText.append(text);
+        }
+
+        if (bratHoverText.length() > 0) {
+            if (aAdapter.getLayer().isShowTextInHover())
+                return String.format("\"%s\" %s", aFs.getCoveredText(), bratHoverText.toString());
+            return bratHoverText.toString();
+        }
+        else {
+            // If there are no label features at all, then use the spantext, which 
+            // is the default if no hover text is provided
+            return null;
         }
     }
 

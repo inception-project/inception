@@ -105,11 +105,14 @@ public class ChainRenderer
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
+                    String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
                     VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
                             linkFs.getEnd() - aState.getWindowBeginOffset());
 
                     aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText)));
+                            colorIndex, singletonMap("label", bratLabelText), 
+                            singletonMap("label", bratHoverText)));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current

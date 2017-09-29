@@ -84,6 +84,31 @@ public interface Renderer
         return features;
     }
     
+    default Map<String, String> getHoverFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
+        Map<String, String> hoverfeatures = new LinkedHashMap<>();
+
+        if (aAdapter.getLayer().isShowTextInHover())
+            hoverfeatures.put("__spantext__", aFs.getCoveredText());
+
+        for (AnnotationFeature feature : aFeatures) {
+            if (!feature.isEnabled() || !feature.isIncludeInHover()
+                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                continue;
+            }
+            
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            String text = defaultString(
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+            
+            hoverfeatures.put(feature.getName(), text);
+        }
+        
+        return hoverfeatures;
+    }
+    
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
             FeatureStructure aFS, VDocument aResponse)
     {

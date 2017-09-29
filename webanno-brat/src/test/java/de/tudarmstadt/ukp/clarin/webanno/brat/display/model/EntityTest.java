@@ -39,8 +39,10 @@ public class EntityTest
                 new MappingJackson2HttpMessageConverter();
 
         String json = JSONUtil.toPrettyJsonString(jsonConverter, new Entity(new VID(1, 2), "type",
-                new Offsets(1, 2), "label", "color"));
-        
-        assertEquals("[ \"1.2\", \"type\", [ [ 1, 2 ] ], \"label\", \"color\" ]", json);
+                new Offsets(1, 2), "label", "color", "somehoverspantext"));
+
+        assertEquals(
+                "[ \"1.2\", \"type\", [ [ 1, 2 ] ], \"label\", \"color\", \"somehoverspantext\" ]",
+                json);
     }
 }

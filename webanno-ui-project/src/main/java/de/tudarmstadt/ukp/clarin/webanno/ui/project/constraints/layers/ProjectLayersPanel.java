@@ -418,6 +418,7 @@ public class ProjectLayersPanel
         private CheckBox lockToTokenOffset;
         private CheckBox allowStacking;
         private CheckBox crossSentence;
+        private CheckBox showTextInHover;
         private CheckBox multipleTokens;
         private CheckBox linkedListBehavior;
 
@@ -466,6 +467,7 @@ public class ProjectLayersPanel
                     target.add(lockToTokenOffset);
                     target.add(allowStacking);
                     target.add(crossSentence);
+                    target.add(showTextInHover);
                     target.add(multipleTokens);
                     target.add(linkedListBehavior);
                     target.add(attachTypes);
@@ -610,6 +612,31 @@ public class ProjectLayersPanel
                             // Not configurable for layers that attach to tokens (currently that
                             // is the only layer on which we use the attach feature)
                             && layer.getAttachFeature() == null);
+                }
+            });
+            
+            add(showTextInHover = new CheckBox("showTextInHover")
+            {
+                
+                private static final long serialVersionUID = -7739913125218251672L;
+
+                {
+                    setOutputMarkupPlaceholderTag(true);
+                }
+
+                @Override
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+                    AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+                    setVisible(!isBlank(layer.getType()) &&
+                            // Not configurable for chains or relations
+                            !CHAIN_TYPE.equals(layer.getType()) &&
+                            !RELATION_TYPE.equals(layer.getType()));
+                    setEnabled(
+                            // Surface form must be locked to token boundaries for CONLL-U writer
+                            // to work.
+                            !SurfaceForm.class.getName().equals(layer.getName()));
                 }
             });
 
@@ -852,6 +879,21 @@ public class ProjectLayersPanel
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
             add(new CheckBox("enabled"));
             add(new CheckBox("visible"));
+            add(new CheckBox("includeInHover") {
+
+                private static final long serialVersionUID = -8273152168889478682L;
+                
+                @Override
+                protected void onConfigure()
+                {
+                    String layertype = layerDetailForm.getModelObject().getType();
+                    // Currently not configurable for chains or relations 
+                    // TODO: technically it is possible
+                    setVisible(!CHAIN_TYPE.equals(layertype) &&
+                            !RELATION_TYPE.equals(layertype));
+                }
+                
+            });
             add(new CheckBox("remember"));
             add(required = new CheckBox("required") {
                 private static final long serialVersionUID = -2716373442353375910L;
