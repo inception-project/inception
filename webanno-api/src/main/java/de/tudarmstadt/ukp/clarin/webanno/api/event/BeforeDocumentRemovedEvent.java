@@ -15,11 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-import java.util.List;
+import org.springframework.context.ApplicationEvent;
 
-public interface DocumentLifecycleAwareRegistry
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public class BeforeDocumentRemovedEvent
+    extends ApplicationEvent
 {
-    List<DocumentLifecycleAware> getBeans();
+    private static final long serialVersionUID = 2978609733854059009L;
+    
+    private final SourceDocument document;
+
+    public BeforeDocumentRemovedEvent(Object aSource, SourceDocument aDocument)
+    {
+        super(aSource);
+        document = aDocument;
+    }
+
+    public SourceDocument getDocument()
+    {
+        return document;
+    }
 }
