@@ -15,11 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-import java.util.List;
+import org.springframework.context.ApplicationEvent;
 
-public interface ProjectLifecycleAwareRegistry
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public class BeforeProjectRemovedEvent
+    extends ApplicationEvent
 {
-    List<ProjectLifecycleAware> getBeans();
+    private static final long serialVersionUID = -1167656656803093660L;
+
+    private final Project project;
+
+    public BeforeProjectRemovedEvent(Object aSource, Project aProject)
+    {
+        super(aSource);
+        project = aProject;
+    }
+
+    public Project getProject()
+    {
+        return project;
+    }
 }

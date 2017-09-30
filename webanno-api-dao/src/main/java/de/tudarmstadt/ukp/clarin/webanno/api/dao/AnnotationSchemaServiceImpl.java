@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -52,18 +51,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -86,7 +86,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
  */
 @Component(AnnotationSchemaService.SERVICE_NAME)
 public class AnnotationSchemaServiceImpl
-    implements AnnotationSchemaService, ProjectLifecycleAware
+    implements AnnotationSchemaService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -1073,39 +1073,24 @@ public class AnnotationSchemaServiceImpl
         }
     }
     
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing to do
-    }
-
-    @Override
+    @EventListener
     @Transactional
-    public void beforeProjectRemove(Project aProject)
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
         throws Exception
     {
-        for (AnnotationFeature feature : listAnnotationFeature(aProject)) {
+        Project project = aEvent.getProject();
+        
+        for (AnnotationFeature feature : listAnnotationFeature(project)) {
             removeAnnotationFeature(feature);
         }
 
         // remove the layers too
-        for (AnnotationLayer layer : listAnnotationLayer(aProject)) {
+        for (AnnotationLayer layer : listAnnotationLayer(project)) {
             removeAnnotationLayer(layer);
         }
 
-        for (TagSet tagSet : listTagSets(aProject)) {
+        for (TagSet tagSet : listTagSets(project)) {
             removeTagSet(tagSet);
         }
-    }
-
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }

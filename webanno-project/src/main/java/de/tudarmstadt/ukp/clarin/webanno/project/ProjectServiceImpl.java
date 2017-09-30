@@ -56,17 +56,18 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -90,8 +91,7 @@ public class ProjectServiceImpl
     @Resource(name = "userRepository")
     private UserDao userRepository;
 
-    @Resource
-    private ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
+    private @Resource ApplicationEventPublisher applicationEventPublisher;
 
     @Value(value = "${repository.path}")
     private File dir;
@@ -122,18 +122,7 @@ public class ProjectServiceImpl
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
         }
         
-        // Notify all relevant service so that they can initialize themselves for the given project
-        for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
-            try {
-                bean.afterProjectCreate(aProject);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
     }
 
     @Override
@@ -488,22 +477,7 @@ public class ProjectServiceImpl
             project = entityManager.merge(project);
         }
         
-        // Notify all relevant service so that they can clean up themselves before we remove the
-        // project - notification happens in reverse order
-        List<ProjectLifecycleAware> beans = new ArrayList<>(
-                projectLifecycleAwareRegistry.getBeans());
-        Collections.reverse(beans);
-        for (ProjectLifecycleAware bean : beans) {
-            try {
-                bean.beforeProjectRemove(aProject);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
 
         for (ProjectPermission permissions : getProjectPermissions(aProject)) {
             entityManager.remove(permissions);

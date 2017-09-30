@@ -35,7 +35,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -56,6 +55,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,11 +63,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean, ProjectLifecycleAware
+    implements DocumentService, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -889,28 +889,13 @@ public class DocumentServiceImpl
         return users;
     }
     
-    @Override
-    public void afterProjectCreate(Project aProject)
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
+    @EventListener
+    @Transactional
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
         throws IOException
     {
-        for (SourceDocument document : listSourceDocuments(aProject)) {
+        for (SourceDocument document : listSourceDocuments(aEvent.getProject())) {
             removeSourceDocument(document);
         }
-    }
-
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }

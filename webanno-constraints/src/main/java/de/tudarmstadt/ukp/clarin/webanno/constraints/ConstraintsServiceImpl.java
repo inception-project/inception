@@ -39,10 +39,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -56,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl
-    implements ConstraintsService, ProjectLifecycleAware
+    implements ConstraintsService
 {
     private static final String CONSTRAINTS = "/constraints/";
 
@@ -247,31 +249,26 @@ public class ConstraintsServiceImpl
         return merged;
     }
     
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
+    @EventListener
+    @Transactional
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
         throws Exception
     {
         //Remove Constraints
-        for (ConstraintSet set : listConstraintSets(aProject)) {
+        for (ConstraintSet set : listConstraintSets(aEvent.getProject())) {
             removeConstraintSet(set);
         }
     }
     
-    @Override
+    @EventListener
     @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
+    public void onProjectImport(ProjectImportEvent aEvent)
         throws Exception
     {
-        for (Enumeration zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
+        Project project = aEvent.getProject();
+        ZipFile zipFile = aEvent.getZip();
+        
+        for (Enumeration zipEnumerate = zipFile.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
             
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
@@ -283,12 +280,12 @@ public class ConstraintsServiceImpl
                     continue;
                 }
                 ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.setProject(aProject);
+                constraintSet.setProject(project);
                 constraintSet.setName(fileName);
                 createConstraintSet(constraintSet);
-                writeConstraintSet(constraintSet, aZip.getInputStream(entry));
-                log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
+                writeConstraintSet(constraintSet, zipFile.getInputStream(entry));
+                log.info("Imported constraint [" + fileName + "] for project [" + project.getName()
+                        + "] with id [" + project.getId() + "]");
             }
         }
     }

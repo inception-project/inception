@@ -33,7 +33,6 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -54,7 +53,6 @@ public class ExportServiceImpl implements ExportService
     private @Resource ConstraintsService constraintsService;
     private @Resource UserDao userRepository;
     private @Resource ImportExportService importExportService;
-    private @Resource ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
     
     @Override
     public File generateZipFile(final ProjectExportRequest aRequest)

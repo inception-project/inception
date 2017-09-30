@@ -31,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -50,12 +49,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(AutomationService.SERVICE_NAME)
 public class MiraAutomationServiceImpl
-    implements AutomationService, ProjectLifecycleAware
+    implements AutomationService
 {
  
 
@@ -482,31 +482,17 @@ public class MiraAutomationServiceImpl
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
     }
 
-    @Override
-    public void afterProjectCreate(Project aProject)
+    @EventListener
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
         throws Exception
     {
-        // Nothing at the moment
-    }
-
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws Exception
-    {
-        for (TrainingDocument document : listTrainingDocuments(aProject)) {
+        Project project = aEvent.getProject();
+        
+        for (TrainingDocument document : listTrainingDocuments(project)) {
             removeTrainingDocument(document);
         }
-        for (MiraTemplate template : listMiraTemplates(aProject)) {
+        for (MiraTemplate template : listMiraTemplates(project)) {
             removeMiraTemplate(template);
         }
-    }
-
-    @Override
-    public void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }

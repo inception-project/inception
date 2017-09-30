@@ -15,22 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
 import java.util.zip.ZipFile;
 
+import org.springframework.context.ApplicationEvent;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public interface ProjectLifecycleAware
+public class ProjectImportEvent
+    extends ApplicationEvent
 {
-    void afterProjectCreate(Project aProject)
-        throws Exception;
+    private static final long serialVersionUID = 5604222911753768415L;
 
-    void beforeProjectRemove(Project aProject)
-        throws Exception;
+    private final ZipFile zip;
+    private final de.tudarmstadt.ukp.clarin.webanno.export.model.Project exportedProject;
+    private final Project project;
 
-    void onProjectImport(ZipFile zip,
+    public ProjectImportEvent(Object aSource, ZipFile aZip,
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
             Project aProject)
-        throws Exception;
+    {
+        super(aSource);
+        zip = aZip;
+        exportedProject = aExportedProject;
+        project = aProject;
+    }
+
+    public Project getProject()
+    {
+        return project;
+    }
+
+    public ZipFile getZip()
+    {
+        return zip;
+    }
+
+    public de.tudarmstadt.ukp.clarin.webanno.export.model.Project getExportedProject()
+    {
+        return exportedProject;
+    }
 }
