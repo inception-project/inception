@@ -23,18 +23,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -42,7 +38,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -51,15 +46,12 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl
-    implements ConstraintsService, ProjectLifecycleAware
+    implements ConstraintsService
 {
-    private static final String CONSTRAINTS = "/constraints/";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @PersistenceContext
@@ -245,51 +237,5 @@ public class ConstraintsServiceImpl
         }
 
         return merged;
-    }
-    
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws Exception
-    {
-        //Remove Constraints
-        for (ConstraintSet set : listConstraintSets(aProject)) {
-            removeConstraintSet(set);
-        }
-    }
-    
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        for (Enumeration zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(CONSTRAINTS)) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if (fileName.trim().isEmpty()) {
-                    continue;
-                }
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.setProject(aProject);
-                constraintSet.setName(fileName);
-                createConstraintSet(constraintSet);
-                writeConstraintSet(constraintSet, aZip.getInputStream(entry));
-                log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
-            }
-        }
     }
 }

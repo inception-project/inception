@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Map;
@@ -28,13 +27,13 @@ import java.util.zip.ZipFile;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -51,7 +50,7 @@ public class ImportServiceImpl implements ImportService
     private @Resource ProjectService projectService;
     private @Resource ConstraintsService constraintsService;
     private @Resource UserDao userRepository;
-    private @Resource ProjectLifecycleAwareRegistry projectLifecycleAwareRegistry;
+    private @Resource ApplicationEventPublisher applicationEventPublisher;
     
     @Override
     public Project importProject(File aProjectFile, boolean aGenerateUsers) throws Exception
@@ -86,19 +85,8 @@ public class ImportServiceImpl implements ImportService
             ImportUtil.createMissingUsers(importedProjectSetting, userRepository);
         }
 
-        // Notify all relevant service so that they can initialize themselves for the given
-        // project
-        for (ProjectLifecycleAware bean : projectLifecycleAwareRegistry.getBeans()) {
-            try {
-                bean.onProjectImport(zip, importedProjectSetting, importedProject);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        applicationEventPublisher.publishEvent(
+                new ProjectImportEvent(this, zip, importedProjectSetting, importedProject));
 
         // Import layers
         Map<String, AnnotationFeature> featuresMap = ImportUtil.createLayer(importedProject,

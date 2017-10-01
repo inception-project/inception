@@ -15,21 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
 import org.apache.uima.jcas.JCas;
+import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public interface DocumentLifecycleAware
+public class AfterAnnotationUpdateEvent
+    extends ApplicationEvent
 {
-    void afterDocumentCreate(SourceDocument aDocument, JCas aJCas)
-        throws Exception;
+    private static final long serialVersionUID = 686641613168415460L;
+    
+    private final AnnotationDocument document;
+    private final JCas jcas;
 
-    void beforeDocumentRemove(SourceDocument aDocument)
-        throws Exception;
+    public AfterAnnotationUpdateEvent(Object aSource, AnnotationDocument aDocument, JCas aJCas)
+    {
+        super(aSource);
+        document = aDocument;
+        jcas = aJCas;
+    }
 
-    void afterAnnotationUpdate(AnnotationDocument aDocument, JCas aJCas)
-        throws Exception;
+    public AnnotationDocument getDocument()
+    {
+        return document;
+    }
+
+    public JCas getJCas()
+    {
+        return jcas;
+    }
 }

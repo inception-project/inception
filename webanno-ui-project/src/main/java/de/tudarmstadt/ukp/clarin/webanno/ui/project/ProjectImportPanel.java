@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -91,13 +92,12 @@ public class ProjectImportPanel
                         OutputStream os = new FileOutputStream(tempFile);
                 ) {
                     if (!ZipUtils.isZipStream(is)) {
-                        error("Invalid ZIP file");
-                        return;
+                        throw new IOException("Invalid ZIP file");
                     }
                     IOUtils.copyLarge(is, os);
                     
                     if (!ImportUtil.isZipValidWebanno(tempFile)) {
-                        error("Incompatible to webanno ZIP file");
+                        throw new IOException("ZIP file is not a WebAnno project archive");
                     }
                     
                     importedProject = importService.importProject(tempFile, aGenerateUsers);
@@ -108,7 +108,7 @@ public class ProjectImportPanel
             }
             catch (Exception e) {
                 aTarget.addChildren(getPage(), IFeedback.class);
-                error("Error Importing Project " + ExceptionUtils.getRootCauseMessage(e));
+                error("Error importing project: " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing project", e);
             }
         }

@@ -31,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -54,7 +53,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -66,10 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(AutomationService.SERVICE_NAME)
 public class MiraAutomationServiceImpl
-    implements AutomationService, ProjectLifecycleAware
+    implements AutomationService
 {
- 
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Resource(name = "automationCasStorageService")
@@ -480,33 +476,5 @@ public class MiraAutomationServiceImpl
         File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId()
                 + TRAIN + aDocument.getId() + ANNOTATION);
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
-    }
-
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
-    }
-
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws Exception
-    {
-        for (TrainingDocument document : listTrainingDocuments(aProject)) {
-            removeTrainingDocument(document);
-        }
-        for (MiraTemplate template : listMiraTemplates(aProject)) {
-            removeMiraTemplate(template);
-        }
-    }
-
-    @Override
-    public void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }

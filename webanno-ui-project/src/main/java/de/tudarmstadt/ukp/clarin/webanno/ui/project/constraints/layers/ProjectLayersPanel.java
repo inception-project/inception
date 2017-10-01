@@ -71,12 +71,14 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -109,6 +111,7 @@ public class ProjectLayersPanel
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean ApplicationEventPublisher applicationEventPublisher;
 
     private final String FIRST = "first";
     private final String NEXT = "next";
@@ -773,6 +776,8 @@ public class ProjectLayersPanel
                         }
                         featureSelectionForm.setVisible(true);
 
+                        applicationEventPublisher
+                                .publishEvent(new LayerConfigurationChangedEvent(this, project));
                     }
                 }
             });
@@ -1068,6 +1073,9 @@ public class ProjectLayersPanel
             aFeature.setTagset(null);
         }
 
+        applicationEventPublisher
+                .publishEvent(new LayerConfigurationChangedEvent(this, aFeature.getProject()));
+        
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }

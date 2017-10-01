@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -57,7 +56,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
@@ -86,7 +84,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor
  */
 @Component(AnnotationSchemaService.SERVICE_NAME)
 public class AnnotationSchemaServiceImpl
-    implements AnnotationSchemaService, ProjectLifecycleAware
+    implements AnnotationSchemaService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -1071,41 +1069,5 @@ public class AnnotationSchemaServiceImpl
             throw new IllegalArgumentException(
                     "No adapter for type with name [" + aLayer.getName() + "]");
         }
-    }
-    
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing to do
-    }
-
-    @Override
-    @Transactional
-    public void beforeProjectRemove(Project aProject)
-        throws Exception
-    {
-        for (AnnotationFeature feature : listAnnotationFeature(aProject)) {
-            removeAnnotationFeature(feature);
-        }
-
-        // remove the layers too
-        for (AnnotationLayer layer : listAnnotationLayer(aProject)) {
-            removeAnnotationLayer(layer);
-        }
-
-        for (TagSet tagSet : listTagSets(aProject)) {
-            removeTagSet(tagSet);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }

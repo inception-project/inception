@@ -31,12 +31,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -56,17 +54,18 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAware;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -80,7 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean, ProjectLifecycleAware
+    implements DocumentService, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -100,8 +99,8 @@ public class DocumentServiceImpl
     private ImportExportService importExportService;
 
     @Resource
-    private DocumentLifecycleAwareRegistry documentLifecycleAwareRegistry;
-
+    private ApplicationEventPublisher applicationEventPublisher;
+    
     @Value(value = "${repository.path}")
     private File dir;
 
@@ -396,22 +395,7 @@ public class DocumentServiceImpl
             removeAnnotationDocument(annotationDocument);
         }
         
-        // Notify all relevant service so that they can clean up themselves before we remove the
-        // document - notification happens in reverse order
-        List<DocumentLifecycleAware> beans = new ArrayList<>(
-                documentLifecycleAwareRegistry.getBeans());
-        Collections.reverse(beans);
-        for (DocumentLifecycleAware bean : beans) {
-            try {
-                bean.beforeDocumentRemove(aDocument);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, aDocument));
         
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
@@ -481,19 +465,8 @@ public class DocumentServiceImpl
             throw new IOException(e.getMessage(), e);
         }
 
-        // Notify all relevant service so that they can initialize themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
-            try {
-                bean.afterDocumentCreate(aDocument, jcas);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IOException(e.getMessage(), e);
-            }
-        }
+        applicationEventPublisher
+                .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, jcas));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
@@ -655,18 +628,8 @@ public class DocumentServiceImpl
             entityManager.merge(aAnnotationDocument);
         }
         
-        // Notify all relevant service so that they can update themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry.getBeans()) {
-            try {
-                bean.afterAnnotationUpdate(aAnnotationDocument, aJCas);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }    
+        applicationEventPublisher
+                .publishEvent(new AfterAnnotationUpdateEvent(this, aAnnotationDocument, aJCas));
     }
     
     
@@ -922,30 +885,5 @@ public class DocumentServiceImpl
         users.removeAll(notInUsers);
 
         return users;
-    }
-    
-    @Override
-    public void afterProjectCreate(Project aProject)
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws IOException
-    {
-        for (SourceDocument document : listSourceDocuments(aProject)) {
-            removeSourceDocument(document);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
     }
 }
