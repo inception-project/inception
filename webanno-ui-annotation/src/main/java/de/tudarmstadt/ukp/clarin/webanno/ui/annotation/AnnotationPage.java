@@ -54,6 +54,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.urlfragment.UrlFragment;
 
@@ -68,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -126,8 +128,9 @@ public class AnnotationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
-
+    private @SpringBean ApplicationEventPublisher applicationEventPublisher;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    
     private NumberTextField<Integer> gotoPageTextField;
     
     private long currentprojectId;
@@ -602,7 +605,8 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
             
-            extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
+            applicationEventPublisher
+                    .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
             
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
                     + state.getFirstVisibleUnitIndex() + "] l:["

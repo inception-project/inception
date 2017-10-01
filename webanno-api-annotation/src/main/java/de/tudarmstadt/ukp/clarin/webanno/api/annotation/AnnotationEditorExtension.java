@@ -46,9 +46,4 @@ public interface AnnotationEditorExtension
      * Post-process the output during rendering.
      */
     void render(JCas jCas, AnnotatorState aState, VDocument vdoc);
-
-    /**
-     * Initiatialize extension service
-     */
-    void onDocumentLoad(JCas jCas, AnnotatorState aState);
 }
