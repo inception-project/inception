@@ -54,7 +54,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.urlfragment.UrlFragment;
 
@@ -88,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
@@ -128,7 +128,7 @@ public class AnnotationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
-    private @SpringBean ApplicationEventPublisher applicationEventPublisher;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     
     private NumberTextField<Integer> gotoPageTextField;
@@ -605,7 +605,7 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
             
-            applicationEventPublisher
+            applicationEventPublisherHolder.get()
                     .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
             
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
