@@ -30,7 +30,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public interface ConstraintsService
 {
     String SERVICE_NAME = "constraintsService";
-    
+
+    String CONSTRAINTS = "/constraints/";
+
     /**
      * Creates Constraint Set
      */

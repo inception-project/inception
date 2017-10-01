@@ -49,13 +49,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -68,8 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 public class MiraAutomationServiceImpl
     implements AutomationService
 {
- 
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Resource(name = "automationCasStorageService")
@@ -480,19 +476,5 @@ public class MiraAutomationServiceImpl
         File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId()
                 + TRAIN + aDocument.getId() + ANNOTATION);
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
-    }
-
-    @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
-    {
-        Project project = aEvent.getProject();
-        
-        for (TrainingDocument document : listTrainingDocuments(project)) {
-            removeTrainingDocument(document);
-        }
-        for (MiraTemplate template : listMiraTemplates(project)) {
-            removeMiraTemplate(template);
-        }
     }
 }

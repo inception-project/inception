@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -1070,27 +1068,6 @@ public class AnnotationSchemaServiceImpl
         default:
             throw new IllegalArgumentException(
                     "No adapter for type with name [" + aLayer.getName() + "]");
-        }
-    }
-    
-    @EventListener
-    @Transactional
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
-    {
-        Project project = aEvent.getProject();
-        
-        for (AnnotationFeature feature : listAnnotationFeature(project)) {
-            removeAnnotationFeature(feature);
-        }
-
-        // remove the layers too
-        for (AnnotationLayer layer : listAnnotationLayer(project)) {
-            removeAnnotationLayer(layer);
-        }
-
-        for (TagSet tagSet : listTagSets(project)) {
-            removeTagSet(tagSet);
         }
     }
 }
