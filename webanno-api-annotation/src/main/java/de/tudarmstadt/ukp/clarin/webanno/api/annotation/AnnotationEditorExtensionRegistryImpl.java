@@ -105,12 +105,4 @@ public class AnnotationEditorExtensionRegistryImpl
             ext.render(aJCas, aModelObject, aVdoc);
         }
     }
-    
-    @Override
-    public void fireDocumentLoad(JCas aJCas, AnnotatorState aModelObject)
-    {
-        for (AnnotationEditorExtension ext: getExtensions()) {
-            ext.onDocumentLoad(aJCas, aModelObject);
-        }
-    }
 }

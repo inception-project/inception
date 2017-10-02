@@ -71,7 +71,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -93,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -111,7 +111,7 @@ public class ProjectLayersPanel
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    private @SpringBean ApplicationEventPublisher applicationEventPublisher;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private final String FIRST = "first";
     private final String NEXT = "next";
@@ -776,7 +776,7 @@ public class ProjectLayersPanel
                         }
                         featureSelectionForm.setVisible(true);
 
-                        applicationEventPublisher
+                        applicationEventPublisherHolder.get()
                                 .publishEvent(new LayerConfigurationChangedEvent(this, project));
                     }
                 }
@@ -1073,7 +1073,7 @@ public class ProjectLayersPanel
             aFeature.setTagset(null);
         }
 
-        applicationEventPublisher
+        applicationEventPublisherHolder.get()
                 .publishEvent(new LayerConfigurationChangedEvent(this, aFeature.getProject()));
         
         annotationService.createFeature(aFeature);

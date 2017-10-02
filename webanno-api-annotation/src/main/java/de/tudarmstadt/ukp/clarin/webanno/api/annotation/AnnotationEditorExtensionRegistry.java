@@ -40,6 +40,4 @@ public interface AnnotationEditorExtensionRegistry
         throws IOException, AnnotationException;
 
     void fireRender(JCas aJCas, AnnotatorState aModelObject, VDocument aVdoc);
-
-    void fireDocumentLoad(JCas aEditorCas, AnnotatorState aModelObject);
 }

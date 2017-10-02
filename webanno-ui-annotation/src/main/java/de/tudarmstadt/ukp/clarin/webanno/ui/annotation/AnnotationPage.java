@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -86,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
@@ -126,8 +128,9 @@ public class AnnotationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
-
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    
     private NumberTextField<Integer> gotoPageTextField;
     
     private long currentprojectId;
@@ -602,7 +605,8 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
             
-            extensionRegistry.fireDocumentLoad(editorCas, getModelObject());
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
             
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
                     + state.getFirstVisibleUnitIndex() + "] l:["
