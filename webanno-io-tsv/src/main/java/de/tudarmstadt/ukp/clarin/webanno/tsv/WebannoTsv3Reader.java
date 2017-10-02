@@ -153,6 +153,9 @@ public class WebannoTsv3Reader
             if (line.startsWith("#Text=")) {
                 String text = line.substring(line.indexOf("=") + 1);
                 if (format == 31) {
+                    text = unescapeJava(text);
+                }
+                else if (format == 32) {
                     text = unEscapeSpecial(text);
                 }
 
@@ -172,6 +175,9 @@ public class WebannoTsv3Reader
                 }
                 else if ("#FORMAT=WebAnno TSV 3.1".equals(line)) {
                     format = 31;
+                }
+                else if ("#FORMAT=WebAnno TSV 3.2".equals(line)) {
+                    format = 32;
                 }
                 continue;
             }

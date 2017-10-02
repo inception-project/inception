@@ -243,7 +243,7 @@ public class WebannoTsv3Writer
     private void writeHeader(OutputStream docOS)
         throws IOException
     {
-        IOUtils.write("#FORMAT=WebAnno TSV 3.1" + LF, docOS, encoding);
+        IOUtils.write("#FORMAT=WebAnno TSV 3.2" + LF, docOS, encoding);
         for (String type : featurePerLayer.keySet()) {
             String annoType;
             if (spanLayers.contains(type)) {
