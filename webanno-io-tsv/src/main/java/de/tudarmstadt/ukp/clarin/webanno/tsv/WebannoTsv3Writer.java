@@ -148,7 +148,8 @@ public class WebannoTsv3Writer
             for (AnnotationUnit unit : units) {
                 if (sentenceUnits.containsKey(unit)) {
                     String[] sentWithNl = sentenceUnits.get(unit).split("\n");
-                    IOUtils.write(LF + "#Text=" + escapeSpecial(sentWithNl[0]) + LF, docOS, encoding);
+                    IOUtils.write(LF + "#Text=" + escapeSpecial(sentWithNl[0]) + LF, 
+                            docOS, encoding);
                     // if sentence contains new line character
                     // GITHUB ISSUE 318: New line in sentence should be exported as is
                     if (sentWithNl.length > 1) {
@@ -1020,39 +1021,39 @@ public class WebannoTsv3Writer
         }
 
     }
+
     private String escapeSpecial(String aText) {
-    		List<String> pat = new ArrayList<>();
-    		List<String> esc = new ArrayList<>();
-    		for(int i=0;i<32;i++) {
-    			if(i>7 && i<14) {
-    				continue;
-    			}
-			pat.add(Character.toString ((char) i));
-			esc.add("\\"+Character.toString ((char) i));	
-		}
-    		// with a readable Java escape sequence
-    		//TAB
-    		pat.add("\t");
-    		esc.add("\\t");
-    		//linefeed
-    		pat.add("\n");
-    		esc.add("\\n");
-    		//formfeed
-    		pat.add("\f");
-    		esc.add("\\f");
-    		//carriage return
-    		pat.add("\r");
-    		esc.add("\\r");
-    		//backspace
-    		pat.add("\b");
-    		esc.add("\\b");
-    		//backslash
-    		pat.add("\\");
-    		esc.add("\\\\");
-    			
-    	   return StringUtils.replaceEach(aText,
-    			   pat.toArray(new String[pat.size()]),
-    			   esc.toArray(new String[esc.size()]));	
+        List<String> pat = new ArrayList<>();
+        List<String> esc = new ArrayList<>();
+        for (int i = 0; i < 32; i++) {
+            if (i > 7 && i < 14) {
+                continue;
+            }
+            pat.add(Character.toString((char) i));
+            esc.add("\\" + Character.toString((char) i));
+        }
+        // with a readable Java escape sequence
+        // TAB
+        pat.add("\t");
+        esc.add("\\t");
+        // linefeed
+        pat.add("\n");
+        esc.add("\\n");
+        // formfeed
+        pat.add("\f");
+        esc.add("\\f");
+        // carriage return
+        pat.add("\r");
+        esc.add("\\r");
+        // backspace
+        pat.add("\b");
+        esc.add("\\b");
+        // backslash
+        pat.add("\\");
+        esc.add("\\\\");
+
+        return StringUtils.replaceEach(aText, 
+                pat.toArray(new String[pat.size()]), esc.toArray(new String[esc.size()]));
     }
 
     class SubTokenAnno
