@@ -23,9 +23,11 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -149,12 +152,12 @@ public class WebannoTsv3Writer
             for (AnnotationUnit unit : units) {
                 if (sentenceUnits.containsKey(unit)) {
                     String[] sentWithNl = sentenceUnits.get(unit).split("\n");
-                    IOUtils.write(LF + "#Text=" + escapeJava(sentWithNl[0]) + LF, docOS, encoding);
+                    IOUtils.write(LF + "#Text=" + escapeSpecial(sentWithNl[0]) + LF, docOS, encoding);
                     // if sentence contains new line character
                     // GITHUB ISSUE 318: New line in sentence should be exported as is
                     if (sentWithNl.length > 1) {
                         for (int i = 0; i < sentWithNl.length - 1; i++) {
-                            IOUtils.write("#Text=" + escapeJava(sentWithNl[i + 1]) + LF, docOS,
+                            IOUtils.write("#Text=" + escapeSpecial(sentWithNl[i + 1]) + LF, docOS,
                                     encoding);
                         }
                     }
@@ -1020,6 +1023,40 @@ public class WebannoTsv3Writer
             sentNMumber++;
         }
 
+    }
+    private String escapeSpecial(String aText) {
+    		List<String> pat = new ArrayList<>();
+    		List<String> esc = new ArrayList<>();
+    		for(int i=0;i<32;i++) {
+    			if(i>7 && i<14) {
+    				continue;
+    			}
+			pat.add(Character.toString ((char) i));
+			esc.add("\\"+Character.toString ((char) i));	
+		}
+    		// with a readable Java escape sequence
+    		//TAB
+    		pat.add("\t");
+    		esc.add("\\t");
+    		//linefeed
+    		pat.add("\n");
+    		esc.add("\\n");
+    		//formfeed
+    		pat.add("\f");
+    		esc.add("\\f");
+    		//carriage return
+    		pat.add("\r");
+    		esc.add("\\r");
+    		//backspace
+    		pat.add("\b");
+    		esc.add("\\b");
+    		//backslash
+    		pat.add("\\");
+    		esc.add("\\\\");
+    			
+    	   return StringUtils.replaceEach(aText,
+    			   pat.toArray(new String[pat.size()]),
+    			   esc.toArray(new String[esc.size()]));	
     }
 
     class SubTokenAnno

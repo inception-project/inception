@@ -153,7 +153,7 @@ public class WebannoTsv3Reader
             if (line.startsWith("#Text=")) {
                 String text = line.substring(line.indexOf("=") + 1);
                 if (format == 31) {
-                    text = unescapeJava(text);
+                    text = unEscapeSpecial(text);
                 }
 
                 if (sentLineSb.toString().isEmpty()) {
@@ -591,6 +591,43 @@ public class WebannoTsv3Reader
 
         return unescapeJava(aAnno);
     }
+    
+    private String unEscapeSpecial(String aText) {
+		List<String> pat = new ArrayList<>();
+		List<String> esc = new ArrayList<>();
+		for(int i=0;i<32;i++) {
+			if(i>7 && i<14) {
+				continue;
+			}
+		pat.add(Character.toString ((char) i));
+		esc.add("\\"+Character.toString ((char) i));	
+	}
+		// with a readable Java escape sequence
+		//TAB
+		pat.add("\t");
+		esc.add("\\t");
+		//linefeed
+		pat.add("\n");
+		esc.add("\\n");
+		//formfeed
+		pat.add("\f");
+		esc.add("\\f");
+		//carriage return
+		pat.add("\r");
+		esc.add("\\r");
+		//backspace
+		pat.add("\b");
+		esc.add("\\b");
+		//backslash
+		pat.add("\\");
+		esc.add("\\\\");
+			
+	   return StringUtils.replaceEach(aText,
+			   esc.toArray(new String[esc.size()]),
+			   pat.toArray(new String[pat.size()])
+			   );	
+}
+
 
     /**
      * update a base annotation with slot annotations
