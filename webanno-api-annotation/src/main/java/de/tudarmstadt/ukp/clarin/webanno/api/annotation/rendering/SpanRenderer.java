@@ -147,7 +147,7 @@ public class SpanRenderer
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectByAddr(fs.getCAS(), link.targetAddr);
                         aResponse.add(new VArc(typeAdapter.getLayer(), new VID(fs, fi, li),
-                                bratTypeName, fs, targetFS, features));
+                                bratTypeName, fs, targetFS, link.role, features));
                     }
                 }
                 fi++;
