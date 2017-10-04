@@ -191,7 +191,9 @@ public class ArcAdapter
             // If stacking is not allowed and we would be creating a duplicate arc, then instead
             // update the label of the existing arc
             if (!allowStacking && isDuplicate(governorFs, aOriginFs, dependentFs, aTargetFs)) {
-                return fs;
+                throw new AnnotationException("Cannot create another annotation of layer ["
+                        + getLayer().getUiName() + "] at this location - stacking is not "
+                        + "enabled for this layer.");
             }
         }
 
