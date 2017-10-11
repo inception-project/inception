@@ -139,6 +139,7 @@ public class RemoteApiController2
     private static final String EXPORT = "export.zip";
     
     private static final String PARAM_FILE = "file";
+    private static final String PARAM_CONTENT = "content";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_FORMAT = "format";
     private static final String PARAM_STATE = "state";
@@ -483,7 +484,7 @@ public class RemoteApiController2
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_NAME) String aName,
             @RequestParam(value = PARAM_FORMAT) String aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
@@ -688,7 +689,7 @@ public class RemoteApiController2
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
@@ -776,7 +777,7 @@ public class RemoteApiController2
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
