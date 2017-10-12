@@ -81,7 +81,9 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -1264,10 +1266,25 @@ public class AnnotationDetailEditorPanel
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
                     .listAttachedLinkFeatures(aLayer)) {
-                Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
-
-                for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
-                    attachedLinks.add(linkFS);
+                if (MultiValueMode.ARRAY.equals(linkFeature.getMultiValueMode())
+                        && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
+                    // Fetch slot hosts that could link to the current FS and check if any of
+                    // them actually links to the current FS
+                    Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
+                        List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
+                                linkFS);
+                        for (int li = 0; li < links.size(); li++) {
+                            LinkWithRoleModel link = links.get(li);
+                            AnnotationFS linkTarget = selectByAddr(cas, AnnotationFS.class,
+                                    link.targetAddr);
+                            // If the current annotation fills a slot, then add the slot host to
+                            // our list of attached links.
+                            if (isSame(linkTarget, aFs)) {
+                                attachedLinks.add(linkFS);
+                            }
+                        }
+                    }
                 }
             }
         }
