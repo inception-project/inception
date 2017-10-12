@@ -239,7 +239,7 @@ public class AnnotationPreferencesDialogContent
         prefs.setColorPerLayer(model.colorPerLayer);
         prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
         prefs.setEditor(model.editor.getKey());
-        if (!preferredLayerIds.contains(state.getSelectedAnnotationLayer().getId()))
+        if (!state.getAnnotationLayers().contains(state.getSelectedAnnotationLayer()))
             state.setSelectedAnnotationLayer(
                     state.getAnnotationLayers().size() > 0 ? 
                             state.getAnnotationLayers().get(0) : 
