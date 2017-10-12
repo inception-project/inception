@@ -122,9 +122,9 @@ public class PreferencesUtil
                     .collect(Collectors.toList());
                         
             if (preference.getAnnotationLayers() != null) {
-                List<Long> prefferdLayerIds = preference.getAnnotationLayers();
+                List<Long> prefferedLayerIds = preference.getAnnotationLayers();
                 enabledLayers = enabledLayers.stream()
-                        .filter(l -> prefferdLayerIds.contains(l.getId()))
+                        .filter(l -> prefferedLayerIds.contains(l.getId()))
                         .collect(Collectors.toList());
             }            
             aBModel.setAnnotationLayers(enabledLayers);
