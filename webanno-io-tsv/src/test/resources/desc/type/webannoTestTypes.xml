@@ -98,7 +98,7 @@
     <typeDescription>
       <name>webanno.custom.LinkType</name>
       <description/>
-      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <supertypeName>uima.cas.TOP</supertypeName>
       <features>
         <featureDescription>
           <name>role</name>

@@ -38,11 +38,11 @@ Features are separated by the `|` character and only the short name of the featu
 .Example: Span layer with simple features in file header
 [source,text]
 ----
-#T_SP=webanno.custom.Pred|bestSense|lemmaMapped|senseId|senseMapped`
+#T_SP=webanno.custom.Pred|bestSense|lemmaMapped|senseId|senseMapped
 ----
  
 Here the layer name is *webanno.custom.Pred* and the features are named *bestSense*, *lemmaMapped*, *senseId*, *senseMapped*.
-Slot features start with a prefix `ROLE_`followed by the name of the role and the link. The role feature name and the link feature name are separated by the `_` character.
+Slot features start with a prefix `ROLE_` followed by the name of the role and the link. The role feature name and the link feature name are separated by the `_` character.
 
 The target of the slot feature always follows the role/link name
 
@@ -83,7 +83,7 @@ Reserved characters have a special meaning in the TSV format and must be are esc
 .Reserved Characters
 [source,text]
 ----
-`\,[,],|,_,->,;,\t,\n,*`
+\,[,],|,_,->,;,\t,\n,*
 ----
 
 ==== Sentence Representation
@@ -187,7 +187,7 @@ Unlike other span layer features (which are separated by `|` character), multipl
 2-7	59-60	.	_	_	_	_
 ----
 
-Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `,`2-3[4]`, and `2-6` resp. which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
+Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `, `2-3[4]`, and `2-6` respectively which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
 
 ==== Chain Annotations
 
