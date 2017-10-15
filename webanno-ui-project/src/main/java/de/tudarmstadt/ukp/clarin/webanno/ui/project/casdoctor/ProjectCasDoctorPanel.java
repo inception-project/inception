@@ -94,6 +94,13 @@ public class ProjectCasDoctorPanel
         add(createMessageSetsView());
     }
     
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        formModel = new FormModel();
+    }
+    
     private ListView<LogMessageSet> createMessageSetsView()
     {
         return new ListView<LogMessageSet>("messageSets",

@@ -34,19 +34,20 @@ public class VArc
     private VID source;
     private VID target;
     private String colorHint;
+    private String labelHint;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), aFeatures, null);
+                new VID(getAddr(aTargetFS)), null, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, Map<String, String> aFeatures)
+            FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
     {
         this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aFeatures, null);
+                aLabelHint, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
@@ -58,16 +59,22 @@ public class VArc
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            Map<String, String> aFeatures, String color)
+            String aLabelHint, Map<String, String> aFeatures, String aColor)
     {
         super(aLayer, aVid, aType, aFeatures, Collections.emptyMap());
         source = aSource;
         target = aTarget;
-        colorHint = color;
+        labelHint = aLabelHint;
+        colorHint = aColor;
     }
 
     public String getColorHint () {
         return colorHint;
+    }
+    
+    public String getLabelHint()
+    {
+        return labelHint;
     }
     
     public VID getSource()

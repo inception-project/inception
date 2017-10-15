@@ -129,7 +129,14 @@ public class BratRenderer
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
+                String bratLabelText;
+                if (varc.getLabelHint() == null) {
+                    bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
+                }
+                else {
+                    bratLabelText = varc.getLabelHint();
+                }
+                
                 String color;
                 if (varc.getColorHint() == null) {
                     color = getColor(varc, coloringStrategy, bratLabelText);

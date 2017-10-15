@@ -65,7 +65,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
-public class WebAnnoTsv3ReaderWriterTest
+public class WebAnnoTsv3WriterTest
 {
     @Test
     public void test()
@@ -1008,7 +1008,7 @@ public class WebAnnoTsv3ReaderWriterTest
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
-        String referenceFolder = "src/test/resources/" + testContext.getTestOutputFolderName();
+        String referenceFolder = "src/test/resources/tsv3-suite/" + testContext.getMethodName();
         
         List<Object> params = new ArrayList<>();
         params.addAll(asList(aParams));

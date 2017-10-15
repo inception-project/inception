@@ -48,8 +48,8 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
     @Parameters(name = "{index}: running on file {0}")
     public static Iterable<File> tsvFiles()
     {
-        return asList(new File("src/test/resources/")
-                .listFiles((FilenameFilter) new PrefixFileFilter("WebAnnoTsv3ReaderWriterTest-")));
+        return asList(new File("src/test/resources/tsv3-suite/")
+                .listFiles((FilenameFilter) new PrefixFileFilter("test")));
     }
 
     private File referenceFolder;
