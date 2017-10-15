@@ -708,8 +708,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
@@ -739,8 +739,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
@@ -770,8 +770,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
@@ -803,8 +803,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
@@ -834,8 +834,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
@@ -865,8 +865,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }    
@@ -896,8 +896,8 @@ public class WebAnnoTsv3ReaderWriterTest
         
         writeAndAssertEquals(jcas, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"),
-                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleLinkHost", 
-                        "webanno.custom.SimpleSpan"),
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan", 
+                        "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }    
