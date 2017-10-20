@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 @Component
 public class SlotFeatureSupport
@@ -46,16 +49,30 @@ public class SlotFeatureSupport
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
         List<FeatureType> types = new ArrayList<>();
+        
+        // Slot features are only supported on span layers
         if (aAnnotationLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
+                
+                if (
+                        Token.class.getName().equals(aAnnotationLayer.getName()) || 
+                        Sentence.class.getName().equals(aAnnotationLayer.getName())) 
+                {
+                    continue;
+                }
+
                 if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
                     types.add(new FeatureType(spanLayer.getName(), 
                             "Link: " + spanLayer.getUiName()));
                 }
             }
+            
+            // Also allow the user to use any annotation type as slot filler
+            types.add(new FeatureType(CAS.TYPE_NAME_ANNOTATION, "Link: <Any>"));
         }
+        
         return types;
     }
 

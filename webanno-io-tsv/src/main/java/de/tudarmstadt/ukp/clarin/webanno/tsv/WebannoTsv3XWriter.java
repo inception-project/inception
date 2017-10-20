@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -24,7 +25,8 @@ import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
 
-import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XSchemaAnalyzer;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasDocumentBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvDocument;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema;
@@ -49,9 +51,9 @@ public class WebannoTsv3XWriter
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
-        TsvSchema schema = Tsv3XSchemaAnalyzer.analyze(aJCas.getTypeSystem());
+        TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(aJCas.getTypeSystem());
         
-        TsvDocument doc = TsvDocument.of(schema, aJCas);
+        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
         
         try (PrintWriter docOS = new PrintWriter(new OutputStreamWriter(
                 getOutputStream(aJCas, filenameSuffix), encoding))) {
