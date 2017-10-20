@@ -57,8 +57,8 @@ public class SlotFeatureSupport
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
                 
                 if (
-                        Token.class.getName().equals(aAnnotationLayer.getName()) || 
-                        Sentence.class.getName().equals(aAnnotationLayer.getName())) 
+                        Token.class.getName().equals(spanLayer.getName()) || 
+                        Sentence.class.getName().equals(spanLayer.getName())) 
                 {
                     continue;
                 }
