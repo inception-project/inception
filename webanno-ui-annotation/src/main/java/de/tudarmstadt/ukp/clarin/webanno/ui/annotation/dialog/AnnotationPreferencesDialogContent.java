@@ -206,7 +206,9 @@ public class AnnotationPreferencesDialogContent
         }
         model.editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
 
-        model.annotationLayers = bModel.getAnnotationLayers().stream()
+        model.annotationLayers = annotationService.listAnnotationLayer(bModel.getProject()).stream()
+                // hide disabled Layers
+                .filter(layer -> layer.isEnabled())
                 // hide Token layer
                 .filter(layer -> !Token.class.getName().equals(layer.getName()))
                 .filter(layer -> !(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)
@@ -214,10 +216,6 @@ public class AnnotationPreferencesDialogContent
                                 // disable coreference annotation for correction/curation pages
                                 || bModel.getMode().equals(Mode.CURATION))))
                 .collect(Collectors.toList());
-        if (bModel.getPreferences().getAnnotationLayers() != null) {
-            model.annotationLayers.forEach(l -> l
-                    .setEnabled(bModel.getPreferences().getAnnotationLayers().contains(l.getId())));
-        }
 
         return model;
     }
@@ -227,17 +225,29 @@ public class AnnotationPreferencesDialogContent
         AnnotationPreference prefs = state.getPreferences();
         Preferences model = form.getModelObject();
 
-        state.setAnnotationLayers(model.annotationLayers);
+        List<Long> preferredLayerIds = state.getPreferences().getAnnotationLayers();
+        state.setAnnotationLayers(
+                model.annotationLayers.stream()
+                .filter(l -> preferredLayerIds.contains(l.getId()))
+                .collect(Collectors.toList()));
+
         prefs.setScrollPage(model.scrollPage);
         prefs.setRememberLayer(model.rememberLayer);
-        prefs.setAnnotationLayers(model.annotationLayers.stream().filter(x -> x.isEnabled())
-                .map(x -> x.getId()).collect(Collectors.toList()));
         prefs.setWindowSize(model.windowSize);
         prefs.setSidebarSize(model.sidebarSize);
         prefs.setFontZoom(model.fontZoom);
         prefs.setColorPerLayer(model.colorPerLayer);
         prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
         prefs.setEditor(model.editor.getKey());
+        
+        // Make sure the currently selected layer (layer selection dropdown) isn't a layer we
+        // have just hidden.
+        if (!state.getAnnotationLayers().contains(state.getSelectedAnnotationLayer())) {
+            state.setSelectedAnnotationLayer(
+                    state.getAnnotationLayers().size() > 0 ? state.getAnnotationLayers().get(0)
+                            : null);
+            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+        }
     }
 
     private ListView<AnnotationLayer> createLayerContainer()
@@ -250,8 +260,14 @@ public class AnnotationPreferencesDialogContent
             protected void populateItem(ListItem<AnnotationLayer> item)
             {
                 // add checkbox
+                // get initial state
+                AnnotationPreference pref = stateModel.getObject().getPreferences();
+                List<Long> preferredLayers = pref.getAnnotationLayers();
+                boolean isPreferredToShow = preferredLayers.contains(item.getModelObject().getId());
+                
                 CheckBox layer_cb = new CheckBox("annotationLayerActive",
-                        Model.of(item.getModelObject().isEnabled()));
+                        Model.of(isPreferredToShow));
+                
                 layer_cb.add(new AjaxEventBehavior("change")
                 {
                     private static final long serialVersionUID = 8378489004897115519L;
@@ -259,9 +275,21 @@ public class AnnotationPreferencesDialogContent
                     @Override
                     protected void onEvent(AjaxRequestTarget target)
                     {
-                        // deactivate layer
-                        item.getModelObject().setEnabled(!item.getModelObject().isEnabled());
-                        layer_cb.setModelObject(item.getModelObject().isEnabled());
+                        // check state & live update preferences
+                        List<Long> preferredLayers = stateModel.getObject()
+                                .getPreferences().getAnnotationLayers();
+                        // get and switch state of checkbox
+                        boolean isPreferredToShow = layer_cb.getModelObject();
+                        layer_cb.setModelObject(!isPreferredToShow);
+                        // live update preferences
+                        if (isPreferredToShow) {
+                            // prefer to deactivate layer
+                            preferredLayers.remove(item.getModelObject().getId());
+                        }
+                        else {
+                            // prefer to activate layer
+                            preferredLayers.add(item.getModelObject().getId());
+                        }
                     }
                 });
                 item.add(layer_cb);
