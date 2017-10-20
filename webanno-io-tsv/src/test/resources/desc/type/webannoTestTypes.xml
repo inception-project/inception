@@ -146,5 +146,40 @@
         </featureDescription>
       </features>
     </typeDescription>
+  <typeDescription>
+      <name>webanno.custom.ComplexLinkHost</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>links</name>
+          <description/>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>webanno.custom.ComplexLinkType</elementType>
+        </featureDescription>
+        <featureDescription>
+          <name>value</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.ComplexLinkType</name>
+      <description>This link is not really complex, but it belongs to the ComplexLinkHost!</description>
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>role</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>target</name>
+          <description/>
+          <rangeTypeName>webanno.custom.SimpleSpan</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
   </types>
 </typeSystemDescription>

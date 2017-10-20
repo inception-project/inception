@@ -67,7 +67,7 @@ public class WebannoTsv3Writer
     /**
      * Name of configuration parameter that contains the character encoding used by the input files.
      */
-    public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
+    public static final String PARAM_ENCODING = ComponentParameters.PARAM_TARGET_ENCODING;
     @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String encoding;
 
@@ -467,7 +467,7 @@ public class WebannoTsv3Writer
                 int govRef = 0;
                 int depRef = 0;
 
-                // For that unit test case onle, where annotations are on Tokens.
+                // For that unit test case only, where annotations are on Tokens.
                 // The WebAnno world do not ever process Token as an annotation
                 if (!govType.getName().equals(Token.class.getName())
                         && ambigUnits.get(govType.getName()).get(govUnit).equals(true)) {
