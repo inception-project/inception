@@ -20,21 +20,8 @@
 <body>
   <wicket:extend>
     <div class="flex-content flex-h-container flex-gutter">
-      <form wicket:id="selectionForm" class="flex-sidebar flex-v-container flex-gutter">
-        <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
-          <div class="panel-heading">
-            <h3 class="panel-title">Users</h3>
-          </div>
-          <div class="scrolling panel-body fit-child-snuck">
-            <select wicket:id="user" size="20" class="form-control"></select>
-          </div>
-          <div class="panel-footer text-right">
-            <input wicket:id="create" type="submit" class="btn btn-primary"/> 
-            <input wicket:id="delete" type="submit" class="btn btn-danger"/>
-          </div>            
-        </div>
-      </form>
-      <form id="detail-editor" wicket:id="detailForm" class="flex-content flex-v-container flex-gutter">
+      <div wicket:id="users" class="flex-sidebar flex-v-container flex-gutter"></div>
+      <form wicket:id="detailForm" class="flex-content flex-v-container flex-gutter">
         <div class="flex-content panel panel-default panel-flex">
           <div class="panel-heading">
             <h3 class="panel-title">User details</h3>
@@ -91,8 +78,8 @@
             </div>
           </div>
           <div class="panel-footer text-right">
-            <input wicket:id="save" type="submit" class="btn btn-primary"/> 
-            <input wicket:id="cancel" type="submit" class="btn"/>
+            <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
+            <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel"/>
           </div>
         </div>
       </form>

@@ -19,28 +19,25 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import static java.util.Arrays.asList;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.EmailTextField;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
-import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.validation.EqualPasswordInputValidator;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -54,7 +51,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -73,98 +72,6 @@ public class ManageUsersPage
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectRepository;
 
-    private boolean isCreate = false;
-    
-    private class SelectionForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -1L;
-
-        public SelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new SelectionModel()));
-
-            add(new Button("create", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    actionSelectionChanged(null);
-                    actionCreate();
-                }
-            });
-            // not used in the 1.0.0 release
-            Button delete;
-            add(delete = new Button("delete", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    // disable delete button when active user is selected
-                    setEnabled(selectionForm.getModelObject().user != null
-                            && !selectionForm.getModelObject().user
-                                    .equals(userRepository.getCurrentUser()));
-                }
-
-                @Override
-                public void onSubmit()
-                {
-                    actionDelete();
-                }
-            });
-            delete.setVisible(false);
-
-            add(new ListChoice<User>("user")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoices(LambdaModel.of(() -> userRepository.list()));
-                    setChoiceRenderer(new ChoiceRenderer<User>() {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        public Object getDisplayValue(User aUser)
-                        {
-                            return aUser.getUsername() + (aUser.isEnabled() ? "" : " (disabled)");
-                        }
-                    });
-                    setNullValid(false);
-                }
-                
-                @Override
-                protected void onSelectionChanged(User aNewSelection)
-                {
-                    actionSelectionChanged(aNewSelection);
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
-        }
-    }
-
-    static private class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -1L;
-
-        private User user;
-    }
-
     private class DetailForm
         extends Form<User>
     {
@@ -173,15 +80,19 @@ public class ManageUsersPage
         public transient Model<String> passwordModel = new Model<>();
         public transient Model<String> repeatPasswordModel = new Model<>();
 
-        public DetailForm(String id)
+        public DetailForm(String id, IModel<User> aModel)
         {
-            super(id, new CompoundPropertyModel<>(new Model<>(new User())));
+            super(id, new CompoundPropertyModel<>(aModel));
 
-            add(new TextField<String>("username").setOutputMarkupId(true));
+            setOutputMarkupId(true);
+            setOutputMarkupPlaceholderTag(true);
+            
+            add(new TextField<String>("username"));
             add(new PasswordTextField("password", passwordModel).setRequired(false));
             add(new PasswordTextField("repeatPassword", repeatPasswordModel).setRequired(false));
             add(new Label("lastLogin"));
             add(new EmailTextField("email"));
+            
             WebMarkupContainer adminOnly = new WebMarkupContainer("adminOnly");
             adminOnly.add(new ListMultipleChoice<>("roles", new ArrayList<>(Role.getRoles()))
                     .add(new IValidator<Collection<Role>>()
@@ -220,45 +131,31 @@ public class ManageUsersPage
                     if (!aValidatable.getValue()
                             && userRepository.getCurrentUser().equals(getModelObject())) {
                         aValidatable.error(new ValidationError()
-                                .setMessage("You can't disable your own account."));
+                                .setMessage("You cannot disable your own account."));
                     }
                 }
             }));
             adminOnly.setVisible(isAdmin());
             add(adminOnly);
 
-            add(new Button("save", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    if (userRepository.exists(DetailForm.this.getModelObject().getUsername())
-                            && isCreate) {
-                        info("User already exists.");
-                    }
-                    else if (DetailForm.this.getModelObject().getUsername().contains(" ")) {
-                        info("User username should not contain SPACE character.");
-                    }
-                    else if (NameUtil.isNameValid(DetailForm.this.getModelObject().getUsername())) {
-                        actionSave();
-                    }
-                    else {
-                        info("Username should not contain special character.");
-                    }
+            add(new LambdaAjaxButton<>("save", (_target, form) -> {
+                _target.add(getPage());
+                if (userRepository.exists(DetailForm.this.getModelObject().getUsername())
+                        && isCreate) {
+                    info("User already exists.");
                 }
-            });
-            add(new Button("cancel", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    actionCancel();
+                else if (DetailForm.this.getModelObject().getUsername().contains(" ")) {
+                    info("User username cannot contain SPACE character.");
                 }
-            }.setDefaultFormProcessing(false));
+                else if (NameUtil.isNameValid(DetailForm.this.getModelObject().getUsername())) {
+                    actionSave();
+                }
+                else {
+                    info("Username cannot contain special characters.");
+                }
+            }));
+            
+            add(new LambdaAjaxLink("cancel", ManageUsersPage.this::actionCancel));
 
             add(new EqualPasswordInputValidator((FormComponent<?>) get("password"),
                     (FormComponent<?>) get("repeatPassword")));
@@ -268,63 +165,55 @@ public class ManageUsersPage
         {
             return passwordModel.getObject();
         }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            
+            setVisible(getModelObject() != null);
+        }
     }
 
-    private SelectionForm selectionForm;
     private DetailForm detailForm;
-
+    private UserSelectionPanel users;
+    
+    private IModel<User> selectedUser;
+    private boolean isCreate = false;
+    
     public ManageUsersPage()
     {
-        selectionForm = new SelectionForm("selectionForm");
-        detailForm = new DetailForm("detailForm");
+        selectedUser = Model.of();
+        
+        users = new UserSelectionPanel("users", selectedUser);
+        users.setCreateAction(target -> {
+            selectedUser.setObject(new User());
+            isCreate = true;
+            target.add(detailForm);
+        });
+        users.setChangeAction(target -> { 
+            isCreate = false;
+            // Make sure that any invalid forms are cleared now that we load the new project.
+            // If we do not do this, then e.g. input fields may just continue showing the values
+            // they had when they were marked invalid.
+            detailForm.visitChildren(new ModelChangedVisitor(selectedUser));
+            target.add(detailForm);
+        });
+        add(users);
+        
+        detailForm = new DetailForm("detailForm", selectedUser);
 
         // show only selectionForm when accessing this page as admin
         if (isAdmin()) {
-            detailForm.setVisible(false);
+            users.setVisible(true);
         }
         // else show only the own options
         else {
-            actionSelectionChanged(userRepository.getCurrentUser());
-            selectionForm.setVisible(false);
+            selectedUser.setObject(userRepository.getCurrentUser());
+            users.setVisible(false);
         }
 
-        add(selectionForm);
         add(detailForm);
-    }
-
-    public void actionSelectionChanged(User aNewSelection)
-    {
-        if (aNewSelection != null) {
-            detailForm.setModelObject(aNewSelection);
-            detailForm.setVisible(true);
-            detailForm.get("username").setEnabled(false);
-            isCreate = false;
-        }
-        else {
-            detailForm.setVisible(false);
-        }
-    }
-
-    public void actionCreate()
-    {
-        selectionForm.getModelObject().user = null;
-        detailForm.setModelObject(new User());
-        detailForm.setVisible(true);
-        detailForm.get("username").setEnabled(true);
-        isCreate = true;
-    }
-
-    // not used in 1.0.0 release
-    public void actionDelete()
-    {
-        User user = selectionForm.getModelObject().user;
-        if (user != null) {
-            userRepository.delete(user);
-        }
-        selectionForm.getModelObject().user = null;
-        selectionForm.get("user").detachModels();
-        detailForm.setVisible(false);
-        info("User [" + user.getUsername() + "] has been removed.");
     }
 
     public void actionSave()
@@ -343,25 +232,21 @@ public class ManageUsersPage
         }
 
         if (isAdmin()) {
-            detailForm.setModelObject(new User());
-            detailForm.setVisible(false);
+            selectedUser.setObject(null);
         }
-        selectionForm.getModelObject().user = null;
+        
         info("User details have been saved.");
     }
 
-    public void actionCancel()
-    {
+    private void actionCancel(AjaxRequestTarget aTarget) {
         if (isAdmin()) {
-            detailForm.detach();
-            detailForm.setModelObject(new User());
-            detailForm.setVisible(false);
+            selectedUser.setObject(null);
         }
         else {
             setResponsePage(getApplication().getHomePage());
         }
     }
-
+    
     private boolean isAdmin()
     {
         return SecurityUtil.isSuperAdmin(projectRepository, userRepository.getCurrentUser());

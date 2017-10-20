@@ -22,20 +22,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.extensions.markup.html.tabs.ITab;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IChainingModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.IWrapModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.visit.IVisit;
-import org.apache.wicket.util.visit.IVisitor;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -46,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -173,69 +168,5 @@ public class ProjectPage
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
         return SecurityUtil.projectSettingsEnabeled(aRepo, aUserRepo.getCurrentUser());
-    }
-    
-    /**
-     * In contrast to {@link Component#sameInnermostModel}, this visitor can not only handle
-     * {@link IWrapModel} but also {@link IChainingModel}, e.g. {@link CompoundPropertyModel}
-     * which is used in forms.
-     */
-    private static class ModelChangedVisitor
-        implements IVisitor<Component, Void>
-    {
-        private IModel<?> model;
-
-        public ModelChangedVisitor(IModel<?> aModel)
-        {
-            model = aModel;
-        }
-
-        @Override
-        public void component(Component aComponent, IVisit<Void> aVisit)
-        {
-            if (sameInnermostModel(aComponent, model)) {
-                aComponent.modelChanged();
-            }
-        }
-
-        private boolean sameInnermostModel(Component aComponent, IModel<?> aModel)
-        {
-            // Get the two models
-            IModel<?> thisModel = aComponent.getDefaultModel();
-
-            // If both models are non-null they could be the same
-            if (thisModel != null && aModel != null) {
-                return innermostModel(thisModel) == innermostModel(aModel);
-            }
-
-            return false;
-        }
-
-        private IModel<?> innermostModel(IModel<?> aModel)
-        {
-            IModel<?> nested = aModel;
-            while (nested != null) {
-                if (nested instanceof IWrapModel) {
-                    final IModel<?> next = ((IWrapModel<?>) nested).getWrappedModel();
-                    if (nested == next) {
-                        throw new WicketRuntimeException(
-                                "Model for " + nested + " is self-referential");
-                    }
-                    nested = next;
-                }
-                else if (nested instanceof IChainingModel) {
-                    final IModel<?> next = ((IChainingModel<?>) nested).getChainedModel();
-                    if (nested == next) {
-                        throw new WicketRuntimeException(
-                                "Model for " + nested + " is self-referential");
-                    }
-                    nested = next;
-                }
-                else {
-                    break;
-                }
-            }
-            return nested;
-        }
     }
 }
