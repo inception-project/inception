@@ -63,7 +63,7 @@ public class Tsv3XSerializerTest
                 new TsvColumn(namedEntityType, LayerType.SPAN, "value", FeatureType.PRIMITIVE));
 
         // Convert test document content to TSV model
-        TsvDocument doc = TsvDocument.of(schema, cas);
+        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, cas);
         doc.getSentences().get(0).getTokens().get(0).addUimaAnnotation(ne1, true);
         doc.getSentences().get(0).getTokens().get(0).addUimaAnnotation(ne2, true);
 
@@ -94,7 +94,7 @@ public class Tsv3XSerializerTest
                 new TsvColumn(namedEntityType, LayerType.SPAN, "value", FeatureType.PRIMITIVE));
 
         // Convert test document content to TSV model
-        TsvDocument doc = TsvDocument.of(schema, cas);
+        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, cas);
 
         String expectedSentence = 
                 "#Text=This is a test .\n" + 
@@ -121,7 +121,7 @@ public class Tsv3XSerializerTest
                 new TsvColumn(namedEntityType, LayerType.SPAN, "value", FeatureType.PRIMITIVE));
 
         // Convert test document content to TSV model
-        TsvDocument doc = TsvDocument.of(schema, cas);
+        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, cas);
 
         String expectedSentence = 
                 "#Text=This is a test .\n" + 
@@ -156,7 +156,7 @@ public class Tsv3XSerializerTest
                 FeatureType.RELATION_REF));
 
         // Convert test document content to TSV model
-        TsvDocument doc = TsvDocument.of(schema, cas);
+        TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, cas);
         doc.getSentences().get(0).getTokens().get(1).addUimaAnnotation(dep, false);
 
         assertEquals(

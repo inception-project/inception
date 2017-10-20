@@ -108,7 +108,7 @@
         <featureDescription>
           <name>target</name>
           <description/>
-          <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
+          <rangeTypeName>webanno.custom.SimpleSpan</rangeTypeName>
         </featureDescription>
       </features>
     </typeDescription>

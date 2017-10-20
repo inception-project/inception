@@ -18,11 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -54,11 +55,14 @@ public class ChainRenderer
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             AnnotatorState aState)
     {
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+        
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
-        for (AnnotationFeature f : aFeatures) {
+        for (AnnotationFeature f : visibleFeatures) {
             if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
                 spanLabelFeature = f;
             }
@@ -104,9 +108,9 @@ public class ChainRenderer
                 // Render span
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
                             linkFs.getEnd() - aState.getWindowBeginOffset());
 
@@ -128,7 +132,7 @@ public class ChainRenderer
                     else {
                         // Render only chain type
                         bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
-                                EMPTY_LIST);
+                                emptyList());
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
@@ -137,7 +141,7 @@ public class ChainRenderer
                 }
 
                 // Render errors if required features are missing
-                renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
+                renderRequiredFeatureErrors(visibleFeatures, linkFs, aResponse);
 
                 // if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
                 // log.error("Loop in CAS detected, aborting rendering of chains");

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -45,16 +44,9 @@ public class PreRenderer
     public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
             List<AnnotationLayer> aLayers)
     {
-        // Render visible (custom) layers
+        // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-            
-            for (Iterator<AnnotationFeature> iter = features.iterator(); iter.hasNext();) {
-                if (!iter.next().isVisible()) {
-                    iter.remove();
-                }
-            }
-
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = getRenderer(adapter);
             renderer.render(aJCas, features, aResponse, aState);

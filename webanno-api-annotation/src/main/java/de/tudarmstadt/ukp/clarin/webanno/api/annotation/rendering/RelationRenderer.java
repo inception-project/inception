@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -65,6 +66,9 @@ public class RelationRenderer
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+        
         ArcAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
@@ -97,7 +101,7 @@ public class RelationRenderer
             }
 
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            Map<String, String> features = getFeatures(typeAdapter, fs, aFeatures);
+            Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
@@ -116,7 +120,7 @@ public class RelationRenderer
                     dependentFs, features));
 
             // Render errors if required features are missing
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+            renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
             
             if (relationLinks.keySet().contains(getAddr(governorFs))
                     && !yieldDeps.contains(getAddr(governorFs))) {

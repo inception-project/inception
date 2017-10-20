@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class Tsv3XSchemaAnalyzer
+public class Tsv3XCasSchemaAnalyzer
 {
     public static TsvSchema analyze(TypeSystem aTypeSystem)
     {

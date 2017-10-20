@@ -16,8 +16,8 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XSchemaAnalyzer.isChainLayer;
-import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XSchemaAnalyzer.isRelationLayer;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isChainLayer;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.SLOT_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.SLOT_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.CHAIN;

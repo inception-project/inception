@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints.layers;
+package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
@@ -1047,7 +1047,7 @@ public class ProjectLayersPanel
                 public void onSubmit()
                 {
                     featureDetailForm.setModelObject(new AnnotationFeature());
-//                    FeatureDetailForm.this.setVisible(false);
+                    FeatureDetailForm.this.setVisible(false);
                 }
             });
 
