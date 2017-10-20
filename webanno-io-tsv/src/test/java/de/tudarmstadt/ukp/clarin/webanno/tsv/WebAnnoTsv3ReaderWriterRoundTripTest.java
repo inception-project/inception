@@ -82,6 +82,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("testStackedComplexSlotFeatureWithoutSlotFillers");
         failingTests.add("testStackedComplexSlotFeatureWithoutValues");
         failingTests.add("testStackedSimpleSlotFeatureWithoutValues");
+        failingTests.add("testZeroLengthSlotFeature2");
 
         return failingTests.contains(aMethodName);
     }

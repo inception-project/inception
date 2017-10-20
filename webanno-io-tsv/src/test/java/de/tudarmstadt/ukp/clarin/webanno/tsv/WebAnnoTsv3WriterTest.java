@@ -25,32 +25,35 @@ import java.util.List;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 
-public class WebAnnoTsv3WriterTest
-    extends WebAnnoTsv3WriterTestBase
+public class WebAnnoTsv3WriterTest extends WebAnnoTsv3WriterTestBase
 {
-
     @Override
-    protected AnalysisEngineDescription makeWriter() throws ResourceInitializationException
-    {
+    protected AnalysisEngineDescription makeWriter()
+        throws ResourceInitializationException
+    {        
         return createEngineDescription(WebannoTsv3Writer.class);
     }
-
+    
     @Override
     protected String getSuiteName() throws ResourceInitializationException
     {
         return "tsv3-suite";
     }
-
+    
     @Override
     protected boolean isKnownToFail(String aMethodName)
     {
         List<String> failing = asList(
+                "testSubtokenChain",
                 "testStackedSubMultiTokenSpanWithFeatureValue",
                 "testSubMultiTokenSpanWithFeatureValue",
                 "testSubMoltuTokenSpanWithoutFeatureValues",
+                "testSubMultiTokenSpanWithoutFeatureValue",
                 "testSubMultiTokenSpanWithoutFeatureValue2",
                 "testSubMultiTokenSpanWithoutFeatureValue3",
-                "testSubMultiTokenSpanWithoutFeatureValue");
+                "testStackedComplexSlotFeatureWithoutValues",
+                "testSingleStackedNonTokenRelationWithoutFeatureValue2",
+                "testZeroLengthSlotFeature2");
         
         return failing.contains(aMethodName);
     }

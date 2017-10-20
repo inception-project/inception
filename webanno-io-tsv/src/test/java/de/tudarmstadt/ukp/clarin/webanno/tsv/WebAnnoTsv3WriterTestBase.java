@@ -1677,7 +1677,7 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         return linkA1;
     }
-    
+
     private static void makeChainHead(Type aType, AnnotationFS first)
     {
         CAS cas = first.getCAS();
