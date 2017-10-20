@@ -239,11 +239,15 @@ public class AnnotationPreferencesDialogContent
         prefs.setColorPerLayer(model.colorPerLayer);
         prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
         prefs.setEditor(model.editor.getKey());
-        if (!state.getAnnotationLayers().contains(state.getSelectedAnnotationLayer()))
+        
+        // Make sure the currently selected layer (layer selection dropdown) isn't a layer we
+        // have just hidden.
+        if (!state.getAnnotationLayers().contains(state.getSelectedAnnotationLayer())) {
             state.setSelectedAnnotationLayer(
-                    state.getAnnotationLayers().size() > 0 ? 
-                            state.getAnnotationLayers().get(0) : 
-                                null);
+                    state.getAnnotationLayers().size() > 0 ? state.getAnnotationLayers().get(0)
+                            : null);
+            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+        }
     }
 
     private ListView<AnnotationLayer> createLayerContainer()
@@ -278,12 +282,14 @@ public class AnnotationPreferencesDialogContent
                         boolean isPreferredToShow = layer_cb.getModelObject();
                         layer_cb.setModelObject(!isPreferredToShow);
                         // live update preferences
-                        if (isPreferredToShow)
+                        if (isPreferredToShow) {
                             // prefer to deactivate layer
                             preferredLayers.remove(item.getModelObject().getId());
-                        else   
+                        }
+                        else {
                             // prefer to activate layer
                             preferredLayers.add(item.getModelObject().getId());
+                        }
                     }
                 });
                 item.add(layer_cb);
