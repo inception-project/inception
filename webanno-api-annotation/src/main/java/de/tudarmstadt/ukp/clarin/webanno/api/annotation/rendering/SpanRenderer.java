@@ -25,6 +25,7 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -61,6 +62,8 @@ public class SpanRenderer
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         SpanAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
@@ -72,7 +75,7 @@ public class SpanRenderer
         
         for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            Map<String, String> features = getFeatures(typeAdapter, fs, aFeatures);
+            Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
             
             Sentence beginSent = null;
@@ -135,7 +138,7 @@ public class SpanRenderer
             }
             
             // Render errors if required features are missing
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+            renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
 
             // Render slots
             int fi = 0;
