@@ -331,8 +331,8 @@ public class Tsv3XSerializer
         }
         else {
             aOut.print(NULL_COLUMN);
-            writeDisambiguationId(aOut, aDoc, aFS);
         }
+        writeDisambiguationId(aOut, aDoc, aFS);
     }
     
     private static void writeSlotTarget(PrintWriter aOut, TsvDocument aDoc, TsvColumn aCol,
