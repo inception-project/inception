@@ -18,6 +18,7 @@
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isChainLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isSpanLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.SLOT_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.SLOT_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.CHAIN;
@@ -71,6 +72,10 @@ public class TsvSchema
     
     /**
      * Returns the columns in the same order as they are in the TSV header.
+     * 
+     * @param aActiveColumns
+     *            columns for which actual annotations exist.
+     * @return the list of columns in the order as defined in the schema header.
      */
     public List<TsvColumn> getHeaderColumns(Collection<TsvColumn> aActiveColumns)
     {
@@ -157,8 +162,11 @@ public class TsvSchema
         else if (isChainLayer(aType)) {
             return LayerType.CHAIN;
         }
-        else {
+        else if (isSpanLayer(aType)) {
             return LayerType.SPAN;
+        }
+        else {
+            return LayerType.INCOMPATIBLE;
         }
     }
 
