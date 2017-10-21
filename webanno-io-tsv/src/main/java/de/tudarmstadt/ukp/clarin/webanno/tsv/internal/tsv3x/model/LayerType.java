@@ -19,5 +19,6 @@
 public enum LayerType {
     SPAN,
     RELATION,
-    CHAIN;
+    CHAIN,
+    INCOMPATIBLE;
 }
