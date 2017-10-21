@@ -319,7 +319,7 @@ public class Tsv3XSerializer
             AnnotationFS aFS)
     {
         FeatureStructure[] links = getFeature(aFS, aCol.uimaFeature, FeatureStructure[].class);
-        if (links.length > 0) {
+        if (links != null && links.length > 0) {
             for (int i = 0; i < links.length; i++) {
                 if (i > 0) {
                     aOut.print(SLOT_SEP);
@@ -339,7 +339,7 @@ public class Tsv3XSerializer
             AnnotationFS aFS)
     {
         FeatureStructure[] links = getFeature(aFS, aCol.uimaFeature, FeatureStructure[].class);
-        if (links.length > 0) {
+        if (links != null && links.length > 0) {
             for (int i = 0; i < links.length; i++) {
                 if (i > 0) {
                     aOut.print(SLOT_SEP);
