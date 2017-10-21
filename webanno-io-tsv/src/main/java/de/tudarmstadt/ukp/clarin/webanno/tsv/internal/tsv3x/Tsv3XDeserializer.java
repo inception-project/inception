@@ -545,7 +545,7 @@ public class Tsv3XDeserializer
         // If it is a slot column, skip this step because disambiguation info is provided per
         // slot value.
         String disambiguationInfo = null;
-        if (!(SLOT_ROLE.equals(aCol.featureType) || SLOT_TARGET.equals(aCol.featureType))) {
+        if (!(SLOT_TARGET.equals(aCol.featureType))) {
             if (aValue.endsWith("]") && !aValue.endsWith("\\]")) {
                 String buf = substringAfterLast(value, "[");
                 disambiguationInfo = substringBefore(buf, "]");
@@ -611,13 +611,6 @@ public class Tsv3XDeserializer
                     aUnit.getBegin(), aUnit.getEnd());
             aUnit.addUimaAnnotation(annotation);
 
-            // If the current annotation carries an disambiguation ID, then register it in the
-            // document so we can look up the annotation via its ID later. This is necessary
-            // to extend the range of multi-token IDs.
-            if (disambiguationId != -1) {
-                aUnit.getDocument().addDisambiguationId(annotation, disambiguationId);
-            }
-            
             // Check if there are slot features that need to be initialized
             List<TsvColumn> otherColumnsForType = aUnit.getDocument().getSchema()
                     .getColumns(aCol.uimaType);
@@ -644,6 +637,13 @@ public class Tsv3XDeserializer
                 TsvToken token = (TsvToken) aUnit;
                 token.getUimaToken().setPos((POS) annotation); 
             }
+        }
+        
+        // If the current annotation carries an disambiguation ID, then register it in the
+        // document so we can look up the annotation via its ID later. This is necessary
+        // to extend the range of multi-token IDs.
+        if (disambiguationId != -1) {
+            aUnit.getDocument().addDisambiguationId(annotation, disambiguationId);
         }
 
         return annotation;
