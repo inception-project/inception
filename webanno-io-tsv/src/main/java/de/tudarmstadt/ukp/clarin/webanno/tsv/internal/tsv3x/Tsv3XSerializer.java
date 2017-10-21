@@ -345,9 +345,18 @@ public class Tsv3XSerializer
                 }
                 AnnotationFS targetFS = getFeature(links[i], TsvSchema.FEAT_SLOT_TARGET,
                         AnnotationFS.class);
+                if (targetFS == null) {
+                    throw new IllegalStateException(
+                            "Slot link has no target: " + links[i]);
+                }
+
                 TsvUnit target = aDoc.findIdDefiningUnit(targetFS);
-                aOut.print(target.getId());
+                if (target == null) {
+                    throw new IllegalStateException(
+                            "Unable to find ID-defining unit for annotation: " + targetFS);
+                }
                 
+                aOut.print(target.getId());
                 writeDisambiguationId(aOut, aDoc, targetFS);
             }
         }

@@ -227,11 +227,21 @@ public class TsvDocument
         // it is handled in the second case.
         if (aDisambiguationId > 0) {
             annotation = getDisambiguatedAnnotation(aDisambiguationId);
+            if (annotation == null) {
+                throw new IllegalStateException("Unable to resolve reference to disambiguation ID ["
+                        + aDisambiguationId + "]");
+            }
         }
         // Otherwise, we'll have to go through the source unit.
         else {
             annotation = getUnit(aId).getUimaAnnotation(aType, 0);
+            if (annotation == null) {
+                throw new IllegalStateException(
+                        "Unable to resolve reference to unambiguous annotation of type ["
+                                + aType.getName() + "] in unit [" + aId + "]");
+            }
         }
+        
         return annotation;
     }
 

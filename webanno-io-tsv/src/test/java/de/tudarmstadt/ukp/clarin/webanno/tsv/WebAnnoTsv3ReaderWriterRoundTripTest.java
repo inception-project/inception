@@ -56,8 +56,8 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
     @Parameters(name = "{index}: running on file {0}")
     public static Iterable<File> tsvFiles()
     {
-        return asList(new File("src/test/resources/tsv3-suite/")
-                .listFiles((FilenameFilter) new PrefixFileFilter(asList("test", "issue"))));
+        return asList(new File("src/test/resources/tsv3-suite/").listFiles(
+                (FilenameFilter) new PrefixFileFilter(asList("test", "issue", "sample"))));
     }
 
     private File referenceFolder;
@@ -83,6 +83,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("testStackedComplexSlotFeatureWithoutValues");
         failingTests.add("testStackedSimpleSlotFeatureWithoutValues");
         failingTests.add("testZeroLengthSlotFeature2");
+        failingTests.add("sampleSlotAnnotation1");
 
         return failingTests.contains(aMethodName);
     }

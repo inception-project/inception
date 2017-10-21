@@ -832,15 +832,6 @@ public class Tsv3XDeserializer
                 FeatureStructure[] links = getFeature(aAnnotation,
                         aCol.uimaFeature.getShortName(), FeatureStructure[].class);
                 
-//                // If we get here and links is still null, then we didn't have any slot fillers.
-//                // In that case we set it here because other code should be able to rely on the
-//                // fact that at least an empty array is set.
-//                if (links == null) {
-//                    setFeature(aAnnotation, aCol.uimaFeature.getShortName(),
-//                            Collections.emptyList());
-//                    links = new FeatureStructure[0];
-//                }
-                
                 assert values.length == links.length;
 
                 for (int i = 0; i < values.length; i++) {

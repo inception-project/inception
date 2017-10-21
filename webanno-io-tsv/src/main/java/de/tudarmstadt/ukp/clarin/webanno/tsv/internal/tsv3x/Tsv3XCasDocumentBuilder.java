@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.PLACEHOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.RELATION_REF;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FeatureType.SLOT_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.CHAIN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.RELATION;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.LayerType.SPAN;
@@ -39,6 +40,7 @@ import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -196,8 +198,10 @@ public class Tsv3XCasDocumentBuilder
         for (TsvSentence sentence : doc.getSentences()) {
             for (TsvToken token : sentence.getTokens()) {
                 scanUnitForActiveColumns(token);
+                scanUnitForAmbiguousSlotReferences(token);
                 for (TsvSubToken subToken : token.getSubTokens()) {
                     scanUnitForActiveColumns(subToken);
+                    scanUnitForAmbiguousSlotReferences(subToken);
                 }
             }
         }
@@ -253,6 +257,33 @@ public class Tsv3XCasDocumentBuilder
                     }
                     else {
                         col.setTargetTypeHint(target.getType());
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * If a slot feature has the target type Annotation, then any kind of annotation can be
+     * used as slot filler. In this case, the targets are ambiguous and require an disambiguaton
+     * ID.
+     */
+    private static void scanUnitForAmbiguousSlotReferences(TsvUnit aUnit)
+    {
+        for (TsvColumn col : aUnit.getDocument().getSchema().getColumns()) {
+            if (SPAN.equals(col.layerType) && SLOT_TARGET.equals(col.featureType)
+                    && CAS.TYPE_NAME_ANNOTATION.equals(col.getTargetTypeHint().getName())) {
+                List<AnnotationFS> annotationsForColumn = aUnit.getAnnotationsForColumn(col);
+                for (AnnotationFS aFS : annotationsForColumn) {
+                    FeatureStructure[] links = getFeature(aFS, col.uimaFeature,
+                            FeatureStructure[].class);
+                    for (FeatureStructure link : links) {
+                        AnnotationFS targetFS = getFeature(link, TsvSchema.FEAT_SLOT_TARGET,
+                                AnnotationFS.class);
+                        if (targetFS == null) {
+                            throw new IllegalStateException("Slot link has no target: " + link);
+                        }
+                        aUnit.getDocument().addDisambiguationId(targetFS);
                     }
                 }
             }
