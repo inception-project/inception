@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -41,7 +40,7 @@ public class TsvDocument
     private final TsvFormatHeader format;
     private final TsvSchema schema;
     private final JCas jcas;
-    private final Map<FeatureStructure, TsvUnit> fs2unitIndex = new HashMap<>();
+    private final Map<AnnotationFS, TsvUnit> fs2unitIndex = new HashMap<>();
     private final List<TsvSentence> sentences = new ArrayList<>();
     private final List<TsvChain> chains = new ArrayList<>();
     private final Map<AnnotationFS, TsvChain> fs2ChainIndex = new HashMap<>();
@@ -78,16 +77,21 @@ public class TsvDocument
     }
     
     /**
-     * Get the unit which defines the TSV ID for the given feature structure. This can be either
-     * a token or it could be a subtoken if the feature structure is properly nested in a token
-     * of if it triggered the creation of a prefix or suffix subtoken.
+     * Get the unit which defines the TSV ID for the given feature structure. This can be either a
+     * token or it could be a sub-token if the feature structure is properly nested in a token of if
+     * it triggered the creation of a prefix or suffix sub-token.
+     * 
+     * @param aFS
+     *            an annotation.
+     * 
+     * @return the unit defining the TSV ID for the given feature structure
      */
-    public TsvUnit findIdDefiningUnit(FeatureStructure aFS)
+    public TsvUnit findIdDefiningUnit(AnnotationFS aFS)
     {
         return fs2unitIndex.get(aFS);
     }
     
-    public void mapFS2Unit(FeatureStructure aFS, TsvUnit aUnit)
+    public void mapFS2Unit(AnnotationFS aFS, TsvUnit aUnit)
     {
         fs2unitIndex.put(aFS, aUnit);
     }
