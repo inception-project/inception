@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IChainingModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IWrapModel;
