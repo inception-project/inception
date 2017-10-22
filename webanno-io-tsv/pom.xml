@@ -123,6 +123,12 @@
             <usedDependencies>
               <!-- Not detected by Maven -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
+              <!-- 
+                - The logging is used via reflection and cannot be detected by Maven
+              -->
+              <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
+              <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
