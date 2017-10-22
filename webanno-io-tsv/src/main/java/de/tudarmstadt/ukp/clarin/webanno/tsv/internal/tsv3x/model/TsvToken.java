@@ -31,8 +31,14 @@ public class TsvToken extends TsvUnit
     }
 
     /**
-     * Creates a new sub-token if there is not already a sub-token with the same offsets.
-     * Otherwise, it returns the existing sub-token.
+     * Creates a new sub-token if there is not already a sub-token with the same offsets. Otherwise,
+     * it returns the existing sub-token.
+     * 
+     * @param aBegin
+     *            begin offset.
+     * @param aEnd
+     *            end offset.
+     * @return the new sub-token.
      */
     public TsvSubToken createSubToken(int aBegin, int aEnd)
     {

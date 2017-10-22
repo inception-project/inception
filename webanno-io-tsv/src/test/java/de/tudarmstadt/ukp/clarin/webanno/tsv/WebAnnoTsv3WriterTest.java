@@ -53,7 +53,9 @@ public class WebAnnoTsv3WriterTest extends WebAnnoTsv3WriterTestBase
                 "testSubMultiTokenSpanWithoutFeatureValue3",
                 "testStackedComplexSlotFeatureWithoutValues",
                 "testSingleStackedNonTokenRelationWithoutFeatureValue2",
-                "testZeroLengthSlotFeature2");
+                "testZeroLengthSlotFeature2",
+                "testStackedComplexSlotFeatureWithoutSlotFillers",
+                "testStackedSimpleSlotFeatureWithoutValues");
         
         return failing.contains(aMethodName);
     }

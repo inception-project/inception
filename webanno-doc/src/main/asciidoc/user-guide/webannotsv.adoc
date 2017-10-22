@@ -88,7 +88,7 @@ Reserved characters have a special meaning in the TSV format and must be are esc
 
 ==== Sentence Representation
 
-Sentence annotations are presented following the text marker `#Text=`, before the token annotations.
+Sentence annotations are presented following the text marker `#Text=`, before the token annotations. All text given here is inside the sentence boundaries.
 
 .Example: Original text sections
 [source,text]
@@ -98,7 +98,21 @@ Sentence annotations are presented following the text marker `#Text=`, before th
 
 The sentence annotation do not include offsets and mainly presented as additional information. Re-importing the WebAnno TSV file construct sentences from the token annotations.
 
+If a sentence spans multiple lines, the text is split at the line feed characters (ASCII 12) and multiple `#Text=` lines are generated. Note that carriage return characters (ASCII 13) are kept
+as escaped characters (`\r`). 
+
+.Example: Original multi-line text
+[source,text]
+----
+#Text=Bell , based in Los Angeles , makes and distributes
+#Text=electronic , computer and building products .
+----
+
 ==== Token and Sub-token Annotations
+
+Tokens represent a span of text within a sentence. Tokens cannot overlap, although then can be
+directly adjacent (i.e. without any whitespace between them). The start offset of the first
+character of the first token corresponds to the start of offset of the sentence.
 
 Token annotation starts with a `sentence-token` number marker followed by the begin-end offsets and the token itself, separated by a TAB characters. 
 
@@ -108,7 +122,7 @@ Token annotation starts with a `sentence-token` number marker followed by the be
 1-2	4-8	Haag
 ----
 
-Here `1` indicates the sentence number, `2` indicates the token number (here, the second token in the first sentence) and `4` is the begin offset of the token and `8` is the end offset of the toke while `Haag` is the token.
+Here `1` indicates the sentence number, `2` indicates the token number (here, the second token in the first sentence) and `4` is the begin offset of the token and `8` is the end offset of the token while `Haag` is the token.
 
 Sub-token representations are affixed with a `.` and a number starts from 1 to N. 
 
@@ -120,7 +134,17 @@ Sub-token representations are affixed with a `.` and a number starts from 1 to N
 1-3.2	13-14	s
 ----
 
-Here, the sub-token `play` is indicated by sentence-token number `1-3.1` and the sub-token `s` is indicated by `1-3.2`. 
+Here, the sub-token `play` is indicated by sentence-token number `1-3.1` and the sub-token `s` is indicated by `1-3.2`.
+
+While tokens may not overlap, sub-tokens may overlap.
+
+.Example: Overlapping sub-tokens
+[source,text]
+----
+1-3 9-14  plays
+1-3.1 9-12  pla
+1-3.2 11-14 ays
+----
 
 ==== Span Annotations
 
@@ -142,9 +166,19 @@ For every features of a span Annotation, annotation value will be presented in t
 Here, the first annotation at column 4, `JJ` is avalue for a feature *PosValue* of the layer *de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS*. For the two features of the layer *webanno.custom.Sentiment* (*Category* and *Opinion*), the values `abstract` and `negative` are
 presented at column 5 and 6 resp.
 
-==== Multi-Token Span Annotations and Stacked Annotations
+==== Disambiguation IDs
 
-Multiple span annotation or stacked annotations on a token/sub-token will have a numbered reference enclosed by brackets as `[N]` where *N* refers to the nth annotation on the layer. Stacked annotations are separated by `|` character.
+Within a single line, an annotation can be uniquely identified by its type and stacking index.
+However, across lines, annotation cannot be uniquely identified easily. Also, if the exact type
+of the referenced annotation is not known, an annotation cannot be uniquely identified. For this
+reason, disambiguation IDs are introduced in potentially problematic cases:
+
+* stacked annotations - if multiple annotations of the same type appear in the same line
+* multi-unit annotations - if an annotations spans multiple tokens or sub-tokens
+* un-typed slots - if a slot feature has the type `uima.tcas.Annotation` and may thus refer to
+  any kind of target annotation.
+
+The disambiguation ID is attached as a suffix `[N]` to the annotation value. Stacked annotations are separated by `|` character.
 
 .Example: Span layer declaration in file header
 [source,text]
@@ -160,7 +194,9 @@ Multiple span annotation or stacked annotations on a token/sub-token will have a
 1-2	4-8	Haag	NNP	PER[1]
 ----
 
-Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multiple token annotations) while `PERpart[2]` is the second (stacked) annotation on token  `1-1` separated by `|` character.
+Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (multi-token annotations) while `PERpart[2]` is the second (stacked) annotation on token  `1-1` separated by `|` character.
+
+NOTE: On chain layers, the number in brackets is *not* a disambiguation ID but rather a chain ID!
 
 ==== Slot features
 
@@ -235,3 +271,26 @@ Relation annotations comes to the last columns of the TSV file format. Just like
 ----
 
 In this example (say token `1-1`), column 4 (`NNP`) is a value for the feature `PosValue` of the *de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS* layer. Column 5 (`SUBJ`) records the value for the feature *DependencyType* of the *de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency* relation layer, where as column 6 (`1-3`) shows from which governor (`VBD`) the dependency arc is drawn.
+
+For relations, a single disambiguation ID is not sufficient. If a relation is ambiguous, then
+the source ID of the relation is followed by the source and target disambiguation ID separated
+by an underscore (`_`). If only one of the relation endpoints is ambiguous, then the other one
+appears with the ID `0`. E.g. in the example below, the annotation on token `1-5` is ambiguous,
+but the annotation on token `1-1` is not.
+
+.Example: Disambiguation IDs in relations
+[source,text]
+----
+#FORMAT=WebAnno TSV 3.2
+#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value
+#T_RL=webanno.custom.Relation|value|BT_de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity
+
+
+#Text=This is a test .
+1-1 0-4 This  * _ _ 
+1-2 5-7 is  _ _ _ 
+1-3 8-9 a _ _ _ 
+1-4 10-14 test  _ _ _ 
+1-5 15-16 . *[1]|*[2] * 1-1[0_1]
+----
+  

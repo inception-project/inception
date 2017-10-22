@@ -319,7 +319,7 @@ public class Tsv3XSerializer
             AnnotationFS aFS)
     {
         FeatureStructure[] links = getFeature(aFS, aCol.uimaFeature, FeatureStructure[].class);
-        if (links.length > 0) {
+        if (links != null && links.length > 0) {
             for (int i = 0; i < links.length; i++) {
                 if (i > 0) {
                     aOut.print(SLOT_SEP);
@@ -332,22 +332,32 @@ public class Tsv3XSerializer
         else {
             aOut.print(NULL_COLUMN);
         }
+        writeDisambiguationId(aOut, aDoc, aFS);
     }
     
     private static void writeSlotTarget(PrintWriter aOut, TsvDocument aDoc, TsvColumn aCol,
             AnnotationFS aFS)
     {
         FeatureStructure[] links = getFeature(aFS, aCol.uimaFeature, FeatureStructure[].class);
-        if (links.length > 0) {
+        if (links != null && links.length > 0) {
             for (int i = 0; i < links.length; i++) {
                 if (i > 0) {
                     aOut.print(SLOT_SEP);
                 }
                 AnnotationFS targetFS = getFeature(links[i], TsvSchema.FEAT_SLOT_TARGET,
                         AnnotationFS.class);
+                if (targetFS == null) {
+                    throw new IllegalStateException(
+                            "Slot link has no target: " + links[i]);
+                }
+
                 TsvUnit target = aDoc.findIdDefiningUnit(targetFS);
-                aOut.print(target.getId());
+                if (target == null) {
+                    throw new IllegalStateException(
+                            "Unable to find ID-defining unit for annotation: " + targetFS);
+                }
                 
+                aOut.print(target.getId());
                 writeDisambiguationId(aOut, aDoc, targetFS);
             }
         }
