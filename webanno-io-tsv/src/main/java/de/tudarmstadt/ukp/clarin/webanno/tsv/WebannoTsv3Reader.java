@@ -50,11 +50,13 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -510,6 +512,13 @@ public class WebannoTsv3Reader
                             }
                             if (type.getName().equals(Lemma.class.getName())) {
                                 units2Tokens.get(unit).setLemma((Lemma) annos.get(i));
+                            }
+                            if (type.getName().equals(Stem.class.getName())) {
+                                units2Tokens.get(unit).setStem((Stem) annos.get(i));
+                            }
+                            if (type.getName().equals(MorphologicalFeatures.class.getName())) {
+                                units2Tokens.get(unit)
+                                        .setMorph((MorphologicalFeatures) annos.get(i));
                             }
                             i++;
                         }
