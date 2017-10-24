@@ -44,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -96,20 +97,39 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
         AnalysisEngineDescription checker = createEngineDescription(
                 DKProCoreConventionsChecker.class);
         
-        AnalysisEngineDescription writer = createEngineDescription(WebannoTsv3XWriter.class,
+        AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3XWriter.class,
                 merged,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true);
+
+        AnalysisEngineDescription xmiWriter = createEngineDescription(XmiWriter.class,
+                merged,
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
+                XmiWriter.PARAM_STRIP_EXTENSION, true);
+
+        SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         
-        SimplePipeline.runPipeline(reader, checker, writer);
-        
-        String reference = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
+        String referenceTsv = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
                 "UTF-8");
-        
-        String actual = FileUtils.readFileToString(new File(targetFolder, "reference.tsv"),
+
+        String actualTsv = FileUtils.readFileToString(new File(targetFolder, "reference.tsv"),
                 "UTF-8");
-        
-        assertEquals(reference, actual);
+
+        //
+        // The XMI files here are not compared semantically but using their serialization which
+        // is subject to minor variations depending e.g. on the order in which annotation are
+        // created in the CAS. Thus, this code is commented out and should only be used on a
+        // case-by-case base to compare XMIs during development.
+        //
+        // String referenceXmi = FileUtils.readFileToString(new File(referenceFolder,
+        // "reference.xmi"),
+        // "UTF-8");
+        //
+        // String actualXmi = FileUtils.readFileToString(new File(targetFolder, "reference.xmi"),
+        // "UTF-8");
+
+        assertEquals(referenceTsv, actualTsv);
+        // assertEquals(referenceXmi, actualXmi);
     }
     
     public static class DKProCoreConventionsChecker

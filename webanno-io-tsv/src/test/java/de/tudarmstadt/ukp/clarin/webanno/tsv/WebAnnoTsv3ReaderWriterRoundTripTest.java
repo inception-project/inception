@@ -42,6 +42,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3XReaderWriterRoundTripTest.DKProCoreConventionsChecker;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -113,10 +115,13 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, referenceFolder,
                 WebannoTsv3Reader.PARAM_PATTERNS, "reference.tsv");
         
+        AnalysisEngineDescription checker = createEngineDescription(
+                DKProCoreConventionsChecker.class);        
+        
         // WebannoTsv3Writer doesn't seem to like it if both "SimpleLinkHost" and
         // "ComplexLinkHost" are declared, so I comment out "ComplexLinkHost" which has
         // less tests.
-        AnalysisEngineDescription writer = createEngineDescription(WebannoTsv3Writer.class,
+        AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3Writer.class,
                 merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true,
@@ -148,9 +153,14 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                         "webanno.custom.ComplexRelation", 
                         Dependency.class.getName())
                 );
+
+        AnalysisEngineDescription xmiWriter = createEngineDescription(XmiWriter.class,
+                merged,
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
+                XmiWriter.PARAM_STRIP_EXTENSION, true);
         
         try {
-            SimplePipeline.runPipeline(reader, writer);
+            SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         }
         catch (Throwable e) {
             assumeFalse("This test is known to fail.", isKnownToFail(referenceFolder.getName()));
@@ -163,8 +173,22 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         String actual = FileUtils.readFileToString(new File(targetFolder, "reference.tsv"),
                 "UTF-8");
         
+        //
+        // The XMI files here are not compared semantically but using their serialization which
+        // is subject to minor variations depending e.g. on the order in which annotation are
+        // created in the CAS. Thus, this code is commented out and should only be used on a
+        // case-by-case base to compare XMIs during development.
+        //
+        // String referenceXmi = FileUtils.readFileToString(new File(referenceFolder,
+        // "reference.xmi"),
+        // "UTF-8");
+        //
+        // String actualXmi = FileUtils.readFileToString(new File(targetFolder, "reference.xmi"),
+        // "UTF-8");
+
         assumeFalse("This test is known to fail.", isKnownToFail(referenceFolder.getName()));
         assertEquals(reference, actual);
+        // assertEquals(referenceXmi, actualXmi);
     }
     
     @Rule
