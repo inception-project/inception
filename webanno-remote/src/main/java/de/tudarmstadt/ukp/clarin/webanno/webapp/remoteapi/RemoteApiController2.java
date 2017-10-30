@@ -106,7 +106,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.AccessForbiddenException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IllegalObjectStateException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.exception.IncompatibleDocumentException;
@@ -887,7 +887,7 @@ public class RemoteApiController2
             String msg = "[" + doc.getName() + "] No writer found for format [" + format
                     + "] - exporting as WebAnno TSV instead.";
             LOG.info(msg);
-            writer = WebannoTsv3Writer.class;
+            writer = WebannoTsv3XWriter.class;
         }
         
         // In principle we don't need this call - but it makes sure that we check that the

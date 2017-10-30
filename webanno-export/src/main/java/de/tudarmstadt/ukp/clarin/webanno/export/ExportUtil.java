@@ -63,7 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 
 public class ExportUtil
 {
@@ -406,7 +406,7 @@ public class ExportUtil
                 if (!aModel.messages.contains(msg)) {
                     aModel.messages.add(msg);
                 }
-                writer = WebannoTsv3Writer.class;
+                writer = WebannoTsv3XWriter.class;
             }
 
             // Export annotations from regular users
@@ -577,13 +577,13 @@ public class ExportUtil
         // Determine which format to use for export.
         Class<?> writer;
         if (FORMAT_AUTO.equals(aModel.format)) {
-            writer = WebannoTsv3Writer.class;
+            writer = WebannoTsv3XWriter.class;
         }
         else {
             writer = importExportService.getWritableFormats().get(
                     importExportService.getWritableFormatId(aModel.format));
             if (writer == null) {
-                writer = WebannoTsv3Writer.class;
+                writer = WebannoTsv3XWriter.class;
             }
         }
         

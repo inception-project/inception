@@ -69,7 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer;
+import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
@@ -741,7 +741,7 @@ public class RemoteApiController
             String msg = "[" + srcDoc.getName() + "] No writer found for format [" + formatId
                     + "] - exporting as WebAnno TSV instead.";
             LOG.info(msg);
-            writer = WebannoTsv3Writer.class;
+            writer = WebannoTsv3XWriter.class;
         }
 
         // Temporary file of annotation document
@@ -872,7 +872,7 @@ public class RemoteApiController
         if (writer == null) {
             LOG.info("[" + srcDocument.getName() + "] No writer found for format ["
                     + formatId + "] - exporting as WebAnno TSV instead.");
-            writer = WebannoTsv3Writer.class;
+            writer = WebannoTsv3XWriter.class;
         }
 
         // Temporary file of annotation document
