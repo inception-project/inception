@@ -89,7 +89,8 @@ public class ProjectTagSetsPanel
         tagEditorPanel.onConfigure(_this -> _this.setVisible(selectedTag.getObject() != null));
         add(tagEditorPanel);
 
-        tagSetEditorPanel = new TagSetEditorPanel("tagSetEditor", selectedProject, selectedTagSet);
+        tagSetEditorPanel = new TagSetEditorPanel("tagSetEditor", selectedProject, selectedTagSet,
+                selectedTag);
         tagSetEditorPanel
                 .onConfigure(_this -> _this.setVisible(selectedTagSet.getObject() != null));
         add(tagSetEditorPanel);
