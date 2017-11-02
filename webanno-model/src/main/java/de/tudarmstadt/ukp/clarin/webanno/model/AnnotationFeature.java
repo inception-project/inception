@@ -30,6 +30,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
 
 /**
@@ -67,6 +69,7 @@ public class AnnotationFeature
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "tag_set")
+    @NotFound(action = NotFoundAction.IGNORE)
     private TagSet tagset;
 
     @Column(nullable = false)
