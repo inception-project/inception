@@ -77,9 +77,11 @@ public class TagSetEditorPanel
 
     private IModel<Project> selectedProject;
     private IModel<TagSet> selectedTagSet;
+    private IModel<Tag> selectedTag;
     private IModel<String> exportFormat;
     
-    public TagSetEditorPanel(String aId, IModel<Project> aProject, IModel<TagSet> aTagSet)
+    public TagSetEditorPanel(String aId, IModel<Project> aProject, IModel<TagSet> aTagSet,
+            IModel<Tag> aSelectedTag)
     {
         super(aId, aTagSet);
         
@@ -88,6 +90,7 @@ public class TagSetEditorPanel
         
         selectedProject = aProject;
         selectedTagSet = aTagSet;
+        selectedTag = aSelectedTag;
         exportFormat = Model.of(supportedFormats().get(0));
         
         Form<TagSet> form = new Form<>("form", CompoundPropertyModel.of(aTagSet));
@@ -160,6 +163,7 @@ public class TagSetEditorPanel
     
     private void actionCancel(AjaxRequestTarget aTarget) {
         selectedTagSet.setObject(null);
+        selectedTag.setObject(null);
         
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
