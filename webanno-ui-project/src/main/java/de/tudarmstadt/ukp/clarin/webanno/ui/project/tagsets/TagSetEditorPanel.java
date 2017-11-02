@@ -127,10 +127,9 @@ public class TagSetEditorPanel
                 error("Only one tagset per project is allowed!");
             }
         }
-        else {
-            selectedTagSet.getObject().setProject(selectedProject.getObject());
-            annotationSchemaService.createTagSet(selectedTagSet.getObject());
-        }
+        
+        selectedTagSet.getObject().setProject(selectedProject.getObject());
+        annotationSchemaService.createTagSet(selectedTagSet.getObject());
         
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
