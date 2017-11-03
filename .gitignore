@@ -6,3 +6,4 @@ target
 /db/
 /repository/
 webanno-doc/src/main/resources
+log4j2-dev.xml
