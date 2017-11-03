@@ -162,8 +162,8 @@ public class TextFeatureEditor
 	protected void onInitialize()
 	{
 	    super.onInitialize();
-        LOG.trace(String.format("TextFeatureEditor(path: " + getPageRelativePath() + ", "
-                + getModelObject().feature.getUiName() + ": " + getModelObject().value + ")"));
+        LOG.trace(String.format("TextFeatureEditor(path: %s, %s: %s)", getPageRelativePath(),
+                getModelObject().feature.getUiName(), String.valueOf(getModelObject().value)));
 	}
 	
     @Override

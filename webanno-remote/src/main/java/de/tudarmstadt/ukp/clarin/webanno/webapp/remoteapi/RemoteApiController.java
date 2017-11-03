@@ -754,7 +754,7 @@ public class RemoteApiController
             response.setContentType(mimeType);
             response.setContentType("application/force-download");
             response.setHeader("Content-Disposition",
-                    String.format("inline; filename=\"" + downloadableFile.getName() + "\""));
+                    "inline; filename=\"" + downloadableFile.getName() + "\"");
             response.setContentLength((int) downloadableFile.length());
             InputStream inputStream = new BufferedInputStream(
                     new FileInputStream(downloadableFile));

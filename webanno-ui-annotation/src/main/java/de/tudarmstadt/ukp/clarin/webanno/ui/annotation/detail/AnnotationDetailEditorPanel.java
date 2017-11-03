@@ -43,8 +43,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
@@ -84,6 +82,8 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
@@ -593,7 +593,7 @@ public class AnnotationDetailEditorPanel
         
         private void updateLayersDropdown()
         {
-            LOG.trace(String.format("updateLayersDropdown()"));
+            LOG.trace("updateLayersDropdown()");
             
             AnnotatorState state = getModelObject();
             
@@ -632,7 +632,7 @@ public class AnnotationDetailEditorPanel
         
         private void updateRememberLayer()
         {
-            LOG.trace(String.format("updateRememberLayer()"));
+            LOG.trace("updateRememberLayer()");
             
             AnnotatorState state = getModelObject();
             
@@ -744,9 +744,9 @@ public class AnnotationDetailEditorPanel
             @Override
             protected void populateItem(final Item<FeatureState> item)
             {
-                LOG.trace(String.format("FeatureEditorPanelContent.populateItem("
-                        + item.getModelObject().feature.getUiName() + ": "
-                        + item.getModelObject().value + ")"));
+                LOG.trace(String.format("FeatureEditorPanelContent.populateItem(%s: %s)",
+                        item.getModelObject().feature.getUiName(),
+                        String.valueOf(item.getModelObject().value)));
                 
                 // Feature editors that allow multiple values may want to update themselves,
                 // e.g. to add another slot.
@@ -1001,7 +1001,7 @@ public class AnnotationDetailEditorPanel
             JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace(String.format("createNewRelationAnnotation()"));
+        LOG.trace("createNewRelationAnnotation()");
         
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -1028,7 +1028,7 @@ public class AnnotationDetailEditorPanel
             JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace(String.format("createNewSpanAnnotation()"));
+        LOG.trace("createNewSpanAnnotation()");
 
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -1064,7 +1064,7 @@ public class AnnotationDetailEditorPanel
             JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace(String.format("createNewChainElement()"));
+        LOG.trace("createNewChainElement()");
         
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -1094,7 +1094,7 @@ public class AnnotationDetailEditorPanel
             JCas aJCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        LOG.trace(String.format("createNewChainLinkAnnotation()"));
+        LOG.trace("createNewChainLinkAnnotation()");
         
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -1237,8 +1237,7 @@ public class AnnotationDetailEditorPanel
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
         if (state.getSelection().isRelationAnno()) {
-            LOG.trace(String
-                    .format("actionAnnotate() relation annotation - looking for attached layer"));
+            LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
     
             // FIXME REC I think this whole section which meddles around with the selected annotation
             // layer should be moved out of there to the place where we originally set the annotation
@@ -1326,7 +1325,7 @@ public class AnnotationDetailEditorPanel
         }
         
         // Verify if input is valid according to tagset
-        LOG.trace(String.format("actionAnnotate() verifying feature values in editors"));
+        LOG.trace("actionAnnotate() verifying feature values in editors");
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
         for (int i = 0; i < featureStates.size(); i++) {
             AnnotationFeature feature = featureStates.get(i).feature;
@@ -1364,7 +1363,7 @@ public class AnnotationDetailEditorPanel
     	writeFeatureEditorModelsToCas(adapter, aJCas);
     
         // Update progress information
-        LOG.trace(String.format("actionAnnotate() updating progress information"));
+        LOG.trace("actionAnnotate() updating progress information");
         int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
         state.setFocusSentenceNumber(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
@@ -1373,14 +1372,14 @@ public class AnnotationDetailEditorPanel
         repository.writeCas(state.getMode(), state.getDocument(), state.getUser(), aJCas);
     
         // Remember the current feature values independently for spans and relations
-        LOG.trace(String.format("actionAnnotate() remembering feature editor values"));
+        LOG.trace("actionAnnotate() remembering feature editor values");
         state.rememberFeatures();
     
     	// Loading feature editor values from CAS
     	loadFeatureEditorModels(aJCas, aTarget);
     	
     	// onAnnotate callback
-        LOG.trace(String.format("onAnnotate()"));
+        LOG.trace("onAnnotate()");
     	onAnnotate(aTarget);
     
     	// Handle auto-forward if it is enabled
@@ -1401,7 +1400,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
     
-            LOG.trace(String.format("onAutoForward()"));
+            LOG.trace("onAutoForward()");
     		onAutoForward(aTarget);
     		
             LOG.info("END auto-forward annotation");
@@ -1413,7 +1412,7 @@ public class AnnotationDetailEditorPanel
     	
     	annotationFeatureForm.forwardAnnotationText.setModelObject(null);
     	
-        LOG.trace(String.format("onChange()"));
+        LOG.trace("onChange()");
     	onChange(aTarget);
     	
     	if (state.isForwardAnnotation() && state.getFeatureStates().get(0).value != null) {
@@ -1427,7 +1426,7 @@ public class AnnotationDetailEditorPanel
             // here again
             // annotationFeatureForm.updateLayersDropdown();
             
-            LOG.trace(String.format("actionAnnotate() setting selected layer (not sure why)"));
+            LOG.trace("actionAnnotate() setting selected layer (not sure why)");
             if (annotationFeatureForm.annotationLayers.size() == 0) {
                 state.setSelectedAnnotationLayer(new AnnotationLayer());
             }
@@ -1872,7 +1871,7 @@ public class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         List<FeatureState> featureStates = state.getFeatureStates();
 
-        LOG.trace(String.format("writeFeatureEditorModelsToCas()"));
+        LOG.trace("writeFeatureEditorModelsToCas()");
         List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
         for (FeatureState featureState : featureStates) {
             features.add(featureState.feature);
@@ -1890,8 +1889,8 @@ public class AnnotationDetailEditorPanel
                     annotationService.createTag(selectedTag);
                 }
             }
-            LOG.trace(String.format("writeFeatureEditorModelsToCas() "
-                    + featureState.feature.getUiName() + " = " + featureState.value));
+            LOG.trace(String.format("writeFeatureEditorModelsToCas() %s = %s",
+                    featureState.feature.getUiName(), String.valueOf(featureState.value)));
             aAdapter.updateFeature(aJCas, featureState.feature,
                     state.getSelection().getAnnotation().getId(), featureState.value);
         }
@@ -1941,7 +1940,7 @@ public class AnnotationDetailEditorPanel
      */
     private void clearFeatureEditorModels(AjaxRequestTarget aTarget)
     {
-        LOG.trace(String.format("clearFeatureEditorModels()"));
+        LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
             aTarget.add(annotationFeatureForm);
@@ -1953,8 +1952,8 @@ public class AnnotationDetailEditorPanel
      */
     private void populateTagsBasedOnRules(JCas aJCas, FeatureState aModel)
     {
-        LOG.trace(String
-                .format("populateTagsBasedOnRules(feature: " + aModel.feature.getUiName() + ")"));
+        LOG.trace(
+                String.format("populateTagsBasedOnRules(feature: %s)", aModel.feature.getUiName()));
         
         AnnotatorState state = getModelObject();
         
