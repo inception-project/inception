@@ -105,7 +105,12 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTag(Tag aTag)
     {
-        entityManager.persist(aTag);
+        if (aTag.getId() == 0) {
+            entityManager.persist(aTag);
+        }
+        else {
+            entityManager.merge(aTag);
+        }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aTag.getTagSet().getProject().getId()))) {
@@ -121,7 +126,6 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTagSet(TagSet aTagSet)
     {
-
         if (aTagSet.getId() == 0) {
             entityManager.persist(aTagSet);
         }
