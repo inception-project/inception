@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import java.util.Optional;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +39,10 @@ public class SwaggerConfig
     @Bean
     public Docket customDocket()
     {
-        return new Docket(DocumentationType.SWAGGER_2); // some customization goes here
+        return new Docket(DocumentationType.SWAGGER_2)
+                .select()
+                .paths(path -> path.matches("/api.*"))
+                .build()
+                .genericModelSubstitutes(Optional.class);
     }
 }
