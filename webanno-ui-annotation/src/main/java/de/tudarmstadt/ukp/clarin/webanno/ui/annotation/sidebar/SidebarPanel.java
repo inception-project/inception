@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -51,6 +52,8 @@ public class SidebarPanel
             AnnotationPage aAnnotationPage)
     {
         super(aId);
+
+        Validate.notNull(aActionHandler, "Action handler must not be null");
         
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);

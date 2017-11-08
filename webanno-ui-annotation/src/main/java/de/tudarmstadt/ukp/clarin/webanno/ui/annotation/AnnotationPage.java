@@ -191,12 +191,12 @@ public class AnnotationPage
 
         add(createUrlFragmentBehavior());      
         
-        add(createLeftSidebar());
-        
         add(annotationEditor = createAnnotationEditor());
         
         add(createRightSidebar());
 
+        add(createLeftSidebar());
+        
         add(createDocumentInfoLabel());
 
         add(getOrCreatePositionInfoLabel());
