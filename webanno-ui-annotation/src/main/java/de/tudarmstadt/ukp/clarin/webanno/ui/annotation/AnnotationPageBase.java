@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -100,7 +101,7 @@ public abstract class AnnotationPageBase
                                     PropertyModel.of(getModel(), "firstVisibleUnitIndex"),
                                     PropertyModel.of(getModel(), "lastVisibleUnitIndex"),
                                     PropertyModel.of(getModel(), "unitCount"),
-                                    PropertyModel.of(getModel(), "documentIndex"),
+                                    LambdaModel.of(() -> getModelObject().getDocumentIndex() + 1),
                                     PropertyModel.of(getModel(), "numberOfDocuments")))
             {
                 private static final long serialVersionUID = 7176610419683776917L;
