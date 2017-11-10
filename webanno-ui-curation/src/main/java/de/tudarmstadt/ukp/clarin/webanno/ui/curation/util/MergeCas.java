@@ -88,7 +88,7 @@ public class MergeCas
      *            a map of{@code JCas}s for each users and the random merge
      * @return the actual merge {@code JCas}
      */
-    public static JCas geMergeCas(DiffResult aDiff, Map<String, JCas> aJCases)
+    public static JCas reMergeCas(DiffResult aDiff, Map<String, JCas> aJCases)
     {
 
         Set<FeatureStructure> slotFeaturesToReset = new HashSet<>();

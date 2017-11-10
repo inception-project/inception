@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -125,6 +126,7 @@ public class AutomationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
@@ -403,9 +405,9 @@ public class AutomationPage
                 }
 
                 try {
-                    SuggestionBuilder builder = new SuggestionBuilder(documentService,
-                            correctionDocumentService, curationDocumentService, annotationService,
-                            userRepository);
+                    SuggestionBuilder builder = new SuggestionBuilder(casStorageService,
+                            documentService, correctionDocumentService, curationDocumentService,
+                            annotationService, userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(getEditorCas());
                     curationContainer.setBratAnnotatorModel(state);
@@ -611,7 +613,7 @@ public class AutomationPage
         state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
         state.setFocusUnitIndex(selectedSentence);        
         
-        SuggestionBuilder builder = new SuggestionBuilder(documentService,
+        SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                 correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
@@ -647,7 +649,7 @@ public class AutomationPage
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
@@ -796,7 +798,7 @@ public class AutomationPage
     {
         try {
             AnnotatorState state = getModelObject();
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);

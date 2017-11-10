@@ -52,6 +52,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -108,6 +109,7 @@ public class CurationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -615,8 +617,9 @@ public class CurationPage
                 }
             }
     
-            SuggestionBuilder cb = new SuggestionBuilder(documentService, correctionDocumentService,
-                    curationDocumentService, annotationService, userRepository);
+            SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
+                    userRepository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -647,7 +650,7 @@ public class CurationPage
     
             currentprojectId = state.getProject().getId();
     
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);

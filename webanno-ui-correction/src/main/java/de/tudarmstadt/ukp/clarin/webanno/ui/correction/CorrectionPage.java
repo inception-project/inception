@@ -52,6 +52,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -118,6 +119,7 @@ public class CorrectionPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
@@ -407,9 +409,9 @@ public class CorrectionPage
                     annotationEditor.requestRender(aTarget);
 
                     // info(bratAnnotatorModel.getMessage());
-                    SuggestionBuilder builder = new SuggestionBuilder(documentService,
-                            correctionDocumentService, curationDocumentService, annotationService,
-                            userRepository);
+                    SuggestionBuilder builder = new SuggestionBuilder(casStorageService,
+                            documentService, correctionDocumentService, curationDocumentService,
+                            annotationService, userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(editorCas);
                     curationContainer.setBratAnnotatorModel(state);
@@ -521,7 +523,7 @@ public class CorrectionPage
         state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
         state.setFocusUnitIndex(selectedSentence);        
         
-        SuggestionBuilder builder = new SuggestionBuilder(documentService,
+        SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                 correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         curationContainer = builder.buildCurationContainer(state);
@@ -557,7 +559,7 @@ public class CorrectionPage
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
 
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
@@ -725,7 +727,7 @@ public class CorrectionPage
     {
         try {
             AnnotatorState state = getModelObject();
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
