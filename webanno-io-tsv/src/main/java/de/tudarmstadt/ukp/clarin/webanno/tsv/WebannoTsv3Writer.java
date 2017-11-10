@@ -137,6 +137,7 @@ public class WebannoTsv3Writer
         throws AnalysisEngineProcessException
     {
         try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
+            resetVariables();
             setSlotLinkTypes();
             setLinkMaps(aJCas);
             setTokenSentenceAddress(aJCas);
@@ -1019,7 +1020,21 @@ public class WebannoTsv3Writer
             }
             sentNMumber++;
         }
+    }
 
+    private void resetVariables() {
+        units.clear();
+        subUnits.clear();
+        featurePerLayer.clear();
+        unitsLineNumber.clear();
+        sentenceUnits.clear();
+        annotationsPerPostion.clear();
+        slotFeatureTypes.clear();
+        annotaionRefPerType.clear();
+        ambigUnits.clear();
+        multiAnnosPerUnit.clear();
+        slotLinkTypes.clear();
+        layerMaps.clear();
     }
 
     private String escapeSpecial(String aText) {
