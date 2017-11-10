@@ -507,6 +507,15 @@ public class CasStorageServiceImpl
     }
     
     @Override
+    public void enableCache()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        if (requestCycle != null) {
+            requestCycle.setMetaData(CACHE_DISABLED, false);
+        }
+    }
+    
+    @Override
     public void disableCache()
     {
         RequestCycle requestCycle = RequestCycle.get();

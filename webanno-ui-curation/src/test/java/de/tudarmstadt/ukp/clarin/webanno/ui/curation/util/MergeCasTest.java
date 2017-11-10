@@ -73,7 +73,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentence.tsv", null);
@@ -104,7 +104,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
@@ -135,7 +135,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
@@ -167,7 +167,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceposlabel.tsv", null);
@@ -199,7 +199,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
@@ -231,7 +231,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
@@ -263,7 +263,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
@@ -295,7 +295,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEstacked2merge.tsv",
@@ -333,7 +333,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/spanmultifeature/1sentenceNENoFeature.tsv",
@@ -371,7 +371,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV(
@@ -406,7 +406,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel.tsv", null);
@@ -440,7 +440,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel3.tsv", null);
@@ -474,7 +474,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel5.tsv", null);
@@ -521,7 +521,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         JCas actual = DiffUtils.readWebAnnoTSV("mergecas/multivalspanrel/tale2.tsv", customType);
@@ -569,7 +569,7 @@ public class MergeCasTest
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
         JCas actual = DiffUtils.readXMI("mergecas/multivalspanrel/stackedmerge.xmi", customType);
 
         Type relType = mergeCas.getTypeSystem().getType("webanno.custom.Multivalrel");
@@ -607,7 +607,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
         JCas actual = DiffUtils.read("casdiff/relationLabel/merge.conll");
 
         casByUser = new HashMap<>();
@@ -651,7 +651,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         casByUser.put("actual", asList(jcasA));
@@ -690,7 +690,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas.getCas(), hostType).size();
@@ -730,7 +730,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas.getCas(), hostType).size();
@@ -770,7 +770,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas.getCas(), hostType).size();
@@ -811,7 +811,7 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        JCas mergeCas = MergeCas.geMergeCas(result, getSingleCasByUser(casByUser));
+        JCas mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas.getCas(), hostType).size();

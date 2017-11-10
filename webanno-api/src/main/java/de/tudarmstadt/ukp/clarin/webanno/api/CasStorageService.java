@@ -70,9 +70,17 @@ public interface CasStorageService
     
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
     
+    boolean isCacheEnabled();
+
     /**
      * Disables the CAS cache for the current request cycle. This is useful to avoid quickly filling
-     * up the memory during bulk operations e.g. reparing all CASes in a project.
+     * up the memory during bulk operations e.g. repairing all CASes in a project. It is also useful
+     * when a CAS needs to be copied and modified, e.g. during a curation re-merge.
      */
     void disableCache();
+
+    /**
+     * Enables the CAS cache for the current request cycle.
+     */
+    void enableCache();
 }

@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -82,6 +83,7 @@ public class SuggestionBuilder
     private final CorrectionDocumentService correctionDocumentService;
     private final CurationDocumentService curationDocumentService;
     private final UserDao userRepository;
+    private final CasStorageService casStorageService;
 
     int diffRangeBegin, diffRangeEnd;
     boolean firstload = true;
@@ -89,7 +91,8 @@ public class SuggestionBuilder
     //
     Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
 
-    public SuggestionBuilder(DocumentService aDocumentService,
+    public SuggestionBuilder(CasStorageService aCasStorageService,
+            DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService,
             CurationDocumentService aCurationDocumentService,
             AnnotationSchemaService aAnnotationService, UserDao aUserDao)
@@ -99,6 +102,7 @@ public class SuggestionBuilder
         curationDocumentService = aCurationDocumentService;
         annotationService = aAnnotationService;
         userRepository = aUserDao;
+        casStorageService = aCasStorageService;
     }
 
     public CurationContainer buildCurationContainer(AnnotatorState aBModel)
@@ -497,12 +501,20 @@ public class SuggestionBuilder
      */
     public JCas createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
             Map<String, JCas> jCases, List<AnnotationLayer> aAnnotationLayers)
-        throws IOException, UIMAException
+        throws IOException
     {
-        User userLoggedIn = userRepository
-                .get(SecurityContextHolder.getContext().getAuthentication().getName());
-
-        JCas mergeJCas = documentService.readAnnotationCas(randomAnnotationDocument);
+        JCas mergeJCas;
+        boolean cacheEnabled = false;
+        try {
+            cacheEnabled = casStorageService.isCacheEnabled();
+            casStorageService.disableCache();
+            mergeJCas = documentService.readAnnotationCas(randomAnnotationDocument);
+        }
+        finally {
+            if (cacheEnabled) {
+                casStorageService.enableCache();
+            }
+        }
         jCases.put(WebAnnoConst.CURATION_USER, mergeJCas);
 
         List<Type> entryTypes = getEntryTypes(mergeJCas, aAnnotationLayers, annotationService);
@@ -511,7 +523,7 @@ public class SuggestionBuilder
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0,
                 mergeJCas.getDocumentText().length());
 
-        mergeJCas = MergeCas.geMergeCas(diff, jCases);
+        mergeJCas = MergeCas.reMergeCas(diff, jCases);
 
         curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 false);
