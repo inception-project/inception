@@ -17,16 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -134,7 +138,8 @@ public class CasToBratJsonTest
                 "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
         String actual = FileUtils.readFileToString(new File(
                 "target/test-output/output_cas_to_json_collection.json"), "UTF-8");
-        assertEquals(reference, actual);
+        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
+                new StringReader(actual)));
     }
 
     /**
@@ -205,6 +210,7 @@ public class CasToBratJsonTest
                 "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");
         String actual = FileUtils.readFileToString(new File(
                 "target/test-output/output_cas_to_json_document.json"), "UTF-8");
-        assertEquals(reference, actual);
+        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
+                new StringReader(actual)));
     }
 }

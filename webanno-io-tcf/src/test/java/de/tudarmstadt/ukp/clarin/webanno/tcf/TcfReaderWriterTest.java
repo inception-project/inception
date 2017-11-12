@@ -21,6 +21,7 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -113,7 +114,6 @@ public class TcfReaderWriterTest
     }
     
     @Test
-    // @Ignore("The TCF library generates different xml namespaces and assertEquals fails on Jenkins ")
     public void testRoundtrip()
         throws Exception
     {
@@ -129,11 +129,8 @@ public class TcfReaderWriterTest
 
         runPipeline(reader, writer);
 
-        String reference = FileUtils.readFileToString(
-                new File("src/test/resources/wlfxb.xml"), "UTF-8");
-        String actual = FileUtils.readFileToString(
-                new File("target/test-output/roundtrip/wlfxb.xml"), "UTF-8");
-        assertEquals(reference, actual);
+        assertTrue(FileUtils.contentEqualsIgnoreEOL(new File("src/test/resources/wlfxb.xml"),
+                new File("target/test-output/roundtrip/wlfxb.xml"), "UTF-8"));
     }
 
     @Before
