@@ -68,7 +68,7 @@
     <springfox.version>2.7.0</springfox.version>
     <servlet.api.groupId>javax.servlet</servlet.api.groupId>
     <servlet.api.artifactId>javax.servlet-api</servlet.api.artifactId>
-    <javamelody.version>1.79.0</javamelody.version>
+    <javamelody.version>1.70.0</javamelody.version>
     <batik.version>1.9.1</batik.version>
   </properties>
   <repositories>
