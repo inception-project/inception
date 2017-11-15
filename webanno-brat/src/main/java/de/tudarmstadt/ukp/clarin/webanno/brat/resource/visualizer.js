@@ -1084,6 +1084,11 @@ var Visualizer = (function($, window, undefined) {
                 labelIdx++;
               }
             }
+            
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+              fragment.labelText = "(" + fragment.labelText + ")";
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
+            
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
             if (fragment.span.labelText) {
             	fragment.labelText = fragment.span.labelText;
@@ -2738,6 +2743,10 @@ Util.profileStart('arcs');
                   labelIdx++;
                 }
               }
+              
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+              labelText = "(" + labelText + ")";
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
 
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
