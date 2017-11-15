@@ -30,6 +30,8 @@ import org.springframework.core.io.ClassPathResource;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -38,6 +40,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
@@ -91,6 +96,10 @@ class ProjectInitializer
         createChunkLayer(aProject);
 
         createSurfaceFormLayer(aProject);
+        
+        createSemArgLayer(aProject);
+        
+        createSemPredLayer(aProject);
 
         // Extra tagsets
         JsonImportUtil.importTagSetFromJson(aProject,
@@ -422,6 +431,54 @@ class ProjectInitializer
         AnnotationFeature posFeature = createFeature("PosValue", "PosValue", "Part-of-speech tag",
                 CAS.TYPE_NAME_STRING, aPosTagset, aProject);
         posFeature.setLayer(posLayer);
+    }
+    
+    private AnnotationLayer createSemPredLayer(Project aProject)
+            throws IOException
+    {
+        AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
+                SPAN_TYPE, aProject, true);
+        semPredLayer.setAllowStacking(true);
+        semPredLayer.setCrossSentence(false);
+        semPredLayer.setLockToTokenOffset(false);
+        semPredLayer.setMultipleTokens(true);
+        
+        AnnotationFeature semPredCategoryFeature = createFeature("category", "category",
+                "Category of the semantic predicate, e.g. the frame identifier.",
+                CAS.TYPE_NAME_STRING, null, aProject);
+        semPredCategoryFeature.setLayer(semPredLayer);
+        
+        AnnotationFeature semPredArgumentsFeature = new AnnotationFeature();
+        semPredArgumentsFeature.setName("arguments");
+        semPredArgumentsFeature.setUiName("arguments");
+        semPredArgumentsFeature.setDescription("Arguments of the semantic predicate");
+        semPredArgumentsFeature.setType(SemArg.class.getName());
+        semPredArgumentsFeature.setProject(aProject);
+        semPredArgumentsFeature.setTagset(null);
+        semPredArgumentsFeature.setMode(MultiValueMode.ARRAY);
+        semPredArgumentsFeature.setLinkMode(LinkMode.WITH_ROLE);
+        semPredArgumentsFeature.setLinkTypeName(SemArgLink.class.getName());
+        semPredArgumentsFeature.setLinkTypeRoleFeatureName("role");
+        semPredArgumentsFeature.setLinkTypeTargetFeatureName("target");
+        semPredArgumentsFeature.setLayer(semPredLayer);
+        annotationSchemaService.createFeature(semPredArgumentsFeature);
+        
+        annotationSchemaService.createLayer(semPredLayer);
+        return semPredLayer;
+    }
+
+    private AnnotationLayer createSemArgLayer(Project aProject)
+            throws IOException
+    {
+        AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
+                SPAN_TYPE, aProject, true);
+        semArgLayer.setAllowStacking(true);
+        semArgLayer.setCrossSentence(false);
+        semArgLayer.setLockToTokenOffset(false);
+        semArgLayer.setMultipleTokens(true);
+        
+        annotationSchemaService.createLayer(semArgLayer);
+        return semArgLayer;
     }
 
     private AnnotationLayer createTokenLayer(Project aProject)

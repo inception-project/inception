@@ -154,7 +154,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-io-conllu</artifactId>
+        <artifactId>webanno-io-conll</artifactId>
         <version>3.4.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -720,7 +720,7 @@
     <module>webanno-io-tei</module>
     <module>webanno-io-text</module>
     <module>webanno-io-tsv</module>
-    <module>webanno-io-conllu</module>
+    <module>webanno-io-conll</module>
     <module>webanno-io-xmi</module>
     <!-- Core -->
     <module>webanno-model</module>
