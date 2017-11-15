@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.conllu;
+package de.tudarmstadt.ukp.clarin.webanno.conll;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
@@ -44,7 +44,7 @@ public class ConllUReaderWriterTest
     {
         CollectionReaderDescription reader = createReaderDescription(
                 ConllUReader.class, 
-                ConllUReader.PARAM_SOURCE_LOCATION, "src/test/resources/",
+                ConllUReader.PARAM_SOURCE_LOCATION, "src/test/resources/conll/u",
                 ConllUReader.PARAM_PATTERNS, "conllu-en-orig.conll");
 
         AnalysisEngineDescription writer = createEngineDescription(
@@ -56,7 +56,7 @@ public class ConllUReaderWriterTest
         runPipeline(reader, writer);
 
         String reference = FileUtils.readFileToString(
-                new File("src/test/resources/conllu-en-ref.conll"), "UTF-8")
+                new File("src/test/resources/conll/u/conllu-en-ref.conll"), "UTF-8")
                 .trim();
         String actual = FileUtils.readFileToString(
                 new File("target/test-output/ConllUReaderWriterTest-roundTrip/conllu-en-orig.conll"),
