@@ -91,8 +91,9 @@ public final class TypeUtil
         
         boolean featuresToShowAvailable = false;
         for (Entry<String, String> feature : aHoverFeatures.entrySet()) {
-            if ("__spantext__".equals(feature.getKey()))
-                    continue;
+            if ("__spantext__".equals(feature.getKey())) {
+                continue;
+            }
             String text = StringUtils.defaultString(feature.getValue());
             
             if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
@@ -181,8 +182,9 @@ public final class TypeUtil
         }
 
         if (bratHoverText.length() > 0) {
-            if (aAdapter.getLayer().isShowTextInHover())
+            if (aAdapter.getLayer().isShowTextInHover()) {
                 return String.format("\"%s\" %s", aFs.getCoveredText(), bratHoverText.toString());
+            }
             return bratHoverText.toString();
         }
         else {
