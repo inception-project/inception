@@ -22,8 +22,8 @@
     <artifactId>webanno</artifactId>
     <version>3.3.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-io-conllu</artifactId>
-  <name>WebAnno - IO - CONLL-U</name>
+  <artifactId>webanno-io-conll</artifactId>
+  <name>WebAnno - IO - CONLL</name>
   <dependencies>
     <dependency>
       <groupId>org.apache.uima</groupId>
