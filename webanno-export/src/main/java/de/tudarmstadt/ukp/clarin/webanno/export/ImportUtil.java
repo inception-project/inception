@@ -169,6 +169,9 @@ public class ImportUtil
         return createV1Layer(aProjecct, aImportedProjectSetting, aAnnotationService, user);
     }
 
+    /**
+     * Import tagsets from projects prior to WebAnno 2.0.
+     */
     private static void createV0TagSet(Project aProject,
             List<ExportedTagSet> importedTagSets,
             AnnotationSchemaService aAnnotationService, User user)
@@ -215,7 +218,7 @@ public class ImportUtil
             }
         }
         
-        aAnnotationService.initializeTypesForProject(aProject, posTags.toArray(new String[0]),
+        aAnnotationService.initializeTypesForProjectV0(aProject, posTags.toArray(new String[0]),
                 posTagDescriptions.toArray(new String[0]), depTags.toArray(new String[0]),
                 depTagDescriptions.toArray(new String[0]), neTags.toArray(new String[0]),
                 neTagDescriptions.toArray(new String[0]), corefTypeTags.toArray(new String[0]),

@@ -244,7 +244,7 @@ public interface AnnotationSchemaService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void initializeTypesForProject(Project project, String[] postags, String[] posTagDescriptions,
+    void initializeTypesForProjectV0(Project project, String[] postags, String[] posTagDescriptions,
             String[] depTags, String[] depTagDescriptions, String[] neTags,
             String[] neTagDescriptions, String[] corefTypeTags, String[] corefRelTags)
         throws IOException;
