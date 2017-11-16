@@ -41,15 +41,15 @@ public class Conll2009ReaderWriterTest
         throws Exception
     {
         CollectionReaderDescription reader = createReaderDescription(
-                ConllUReader.class, 
-                ConllUReader.PARAM_SOURCE_LOCATION, "src/test/resources/conll/2009",
-                ConllUReader.PARAM_PATTERNS, "conll/2009/en-ref.conll");
+                Conll2009Reader.class, 
+                Conll2009Reader.PARAM_SOURCE_LOCATION, "src/test/resources/conll/2009",
+                Conll2009Reader.PARAM_PATTERNS, "en-orig.conll");
 
         AnalysisEngineDescription writer = createEngineDescription(
-                ConllUWriter.class,
-                ConllUWriter.PARAM_TARGET_LOCATION, "target/test-output/ConllUReaderWriterTest-roundTrip",
-                ConllUWriter.PARAM_FILENAME_SUFFIX, ".conll",
-                ConllUWriter.PARAM_STRIP_EXTENSION, true);
+                Conll2009Writer.class,
+                Conll2009Writer.PARAM_TARGET_LOCATION, "target/test-output/Conll2009ReaderWriterTest-test",
+                Conll2009Writer.PARAM_FILENAME_EXTENSION, ".conll",
+                Conll2009Writer.PARAM_STRIP_EXTENSION, true);
 
         runPipeline(reader, writer);
 
