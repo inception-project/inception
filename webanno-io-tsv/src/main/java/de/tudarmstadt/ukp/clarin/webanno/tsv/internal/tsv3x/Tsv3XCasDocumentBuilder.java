@@ -119,6 +119,16 @@ public class Tsv3XCasDocumentBuilder
                 
                 TsvToken beginToken = tokenBeginIndex.floorEntry(annotation.getBegin()).getValue();
                 TsvToken endToken = tokenEndIndex.ceilingEntry(annotation.getEnd()).getValue();
+                
+                // For zero-width annotations, the begin token must match the end token.
+                // Zero-width annotations between two directly adjacent tokens are always
+                // considered to be at the end of the first token rather than at the beginning
+                // of the second token, so we trust the tokenEndIndex here and override the
+                // value obtained from the tokenBeginIndex.
+                if (annotation.getBegin() == annotation.getEnd()) {
+                    beginToken = endToken;
+                }
+                
                 boolean singleToken = beginToken == endToken;
                 boolean zeroWitdh = annotation.getBegin() == annotation.getEnd();
                 boolean multiTokenCapable = SPAN.equals(layerType) || CHAIN.equals(layerType);

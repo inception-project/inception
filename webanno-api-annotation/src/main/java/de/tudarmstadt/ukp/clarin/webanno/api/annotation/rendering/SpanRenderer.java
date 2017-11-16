@@ -83,16 +83,26 @@ public class SpanRenderer
             
             // check if annotation extends beyond viewable window - if yes, then constrain it to 
             // the visible window
-            for (Sentence sentence : visibleSentences) {
+            for (Sentence sent : visibleSentences) {
                 if (beginSent == null) {
-                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
-                        beginSent = sentence;
+                    // Here we catch the first sentence in document order which covers the begin
+                    // offset of the current annotation.
+                    if (sent.getBegin() <= fs.getBegin() && fs.getBegin() <= sent.getEnd()) {
+                        beginSent = sent;
+                    }
+                    // Make sure that zero-width annotations always start and end in the same
+                    // sentence. Zero-width annotations that are on the boundary of two directly
+                    // adjacent sentences (i.e. without whitespace between them) are considered
+                    // to be at the end of the first sentence rather than at the beginning of the
+                    // second sentence.
+                    if (fs.getBegin() == fs.getEnd()) {
+                        endSent = sent;
                     }
                 }
                 
                 if (endSent == null) {
-                    if (sentence.getBegin() <= fs.getEnd() && fs.getEnd() <= sentence.getEnd()) {
-                        endSent = sentence;
+                    if (sent.getBegin() <= fs.getEnd() && fs.getEnd() <= sent.getEnd()) {
+                        endSent = sent;
                     }
                 }
                 
