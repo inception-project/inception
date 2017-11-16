@@ -201,6 +201,26 @@ public abstract class WebAnnoTsv3WriterTestBase
     }
 
     @Test
+    public void testZeroLengthSpanBetweenAdjacentTokens() throws Exception
+    {
+        JCas jcas = makeJCas();
+        jcas.setDocumentText("word.");
+        new Token(jcas, 0,4).addToIndexes();
+        new Token(jcas, 4,5).addToIndexes();
+        new Sentence(jcas, 0,5).addToIndexes();
+        
+        CAS cas = jcas.getCas();
+        Type simpleSpanType = cas.getTypeSystem().getType("webanno.custom.SimpleSpan");
+        
+        // Insert zero-width annotation between the adjacent tokens (at end of first token).
+        AnnotationFS fs1a = cas.createAnnotation(simpleSpanType, 4, 4);
+        cas.addFsToIndexes(fs1a);
+
+        writeAndAssertEquals(jcas, 
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
+    }
+
+    @Test
     public void testZeroLengthStackedSpansWithoutFeatures() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
@@ -1573,7 +1593,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         assertEquals(reference, actual);
     }
 
-    private static JCas makeJCasOneSentence() throws UIMAException
+    private static JCas makeJCas() throws UIMAException
     {
         TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
         TypeSystemDescription local = TypeSystemDescriptionFactory
@@ -1583,8 +1603,15 @@ public abstract class WebAnnoTsv3WriterTestBase
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
         
         JCas jcas = JCasFactory.createJCas(merged);
-        
+
         DocumentMetaData.create(jcas).setDocumentId("doc");
+        
+        return jcas;
+    }
+
+    private static JCas makeJCasOneSentence() throws UIMAException
+    {
+        JCas jcas = makeJCas();
         
         TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
@@ -1592,19 +1619,10 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         return jcas;
     }
-
+    
     private static JCas makeJCasTwoSentences() throws UIMAException
     {
-        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        TypeSystemDescription local = TypeSystemDescriptionFactory
-                .createTypeSystemDescriptionFromPath(
-                        "src/test/resources/desc/type/webannoTestTypes.xml");
-       
-        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
-        JCas jcas = JCasFactory.createJCas(merged);
-        
-        DocumentMetaData.create(jcas).setDocumentId("doc");
+        JCas jcas = makeJCas();
         
         TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
@@ -1617,16 +1635,7 @@ public abstract class WebAnnoTsv3WriterTestBase
     
     private static JCas makeJCasOneSentence(String aText) throws UIMAException
     {
-        TypeSystemDescription global = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        TypeSystemDescription local = TypeSystemDescriptionFactory
-                .createTypeSystemDescriptionFromPath(
-                        "src/test/resources/desc/type/webannoTestTypes.xml");
-       
-        TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
-        JCas jcas = JCasFactory.createJCas(merged);
-        
-        DocumentMetaData.create(jcas).setDocumentId("doc");
+        JCas jcas = makeJCas();
         
         TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
                 Sentence.class);
