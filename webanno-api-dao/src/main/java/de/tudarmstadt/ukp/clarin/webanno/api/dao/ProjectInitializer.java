@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -100,6 +101,8 @@ class ProjectInitializer
         createSemArgLayer(aProject);
         
         createSemPredLayer(aProject);
+        
+        createMorphologicalFeaturesLayer(aProject);
 
         // Extra tagsets
         JsonImportUtil.importTagSetFromJson(aProject,
@@ -295,6 +298,30 @@ class ProjectInitializer
         annotationSchemaService.createFeature(lemmaFeature);
     }
 
+    private void createMorphologicalFeaturesLayer(Project aProject)
+            throws IOException
+    {
+        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
+                aProject);
+        AnnotationFeature tokenMorphFeature = createFeature("morph", "morph", aProject, tokenLayer,
+                Lemma.class.getName());
+        tokenMorphFeature.setVisible(true);
+
+        AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
+                "Morphological features", SPAN_TYPE, aProject, true);
+        morphLayer.setAttachType(tokenLayer);
+        morphLayer.setAttachFeature(tokenMorphFeature);
+        annotationSchemaService.createLayer(morphLayer);
+
+        AnnotationFeature valueFeature = new AnnotationFeature();
+        valueFeature.setDescription("Morphological features");
+        valueFeature.setName("value");
+        valueFeature.setType(CAS.TYPE_NAME_STRING);
+        valueFeature.setProject(aProject);
+        valueFeature.setUiName("Features");
+        valueFeature.setLayer(morphLayer);
+        annotationSchemaService.createFeature(valueFeature);
+    }
     private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags,
             TagSet aCorefRelTags)
         throws IOException
