@@ -87,11 +87,6 @@
     <property name="defaultTransactionIsolation"
       value="#{ T(java.sql.Connection).TRANSACTION_READ_COMMITTED}" />
   </bean>
-
-  <bean id="sessionFactory"
-    class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
-    <property name="dataSource" ref="dataSource" />
-  </bean>
   
   <bean id="passwordEncoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder" />
 </beans>

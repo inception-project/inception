@@ -62,7 +62,7 @@
     <wicket-bootstrap.version>0.10.16</wicket-bootstrap.version>
     <wicket-webjars.version>0.5.6</wicket-webjars.version>    
     <wicket-spring-boot.version>1.0.10</wicket-spring-boot.version>
-    <hibernate.version>4.3.11.Final</hibernate.version>
+    <hibernate.version>5.2.12.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
