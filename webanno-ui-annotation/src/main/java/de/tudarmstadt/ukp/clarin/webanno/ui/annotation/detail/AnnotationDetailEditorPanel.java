@@ -87,7 +87,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 /**
  * Annotation Detail Editor Panel.
@@ -1369,48 +1368,6 @@ public class AnnotationDetailEditorPanel
     public AnnotationFeatureForm getAnnotationFeatureForm()
     {
         return annotationFeatureForm;
-    }
-
-    boolean isForwardable()
-    {
-        AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
-        AnnotationLayer selectedLayer = state.getSelectedAnnotationLayer();
-
-        if (selectedLayer == null) {
-            return false;
-        }
-
-        if (selectedLayer.getId() <= 0) {
-            return false;
-        }
-
-        if (!selectedLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-            return false;
-        }
-
-        if (!selectedLayer.isLockToTokenOffset()) {
-            return false;
-        }
-
-        // no forward annotation for multifeature layers.
-        if (annotationService.listAnnotationFeature(selectedLayer).size() > 1) {
-            return false;
-        }
-
-        // if there are no features at all, no forward annotation
-        if (annotationService.listAnnotationFeature(selectedLayer).isEmpty()) {
-            return false;
-        }
-
-        // we allow forward annotation only for a feature with a tagset
-        if (annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset() == null) {
-            return false;
-        }
-
-        // there should be at least one tag in the tagset
-        TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset();
-
-        return annotationService.listTags(tagSet).size() != 0;
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
