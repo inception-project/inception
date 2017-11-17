@@ -1723,9 +1723,25 @@ var AnnotatorUI = (function($, window, undefined) {
         } else if (!evt.ctrlKey) {
           // if not, then is it span selection? (ctrl key cancels)
           var sel = window.getSelection();
+          
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+/*
           var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
           var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
+ */
+          var anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
+          var focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
+          var chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
+          var chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
 
+          if (focusNode && anchorNode && focusNode[0] == anchorNode[0] && focusNode.hasClass('spacing')) {
+            // misclick
+            clearSelection();
+            stopArcDrag(target);
+            return;
+          }
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+          
           // fallback for firefox (at least):
           // it's unclear why, but for firefox the anchor and focus
           // node parents are always undefined, the the anchor and
@@ -1780,6 +1796,33 @@ var AnnotatorUI = (function($, window, undefined) {
             anchorOffset = sel.anchorOffset;
             focusOffset = sel.focusOffset;
           }
+          
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+          // If we hit a spacing element, then we shift the anchors left or right, depending on
+          // the direction of the selected range.
+          if (anchorNode.hasClass('spacing')) {
+        	    if (Number(chunkIndexFrom) < Number(chunkIndexTo)) {
+        	      anchorNode = anchorNode.next();
+        	      anchorOffset = 0;
+        	    	  chunkIndexFrom = anchorNode.attr('data-chunk-id');
+        	    }
+        	    else {
+        	      anchorNode = anchorNode.prev();
+              anchorOffset = anchorNode.text().length;
+        	    }
+          }
+          if (focusNode.hasClass('spacing')) {
+        	    if (Number(chunkIndexFrom) > Number(chunkIndexTo)) {
+        	      focusNode = focusNode.next();
+        	      focusOffset = 0;
+        	    	  chunkIndexTo = focusNode.attr('data-chunk-id');
+        	    }
+        	    else {
+        	      focusNode = anchorNode.prev();
+              focusOffset = focusNode.text().length;
+        	    }
+          }
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
 
           if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
             var chunkFrom = data.chunks[chunkIndexFrom];
