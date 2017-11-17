@@ -50,7 +50,7 @@
     <jackson.version>2.9.2</jackson.version>
     <uima.version>2.10.2</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>4.3.9.RELEASE</spring.version>
+    <spring.version>5.0.1.RELEASE </spring.version>
     <spring.boot.version>1.5.8.RELEASE</spring.boot.version>
     <spring.security.version>4.2.3.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
