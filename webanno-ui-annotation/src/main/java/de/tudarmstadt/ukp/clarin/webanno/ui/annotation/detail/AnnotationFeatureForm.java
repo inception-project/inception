@@ -72,14 +72,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.DefaultFocusBehavior2;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -487,7 +484,6 @@ public class AnnotationFeatureForm
                     @Override
                     protected void onUpdate(AjaxRequestTarget aTarget)
                     {
-                        updateForwardAnnotation();
                         if (AnnotationFeatureForm.this.getModelObject().isForwardAnnotation()) {
                             aTarget.appendJavaScript(JavascriptUtils.getFocusScript
                                     (forwardAnnotationText));
@@ -501,10 +497,54 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(editorPanel.isForwardable());
-                updateForwardAnnotation();
+                setEnabled(isForwardable());
+                if (!isForwardable()) {
+                    AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
+                }
             }
         };
+    }
+
+    private boolean isForwardable()
+    {
+        AnnotatorState state = getModelObject();
+        AnnotationLayer selectedLayer = state.getSelectedAnnotationLayer();
+
+        if (selectedLayer == null) {
+            return false;
+        }
+
+        if (selectedLayer.getId() <= 0) {
+            return false;
+        }
+
+        if (!selectedLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+            return false;
+        }
+
+        if (!selectedLayer.isLockToTokenOffset()) {
+            return false;
+        }
+
+        // no forward annotation for multi-feature layers.
+        if (annotationService.listAnnotationFeature(selectedLayer).size() > 1) {
+            return false;
+        }
+
+        // if there are no features at all, no forward annotation
+        if (annotationService.listAnnotationFeature(selectedLayer).isEmpty()) {
+            return false;
+        }
+
+        // we allow forward annotation only for a feature with a tagset
+        if (annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset() == null) {
+            return false;
+        }
+
+        // there should be at least one tag in the tagset
+        TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset();
+
+        return annotationService.listTags(tagSet).size() != 0;
     }
 
     @Override
@@ -563,19 +603,6 @@ public class AnnotationFeatureForm
         }
         return bindTag2Key;
 
-    }
-
-    private void updateForwardAnnotation()
-    {
-        AnnotatorState state = getModelObject();
-        if (state.getSelectedAnnotationLayer() != null
-            && !state.getSelectedAnnotationLayer().isLockToTokenOffset()) {
-            state.setForwardAnnotation(false);// no forwarding for
-            // sub-/multi-token annotation
-        }
-        else {
-            state.setForwardAnnotation(state.isForwardAnnotation());
-        }
     }
 
     public void updateLayersDropdown()
@@ -707,6 +734,20 @@ public class AnnotationFeatureForm
             // available tags.
             setItemReuseStrategy(new CachingReuseStrategy());
         }
+        
+        @Override
+        protected void onConfigure()
+        {
+            super.onConfigure();
+            
+            AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target != null) {
+                // Put focus on hidden input field if we are in forward-mode
+                if (getModelObject().isForwardAnnotation()) {
+                    target.focusComponent(forwardAnnotationText);
+                }
+            }
+        }
 
         @Override
         protected void populateItem(final Item<FeatureState> item)
@@ -743,25 +784,6 @@ public class AnnotationFeatureForm
                     addRefreshFeaturePanelBehavior(frag);
                 }
 
-                // Put focus on hidden input field if we are in forward-mode
-                if (state.isForwardAnnotation()) {
-                    forwardAnnotationText.add(new DefaultFocusBehavior2());
-                }
-                // Put focus on first component if we select an existing annotation or create a
-                // new one
-                else if (item.getIndex() == 0
-                    && SpanAnnotationResponse.is(state.getAction().getUserAction())) {
-                    frag.getFocusComponent().add(new DefaultFocusBehavior());
-                }
-                // Restore/preserve focus when tabbing through the feature editors
-                else if (state.getAction().getUserAction() == null) {
-                    AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-                    if (target != null && frag.getFocusComponent().getMarkupId()
-                        .equals(target.getLastFocusedElementId())) {
-                        target.focusComponent(frag.getFocusComponent());
-                    }
-                }
-
                 // Add tooltip on label
                 StringBuilder tooltipTitle = new StringBuilder();
                 tooltipTitle.append(featureState.feature.getUiName());
@@ -781,9 +803,8 @@ public class AnnotationFeatureForm
             }
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
-            // that
-            // automatically saves feature editors on change/blur. Check
-            // addAnnotateActionBehavior.
+            // that automatically saves feature editors on change/blur. 
+            // Check addAnnotateActionBehavior.
             frag.setOutputMarkupId(true);
             item.add(frag);
         }
@@ -845,6 +866,7 @@ public class AnnotationFeatureForm
                 {
                     try {
                         AnnotatorState state = getModelObject();
+                        
                         if (state.getConstraints() != null) {
                             // Make sure we update the feature editor panel because due to
                             // constraints the contents may have to be re-rendered
