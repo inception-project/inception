@@ -1404,8 +1404,8 @@ var Visualizer = (function($, window, undefined) {
         				  corrFactor: corrFactor
             		  };
     				  
-		          	  console.log("Completed calculating static RTL metrics in " + (new Date() - 
-		          			  start) + " for " + text.getNumberOfChars() + " characters.");
+		          	  //console.log("Completed calculating static RTL metrics in " + (new Date() - 
+		          	  //		  start) + " for " + text.getNumberOfChars() + " characters.");
 				  }
 		              
 	              //startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
@@ -3341,16 +3341,63 @@ Util.profileStart('chunkFinish');
         	// Render every text chunk as a SVG text so we maintain control over the layout. When 
         	// rendering as a SVG span (as brat does), then the browser changes the layout on the 
         	// X-axis as it likes in RTL mode.
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+/*
             svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text + nextSpace, {
               'data-chunk-id': chunk.index
             });
+ */
+        	    svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text, {
+              'data-chunk-id': chunk.index
+            });
+        	    
+        	    // If there needs to be space between this chunk and the next one, add a spacer item
+        	    // that stretches across the entire inter-chunk space. This ensures a smooth
+        	    // selection.
+            if (nextChunk) {
+            	  var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
+            	  var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
+            	  if (spaceWidth > 0) {
+                svg.text(textGroup, spaceX, chunk.row.textY, '\u200f ', {
+                  'data-chunk-id': chunk.index,
+                	  textLength: spaceWidth,
+                  lengthAdjust: 'spacingAndGlyphs',
+                	  'class': 'spacing'});
+            	  }
+            }
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
           else {
         	// Original rendering using tspan in ltr mode as it play nicer with selection
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+/*
             sentenceText.span(chunk.text + nextSpace, {
               x: chunk.textX,
               y: chunk.row.textY,
               'data-chunk-id': chunk.index});
+ */
+            sentenceText.span(chunk.text, {
+              x: chunk.textX,
+              y: chunk.row.textY,
+              'data-chunk-id': chunk.index});
+            
+        	    // If there needs to be space between this chunk and the next one, add a spacer item
+        	    // that stretches across the entire inter-chunk space. This ensures a smooth
+        	    // selection.
+            if (nextChunk) {
+            	  var spaceX = chunk.textX + sizes.texts.widths[chunk.text];
+            	  var spaceWidth = nextChunk.textX - (chunk.textX + sizes.texts.widths[chunk.text]);
+            	  if (spaceWidth > 0) {
+                sentenceText.span(' ', {
+                  x: spaceX,
+                  y: chunk.row.textY,
+                  'data-chunk-id': chunk.index,
+                  textLength: spaceWidth,
+                  lengthAdjust: 'spacingAndGlyphs',
+                  'class': 'spacing'});
+            	  }
+            }
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
 // WEBANNO EXTENSION END
 
