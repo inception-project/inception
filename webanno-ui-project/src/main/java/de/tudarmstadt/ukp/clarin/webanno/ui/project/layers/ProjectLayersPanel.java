@@ -730,17 +730,18 @@ public class ProjectLayersPanel
                         }
                         if (annotationService.existsLayer(TYPE_PREFIX + layerName, layer.getType(),
                                 project)) {
-                            error("Only one Layer per project is allowed!");
+                            error("A layer with the name [" + TYPE_PREFIX + layerName
+                                    + "] already exists in this project.");
                             return;
                         }
                         if (layer.getType().equals(RELATION_TYPE)
                                 && layer.getAttachType() == null) {
-                            error("a relation layer need an attach type!");
+                            error("A relation layer needs an attach type!");
                             return;
                         }
 
                         if ((TYPE_PREFIX + layerName).endsWith(".")) {
-                            error("please give a proper layer name!");
+                            error("Layer names cannot end in '.'.");
                             return;
                         }
 
