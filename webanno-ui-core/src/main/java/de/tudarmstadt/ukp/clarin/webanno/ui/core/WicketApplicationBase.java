@@ -32,6 +32,7 @@ import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
@@ -112,8 +113,16 @@ public abstract class WicketApplicationBase
         initShowExceptionPage();
 
         initMDCLifecycle();
+        
+        // Allow fetching the current page from non-Wicket code
+        initPageRequestTracker();
     }
     
+    private void initPageRequestTracker()
+    {
+        getRequestCycleListeners().add(new PageRequestHandlerTracker());
+    }
+
     protected void initWebFrameworks()
     {
         // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser

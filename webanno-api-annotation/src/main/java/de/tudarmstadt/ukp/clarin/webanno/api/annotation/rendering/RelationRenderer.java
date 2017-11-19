@@ -36,6 +36,10 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Page;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,14 +108,23 @@ public class RelationRenderer
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             
             if (dependentFs == null || governorFs == null) {
-                log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot render");
+                RequestCycle requestCycle = RequestCycle.get();
+                IPageRequestHandler handler = PageRequestHandlerTracker
+                        .getLastHandler(requestCycle);
+                Page page = (Page) handler.getPage();
+
+                StringBuilder message = new StringBuilder();
+                
+                message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
+                        + getAddr(fs) + "] has loose ends - cannot render.");
                 if (typeAdapter.getAttachFeatureName() != null) {
-                    log.warn("Relation [" + typeAdapter.getLayer().getName()
-                            + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "]");
+                    message.append("\nRelation [" + typeAdapter.getLayer().getName()
+                            + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
                 }
-                log.warn("Dependent: " + dependentFs);
-                log.warn("Governor: " + governorFs);
+                message.append("\nDependent: " + dependentFs);
+                message.append("\nGovernor: " + governorFs);
+                
+                page.warn(message.toString());
                 
                 continue;
             }
