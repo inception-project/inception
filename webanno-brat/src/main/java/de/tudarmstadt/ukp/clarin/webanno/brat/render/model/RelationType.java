@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
-import java.util.Arrays;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 /**
@@ -66,7 +68,8 @@ public class RelationType
     public RelationType(String aName, String aLabel, String aType, String aTarget, String aColor,
             String aArrowHead, String aDashArray)
     {
-        this(aColor, aArrowHead, Arrays.asList(aLabel), aType, Arrays.asList(aTarget), aDashArray);
+        this(aColor, aArrowHead, asList(aLabel, abbreviate(aLabel)), aType, asList(aTarget),
+                aDashArray);
     }
     
     private RelationType(String aColor, String aArrowHead, List<String> aLabels, String aType,

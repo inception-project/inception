@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
-import java.util.Arrays;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 /**
@@ -67,8 +69,8 @@ public class EntityType
     {
         this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
                 null /* fgColor */, null /* bgColor */, null /* borderColor */,
-                Arrays.asList(aLabel) /* labels */, null /* children */, null /* attributes */, 
-                null /* arcs */);
+                asList(aLabel, abbreviate(aLabel)) /* labels */, null /* children */,
+                null /* attributes */, null /* arcs */);
     }
     
 //    public EntityType(String aName, String aType, String aFgColor, String aBgColor,
