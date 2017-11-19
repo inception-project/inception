@@ -94,8 +94,9 @@ public class LoginPage
 
             String msg = "No user accounts have been found. An admin account has been created: "
                     + ADMIN_DEFAULT_USERNAME + "/" + ADMIN_DEFAULT_PASSWORD;
-            info(msg);
-            log.info(msg);
+            // We log this as a warning so the message sticks on the screen. Success and info
+            // messages are set to auto-close after a short time.
+            warn(msg);
         }
     }
     
