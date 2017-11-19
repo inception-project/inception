@@ -293,7 +293,7 @@ class ProjectInitializer
         lemmaFeature.setName("value");
         lemmaFeature.setType(CAS.TYPE_NAME_STRING);
         lemmaFeature.setProject(aProject);
-        lemmaFeature.setUiName("Lemma value");
+        lemmaFeature.setUiName("Lemma");
         lemmaFeature.setLayer(lemmaLayer);
         annotationSchemaService.createFeature(lemmaFeature);
     }
@@ -320,6 +320,8 @@ class ProjectInitializer
         valueFeature.setProject(aProject);
         valueFeature.setUiName("Features");
         valueFeature.setLayer(morphLayer);
+        valueFeature.setIncludeInHover(true);
+        valueFeature.setVisible(false);
         annotationSchemaService.createFeature(valueFeature);
     }
     private AnnotationLayer createCorefLayer(Project aProject, TagSet aCorefTypeTags,
@@ -354,7 +356,7 @@ class ProjectInitializer
         AnnotationFeature neFeature = createFeature("value", "value", "Named entity type",
                 CAS.TYPE_NAME_STRING, aTagset, aProject);
 
-        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
                 SPAN_TYPE, aProject, true);
         neLayer.setAllowStacking(true);
         neLayer.setMultipleTokens(true);
