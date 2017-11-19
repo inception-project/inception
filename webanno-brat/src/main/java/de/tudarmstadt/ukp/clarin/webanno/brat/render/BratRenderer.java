@@ -375,4 +375,34 @@ public class BratRenderer
         }
         return bratTypeName;
     }
+    
+    public static String abbreviate(String aName)
+    {
+        if (aName == null || aName.length() < 3) {
+            return aName;
+        }
+        
+        StringBuilder abbr = new StringBuilder();
+        int ti = 0;
+        boolean capitalizeNext = true;
+        for (int i = 0; i < aName.length(); i++) {
+            int ch = aName.charAt(i);
+            
+            if (Character.isWhitespace(ch)) {
+                capitalizeNext = true;
+                ti = 0;
+            }
+            else {
+                if (ti < 3) {
+                    if (capitalizeNext) {
+                        ch = Character.toTitleCase(ch);
+                        capitalizeNext = false;
+                    }
+                    abbr.append((char) ch);
+                }
+                ti ++;
+            }
+        }
+        return abbr.toString();
+    }
 }
