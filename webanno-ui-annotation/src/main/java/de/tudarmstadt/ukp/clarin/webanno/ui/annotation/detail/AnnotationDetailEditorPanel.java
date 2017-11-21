@@ -212,6 +212,12 @@ public class AnnotationDetailEditorPanel
         Selection selection = state.getSelection();
         List<FeatureState> featureStates = state.getFeatureStates();
 
+        if ((aAdapter.isAllowMultipleToken() || aAdapter.isLockToTokenOffsets())
+                && selection.getBegin() == selection.getEnd()) {
+            throw new AnnotationException(
+                    "Cannot create zero-width annotation on layers that lock to token boundaries.");
+        }
+        
         for (FeatureState featureState : featureStates) {
             Serializable spanValue = aAdapter.getSpan(aJCas, selection.getBegin(),
                 selection.getEnd(), featureState.feature, null);
@@ -263,6 +269,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
+        
         selection.setAnnotation(new VID(
             aAdapter.addSpan(aJCas, selection.getBegin(), selection.getEnd())));
         selection.setText(
