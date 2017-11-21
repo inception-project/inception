@@ -430,8 +430,6 @@ public class ProjectLayersPanel
             super(id, new CompoundPropertyModel<>(new EntityModel<>(
                     new AnnotationLayer())));
 
-            final Project project = ProjectLayersPanel.this.getModelObject();
-            
             add(new TextField<String>("uiName").setRequired(true));
             add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
@@ -491,7 +489,7 @@ public class ProjectLayersPanel
                         protected List<AnnotationLayer> load()
                         {
                             List<AnnotationLayer> allLayers = annotationService
-                                    .listAnnotationLayer(project);
+                                    .listAnnotationLayer(ProjectLayersPanel.this.getModelObject());
 
                             if (LayerDetailForm.this.getModelObject().getId() > 0) {
                                 if (LayerDetailForm.this.getModelObject().getAttachType() == null) {
@@ -720,6 +718,8 @@ public class ProjectLayersPanel
                     }
 
                     if (layer.getId() == 0) {
+                        final Project project = ProjectLayersPanel.this.getModelObject();
+                        
                         String layerName = StringUtils
                                 .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                         
