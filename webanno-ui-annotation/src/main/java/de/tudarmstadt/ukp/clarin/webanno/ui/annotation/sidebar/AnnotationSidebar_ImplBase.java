@@ -97,15 +97,19 @@ public abstract class AnnotationSidebar_ImplBase
     }
 
     /**
-     * Show the next document if exist
+     * Show the next document if it exists
      */
     protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
         annotationPage.actionShowSelectedDocument(aTarget, aDocument);
     }
 
-    protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aTokenNumber)
+    /**
+     * Show the next document if it exists, starting in a certain token position
+     */
+    @Deprecated
+    protected void actionShowSelectedDocumentByTokenPosition(AjaxRequestTarget aTarget,
+            SourceDocument aDocument, int aTokenNumber)
         throws IOException
     {
         annotationPage.actionShowSelectedDocument(aTarget, aDocument);
@@ -120,6 +124,33 @@ public abstract class AnnotationSidebar_ImplBase
         int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas,
                 tokens[aTokenNumber].getBegin());
         Sentence sentence = WebAnnoCasUtil.getSentence(jCas, tokens[aTokenNumber].getBegin());
+
+        annotationPage.getGotoPageTextField().setModelObject(sentenceNumber);
+
+        state.setFirstVisibleUnit(sentence);
+        state.setFocusUnitIndex(sentenceNumber);
+
+        annotationPage.actionRefreshDocument(aTarget);
+    }
+
+    /**
+     * Show the next document if it exists, starting in a certain begin offset
+     */
+    protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBeginOffset)
+        throws IOException
+    {
+        annotationPage.actionShowSelectedDocument(aTarget, aDocument);
+
+        AnnotatorState state = getModelObject();
+
+        JCas jCas = annotationPage.getEditorCas();
+
+        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
+        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
+
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
+        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);
 
         annotationPage.getGotoPageTextField().setModelObject(sentenceNumber);
 
