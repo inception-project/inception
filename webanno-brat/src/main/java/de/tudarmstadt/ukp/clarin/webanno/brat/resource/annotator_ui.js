@@ -1828,13 +1828,13 @@ var AnnotatorUI = (function($, window, undefined) {
               }
             }
             if (focusNode.hasClass('spacing')) {
-              if (Number(chunkIndexFrom) >= Number(chunkIndexTo)) {
+              if (Number(chunkIndexFrom) > Number(chunkIndexTo)) {
                 focusNode = focusNode.next();
                 focusOffset = 0;
                 chunkIndexTo = focusNode.attr('data-chunk-id');
               }
               else {
-                focusNode = anchorNode.prev();
+                focusNode = focusNode.prev();
                 focusOffset = focusNode.text().length;
               }
             }
