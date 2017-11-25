@@ -360,6 +360,16 @@ var AnnotatorUI = (function($, window, undefined) {
           startArcDrag(id);
           return false;
         }
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+        // If user starts selecting text, suppress all pointer events on annotations to
+        // avoid the selection jumping around. During selection, we don't need the annotations
+        // to react on mouse events anyway.
+        if (target.attr('data-chunk-id')) {
+          $(svgElement).children('.row, .sentnum').each(function(index, row) {
+            $(row).css('pointer-events', 'none');
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       };
 
       var onMouseMove = function(evt) {
@@ -1678,6 +1688,15 @@ var AnnotatorUI = (function($, window, undefined) {
       var onMouseUp = function(evt) {
         if (that.user === null) return;
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+        // Restore pointer events on annotations
+        if (dragStartedAt && $(dragStartedAt.target).attr('data-chunk-id')) {
+          $(svgElement).children('.row, .sentnum').each(function(index, row) {
+            $(row).css('pointer-events', 'auto');
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+
         var target = $(evt.target);
 
         // three things that are clickable in SVG
@@ -1791,6 +1810,7 @@ var AnnotatorUI = (function($, window, undefined) {
           }
           
 // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
           if (focusNode && anchorNode && focusNode[0] == anchorNode[0] && focusNode.hasClass('spacing')) {
             if (evt.shiftKey) {
               if (anchorOffset == 0) {
@@ -1822,6 +1842,10 @@ var AnnotatorUI = (function($, window, undefined) {
                 anchorOffset = 0;
                 chunkIndexFrom = anchorNode.attr('data-chunk-id');
               }
+              else if (anchorNode.hasClass('row-initial')) {
+                anchorNode = anchorNode.next();
+                anchorOffset = 0;
+              }
               else {
                 anchorNode = anchorNode.prev();
                 anchorOffset = anchorNode.text().length;
@@ -1833,12 +1857,17 @@ var AnnotatorUI = (function($, window, undefined) {
                 focusOffset = 0;
                 chunkIndexTo = focusNode.attr('data-chunk-id');
               }
+              else if (focusNode.hasClass('row-initial')) {
+                focusNode = focusNode.next();
+                focusOffset = 0;
+              }
               else {
                 focusNode = focusNode.prev();
                 focusOffset = focusNode.text().length;
               }
             }
           }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
 
           if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {

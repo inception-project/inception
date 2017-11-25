@@ -216,7 +216,12 @@ var Visualizer = (function($, window, undefined) {
     };
 
     var Row = function(svg) {
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
       this.group = svg.group();
+ */
+      this.group = svg.group({ 'class': 'row' });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
       this.background = svg.group(this.group);
       this.chunks = [];
       this.hasAnnotations = false;
@@ -1635,7 +1640,12 @@ Util.profileStart('init');
 
         var defs = addHeaderAndDefs();
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var backgroundGroup = svg.group({ 'class': 'background' });
+*/
+        var backgroundGroup = svg.group({ 'class': 'background', 'pointer-events': 'none' });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         var glowGroup = svg.group({ 'class': 'glow' });
         highlightGroup = svg.group({ 'class': 'highlight' });
         var textGroup = svg.group({ 'class': 'text' });
@@ -3128,7 +3138,12 @@ Util.profileStart('rows');
 
         // position the rows
         var y = Configuration.visual.margin.y;
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var sentNumGroup = svg.group({'class': 'sentnum'});
+*/
+        var sentNumGroup = svg.group({'class': 'sentnum unselectable'});
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         var currentSent;
         $.each(rows, function(rowId, row) {
           // find the maximum fragment height
@@ -3311,11 +3326,19 @@ Util.profileStart('chunkFinish');
           return endDiff != 0 ? endDiff : Util.cmp(bc.to-bc.from, ac.to-ac.from);
         }
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var sentenceText = null;
+*/
+        var prevChunk = null;
+        var rowTextGroup = null;
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         $.each(data.chunks, function(chunkNo, chunk) {
           // context for sort
           currentChunk = chunk;
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
           // text rendering
           if (chunk.sentence) {
             if (sentenceText) {
@@ -3327,6 +3350,19 @@ Util.profileStart('chunkFinish');
           if (!sentenceText) {
             sentenceText = svg.createText();
           }
+*/
+          if (!rowTextGroup || prevChunk.row != chunk.row) {
+            if (rowTextGroup) {
+              horizontalSpacer(svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
+                'data-chunk-id': prevChunk.index,
+                'class': 'row-final spacing'
+              });
+            }
+            rowTextGroup = svg.group(textGroup, { 'class': 'text-row'})
+          }
+          prevChunk = chunk;
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+          
           var nextChunk = data.chunks[chunkNo + 1];
           var nextSpace = nextChunk ? nextChunk.space : '';
 // WEBANNO EXTENSION BEGIN - RTL support - Render chunks as SVG text
@@ -3342,61 +3378,68 @@ Util.profileStart('chunkFinish');
         	// rendering as a SVG span (as brat does), then the browser changes the layout on the 
         	// X-axis as it likes in RTL mode.
 // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 /*
             svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text + nextSpace, {
               'data-chunk-id': chunk.index
             });
  */
-        	    svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text, {
+            if (!rowTextGroup.firstChild) {
+              horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
+                'class': 'row-initial spacing',
+                'data-chunk-id': chunk.index
+              });
+            }
+
+            svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
               'data-chunk-id': chunk.index
             });
-        	    
-        	    // If there needs to be space between this chunk and the next one, add a spacer item
-        	    // that stretches across the entire inter-chunk space. This ensures a smooth
-        	    // selection.
+
+            // If there needs to be space between this chunk and the next one, add a spacer 
+            // item that stretches across the entire inter-chunk space. This ensures a 
+            // smooth selection.
             if (nextChunk) {
-            	  var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
-            	  var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
-            	  if (spaceWidth > 0) {
-                svg.text(textGroup, spaceX, chunk.row.textY, '\u200f\u00a0', {
-                  'data-chunk-id': chunk.index,
-                	  textLength: spaceWidth,
-                  lengthAdjust: 'spacingAndGlyphs',
-                	  'class': 'spacing'});
-            	  }
+              var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
+              var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
+              horizontalSpacer(svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+                'data-chunk-id': chunk.index
+              });
             }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
           else {
         	// Original rendering using tspan in ltr mode as it play nicer with selection
 // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 /*
             sentenceText.span(chunk.text + nextSpace, {
               x: chunk.textX,
               y: chunk.row.textY,
               'data-chunk-id': chunk.index});
  */
-            sentenceText.span(chunk.text, {
-              x: chunk.textX,
-              y: chunk.row.textY,
-              'data-chunk-id': chunk.index});
-            
-        	    // If there needs to be space between this chunk and the next one, add a spacer item
-        	    // that stretches across the entire inter-chunk space. This ensures a smooth
-        	    // selection.
+            if (!rowTextGroup.firstChild) {
+              horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
+                'class': 'row-initial spacing',
+                'data-chunk-id': chunk.index
+              });
+            }
+
+            svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
+              'data-chunk-id': chunk.index
+            });
+
+            // If there needs to be space between this chunk and the next one, add a spacer 
+            // item that stretches across the entire inter-chunk space. This ensures a 
+            // smooth selection.
             if (nextChunk) {
             	  var spaceX = chunk.textX + sizes.texts.widths[chunk.text];
-            	  var spaceWidth = nextChunk.textX - (chunk.textX + sizes.texts.widths[chunk.text]);
-            	  if (spaceWidth > 0) {
-                sentenceText.span('\u00a0', {
-                  x: spaceX,
-                  y: chunk.row.textY,
-                  'data-chunk-id': chunk.index,
-                  textLength: spaceWidth,
-                  lengthAdjust: 'spacingAndGlyphs',
-                  'class': 'spacing'});
-            	  }
+            	  var spaceWidth = nextChunk.textX - spaceX;
+              horizontalSpacer(svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+                'data-chunk-id': chunk.index
+              });
             }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
 // WEBANNO EXTENSION END
@@ -3531,10 +3574,21 @@ Util.profileStart('chunkFinish');
             }
           }
         });
+        
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         if (sentenceText) {
           // svg.text(textGroup, sentenceText); // avoids jQuerySVG bug
           svg.text(textGroup, 0, 0, sentenceText);
         }
+*/
+        if (rowTextGroup) {
+          horizontalSpacer(svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
+            'data-chunk-id': currentChunk.index,
+            'class': 'row-final spacing'
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 
         // draw the markedText
         $.each(textMarkedRows, function(textRowNo, textRowDesc) { // row, from, to
@@ -3649,6 +3703,69 @@ Util.profileStart('finish');
         }
 // WEBANNO EXTENSION END        
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+        var svgRect = $svg[0].getBoundingClientRect();
+        
+        // Go through each row and adjust the row-initial and row-final spacing
+        $(textGroup).children(".text-row").each(function (rowIndex, textRow) {
+          var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+          var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+          var firstChunkRect = rowInitialSpacing.next()[0].getBoundingClientRect();
+          var lastChunkRect = rowFinalSpacing.prev()[0].getBoundingClientRect();
+
+          if (rtlmode) {
+            var initialSpacingX = canvasWidth - sentNumMargin;
+            var initialSpacingWidth = initialSpacingX - (firstChunkRect.x - svgRect.x + firstChunkRect.width);
+            rowInitialSpacing.attr('x', initialSpacingX);
+            rowInitialSpacing.attr('textLength', initialSpacingWidth);
+            
+            var finalSpacingX = lastChunkRect.x - svgRect.x;
+            var finalSpacingWidth = finalSpacingX;
+            rowFinalSpacing.attr('x', finalSpacingX);
+            rowFinalSpacing.attr('textLength', finalSpacingWidth);
+          }
+          else {
+            var initialSpacingX = sentNumMargin;
+            var initialSpacingWidth = (firstChunkRect.x - svgRect.x) - initialSpacingX;
+            rowInitialSpacing.attr('x', initialSpacingX);
+            rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+            var finalSpacingX = lastChunkRect.x + lastChunkRect.width - svgRect.x;
+            var finalSpacingWidth = canvasWidth - finalSpacingX;
+            rowFinalSpacing.attr('x', lastChunkRect.x + lastChunkRect.width - svgRect.x);
+            rowFinalSpacing.attr('textLength', finalSpacingWidth);
+           }
+        });
+
+        // Go through each row and add an unselectable spacer between this row and the next row
+        // While the space is unselectable, it will still help in guiding the browser into which
+        // direction the selection should in principle go and thus avoids jumpyness.
+        var prevRowRect = { y: svgRect.y, width: 0, height: 0 };
+        
+        var textRows = $(textGroup).children(".text-row");
+        textRows.each(function (rowIndex, textRow) {
+          var rowRect = textRow.getBoundingClientRect();
+          var spaceHeight = rowRect.y - (prevRowRect.y + prevRowRect.height);
+
+          // Adding a spacer between the rows. We make is a *little* bit larger than necessary
+          // to avoid exposing areas where the background shines through and which would again
+          // cause jumpyness during selection.
+          textRow.before(vertialSpacer( 
+            Math.floor((prevRowRect.y - svgRect.y) + prevRowRect.height), 
+            Math.ceil(spaceHeight) + 1));
+          
+          prevRowRect = rowRect;
+          
+          // Add a spacer below the final row until the end of the canvas
+          if (rowIndex == textRows.length - 1) {
+            var lastSpacerY = Math.floor((rowRect.y - svgRect.y) + rowRect.height);
+            textRow.after(vertialSpacer( 
+              Math.floor((rowRect.y - svgRect.y) + rowRect.height), 
+              Math.ceil(y - lastSpacerY) + 1));
+          }
+        });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+        
 Util.profileEnd('finish');
 Util.profileEnd('render');
 Util.profileReport();
@@ -4103,6 +4220,47 @@ Util.profileStart('before render');
         // do not reload while the user is in the dialog
         return !drawing;
       };
+      
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+      var vertialSpacer = function(y, height) {
+        if (height > 0) {
+          var foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject' );
+          var spacer = document.createElement('span');
+          $(spacer)
+            .addClass('unselectable')
+            .css('display', 'inline-block')
+            .css('width', '100%')
+            .css('height', '100%')
+            //.css('background-color', 'yellow')
+            .text('\u00a0');
+          $(foreignObject)
+            .attr("x", rtlmode ? 0 : sentNumMargin)
+            .attr("y", y)
+            .attr("width", rtlmode ? canvasWidth - sentNumMargin : canvasWidth)
+            .attr("height", height)
+            .append(spacer);
+          return foreignObject;
+        }
+      }
+      
+      var horizontalSpacer = function(svg, group, x, y, width, attrs) {
+        if (width > 0) {
+          var attributes = $.extend({
+            textLength: width,
+            lengthAdjust: 'spacingAndGlyphs',
+            //'fill': 'blue',
+            'class': 'spacing'}, attrs);
+          // To visualize the spacing use \u2588, otherwise \u00a0
+          svg.text(group, x, y, rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
+          /*
+          svg.rect(group,
+            x - (rtlmode ? width : 0), y - 10,
+            width, 10,
+            { fill: 'blue' });
+          */
+        }
+      }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       
 // BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it   
 /*
