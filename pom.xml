@@ -66,9 +66,6 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
-    <servlet.api.groupId>javax.servlet</servlet.api.groupId>
-    <servlet.api.artifactId>javax.servlet-api</servlet.api.artifactId>
-    <javamelody.version>1.70.0</javamelody.version>
     <batik.version>1.9.1</batik.version>
   </properties>
   <repositories>
@@ -513,8 +510,8 @@
       </dependency>
 
       <dependency>
-        <groupId>${servlet.api.groupId}</groupId>
-        <artifactId>${servlet.api.artifactId}</artifactId>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
         <version>3.1.0</version>
       </dependency>
 

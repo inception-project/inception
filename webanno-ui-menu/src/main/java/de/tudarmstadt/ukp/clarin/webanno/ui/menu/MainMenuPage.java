@@ -75,7 +75,7 @@ public class MainMenuPage
                 && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION)
                 && !curationEnabeled(projectService, user)) 
         {
-            info("You are not member of any projects to annotate or curate");
+            warn("You are not member of any projects to annotate or curate.");
         }
         
         List<MenuItemDecl> menuItems = new ArrayList<>(menuItemService.getMenuItems());
