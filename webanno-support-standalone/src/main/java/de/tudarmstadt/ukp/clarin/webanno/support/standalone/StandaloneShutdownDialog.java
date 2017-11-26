@@ -48,8 +48,11 @@ public class StandaloneShutdownDialog
     @Resource
     private ApplicationEventPublisher eventPublisher;
     
-    @Value(value = "${running.from.commandline}")
-    private boolean runningFromCommandline;    
+    @Value("${running.from.commandline}")
+    private boolean runningFromCommandline;
+    
+    @Value("${spring.application.name}")
+    private String applicationName;
     
     @Override
     public void start()
@@ -97,20 +100,22 @@ public class StandaloneShutdownDialog
         // Show this only when run from the standalone JAR via a double-click
         if (System.console() == null && !GraphicsEnvironment.isHeadless()
                 && runningFromCommandline) {
-            log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
+            log.info("If you are running " + applicationName
+                    + " in a server environment, please use '-Djava.awt.headless=true'");
             eventPublisher.publishEvent(
                     new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
 
             EventQueue.invokeLater(() -> {
                 final JOptionPane optionPane = new JOptionPane(
-                        new JLabel(
-                                "<HTML>WebAnno is running now and can be accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
-                                        + "WebAnno works best with the browsers Google Chrome or Safari.<br>"
-                                        + "Use this dialog to shut WebAnno down.</HTML>"),
+                        new JLabel("<HTML>" + applicationName + " is running now and can be "
+                                + "accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
+                                + applicationName
+                                + " works best with the browsers Google Chrome or Safari.<br>"
+                                + "Use this dialog to shut " + applicationName + " down.</HTML>"),
                         JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_OPTION, null,
                         new String[] { "Shutdown" });
 
-                final JDialog dialog = new JDialog((JFrame) null, "WebAnno", true);
+                final JDialog dialog = new JDialog((JFrame) null, applicationName, true);
                 dialog.setContentPane(optionPane);
                 dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                 dialog.addWindowListener(new WindowAdapter()
