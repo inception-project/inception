@@ -260,8 +260,8 @@
     </dependency>
     <!--
     <dependency>
-      <groupId>${servlet.api.groupId}</groupId>
-      <artifactId>${servlet.api.artifactId}</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     -->
@@ -281,11 +281,6 @@
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>net.bull.javamelody</groupId>
-      <artifactId>javamelody-spring-boot-starter</artifactId>
-      <version>${javamelody.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -406,7 +401,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
-              <usedDependency>net.bull.javamelody:javamelody-spring-boot-starter</usedDependency>
               <!-- Spring configuration -->
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
