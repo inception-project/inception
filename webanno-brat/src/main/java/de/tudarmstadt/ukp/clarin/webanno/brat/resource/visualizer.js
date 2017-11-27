@@ -3367,7 +3367,7 @@ Util.profileStart('chunkFinish');
             	  var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
             	  var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
             	  if (spaceWidth > 0) {
-                svg.text(textGroup, spaceX, chunk.row.textY, '\u200f ', {
+                svg.text(textGroup, spaceX, chunk.row.textY, '\u200f\u00a0', {
                   'data-chunk-id': chunk.index,
                 	  textLength: spaceWidth,
                   lengthAdjust: 'spacingAndGlyphs',
@@ -3397,7 +3397,7 @@ Util.profileStart('chunkFinish');
             	  var spaceX = chunk.textX + sizes.texts.widths[chunk.text];
             	  var spaceWidth = nextChunk.textX - (chunk.textX + sizes.texts.widths[chunk.text]);
             	  if (spaceWidth > 0) {
-                sentenceText.span(' ', {
+                sentenceText.span('\u00a0', {
                   x: spaceX,
                   y: chunk.row.textY,
                   'data-chunk-id': chunk.index,
