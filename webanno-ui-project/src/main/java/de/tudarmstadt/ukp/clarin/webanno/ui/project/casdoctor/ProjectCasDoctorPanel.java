@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -214,9 +213,10 @@ public class ProjectCasDoctorPanel
                     }
                     casDoctor.analyze(project, initialCas.getCas(), messageSet.messages);
                 }
-                catch (FileNotFoundException e) {
+                catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            e.getMessage()));
+                            "Error reading initial CAS for [" + sd.getName() + "]: "
+                                    + e.getMessage()));
                 }
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
