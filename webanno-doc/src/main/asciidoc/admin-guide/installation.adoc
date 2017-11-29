@@ -19,7 +19,7 @@
 
 === Prerequisites
 
-* This guide assumes Debian 8.0.0 (Jessie). It may also work on Ubuntu with some modifications, but we do not test this. Instructions for other Linux distributions likely deviate significantly.
+* This guide assumes Debian 9.1 (Stretch). It may also work on Ubuntu with some modifications, but we do not test this. Instructions for other Linux distributions likely deviate significantly.
 * It is further assumed that the user "www-data" already exists on the system and that it shall be used to run WebAnno. Finally, it is expected that you have set up a MySQL database that WebAnno can use. 
 * All commands assume that you are logged in as the *root* user. 
 
@@ -31,6 +31,8 @@ You can install an Oracle Java 8 JDK using the following commands.
 
 [source,bash]
 ----
+$ apt-get update
+$ apt-get install dirmngr
 $ echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list
 $ echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list
 $ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
@@ -45,13 +47,21 @@ $ apt-get install oracle-java8-set-default
 +
 [source,bash]
 ----
-$ sudo apt-get install mysql-server
+$ apt-get install mysql-server
 ----
-* make sure your MySQL server is configured for UTF-8. Check the following line is present in `/etc/mysql/my.cnf`:
+* make sure your MySQL server is configured for UTF-8. Check the following line is present in `/etc/mysql/mariadb.conf.d/50-server.cnf` (this is specific to Debian 9; on other systems the relevant file
+may be `/etc/mysql/my.cnf`):
 +
 [source,bash]
 ----
 character-set-server = utf8
+collation-server     = utf8_bin
+----
+* also ensure the default settings for client connections to are UTF-8 in `/etc/mysql/mariadb.conf.d/50-server.cnf` (again Debian 9; likely in `/etc/mysql/my.cnf` on other systems)
++
+[source,bash]
+----
+default-character-set = utf8
 ----
 * login to MySQL
 +
@@ -71,6 +81,7 @@ mysql> CREATE DATABASE webanno DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
 ----
 mysql> CREATE USER 'webanno'@'localhost' IDENTIFIED BY 't0t4llYSecreT';
 mysql> GRANT ALL PRIVILEGES ON webanno.* TO 'webanno'@'localhost';
+mysql> FLUSH PRIVILEGES;
 ----
 
 IMPORTANT: For production use, make sure you choose a different, secret, and secure password.
@@ -81,7 +92,7 @@ IMPORTANT: For production use, make sure you choose a different, secret, and sec
 +
 [source,bash]
 ----
-$ aptitude install tomcat8-user authbind
+$ apt-get install tomcat8-user authbind
 ----
 * Create new instance
 +
@@ -125,7 +136,7 @@ $ cp webanno-webapp-{revnumber}.war /opt/webanno/webapps/webanno.war
 ----
 +
 NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that WebAnno is accessible at the URL noted later in the present guidelines.
-* Create WebAnno home folder. This is the directory where webanno settings files and projects (Serialized Cases, Source documents...) are stored
+* Create WebAnno home folder. This is the directory where WebAnno settings files and projects (documents, annotations, etc.) are stored
 +
 [source,bash]
 ----
@@ -141,7 +152,7 @@ $ mkdir /srv/webanno
 ----
 database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
 database.driver=com.mysql.jdbc.Driver
-database.url=jdbc:mysql://localhost:3306/webanno
+database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false
 database.username=webanno
 database.password=t0t4llYSecreT
 
@@ -156,7 +167,6 @@ backup.keep.number=10
 ui.brat.sentences.number = 5
 ----
 +
-NOTE: If you are using MySQL 5.5.45{plus}, 5.6.26{plus} or 5.7.6{plus}, you may have to append `?useSSL=false` to the `database.url` value.
 * Fix permissions in WebAnno home folder
 +
 [source,bash]
@@ -170,9 +180,7 @@ $ chown -R www-data /srv/webanno
 $ service webanno start
 ----
 * Open it with your browser at `http://localhost:18080/webanno`. If you chose to run WebAnno behind the Apache web-server use `http://localhost/webanno`.
-The first time, it will create a username admin with password admin. login with this username and proceed.
-
-You can start with the SampleProjects to explore some of the functionalities.
+The first time, it will create a username `admin` with password `admin`. Log in with this username and proceed.
 
 === Running behind Apache HTTPD
 
