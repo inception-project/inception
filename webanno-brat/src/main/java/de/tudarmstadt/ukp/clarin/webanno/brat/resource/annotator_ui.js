@@ -1747,12 +1747,6 @@ var AnnotatorUI = (function($, window, undefined) {
 /*
           var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
           var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
- */
-          var anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
-          var focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
-          var chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
-          var chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
-// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           
           // fallback for firefox (at least):
           // it's unclear why, but for firefox the anchor and focus
@@ -1808,6 +1802,36 @@ var AnnotatorUI = (function($, window, undefined) {
             anchorOffset = sel.anchorOffset;
             focusOffset = sel.focusOffset;
           }
+ */
+          // Try getting anchor and focus node via the selection itself. This works in Chrome and
+          // Safari.
+          var anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
+          var anchorOffset = sel.anchorOffset;
+          var focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
+          var focusOffset = sel.focusOffset;
+          
+          // If using the selection was not successful, try using the ranges instead. This should
+          // work on Firefox.
+          if (!anchorNode[0] || !focusNode[0]) {
+            anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]');
+            anchorOffset = sel.getRangeAt(0).startOffset;
+            focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]');
+            focusOffset = sel.getRangeAt(sel.rangeCount - 1).endOffset;
+          }
+          
+          // If neither approach worked, give up.
+          if (!anchorNode[0] || !focusNode[0]) {
+            console.error("Unable to locate start/end chunks");
+            clearSelection();
+            stopArcDrag(target);
+            return;
+          }
+          
+          var chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
+          var chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
+          
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+          
           
 // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
 // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
