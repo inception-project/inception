@@ -25,6 +25,9 @@
   <artifactId>webanno-webapp</artifactId>
   <name>WebAnno - Application</name>
   <packaging>war</packaging>
+  <properties>
+    <docker.image.name>webanno/webanno-snapshots</docker.image.name>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -438,7 +441,7 @@
             <configuration>
               <images>
                 <image>
-                  <name>webanno/webanno-snapshots</name>
+                  <name>${docker.image.name}</name>
                   <build>
                     <tags>
                       <tag>latest</tag>
