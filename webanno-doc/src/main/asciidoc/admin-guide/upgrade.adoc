@@ -38,11 +38,6 @@ This method should work when updating only a bugfix version, e.g. from 2.0.9 to 
 * *Make a backup of your data before upgrading to a new version:*
 ** Make a copy of your WebAnno home folder
 ** If you are using MySQL, make a backup of your WebAnno database, e.g. using the link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] command.
-* Standalone version
-** clean up the temporary installation before running the new version:
-*** On OS X: `rm -R "$TMPDIR/winstoneEmbeddedWAR"`
-*** On Linux: `rm -R /tmp/winstoneEmbeddedWAR`
-*** On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
 ** start the new version
 * WAR version
 ** while Tomcat is running, delete the old WAR from your `webapps` folder
@@ -51,44 +46,44 @@ This method should work when updating only a bugfix version, e.g. from 2.0.9 to 
 ** place the new WAR file into your `webapps` folder
 ** start Tomcat
 
-=== Upgrading Tomcat 6 to Tomcat 7
+=== Upgrading Tomcat 7 to Tomcat 8
 
 If you have been using our installation instructions to install WebAnno on Linux, you are probably
-running an instance of Tomcat 6. WebAnno 3 is no longer compatible with Tomcat 6 and requires at
-least Tomcat 7.
+running an instance of Tomcat 6. WebAnno 3.3.0 is no longer compatible with Tomcat 6 and requires
+at least Tomcat 8. 
 
 To upgrade your existing instance, you can try the following procedure (adapt the procedure as
 necessary if you have deviated from our installation instructions):
 
-    * Stop the current WebAnno Tomcat 6 instance
+    * Stop the current WebAnno Tomcat 7 instance
 ----
 $ service webanno stop
 ----
     * Move your old Tomcat instance out of the way
 ----
-$ mv /opt/webanno /opt/webanno-tomcat6
+$ mv /opt/webanno /opt/webanno-tomcat7
 ----
-    * Install `tomcat7-user` package (this will automatically uninstall Tomcat 6)
+    * Install `tomcat8-user` package (this will automatically uninstall Tomcat 7)
 ----
-$ apt-get install tomcat7-user
+$ apt-get install tomcat8-user
 ----
    * Create new instance
 ----
 $ cd /opt
-$ tomcat7-instance-create -p 18080 -c 18005 webanno
+$ tomcat8-instance-create -p 18080 -c 18005 webanno
 $ chown -R www-data /opt/webanno
 ----
   * Copy the WAR file over to the new instance
 ----
-$ mv /opt/webanno-tomcat6/webapps/webanno.war /opt/webanno/webapps/webanno.war
+$ mv /opt/webanno-tomcat7/webapps/webanno.war /opt/webanno/webapps/webanno.war
 ----
-    * Stop the new WebAnno Tomcat 7 instance
+    * Stop the new WebAnno Tomcat 8 instance
 ----
 $ service webanno start
 ----
   
-NOTE: If you have made additional changes to the Tomcat 6 configuration files, e.g. changed
-      `conf/server.xml`, please make sure to redo them in the new Tomcat 7 instance.
+NOTE: If you have made additional changes to the Tomcat 7 configuration files, e.g. changed
+      `conf/server.xml`, please make sure to redo them in the new Tomcat 8 instance.
 
 include::../common/migration.adoc[]
       
