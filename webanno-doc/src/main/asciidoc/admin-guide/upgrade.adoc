@@ -38,11 +38,6 @@ This method should work when updating only a bugfix version, e.g. from 2.0.9 to 
 * *Make a backup of your data before upgrading to a new version:*
 ** Make a copy of your WebAnno home folder
 ** If you are using MySQL, make a backup of your WebAnno database, e.g. using the link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] command.
-* Standalone version
-** clean up the temporary installation before running the new version:
-*** On OS X: `rm -R "$TMPDIR/winstoneEmbeddedWAR"`
-*** On Linux: `rm -R /tmp/winstoneEmbeddedWAR`
-*** On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
 ** start the new version
 * WAR version
 ** while Tomcat is running, delete the old WAR from your `webapps` folder
