@@ -36,7 +36,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.jfree.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
@@ -79,6 +81,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  */
 public class BratRenderer
 {
+    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
             VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
     {
@@ -188,7 +192,7 @@ public class BratRenderer
                         ((VAnnotationMarker) vmarker).getVid()));
             }
             else {
-                Log.warn("Unknown how to render marker: [" + vmarker + "]");
+                LOG.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
     }
