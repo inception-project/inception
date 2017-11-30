@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.jfree.util.Log;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
@@ -43,15 +44,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
@@ -174,6 +178,17 @@ public class BratRenderer
             else {
                 aResponse.addComment(
                         new AnnotationComment(vcomment.getVid(), type, vcomment.getComment()));
+            }
+        }
+        
+        // Render markers
+        for (VMarker vmarker : aVDoc.getMarkers()) {
+            if (vmarker instanceof VAnnotationMarker) {
+                aResponse.addMarker(new AnnotationMarker(vmarker.getType(),
+                        ((VAnnotationMarker) vmarker).getVid()));
+            }
+            else {
+                Log.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
     }
