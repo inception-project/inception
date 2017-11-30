@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .settings
 .classpath
 .project
@@ -8,3 +9,7 @@ target
 *.iml
 .idea
 cache
+=======
+/target/
+>>>>>>> Modified .gitignore
+/bin/
