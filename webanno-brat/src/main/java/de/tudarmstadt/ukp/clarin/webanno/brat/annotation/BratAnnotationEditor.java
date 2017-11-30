@@ -60,7 +60,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
@@ -70,8 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -511,7 +511,6 @@ public class BratAnnotationEditor
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
         extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
-        BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
         
         if (isHighlightEnabled()) {
             AnnotatorState state = getModelObject();
@@ -523,10 +522,12 @@ public class BratAnnotationEditor
             // }
             
             if (state.getSelection().getAnnotation().isSet()) {
-                response.addMarker(
-                        new AnnotationMarker(Marker.FOCUS, state.getSelection().getAnnotation()));
+                vdoc.add(new VAnnotationMarker(
+                        VMarker.FOCUS, state.getSelection().getAnnotation()));
             }
         }
+
+        BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
     }
 
     private List<AnnotationLayer> getLayersToRender()
