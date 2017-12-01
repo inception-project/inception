@@ -23,6 +23,7 @@ import javax.swing.JWindow;
 import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.uima.cas.impl.CASImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -87,6 +88,8 @@ public class WebAnno
     
     private static void init(SpringApplicationBuilder aBuilder)
     {
+        System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
+        
         aBuilder.banner(new WebAnnoBanner());
         aBuilder.initializers(new WebAnnoApplicationContextInitializer());
         aBuilder.headless(false);

@@ -39,20 +39,19 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.ADJ;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.ADV;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.ART;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.CARD;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.CONJ;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.N;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.NN;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.NP;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.O;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.PP;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.PR;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.PUNC;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.V;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_ADJ;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_ADP;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_ADV;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_CONJ;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_DET;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_NOUN;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_NUM;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_PRON;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_PROPN;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_PUNCT;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_VERB;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_X;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -131,19 +130,18 @@ public class ConllUWriter
     private Map<Class<?>, String> dkpro2ud = new HashMap<>();
     
     {
-        dkpro2ud.put(ADJ.class, "ADJ");
-        dkpro2ud.put(ADV.class, "ADV");
-        dkpro2ud.put(ART.class, "DET");
-        dkpro2ud.put(CARD.class, "NUM");
-        dkpro2ud.put(CONJ.class, "CONJ");
-        dkpro2ud.put(N.class, "NOUN");
-        dkpro2ud.put(NN.class, "NOUN");
-        dkpro2ud.put(NP.class, "PROPN");
-        dkpro2ud.put(O.class, "X");
-        dkpro2ud.put(PP.class, "ADP");
-        dkpro2ud.put(PR.class, "PRON");
-        dkpro2ud.put(V.class, "VERB");
-        dkpro2ud.put(PUNC.class, "PUNCT");
+        dkpro2ud.put(POS_ADJ.class, "ADJ");
+        dkpro2ud.put(POS_ADV.class, "ADV");
+        dkpro2ud.put(POS_DET.class, "DET");
+        dkpro2ud.put(POS_NUM.class, "NUM");
+        dkpro2ud.put(POS_CONJ.class, "CONJ");
+        dkpro2ud.put(POS_NOUN.class, "NOUN");
+        dkpro2ud.put(POS_PROPN.class, "PROPN");
+        dkpro2ud.put(POS_X.class, "X");
+        dkpro2ud.put(POS_ADP.class, "ADP");
+        dkpro2ud.put(POS_PRON.class, "PRON");
+        dkpro2ud.put(POS_VERB.class, "VERB");
+        dkpro2ud.put(POS_PUNCT.class, "PUNCT");
     }
     
     @Override
