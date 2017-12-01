@@ -22,6 +22,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -40,7 +41,7 @@ public class ConstraintSet
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id = -1;
 
     @Column(nullable = false)
@@ -103,13 +104,13 @@ public class ConstraintSet
         if (name == null) {
             if (other.name != null)
                 return false;
-        }
+            }
         else if (!name.equals(other.name))
             return false;
         if (project == null) {
             if (other.project != null)
                 return false;
-        }
+            }
         else if (!project.equals(other.project))
             return false;
         return true;
