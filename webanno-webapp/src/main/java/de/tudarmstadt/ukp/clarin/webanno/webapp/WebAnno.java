@@ -25,6 +25,7 @@ import javax.validation.Validator;
 import org.apache.catalina.connector.Connector;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
@@ -44,10 +45,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
  * Boots WebAnno in standalone JAR or WAR modes.
  */
 @SpringBootApplication(scanBasePackages = "de.tudarmstadt.ukp.clarin.webanno")
+@EntityScan(basePackages = "de.tudarmstadt.ukp.clarin.webanno")
 @ImportResource({ 
         "classpath:/META-INF/application-context.xml",
         "classpath:/META-INF/rest-context.xml", 
-        "classpath:/META-INF/database-context.xml",
         "classpath:/META-INF/static-resources-context.xml" })
 public class WebAnno
     extends SpringBootServletInitializer
@@ -90,6 +91,12 @@ public class WebAnno
         aBuilder.banner(new WebAnnoBanner());
         aBuilder.initializers(new WebAnnoApplicationContextInitializer());
         aBuilder.headless(false);
+        
+        // Traditionally, the WebAnno configuration file is called settings.properties and is
+        // either located in webanno.home or under the user's home directory. Make sure we pick
+        // it up from there in addition to reading the built-in application.properties file.
+        aBuilder.properties("spring.config.location="
+                + "${webanno.home:${user.home}/.webanno}/settings.properties");
     }
     
     public static void main(String[] args) throws Exception
