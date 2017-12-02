@@ -74,6 +74,7 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
     @Temporal(TemporalType.TIMESTAMP)

@@ -68,6 +68,7 @@ public class AnnotationLayer
 
     private boolean enabled = true;
 
+    @Column(name = "builtIn")
     private boolean builtIn = false;
     
     private boolean readonly = false;
@@ -94,18 +95,23 @@ public class AnnotationLayer
     @JoinColumn(name = "project")
     private Project project;
 
+    @Column(name = "lockToTokenOffset")
     private boolean lockToTokenOffset = true;
 
-    // There wase a type in the code which unfortunately made it into databases...
+    // There was a type in the code which unfortunately made it into databases...
     @Column(name = "allowSTacking")
     private boolean allowStacking;
 
+    @Column(name = "crossSentence")
     private boolean crossSentence;
     
+    @Column(name = "showTextInHover")
     private boolean showTextInHover = true;
 
+    @Column(name = "multipleTokens")
     private boolean multipleTokens;
     
+    @Column(name = "linkedListBehavior")
     private boolean linkedListBehavior;
 
     

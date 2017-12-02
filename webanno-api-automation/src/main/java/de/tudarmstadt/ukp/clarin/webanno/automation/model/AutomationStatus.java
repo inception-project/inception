@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.automation.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -58,17 +59,25 @@ public class AutomationStatus
     MiraTemplate template;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "startime")
     private Date startime;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "endTime")
     private Date endTime;
 
-    int trainDocs;
+    @Column(name = "trainDocs")
+    private int trainDocs;
 
-    int annoDocs;
-    int totalDocs;
+    @Column(name = "annoDocs")
+    private int annoDocs;
+    
+    @Column(name = "totalDocs")
+    private int totalDocs;
+    
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.StatusType")
     private Status status = Status.NOT_STARTED;
+    
     public long getId()
     {
         return id;
