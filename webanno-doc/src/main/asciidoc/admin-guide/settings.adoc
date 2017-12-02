@@ -84,11 +84,6 @@
 | 10
 | 
 
-// | database.generate
-// | 
-// | update
-// | 
-
 | backup.interval
 | Time between backups (seconds)
 | 0

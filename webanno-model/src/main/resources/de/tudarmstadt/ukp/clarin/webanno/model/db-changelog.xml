@@ -1,0 +1,344 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+ # Copyright 2017
+ # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ # Technische Universität Darmstadt
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ # 
+ #  http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-->
+<databaseChangeLog 
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="WebAnno Team" id="1512223050574-1">
+        <createTable tableName="annotation_document">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="created" type="datetime(6)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sentenceAccessed" type="INT"/>
+            <column name="state" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="datetime(6)"/>
+            <column name="updated" type="datetime(6)"/>
+            <column name="user" type="VARCHAR(255)"/>
+            <column name="document" type="BIGINT"/>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-2">
+        <createTable tableName="annotation_feature">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="description" type="LONGTEXT"/>
+            <column name="enabled" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hideUnconstraintFeature" type="BIT(1)"/>
+            <column name="includeInHover" type="BIT(1)"/>
+            <column name="link_mode" type="VARCHAR(255)"/>
+            <column name="link_type_name" type="VARCHAR(255)"/>
+            <column name="link_type_role_feature_name" type="VARCHAR(255)"/>
+            <column name="link_type_target_feature_name" type="VARCHAR(255)"/>
+            <column name="multi_value_mode" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="remember" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="required" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)"/>
+            <column name="uiName" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="visible" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_type" type="BIGINT"/>
+            <column name="project" type="BIGINT"/>
+            <column name="tag_set" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-3">
+        <createTable tableName="annotation_type">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="allowSTacking" type="BIT(1)"/>
+            <column name="builtIn" type="BIT(1)"/>
+            <column name="crossSentence" type="BIT(1)"/>
+            <column name="description" type="LONGTEXT"/>
+            <column name="enabled" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="linkedListBehavior" type="BIT(1)"/>
+            <column name="lockToTokenOffset" type="BIT(1)"/>
+            <column name="multipleTokens" type="BIT(1)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="onClickJavascriptAction" type="LONGTEXT"/>
+            <column name="readonly" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="showTextInHover" type="BIT(1)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uiName" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="annotation_feature" type="BIGINT"/>
+            <column name="annotation_type" type="BIGINT"/>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-6">
+        <createTable tableName="constraint_set">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-9">
+        <createTable tableName="project">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="created" type="datetime(6)"/>
+            <column name="description" type="LONGTEXT"/>
+            <column name="disableExport" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mode" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scriptDirection" type="VARCHAR(255)"/>
+            <column name="updated" type="datetime(6)"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-10">
+        <createTable tableName="project_permissions">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="level" type="VARCHAR(255)"/>
+            <column name="user" type="VARCHAR(255)"/>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-11">
+        <createTable tableName="source_document">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="created" type="datetime(6)"/>
+            <column name="format" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sentenceAccessed" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="datetime(6)"/>
+            <column name="trainingDocument" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated" type="datetime(6)"/>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-12">
+        <createTable tableName="tag">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="description" type="LONGTEXT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tagset" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-13">
+        <createTable tableName="tag_set">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="createTag" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="LONGTEXT"/>
+            <column name="language" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-14">
+        <createTable tableName="train_document">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="format" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed" type="BIT(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sentenceAccessed" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="datetime(6)"/>
+            <column name="feature_id" type="BIGINT"/>
+            <column name="project" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-19">
+        <addUniqueConstraint columnNames="name" constraintName="UK3k75vvu7mevyvvb5may5lj8k7" tableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-20">
+        <addUniqueConstraint columnNames="name, project" constraintName="UK3ma3d81kn5x2sjpv7e99rnt2h" tableName="source_document"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-22">
+        <addUniqueConstraint columnNames="user, level, project" constraintName="UKgh78wc2j1lxhhmk1hu5b9u8vb" tableName="project_permissions"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-23">
+        <addUniqueConstraint columnNames="name, project" constraintName="UKjf8bhw2u6xwp9goc2yqv2qfhc" tableName="train_document"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-24">
+        <addUniqueConstraint columnNames="name, project" constraintName="UKl1sft43l0tnf9b1ix60pf29m" tableName="constraint_set"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-25">
+        <addUniqueConstraint columnNames="name, project, user" constraintName="UKlq2x3u95l76hxx8ei9hydk824" tableName="annotation_document"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-26">
+        <addUniqueConstraint columnNames="name, project" constraintName="UKm2jvqyu4akybpmyv7e6xli166" tableName="annotation_type"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-27">
+        <addUniqueConstraint columnNames="name, project" constraintName="UKn1pf8qa78xwkkq5890mp5u5rw" tableName="tag_set"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-28">
+        <addUniqueConstraint columnNames="annotation_type, name, project" constraintName="UKpgq9palohljgv9qympj7nbcp2" tableName="annotation_feature"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-29">
+        <createIndex indexName="FK411i5muqyvbe4ag5r38g81uus" tableName="constraint_set">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-30">
+        <createIndex indexName="FKa6yp1botw0ofbutj6ki5q3j1n" tableName="project_permissions">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-32">
+        <createIndex indexName="FKb9ffvpa00ogpdrjixrhlxqwtb" tableName="annotation_feature">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-33">
+        <createIndex indexName="FKc8nbnendgkcp51yy9mo5yjiu7" tableName="annotation_document">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-34">
+        <createIndex indexName="FKfmg2omct594qkgix3l6dclxov" tableName="tag_set">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-36">
+        <createIndex indexName="FKj4k7l1evyutdsam9mw4n5c5c0" tableName="source_document">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-37">
+        <createIndex indexName="FKlpt8o34eo4nyuv5qsuple9vfa" tableName="annotation_document">
+            <column name="document"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-38">
+        <createIndex indexName="FKm5kf05xieqgw9pfxqrnbsddac" tableName="annotation_type">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-39">
+        <createIndex indexName="FKprsffdlcey9b2tq3gw3p3jctd" tableName="tag">
+            <column name="tagset"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-40">
+        <createIndex indexName="FKrthd11flannrdgc0hvvjcagy5" tableName="train_document">
+            <column name="project"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-41">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="constraint_set" constraintName="FK411i5muqyvbe4ag5r38g81uus" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-42">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="project_permissions" constraintName="FKa6yp1botw0ofbutj6ki5q3j1n" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-44">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_feature" constraintName="FKb9ffvpa00ogpdrjixrhlxqwtb" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-45">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_document" constraintName="FKc8nbnendgkcp51yy9mo5yjiu7" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-46">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="tag_set" constraintName="FKfmg2omct594qkgix3l6dclxov" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-49">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="source_document" constraintName="FKj4k7l1evyutdsam9mw4n5c5c0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-50">
+        <addForeignKeyConstraint baseColumnNames="document" baseTableName="annotation_document" constraintName="FKlpt8o34eo4nyuv5qsuple9vfa" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="source_document"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-51">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="annotation_type" constraintName="FKm5kf05xieqgw9pfxqrnbsddac" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-53">
+        <addForeignKeyConstraint baseColumnNames="tagset" baseTableName="tag" constraintName="FKprsffdlcey9b2tq3gw3p3jctd" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tag_set"/>
+    </changeSet>
+    <changeSet author="WebAnno Team" id="1512223050574-54">
+        <addForeignKeyConstraint baseColumnNames="project" baseTableName="train_document" constraintName="FKrthd11flannrdgc0hvvjcagy5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+</databaseChangeLog>
