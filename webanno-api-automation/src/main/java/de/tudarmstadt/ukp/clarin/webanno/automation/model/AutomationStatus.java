@@ -21,7 +21,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -31,7 +33,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
@@ -54,8 +55,8 @@ public class AutomationStatus
     private long id;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "template")
+    @JoinColumn(name = "template", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     MiraTemplate template;
 
     @Temporal(TemporalType.TIMESTAMP)

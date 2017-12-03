@@ -22,7 +22,9 @@ import java.util.Comparator;
 import java.util.Date;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,7 +35,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 /**
@@ -57,7 +58,7 @@ public class TrainingDocument
 
     @ManyToOne
     @JoinColumn(name = "project")
-    Project project;
+    private Project project;
 
     private String format;
 
@@ -73,8 +74,8 @@ public class TrainingDocument
     private int sentenceAccessed = 0;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    AnnotationFeature feature; // if it is a training document, for which Template (layer)
+    @JoinColumn(foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    private AnnotationFeature feature; // if it is a training document, for which Template (layer)
 
     public long getId()
     {

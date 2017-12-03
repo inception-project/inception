@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import java.io.Serializable;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -30,7 +32,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
@@ -59,8 +60,8 @@ public class AnnotationFeature
     private String type;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_type")
+    @JoinColumn(name = "annotation_type", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     private AnnotationLayer layer;
 
     @ManyToOne
@@ -68,8 +69,8 @@ public class AnnotationFeature
     private Project project;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "tag_set")
+    @JoinColumn(name = "tag_set", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     @NotFound(action = NotFoundAction.IGNORE)
     private TagSet tagset;
 
