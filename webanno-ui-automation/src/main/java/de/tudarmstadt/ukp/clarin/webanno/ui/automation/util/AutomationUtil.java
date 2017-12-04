@@ -595,8 +595,9 @@ public class AutomationUtil
                 .listTrainingDocuments(feature.getProject());
         int trainingDocsCount = 0;
         for (TrainingDocument trainingDocument : trainingDocuments) {
-            if ((trainingDocument.getFeature() != null && trainingDocument
-                    .getFeature().equals(feature))) {
+            if ((trainingDocument.getFeature() != null 
+                    && trainingDocument.getFeature().equals(feature)) 
+                   /* && !trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)*/) {
                 JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) { // base training document
