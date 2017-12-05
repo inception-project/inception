@@ -237,6 +237,17 @@ public class AnnotationFeatureForm
         // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
         return textfield;
     }
+    
+    public FeatureEditor getFirstFeatureEditor()
+    {
+        Iterator<Item<FeatureState>> itemIterator = featureEditorPanelContent.getItems();
+        if (!itemIterator.hasNext()) {
+            return null;
+        }
+        else {
+            return (FeatureEditor) itemIterator.next().get("editor");
+        }
+    }
 
     private ConfirmationDialog createDeleteDialog()
     {
@@ -736,15 +747,24 @@ public class AnnotationFeatureForm
         }
         
         @Override
-        protected void onConfigure()
+        protected void onAfterRender()
         {
-            super.onConfigure();
+            super.onAfterRender();
             
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
             if (target != null) {
+                AnnotatorState state = getModelObject();
                 // Put focus on hidden input field if we are in forward-mode
                 if (getModelObject().isForwardAnnotation()) {
                     target.focusComponent(forwardAnnotationText);
+                }
+                // If the use selects an annotation (!isAnnotate()) and forward mode is not
+                // not enabled, then we put the focus on the first of the feature editors
+                else if (!state.getAction().isAnnotate() ) {
+                    FeatureEditor editor = getFirstFeatureEditor();
+                    if (editor != null) {
+                        target.focusComponent(editor.getFocusComponent());
+                    }
                 }
             }
         }
