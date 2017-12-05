@@ -87,7 +87,7 @@ public class PreferencesUtil
             Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
             for (Entry<Object, Object> entry : props.entrySet()) {
                 String property = entry.getKey().toString();
-                int index = property.lastIndexOf(".");
+                int index = property.indexOf(".");
                 String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
@@ -126,7 +126,12 @@ public class PreferencesUtil
                 enabledLayers = enabledLayers.stream()
                         .filter(l -> prefferedLayerIds.contains(l.getId()))
                         .collect(Collectors.toList());
-            }            
+            } else {
+                preference.setAnnotationLayers(
+                        enabledLayers.stream()
+                        .map(l -> l.getId())
+                        .collect(Collectors.toList()));
+            }
             aBModel.setAnnotationLayers(enabledLayers);
             
             // Get color preferences for each layer, init with legacy if not found
