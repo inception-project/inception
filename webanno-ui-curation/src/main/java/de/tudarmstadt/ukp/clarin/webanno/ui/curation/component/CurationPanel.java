@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
@@ -301,36 +302,6 @@ public class CurationPanel
             {
                 final SourceListView curationViewItem = item.getModelObject();
     
-                // ajax call when clicking on a sentence on the left side
-                final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
-                {
-                    private static final long serialVersionUID = 5803814168152098822L;
-    
-                    @Override
-                    protected void respond(AjaxRequestTarget aTarget)
-                    {
-                        curationView = curationViewItem;
-                        fSn = 0;
-                        try {
-                            JCas jCas = curationDocumentService
-                                    .readCurationCas(bModel.getDocument());
-                            updateCurationView(cCModel.getObject(), curationViewItem, aTarget,
-                                    jCas);
-                            updatePanel(aTarget, cCModel.getObject());
-                            bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
-                        }
-                        catch (UIMAException e) {
-                            error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                        catch (ClassNotFoundException | AnnotationException | IOException e) {
-                            error("Error: " + e.getMessage());
-                        }
-                    }
-                };
-    
-                // add subcomponents to the component
-                item.add(click);
-    
                 // Is in focus?
                 if (curationViewItem.getSentenceNumber() == bModel.getFocusUnitIndex()) {
                     item.add(AttributeModifier.append("class", "current"));
@@ -354,9 +325,22 @@ public class CurationPanel
                     item.add(AttributeModifier.append("class", "out-range"));
                 }
                 
-                Label sentenceNumber = new AjaxLabel("sentenceNumber", curationViewItem
-                        .getSentenceNumber().toString(), click);
-                item.add(sentenceNumber);
+                item.add(new LambdaAjaxLink("sentenceNumber", (_target) -> {
+                    curationView = curationViewItem;
+                    fSn = 0;
+                    try {
+                        JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
+                        updateCurationView(cCModel.getObject(), curationViewItem, _target, jCas);
+                        updatePanel(_target, cCModel.getObject());
+                        bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
+                    }
+                    catch (UIMAException e) {
+                        error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    catch (ClassNotFoundException | AnnotationException | IOException e) {
+                        error("Error: " + e.getMessage());
+                    }
+                }).setBody(Model.of(curationViewItem.getSentenceNumber().toString())));
             }
         };
         // add subcomponents to the component

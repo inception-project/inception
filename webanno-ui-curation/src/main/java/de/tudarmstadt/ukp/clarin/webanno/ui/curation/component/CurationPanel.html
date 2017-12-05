@@ -27,12 +27,19 @@
     
     .curation-sentence-number {
       	border: 1px solid white;
+      border-radius: 4px;
       	margin: 1px 1px;
       	padding: 1px 1px;
       	display: inline-block;
       	min-width: 4em;
       	max-width: 7.9em;
       	text-align: center;
+    }
+
+    .curation-sentence-number a {
+      display: block;
+      text-decoration: none !important;
+      color: black !important;
     }
     
     .curation-sentence-list {
@@ -65,7 +72,8 @@
     }
     
     .current {
-      	background-color: orange;
+      box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
+        border: 1px solid rgba(231,166,26,1);
     }
     
     .suggestion-panel-body {
@@ -86,7 +94,7 @@
           <div class="scrolling panel-body">
             <span wicket:id="sentencesListView" style="border-collapse: collapse;">
               <span wicket:id="sentencesList" class="curation-sentence-number">
-                <span wicket:id="sentenceNumber"></span>
+                <a wicket:id="sentenceNumber"></a>
               </span>
             </span>
           </div>
