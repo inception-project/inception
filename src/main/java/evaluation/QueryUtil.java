@@ -32,7 +32,7 @@ public class QueryUtil {
 
   private static String SPARQL_LIMIT = " \n LIMIT ";
 
-  public static String entityQuery(List<String> tokens) {
+  public static String entityQuery(List<String> tokens, int limit) {
     String query = SPARQL_INFERENCE_CLAUSE;
     query += SPARQL_PREFIX + "\n";
     query += SPARQL_SELECT + "{";
@@ -48,7 +48,7 @@ public class QueryUtil {
     }
     query += SPARQL_ENTITY_LABEL_INST;
     query += "}";
-    query += SPARQL_LIMIT + "10";
+    query += SPARQL_LIMIT + limit;
     String variables = "".concat("?e2 ").concat("?anylabel ").concat("?label");
     query = query.replace("%queryvariables%", variables);
     return query;
