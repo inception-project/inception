@@ -9,7 +9,8 @@ public class QueryUtil {
   private static String SPARQL_PREFIX = "PREFIX e:<http://www.wikidata.org/entity/>\n"
       + "        PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n"
       + "        PREFIX skos:<http://www.w3.org/2004/02/skos/core#>\n"
-      + "        PREFIX base:<http://www.wikidata.org/ontology#>";
+      + "        PREFIX base:<http://www.wikidata.org/ontology#>\n"
+      + "        PREFIX schema: <http://schema.org/>\n";
 
   private static String SPARQL_SELECT = "SELECT DISTINCT %queryvariables% WHERE";
 
@@ -32,6 +33,10 @@ public class QueryUtil {
 
   private static String SPARQL_LIMIT = " \n LIMIT ";
 
+  private static String SPARQL_MAP_WIKIPEDIA_ID = "{\n" + 
+      "            GRAPH <http://wikidata.org/sitelinks> { <%otherkbid%> schema:about ?e2 }\n" + 
+      "        }\n";
+  
   public static String entityQuery(List<String> tokens, int limit) {
     String query = SPARQL_INFERENCE_CLAUSE;
     query += SPARQL_PREFIX + "\n";
@@ -51,6 +56,19 @@ public class QueryUtil {
     query += SPARQL_LIMIT + limit;
     String variables = "".concat("?e2 ").concat("?anylabel ").concat("?label");
     query = query.replace("%queryvariables%", variables);
+    return query;
+  }
+  
+  public static String mapWikipediaUrlToWikidataUrlQuery(String wikipediaURL) {
+    String wikipediaId = wikipediaURL.replace("http://de.wikipedia.org/wiki/", 
+                                              "https://de.wikipedia.org/wiki/");
+    String query = SPARQL_PREFIX + "\n";
+    query += SPARQL_SELECT + "{";
+    query += SPARQL_MAP_WIKIPEDIA_ID
+        .replace("%otherkbid%", wikipediaId);
+    query += "}";
+    query = query.replace("%queryvariables%", "?e2");
+    query += SPARQL_LIMIT + 10;
     return query;
   }
   
