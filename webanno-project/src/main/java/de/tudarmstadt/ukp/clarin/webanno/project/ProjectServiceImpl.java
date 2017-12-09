@@ -114,7 +114,7 @@ public class ProjectServiceImpl
         throws IOException
     {
         entityManager.persist(aProject);
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
         FileUtils.forceMkdir(new File(path));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -233,19 +233,22 @@ public class ProjectServiceImpl
     @Override
     public File getProjectLogFile(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + PROJECT + "project-" + aProject.getId() + ".log");
+        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + "project-"
+                + aProject.getId() + ".log");
     }
 
     @Override
-    public File getGuidelinesFile(Project aProject)
+    public File getGuidelinesFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE);
+        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
+                + GUIDELINES_FOLDER + "/");
     }
 
     @Override
     public File getMetaInfFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + META_INF);
+        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
+                + META_INF_FOLDER + "/");
     }
 
     @Override
@@ -260,7 +263,8 @@ public class ProjectServiceImpl
     @Override
     public File getGuideline(Project aProject, String aFilename)
     {
-        return new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE + aFilename);
+        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
+                + GUIDELINES_FOLDER + "/" + aFilename);
     }
 
     @Override
@@ -376,7 +380,8 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
-        String guidelinePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE;
+        String guidelinePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
+                + "/" + GUIDELINES_FOLDER + "/";
         FileUtils.forceMkdir(new File(guidelinePath));
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
                 + aFileName)));
@@ -433,8 +438,7 @@ public class ProjectServiceImpl
     public List<String> listGuidelines(Project aProject)
     {
         // list all guideline files
-        File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + GUIDELINE)
-                .listFiles();
+        File[] files = getGuidelinesFolder(aProject).listFiles();
 
         // Name of the guideline files
         List<String> annotationGuidelineFiles = new ArrayList<>();
@@ -460,8 +464,8 @@ public class ProjectServiceImpl
         throws IOException
     {
         Properties property = new Properties();
-        property.load(new FileInputStream(new File(dir.getAbsolutePath() + PROJECT
-                + aProject.getId() + SETTINGS + aUsername + "/"
+        property.load(new FileInputStream(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername + "/"
                 + annotationPreferencePropertiesFileName)));
         return property;
     }
@@ -486,7 +490,7 @@ public class ProjectServiceImpl
         entityManager.remove(project);
         
         // remove the project directory from the file system
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId();
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
         try {
             FileUtils.deleteDirectory(new File(path));
         }
@@ -507,8 +511,8 @@ public class ProjectServiceImpl
     public void removeGuideline(Project aProject, String aFileName)
         throws IOException
     {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId()
-                + GUIDELINE + aFileName));
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
@@ -535,7 +539,7 @@ public class ProjectServiceImpl
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + PROJECT + aProject.getId() + "/"
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
                 + FilenameUtils.getFullPath(aFileName);
         FileUtils.forceMkdir(new File(path));
 
@@ -565,8 +569,8 @@ public class ProjectServiceImpl
             props.setProperty(aSubject + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
-        String propertiesPath = dir.getAbsolutePath() + PROJECT + aProject.getId() + SETTINGS
-                + aUsername;
+        String propertiesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
             for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
@@ -649,7 +653,7 @@ public class ProjectServiceImpl
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
             
-            if (entryName.startsWith(LOG_DIR)) {
+            if (entryName.startsWith(LOG_FOLDER + "/")) {
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
                         getProjectLogFile(aProject));
                 log.info("Imported log for project [" + aProject.getName() + "] with id ["
@@ -674,12 +678,12 @@ public class ProjectServiceImpl
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
             
-            if (entryName.startsWith(GUIDELINE)) {
+            if (entryName.startsWith(GUIDELINES_FOLDER + "/")) {
                 String fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                File guidelineDir = getGuidelinesFile(aProject);
+                File guidelineDir = getGuidelinesFolder(aProject);
                 FileUtils.forceMkdir(guidelineDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
                         fileName));
@@ -706,9 +710,9 @@ public class ProjectServiceImpl
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
 
-            if (entryName.startsWith(META_INF)) {
+            if (entryName.startsWith(META_INF_FOLDER + "/")) {
                 File metaInfDir = new File(getMetaInfFolder(aProject),
-                        FilenameUtils.getPath(entry.getName().replace(META_INF, "")));
+                        FilenameUtils.getPath(entry.getName().replace(META_INF_FOLDER + "/", "")));
                 // where the file reside in the META-INF/... directory
                 FileUtils.forceMkdir(metaInfDir);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
