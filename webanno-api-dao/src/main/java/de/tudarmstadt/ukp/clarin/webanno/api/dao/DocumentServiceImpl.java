@@ -391,11 +391,13 @@ public class DocumentServiceImpl
     public void removeSourceDocument(SourceDocument aDocument)
         throws IOException
     {
+        // BeforeDocumentRemovedEvent is triggered first, since methods that rely 
+        // on it might need to have access to the associated annotation documents 
+        applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, aDocument));
+        
         for (AnnotationDocument annotationDocument : listAllAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
-        
-        applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, aDocument));
         
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
