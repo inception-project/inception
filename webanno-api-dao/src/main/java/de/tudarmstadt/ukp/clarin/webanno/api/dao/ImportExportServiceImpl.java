@@ -243,7 +243,14 @@ public class ImportExportServiceImpl
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    readableFormats.add(readWriteFileFormats.getProperty(key));
+                    try {
+                        Class.forName(readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                        readableFormats.add(readWriteFileFormats.getProperty(key));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Reader class not found: "
+                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                    }
                 }
             }
         }
@@ -269,15 +276,20 @@ public class ImportExportServiceImpl
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Class<CollectionReader>> getReadableFormats()
-        throws ClassNotFoundException
     {
         Map<String, Class<CollectionReader>> readableFormats = new HashMap<>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    readableFormats.put(readerLabel, (Class) Class.forName(readWriteFileFormats
-                            .getProperty(readerLabel + ".reader")));
+                    try {
+                        readableFormats.put(readerLabel, (Class) Class.forName(
+                                readWriteFileFormats.getProperty(readerLabel + ".reader")));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Reader class not found: "
+                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                    }
                 }
             }
         }
@@ -292,7 +304,14 @@ public class ImportExportServiceImpl
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String writerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(writerLabel + ".writer"))) {
-                    writableFormats.add(readWriteFileFormats.getProperty(key));
+                    try {
+                        Class.forName(readWriteFileFormats.getProperty(writerLabel + ".writer"));
+                        writableFormats.add(readWriteFileFormats.getProperty(key));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Writer class not found: "
+                                + readWriteFileFormats.getProperty(writerLabel + ".writer"));
+                    }
                 }
             }
         }
@@ -318,7 +337,6 @@ public class ImportExportServiceImpl
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
-        throws ClassNotFoundException
     {
         Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = new HashMap<>();
         Set<String> keys = (Set) readWriteFileFormats.keySet();
@@ -327,8 +345,14 @@ public class ImportExportServiceImpl
             if (keyvalue.contains(".label")) {
                 String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.put(writerLabel, (Class) Class.forName(readWriteFileFormats
-                            .getProperty(writerLabel + ".writer")));
+                    try {
+                        writableFormats.put(writerLabel, (Class) Class.forName(
+                                readWriteFileFormats.getProperty(writerLabel + ".writer")));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Writer class not found: "
+                                + readWriteFileFormats.getProperty(writerLabel + ".reader"));
+                    }
                 }
             }
         }
