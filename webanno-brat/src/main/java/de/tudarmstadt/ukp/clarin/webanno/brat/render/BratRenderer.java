@@ -166,6 +166,9 @@ public class BratRenderer
             case INFO:
                 type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
+            case YIELD:
+                type = "Yield";
+                break;
             default:
                 type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
