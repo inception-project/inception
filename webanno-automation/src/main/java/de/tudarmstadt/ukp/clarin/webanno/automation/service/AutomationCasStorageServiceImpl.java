@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
 
 import java.io.File;
@@ -232,8 +232,9 @@ public class AutomationCasStorageServiceImpl
     public File getAutomationFolder(TrainingDocument aDocument)
         throws IOException
     {
-        File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + TRAIN
-                + aDocument.getId() + ANNOTATION);
+        File annotationFolder = new File(dir,
+                "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + TRAIN
+                        + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }

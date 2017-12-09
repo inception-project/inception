@@ -39,17 +39,14 @@ public interface ProjectService
 {
     String SERVICE_NAME = "projectService";
     
-    String PROJECT = "/project/";
-    String DOCUMENT = "/document/";
-    String SOURCE = "/source";
-    String GUIDELINE = "/guideline/";
-    String ANNOTATION = "/annotation";
-    String SETTINGS = "/settings/";
-    String META_INF = "/META-INF/";
-
-    String HELP_FILE = "/help.properties";
-
-    String LOG_DIR = "log";
+    String PROJECT_FOLDER = "project";
+    String DOCUMENT_FOLDER = "document";
+    String SOURCE_FOLDER = "source";
+    String GUIDELINES_FOLDER = "guideline";
+    String ANNOTATION_FOLDER = "annotation";
+    String SETTINGS_FOLDER = "settings";
+    String META_INF_FOLDER = "META-INF";
+    String LOG_FOLDER = "log";
     
     /**
      * creates a project permission, adding permission level for the user in the given project
@@ -376,7 +373,7 @@ public interface ProjectService
      *            the project.
      * @return the file.
      */
-    File getGuidelinesFile(Project project);
+    File getGuidelinesFolder(Project project);
 
     /**
      * List annotation guideline document already uploaded

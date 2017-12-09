@@ -71,7 +71,7 @@ public class ExportUtil
     
     private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
     private static final String CONSTRAINTS = "/constraints/";
-    private static final String LOG_FOLDER = "/" + ProjectService.LOG_DIR;
+    private static final String LOG_FOLDER = "/" + ProjectService.LOG_FOLDER;
     private static final String GUIDELINES_FOLDER = "/" + ImportUtil.GUIDELINE;
     private static final String ANNOTATION_CAS_FOLDER = "/"
             + ImportUtil.ANNOTATION_AS_SERIALISED_CAS + "/";
@@ -512,7 +512,7 @@ public class ExportUtil
     {
         File guidelineDir = new File(aCopyDir + GUIDELINES_FOLDER);
         FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = projectService.getGuidelinesFile(aProject);
+        File annotationGuidlines = projectService.getGuidelinesFolder(aProject);
         if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);

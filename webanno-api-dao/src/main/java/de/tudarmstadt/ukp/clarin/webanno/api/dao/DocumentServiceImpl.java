@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -137,8 +137,8 @@ public class DocumentServiceImpl
     public File getDocumentFolder(SourceDocument aDocument)
         throws IOException
     {
-        File sourceDocFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + SOURCE);
+        File sourceDocFolder = new File(dir, "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
+                + aDocument.getId() + "/" + SOURCE_FOLDER);
         FileUtils.forceMkdir(sourceDocFolder);
         return sourceDocFolder;
     }
@@ -236,8 +236,9 @@ public class DocumentServiceImpl
     @Override
     public File getSourceDocumentFile(SourceDocument aDocument)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT
-                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + SOURCE);
+        File documentUri = new File(
+                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
+                        + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
         return new File(documentUri, aDocument.getName());
     }
 
@@ -402,7 +403,7 @@ public class DocumentServiceImpl
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId();
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
