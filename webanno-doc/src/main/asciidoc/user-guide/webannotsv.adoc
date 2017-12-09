@@ -120,6 +120,10 @@ Reserved characters have a special meaning in the TSV format and must be are esc
 \,[,],|,_,->,;,\t,\n,*
 ----
 
+NOTE: The way that TSV is presently defined/implemented, it kind of considers `->` as a single 
+      "character"... and it is also escaped as a single unit, i.e. `->` becomes `\->`. It is something to
+      be addressed in a future iteration of the format.
+
 ==== Sentence Representation
 
 Sentence annotations are presented following the text marker `#Text=`, before the token
