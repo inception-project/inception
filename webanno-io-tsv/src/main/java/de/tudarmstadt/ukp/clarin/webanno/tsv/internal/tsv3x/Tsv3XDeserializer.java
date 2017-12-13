@@ -869,6 +869,13 @@ public class Tsv3XDeserializer
             String value = Escaping.unescapeValue(aValue);
             Feature feat = aAnnotation.getType()
                     .getFeatureByBaseName(aCol.uimaFeature.getShortName());
+            
+            if (feat == null) {
+                throw new IllegalArgumentException(
+                        "CAS type [" + aAnnotation.getType() + "] does not have a feature called ["
+                                + aCol.uimaFeature.getShortName() + "]");
+            }
+            
             aAnnotation.setFeatureValueFromString(feat, value);
         }
     }
