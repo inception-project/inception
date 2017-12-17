@@ -252,7 +252,7 @@ public class SuggestionViewPanel
         long layerId = TypeUtil.getLayerId(spanType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
-        MergeCas.addSpanAnnotation(annotationService, layer, aMergeJCas, fsClicked,
+        MergeCas.addSpanAnnotation(aBModel, annotationService, layer, aMergeJCas, fsClicked,
                 layer.isAllowStacking());
 
         writeEditorCas(aBModel, aMergeJCas);
