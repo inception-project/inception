@@ -100,7 +100,7 @@ Wicket.Focus.focusin = function (event) {
 		// handle these specially by fetching the Wicket ID from the original input instead
 		// of from the visible input.
 		var widget = $(target).parent().next("[data-role='combobox']"); 
-		if (widget) {
+		if (widget && widget.length) {
 			target = widget[0];
 		}
 		// END WEBANNO - #722
