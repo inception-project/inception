@@ -105,7 +105,7 @@ public class ConstraintsServiceImpl
         throws IOException
     {
         String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + CONSTRAINTS;
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
 
@@ -123,7 +123,7 @@ public class ConstraintsServiceImpl
         throws IOException
     {
         String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + CONSTRAINTS;
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
@@ -143,7 +143,7 @@ public class ConstraintsServiceImpl
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
         String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + CONSTRAINTS;
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         File constraintsFile = new File(constraintRulesPath, filename);
         if (constraintsFile.exists()) {

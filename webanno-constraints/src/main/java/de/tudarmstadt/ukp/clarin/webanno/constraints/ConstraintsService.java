@@ -31,8 +31,7 @@ public interface ConstraintsService
 {
     String SERVICE_NAME = "constraintsService";
 
-    String CONSTRAINTS = "/constraints/";
-
+    String CONSTRAINTS = "constraints";
     /**
      * Creates Constraint Set
      */

@@ -65,7 +65,7 @@ public class ConstraintsServiceEventAdapter
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
             
-            if (entryName.startsWith(ConstraintsService.CONSTRAINTS)) {
+            if (entryName.startsWith(ConstraintsService.CONSTRAINTS + "/")) {
                 String fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
                     continue;

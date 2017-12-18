@@ -120,8 +120,8 @@ public class FixCoreferenceFeatures
             q.setParameter("fixedType", CAS.TYPE_NAME_STRING);
             int changed = q.executeUpdate();
             if (changed > 0) {
-                log.info("DATABASE UPGRADE PERFORMED: [" + changed
-                        + "] coref chain features had their type fixed");
+                log.info("DATABASE UPGRADE PERFORMED: [{}] coref chain features had their "
+                        + "type fixed.", changed);
             }
             txManager.commit(status);
         }

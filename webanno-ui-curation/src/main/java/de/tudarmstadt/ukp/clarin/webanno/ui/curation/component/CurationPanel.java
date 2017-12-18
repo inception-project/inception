@@ -33,7 +33,9 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
@@ -44,8 +46,8 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
@@ -108,7 +109,6 @@ public class CurationPanel
 
     public SourceListView curationView;
 
-    ListView<SourceListView> sentenceList;
     ListView<String> crossSentAnnoList;
     List<SourceListView> sourceListModel;
 
@@ -271,81 +271,112 @@ public class CurationPanel
                     {
                         // Expand curation view
                     }
-    
                 };
     
                 // add subcomponents to the component
                 item.add(click);
-                Label crossSentAnnoItem = new AjaxLabel("crossAnnoSent", crossSentAnno, click);
-                item.add(crossSentAnnoItem);
+                item.add(new AjaxLabel("crossAnnoSent", crossSentAnno, click));
             }
     
         };
         crossSentAnnoList.setOutputMarkupId(true);
         corssSentAnnoView.add(crossSentAnnoList);
     
-        LoadableDetachableModel sentencesListModel = new LoadableDetachableModel()
-        {
-            @Override
-            protected Object load()
-            {
-                return getModelObject().getCurationViews();
-            }
-        };
-    
-        sentenceList = new ListView<SourceListView>("sentencesList", sentencesListModel)
+        // add subcomponents to the component
+        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+               LambdaModel.of(() -> getModelObject().getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
     
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
-                final SourceListView curationViewItem = item.getModelObject();
-    
-                // Is in focus?
-                if (curationViewItem.getSentenceNumber() == bModel.getFocusUnitIndex()) {
-                    item.add(AttributeModifier.append("class", "current"));
-                }
-                
-                // Agree or disagree?
-                String cC = curationViewItem.getSentenceState().getValue();
-                if (cC != null) {
-                    item.add(AttributeModifier.append("class", "disagree"));
-                }
-                else {
-                    item.add(AttributeModifier.append("class", "agree"));
-                }
-                
-                // In range or not?
-                if (curationViewItem.getSentenceNumber() >= fSn
-                        && curationViewItem.getSentenceNumber() <= lSn) {
-                    item.add(AttributeModifier.append("class", "in-range"));
-                }
-                else {
-                    item.add(AttributeModifier.append("class", "out-range"));
-                }
-                
-                item.add(new LambdaAjaxLink("sentenceNumber", (_target) -> {
-                    curationView = curationViewItem;
-                    fSn = 0;
-                    try {
-                        JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
-                        updateCurationView(cCModel.getObject(), curationViewItem, _target, jCas);
-                        updatePanel(_target, cCModel.getObject());
-                        bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
-                    }
-                    catch (UIMAException e) {
-                        error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                    catch (ClassNotFoundException | AnnotationException | IOException e) {
-                        error("Error: " + e.getMessage());
-                    }
-                }).setBody(Model.of(curationViewItem.getSentenceNumber().toString())));
+                item.add(new SentenceLink("sentenceNumber", item.getModel()));
             }
-        };
-        // add subcomponents to the component
-        sentenceList.setOutputMarkupId(true);
-        sentencesListView.add(sentenceList);
+        });
+    }
+    
+    public class SentenceLink extends AjaxLink<SourceListView>
+    {
+        private static final long serialVersionUID = 4558300090461815010L;
+
+        public SentenceLink(String aId, IModel<SourceListView> aModel)
+        {
+            super(aId, aModel);
+            setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
+        }
+        
+        @Override
+        protected void onComponentTag(ComponentTag aTag)
+        {
+            super.onComponentTag(aTag);
+            
+            final SourceListView curationViewItem = getModelObject();
+            
+            // Is in focus?
+            if (curationViewItem.getSentenceNumber() == bModel.getFocusUnitIndex()) {
+                aTag.append("class", "current", " ");
+            }
+            
+            // Agree or disagree?
+            String cC = curationViewItem.getSentenceState().getValue();
+            if (cC != null) {
+                aTag.append("class", "disagree", " ");
+            }
+            else {
+                aTag.append("class", "agree", " ");
+            }
+            
+            // In range or not?
+            if (curationViewItem.getSentenceNumber() >= fSn
+                    && curationViewItem.getSentenceNumber() <= lSn) {
+                aTag.append("class", "in-range", " ");
+            }
+            else {
+                aTag.append("class", "out-range", " ");
+            }
+        }
+        
+        @Override
+        protected void onAfterRender()
+        {
+            super.onAfterRender();
+            
+            // The sentence list is refreshed using AJAX. Unfortunately, the renderHead() method
+            // of the AjaxEventBehavior created by AjaxLink does not seem to be called by Wicket
+            // during an AJAX rendering, causing the sentence links to loose their functionality.
+            // Here, we ensure that the callback scripts are attached to the sentence links even
+            // during AJAX updates.
+            if (isEnabledInHierarchy()) {
+                AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
+                if (target != null) {
+                    for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
+                        target.appendJavaScript(b.getCallbackScript());
+                    }
+                }
+            }
+        }
+        
+        @Override
+        public void onClick(AjaxRequestTarget aTarget)
+        {
+            final SourceListView curationViewItem = getModelObject();
+            curationView = curationViewItem;
+            fSn = 0;
+            try {
+                JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
+                updateCurationView(CurationPanel.this.getModelObject(), curationViewItem, aTarget,
+                        jCas);
+                updatePanel(aTarget, CurationPanel.this.getModelObject());
+                bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
+            }
+            catch (UIMAException e) {
+                error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+            catch (ClassNotFoundException | AnnotationException | IOException e) {
+                error("Error: " + e.getMessage());
+            }
+        }
     }
 
     public void setModel(IModel<CurationContainer> aModel)
@@ -434,19 +465,14 @@ public class CurationPanel
         fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
-        sentencesListView.addOrReplace(sentenceList);
         aTarget.add(sentencesListView);
 
         /*
          * corssSentAnnoView.addOrReplace(crossSentAnnoList); aTarget.add(corssSentAnnoView);
          */
         aTarget.add(suggestionViewPanel);
-        if (annotate) {
-            annotationEditor.requestRender(aTarget);
-        }
-        else {
-            annotationEditor.requestRender(aTarget);
-        }
+        annotationEditor.requestRender(aTarget);
+        
         annotate = false;
         suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor,
                 annotationSelectionByUsernameAndAddress, curationView);
