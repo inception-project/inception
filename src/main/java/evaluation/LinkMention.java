@@ -202,7 +202,7 @@ public class LinkMention {
    * 
    * TODO what happens if there are multiple mentions in a sentence?
    */
-  public static List<Token> getMentionContext(List<Token> mentionSentence, List<Token> mention, 
+  public static List<Token> getMentionContext(List<Token> mentionSentence, List<String> mention, 
 		  int mentionContextSize)
   {
 	  int start = 0, end = 0;
@@ -210,7 +210,7 @@ public class LinkMention {
 	  boolean done = false;
 	  while (done == false && j < mentionSentence.size()) {
 		for (int i = 0; i < mention.size(); i++) {
-	      if (!mentionSentence.get(j).getCoveredText().equals(mention.get(i).getCoveredText())) {
+	      if (!mentionSentence.get(j).getCoveredText().equals(mention.get(i))) {
 		 	break;
 	      }
 	      if (i == mention.size()-1) {
@@ -267,15 +267,15 @@ public class LinkMention {
 
     int mentionContextSize = 2;
     List<Token> mentionSentence = getMentionSentence(text, mention);
-    List<Token> tokenizedMention = tokenizeMention(mention);
-    List<Token> mentionContext = getMentionContext(mentionSentence, tokenizedMention, 
+    List<String> splitMention = Arrays.asList(mention.split(" "));
+    List<Token> mentionContext = getMentionContext(mentionSentence, splitMention, 
     			mentionContextSize);
    
     // TODO stopwords
     // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
     Set<String> sentenceContentTokens = new HashSet<>();
     for (Token t: mentionSentence) {
-        if (t.getPos().getPosValue().equals("VNJ") && !tokenizedMention.contains(t)) {
+        if (t.getPos().getPosValue().equals("VNJ") && !splitMention.contains(t)) {
             sentenceContentTokens.add(t.getCoveredText());
         }
     }
@@ -298,7 +298,7 @@ public class LinkMention {
             if (sentenceContentTokens.contains(s))
             signatureOverlap.add(s);
         }
-        l.setSignatureOverlapScore(tokenizedMention.size() + signatureOverlap.size());
+        l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
     }
     List<Entity> result = sortCandidates(new ArrayList<>(linkings));
     return result;
