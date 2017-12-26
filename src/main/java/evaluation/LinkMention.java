@@ -12,6 +12,15 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+
+import org.apache.uima.UIMAException;
+import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -23,6 +32,10 @@ import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import de.dailab.irml.gerned.NewsReader;
 import de.dailab.irml.gerned.QueriesReader;
 import de.dailab.irml.gerned.data.Query;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
+import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
 
 public class LinkMention {
 
@@ -82,6 +95,34 @@ public class LinkMention {
     return null;
   }
 
+  /*
+   * Retrieves the sentence containing the mention as Tokens
+   */
+  public static List<Token> getMentionSentence(String docText, String mention) throws UIMAException{
+    JCas doc = JCasFactory.createText(docText, "en");
+    AnalysisEngineDescription desc = createEngineDescription(
+        createEngineDescription(StanfordSegmenter.class),
+        createEngineDescription(StanfordPosTagger.class, 
+            StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
+    AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
+    pipeline.process(doc);
+    
+    for (Sentence s : JCasUtil.select(doc, Sentence.class)) {
+      List<Token> sentence = new LinkedList<>();
+      boolean containsMention = false;
+      for (Token t : JCasUtil.selectCovered(Token.class, s)) {
+        sentence.add(t);
+        if(t.getCoveredText().equals(mention)) {
+          containsMention = true;
+        }
+      }
+      if (containsMention) {
+        for(Token t:sentence) System.out.print(t.getCoveredText());
+        return sentence;
+      }
+    }
+    return null;
+}
   
   public static Set<Entity> linkMention(String mention) {
     Set<Entity> linkings = new HashSet<>();
