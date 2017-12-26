@@ -37,6 +37,12 @@ public class QueryUtil {
       "            GRAPH <http://wikidata.org/sitelinks> { <%otherkbid%> schema:about ?e2 }\n" + 
       "        }\n";
   
+  private static String SPARQL_RELATION_DIRECT = 
+          "{GRAPH <http://wikidata.org/statements> { ?e1 ?p ?m . ?m ?rd ?e2 . %restriction% }}\n";
+  
+  private static String SPARQL_RELATION_REVERSE =
+          "{GRAPH <http://wikidata.org/statements> { ?e2 ?p ?m . ?m ?rr ?e1 . %restriction% }}\n";
+  
   public static String entityQuery(List<String> tokens, int limit) {
     String query = SPARQL_INFERENCE_CLAUSE;
     query += SPARQL_PREFIX + "\n";
@@ -52,7 +58,7 @@ public class QueryUtil {
           "");
     }
     query += SPARQL_ENTITY_LABEL_INST;
-    query += "}";
+    query += "\n}";
     query += SPARQL_LIMIT + limit;
     String variables = "".concat("?e2 ").concat("?anylabel ").concat("?label");
     query = query.replace("%queryvariables%", variables);
@@ -63,14 +69,28 @@ public class QueryUtil {
     String wikipediaId = wikipediaURL.replace("http://de.wikipedia.org/wiki/", 
                                               "https://de.wikipedia.org/wiki/");
     String query = SPARQL_PREFIX + "\n";
-    query += SPARQL_SELECT + "{";
+    query += SPARQL_SELECT + "{\n";
     query += SPARQL_MAP_WIKIPEDIA_ID
         .replace("%otherkbid%", wikipediaId);
-    query += "}";
+    query += "\n}";
     query = query.replace("%queryvariables%", "?e2");
     query += SPARQL_LIMIT + 10;
     return query;
   }
   
+  public static String semanticSignatureQuery (String wikidataId) {
+      String query = SPARQL_PREFIX + "\n";
+      query += SPARQL_SELECT + "{\n";
+      String semanticSignatureInst = "{\n" + SPARQL_RELATION_DIRECT;
+      semanticSignatureInst += "UNION \n" + SPARQL_RELATION_REVERSE + "}\n";
+      semanticSignatureInst = semanticSignatureInst.replace("?e2", "e:" + wikidataId);
+      query += semanticSignatureInst;
+      query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1");
+      query += "\n}";
+      query = query.replace("%queryvariables%", "?label ?p");
+      query = query.replace("%restriction%", "");
+      query += SPARQL_LIMIT + 1000;
+      return query;
+  }
   
 }
