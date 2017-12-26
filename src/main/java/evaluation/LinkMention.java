@@ -52,9 +52,14 @@ public class LinkMention {
   
   private static RepositoryConnection conn;
   
-  // TODO
-  private static String punctuations = "";
-  private static String stopwords = "";
+  private final static String[] PUNCTUATION_VALUES 
+          = new String[] {"``", "''", "(", ")", ",", ".", ":", "--"};
+  
+  private static final Set<String> punctuations 
+          = new HashSet<>(Arrays.asList(PUNCTUATION_VALUES));
+  
+  private static final Set<String> stopwords 
+          = Utils.readFile("resources/stopwords-de.txt");
 
   private static String SPARQL_ENDPOINT = 
 		  "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
@@ -170,12 +175,23 @@ public class LinkMention {
     while (it.hasNext()) {
       current = it.next().toLowerCase();
       it.set(current);
-      if (stopwords.contains(current) || punctuations.contains(current)) {
+      if (punctuations.contains(current)) {
         it.remove();
       }
     }
+    
+    boolean onlyStopwords = true;
+    ListIterator<String> it2 = mentionArray.listIterator();
+    while (it2.hasNext()) {
+      current = it2.next().toLowerCase();
+      it2.set(current);
+      if (!stopwords.contains(current)) {
+        onlyStopwords = false;
+        break;
+      }
+    }
 
-    if (mentionArray.isEmpty()) {
+    if (mentionArray.isEmpty() || onlyStopwords) {
       return null;
     }
 
@@ -271,14 +287,20 @@ public class LinkMention {
     List<Token> mentionContext = getMentionContext(mentionSentence, splitMention, 
     			mentionContextSize);
    
-    // TODO stopwords
     // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
     Set<String> sentenceContentTokens = new HashSet<>();
     for (Token t: mentionSentence) {
-        if (t.getPos().getPosValue().equals("VNJ") && !splitMention.contains(t)) {
+        if ((t.getPos().getPosValue().startsWith("V") 
+          || t.getPos().getPosValue().startsWith("N")
+          || t.getPos().getPosValue().startsWith("J"))
+                && !splitMention.contains(t.getCoveredText())) {
             sentenceContentTokens.add(t.getCoveredText());
         }
     }
+    sentenceContentTokens = sentenceContentTokens.stream()
+            //correct?
+            .filter(f -> !stopwords.contains(f) || !splitMention.contains(f))
+            .collect(Collectors.toSet());
     
     for (Entity l: linkings) {
         String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
