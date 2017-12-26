@@ -164,7 +164,7 @@ public class LinkMention {
     }
     return null;
 }
-  
+  // TODO consider # and @
   public static Set<Entity> linkMention(String mention) {
     Set<Entity> linkings = new HashSet<>();
     List<String> mentionArray = Arrays.asList(mention.split(" "));
