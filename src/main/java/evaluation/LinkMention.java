@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -81,8 +82,9 @@ public class LinkMention {
     return null;
   }
 
-  public static Set<String> linkMention(String mention) {
-    Set<String> linkings = new HashSet<String>();
+  
+  public static Set<Entity> linkMention(String mention) {
+    Set<Entity> linkings = new HashSet<>();
     List<String> mentionArray = Arrays.asList(mention.split(" "));
 
     ListIterator<String> it = mentionArray.listIterator();
@@ -99,13 +101,17 @@ public class LinkMention {
       return null;
     }
 
-    String entityQueryString = QueryUtil.entityQuery(mentionArray, 10);
+    String entityQueryString = QueryUtil.entityQuery(mentionArray, 1000);
     TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
     try (TupleQueryResult entityResult = query.evaluate()) {
       while (entityResult.hasNext()) {
         BindingSet solution = entityResult.next();
-        linkings.add(solution.getValue("e2").toString());
+            linkings.add(new Entity(solution.getValue("e2").toString(),
+                    solution.getValue("label").toString(),
+                    solution.getValue("anylabel").toString()));
       }
+    } catch (QueryEvaluationException e) {
+    	throw new QueryEvaluationException(e);
     }
     return linkings;
   }
