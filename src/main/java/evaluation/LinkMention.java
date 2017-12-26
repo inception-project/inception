@@ -154,12 +154,11 @@ public class LinkMention {
       boolean containsMention = false;
       for (Token t : JCasUtil.selectCovered(Token.class, s)) {
         sentence.add(t);
-        if(t.getCoveredText().equals(mention)) {
+        if(t.getCoveredText().toLowerCase().equals(mention)) {
           containsMention = true;
         }
       }
       if (containsMention) {
-        for(Token t:sentence) System.out.print(t.getCoveredText());
         return sentence;
       }
     }
@@ -281,6 +280,7 @@ public class LinkMention {
   public static List<Entity> computeCandidateScores(String mention, Set<Entity> linkings, 
       String text) throws UIMAException {
 
+    mention = mention.toLowerCase();
     int mentionContextSize = 2;
     List<Token> mentionSentence = getMentionSentence(text, mention);
     List<String> splitMention = Arrays.asList(mention.split(" "));
@@ -293,13 +293,14 @@ public class LinkMention {
         if ((t.getPos().getPosValue().startsWith("V") 
           || t.getPos().getPosValue().startsWith("N")
           || t.getPos().getPosValue().startsWith("J"))
-                && !splitMention.contains(t.getCoveredText())) {
-            sentenceContentTokens.add(t.getCoveredText());
+                && !splitMention.contains(t.getCoveredText().toLowerCase())) {
+            sentenceContentTokens.add(t.getCoveredText().toLowerCase());
         }
     }
     sentenceContentTokens = sentenceContentTokens.stream()
             //correct?
-            .filter(f -> !stopwords.contains(f) || !splitMention.contains(f))
+            .filter(f -> !stopwords.contains(f.toLowerCase()) 
+                    || !splitMention.contains(f.toLowerCase()))
             .collect(Collectors.toSet());
     
     for (Entity l: linkings) {
