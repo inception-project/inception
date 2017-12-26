@@ -56,31 +56,59 @@ public class LinkMention {
   private static String punctuations = "";
   private static String stopwords = "";
 
-  private static String SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-
+  private static String SPARQL_ENDPOINT = 
+		  "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
+//		  "https://query.wikidata.org/sparql?query=SPARQL";
   public static void main(String[] args) {
 
     initializeConnection();
 
     QueriesReader reader = new QueriesReader();
-    // File queriesFile = new File("../gerned/dataset/ANY_german_queries.xml");
     File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
     List<Query> queries = reader.readQueries(answersFile);
 
-    Map<String, Set<String>> entities = new HashMap<String, Set<String>>();
+    System.out.println("Total number of queries: "+ queries.size());
+    Map<String, Set<Entity>> entities = new HashMap<>();
     
     int counter = 0;
+    int coverageCounter = 0;
+    int i = 1;
+    
     for (Query query : queries) {
+      String docText = NewsReader.readFile("../gerned/dataset/news/"+ query.getDocid()+".xml");
+//      try {
+//        List<Token> taggedText = getMentionSentence(docText, query.getName());
         String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
-        Set<String> linkings = linkMention(query.getName());
+        Set<Entity> linkings = linkMention(query.getName());
+        try {
+            List<Entity> sortedCandidates = 
+                 computeCandidateScores(query.getName(), linkings, docText);
+        }
+        catch (UIMAException e) {
+            logger.error("Could not compute candidate scores: ", e);
+        }
+//        String actual = sortedCandidates.get(0); 
         entities.put(query.getId(), linkings);
-          if(linkings.contains(expected)) {
+        Set<String> linkingsAsStrings = 
+            linkings.stream().map(e->e.getE2()).collect(Collectors.toSet());
+        if (linkingsAsStrings.contains(expected)) {
           counter++;
         }
-           System.out.println(expected);
-           System.out.println(linkings);
+
+        if (!linkings.isEmpty()) {
+        	coverageCounter++;
+        }
+        i++;
+//        System.out.println(expected);
+//        System.out.println(actual);
+//        System.out.println(linkings);
+//        System.out.println("Results unempty : " + (double) coverageCounter/i);
+//        System.out.println("Results contain correct answer : " + (double) counter/i);
+//      } catch (UIMAException e) {
+//        logger.error("Could not parse Text", e);
+//      }
+    }    
   }
-    System.out.println(counter/queries.size());
 
   public static void initializeConnection()
   {
