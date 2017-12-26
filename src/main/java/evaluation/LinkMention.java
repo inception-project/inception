@@ -224,6 +224,78 @@ public class LinkMention {
 		}
 		return tokenizedMention;
   }
+  /**
+   * The method should compute scores for each candidate linking for the given entity 
+   * and sort the candidates so that the most probable candidate comes first. 
+   *
+   * @param mention
+   * @param linkings
+   * @param taggedText: the current text as a list of tagged token
+   * @return
+ * @throws UIMAException 
+   */
+  public static List<Entity> computeCandidateScores(String mention, Set<Entity> linkings, 
+      String text) throws UIMAException {
+
+    int mentionContextSize = 2;
+    List<Token> mentionSentence = getMentionSentence(text, mention);
+    List<Token> tokenizedMention = tokenizeMention(mention);
+    List<Token> mentionContext = getMentionContext(mentionSentence, tokenizedMention, 
+    			mentionContextSize);
+   
+    // TODO stopwords
+    // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
+    Set<String> sentenceContentTokens = new HashSet<>();
+    for (Token t: mentionSentence) {
+        if (t.getPos().getPosValue().equals("VNJ") && !tokenizedMention.contains(t)) {
+            sentenceContentTokens.add(t.getCoveredText());
+        }
+    }
+    
+    for (Entity l: linkings) {
+        String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
+    	String anylabel = l.getAnyLabel().toLowerCase();
+    	
+    	l.setIdRank(Math.log(Double.parseDouble(wikidataId)));
+    	
+        LevenshteinDistance lev = new LevenshteinDistance();
+        //TODO adjustable costs
+        l.setLevMatchLabel(lev.apply(mention, anylabel).intValue());
+        l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel).intValue());
+        l.setNumRelatedRelations(0);
+
+        Set<String> semanticSignature = getSemanticSignature(wikidataId);
+        Set<String> signatureOverlap = new HashSet<>();
+        for (String s: semanticSignature) {
+            if (sentenceContentTokens.contains(s))
+            signatureOverlap.add(s);
+        }
+        l.setSignatureOverlapScore(tokenizedMention.size() + signatureOverlap.size());
+    }
+    List<Entity> result = sortCandidates(new ArrayList<>(linkings));
+    return result;
+    
+  }
+
+  private static List<Entity> sortCandidates(List<Entity> candidates)
+{
+      Collections.sort(candidates, new Comparator<Entity>() {
+
+          @Override
+          public int compare(Entity e1, Entity e2) {
+
+            return new org.apache.commons.lang.builder.CompareToBuilder()
+                .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
+                .append(e1.getLevSentence()+ e1.getLevMatchLabel(), 
+                        e2.getLevSentence() + e2.getLevMatchLabel())
+                //TODO -entity['freqs']
+                //TODO .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
+                .append(e1.getIdRank(), e2.getIdRank())
+                .toComparison();
+          }
+        });
+    return candidates;
+}
 
 private static String tokensToString(List<Token> sentence) {
 	String result ="";
