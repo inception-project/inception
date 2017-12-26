@@ -157,6 +157,45 @@ public class LinkMention {
     return linkings;
   }
   
+  /**
+   * Finds the position of a mention in a given sentence and
+   * returns the corresponding tokens of the mention with 
+   * <mentionContextSize> tokens before and 
+   * <mentionContextSize> after the mention
+   * 
+   * TODO what happens if there are multiple mentions in a sentence?
+   */
+  public static List<Token> getMentionContext(List<Token> mentionSentence, List<Token> mention, 
+		  int mentionContextSize)
+  {
+	  int start = 0, end = 0;
+	  int j = 0;
+	  boolean done = false;
+	  while (done == false && j < mentionSentence.size()) {
+		for (int i = 0; i < mention.size(); i++) {
+	      if (!mentionSentence.get(j).getCoveredText().equals(mention.get(i).getCoveredText())) {
+		 	break;
+	      }
+	      if (i == mention.size()-1) {
+            start = j - (mention.size() - 1) - mentionContextSize;
+            end = j + mentionContextSize + 1;
+            done = true;
+	      }
+	    }
+		j++;
+	  }
+	  
+	  if (start == end) {
+		  throw new IllegalStateException("Mention not found in sentence!");
+	  }
+	  if (start < 0) {
+		  start = 0;
+	  }
+	  if (end > mentionSentence.size()) {
+		  end = mentionSentence.size();
+	  }
+	  return mentionSentence.subList(start, end);
+  }
   
   public static List<Token> tokenizeMention(String mention) throws UIMAException
   {
