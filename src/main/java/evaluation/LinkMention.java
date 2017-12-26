@@ -232,7 +232,8 @@ public class LinkMention
         boolean done = false;
         while (done == false && j < mentionSentence.size()) {
             for (int i = 0; i < mention.size(); i++) {
-                if (!mentionSentence.get(j).getCoveredText().equals(mention.get(i))) {
+                if (!mentionSentence.get(j).getCoveredText().toLowerCase()
+                        .equals(mention.get(i))) {
                     break;
                 }
                 if (i == mention.size() - 1) {
