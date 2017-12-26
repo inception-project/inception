@@ -37,9 +37,7 @@ public class LinkMention {
 
   public static void main(String[] args) {
 
-    SPARQLRepository repo = new SPARQLRepository(SPARQL_ENDPOINT);
-    repo.initialize();
-    conn = repo.getConnection();
+    initializeConnection();
 
     QueriesReader reader = new QueriesReader();
     // File queriesFile = new File("../gerned/dataset/ANY_german_queries.xml");
@@ -50,19 +48,24 @@ public class LinkMention {
     
     int counter = 0;
     for (Query query : queries) {
-      String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
+        String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
         Set<String> linkings = linkMention(query.getName());
-          entities.put(query.getId(), linkings);
+        entities.put(query.getId(), linkings);
           if(linkings.contains(expected)) {
-            counter++;
-          }
+          counter++;
+        }
            System.out.println(expected);
            System.out.println(linkings);
-    }
-    System.out.println(counter/queries.size());
-    
   }
-  
+    System.out.println(counter/queries.size());
+
+  public static void initializeConnection()
+  {
+    SPARQLRepository repo = new SPARQLRepository(SPARQL_ENDPOINT);
+    repo.initialize();
+    conn = repo.getConnection();
+  }
+
   public static String mapWikipediaUrlToWikidataUrl(String url) {
     String wikidataQueryString = QueryUtil.mapWikipediaUrlToWikidataUrlQuery(url);
     TupleQuery wikidataIdQuery = 
