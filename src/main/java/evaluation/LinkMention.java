@@ -110,6 +110,34 @@ public class LinkMention {
     return linkings;
   }
   
+  
+  public static List<Token> tokenizeMention(String mention) throws UIMAException
+  {
+	  JCas doc = JCasFactory.createText(mention, "en");
+	    AnalysisEngineDescription desc = createEngineDescription(
+	        createEngineDescription(StanfordSegmenter.class),
+				createEngineDescription(StanfordPosTagger.class,
+						StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
+		AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
+		pipeline.process(doc);
+
+		List<Token> tokenizedMention = new LinkedList<>();
+		for (Sentence s : JCasUtil.select(doc, Sentence.class)) {
+			for (Token t : JCasUtil.selectCovered(Token.class, s)) {
+				tokenizedMention.add(t);
+			}
+		}
+		return tokenizedMention;
+  }
+
+private static String tokensToString(List<Token> sentence) {
+	String result ="";
+	  for(Token t: sentence) {
+	    result.concat(t.getCoveredText());
+	  }
+	return result;
+  }
+  
   // TODO include relations
   // TODO filter against blacklist
   public static Set<String> getSemanticSignature(String wikidataId) {
