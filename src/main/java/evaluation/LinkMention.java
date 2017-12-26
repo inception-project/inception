@@ -109,5 +109,22 @@ public class LinkMention {
     }
     return linkings;
   }
+  
+  // TODO include relations
+  // TODO filter against blacklist
+  public static Set<String> getSemanticSignature(String wikidataId) {
+      Set<String> semanticSignature = new HashSet<>();
+      String queryString = QueryUtil.semanticSignatureQuery(wikidataId);
+      TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+      try (TupleQueryResult result = query.evaluate()) {
+        while (result.hasNext()) {
+          BindingSet sol = result.next();
+          semanticSignature.add(sol.getValue("label").toString());
+        }
+      } catch(Exception e) {
+          logger.error("could not get semantic signature", e);
+      }
+      return semanticSignature;
+  }
 
 }
