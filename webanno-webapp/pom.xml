@@ -92,6 +92,10 @@
       <artifactId>wicket-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-jmx</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
     </dependency>
@@ -399,6 +403,8 @@
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>commons-logging:commons-logging</usedDependency>
+              <!-- JMX -->
+              <usedDependency>org.apache.wicket:wicket-jmx</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
