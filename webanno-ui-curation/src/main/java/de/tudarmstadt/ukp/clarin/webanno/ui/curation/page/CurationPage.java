@@ -163,22 +163,6 @@ public class CurationPage
                 catch (Exception e) {
                     handleException(aTarget, e);
                 }
-//                
-//              AnnotatorState state = CurationPage.this.getModelObject();
-//              JCas mergeJCas = null;
-//              try {
-//                  mergeJCas = repository.readCurationCas(state.getDocument());
-//              }
-//              catch (Exception e) {
-//                  aTarget.add(getFeedbackPanel());
-//                  LOG.error("Unable to load data", e);
-//                  error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//              }
-//              aTarget.add(numberOfPages);
-//              gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
-//              gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
-//              aTarget.add(gotoPageTextField);
-//              aTarget.add(curationPanel);
             }
         };
         add(curationPanel);
@@ -416,20 +400,9 @@ public class CurationPage
         return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
     }
 
-    // Update the curation panel.
-
     private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-//        JCas mergeJCas = null;
-//        try {
-//            mergeJCas = repository.readCurationCas(state.getDocument());
-//        }
-//        catch (Exception e) {
-//            aTarget.add(getFeedbackPanel());
-//            LOG.error("Unable to load data", e);
-//            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//        }
         gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
         aTarget.add(gotoPageTextField);

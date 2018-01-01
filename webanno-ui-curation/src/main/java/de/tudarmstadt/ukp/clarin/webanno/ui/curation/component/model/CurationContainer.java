@@ -71,7 +71,7 @@ public class CurationContainer
 
     }
 
-    public AnnotatorState getBratAnnotatorModel()
+    public AnnotatorState getAnnotatorState()
     {
         return bratAnnotatorModel;
     }

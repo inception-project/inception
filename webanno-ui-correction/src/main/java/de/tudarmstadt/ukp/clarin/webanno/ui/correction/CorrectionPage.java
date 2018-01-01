@@ -45,6 +45,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,8 +185,7 @@ public class CorrectionPage
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(getModelObject());
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        suggestionView = new SuggestionViewPanel("correctionView",
-                new Model<>(sentences))
+        suggestionView = new SuggestionViewPanel("correctionView", new ListModel<>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
 
