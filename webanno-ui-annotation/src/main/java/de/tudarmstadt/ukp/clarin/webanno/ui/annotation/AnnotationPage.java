@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.NoResultException;
 
@@ -71,6 +72,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -513,9 +516,14 @@ public class AnnotationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
+            AnnotationDocumentState oldState = annotationDocument.getState();
             annotationDocument.setState(AnnotationDocumentStateTransition.transition(
                     AnnotationDocumentStateTransition.
                     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            if (!Objects.equals(oldState, annotationDocument.getState())) {
+                applicationEventPublisherHolder.get().publishEvent(
+                        new AnnotationStateChangeEvent(this, annotationDocument, oldState));
+            }
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -591,6 +599,8 @@ public class AnnotationPage
                 state.getDocument().setState(SourceDocumentStateTransition
                         .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
                 documentService.createSourceDocument(state.getDocument());
+                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
+                        this, state.getDocument(), SourceDocumentState.NEW));
             }
             
             // Reset the editor (we reload the page content below, so in order not to schedule

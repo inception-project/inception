@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.annotation.Resource;
@@ -65,13 +66,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -554,6 +558,8 @@ public class DocumentServiceImpl
     public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
         throws IOException
     {
+        SourceDocumentState oldState = aDocument.getState();
+        
         // Change the state of the source document to in progress
         aDocument.setState(SourceDocumentStateTransition
                 .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
@@ -561,6 +567,10 @@ public class DocumentServiceImpl
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
+
+        // Notify about change in document state
+        applicationEventPublisher.publishEvent(new DocumentStateChangedEvent(this, aDocument, 
+                oldState));
 
         return readAnnotationCas(annotationDocument);
     }
@@ -627,7 +637,13 @@ public class DocumentServiceImpl
             aAnnotationDocument
                     .setSentenceAccessed(aAnnotationDocument.getDocument().getSentenceAccessed());
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            
+            AnnotationDocumentState oldState = aAnnotationDocument.getState();
             aAnnotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
+            if (!Objects.equals(oldState, aAnnotationDocument.getState())) {
+                applicationEventPublisher.publishEvent(
+                        new AnnotationStateChangeEvent(this, aAnnotationDocument, oldState));
+            }
             entityManager.merge(aAnnotationDocument);
         }
         

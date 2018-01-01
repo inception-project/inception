@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.uima.UIMAException;
@@ -92,6 +93,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -107,6 +110,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -145,6 +149,7 @@ public class MonitoringPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
@@ -1035,6 +1040,10 @@ public class MonitoringPage
                             annotationDocument.setState(AnnotationDocumentStateTransition
                                     .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             documentService.createAnnotationDocument(annotationDocument);
+                            
+                            applicationEventPublisherHolder.get()
+                                    .publishEvent(new AnnotationStateChangeEvent(this,
+                                            annotationDocument, AnnotationDocumentState.NEW));
                         }
                         
                         aTarget.add(aCellItem);
@@ -1094,9 +1103,16 @@ public class MonitoringPage
         {
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(aSourceDocument, aUser);
+            AnnotationDocumentState oldState = annotationDocument.getState();
+
             annotationDocument.setState(AnnotationDocumentStateTransition
                     .transition(aAnnotationDocumentStateTransition));
             documentService.createAnnotationDocument(annotationDocument);
+            
+            if (!Objects.equals(oldState, annotationDocument.getState())) {
+                applicationEventPublisherHolder.get().publishEvent(
+                        new AnnotationStateChangeEvent(this, annotationDocument, oldState));
+            }
         }
 
         /**
@@ -1106,9 +1122,16 @@ public class MonitoringPage
                 SourceDocumentStateTransition aSourceDocumentStateTransition)
             throws IOException
         {
+            SourceDocumentState oldDocState = aSourceDocument.getState();
+            
             aSourceDocument.setState(
                     SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
             documentService.createSourceDocument(aSourceDocument);
+            
+            if (!Objects.equals(aSourceDocument.getState(), oldDocState)) {
+                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
+                        this, aSourceDocument, oldDocState));
+            }
         }
     }
     
