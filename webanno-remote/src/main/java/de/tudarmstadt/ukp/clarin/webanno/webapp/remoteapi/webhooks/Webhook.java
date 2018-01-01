@@ -20,13 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WebhookConfiguration
+public class Webhook
 {
     private String url;
     private String secret;
-    private boolean disableSSL;
     private boolean enabled = true;
     private List<String> topics = new ArrayList<>();
+    private boolean verifyCertificates = true;
 
     public String getUrl()
     {
@@ -48,16 +48,6 @@ public class WebhookConfiguration
         secret = aSecret;
     }
 
-    public boolean isDisableSSL()
-    {
-        return disableSSL;
-    }
-
-    public void setDisableSSL(boolean aDisableSSL)
-    {
-        disableSSL = aDisableSSL;
-    }
-
     public boolean isEnabled()
     {
         return enabled;
@@ -77,12 +67,22 @@ public class WebhookConfiguration
     {
         topics = aTopics;
     }
+    
+    public boolean isVerifyCertificates()
+    {
+        return verifyCertificates;
+    }
+
+    public void setVerifyCertificates(boolean aVerifyCertificates)
+    {
+        verifyCertificates = aVerifyCertificates;
+    }
 
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("WebhookConfiguration [url=");
+        builder.append("Webhook [url=");
         builder.append(url);
         builder.append("]");
         return builder.toString();

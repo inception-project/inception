@@ -17,29 +17,45 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.net.ssl.SSLContext;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
 @Component
 public class WebhookService
@@ -47,14 +63,17 @@ public class WebhookService
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public static final String X_AERO_NOTIFICATION = "X-AERO-Notification";
+    public static final String X_AERO_SIGNATURE = "X-AERO-Signature";
 
     private static final Map<Class<? extends ApplicationEvent>, String> EVENT_TOPICS;
     
     public static final String DOCUMENT_STATE = "DOCUMENT_STATE";
     public static final String ANNOTATION_STATE = "ANNOTATION_STATE";
+    public static final String PROJECT_STATE = "PROJECT_STATE";
     
     static {
         Map<Class<? extends ApplicationEvent>, String> names = new HashMap<>();
+        names.put(ProjectStateChangedEvent.class, PROJECT_STATE);
         names.put(DocumentStateChangedEvent.class, DOCUMENT_STATE);
         names.put(AnnotationStateChangeEvent.class, ANNOTATION_STATE);
         EVENT_TOPICS = Collections.unmodifiableMap(names);
@@ -68,13 +87,13 @@ public class WebhookService
     {
         if (!configuration.getGlobalHooks().isEmpty()) {
             log.info("Global webhooks registered:");
-            for (WebhookConfiguration hook : configuration.getGlobalHooks()) {
+            for (Webhook hook : configuration.getGlobalHooks()) {
                 log.info("- " + hook);
             }
         }
     }
     
-    @EventListener
+    @TransactionalEventListener
     @Async
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
@@ -85,6 +104,9 @@ public class WebhookService
         
         Object message;
         switch (topic) {
+        case PROJECT_STATE:
+            message = new ProjectStateChangeMessage((ProjectStateChangedEvent) aEvent);
+            break;
         case DOCUMENT_STATE:
             message = new DocumentStateChangeMessage((DocumentStateChangedEvent) aEvent);
             break;
@@ -95,20 +117,63 @@ public class WebhookService
             return;
         }
         
-        RestTemplate restTemplate = restTemplateBuilder.build();
-        
-        for (WebhookConfiguration hook : configuration.getGlobalHooks()) {
+        for (Webhook hook : configuration.getGlobalHooks()) {
             if (!hook.isEnabled() || !hook.getTopics().contains(topic)) {
                 continue;
             }
-            
-            HttpHeaders requestHeaders = new HttpHeaders();
-            requestHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
-            requestHeaders.set(X_AERO_NOTIFICATION, topic);
 
-            HttpEntity<?> httpEntity = new HttpEntity<Object>(message, requestHeaders);
-            
-            restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
+            try {
+                // Configure rest template without SSL certification check if that is disabled.
+                RestTemplate restTemplate;
+                if (hook.isVerifyCertificates()) {
+                    restTemplate = restTemplateBuilder.build();
+                }
+                else {
+                    restTemplate = restTemplateBuilder
+                            .requestFactory(getNonValidatingRequestFactory()).build();
+                }
+                
+                HttpHeaders requestHeaders = new HttpHeaders();
+                requestHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+                requestHeaders.set(X_AERO_NOTIFICATION, topic);
+                
+                // If a secret is set, then add a digest header that allows the client to verify
+                // the message integrity
+                String json = JSONUtil.toJsonString(message);
+                if (isNotBlank(hook.getSecret())) {
+                    String digest = DigestUtils.shaHex(hook.getSecret() + json);
+                    requestHeaders.set(X_AERO_SIGNATURE, digest);
+                }
+    
+                HttpEntity<?> httpEntity = new HttpEntity<Object>(json, requestHeaders);
+                restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
+            }
+            catch (Exception e) {
+                log.error("Unable to invoke webhook [{}]", hook, e);
+            }
         }
+    }
+    
+    private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
+    
+    private HttpComponentsClientHttpRequestFactory getNonValidatingRequestFactory()
+        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+    {
+        if (nonValidatingRequestFactory == null) {
+            TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain,
+                    String authType) -> true;
+
+            SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                    .loadTrustMaterial(null, acceptingTrustStrategy).build();
+
+            SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+
+            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+
+            nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
+            nonValidatingRequestFactory.setHttpClient(httpClient);
+        }
+
+        return nonValidatingRequestFactory;
     }
 }

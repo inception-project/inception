@@ -34,10 +34,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 
@@ -85,12 +87,9 @@ public interface DocumentService
      *
      * @param document
      *            {@link SourceDocument} to be created
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void createSourceDocument(SourceDocument document)
-        throws IOException;
+    void createSourceDocument(SourceDocument document);
 
     /**
      * Check if a Source document with this same name exist in the project. The caller method then
@@ -194,6 +193,12 @@ public interface DocumentService
      */
     File getDocumentFolder(SourceDocument aDocument)
         throws IOException;
+
+    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState);
+
+    SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentStateTransition aTransition);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
@@ -461,4 +466,10 @@ public interface DocumentService
      * value. The annotation document may be {@code null}.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
+    
+    AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState);
+
+    AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentStateTransition aTransition);
 }

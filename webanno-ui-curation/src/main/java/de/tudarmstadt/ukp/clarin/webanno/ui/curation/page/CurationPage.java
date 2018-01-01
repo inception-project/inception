@@ -21,14 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -63,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -79,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
@@ -121,7 +117,6 @@ public class CurationPage
     private @SpringBean SettingsService settingsService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private NumberTextField<Integer> gotoPageTextField;
     private DocumentNamePanel documentNamePanel;
@@ -553,20 +548,14 @@ public class CurationPage
             AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();
 
-            SourceDocumentState oldDocState = sourceDocument.getState();
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                sourceDocument.setState(transition(CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
             }
             else {
-                sourceDocument.setState(transition(CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             }
-            
-            if (!Objects.equals(sourceDocument.getState(), oldDocState)) {
-                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
-                        this, sourceDocument, oldDocState));
-            }
-            
-            documentService.createSourceDocument(sourceDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -605,12 +594,9 @@ public class CurationPage
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
             // ANNOTATION_FINISHED
-            if (!state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                state.getDocument()
-                        .setState(transition(ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
-                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
-                        this, state.getDocument(), SourceDocumentState.CURATION_FINISHED));
+            if (!SourceDocumentState.CURATION_FINISHED.equals(state.getDocument().getState())) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
     
             // Load user preferences

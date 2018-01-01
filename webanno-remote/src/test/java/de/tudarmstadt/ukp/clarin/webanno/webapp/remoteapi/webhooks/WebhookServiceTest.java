@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.ANNOTATION_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.DOCUMENT_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.PROJECT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -48,13 +49,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
 @RunWith(SpringRunner.class)
 @SpringBootApplication
@@ -70,14 +75,15 @@ public class WebhookServiceTest
     @Test
     public void test()
     {
-        WebhookConfiguration hook = new WebhookConfiguration();
+        Webhook hook = new Webhook();
         hook.setUrl("http://localhost:" + port + "/test/subscribe");
-        hook.setTopics(asList(ANNOTATION_STATE, DOCUMENT_STATE));
+        hook.setTopics(asList(PROJECT_STATE, ANNOTATION_STATE, DOCUMENT_STATE));
         hook.setEnabled(true);
 
         webhooksConfiguration.setGlobalHooks(asList(hook));
 
         Project project = new Project();
+        project.setState(ProjectState.NEW);
         project.setId(1);
 
         SourceDocument doc = new SourceDocument();
@@ -92,10 +98,13 @@ public class WebhookServiceTest
         ann.setState(AnnotationDocumentState.FINISHED);
         
         applicationEventPublisher.publishEvent(
+                new ProjectStateChangedEvent(this, project, ProjectState.CURATION_FINISHED));
+        applicationEventPublisher.publishEvent(
                 new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW));
         applicationEventPublisher.publishEvent(
                 new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS));
         
+        assertEquals(1, testService.projectStateChangeMsgs.size());
         assertEquals(1, testService.docStateChangeMsgs.size());
         assertEquals(1, testService.annStateChangeMsgs.size());
     }
@@ -104,9 +113,23 @@ public class WebhookServiceTest
     @Controller
     public static class TestService
     {
+        private List<ProjectStateChangeMessage> projectStateChangeMsgs = new ArrayList<>();
         private List<DocumentStateChangeMessage> docStateChangeMsgs = new ArrayList<>();
         private List<AnnotationStateChangeMessage> annStateChangeMsgs = new ArrayList<>();
         
+        @RequestMapping(value = "/subscribe", 
+                method = RequestMethod.POST, 
+                headers = X_AERO_NOTIFICATION + "=" + PROJECT_STATE,
+                consumes = APPLICATION_JSON_UTF8_VALUE, 
+                produces = APPLICATION_JSON_UTF8_VALUE)
+        public ResponseEntity<Void> onProjectStateEvent(
+                @RequestBody ProjectStateChangeMessage aMsg)
+            throws Exception
+        {
+            projectStateChangeMsgs.add(aMsg);
+            return ResponseEntity.ok().build();
+        }
+
         @RequestMapping(value = "/subscribe", 
                 method = RequestMethod.POST, 
                 headers = X_AERO_NOTIFICATION + "=" + DOCUMENT_STATE,
@@ -137,6 +160,12 @@ public class WebhookServiceTest
     @Configuration
     public static class TestContext
     {
+        @Bean
+        public ApplicationContextProvider contextProvider()
+        {
+            return new ApplicationContextProvider();
+        }
+        
         @Bean
         public WebhooksConfiguration webhooksConfiguration()
         {

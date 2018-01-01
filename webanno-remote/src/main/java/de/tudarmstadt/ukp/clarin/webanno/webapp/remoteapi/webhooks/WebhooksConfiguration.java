@@ -29,14 +29,14 @@ public class WebhooksConfiguration
 {
     public static final String PROPERTY_PREFIX = "webhooks";
     
-    private List<WebhookConfiguration> globalHooks = new ArrayList<>();
+    private List<Webhook> globalHooks = new ArrayList<>();
 
-    public List<WebhookConfiguration> getGlobalHooks()
+    public List<Webhook> getGlobalHooks()
     {
         return globalHooks;
     }
 
-    public void setGlobalHooks(List<WebhookConfiguration> aWebhooks)
+    public void setGlobalHooks(List<Webhook> aWebhooks)
     {
         globalHooks = aWebhooks;
     }

@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.uima.UIMAException;
@@ -93,8 +92,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -104,13 +101,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -149,7 +144,6 @@ public class MonitoringPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
@@ -919,24 +913,19 @@ public class MonitoringPage
                             return;
                         }
                         
-                        try {
-                            SourceDocument doc = documentService.getSourceDocument(project,
-                                    value.substring(value.indexOf(":") + 1));
-                            if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-                            }
-                            else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-                            }
-                            else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-                            }
+                        SourceDocument doc = documentService.getSourceDocument(project,
+                                value.substring(value.indexOf(":") + 1));
+                        if (doc.getState().equals(CURATION_FINISHED)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                         }
-                        catch (IOException e) {
-                            LOG.info(e.getMessage(), e);
+                        else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                        }
+                        else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                         }
 
                         aTarget.add(aCellItem);
@@ -1037,13 +1026,9 @@ public class MonitoringPage
                             annotationDocument.setName(document.getName());
                             annotationDocument.setProject(project);
                             annotationDocument.setUser(user.getUsername());
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             documentService.createAnnotationDocument(annotationDocument);
-                            
-                            applicationEventPublisherHolder.get()
-                                    .publishEvent(new AnnotationStateChangeEvent(this,
-                                            annotationDocument, AnnotationDocumentState.NEW));
+                            documentService.transitionAnnotationDocumentState(annotationDocument,
+                                    NEW_TO_ANNOTATION_IN_PROGRESS);
                         }
                         
                         aTarget.add(aCellItem);
@@ -1103,35 +1088,9 @@ public class MonitoringPage
         {
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(aSourceDocument, aUser);
-            AnnotationDocumentState oldState = annotationDocument.getState();
-
-            annotationDocument.setState(AnnotationDocumentStateTransition
-                    .transition(aAnnotationDocumentStateTransition));
-            documentService.createAnnotationDocument(annotationDocument);
             
-            if (!Objects.equals(oldState, annotationDocument.getState())) {
-                applicationEventPublisherHolder.get().publishEvent(
-                        new AnnotationStateChangeEvent(this, annotationDocument, oldState));
-            }
-        }
-
-        /**
-         * change source document state when curation document state is changed.
-         */
-        private void changeSourceDocumentState(SourceDocument aSourceDocument,
-                SourceDocumentStateTransition aSourceDocumentStateTransition)
-            throws IOException
-        {
-            SourceDocumentState oldDocState = aSourceDocument.getState();
-            
-            aSourceDocument.setState(
-                    SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
-            documentService.createSourceDocument(aSourceDocument);
-            
-            if (!Objects.equals(aSourceDocument.getState(), oldDocState)) {
-                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
-                        this, aSourceDocument, oldDocState));
-            }
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    aAnnotationDocumentStateTransition);
         }
     }
     

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -28,7 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -66,18 +64,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -86,7 +80,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
@@ -133,7 +126,6 @@ public class CorrectionPage
     private @SpringBean SettingsService settingsService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private NumberTextField<Integer> gotoPageTextField;
     private DocumentNamePanel documentNamePanel;
@@ -609,18 +601,9 @@ public class CorrectionPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            AnnotationDocumentState oldState = annotationDocument.getState();
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
-            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
-            // manually update state change!! No idea why it is not updated in the DB
-            // without calling createAnnotationDocument(...)
-            documentService.createAnnotationDocument(annotationDocument);
-            
-            if (!Objects.equals(oldState, annotationDocument.getState())) {
-                applicationEventPublisherHolder.get().publishEvent(
-                        new AnnotationStateChangeEvent(this, annotationDocument, oldState));
-            }
-            
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
             aCallbackTarget.add(detailEditor);
@@ -716,13 +699,8 @@ public class CorrectionPage
             }
 
             // Update document state
-            if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
-                state.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
-                applicationEventPublisherHolder.get().publishEvent(new DocumentStateChangedEvent(
-                        this, state.getDocument(), SourceDocumentState.NEW));
-            }
+            documentService.transitionSourceDocumentState(state.getDocument(),
+                    SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);            
             
             // Reset the editor
             detailEditor.reset(aTarget);
