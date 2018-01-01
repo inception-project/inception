@@ -608,10 +608,9 @@ public class AnnotationPage
             applicationEventPublisherHolder.get()
                     .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
             
-            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
-                    + state.getFirstVisibleUnitIndex() + "] l:["
-                    + state.getLastVisibleUnitIndex() + "] s:["
-                    + state.getFocusUnitIndex() + "]");
+            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser().getUsername()
+                    + "] f:[" + state.getFirstVisibleUnitIndex() + "] l:["
+                    + state.getLastVisibleUnitIndex() + "] s:[" + state.getFocusUnitIndex() + "]");
         }
         catch (Exception e) {
             handleException(aTarget, e);
