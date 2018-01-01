@@ -1,59 +1,34 @@
 ############################################################
+#
 # Dockerfile to build webanno container images
 #
-# Inspired by
-# * https://github.com/NLPbox/webanno-docker
-# * https://github.com/simonmeoni/webanno-docker
 ############################################################
 
-################## BEGIN INSTALLATION ######################
-FROM tomcat:7-jre8
+FROM openjdk:8
 
 MAINTAINER WebAnno Team
 
-RUN apt-get update
-# Install tomcat utilities (we will need tomcat7-instance-create) and mysql
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y wget mysql-server mysql-client tomcat7-user tomcat7-admin authbind
+# make sure webanno is running in en_US.UTF-8 locale
+RUN set -ex \
+      && DEBIAN_FRONTEND=noninteractive \
+      && apt-get update \
+      && apt-get install -y --no-install-recommends locales
+RUN set -ex \
+      && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+      && dpkg-reconfigure --frontend=noninteractive locales \
+      && update-locale LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
 
-# Copy webanno and mysql settings to tmp
-COPY create_webanno_db.sql mysql-init /tmp/
+WORKDIR /opt/webanno
 
-# Setup mysql as depicted in the webanno admin guide
-RUN service mysql stop
-RUN mysqld_safe --init-file=/tmp/mysql-init &
-RUN rm /tmp/mysql-init
-RUN service mysql start && \
-    mysql -u root < /tmp/create_webanno_db.sql
+COPY @docker.jarfile@ webanno-standalone.jar
 
-WORKDIR /opt
+# this will be the WebAnno home folder
+RUN mkdir /export
+VOLUME /export
 
-# Create a tomcat7 instance of webanno to operate on port 18080 as
-# shown in the official admin guide
-RUN tomcat7-instance-create -p 18080 -c 18005 webanno && \
-    chown -R www-data /opt/webanno
+EXPOSE 8080
 
-# create some folders to get rid of tomcat7 warnings
-RUN mkdir -p /usr/share/tomcat7/common/classes /usr/share/tomcat7/server/classes /usr/share/tomcat7/shared/classes
+ENV JAVA_OPTS="-Xmx750m"
 
-# Rename the webanno webapp 
-COPY webanno_initd /etc/init.d/webanno
-COPY @docker.warfile@ /opt/webanno/webapps/ROOT.war
-
-# Setup webanno as a service 
-RUN chmod +x /etc/init.d/webanno
-RUN update-rc.d webanno defaults
-RUN mkdir /srv/webanno
-
-COPY settings.properties /srv/webanno/settings.properties
-RUN chown -R www-data /srv/webanno
-
-COPY entrypoint.sh /opt/webanno/entrypoint.sh
-
-##################### INSTALLATION END #####################
-
-VOLUME /srv/webanno/repository
-VOLUME /var/lib/mysql
-
-EXPOSE 18080
-
-CMD bash /opt/webanno/entrypoint.sh
+CMD java ${JAVA_OPTS} -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -Dwebanno.home=/export -jar webanno-standalone.jar

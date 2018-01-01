@@ -17,23 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationEditorBase
     extends Panel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorBase.class);
+    
     private static final long serialVersionUID = 8637373389151630602L;
 
     private AnnotationActionHandler actionHandler;
     private JCasProvider jcasProvider;
+    private boolean enableHighlight = true;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
@@ -82,30 +85,98 @@ public abstract class AnnotationEditorBase
     }
     
     /**
+     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be
+     * called multiple times, even for the same annotation editor, but only resulting in a single
+     * rendering call.
+     */
+    public final void requestRender(AjaxRequestTarget aTarget)
+    {
+        aTarget.registerRespondListener(new RenderListener());
+    }
+    
+    /**
      * Render the contents of the annotation editor again in this present AJAX request. This
      * typically happens by sending JavaScript commands including the complete data structures as
      * JSON via {@link AjaxRequestTarget#appendJavaScript(CharSequence)}.
      */
-    public abstract void render(AjaxRequestTarget aTarget, JCas aJCas);
-
+    protected abstract void render(AjaxRequestTarget aTarget);
+    
+    public void setHighlightEnabled(boolean aValue)
+    {
+        enableHighlight = aValue;
+    }
+    
+    public boolean isHighlightEnabled()
+    {
+        return enableHighlight;
+    }
+    
     /**
-     * Request an asynchronous rendering of the annotation editor. This typically happens by
-     * injecting a JavaScript command via {@link AjaxRequestTarget#appendJavaScript(CharSequence)}
-     * that causes the browser-side code to request the data structures from the server.
-     * <p>
-     * This entails that the CAS is loaded again when the async rendering request from the browser
-     * is triggered. Thus, it is preferred to use {@link #render(AjaxRequestTarget, JCas)} because
-     * here we already have the CAS available.
+     * This is a special AJAX target response listener which implements hashCode and equals.
+     * It useds the markup ID of its host component to identify itself. This enables us to add
+     * multiple instances of this listener to an AJAX response without *actually* adding
+     * multiple instances since the AJAX response internally keeps track of the listeners
+     * using a set.
      */
-    public abstract void renderLater(AjaxRequestTarget aTarget);
+    private class RenderListener
+        implements AjaxRequestTarget.ITargetRespondListener
+    {
+        private String markupId;
 
-    /**
-     * Put some focus/highlight on the annotation with the specified visual ID. This typically
-     * happens by sending a suitable JavaScript command via
-     * {@link AjaxRequestTarget#appendJavaScript(CharSequence)}.
-     * <p>
-     * It should not matter if this call is made before or after the call to
-     * {@link #render(AjaxRequestTarget, JCas)} or {@link #renderLater(AjaxRequestTarget)}.
-     */
-    public abstract void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId);
+        public RenderListener()
+        {
+            markupId = AnnotationEditorBase.this.getMarkupId();
+        }
+
+        @Override
+        public void onTargetRespond(AjaxRequestTarget aTarget)
+        {
+            AnnotatorState state = getModelObject();
+            if (state.getDocument() != null) {
+                render(aTarget);
+            }
+        }
+
+        private AnnotationEditorBase getOuterType()
+        {
+            return AnnotationEditorBase.this;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((markupId == null) ? 0 : markupId.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            RenderListener other = (RenderListener) obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (markupId == null) {
+                if (other.markupId != null) {
+                    return false;
+                }
+            }
+            else if (!markupId.equals(other.markupId)) {
+                return false;
+            }
+            return true;
+        }
+    }
 }

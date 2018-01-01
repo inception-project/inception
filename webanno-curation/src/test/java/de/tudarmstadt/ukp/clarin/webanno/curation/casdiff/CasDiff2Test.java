@@ -598,7 +598,7 @@ public class CasDiff2Test
             
             List<Token> tokensA = new ArrayList<>(select(jcasA, Token.class));
             Token t1A = tokensA.get(0);
-            Token t2A = tokensA.get(tokensA.size()-1);
+            Token t2A = tokensA.get(tokensA.size() - 1);
             
             NamedEntity govA = new NamedEntity(jcasA, t1A.getBegin(), t1A.getEnd());
             govA.addToIndexes();
@@ -609,7 +609,8 @@ public class CasDiff2Test
             depA.addToIndexes();
     
             Type relationTypeA = casA.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(), depA.getEnd());
+            AnnotationFS fs1A = casA.createAnnotation(relationTypeA, depA.getBegin(),
+                    depA.getEnd());
             FSUtil.setFeature(fs1A, "Governor", govA);
             FSUtil.setFeature(fs1A, "Dependent", depA);
             FSUtil.setFeature(fs1A, "value", "REL");
@@ -623,7 +624,7 @@ public class CasDiff2Test
             
             List<Token> tokensB = new ArrayList<>(select(jcasB, Token.class));
             Token t1B = tokensB.get(0);
-            Token t2B = tokensB.get(tokensB.size()-1);
+            Token t2B = tokensB.get(tokensB.size() - 1);
             
             NamedEntity govB = new NamedEntity(jcasB, t1B.getBegin(), t1B.getEnd());
             govB.addToIndexes();
@@ -631,7 +632,8 @@ public class CasDiff2Test
             depB.addToIndexes();
     
             Type relationTypeB = casB.getTypeSystem().getType("webanno.custom.Relation");
-            AnnotationFS fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(), depB.getEnd());
+            AnnotationFS fs1B = casB.createAnnotation(relationTypeB, depB.getBegin(),
+                    depB.getEnd());
             FSUtil.setFeature(fs1B, "Governor", govB);
             FSUtil.setFeature(fs1B, "Dependent", depB);
             FSUtil.setFeature(fs1B, "value", "REL");
@@ -674,7 +676,7 @@ public class CasDiff2Test
     {
         JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
         DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));        
-        DiffUtils.makeLinkHostFS(jcasA, 10, 10, DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));        
+        DiffUtils.makeLinkHostFS(jcasA, 10, 10, DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));
 
         JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
         DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 0, 0));

@@ -17,16 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -81,10 +85,12 @@ public class CasToBratJsonTest
         throws IOException
 
     {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = 
+                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
 
-        GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
+        GetCollectionInformationResponse collectionInformation = 
+                new GetCollectionInformationResponse();
 
         List<AnnotationLayer> layerList = new ArrayList<>();
 
@@ -132,7 +138,8 @@ public class CasToBratJsonTest
                 "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
         String actual = FileUtils.readFileToString(new File(
                 "target/test-output/output_cas_to_json_collection.json"), "UTF-8");
-        assertEquals(reference, actual);
+        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
+                new StringReader(actual)));
     }
 
     /**
@@ -142,7 +149,8 @@ public class CasToBratJsonTest
     public void testGenerateBratJsonGetDocument()
         throws Exception
     {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = 
+                new MappingJackson2HttpMessageConverter();
         String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
 
         InputStream is = null;
@@ -153,8 +161,8 @@ public class CasToBratJsonTest
             String path = "src/test/resources/";
             String file = "tcf04-karin-wl.xml";
             CAS cas = JCasFactory.createJCas().getCas();
-            CollectionReader reader = CollectionReaderFactory.createReader(
-                    TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION, path, TcfReader.PARAM_PATTERNS,
+            CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
+                    TcfReader.PARAM_SOURCE_LOCATION, path, TcfReader.PARAM_PATTERNS,
                     new String[] { "[+]" + file });
             if (!reader.hasNext()) {
                 throw new FileNotFoundException("Annotation file [" + file + "] not found in ["
@@ -202,6 +210,7 @@ public class CasToBratJsonTest
                 "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");
         String actual = FileUtils.readFileToString(new File(
                 "target/test-output/output_cas_to_json_document.json"), "UTF-8");
-        assertEquals(reference, actual);
+        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
+                new StringReader(actual)));
     }
 }

@@ -23,25 +23,24 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Implementation of methods defined in the {@link UserDao} interface
- *
- *
  */
-@Repository
+@Component("userRepository")
 public class UserDaoImpl
-	implements UserDao
+    implements UserDao
 {
-	@PersistenceContext
-	private EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-	@Override
-	@Transactional
+    @Override
+    @Transactional
     public boolean exists(final String aUsername)
     {
         return entityManager
@@ -64,44 +63,53 @@ public class UserDaoImpl
         return entityManager.merge(aUser);
     }
 
-	@Override
-	@Transactional
-	public int delete(String aUsername)
-	{
-		User toDelete = get(aUsername);
-		if (toDelete == null) {
-			return 0;
-		}
-		else {
-			delete(toDelete);
-			return 1;
-		}
-	}
+    @Override
+    @Transactional
+    public int delete(String aUsername)
+    {
+        User toDelete = get(aUsername);
+        if (toDelete == null) {
+            return 0;
+        }
+        else {
+            delete(toDelete);
+            return 1;
+        }
+    }
 
-	@Override
-	@Transactional
-	public void delete(User aUser)
-	{
-		entityManager.remove(entityManager.merge(aUser));
-	}
+    @Override
+    @Transactional
+    public void delete(User aUser)
+    {
+        entityManager.remove(entityManager.merge(aUser));
+    }
 
-	@Override
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
-	public User get(String aUsername)
-	{
-		if (!exists(aUsername)) {
-			return null;
-		}
-		return entityManager
-				.createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username",
-						User.class).setParameter("username", aUsername).getSingleResult();
-	}
+    public User get(String aUsername)
+    {
+        if (!exists(aUsername)) {
+            return null;
+        }
+        return entityManager
+                .createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username",
+                        User.class)
+                .setParameter("username", aUsername).getSingleResult();
+    }
 
-	@Override
-	@Transactional
-	public List<User> list()
-	{
-		return entityManager.createQuery("FROM " + User.class.getName(), User.class)
-				.getResultList();
-	}
+    @Override
+    @Transactional
+    public List<User> list()
+    {
+        return entityManager.createQuery("FROM " + User.class.getName(), User.class)
+                .getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public User getCurrentUser()
+    {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return get(username);
+    }
 }

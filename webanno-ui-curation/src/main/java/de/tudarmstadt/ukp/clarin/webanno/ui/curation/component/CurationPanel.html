@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2012
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,111 +16,132 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
 <wicket:head>
-	<style type="text/css">
-.curation-sentence-item {
-	margin: 2px 2px;
-	padding: 2px 2px;
-}
+  <style type="text/css">
+    .curation-sentence-item {
+      	margin: 2px 2px;
+      	padding: 2px 2px;
+    }
+    
+    .curation-sentence-number {
+      border: 1px solid white;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+      	margin: 1px 1px;
+      padding: 1px 1px;
+      display: inline-block;
+      	min-width: 4em;
+      	max-width: 7.9em;
+      text-align: center;
+    }
 
-.curation-sentence-number {
-    border: 1px solid white;
-	margin: 1px 1px;
-	padding: 1px 1px;
-	display: inline-block;
-	min-width: 4em;
-	max-width: 7.9em;
-	text-align: center;
-}
+    .curation-sentence-number a {
+      display: block;
+      text-decoration: none !important;
+      color: black !important;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+    }
+    
+    .curation-sentence-list {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      	box-sizing: border-box;
+      	width: 100%;
+      	height: 550px;
+      	overflow: scroll;
+    }
 
-.curation-sentence-list {
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	width: 100%;
-	height: 550px;
-	overflow: scroll;
-}
-
-.anno-view {
-	background-color: #DFDFDF;
-}
-
-.hidden-view {
-	background-color: #DFDFDF;
-}
-
-.in-range {
-    border: 1px solid black;
-}
-
-.out-range {
-    border: 1px solid white;
-}
-
-.agree {
-}
-
-.disagree {
-    background-color: red;
-}
-
-.current {
-    background-color: orange;
-}
-</style>
+    .hidden-view {
+      	background-color: #DFDFDF;
+    }
+    
+    .in-range {
+      	border: 1px solid black;
+    }
+    
+    .out-range {
+      	border: 1px solid white;
+    }
+    
+    .agree {
+    	
+    }
+    
+    .disagree {
+      	background-color: red;
+    }
+    
+    .current {
+      box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
+        border: 1px solid rgba(231,166,26,1);
+    }
+    
+    .suggestion-panel-body {
+      overflow-x: auto;
+    }
+  </style>
 </wicket:head>
 </head>
 <body>
-	<wicket:panel>
-		<table class="hfill">
-			<tr style="vertical-align: top;">
-				<td width="12%">
-					<fieldset class="curation-sentence-list">
-						<legend>Sentences</legend>
-						<span wicket:id="sentencesListView"
-							style="border-collapse: collapse;"> <span
-							wicket:id="sentencesList" class="curation-sentence-number">
-								<span wicket:id="sentenceNumber" />
-						</span>
-						</span>
-					</fieldset>
-				</td>
-				<td width="88%">
-					<table class="hfill">
-						<tr style="vertical-align: top;">
-							<td wicket:id="annotationViewCell" width="80%">
-								<fieldset class="anno-view">
-									<legend> Annotation</legend>
-									<div wicket:id="mergeView" />
-								</fieldset>
-								<fieldset class="hidden-view">
-									<legend>Invisible annotations in other pages</legend>
-									<span wicket:id="corssSentAnnoView"> <span
-										wicket:id="crossSentAnnoList"> <span
-											wicket:id="crossAnnoSent" />
-									</span>
-									</span>
-								</fieldset>
-								<div wicket:id="suggestionViewPanel">
-									<div class="sentence-list-view" wicket:id="sentenceListView">
-										<div wicket:id="sentence" />
-									</div>
-								</div>
-							</td>
-							<td wicket:id="sidebarCell" width="20%">
-								<div id="annotationDetailEditorPanel"
-									wicket:id="annotationDetailEditorPanel"></div>
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-		</table>
-	</wicket:panel>
+  <wicket:panel>
+    <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
+
+      <div class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex" wicket:enclosure="sentencesListView">
+          <div class="panel-heading">
+            <h3 class="panel-title">Sentences</h3>
+          </div>
+          <div class="scrolling panel-body">
+            <span wicket:id="sentencesListView" style="border-collapse: collapse;">
+              <span wicket:id="sentencesList" class="curation-sentence-number">
+                <a wicket:id="sentenceNumber"></a>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-content flex-v-container">
+        <div class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter" style="flex: 0.75;">
+            <div class="flex-content panel panel-primary panel-flex">
+              <div class="panel-heading">
+                <h3 class="panel-title">Annotation</h3>
+              </div>
+              <div wicket:id="mergeView" class="panel-body text-center flex-v-container"></div>
+            </div>
+    
+            <div class="panel panel-default" wicket:enclosure="sentencesListView">
+              <div class="panel-heading">
+                <h3 class="panel-title">Invisible annotations on other pages</h3>
+              </div>
+              <div class="panel-body">
+                <span wicket:id="corssSentAnnoView">
+                  <span wicket:id="crossSentAnnoList">
+                    <span wicket:id="crossAnnoSent"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div wicket:id="suggestionViewPanel" class="scrolling flex-content">
+            <div class="sentence-list-view" wicket:id="sentenceListView">
+              <div wicket:id="sentence"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+      </div>
+    </div>
+  </wicket:panel>
 </body>
 </html>

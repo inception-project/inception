@@ -30,6 +30,7 @@ import org.apache.wicket.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
 @Component(MenuItemService.SERVICE_NAME)
 public class MenuItemServiceImpl
@@ -117,13 +119,20 @@ public class MenuItemServiceImpl
 
                 log.debug("Found menu item: {} ({})", item.label, item.prio);
                 
-                List<Method> methods = MethodUtils.getMethodsListWithAnnotation(pageClass,
-                        MenuItemCondition.class);
-                if (!methods.isEmpty()) {
-                    Method m = methods.get(0);
+                if (!MethodUtils.getMethodsListWithAnnotation(pageClass, MenuItemCondition.class)
+                        .isEmpty()) {
                     item.condition = () -> {
                         try {
-                            return (boolean) m.invoke(null, projectService, userRepository);
+                            // We need to get the methods and services direclty in here so
+                            // that the lambda doesn't have a dependency on the non-serializable
+                            // MenuItemServiceImpl class.
+                            List<Method> methods = MethodUtils.getMethodsListWithAnnotation(
+                                    pageClass, MenuItemCondition.class);
+                            Method m = methods.get(0);
+                            ApplicationContext ctx = ApplicationContextProvider
+                                    .getApplicationContext();
+                            return (boolean) m.invoke(null, ctx.getBean(ProjectService.class),
+                                    ctx.getBean(UserDao.class));
                         }
                         catch (Exception e) {
                             LoggerFactory.getLogger(MenuItemServiceImpl.class)

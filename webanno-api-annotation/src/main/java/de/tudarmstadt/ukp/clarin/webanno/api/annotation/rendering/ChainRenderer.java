@@ -18,11 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -32,34 +33,36 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class ChainRenderer
-    implements Renderer
+    extends Renderer_ImplBase<ChainAdapter>
 {
-    private ChainAdapter typeAdapter;
-
-    public ChainRenderer(ChainAdapter aTypeAdapter)
+    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        typeAdapter = aTypeAdapter;
+        super(aTypeAdapter, aFeatureSupportRegistry);
     }
 
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             AnnotatorState aState)
     {
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+        
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
-        for (AnnotationFeature f : aFeatures) {
+        for (AnnotationFeature f : visibleFeatures) {
             if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
                 spanLabelFeature = f;
             }
@@ -70,6 +73,7 @@ public class ChainRenderer
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
 
+        ChainAdapter typeAdapter = getTypeAdapter();
         Type chainType = typeAdapter.getAnnotationType(aJcas.getCas());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
@@ -104,12 +108,15 @@ public class ChainRenderer
                 // Render span
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature) : EMPTY_LIST);
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
+                    String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
+                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
                             linkFs.getEnd() - aState.getWindowBeginOffset());
 
                     aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText)));
+                            colorIndex, singletonMap("label", bratLabelText), 
+                            singletonMap("label", bratHoverText)));
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -125,7 +132,7 @@ public class ChainRenderer
                     else {
                         // Render only chain type
                         bratLabelText = TypeUtil.getUiLabelText(typeAdapter, prevLinkFs,
-                                EMPTY_LIST);
+                                emptyList());
                     }
 
                     aResponse.add(new VArc(typeAdapter.getLayer(),
@@ -134,7 +141,7 @@ public class ChainRenderer
                 }
 
                 // Render errors if required features are missing
-                renderRequiredFeatureErrors(aFeatures, linkFs, aResponse);
+                renderRequiredFeatureErrors(visibleFeatures, linkFs, aResponse);
 
                 // if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
                 // log.error("Loop in CAS detected, aborting rendering of chains");

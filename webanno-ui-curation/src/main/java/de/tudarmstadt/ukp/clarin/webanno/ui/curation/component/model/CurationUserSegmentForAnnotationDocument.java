@@ -39,7 +39,7 @@ public class CurationUserSegmentForAnnotationDocument
     //NEw Additions
     private AnnotatorState bratAnnotatorModel;
     private  AnnotationSelection annotationSelection;
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress;
+    private Map<String, Map<Integer, AnnotationSelection>> selectionByUsernameAndAddress;
 
     public String getDocumentResponse()
     {
@@ -97,16 +97,14 @@ public class CurationUserSegmentForAnnotationDocument
         this.annotationSelection = annotationSelection;
     }
 
-    public Map<String, Map<Integer, AnnotationSelection>> getAnnotationSelectionByUsernameAndAddress()
+    public Map<String, Map<Integer, AnnotationSelection>> getSelectionByUsernameAndAddress()
     {
-        return annotationSelectionByUsernameAndAddress;
+        return selectionByUsernameAndAddress;
     }
 
-    public void setAnnotationSelectionByUsernameAndAddress(
-            Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress)
+    public void setSelectionByUsernameAndAddress(
+            Map<String, Map<Integer, AnnotationSelection>> aSelectionByUsernameAndAddress)
     {
-        this.annotationSelectionByUsernameAndAddress = annotationSelectionByUsernameAndAddress;
+        this.selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
     }
-
-
 }

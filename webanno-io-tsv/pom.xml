@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.3-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-io-tsv</artifactId>
   <name>WebAnno - IO - TSV</name>
@@ -70,10 +70,12 @@
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</artifactId>
-      <!-- Constants in this dependency are inlined - dependency not required at runtime -->
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -85,6 +87,31 @@
       <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-xmi</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-dkprocore</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -94,12 +121,14 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies>
-              <!--
-                - Maven doesn't detect the parameters module to be used, be we actually
-                - do require it as a compile dependency and also at runtime, so we
-                - cannot set it to scope provided. Need to tell Maven to ignore it here.
+              <!-- Not detected by Maven -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
+              <!-- 
+                - The logging is used via reflection and cannot be detected by Maven
               -->
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
+              <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

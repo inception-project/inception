@@ -440,7 +440,6 @@ When exporting a whole project, the structure of the exported ZIP file is as fol
 ====
 
 NOTE: The files under `annotation` and `curation` are provided for convenience only. They are 
-      ignored upon import. Only the `annotation_ser` and `curation_ser` folders are relevant for
-      import.
+      ignored upon import.
 
 Currently, WebAnno does not allow the user to choose a specific format for bulk-exporting annotations. However, link:https://groups.google.com/forum/#!msg/webanno-user/X3ShaFPXQT0/PnBzpPdXrIgJ[this mailing list post] describes how link:https://code.google.com/p/dkpro-core-asl/[DKPro Core] can be used to transform the UIMA CAS formats into alternative formats.   

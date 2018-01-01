@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -36,19 +37,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface ProjectService
 {
-    static final String SERVICE_NAME = "projectService";
+    String SERVICE_NAME = "projectService";
     
-    public static final String PROJECT = "/project/";
-    public static final String DOCUMENT = "/document/";
-    public static final String SOURCE = "/source";
-    public static final String GUIDELINE = "/guideline/";
-    public static final String ANNOTATION = "/annotation";
-    public static final String SETTINGS = "/settings/";
-    public static final String META_INF = "/META-INF/";
-
-    public static final String HELP_FILE = "/help.properties";
-
-    public static final String LOG_DIR = "log";
+    String PROJECT_FOLDER = "project";
+    String DOCUMENT_FOLDER = "document";
+    String SOURCE_FOLDER = "source";
+    String GUIDELINES_FOLDER = "guideline";
+    String ANNOTATION_FOLDER = "annotation";
+    String SETTINGS_FOLDER = "settings";
+    String META_INF_FOLDER = "META-INF";
+    String LOG_FOLDER = "log";
     
     /**
      * creates a project permission, adding permission level for the user in the given project
@@ -109,6 +107,11 @@ public interface ProjectService
      */
     List<ProjectPermission> listProjectPermissionLevel(User user, Project project);
 
+    List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
+
+    void setProjectPermissionLevels(User aUser, Project aProject,
+            Collection<PermissionLevel> aLevels);
+    
     /**
      * List Users those with some {@link PermissionLevel}s in the project
      *
@@ -346,12 +349,10 @@ public interface ProjectService
      *            the guidelines.
      * @param fileName
      *            the filename.
-     * @param username
-     *            the username.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName, String username)
+    void createGuideline(Project project, File content, String fileName)
         throws IOException;
 
     /**
@@ -372,7 +373,7 @@ public interface ProjectService
      *            the project.
      * @return the file.
      */
-    File getGuidelinesFile(Project project);
+    File getGuidelinesFolder(Project project);
 
     /**
      * List annotation guideline document already uploaded
@@ -390,12 +391,10 @@ public interface ProjectService
      *            the project.
      * @param fileName
      *            the filename.
-     * @param username
-     *            the username.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void removeGuideline(Project project, String fileName, String username)
+    void removeGuideline(Project project, String fileName)
         throws IOException;
     
     // --------------------------------------------------------------------------------------------

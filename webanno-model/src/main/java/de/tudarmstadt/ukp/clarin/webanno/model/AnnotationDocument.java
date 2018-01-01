@@ -26,6 +26,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -65,13 +67,21 @@ public class AnnotationDocument
     private SourceDocument document;
 
     @Column(nullable = false)
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
     private AnnotationDocumentState state = AnnotationDocumentState.IN_PROGRESS;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     private int sentenceAccessed = 0;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date updated;
 
     public SourceDocument getDocument()
     {
@@ -138,9 +148,13 @@ public class AnnotationDocument
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp)
+    /**
+     * Last change to the actual annotations in the CAS. The change to the annotation document
+     * record is tracked in {@link #getUpdated()}
+     */
+    public void setTimestamp(Date aTimestamp)
     {
-        this.timestamp = timestamp;
+        timestamp = aTimestamp;
     }
 
     public int getSentenceAccessed()
@@ -152,5 +166,44 @@ public class AnnotationDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
+    
+    @PrePersist
+    protected void onCreate()
+    {
+        // When we import data, we set the fields via setters and don't want these to be 
+        // overwritten by this event handler.
+        if (created != null) {
+            created = new Date();
+            updated = created;
+        }
+    }
 
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updated = new Date();
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    /**
+     * Last change to the annotation document record.
+     */
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
+    }
 }

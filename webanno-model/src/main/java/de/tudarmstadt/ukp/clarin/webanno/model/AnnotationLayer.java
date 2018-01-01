@@ -41,11 +41,10 @@ import org.hibernate.annotations.ForeignKey;
  *   'coreference type' as 'chain', and
  *   'coreference' as 'chain'
  *  }
- *
- *
  */
 @Entity
-@Table(name = "annotation_type", uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "project" }) })
+@Table(name = "annotation_type", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class AnnotationLayer
     implements Serializable
 {
@@ -72,7 +71,8 @@ public class AnnotationLayer
     
     private boolean readonly = false;
     
-    @Column(nullable = true)
+    @Lob
+    @Column(nullable = true, length = 64000)
     private String onClickJavascriptAction;
 
     @Column(name = "name", nullable = false)
@@ -96,10 +96,12 @@ public class AnnotationLayer
     private boolean lockToTokenOffset = true;
 
     // There wase a type in the code which unfortunately made it into databases...
-    @Column(name="allowSTacking")
+    @Column(name = "allowSTacking")
     private boolean allowStacking;
 
     private boolean crossSentence;
+    
+    private boolean showTextInHover = true;
 
     private boolean multipleTokens;
     
@@ -111,7 +113,8 @@ public class AnnotationLayer
         // Required
     }
     
-    public AnnotationLayer(String aName, String aUiName, String aType, Project aProject, boolean aBuiltIn)
+    public AnnotationLayer(String aName, String aUiName, String aType, Project aProject,
+            boolean aBuiltIn)
     {
         setName(aName);
         setUiName(aUiName);
@@ -412,6 +415,16 @@ public class AnnotationLayer
         this.crossSentence = crossSentence;
     }
 
+    public boolean isShowTextInHover()
+    {
+        return showTextInHover;
+    }
+
+    public void setShowTextInHover(boolean showTextInHover)
+    {
+        this.showTextInHover = showTextInHover;
+    }
+
     public boolean isMultipleTokens()
     {
         return multipleTokens;
@@ -441,14 +454,24 @@ public class AnnotationLayer
     {
         readonly = aReadonly;
     }
-    
-	public String getOnClickJavascriptAction() 
-	{
-		return onClickJavascriptAction;
-	}
 
-	public void setOnClickJavascriptAction(String onClickAction) 
-	{
-		this.onClickJavascriptAction = onClickAction;
-	}
+    public String getOnClickJavascriptAction()
+    {
+        return onClickJavascriptAction;
+    }
+
+    public void setOnClickJavascriptAction(String onClickAction)
+    {
+        this.onClickJavascriptAction = onClickAction;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("AnnotationLayer [name=");
+        builder.append(name);
+        builder.append("]");
+        return builder.toString();
+    }
 }

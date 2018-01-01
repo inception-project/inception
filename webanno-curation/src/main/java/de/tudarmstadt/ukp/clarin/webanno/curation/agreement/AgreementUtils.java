@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,13 +64,13 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFun
 
 public class AgreementUtils
 {
-    public static enum AgreementReportExportFormat {
+    public enum AgreementReportExportFormat {
         CSV(".csv"),
         DEBUG(".txt");
         
         private final String extension;
         
-        private AgreementReportExportFormat(String aExtension)
+        AgreementReportExportFormat(String aExtension)
         {
             extension = aExtension;
         }
@@ -82,14 +81,14 @@ public class AgreementUtils
         }
     }
     
-    public static enum ConcreteAgreementMeasure {
+    public enum ConcreteAgreementMeasure {
         COHEN_KAPPA_AGREEMENT(false),
         FLEISS_KAPPA_AGREEMENT(false),
         KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT(true);
         
         private final boolean nullValueSupported;
         
-        private ConcreteAgreementMeasure(boolean aNullValueSupported)
+        ConcreteAgreementMeasure(boolean aNullValueSupported)
         {
             nullValueSupported = aNullValueSupported;
         }
@@ -366,7 +365,8 @@ public class AgreementUtils
                     
                     switch (cfg.getPosition().getLinkCompareBehavior()) {
                     case LINK_TARGET_AS_LABEL:
-                        // FIXME The target feature name should be obtained from the feature definition!
+                        // FIXME The target feature name should be obtained from the feature
+                        // definition!
                         AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
                                 .getFeatureByBaseName("target"));
                         
@@ -374,7 +374,8 @@ public class AgreementUtils
                                 + target.getCoveredText() + "]";
                         break;
                     case LINK_ROLE_AS_LABEL:
-                        // FIXME The role feature name should be obtained from the feature definition!
+                        // FIXME The role feature name should be obtained from the feature
+                        // definition!
                         String role = link.getStringValue(link.getType().getFeatureByBaseName(
                                 "role"));
                         
@@ -414,7 +415,7 @@ public class AgreementUtils
             
             // If the position feature is set (subposition), then it must match the feature we
             // are calculating agreement over
-            assert !(cfgSet.getPosition().getFeature() != null)
+            assert cfgSet.getPosition().getFeature() == null
                     || cfgSet.getPosition().getFeature().equals(aFeature);
             
             completeSets.add(cfgSet);
@@ -448,17 +449,20 @@ public class AgreementUtils
         aOut.printComment(String.format("Relevant position count: %d%n",
                 aAgreement.getRelevantSetCount()));
 
-//        aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
+        // aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets());
-//        
-//        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
-//
-//        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
-//
-//        aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
-//        dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
+        //
+        // aOut.printf("%n== Incomplete sets (by position): %d == %n",
+        // aAgreement.getIncompleteSetsByPosition().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement,
+        // aAgreement.getIncompleteSetsByPosition());
+        //
+        // aOut.printf("%n== Incomplete sets (by label): %d ==%n",
+        // aAgreement.getIncompleteSetsByLabel().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
+        //
+        // aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
+        // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
     }    
     
     public static void dumpAgreementStudy(PrintStream aOut, AgreementResult aAgreement)
@@ -481,10 +485,12 @@ public class AgreementUtils
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
         
-        aOut.printf("%n== Incomplete sets (by position): %d == %n", aAgreement.getIncompleteSetsByPosition().size());
+        aOut.printf("%n== Incomplete sets (by position): %d == %n",
+                aAgreement.getIncompleteSetsByPosition().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
 
-        aOut.printf("%n== Incomplete sets (by label): %d ==%n", aAgreement.getIncompleteSetsByLabel().size());
+        aOut.printf("%n== Incomplete sets (by label): %d ==%n",
+                aAgreement.getIncompleteSetsByLabel().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByLabel());
 
         aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
@@ -633,7 +639,7 @@ public class AgreementUtils
                     .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
             pluralitySets = Collections
                     .unmodifiableList(new ArrayList<>(aPluralitySets));
-            casGroupIds = Collections.unmodifiableList(new ArrayList<String>(aCasGroupIds));
+            casGroupIds = Collections.unmodifiableList(new ArrayList<>(aCasGroupIds));
             excludeIncomplete = aExcludeIncomplete;
         }
         
@@ -773,7 +779,7 @@ public class AgreementUtils
     }
     
     public static InputStream generateCsvReport(AgreementResult aResult)
-        throws UnsupportedEncodingException, IOException
+        throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),

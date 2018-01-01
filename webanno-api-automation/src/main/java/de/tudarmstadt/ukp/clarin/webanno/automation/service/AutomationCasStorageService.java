@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 
 public interface AutomationCasStorageService
 {
-    static final String SERVICE_NAME = "automationCasStorageService";
+    String SERVICE_NAME = "automationCasStorageService";
     
     
     /**
@@ -51,6 +51,7 @@ public interface AutomationCasStorageService
             throws IOException;
         
     File getAutomationFolder(TrainingDocument aDocument)
-    		throws IOException;
+        throws IOException;
+
     void analyzeAndRepair(TrainingDocument aDocument, CAS aCas);
 }

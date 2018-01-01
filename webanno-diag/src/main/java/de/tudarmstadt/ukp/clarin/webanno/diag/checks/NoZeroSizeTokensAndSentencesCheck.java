@@ -21,10 +21,10 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;

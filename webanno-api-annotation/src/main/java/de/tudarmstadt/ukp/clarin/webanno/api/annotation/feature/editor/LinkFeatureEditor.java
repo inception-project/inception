@@ -32,10 +32,10 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -48,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
@@ -94,7 +95,7 @@ public class LinkFeatureEditor
     public LinkFeatureEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
             final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel)
     {
-        super(aId, "linkFeatureEditor", aOwner, CompoundPropertyModel.of(aFeatureStateModel));
+        super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
         stateModel = aStateModel;
         actionHandler = aHandler;
@@ -210,16 +211,18 @@ public class LinkFeatureEditor
                 }
 
                 @Override
-                protected void onConfigure()
+                public void onConfigure(JQueryBehavior aBehavior)
                 {
-                    super.onConfigure();
-
+                    super.onConfigure(aBehavior);
+                    
+                    aBehavior.setOption("placeholder", Options.asString("Select role"));
+                    
                     // If a slot is armed, then load the slot's role into the dropdown
                     AnnotatorState state = stateModel.getObject();
                     if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                             .equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                                .getModelObject().value;
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                                LinkFeatureEditor.this.getModelObject().value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
                     else {
@@ -228,7 +231,8 @@ public class LinkFeatureEditor
 
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
-                    Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+                    Optional<AjaxRequestTarget> target = RequestCycle.get()
+                            .find(AjaxRequestTarget.class);
                     if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
                         target.get().appendJavaScript(
@@ -250,6 +254,10 @@ public class LinkFeatureEditor
             {
                 private static final long serialVersionUID = 1L;
 
+                {
+                    setOutputMarkupId(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {
@@ -260,7 +268,8 @@ public class LinkFeatureEditor
 
                     if (state.isSlotArmed()
                             && featureState.feature.equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                                featureState.value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
                     else {
@@ -379,14 +388,8 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> list = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
 
-        Iterator<LinkWithRoleModel> existingLinks = list.iterator();
-        while (existingLinks.hasNext()) {
-            LinkWithRoleModel link = existingLinks.next();
-            if (link.autoCreated && link.targetAddr == -1) {
-                // remove it
-                existingLinks.remove();
-            }
-        }
+        // remove it
+        list.removeIf(link -> link.autoCreated && link.targetAddr == -1);
     }
 
     private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
@@ -458,7 +461,7 @@ public class LinkFeatureEditor
     {
         if (StringUtils.isBlank((String) field.getModelObject())) {
             error("Must set slot label before adding!");
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         else {
             @SuppressWarnings("unchecked")
@@ -491,12 +494,17 @@ public class LinkFeatureEditor
 
         aTarget.add(content);
 
-        // Commit change
-        try {
-            actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
-        }
-        catch (Exception e) {
-            handleException(this, aTarget, e);
+        // Commit change - but only if we set the label on a slot which was already filled/saved.
+        // Unset slots only exist in the link editor and if we commit the change here, we trigger
+        // a reload of the feature editors from the CAS which makes the unfilled slots disappear
+        // and leaves behind an armed slot pointing to a removed slot.
+        if (m.targetAddr != -1) {
+            try {
+                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+            }
+            catch (Exception e) {
+                handleException(this, aTarget, e);
+            }
         }
     }
 

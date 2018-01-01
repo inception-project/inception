@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
 
 public class RAnnotation
 {
@@ -38,11 +41,13 @@ public class RAnnotation
         }
     }
     
-    public RAnnotation(String aUser, String aState, String aTimestamp)
+    public RAnnotation(String aUser, AnnotationDocumentState aState, Date aTimestamp)
     {
         super();
         user = aUser;
-        state = aState;
-        timestamp = aTimestamp;
+        state = RemoteApiController2.annotationDocumentStateToString(aState);
+        if (aTimestamp != null) {
+            timestamp = FORMAT.format(aTimestamp);
+        }
     }
 }

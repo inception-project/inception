@@ -35,7 +35,77 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
 public abstract class ColoringStrategy
 {
-    public static final ColoringStrategy labelHashBasedColor(final String[] aPalette)
+    public enum ReadonlyColoringBehaviour
+    {
+        LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(),
+                ColoringStrategyType.GRAY), 
+        NORMAL("normal", null), 
+        GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), 
+                ColoringStrategyType.GRAY),
+        // here could be more
+        ;
+
+        private String descriptiveName;
+        private ColoringStrategyType t;
+
+        private ReadonlyColoringBehaviour(String descriptiveName, ColoringStrategyType t)
+        {
+            this.descriptiveName = descriptiveName;
+            this.t = t;
+        }
+
+        public ColoringStrategyType getColoringStrategy()
+        {
+            return t;
+        }
+
+        public String getDescriptiveName()
+        {
+            return descriptiveName;
+        }
+
+    }
+
+    public enum ColoringStrategyType
+    {
+
+        STATIC("static"), STATIC_PASTELLE("static pastelle"),
+
+        DYNAMIC("dynamic"), DYNAMIC_PASTELLE("dynamic pastelle"),
+
+        GRAY("static gray"),
+
+        LEGACY("legacy"),
+
+        ;
+
+        private String descriptiveName;
+
+        private ColoringStrategyType(String descriptiveName)
+        {
+            this.descriptiveName = descriptiveName;
+        }
+
+        public String getDescriptiveName()
+        {
+            return descriptiveName;
+        }
+
+    }
+
+    public static ColoringStrategy staticColor(final String aColor)
+    {
+        return new ColoringStrategy()
+        {
+            @Override
+            public String getColor(VID aVid, String aLabel)
+            {
+                return aColor;
+            }
+        };
+    }
+    
+    public static final ColoringStrategy labelHashBasedColor(final String... aPalette)
     {
         return new ColoringStrategy()
         {
@@ -49,7 +119,9 @@ public abstract class ColoringStrategy
                 // tagsets. For layers that have features without tagsets, again, we can only use
                 // the actual label value...
                 int colorIndex = Math.abs(aLabel.hashCode());
-                if (colorIndex == Integer.MIN_VALUE) {
+                if (colorIndex == Integer.MIN_VALUE) { 
+                    // Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE - we need to catch this
+                    // case here.
                     colorIndex = 0;
                 }
                 return aPalette[colorIndex % aPalette.length];
@@ -57,28 +129,32 @@ public abstract class ColoringStrategy
         };
     }
 
-    public static ColoringStrategy staticColor(final String aColor) {
-        return new ColoringStrategy() {
-            @Override
-            public String getColor(VID aVid, String aLabel)
-            {
-                return aColor;
-            }
-        };
+    public static ColoringStrategy getStrategy(AnnotationSchemaService aService,
+            AnnotationLayer aLayer, AnnotationPreference aPreferences,
+            Map<String[], Queue<String>> aColorQueues)
+    {
+        ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
+        ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
+        if (aLayer.isReadonly() && rt != ReadonlyColoringBehaviour.NORMAL) {
+            t = rt.t;
+        }
+        if (t == ColoringStrategyType.LEGACY) {
+            t = getBestInitialStrategy(aService, aLayer, aPreferences);
+        }
+        return getStrategy(aService, aLayer, t, aColorQueues);
     }
 
-    public static ColoringStrategy getBestStrategy(AnnotationSchemaService aService, AnnotationLayer aLayer,
-            AnnotationPreference aPreferences, Map<String[], Queue<String>> aColorQueues)
+    public static ColoringStrategy getStrategy(AnnotationSchemaService aService,
+            AnnotationLayer aLayer, ColoringStrategyType colortype,
+            Map<String[], Queue<String>> aColorQueues)
     {
         // Decide on coloring strategy for the current layer
-        ColoringStrategy coloringStrategy;
-        if (aLayer.isReadonly()) {
-            coloringStrategy = staticColor(DISABLED);
-        }
-        else if (aPreferences.isStaticColor()) {
+        switch (colortype) {
+        case STATIC_PASTELLE: // ignore for the moment and fall through
+        case STATIC:
             int threshold;
-
-            if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aService, aLayer)) {
+            if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())
+                    && !hasLinkFeature(aService, aLayer)) {
                 threshold = Integer.MAX_VALUE; // No filtering
             }
             else {
@@ -87,13 +163,12 @@ public abstract class ColoringStrategy
                 // the full palette.
                 threshold = LIGHTNESS_FILTER_THRESHOLD;
             }
-
-            coloringStrategy = staticColor(nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold));
-        }
-        else {
+            return labelHashBasedColor(nextPaletteEntry(PALETTE_PASTEL, aColorQueues, threshold));
+        case DYNAMIC_PASTELLE:
+        case DYNAMIC:
             String[] palette;
-
-            if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aService, aLayer)) {
+            if (WebAnnoConst.SPAN_TYPE.equals(aLayer.getType())
+                    && !hasLinkFeature(aService, aLayer)) {
                 palette = PALETTE_NORMAL;
             }
             else {
@@ -102,8 +177,26 @@ public abstract class ColoringStrategy
                 // the full palette.
                 palette = PALETTE_NORMAL_FILTERED;
             }
+            return labelHashBasedColor(palette);
+        case GRAY:
+        default:
+            return labelHashBasedColor(DISABLED);
+        }
+    }
 
-            coloringStrategy = labelHashBasedColor(palette);
+    public static ColoringStrategyType getBestInitialStrategy(AnnotationSchemaService aService,
+            AnnotationLayer aLayer, AnnotationPreference aPreferences)
+    {
+        // Decide on coloring strategy for the current layer
+        ColoringStrategyType coloringStrategy;
+        if (aLayer.isReadonly()) {
+            coloringStrategy = ColoringStrategyType.GRAY;
+        }
+        else if (aPreferences.isStaticColor()) {
+            coloringStrategy = ColoringStrategyType.STATIC_PASTELLE;
+        }
+        else {
+            coloringStrategy = ColoringStrategyType.DYNAMIC;
         }
         return coloringStrategy;
     }
@@ -162,7 +255,7 @@ public abstract class ColoringStrategy
                 filtered.add(color);
             }
         }
-        return (String[]) filtered.toArray(new String[filtered.size()]);
+        return filtered.toArray(new String[filtered.size()]);
     }
 
     public static boolean isTooLight(String aColor, int aThreshold)
@@ -172,7 +265,7 @@ public abstract class ColoringStrategy
         int r = Integer.valueOf(aColor.substring(1, 3), 16);
         int g = Integer.valueOf(aColor.substring(3, 5), 16);
         int b = Integer.valueOf(aColor.substring(5, 7), 16);
-        int yiq  = ((r*299)+(g*587)+(b*114))/1000;
+        int yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
         return yiq > aThreshold;
     }
 
@@ -180,12 +273,12 @@ public abstract class ColoringStrategy
 
     public final static String DISABLED = "#bebebe";
 
-    public final static String[] PALETTE_PASTEL = { "#8dd3c7", "#ffffb3", "#bebada",
-            "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5",
+    public final static String[] PALETTE_PASTEL = { "#8dd3c7", "#ffffb3", "#bebada", "#fb8072",
+            "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5",
             "#ffed6f" };
 
-//    public final static String[] PALETTE_PASTEL_FILTERED = filterLightColors(PALETTE_PASTEL,
-//            LIGHTNESS_FILTER_THRESHOLD);
+    // public final static String[] PALETTE_PASTEL_FILTERED = filterLightColors(PALETTE_PASTEL,
+    // LIGHTNESS_FILTER_THRESHOLD);
 
     public final static String[] PALETTE_NORMAL = { "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c",
             "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99",

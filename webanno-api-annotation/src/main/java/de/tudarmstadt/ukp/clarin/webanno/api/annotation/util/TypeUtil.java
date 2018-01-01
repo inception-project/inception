@@ -21,96 +21,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * Utility Class for {@link TypeAdapter} with static methods such as geting
  * {@link TypeAdapter} based on its {@link CAS} {@link Type}
- *
  */
 public final class TypeUtil
 {
-	private TypeUtil() {
-		// No instances
-	}
-	
-	public static AnnotationLayer getLayer(AnnotationSchemaService aRepo, Project aProject, 
-	        FeatureStructure aFS)
-	{
-        String layerName = aFS.getType().getName();
-        AnnotationLayer layer;
-        try {
-            layer = aRepo.getLayer(layerName, aProject);
-        }
-        catch (NoResultException e) {
-            if (layerName.endsWith("Chain")) {
-                layerName = layerName.substring(0, layerName.length() - 5);
-            }
-            if (layerName.endsWith("Link")) {
-                layerName = layerName.substring(0, layerName.length() - 4);
-            }
-            layer = aRepo.getLayer(layerName, aProject);
-        }
-        
-        return layer;
-	}
-
-    public static TypeAdapter getAdapter(AnnotationSchemaService aRepo, AnnotationLayer aLayer)
+    private TypeUtil()
     {
-        switch (aLayer.getType()) {
-            case WebAnnoConst.SPAN_TYPE: {
-                SpanAdapter adapter = new SpanAdapter(aLayer, aRepo.listAnnotationFeature(aLayer));
-                adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
-                adapter.setAllowStacking(aLayer.isAllowStacking());
-                adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
-                adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-                return adapter;
-            }
-            case WebAnnoConst.RELATION_TYPE: {
-                ArcAdapter adapter = new ArcAdapter(aLayer, aLayer.getId(), aLayer.getName(),
-                    WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
-                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
-                    aLayer.getAttachType().getName(), aRepo.listAnnotationFeature(aLayer));
-
-                adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-                adapter.setAllowStacking(aLayer.isAllowStacking());
-
-                return adapter;
-                // default is chain (based on operation, change to CoreferenceLinK)
-            }
-            case WebAnnoConst.CHAIN_TYPE: {
-                ChainAdapter adapter = new ChainAdapter(aLayer, aLayer.getId(), aLayer.getName()
-                    + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
-                    aRepo.listAnnotationFeature(aLayer));
-
-                adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
-
-                return adapter;
-            }
-            default:
-                throw new IllegalArgumentException("No adapter for type with name [" + aLayer.getName()
-                    + "]");
-        }
+        // No instances
     }
-    
+
     /**
      * Construct the label text used in the brat user interface.
      *
@@ -137,6 +69,48 @@ public final class TypeUtil
         else {
             // If there are no label features at all, then use the layer UI name
             return "(" + aAdapter.getLayer().getUiName() + ")";
+        }
+    }
+    
+    /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aHoverFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, Map<String, String> aHoverFeatures)
+    {
+        StringBuilder bratHoverText = new StringBuilder();
+        if (aHoverFeatures.containsKey("__spantext__")) {
+            bratHoverText
+                .append("\"")
+                .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
+                .append("\" ");
+        }
+        
+        boolean featuresToShowAvailable = false;
+        for (Entry<String, String> feature : aHoverFeatures.entrySet()) {
+            if ("__spantext__".equals(feature.getKey())) {
+                continue;
+            }
+            String text = StringUtils.defaultString(feature.getValue());
+            
+            if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
+                bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratHoverText.append(text);
+            featuresToShowAvailable = true;
+        }
+
+        if (featuresToShowAvailable) {
+            return bratHoverText.toString();
+        }
+        else {
+            // If there are no hover features at all, then use the spantext, which 
+            // is the default if no hover text is provided
+            return null;
         }
     }
     
@@ -175,6 +149,48 @@ public final class TypeUtil
         else {
             // If there are no label features at all, then use the layer UI name
             return "(" + aAdapter.getLayer().getUiName() + ")";
+        }
+    }
+    
+    /**
+     * Construct the hover text used in the brat user interface.
+     *
+     * @param aAdapter the adapter.
+     * @param aFs the annotation.
+     * @param aFeatures the features.
+     * @return the hover text.
+     */
+    public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        StringBuilder bratHoverText = new StringBuilder();
+        for (AnnotationFeature feature : aFeatures) {
+
+            if (!feature.isEnabled() || !feature.isIncludeInHover()
+                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                continue;
+            }
+
+            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            String text = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
+            
+            if (bratHoverText.length() > 0 && text.length() > 0) {
+                bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
+            }
+
+            bratHoverText.append(text);
+        }
+
+        if (bratHoverText.length() > 0) {
+            if (aAdapter.getLayer().isShowTextInHover()) {
+                return String.format("\"%s\" %s", aFs.getCoveredText(), bratHoverText.toString());
+            }
+            return bratHoverText.toString();
+        }
+        else {
+            // If there are no label features at all, then use the spantext, which 
+            // is the default if no hover text is provided
+            return null;
         }
     }
 

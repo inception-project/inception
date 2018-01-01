@@ -50,7 +50,8 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -61,8 +62,10 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
             // anno   -> e.g. Lemma
             // attach -> e.g. Token
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
-                for (AnnotationFS attach : selectCovered(getType(aCas, layer.getAttachType().getName()), anno)) {
-                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
+                for (AnnotationFS attach : selectCovered(
+                        getType(aCas, layer.getAttachType().getName()), anno)) {
+                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
+                            AnnotationFS.class);
                     if (candidate == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
                         count++;
@@ -76,7 +79,8 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
             
             if (count > 0) {
                 aMessages.add(new LogMessage(this, LogLevel.INFO,
-                        "Reattached [%d] unattached spans layer [" + layer.getName() + "].", count));
+                        "Reattached [%d] unattached spans layer [" + layer.getName() + "].",
+                        count));
             }
             
             // Go over the layer that is being attached to (e.g. Lemma) and ensure that if there
@@ -88,8 +92,10 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
             // attach     -> e.g. Token
             // candidates -> e.g. Lemma
             List<AnnotationFS> toDelete = new ArrayList<>();
-            for (AnnotationFS attach : select(aCas, getType(aCas, layer.getAttachType().getName()))) {
-                List<AnnotationFS> candidates = selectCovered(getType(aCas, layer.getName()), attach);
+            for (AnnotationFS attach : select(aCas,
+                    getType(aCas, layer.getAttachType().getName()))) {
+                List<AnnotationFS> candidates = selectCovered(getType(aCas, layer.getName()),
+                        attach);
                 
                 if (!candidates.isEmpty()) {
                     // One of the candidates should already be attached

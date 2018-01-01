@@ -105,6 +105,13 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
+    public void deleteCurationCas(SourceDocument aDocument)
+        throws IOException
+    {
+        casStorageService.deleteCas(aDocument, CURATION_USER);
+    }
+
+    @Override
     public void upgradeCurationCas(CAS aCas, SourceDocument aDocument)
         throws UIMAException, IOException
     {

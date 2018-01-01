@@ -19,48 +19,50 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv.util;
 
 /**
- * An UNIT to be exported in one line of a TSV file format (annotations
- * separated by TAB character). <br>
+ * An UNIT to be exported in one line of a TSV file format (annotations separated by TAB character).
+ * <br>
  * This UNIT can be a Token element or a sub-token element<br>
  * Sub-token elements start with the "--"
- *
  */
-public class AnnotationUnit {
-	public int begin;
-	public int end;
-	public String token;
-	public boolean isSubtoken;
+public class AnnotationUnit
+{
+    public int begin;
+    public int end;
+    public String token;
+    public boolean isSubtoken;
 
-	public AnnotationUnit(int aBegin, int aEnd, boolean aIsSubToken, String aToken) {
-		this.begin = aBegin;
-		this.end = aEnd;
-		this.isSubtoken = aIsSubToken;
-		this.token = aToken;
-	}
+    public AnnotationUnit(int aBegin, int aEnd, boolean aIsSubToken, String aToken)
+    {
+        this.begin = aBegin;
+        this.end = aEnd;
+        this.isSubtoken = aIsSubToken;
+        this.token = aToken;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + begin;
-		result = prime * result + end;
-		result = prime * result + (isSubtoken ? 1231 : 1237);
-		return result;
-	}
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + begin;
+        result = prime * result + end;
+        result = prime * result + (isSubtoken ? 1231 : 1237);
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		AnnotationUnit other = (AnnotationUnit) obj;
-		return begin == other.begin && end == other.end && isSubtoken == other.isSubtoken;
-	}
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        AnnotationUnit other = (AnnotationUnit) obj;
+        return begin == other.begin && end == other.end && isSubtoken == other.isSubtoken;
+    }
 }

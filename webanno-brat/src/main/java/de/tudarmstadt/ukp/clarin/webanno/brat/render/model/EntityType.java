@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
-import java.util.Arrays;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 /**
@@ -54,16 +56,21 @@ public class EntityType
     }
 
     /**
-     * @param aName the "name" (the UIMA type name).
-     * @param aLabel the "label" which is displayed to the user e.g. in the comment popup (the display name)
-     * @param aType the "type" (brat type name, which is basically an identifier used in the UI visual model)
+     * @param aName
+     *            the "name" (the UIMA type name).
+     * @param aLabel
+     *            the "label" which is displayed to the user e.g. in the comment pop-up (the display
+     *            name)
+     * @param aType
+     *            the "type" (brat type name, which is basically an identifier used in the UI visual
+     *            model)
      */
     public EntityType(String aName, String aLabel, String aType)
     {
         this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
                 null /* fgColor */, null /* bgColor */, null /* borderColor */,
-                Arrays.asList(aLabel) /* labels */, null /* children */, null /* attributes */, 
-                null /* arcs */);
+                asList(aLabel, abbreviate(aLabel)) /* labels */, null /* children */,
+                null /* attributes */, null /* arcs */);
     }
     
 //    public EntityType(String aName, String aType, String aFgColor, String aBgColor,

@@ -60,8 +60,6 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.image.Image;
-import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
@@ -108,17 +106,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.ChartImageResource;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
 
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MenuItem(icon="images/attribution.png", label="Monitoring", prio=300)
+@MenuItem(icon = "images/attribution.png", label = "Monitoring", prio = 300)
 @MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
@@ -126,8 +125,6 @@ public class MonitoringPage
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
     
     private static final long serialVersionUID = -2102136855109258306L;
-
-    private static final int CHART_WIDTH = 300;
 
     /**
      * The user column in the user-document status table
@@ -152,15 +149,12 @@ public class MonitoringPage
     
     private final ProjectSelectionForm projectSelectionForm;
     private final MonitoringDetailForm monitoringDetailForm;
-    private final Image annotatorsProgressImage;
-    private final Image annotatorsProgressPercentageImage;
-    private final Image overallProjectProgressImage;
+    private final SvgChart annotatorsProgressImage;
+    private final SvgChart annotatorsProgressPercentageImage;
+    private final SvgChart overallProjectProgressImage;
     private  TrainingResultForm trainingResultForm;
 
-    private Label overview;
     private Panel annotationDocumentStatusTable;
-//    private DefaultDataTable<?,?> annotationDocumentStatusTable;
-    private final Label projectName;
 
     private String result;
 
@@ -204,36 +198,39 @@ public class MonitoringPage
         projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
 
         monitoringDetailForm = new MonitoringDetailForm("monitoringDetailForm");
+        monitoringDetailForm.setOutputMarkupId(true);
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
         add(trainingResultForm);
 
-        annotatorsProgressImage = new NonCachingImage("annotator");
+        annotatorsProgressImage = new SvgChart("annotator",
+                LambdaModel.of(this::renderAnnotatorAbsoluteProgress));
+        annotatorsProgressImage.setOutputMarkupId(true);
         annotatorsProgressImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressImage.setVisible(false);
 
-        annotatorsProgressPercentageImage = new NonCachingImage("annotatorPercentage");
+        annotatorsProgressPercentageImage = new SvgChart("annotatorPercentage",
+                LambdaModel.of(this::renderAnnotatorPercentageProgress));
+        annotatorsProgressPercentageImage.setOutputMarkupId(true);
         annotatorsProgressPercentageImage.setOutputMarkupPlaceholderTag(true);
         annotatorsProgressPercentageImage.setVisible(false);
 
-        overallProjectProgressImage = new NonCachingImage("overallProjectProgressImage");
-        final Map<String, Integer> overallProjectProgress = getOverallProjectProgress();
-        overallProjectProgressImage.setImageResource(createProgressChart(overallProjectProgress,
-                100, true));
+        overallProjectProgressImage = new SvgChart("overallProjectProgressImage",
+                LambdaModel.of(this::renderProjectProgress));
+        overallProjectProgressImage.setOutputMarkupId(true);
         overallProjectProgressImage.setOutputMarkupPlaceholderTag(true);
         overallProjectProgressImage.setVisible(true);
         add(overallProjectProgressImage);
-        add(overview = new Label("overview", "overview of projects"));
 
         add(projectSelectionForm);
-        projectName = new Label("projectName", "");
 
         if (!projectService.listProjects().isEmpty()) {
             Project project = projectService.listProjects().get(0);
             List<List<String>> userAnnotationDocumentLists = new ArrayList<>();
             List<SourceDocument> dc = documentService.listSourceDocuments(project);
-            for (int j = 0; j < projectService.listProjectUsersWithPermissions(project).size(); j++) {
+            for (int j = 0; j < projectService.listProjectUsersWithPermissions(project)
+                    .size(); j++) {
                 List<String> userAnnotationDocument = new ArrayList<>();
                 userAnnotationDocument.add("");
                 for (int i = 0; i < dc.size(); i++) {
@@ -255,10 +252,10 @@ public class MonitoringPage
             annotationDocumentStatusTable = new DefaultDataTable("rsTable", cols, prov, 2);
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm.add(annotatorsProgressImage)
-                    .add(annotatorsProgressPercentageImage).add(projectName)
+                    .add(annotatorsProgressPercentageImage)
                     .add(annotationDocumentStatusTable));
             annotationDocumentStatusTable.setVisible(false);
-        }else{
+        } else {
             annotationDocumentStatusTable = new EmptyPanel("rsTable");
             monitoringDetailForm.setVisible(false);
             add(monitoringDetailForm);
@@ -268,6 +265,30 @@ public class MonitoringPage
             info("No project exists in your instance of WebAnno. Please create/import project using Projects page.");
         }
 
+    }
+    
+    private JFreeChart renderProjectProgress()
+    {
+        Map<String, Integer> data = getOverallProjectProgress();
+        overallProjectProgressImage.getOptions().withViewBox(600, 30 + (data.size() * 18));
+        return createProgressChart(data, 100, true);
+    }
+    
+    private JFreeChart renderAnnotatorAbsoluteProgress()
+    {
+        Map<String, Integer> data = projectSelectionForm.getModelObject().annotatorsProgress;
+        annotatorsProgressImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
+        return createProgressChart(data, projectSelectionForm.getModelObject().totalDocuments,
+                false);
+    }
+    
+    private JFreeChart renderAnnotatorPercentageProgress()
+    {
+        Map<String, Integer> data = projectSelectionForm
+                .getModelObject().annotatorsProgressInPercent;
+        annotatorsProgressPercentageImage.getOptions().withViewBox(300, 30 + (data.size() * 18));
+        return createProgressChart(
+                projectSelectionForm.getModelObject().annotatorsProgressInPercent, 100, true);
     }
 
     private class ProjectSelectionForm
@@ -293,9 +314,7 @@ public class MonitoringPage
                         {
                             List<Project> allowedProject = new ArrayList<>();
 
-                            String username = SecurityContextHolder.getContext()
-                                    .getAuthentication().getName();
-                            User user = userRepository.get(username);
+                            User user = userRepository.getCurrentUser();
 
                             List<Project> allProjects = projectService.listProjects();
                             for (Project project : allProjects) {
@@ -315,22 +334,27 @@ public class MonitoringPage
 
                         @Override
                         @SuppressWarnings({ "unchecked", "rawtypes" })
-                        protected void onUpdate() {
-                            ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this.getModelObject();
+                        protected void onUpdate()
+                        {
+                            Project aNewSelection = ProjectSelectionForm.this
+                                    .getModelObject().project;
 
-                            if (projectSelectionModel.project == null) {
+                            if (aNewSelection == null) {
                                 return;
                             }
 
                             List<SourceDocument> sourceDocuments = documentService
-                                    .listSourceDocuments(projectSelectionModel.project);
+                                    .listSourceDocuments(aNewSelection);
 
-                            monitoringDetailForm.setModelObject(projectSelectionModel.project);
+                            monitoringDetailForm.setModelObject(aNewSelection);
                             monitoringDetailForm.setVisible(true);
 
-                            updateTrainingResultForm(projectSelectionModel.project);
+                            updateTrainingResultForm(aNewSelection);
                             result = "";
 
+                            ProjectSelectionModel projectSelectionModel = ProjectSelectionForm.this
+                                    .getModelObject();
+                            projectSelectionModel.project = aNewSelection;
                             projectSelectionModel.annotatorsProgress = new TreeMap<>();
                             projectSelectionModel.annotatorsProgressInPercent = new TreeMap<>();
                             projectSelectionModel.totalDocuments = sourceDocuments.size();
@@ -339,21 +363,13 @@ public class MonitoringPage
                             // Annotator's Progress
                             if (projectSelectionModel.project != null) {
                                 projectSelectionModel.annotatorsProgressInPercent
-                                        .putAll(getPercentageOfFinishedDocumentsPerUser(projectSelectionModel.project));
-                                projectSelectionModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(projectSelectionModel.project));
-
+                                        .putAll(getPercentageOfFinishedDocumentsPerUser(
+                                                projectSelectionModel.project));
+                                projectSelectionModel.annotatorsProgress.putAll(
+                                        getFinishedDocumentsPerUser(projectSelectionModel.project));
                             }
-                            projectName.setDefaultModelObject(projectSelectionModel.project.getName());
                             overallProjectProgressImage.setVisible(false);
-                            overview.setVisible(false);
-
-                            annotatorsProgressImage.setImageResource(createProgressChart(
-                                    projectSelectionModel.annotatorsProgress,
-                                    projectSelectionModel.totalDocuments, false));
                             annotatorsProgressImage.setVisible(true);
-
-                            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                                    projectSelectionModel.annotatorsProgressInPercent, 100, true));
                             annotatorsProgressPercentageImage.setVisible(true);
 
                             List<String> documentListAsColumnHeader = new ArrayList<>();
@@ -376,20 +392,20 @@ public class MonitoringPage
                             List<String> projectTimeStamp = new ArrayList<>();
                             projectTimeStamp.add(LAST_ACCESS + LAST_ACCESS_ROW); // first
                                                                                  // column
-                            if (projectService.existsProjectTimeStamp(projectSelectionModel.project)) {
+                            if (projectService.existsProjectTimeStamp(aNewSelection)) {
                                 projectTimeStamp.add(LAST_ACCESS
-                                        + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(projectService
-                                                .getProjectTimeStamp(projectSelectionModel.project)));
+                                        + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(
+                                                projectService.getProjectTimeStamp(aNewSelection)));
                             }
                             else {
                                 projectTimeStamp.add(LAST_ACCESS + "__");
                             }
 
                             for (User user : users) {
-                                if (projectService.existsProjectTimeStamp(projectSelectionModel.project,
-                                        user.getUsername())) {
-                                    projectTimeStamp
-                                            .add(LAST_ACCESS + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+                                if (projectService.existsProjectTimeStamp(
+                                        projectSelectionModel.project, user.getUsername())) {
+                                    projectTimeStamp.add(LAST_ACCESS
+                                            + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
                                                     .format(projectService.getProjectTimeStamp(
                                                             projectSelectionModel.project,
                                                             user.getUsername())));
@@ -406,8 +422,8 @@ public class MonitoringPage
                                 userAnnotationDocuments.add(DOCUMENT + document.getName());
 
                                 // Curation Document status
-                                userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-" + DOCUMENT
-                                        + document.getName());
+                                userAnnotationDocuments.add(WebAnnoConst.CURATION_USER + "-"
+                                        + DOCUMENT + document.getName());
 
                                 for (User user : users) {
                                     // annotation document status for this annotator
@@ -418,20 +434,21 @@ public class MonitoringPage
                                 userAnnotationDocumentStatusList.add(userAnnotationDocuments);
                             }
 
-                            TableDataProvider provider = new TableDataProvider(documentListAsColumnHeader,
-                                    userAnnotationDocumentStatusList);
+                            TableDataProvider provider = new TableDataProvider(
+                                    documentListAsColumnHeader, userAnnotationDocumentStatusList);
 
-                            List<IColumn<?,?>> columns = new ArrayList<>();
+                            List<IColumn<?, ?>> columns = new ArrayList<>();
 
                             for (int i = 0; i < provider.getColumnCount(); i++) {
-                                columns.add(new DocumentStatusColumnMetaData(provider, i, projectSelectionModel.project));
+                                columns.add(new DocumentStatusColumnMetaData(provider, i,
+                                        projectSelectionModel.project));
                             }
                             annotationDocumentStatusTable.remove();
                             annotationDocumentStatusTable = new DefaultDataTable("rsTable", columns,
                                     provider, 20);
                             annotationDocumentStatusTable.setOutputMarkupId(true);
                             monitoringDetailForm.add(annotationDocumentStatusTable);
-                        }
+                        };
                     });
                 }
 
@@ -459,7 +476,8 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
+            for (User user : projectService.listProjectUsersWithPermissions(aProject,
+                    PermissionLevel.USER)) {
                 for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
                     if (documentService.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
@@ -483,7 +501,8 @@ public class MonitoringPage
     {
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject, PermissionLevel.USER)) {
+            for (User user : projectService.listProjectUsersWithPermissions(aProject,
+                    PermissionLevel.USER)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
@@ -494,8 +513,8 @@ public class MonitoringPage
                         finished++;
                     }
                     else if (documentService.existsAnnotationDocument(document, user)) {
-                        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                                document, user);
+                        AnnotationDocument annotationDocument = documentService
+                                .getAnnotationDocument(document, user);
                         if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
                             ignored++;
                         }
@@ -550,10 +569,11 @@ public class MonitoringPage
     
     private void updateTrainingResultForm(Project aProject)
     {
-    	trainingResultForm.remove();
-    	 trainingResultForm = new TrainingResultForm("trainingResultForm");
-    	 add(trainingResultForm);
-         trainingResultForm.setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
+        trainingResultForm.remove();
+        trainingResultForm = new TrainingResultForm("trainingResultForm");
+        add(trainingResultForm);
+        trainingResultForm
+                .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
     }
 
     private class TrainingResultForm
@@ -642,12 +662,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStartime().toString();
+                        return automationService.getAutomationStatus(template).getStartime()
+                                .toString();
                     }
                     else {
                         return "";
                     }
-
                 }
             }).setOutputMarkupId(true));
 
@@ -660,11 +680,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        if (automationService.getAutomationStatus(template).getEndTime()
-                                .equals(automationService.getAutomationStatus(template).getStartime())) {
+                        if (automationService.getAutomationStatus(template).getEndTime().equals(
+                                automationService.getAutomationStatus(template).getStartime())) {
                             return "---";
                         }
-                        return automationService.getAutomationStatus(template).getEndTime().toString();
+                        return automationService.getAutomationStatus(template).getEndTime()
+                                .toString();
                     }
                     else {
                         return "";
@@ -682,12 +703,12 @@ public class MonitoringPage
                 {
                     MiraTemplate template = selectedTemplate.getModelObject();
                     if (template != null && automationService.existsAutomationStatus(template)) {
-                        return automationService.getAutomationStatus(template).getStatus().getName();
+                        return automationService.getAutomationStatus(template).getStatus()
+                                .getName();
                     }
                     else {
                         return "";
                     }
-
                 }
             }).setOutputMarkupId(true));
             add(selectedTemplate = new ListChoice<MiraTemplate>("layerResult")
@@ -759,7 +780,7 @@ public class MonitoringPage
 
     }
     
-    private ChartImageResource createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
+    private JFreeChart createProgressChart(Map<String, Integer> chartValues, int aMaxValue,
             boolean aIsPercentage)
     {
         // fill dataset
@@ -797,7 +818,7 @@ public class MonitoringPage
         renderer.setSeriesPaint(0, Color.BLUE);
         chart.getCategoryPlot().setRenderer(renderer);
 
-        return new ChartImageResource(chart, CHART_WIDTH, 30 + (chartValues.size() * 18));
+        return chart;
     }
     
     /**
@@ -859,7 +880,8 @@ public class MonitoringPage
 //                        && document.getSentenceAccessed() != 0) {
 //                    JCas jCas = null;
 //                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), user);
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
+//                                user);                
 //                    }
 //                    catch (UIMAException e) {
 //                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
@@ -871,13 +893,14 @@ public class MonitoringPage
 //                        LOG.info(e.getMessage());
 //                    }
 //                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                    aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"+totalSN));
+//                   aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"
+//                            + totalSN));
 //                }
 //                else {
                 
-                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                    aCellItem.add(icon);
+                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
@@ -897,13 +920,16 @@ public class MonitoringPage
                             SourceDocument doc = documentService.getSourceDocument(project,
                                     value.substring(value.indexOf(":") + 1));
                             if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc, CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc,
+                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                             }
                             else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                                changeSourceDocumentState(doc,
+                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
                             }
                             else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc, ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
+                                changeSourceDocumentState(doc,
+                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                             }
                         }
                         catch (IOException e) {
@@ -944,7 +970,8 @@ public class MonitoringPage
 //                        && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
 //                    JCas jCas = null;
 //                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(), annotator);
+//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
+//                                annotator);
 //                    }
 //                    catch (UIMAException e) {
 //                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
@@ -956,12 +983,13 @@ public class MonitoringPage
 //                        LOG.info(e.getMessage());
 //                    }
 //                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                    aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + "/"+totalSN));
+//                   aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + 
+//                           "/" + totalSN));
 //                }
 //                else {
-                    EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
-                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                    aCellItem.add(icon);
+                EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
+                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                aCellItem.add(icon);
 //                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
@@ -994,7 +1022,8 @@ public class MonitoringPage
                             if (state.toString().equals(AnnotationDocumentState.NEW.toString())) {
                                 changeAnnotationDocumentState(document, user, NEW_TO_IGNORE);
                             }
-                            if (state.toString().equals(AnnotationDocumentState.IGNORE.toString())) {
+                            if (state.toString()
+                                    .equals(AnnotationDocumentState.IGNORE.toString())) {
                                 changeAnnotationDocumentState(document, user, IGNORE_TO_NEW);
                             }
                         }
@@ -1021,17 +1050,14 @@ public class MonitoringPage
         {
             aModel.annotatorsProgress.clear();
             aModel.annotatorsProgress.putAll(getFinishedDocumentsPerUser(project));
-            annotatorsProgressImage.setImageResource(createProgressChart(aModel.annotatorsProgress,
-                    aModel.totalDocuments, false));
-            aTarget.add(annotatorsProgressImage.setOutputMarkupId(true));
+            aTarget.add(annotatorsProgressImage);
 
             aModel.annotatorsProgressInPercent.clear();
-            aModel.annotatorsProgressInPercent.putAll(getPercentageOfFinishedDocumentsPerUser(project));
-            annotatorsProgressPercentageImage.setImageResource(createProgressChart(
-                    aModel.annotatorsProgressInPercent, 100, true));
-            aTarget.add(annotatorsProgressPercentageImage.setOutputMarkupId(true));
+            aModel.annotatorsProgressInPercent
+                    .putAll(getPercentageOfFinishedDocumentsPerUser(project));
+            aTarget.add(annotatorsProgressPercentageImage);
 
-            aTarget.add(monitoringDetailForm.setOutputMarkupId(true));
+            aTarget.add(monitoringDetailForm);
         }
         
         /**
@@ -1068,11 +1094,11 @@ public class MonitoringPage
         private void changeAnnotationDocumentState(SourceDocument aSourceDocument, User aUser,
                 AnnotationDocumentStateTransition aAnnotationDocumentStateTransition)
         {
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    aSourceDocument, aUser);
+            AnnotationDocument annotationDocument = documentService
+                    .getAnnotationDocument(aSourceDocument, aUser);
             annotationDocument.setState(AnnotationDocumentStateTransition
                     .transition(aAnnotationDocumentStateTransition));
-                documentService.createAnnotationDocument(annotationDocument);
+            documentService.createAnnotationDocument(annotationDocument);
         }
 
         /**
@@ -1094,8 +1120,7 @@ public class MonitoringPage
     @MenuItemCondition
     public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
+        User user = aUserRepo.getCurrentUser();
         return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }

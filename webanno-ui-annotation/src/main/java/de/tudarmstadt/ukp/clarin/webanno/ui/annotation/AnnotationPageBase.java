@@ -26,8 +26,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -39,13 +39,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -58,7 +58,7 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     
     private ChallengeResponseDialog resetDocumentDialog;
-    private LambdaAjaxLink resetDocumentLink;
+    private ActionBarLink resetDocumentLink;
     private Label numberOfPages;
     
     protected AnnotationPageBase()
@@ -101,7 +101,7 @@ public abstract class AnnotationPageBase
                                     PropertyModel.of(getModel(), "firstVisibleUnitIndex"),
                                     PropertyModel.of(getModel(), "lastVisibleUnitIndex"),
                                     PropertyModel.of(getModel(), "unitCount"),
-                                    PropertyModel.of(getModel(), "documentIndex"),
+                                    LambdaModel.of(() -> getModelObject().getDocumentIndex() + 1),
                                     PropertyModel.of(getModel(), "numberOfDocuments")))
             {
                 private static final long serialVersionUID = 7176610419683776917L;
@@ -136,24 +136,16 @@ public abstract class AnnotationPageBase
         return resetDocumentDialog;
     }
 
-    protected LambdaAjaxLink createOrGetResetDocumentLink()
+    protected ActionBarLink createOrGetResetDocumentLink()
     {
         if (resetDocumentLink == null) {
-            resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
-                    t -> resetDocumentDialog.show(t))
-            {
-                private static final long serialVersionUID = 874573384012299998L;
-    
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    AnnotatorState state = AnnotationPageBase.this.getModelObject();
-                    setEnabled(state.getDocument() != null && !documentService
-                            .isAnnotationFinished(state.getDocument(), state.getUser()));
-                }
-            };
-            resetDocumentLink.setOutputMarkupId(true);
+            resetDocumentLink = new ActionBarLink("showResetDocumentDialog", t -> 
+                resetDocumentDialog.show(t));
+            resetDocumentLink.onConfigure(_this -> {
+                AnnotatorState state = AnnotationPageBase.this.getModelObject();
+                _this.setEnabled(state.getDocument() != null && !documentService
+                        .isAnnotationFinished(state.getDocument(), state.getUser()));
+            });
         }
         return resetDocumentLink;
     }
@@ -181,7 +173,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToPreviousPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowNextPage(AjaxRequestTarget aTarget)
@@ -189,7 +181,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToNextPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowFirstPage(AjaxRequestTarget aTarget)
@@ -197,7 +189,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToFirstPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
 
     protected void actionShowLastPage(AjaxRequestTarget aTarget)
@@ -205,7 +197,7 @@ public abstract class AnnotationPageBase
     {
         JCas jcas = getEditorCas();
         getModelObject().moveToLastPage(jcas);
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
     }
     
     protected void actionResetDocument(AjaxRequestTarget aTarget)
@@ -217,12 +209,21 @@ public abstract class AnnotationPageBase
         actionLoadDocument(aTarget);
     }
 
+    /**
+     * Show the next document if exist
+     */
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        getModelObject().setDocument(aDocument, getListOfDocs());
+        actionLoadDocument(aTarget);
+    }
+
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);
         error("Error: " + aException.getMessage());
         if (aTarget != null) {
-            aTarget.addChildren(getPage(), FeedbackPanel.class);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -243,7 +244,7 @@ public abstract class AnnotationPageBase
      * This method should be used while the editing process is ongoing. It does not upgrade the CAS
      * and it does not reset the annotator state.
      */
-    protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJcas);
+    protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
 
     /**
      * Checks if all required features on all annotations are set. If a required feature value is
@@ -253,10 +254,9 @@ public abstract class AnnotationPageBase
     protected void ensureRequiredFeatureValuesSet(AjaxRequestTarget aTarget, JCas aJcas)
     {
         AnnotatorState state = getModelObject();
-        JCas editorJCas = aJcas;
-        CAS editorCas = editorJCas.getCas();
+        CAS editorCas = aJcas.getCas();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
-            TypeAdapter adapter = TypeUtil.getAdapter(annotationService, layer);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             
             // If no feature is required, then we can skip the whole procedure
@@ -270,10 +270,10 @@ public abstract class AnnotationPageBase
                     if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
                         // Find the sentence that contains the annotation with the missing
                         // required feature value
-                        Sentence s = WebAnnoCasUtil.getSentence(editorJCas, fs.getBegin());
+                        Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
                         // Put this sentence into the focus
                         state.setFirstVisibleUnit(s);
-                        actionRefreshDocument(aTarget, editorJCas);
+                        actionRefreshDocument(aTarget);
                         // Inform the user
                         throw new IllegalStateException(
                                 "Document cannot be marked as finished. Annotation with ID ["

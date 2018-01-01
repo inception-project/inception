@@ -19,27 +19,29 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class JQuerySvgDomResourceReference extends JavaScriptResourceReference
+public class JQuerySvgDomResourceReference
+    extends JavaScriptResourceReference
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private static final JQuerySvgDomResourceReference INSTANCE = new JQuerySvgDomResourceReference();
+    private static final JQuerySvgDomResourceReference INSTANCE = 
+            new JQuerySvgDomResourceReference();
 
-	/**
-	 * Gets the instance of the resource reference
-	 *
-	 * @return the single instance of the resource reference
-	 */
-	public static JQuerySvgDomResourceReference get()
-	{
-		return INSTANCE;
-	}
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static JQuerySvgDomResourceReference get()
+    {
+        return INSTANCE;
+    }
 
-	/**
-	 * Private constructor
-	 */
-	private JQuerySvgDomResourceReference()
-	{
-		super(JQuerySvgDomResourceReference.class, "jquery.svgdom.min.js");
-	}
+    /**
+     * Private constructor
+     */
+    private JQuerySvgDomResourceReference()
+    {
+        super(JQuerySvgDomResourceReference.class, "jquery.svgdom.min.js");
+    }
 }

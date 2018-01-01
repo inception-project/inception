@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 
 public interface AutomationService
 {
-    static final String SERVICE_NAME = "automationService";
+    String SERVICE_NAME = "automationService";
     
     /**
      * Return list of training documents that are in the TOKEN TAB FEAURE formats
@@ -48,7 +48,8 @@ public interface AutomationService
     boolean existsTrainingDocument(Project project, String fileName);
     
     /**
-     * Get the directory of this {@link TrainingDocument} usually to read the content of the document
+     * Get the directory of this {@link TrainingDocument} usually to read the content of the
+     * document.
      *
      * @param trainingDocument
      *            the Training document.

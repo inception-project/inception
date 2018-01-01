@@ -63,25 +63,30 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum> implement
     public boolean isMutable() {
         return false;
     }
+    
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names,SessionImplementor session, Object owner)
-            throws HibernateException, SQLException {
+    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session,
+            Object owner)
+        throws HibernateException, SQLException
+    {
         String name = rs.getString(names[0]);
-        if(rs.wasNull()) {
+        if (rs.wasNull()) {
             return null;
         }
-        for(PersistentEnum value : returnedClass().getEnumConstants()) {
-            if(name.equals(value.getId())) {
+        for (PersistentEnum value : returnedClass().getEnumConstants()) {
+            if (name.equals(value.getId())) {
                 return value;
             }
         }
-        throw new IllegalStateException("Unknown " + returnedClass().getSimpleName() + " value ["
-                + name + "]");
+        throw new IllegalStateException(
+                "Unknown " + returnedClass().getSimpleName() + " value [" + name + "]");
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
-            throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement st, Object value, int index,
+            SessionImplementor session)
+        throws HibernateException, SQLException
+    {
         if (value == null) {
             st.setNull(index, Types.INTEGER);
         } else {

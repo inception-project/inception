@@ -32,6 +32,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -76,11 +78,20 @@ public class User
     private String email;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "authorities", joinColumns = { @JoinColumn(name = "username", referencedColumnName = "username") })
+    @CollectionTable(name = "authorities", joinColumns = {
+            @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date updated;
+    
     private String encodePassword(String aPassword)
     {
         if (passwordEncoder == null) {
@@ -182,5 +193,42 @@ public class User
     public void setLastLogin(Date aLastLogin)
     {
         lastLogin = aLastLogin;
+    }
+    
+    @PrePersist
+    protected void onCreate()
+    {
+        // When we import data, we set the fields via setters and don't want these to be 
+        // overwritten by this event handler.
+        if (created != null) {
+            created = new Date();
+            updated = created;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updated = new Date();
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
     }
 }

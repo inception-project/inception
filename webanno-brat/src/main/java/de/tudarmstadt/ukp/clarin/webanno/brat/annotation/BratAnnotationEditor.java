@@ -17,15 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -34,14 +34,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.markup.head.CssContentHeaderItem;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
@@ -56,14 +53,17 @@ import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryScrollbarWidthReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -111,8 +112,10 @@ public class BratAnnotationEditor
     private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
     private static final String PARAM_SPAN_TYPE = "type";
 
+    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
-
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
@@ -123,7 +126,7 @@ public class BratAnnotationEditor
         
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
-        add(vis);
+        autoAdd(vis, null);
 
         requestHandler = new AbstractDefaultAjaxBehavior()
         {
@@ -132,11 +135,15 @@ public class BratAnnotationEditor
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
+                if (getModelObject().getDocument() == null) {
+                    return;
+                }
+                
                 long timerStart = System.currentTimeMillis();
                 
                 // We always refresh the feedback panel - only doing this in the case were actually
                 // something worth reporting occurs is too much of a hassel...
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
 
                 final IRequestParameters request = getRequest().getPostParameters();
                 
@@ -157,10 +164,10 @@ public class BratAnnotationEditor
                 else {
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
-                
+
                 // Record the action in the action context (which currently is persistent...)
                 getModelObject().getAction().setUserAction(action);
-                
+
                 // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
                 // calls that do not go through this AjaxBehavior do not see an active user action.
                 RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
@@ -174,7 +181,8 @@ public class BratAnnotationEditor
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
-                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action) || DoActionResponse.is(action);
+                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
+                        || DoActionResponse.is(action);
                 JCas jCas = null;
                 if (requiresCasLoading) {
                     try {
@@ -187,127 +195,54 @@ public class BratAnnotationEditor
                     }
                 }
                 
-                
                 Object result = null;
                 try {
-                    boolean skipImplicitSlotActions = false;
-                    
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (DoActionResponse.is(action)) {
-                        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
-                        if (!layerParam.isEmpty()) {
-                            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
-                            AnnotationLayer layer = annotationService.getLayer(layerId);
-                            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
-                                // parse the action
-                                List<AnnotationFeature> features = annotationService
-                                        .listAnnotationFeature(layer);
-                                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas,
-                                        paramId.getId());
-                                Map<String, Object> functionParams = OnClickActionParser.parse(
-                                        layer, features, aModel.getObject().getDocument(), anno);
-                                // define anonymous function, fill the body and immediately execute
-                                String js = String.format("(function ($PARAM){ %s })(%s)",
-                                        layer.getOnClickJavascriptAction(),
-                                        JSONUtil.toJsonString(functionParams));
-                                aTarget.appendJavaScript(js);
-                                skipImplicitSlotActions = true;
-                            }
-                        }
+                        actionDoAction(aTarget, request, jCas, paramId);
                     }
-
-                    if (!skipImplicitSlotActions) {
-                        // HACK: If an arc was clicked that represents a link feature, then open the
-                        // associated span annotation instead.
-                        if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
-                            action = SpanAnnotationResponse.COMMAND;
-                            paramId = new VID(paramId.getId());
-                        }
-    
-                        // Doing anything but selecting or creating a span annotation when a slot is
-                        // armed
-                        // will unarm it
-                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
-                            getModelObject().clearArmedSlot();
-                        }
-                    }
-
-                    if (WhoamiResponse.is(action)) {
-                        result = new WhoamiResponse(
-                                SecurityContextHolder.getContext().getAuthentication().getName());
-                    }
-                    else if (SpanAnnotationResponse.is(action)) {
-                        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
-                        
-                        AnnotatorState state = getModelObject();
-                        Selection selection = state.getSelection();
-                        
-                        if (state.isSlotArmed()) {
-                            // When filling a slot, the current selection is *NOT* changed. The
-                            // Span annotation which owns the slot that is being filled remains
-                            // selected!
-                            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(),
-                                    offsets.getEnd(), paramId);
+                    else {
+                        if (paramId.isSynthetic()) {
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
                         }
                         else {
-                            selection.selectSpan(paramId, jCas, offsets.getBegin(),
-                                    offsets.getEnd());
-
-                            if (selection.getAnnotation().isNotSet()) {
-                                // Create new annotation
-                                state.getAction().setAnnotate(true);
-                                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                            // HACK: If an arc was clicked that represents a link feature, then 
+                            // open the associated span annotation instead.
+                            if (paramId.isSlotSet() && ArcAnnotationResponse.is(action)) {
+                                action = SpanAnnotationResponse.COMMAND;
+                                paramId = new VID(paramId.getId());
                             }
-                            else {
-                                state.getAction().setAnnotate(false);
-                                getActionHandler().actionSelect(aTarget, jCas);
+
+                            // Doing anything but selecting or creating a span annotation when a
+                            // slot is armed will unarm it
+                            if (getModelObject().isSlotArmed()
+                                    && !SpanAnnotationResponse.is(action)) {
+                                getModelObject().clearArmedSlot();
+                            }
+        
+                            if (WhoamiResponse.is(action)) {
+                                result = actionWhoami();
+                            }
+                            else if (SpanAnnotationResponse.is(action)) {
+                                result = actionSpan(aTarget, request, jCas, paramId);
+                            }
+                            else if (ArcAnnotationResponse.is(action)) {
+                                result = actionArc(aTarget, request, jCas, paramId);
+                            }
+                            else if (LoadConfResponse.is(action)) {
+                                result = new LoadConfResponse();
+                            }
+                            else if (GetCollectionInformationResponse.is(action)) {
+                                result = actionGetCollectionInformation();
+                            }
+                            else if (GetDocumentResponse.is(action)) {
+                                result = actionGetDocument(jCas);
                             }
                         }
-                        
-                        result = new SpanAnnotationResponse();
                     }
-                    else if (ArcAnnotationResponse.is(action)) {
-                        AnnotationFS originFs = selectByAddr(jCas,
-                                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
-                        AnnotationFS targetFs = selectByAddr(jCas,
-                                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
-                        
-                        AnnotatorState state = getModelObject();
-                        Selection selection = state.getSelection();
-                        selection.selectArc(paramId, originFs, targetFs);
-                        
-                        if (selection.getAnnotation().isNotSet()) {
-                            // Create new annotation
-                            state.getAction().setAnnotate(true);
-                            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
-                        }
-                        else {
-                            state.getAction().setAnnotate(false);
-                            getActionHandler().actionSelect(aTarget, jCas);
-                        }
-
-                        result = new ArcAnnotationResponse();
-                    }
-                    else if (LoadConfResponse.is(action)) {
-                        result = new LoadConfResponse();
-                    }
-                    else if (GetCollectionInformationResponse.is(action)) {
-                        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-                        if (getModelObject().getProject() != null) {
-                            info.setEntityTypes(BratRenderer.buildEntityTypes(
-                                    getModelObject().getAnnotationLayers(), annotationService));
-                        }
-                        result = info;
-                    }
-                    else if (GetDocumentResponse.is(action)) {
-                        GetDocumentResponse response = new GetDocumentResponse();
-                        if (getModelObject().getProject() != null) {
-                            render(response, jCas);
-                        }
-                        result = response;
-                    }
-
                 }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
@@ -335,6 +270,115 @@ public class BratAnnotationEditor
         add(requestHandler);
     }
 
+    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, JCas jCas,
+            VID paramId)
+        throws IOException
+    {
+        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        if (!layerParam.isEmpty()) {
+            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+            AnnotationLayer layer = annotationService.getLayer(layerId);
+            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
+                // parse the action
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas, paramId.getId());
+                Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
+                        getModelObject().getDocument(), anno);
+                // define anonymous function, fill the body and immediately execute
+                String js = String.format("(function ($PARAM){ %s })(%s)",
+                        layer.getOnClickJavascriptAction(), JSONUtil.toJsonString(functionParams));
+                aTarget.appendJavaScript(js);
+            }
+        }
+        
+        return null;
+    }
+    
+    private WhoamiResponse actionWhoami()
+    {
+        return new WhoamiResponse(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+    
+    private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
+            JCas jCas, VID paramId)
+        throws IOException, AnnotationException
+    {
+        Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+
+        if (state.isSlotArmed()) {
+            // When filling a slot, the current selection is *NOT* changed. The
+            // Span annotation which owns the slot that is being filled remains
+            // selected!
+            getActionHandler().actionFillSlot(aTarget, jCas, offsets.getBegin(), offsets.getEnd(),
+                    paramId);
+        }
+        else {
+            if (!paramId.isSynthetic()) {
+                selection.selectSpan(paramId, jCas, offsets.getBegin(), offsets.getEnd());
+
+                if (selection.getAnnotation().isNotSet()) {
+                    // Create new annotation
+                    state.getAction().setAnnotate(true);
+                    getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                }
+                else {
+                    state.getAction().setAnnotate(false);
+                    getActionHandler().actionSelect(aTarget, jCas);
+                }
+            }
+        }
+
+        return new SpanAnnotationResponse();
+    }
+    
+    private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
+            JCas jCas, VID paramId)
+        throws IOException, AnnotationException
+    {
+        AnnotationFS originFs = selectByAddr(jCas,
+                request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
+        AnnotationFS targetFs = selectByAddr(jCas,
+                request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        selection.selectArc(paramId, originFs, targetFs);
+
+        if (selection.getAnnotation().isNotSet()) {
+            // Create new annotation
+            state.getAction().setAnnotate(true);
+            getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+        }
+        else {
+            state.getAction().setAnnotate(false);
+            getActionHandler().actionSelect(aTarget, jCas);
+        }
+
+        return new ArcAnnotationResponse();
+    }
+    
+    private GetCollectionInformationResponse actionGetCollectionInformation()
+    {
+        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+        if (getModelObject().getProject() != null) {
+            info.setEntityTypes(BratRenderer
+                    .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+        }
+        return info;
+    }
+    
+    private GetDocumentResponse actionGetDocument(JCas jCas)
+    {
+        GetDocumentResponse response = new GetDocumentResponse();
+        if (getModelObject().getProject() != null) {
+            render(response, jCas);
+        }
+        return response;
+    }
+    
     /**
      * Extract offset information from the current request. These are either offsets of an existing
      * selected annotations or offsets contained in the request for the creation of a new
@@ -343,7 +387,7 @@ public class BratAnnotationEditor
     private Offsets getOffsetsFromRequest(IRequestParameters request, JCas jCas, VID aVid)
         throws  IOException
     {
-        if (aVid.isNotSet()) {
+        if (aVid.isNotSet() || aVid.isSynthetic()) {
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
@@ -379,96 +423,85 @@ public class BratAnnotationEditor
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
-        
-        // Override CSS
-        double textFontSize = getModelObject().getPreferences().getFontSize();
-        double spanFontSize = 10 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
-        double arcFontSize = 9 * (textFontSize / (float) AnnotationPreference.FONT_SIZE_DEFAULT);
-        
-        aResponse.render(CssContentHeaderItem.forCSS(String.format(Locale.US,
-                ".span text { font-size: %.1fpx; }\n" +
-                ".arcs text { font-size: %.1fpx; }\n" +
-                "text { font-size: %.1fpx; }\n", 
-                spanFontSize, arcFontSize, textFontSize), 
-                "brat-font"));
-        
+                
         // Libraries
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
-
-        // BRAT helpers
-        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
-
-        // BRAT modules
-        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        aResponse.render(forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQuerySvgResourceReference.get()));
+        aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
+        aResponse.render(forReference(JQueryJsonResourceReference.get()));
+        aResponse.render(forReference(JQueryScrollbarWidthReference.get()));
         
-        StringBuilder script = new StringBuilder();
-        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
-        // variable. If I put a "var" here, then communication fails with messages such as
-        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
-        // console.
-        script.append("(function() {");
-        script.append("var dispatcher = new Dispatcher();");
-        // Each visualizer talks to its own Wicket component instance
-        script.append("dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; ");
-        // We attach the JSON send back from the server to this HTML element
-        // because we cannot directly pass it from Wicket to the caller in ajax.js.
-        script.append("dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
-        script.append("var ajax = new Ajax(dispatcher);");
-        script.append("var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
-        script.append("var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
-        script.append("var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        //script.append("var logger = new AnnotationLog(dispatcher);");
-        script.append("dispatcher.post('init');");
-        script.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
-        script.append("Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
-        script.append("})();");
-
-        // Must be OnDomReader so that this is rendered before all other Javascript that is
-        // appended to the same AJAX request which turns the annotator visible after a document
-        // has been chosen.
-        aResponse.render(OnDomReadyHeaderItem.forScript(script.toString()));
+        // BRAT helpers
+        aResponse.render(forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(forReference(BratUtilResourceReference.get()));
+        // aResponse.render(
+        //    JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+        
+        // BRAT modules
+        aResponse.render(forReference(BratDispatcherResourceReference.get()));
+        aResponse.render(forReference(BratAjaxResourceReference.get()));
+        aResponse.render(forReference(BratVisualizerResourceReference.get()));
+        aResponse.render(forReference(BratVisualizerUiResourceReference.get()));
+        aResponse.render(forReference(BratAnnotatorUiResourceReference.get()));
+        // aResponse.render(
+        //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         
         // If the page is reloaded in the browser and a document was already open, we need
         // to render it. We use the "later" commands here to avoid polluting the Javascript
         // header items with document data and because loading times are not that critical
         // on a reload.
-        if (getModelObject().getProject() != null) {
+        // We only do this if we are *not* in a partial page reload. The case of a partial
+        // page reload is covered in onAfterRender()
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        if (target.isPresent() && getModelObject().getProject() != null) {
             bratInitRenderLater(aResponse);
         }
     }
-
-//    private String bratInitCommand()
-//    {
-//        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
-//        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject()
-//                .getAnnotationLayers(), annotationService));
-//        String json = toJson(response);
-//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
-//                + "]);";
-//    }
     
-//    public void bratInit(AjaxRequestTarget aTarget)
-//    {
-//        aTarget.appendJavaScript(bratInitCommand());
-//    }
+    @Override
+    protected void onAfterRender()
+    {
+        super.onAfterRender();
+        
+        // If we are in a partial page request, then trigger re-initialization of the brat 
+        // rendering engine here. If we are in a full page reload, this is handled already
+        // by renderHead()
+        //
+        // Mind that using AnnotationEditorBase#requestRender() is a better alternative to
+        // adding the editor to the AJAX request because it creates less initialization 
+        // overhead (e.g. it doesn't have to send the collection info again and doesn't require
+        // a delay).
+        RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
+            try {
+                String script = "setTimeout(function() { " +
+                        bratInitCommand() +
+                        bratLoadCollectionCommand() +
+                        // Even with a timeout, brat will try to grab too much space if the view
+                        // contains a *very* long annotation which explodes the view (cf. 
+                        // https://github.com/webanno/webanno/issues/500) - so as a last resort,
+                        // we schedule a delayed rendering. Since this only happens on a document
+                        // switch and after closing the preferences dialog, it is kind of
+                        // acceptable, although actually a faster document switch would be
+                        // desirable.
+                        // bratRenderCommand(getJCasProvider().get()) +
+                        bratRenderLaterCommand() +
+                        "}, 0);";
+                target.appendJavaScript(script);
+                LOG.debug("Delayed rendering in partial page update...");
+            }
+            catch (Exception e) {
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                target.addChildren(getPage(), IFeedback.class);
+            }
+        });
+    }
 
     private String bratRenderCommand(JCas aJCas)
     {
-        LOG.debug("BEGIN bratRenderCommand");
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aJCas);
         String json = toJson(response);
-        LOG.debug("END bratRenderCommand");
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + json
                 + "]);";
     }
@@ -476,8 +509,24 @@ public class BratAnnotationEditor
     private void render(GetDocumentResponse response, JCas aJCas)
     {
         VDocument vdoc = new VDocument();
-        PreRenderer.render(vdoc, getModelObject(), aJCas, annotationService, getLayersToRender());
+        preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
+        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
         
+        if (isHighlightEnabled()) {
+            AnnotatorState state = getModelObject();
+            
+            // Disabling for 3.3.0 by default per #406
+            // FIXME: should be enabled by default and made optional per #606
+            // if (state.getFocusUnitIndex() > 0) {
+            // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
+            // }
+            
+            if (state.getSelection().getAnnotation().isSet()) {
+                vdoc.add(new VAnnotationMarker(
+                        VMarker.FOCUS, state.getSelection().getAnnotation()));
+            }
+        }
+
         BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
     }
 
@@ -500,17 +549,52 @@ public class BratAnnotationEditor
         return layersToRender;
     }
     
-    /**
-     * This triggers the loading of the metadata (colors, types, etc.)
-     *
-     * @return the init script.
-     */
-    private String bratInitLaterCommand()
+    private String bratInitCommand()
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
-                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
-                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
+        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
+        // variable. If I put a "var" here, then communication fails with messages such as
+        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
+        // console.
+        String script = "(function() {" +
+            "var dispatcher = new Dispatcher();" +
+            // Each visualizer talks to its own Wicket component instance
+            "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
+            // We attach the JSON send back from the server to this HTML element
+            // because we cannot directly pass it from Wicket to the caller in ajax.js.
+            "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
+            "var ajax = new Ajax(dispatcher);" +
+            "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
+            "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
+            "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
+            //script.append("var logger = new AnnotationLog(dispatcher);");
+            "dispatcher.post('init');" +
+            "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
+            "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
+            "})();";
+        return script;
     }
+    
+    private String bratLoadCollectionCommand()
+    {
+        GetCollectionInformationResponse response = new GetCollectionInformationResponse();
+        response.setEntityTypes(BratRenderer
+                .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+        String json = toJson(response);
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
+                + "]);";
+    }
+    
+//    /**
+//     * This triggers the loading of the metadata (colors, types, etc.)
+//     *
+//     * @return the init script.
+//     */
+//    private String bratLoadCollectionLaterCommand()
+//    {
+//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
+//                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
+//                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
+//    }
 
     /**
      * This one triggers the loading of the actual document data
@@ -531,59 +615,35 @@ public class BratAnnotationEditor
      */
     private void bratInitRenderLater(IHeaderResponse aResponse)
     {
-        aResponse.render(OnLoadHeaderItem.forScript(bratInitLaterCommand()));
-        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+        // Must be OnDomReader so that this is rendered before all other Javascript that is
+        // appended to the same AJAX request which turns the annotator visible after a document
+        // has been chosen.
+//        aResponse.render(OnDomReadyHeaderItem.forScript(bratInitCommand()));
+//        aResponse.render(OnLoadHeaderItem.forScript(bratLoadCollectionLaterCommand()));
+//        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
+        String script = "setTimeout(function() { " +
+                bratInitCommand() +
+                bratLoadCollectionCommand() +
+                bratRenderLaterCommand() +
+                "}, 0);";
+        aResponse.render(OnDomReadyHeaderItem.forScript(script));
+        
     }
 
-    /**
-     * Render content in a separate request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     */
     @Override
-    public void renderLater(AjaxRequestTarget aTarget)
+    protected void render(AjaxRequestTarget aTarget)
     {
-        aTarget.appendJavaScript(bratRenderLaterCommand());
-    }
-
-    /**
-     * Render content as part of the current request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     * @param aJCas
-     *            the CAS to render.
-     */
-    @Override
-    public void render(AjaxRequestTarget aTarget, JCas aJCas)
-    {
-        aTarget.appendJavaScript(bratRenderCommand(aJCas));
+        try {
+            aTarget.appendJavaScript("setTimeout(function() { "
+                    + bratRenderCommand(getJCasProvider().get()) + " }, 0);");
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
     
-    /**
-     * Render content as part of the current request.
-     *
-     * @param aTarget
-     *            the AJAX target.
-     * @param aAnnotationId
-     *            the annotation ID to highlight.
-     */
-    @Override
-    public void setHighlight(AjaxRequestTarget aTarget, VID aAnnotationId)
-    {
-        if (!aAnnotationId.isSet()) {
-            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                    + "').dispatcher.post('current', " + "['" + getCollection()
-                    + "', '1234', {edited:[]}, false]);");
-        }
-        else {
-            aTarget.appendJavaScript("Wicket.$('" + vis.getMarkupId()
-                    + "').dispatcher.post('current', " + "['" + getCollection()
-                    + "', '1234', {edited:[[\"" + aAnnotationId + "\"]]}, false]);");
-        }
-    }
-
     private String getCollection()
     {
         if (getModelObject().getProject() != null) {

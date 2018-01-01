@@ -18,85 +18,102 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import java.io.Serializable;
-/***
+
+/**
  * Class for indicating whether Constraints affected a feature or not.
  * https://github.com/webanno/webanno/issues/46
- * 
- *
  */
 public class RulesIndicator
     implements Serializable
 {
-
     private static final long serialVersionUID = -5606299056181945134L;
-    private int status= 0;
+    private int status = 0;
     private boolean affected;
-    
-    public String getStatusColor(){
-        if(status==1){
+
+    public String getStatusColor()
+    {
+        if (status == 1) {
             return "red";
-        }else if(status==2){
+        }
+        else if (status == 2) {
             return "orange";
-        }else if(status==3){
+        }
+        else if (status == 3) {
             return "green";
-        }else{
+        }
+        else {
             return "";
         }
     }
-    
-    public boolean isAffected(){
+
+    public boolean isAffected()
+    {
         return affected;
     }
+    
     public void reset()
     {
-        status=0;
-        affected=false;
-        
+        status = 0;
+        affected = false;
     }
 
-    //Sets if rules can affect or not.
-    public void setAffected(boolean existence){
-        affected=existence;
+    /**
+     * Sets if rules can affect or not.
+     */
+    public void setAffected(boolean existence)
+    {
+        affected = existence;
     }
     
-    // if a feature is affected by a constraint but there is no tagset defined on
-    // the feature. In such a case the constraints cannot reorder tags and have no effect.
-    public void didntMatchAnyTag(){
-        if(affected && status!=2 && status!=3){
-            status=1;
+    /**
+     * If a feature is affected by a constraint but there is no tagset defined on the feature. In
+     * such a case the constraints cannot reorder tags and have no effect.
+     */
+    public void didntMatchAnyTag()
+    {
+        if (affected && status != 2 && status != 3) {
+            status = 1;
         }
     }
     
-    // if a feature is affected by a constraint but no rule covers the feature
-    // value, e.g. @Lemma.value = "go" -> aFrame = "going". Here aFrame is affected by a
-    // constraint. However, if the actual lemma annotated in the document is walk and there is
-    // no rule that covers walk, then we should also indicate that.
-    public void didntMatchAnyRule(){
-        if(affected && status!=3 && status!=1){
-            status =2;
+    /**
+     * if a feature is affected by a constraint but no rule covers the feature value, e.g.
+     * <code>@Lemma.value = "go" -&gt; aFrame = "going"</code>. Here aFrame is affected by a
+     * constraint. However, if the actual lemma annotated in the document is walk and there is no
+     * rule that covers walk, then we should also indicate that.
+     */
+    public void didntMatchAnyRule()
+    {
+        if (affected && status != 3 && status != 1) {
+            status = 2;
         }
     }
     
-    // for case that a constrained actually applied ok there should be a marker.
-    public void rulesApplied(){
-       status = 3;
+    /** 
+     * For case that a constrained actually applied ok there should be a marker. 
+     */
+    public void rulesApplied()
+    {
+        status = 3;
     }
 
     /**
      * https://github.com/webanno/webanno/issues/46
-     * @return status symbols in fontawesome 
+     * 
+     * @return status symbols in fontawesome
      */
     public String getStatusSymbol()
     {
-        if(status==1){ //red
+        if (status == 1) { // red
             return "fa fa-exclamation-circle";
-        }else if(status==2){ //orange
+        }
+        else if (status == 2) { // orange
             return "fa fa-info-circle";
-        }else if(status==3){ //green
+        }
+        else if (status == 3) { // green
             return "fa fa-check-circle";
         }
         return "";
-        
     }
 }
 

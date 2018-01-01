@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
- * Provides contains the {@link de.tudarmstadt.ukp.clarin.webanno.webapp.WicketApplication} class for
- * system wide configurations
+ * Provides contains the {@link de.tudarmstadt.ukp.clarin.webanno.webapp.WicketApplication} class
+ * for system wide configurations
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;

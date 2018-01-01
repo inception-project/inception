@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -82,7 +81,7 @@ public class Offsets
     {
         @Override
         public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt)
-            throws IOException, JsonProcessingException
+            throws IOException
         {
             Offsets offsets = new Offsets();
 

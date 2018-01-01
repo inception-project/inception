@@ -18,7 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
 
 /**
  * This is a class representing the bean objects to store users preference of annotation settings
@@ -31,16 +37,20 @@ public class AnnotationPreference
 {
     private static final long serialVersionUID = 2202236699782758271L;
 
-    public static final int FONT_SIZE_MIN = 10;
-    public static final int FONT_SIZE_MAX = 17;
-    public static final int FONT_SIZE_DEFAULT = 13;
+    public static final int FONT_ZOOM_MIN = 10;
+    public static final int FONT_ZOOM_MAX = 1000;
+    public static final int FONT_ZOOM_DEFAULT = 100;
     
     public static final int SIDEBAR_SIZE_MIN = 10;
     public static final int SIDEBAR_SIZE_MAX = 50;
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
     
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
+    @Deprecated
     private List<Long> annotationLayers;
+    
+    // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
+    private List<Long> hiddenAnnotationLayerIds = new ArrayList<>();
 
     private int windowSize;
 
@@ -50,24 +60,52 @@ public class AnnotationPreference
     
     // if a default layer is to be set
     private boolean rememberLayer;
-    
-    // determine if static color for annotations will be used or we shall
-    // dynamically generate one
-    private boolean staticColor = true;
-    
+
+    // // determine if static color for annotations will be used or we shall
+    // // dynamically generate one
+    @Deprecated
+    private boolean staticColor = true; // this is only here to not break previous user settings,
+                                        // its not an option that can be set anymore
+
+    private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
+
+    private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = 
+            ReadonlyColoringBehaviour.LEGACY;
+
     private int sidebarSize;
-    private int fontSize;
+    private int fontZoom;
     
     private String editor;
 
+    /**
+     * working with preferred layers is deprecated, use hidden layers instead
+     * @return
+     */
+    @Deprecated
     public List<Long> getAnnotationLayers()
     {
         return annotationLayers;
     }
-
+    
+    /**
+     * working with preferred layers is deprecated, use hidden layers instead 
+     * 
+     * @param aAnnotationLayers
+     */
+    @Deprecated()
     public void setAnnotationLayers(List<Long> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
+    }
+    
+    public List<Long> getHiddenAnnotationLayerIds()
+    {
+        return hiddenAnnotationLayerIds;
+    }
+    
+    public void setHiddenAnnotationLayerIds(List<Long> aAnnotationLayerIds)
+    {
+        hiddenAnnotationLayerIds = aAnnotationLayerIds;
     }
 
     /**
@@ -129,14 +167,31 @@ public class AnnotationPreference
         rememberLayer = aRememberLayer;
     }
 
+    public Map<Long, ColoringStrategyType> getColorPerLayer()
+    {
+        return colorPerLayer;
+    }
+
+    public void setColorPerLayer(Map<Long, ColoringStrategyType> colorPerLayer)
+    {
+        this.colorPerLayer = colorPerLayer;
+    }
+
+    public ReadonlyColoringBehaviour getReadonlyLayerColoringBehaviour()
+    {
+        return readonlyLayerColoringBehaviour;
+    }
+
+    public void setReadonlyLayerColoringBehaviour(
+            ReadonlyColoringBehaviour readonlyLayerColoringBehaviour)
+    {
+        this.readonlyLayerColoringBehaviour = readonlyLayerColoringBehaviour;
+    }
+
+    @Deprecated
     public boolean isStaticColor()
     {
         return staticColor;
-    }
-
-    public void setStaticColor(boolean staticColor)
-    {
-        this.staticColor = staticColor;
     }
 
     public int getSidebarSize()
@@ -162,26 +217,26 @@ public class AnnotationPreference
         }
     }
     
-    public int getFontSize()
+    public int getFontZoom()
     {
-        if (fontSize < FONT_SIZE_MIN || fontSize > FONT_SIZE_MAX) {
-            return FONT_SIZE_DEFAULT;
+        if (fontZoom < FONT_ZOOM_MIN || fontZoom > FONT_ZOOM_MAX) {
+            return FONT_ZOOM_DEFAULT;
         }
         else {
-            return fontSize;
+            return fontZoom;
         }
     }
 
-    public void setFontSize(int aFontSize)
+    public void setFontZoom(int aFontZoom)
     {
-        if (aFontSize > FONT_SIZE_MAX) {
-            fontSize = FONT_SIZE_MAX;
+        if (aFontZoom > FONT_ZOOM_MAX) {
+            fontZoom = FONT_ZOOM_MAX;
         }
-        else if (aFontSize < FONT_SIZE_MIN) {
-            fontSize = FONT_SIZE_MIN;
+        else if (aFontZoom < FONT_ZOOM_MIN) {
+            fontZoom = FONT_ZOOM_MIN;
         }
         else {
-            fontSize = aFontSize;
+            fontZoom = aFontZoom;
         }
     }
     

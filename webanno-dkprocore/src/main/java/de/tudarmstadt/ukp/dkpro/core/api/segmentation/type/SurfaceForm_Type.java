@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//CHECKSTYLE:OFF
 
 /* First created by JCasGen Fri Jun 17 19:10:16 CEST 2016 */
 package de.tudarmstadt.ukp.dkpro.core.api.segmentation.type;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.JCasRegistry;
-import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.FSGenerator;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.impl.TypeImpl;
@@ -107,7 +107,3 @@ public class SurfaceForm_Type extends Annotation_Type {
 
   }
 }
-
-
-
-    

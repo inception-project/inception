@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+#Copyright 2017
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+<wicket:panel>
+  <ul wicket:id="feedbackul" class="feedbackPanel">
+    <li wicket:id="closeAll" class="alert alert-warning">
+      <a href="#" onClick="$('.alert').alert('close')">Dismiss all messages</a>
+    </li>
+    <li wicket:id="messages">
+      <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+      <span wicket:id="message">A message</span>
+    </li>
+  </ul>
+  <script>
+    setTimeout(function() {
+      	$(".alert.alert-success").fadeTo(600, 0, function(){
+        $(".alert.alert-success").alert('close');
+      });
+      $(".alert.alert-info").fadeTo(600, 0, function(){
+        $(".alert.alert-info").alert('close');
+      });
+    }, 2000);
+  </script>
+</wicket:panel>
+</body>
+</html>

@@ -25,8 +25,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -43,10 +41,12 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -86,12 +86,12 @@ public class AgreementTable
             @Override
             public List<String> getObject()
             {
-              List<String> raters = new ArrayList<>();
-              if (getModelObject() != null) {
-                  raters.add(null);
-                  raters.addAll(getModelObject().getRaters());
-              }
-              return raters;
+                List<String> raters = new ArrayList<>();
+                if (getModelObject() != null) {
+                    raters.add(null);
+                    raters.addAll(getModelObject().getRaters());
+                }
+                return raters;
             }
         };
 
@@ -169,31 +169,29 @@ public class AgreementTable
                             else {
                                 label = String.format("%.2f", result.getAgreement());
                             }
-                            
-                            StringBuilder tooltipTitle = new StringBuilder();
-                            tooltipTitle.append(result.getCasGroupIds().get(0));
-                            tooltipTitle.append('/');
-                            tooltipTitle.append(result.getCasGroupIds().get(1));
-                            
-                            StringBuilder tooltipContent = new StringBuilder();
-                            tooltipContent.append("Positions annotated:\n");
-                            tooltipContent.append(String.format("- %s: %d/%d%n",
+
+                            String tooltipTitle = result.getCasGroupIds().get(0) +
+                                '/' +
+                                result.getCasGroupIds().get(1);
+
+                            String tooltipContent = "Positions annotated:\n" +
+                                String.format("- %s: %d/%d%n",
                                     result.getCasGroupIds().get(0),
                                     result.getNonNullCount(result.getCasGroupIds().get(0)),
-                                    result.getStudy().getItemCount()));
-                            tooltipContent.append(String.format("- %s: %d/%d%n",
+                                    result.getStudy().getItemCount()) +
+                                String.format("- %s: %d/%d%n",
                                     result.getCasGroupIds().get(1),
                                     result.getNonNullCount(result.getCasGroupIds().get(1)),
-                                    result.getStudy().getItemCount()));
-                            tooltipContent.append(String.format("Distinct labels used: %d%n",
-                                    result.getStudy().getCategoryCount()));
-                            
+                                    result.getStudy().getItemCount()) +
+                                String.format("Distinct labels used: %d%n",
+                                    result.getStudy().getCategoryCount());
+
                             Label l = new Label("label", Model.of(label)); 
                             cell.add(l);
                             l.add(makeDownloadBehavior(aRowItem.getModelObject(),
                                     aCellItem.getModelObject()));
                             DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-                                    tooltipTitle.toString(), tooltipContent.toString());
+                                tooltipTitle, tooltipContent);
                             tooltip.setOption("position", (Object) null);
                             l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: pointer", ";"));
@@ -222,7 +220,7 @@ public class AgreementTable
                             
                             Label l = new Label("label", Model.of(label)); 
                             DescriptionTooltipBehavior tooltip = new DescriptionTooltipBehavior(
-                                    tooltipTitle.toString(), tooltipContent.toString());
+                                tooltipTitle, tooltipContent.toString());
                             tooltip.setOption("position", (Object) null);
                             l.add(tooltip);
                             l.add(new AttributeAppender("style", "cursor: help", ";"));

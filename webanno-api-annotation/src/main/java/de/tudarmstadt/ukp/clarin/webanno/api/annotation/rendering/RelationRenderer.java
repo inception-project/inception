@@ -19,27 +19,32 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Page;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -52,21 +57,23 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
 public class RelationRenderer
-    implements Renderer
+    extends Renderer_ImplBase<ArcAdapter>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ArcAdapter typeAdapter;
-    
-    public RelationRenderer(ArcAdapter aTypeAdapter)
+    public RelationRenderer(ArcAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        typeAdapter = aTypeAdapter;
+        super(aTypeAdapter, aFeatureSupportRegistry);
     }
     
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, AnnotatorState aBratAnnotatorModel)
     {
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+        
+        ArcAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
         int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
@@ -98,17 +105,26 @@ public class RelationRenderer
             }
 
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            Map<String, String> features = getFeatures(typeAdapter, fs, aFeatures);
+            Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             
             if (dependentFs == null || governorFs == null) {
-                log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot render");
+                RequestCycle requestCycle = RequestCycle.get();
+                IPageRequestHandler handler = PageRequestHandlerTracker
+                        .getLastHandler(requestCycle);
+                Page page = (Page) handler.getPage();
+
+                StringBuilder message = new StringBuilder();
+                
+                message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
+                        + getAddr(fs) + "] has loose ends - cannot render.");
                 if (typeAdapter.getAttachFeatureName() != null) {
-                    log.warn("Relation [" + typeAdapter.getLayer().getName()
-                            + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "]");
+                    message.append("\nRelation [" + typeAdapter.getLayer().getName()
+                            + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
                 }
-                log.warn("Dependent: " + dependentFs);
-                log.warn("Governor: " + governorFs);
+                message.append("\nDependent: " + dependentFs);
+                message.append("\nGovernor: " + governorFs);
+                
+                page.warn(message.toString());
                 
                 continue;
             }
@@ -117,7 +133,7 @@ public class RelationRenderer
                     dependentFs, features));
 
             // Render errors if required features are missing
-            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
+            renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
             
             if (relationLinks.keySet().contains(getAddr(governorFs))
                     && !yieldDeps.contains(getAddr(governorFs))) {
@@ -125,11 +141,10 @@ public class RelationRenderer
 
                 // sort the annotations (begin, end)
                 List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                sortedDepFs.sort(Comparator.comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
+                sortedDepFs.sort(comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
 
                 String cm = getYieldMessage(aJcas, sortedDepFs);
-                aResponse.add(
-                        new VComment(governorFs, VCommentType.YIELD, "Yield of relation:" + cm));
+                aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
             }
         }
     }
@@ -147,16 +162,16 @@ public class RelationRenderer
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             // if no space between token and punct
-            else if (end==selectByAddr(aJCas, depFs).getBegin()){
+            else if (end == selectByAddr(aJCas, depFs).getBegin()) {
                 cm.append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             else if (end + 1 != selectByAddr(aJCas, depFs).getBegin()) {
-                cm.append(" ... " + selectByAddr(aJCas, depFs).getCoveredText());
+                cm.append(" ... ").append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
             else {
-                cm.append(" " + selectByAddr(aJCas, depFs).getCoveredText());
+                cm.append(" ").append(selectByAddr(aJCas, depFs).getCoveredText());
                 end = selectByAddr(aJCas, depFs).getEnd();
             }
 
@@ -171,6 +186,7 @@ public class RelationRenderer
             int aWindowEnd, Type type, Feature dependentFeature, Feature governorFeature,
             Feature arcSpanFeature)
     {
+        ArcAdapter typeAdapter = getTypeAdapter();
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
@@ -214,12 +230,10 @@ public class RelationRenderer
     private void updateLinks(Map<Integer, Set<Integer>> aRelLinks, Integer aGov)
     {
         for (Integer dep : aRelLinks.get(aGov)) {
-            if (aRelLinks.containsKey(dep) && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
+            if (aRelLinks.containsKey(dep)
+                    && !aRelLinks.get(aGov).containsAll(aRelLinks.get(dep))) {
                 aRelLinks.get(aGov).addAll(aRelLinks.get(dep));
                 updateLinks(aRelLinks, dep);
-            }
-            else {
-                continue;
             }
         }
     }

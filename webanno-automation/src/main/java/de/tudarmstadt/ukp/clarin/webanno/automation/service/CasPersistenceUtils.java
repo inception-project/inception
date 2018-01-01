@@ -41,28 +41,28 @@ public final class CasPersistenceUtils
     }
 
     public static void writeSerializedCas(JCas aJCas, File aFile)
-            throws IOException
-        {
-            FileUtils.forceMkdir(aFile.getParentFile());
+        throws IOException
+    {
+        FileUtils.forceMkdir(aFile.getParentFile());
 
-            try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-                CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
-                os.writeObject(serializer);
-            }
+        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+            CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
+            os.writeObject(serializer);
         }
+    }
 
-        public static void readSerializedCas(JCas aJCas, File aFile)
-            throws IOException
-        {
-            try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
-                CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-                deserializeCASComplete(serializer, aJCas.getCasImpl());
-                // Initialize the JCas sub-system which is the most often used API in DKPro Core
-                // components
-                aJCas.getCas().getJCas();
-            }
-            catch (CASException | ClassNotFoundException e) {
-                throw new IOException(e);
-            }
+    public static void readSerializedCas(JCas aJCas, File aFile)
+        throws IOException
+    {
+        try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
+            CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
+            deserializeCASComplete(serializer, aJCas.getCasImpl());
+            // Initialize the JCas sub-system which is the most often used API in DKPro Core
+            // components
+            aJCas.getCas().getJCas();
         }
+        catch (CASException | ClassNotFoundException e) {
+            throw new IOException(e);
+        }
+    }
 }

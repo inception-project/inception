@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static org.apache.uima.fit.util.FSUtil.*;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ import javax.annotation.Resource;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
@@ -47,7 +49,8 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
+            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+                    && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -55,11 +58,13 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno   -> e.g. Lemma
+            // anno -> e.g. Lemma
             // attach -> e.g. Token
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
-                for (AnnotationFS attach : selectCovered(getType(aCas, layer.getAttachType().getName()), anno)) {
-                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(), AnnotationFS.class);
+                for (AnnotationFS attach : selectCovered(
+                        getType(aCas, layer.getAttachType().getName()), anno)) {
+                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
+                            AnnotationFS.class);
                     if (candidate == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
                         count++;
@@ -70,10 +75,11 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
                     }
                 }
             }
-            
+
             if (count > 0) {
                 aMessages.add(new LogMessage(this, LogLevel.INFO,
-                        "Reattached [%d] unattached spans on layer [" + layer.getName() + "].", count));
+                        "Reattached [%d] unattached spans on layer [" + layer.getName() + "].",
+                        count));
             }
         }
     }

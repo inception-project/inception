@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapper;
@@ -35,6 +36,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -84,14 +87,25 @@ public class PreferencesUtil
             Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
             for (Entry<Object, Object> entry : props.entrySet()) {
                 String property = entry.getKey().toString();
-                int index = property.lastIndexOf(".");
+                int index = property.indexOf(".");
                 String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
-                    if (AnnotationPreference.class.getDeclaredField(propertyName).getGenericType() instanceof ParameterizedType) {
-                        List<String> value = Arrays.asList(StringUtils.replaceChars(
-                                entry.getValue().toString(), "[]", "").split(","));
-                        if (!value.get(0).equals("")) {
+                    if (AnnotationPreference.class.getDeclaredField(propertyName)
+                            .getGenericType() instanceof ParameterizedType) {
+                        if (entry.getValue().toString().startsWith("[")) { // its a list
+                            List<String> value = Arrays.asList(
+                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "").split(","));
+                            if (!value.get(0).equals("")) {
+                                wrapper.setPropertyValue(propertyName, value);
+                            }
+                        }
+                        else if (entry.getValue().toString().startsWith("{")) { // its a map
+                            String s = StringUtils.replaceChars(entry.getValue().toString(), "{}",
+                                    "");
+                            Map<String, String> value = Arrays.stream(s.split(","))
+                                    .map(x -> x.split("="))
+                                    .collect(Collectors.toMap(x -> x[0], x -> x[1]));
                             wrapper.setPropertyValue(propertyName, value);
                         }
                     }
@@ -101,43 +115,57 @@ public class PreferencesUtil
                 }
             }
 
-            // Get tagset using the id, from the properties file
-            aBModel.getAnnotationLayers().clear();
-            if (preference.getAnnotationLayers() != null) {
-                for (Long id : preference.getAnnotationLayers()) {
-                    aBModel.getAnnotationLayers().add(aAnnotationService.getLayer(id));
+            // set layers according to preferences
+            List<AnnotationLayer> enabledLayers = aAnnotationService
+                    .listAnnotationLayer(aBModel.getProject()).stream()
+                    .filter(l -> l.isEnabled())// only allow enabled layers
+                    .collect(Collectors.toList());
+          
+            List<Long> hiddenLayerIds = preference.getHiddenAnnotationLayerIds();
+            enabledLayers = enabledLayers.stream()
+                    .filter(l -> !hiddenLayerIds.contains(l.getId()))
+                    .collect(Collectors.toList());
+          
+            aBModel.setAnnotationLayers(enabledLayers);
+            
+            // Get color preferences for each layer, init with legacy if not found
+            Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
+            for (AnnotationLayer layer : aAnnotationService
+                    .listAnnotationLayer(aBModel.getProject())) {
+                if (!colorPerLayer.containsKey(layer.getId())) {
+                    colorPerLayer.put(layer.getId(), ColoringStrategyType.LEGACY);
                 }
             }
-            else {
-                // If no layer preferences are defined, then just assume all layers are enabled
-                List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
-                        .getProject());
-                aBModel.setAnnotationLayers(layers);
-            }
+
         }
         // no preference found
         catch (Exception e) {
-            // If no layer preferences are defined, then just assume all layers are enabled
-            List<AnnotationLayer> layers = aAnnotationService.listAnnotationLayer(aBModel
-                    .getProject());
-            aBModel.setAnnotationLayers(layers);
+            // If no layer preferences are defined, 
+            // then just assume all enabled layers are preferred
+            List<AnnotationLayer> enabledLayers = aAnnotationService
+                    .listAnnotationLayer(aBModel.getProject()).stream()
+                    .filter(l -> l.isEnabled())// only allow enabled layers
+                    .collect(Collectors.toList()); 
+            aBModel.setAnnotationLayers(enabledLayers);
+            
             preference.setWindowSize(aSettingsService.getNumberOfSentences());
+            // add default coloring strategy
+            Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
+            for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
+                colorPerLayer.put(layer.getId(), ColoringStrategy
+                        .getBestInitialStrategy(aAnnotationService, layer, preference));
+            }
+            preference.setColorPerLayer(colorPerLayer);
+
         }
         
         aBModel.setPreferences(preference);
     }
 
     public static void savePreference(AnnotatorState aBModel, ProjectService aRepository)
-        throws FileNotFoundException, IOException
+        throws IOException
     {
         AnnotationPreference preference = aBModel.getPreferences();
-        ArrayList<Long> layers = new ArrayList<Long>();
-
-        for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-            layers.add(layer.getId());
-        }
-        preference.setAnnotationLayers(layers);
-
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
     }

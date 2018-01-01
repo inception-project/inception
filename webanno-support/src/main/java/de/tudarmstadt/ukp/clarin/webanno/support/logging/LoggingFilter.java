@@ -67,7 +67,7 @@ public class LoggingFilter
     public static void setLoggingUsername(String aUsername)
     {
         MDC.put(Logging.KEY_USERNAME, aUsername);
-        MDC.put("_username", "["+aUsername + "] ");
+        MDC.put("_username", "[" + aUsername + "] ");
     }
     
     public static void clearLoggingUsername()

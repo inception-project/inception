@@ -51,7 +51,11 @@ public abstract class OpenDocumentDialog
         setWidthUnit("px");
         setHeightUnit("px");
         setTitle("Open document");
-        setCloseButtonCallback((t) -> {closeButtonClicked = true; return true;});
+        setCssClassName("w_blue w_flex");
+        setCloseButtonCallback((t) -> {
+            closeButtonClicked = true;
+            return true;
+        });
     }
     
     public AnnotatorState getModelObject()
@@ -72,7 +76,7 @@ public abstract class OpenDocumentDialog
             protected void onCancel(AjaxRequestTarget aInnerTarget)
             {
                 closeButtonClicked = true;
-            };
+            }
         });
         
         setWindowClosedCallback(new ModalWindow.WindowClosedCallback()

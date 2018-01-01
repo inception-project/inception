@@ -61,13 +61,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * Export annotations in TAB separated format. Header includes information about the UIMA type and
  * features The number of columns are depend on the number of types/features exist. All the spans
  * will be written first and subsequently all the relations. relation is given in the form of
- * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates the
- * source of the relation (the source of the arc drown)
+ * Source--&gt;Target and the RelationType is added to the Target token. The next column indicates
+ * the source of the relation (the source of the arc drown)
  *
  * @author Seid Muhie Yimam
- *
  */
-
 public class WebannoTsv2Writer
     extends JCasFileWriter_ImplBase
 {
@@ -75,7 +73,7 @@ public class WebannoTsv2Writer
     /**
      * Name of configuration parameter that contains the character encoding used by the input files.
      */
-    public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
+    public static final String PARAM_ENCODING = ComponentParameters.PARAM_TARGET_ENCODING;
     @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String encoding;
 
@@ -367,7 +365,7 @@ public class WebannoTsv2Writer
                 if (annoFs.getBegin() <= token.getBegin() && annoFs.getEnd() >= token.getEnd()) {
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
                     if (annotation == null) {
-                        annotation = aType.getName()+"_";
+                        annotation = aType.getName() + "_";
                     }
                     if (aTokenAnnoMap.get(llCas.ll_getFSRef(token)) == null) {
                         if (previous) {
@@ -437,7 +435,7 @@ public class WebannoTsv2Writer
 
                     String annotation = annoFs.getFeatureValueAsString(aFeature);
                     if (annotation == null) {
-                        annotation = aType.getName()+"_";
+                        annotation = aType.getName() + "_";
                     }
                     if (aRelAnnoMap.get(llCas.ll_getFSRef(token)) == null) {
                         if (!multipleSpans.contains(aType.getName())) {
@@ -462,12 +460,12 @@ public class WebannoTsv2Writer
                         }
                     }
                 }
-                //TODO: remove the B- and I- code in the if/else above. no such a thing of 
-               // multiplespan annotation on relations.
+                // TODO: remove the B- and I- code in the if/else above. no such a thing of
+                // multiple-span annotation on relations.
                 
                 // if the annotation gov/dep span annotation is on multiple tokens,
-                //we just need an arc to the first token.
-                   break;
+                // we just need an arc to the first token.
+                break;
             }
         }
     }

@@ -34,7 +34,7 @@ public interface Repair
     
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
-    public static @interface Safe
+    @interface Safe
     {
         boolean value() default true;
     }

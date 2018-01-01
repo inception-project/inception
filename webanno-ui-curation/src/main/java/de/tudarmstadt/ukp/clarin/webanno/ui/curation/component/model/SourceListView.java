@@ -22,14 +22,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * A model comprises of Curation Segments comprising of the begin and end of the sentences, {@link SentenceState}
- *  Sentence number
- *
+ * A model comprises of Curation Segments comprising of the begin and end of the sentences,
+ * {@link SentenceState} Sentence number
  */
 public class SourceListView
     implements Serializable
 {
-
     private static final long serialVersionUID = 9219600871129699568L;
     // begin offset of sentences list, default is the begin of the document
     private Integer begin;
@@ -131,6 +129,4 @@ public class SourceListView
     {
         this.isCurrentSentence = isCurrentSentence;
     }
-
-
 }

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
 
 import java.io.File;
@@ -64,7 +64,7 @@ public class AutomationCasStorageServiceImpl
     {
         // Nothing to do
     }
-    	
+
     /**
      * Creates a CAS for the Automation documents
      *
@@ -77,70 +77,60 @@ public class AutomationCasStorageServiceImpl
     public void writeCas(TrainingDocument aDocument, JCas aJcas)
         throws IOException
     {
-    	
-    	   File annotationFolder = getAutomationFolder(aDocument);
-    	   File targetPath = getAutomationFolder(aDocument);   
-    	   writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas, annotationFolder, targetPath);
+        File annotationFolder = getAutomationFolder(aDocument);
+        File targetPath = getAutomationFolder(aDocument);
+        writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
+                annotationFolder, targetPath);
     }
     
-    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas, File aAnnotationFolder, File aTargetPath) throws IOException{
-    	  log.debug("Writing automation cas for document [{}]({})  in project [{}]({})",
-                  aDocumentName, aDocumentId, aProject.getName(),
-                  aProject.getId());
+    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
+            File aAnnotationFolder, File aTargetPath)
+        throws IOException
+    {
+        log.debug("Writing automation cas for document [{}]({})  in project [{}]({})",
+                aDocumentName, aDocumentId, aProject.getName(), aProject.getId());
 
-          try {
-              casDoctor.analyze(aProject, aJcas.getCas());
-          }
-          catch (CasDoctorException e) {
-              StringBuilder detailMsg = new StringBuilder();
-              detailMsg.append("CAS Doctor found problems in train document [" + aDocumentName + "] ("
-                      + aDocumentId + ") in project["
-                      + aProject.getName() + "] ("
-                      + aProject.getId() + ")\n");
-              e.getDetails().forEach(m -> detailMsg.append(
-                      String.format("- [%s] %s%n", m.level, m.message)));
-              
-              throw new DataRetrievalFailureException(detailMsg.toString());
-          }
-          catch (Exception e) {
-              throw new DataRetrievalFailureException("Error analyzing CAS  in train document [" + aDocumentName + "] ("
-                      + aDocumentId + ") in project ["
-                      + aProject.getName() + "] ("
-                      + aProject.getId() + ")", e);
-          }
-          
-          synchronized (lock) {
-              FileUtils.forceMkdir(aAnnotationFolder);
+        try {
+            casDoctor.analyze(aProject, aJcas.getCas());
+        }
+        catch (CasDoctorException e) {
+            StringBuilder detailMsg = new StringBuilder();
+            detailMsg.append("CAS Doctor found problems in train document [").append(aDocumentName)
+                    .append("] (").append(aDocumentId).append(") in project[")
+                    .append(aProject.getName()).append("] (").append(aProject.getId())
+                    .append(")\n");
+            e.getDetails().forEach(m -> 
+                    detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
 
-              // Save CAS of the training document
-              try {
+            throw new DataRetrievalFailureException(detailMsg.toString());
+        }
+        catch (Exception e) {
+            throw new DataRetrievalFailureException("Error analyzing CAS  in train document ["
+                    + aDocumentName + "] (" + aDocumentId + ") in project [" + aProject.getName()
+                    + "] (" + aProject.getId() + ")", e);
+        }
+        synchronized (lock) {
+            FileUtils.forceMkdir(aAnnotationFolder);
+            // Save CAS of the training document
+            {
+                DocumentMetaData md;
+                try {
+                    md = DocumentMetaData.get(aJcas);
+                }
+                catch (IllegalArgumentException e) {
+                    md = DocumentMetaData.create(aJcas);
+                }
+                md.setDocumentId(aDocumentName);
+                CasPersistenceUtils.writeSerializedCas(aJcas,
+                        new File(aTargetPath, aDocumentName + ".ser"));
 
-                  DocumentMetaData md;
-                  try {
-                      md = DocumentMetaData.get(aJcas);
-                  }
-                  catch (IllegalArgumentException e) {
-                      md = DocumentMetaData.create(aJcas);
-                  }
-                  md.setDocumentId(aDocumentName);
-                  CasPersistenceUtils.writeSerializedCas(aJcas,
-                          new File(aTargetPath, aDocumentName + ".ser"));
-
-                  try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                          String.valueOf(aProject.getId()))) {
-                      Project project = aProject;
-                      log.info(
-                              "Updated annotations on document [{}]({}) in project [{}]({})",
-                              aDocumentName, aDocumentId, project.getName(),
-                              project.getId());
-                  }                
-
-              }
-              catch (IOException e) {
-                  // Now abort 
-                  throw e;
-              }
-          }
+                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                        String.valueOf(aProject.getId()))) {
+                    log.info("Updated annotations on document [{}]({}) in project [{}]({})",
+                            aDocumentName, aDocumentId, aProject.getName(), aProject.getId());
+                }
+            }
+        }
     }
     
     @Override
@@ -162,9 +152,8 @@ public class AutomationCasStorageServiceImpl
                 File serializedCasFile = new File(annotationFolder, file);
                 if (!serializedCasFile.exists()) {
                     throw new FileNotFoundException("Annotation document of  Training document "
-                    		+ "[" + aDocument.getName() + "] ("
-                            + aDocument.getId() + ") not found in project["
-                            + aDocument.getProject().getName() + "] ("
+                            + "[" + aDocument.getName() + "] (" + aDocument.getId()
+                            + ") not found in project[" + aDocument.getProject().getName() + "] ("
                             + aDocument.getProject().getId() + ")");
                 }
 
@@ -184,10 +173,13 @@ public class AutomationCasStorageServiceImpl
     @Override
     public void analyzeAndRepair(TrainingDocument aDocument, CAS aCas)
     {
-      analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(), "Automation", aCas);
+        analyzeAndRepair(aDocument.getProject(), aDocument.getName(), aDocument.getId(),
+                "Automation", aCas);
     }
-    
-    private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,String aUsername, CAS aCas){
+
+    private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,
+            String aUsername, CAS aCas)
+    {
         // Check if repairs are active - if this is the case, we only need to run the repairs
         // because the repairs do an analysis as a pre- and post-condition. 
         if (casDoctor.isRepairsActive()) {
@@ -209,11 +201,11 @@ public class AutomationCasStorageServiceImpl
             }
             catch (CasDoctorException e) {
                 StringBuilder detailMsg = new StringBuilder();
-                detailMsg.append("CAS Doctor found problems for user ["
-                        + aUsername + "] in document [" + aDocumentName + "] ("
-                        + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")\n");
+                detailMsg.append("CAS Doctor found problems for user [").append(aUsername)
+                    .append("] in document [")
+                    .append(aDocumentName).append("] (").append(aDocumentId)
+                    .append(") in project[")
+                    .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
                 e.getDetails().forEach(m -> detailMsg.append(
                         String.format("- [%s] %s%n", m.level, m.message)));
                 
@@ -230,7 +222,8 @@ public class AutomationCasStorageServiceImpl
     }
     
     /**
-     * Get the folder where the Automation document annotations are stored. Creates the folder if necessary.
+     * Get the folder where the Automation document annotations are stored. Creates the folder if
+     * necessary.
      *
      * @throws IOException
      *             if the folder cannot be created.
@@ -239,8 +232,9 @@ public class AutomationCasStorageServiceImpl
     public File getAutomationFolder(TrainingDocument aDocument)
         throws IOException
     {
-        File annotationFolder = new File(dir, PROJECT + aDocument.getProject().getId() + TRAIN
-                + aDocument.getId() + ANNOTATION);
+        File annotationFolder = new File(dir,
+                "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + TRAIN
+                        + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         FileUtils.forceMkdir(annotationFolder);
         return annotationFolder;
     }

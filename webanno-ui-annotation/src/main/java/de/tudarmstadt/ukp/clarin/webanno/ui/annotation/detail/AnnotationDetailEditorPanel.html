@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2015
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,16 +16,15 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
 <wicket:head>
-	<script type="text/javascript">
+  <script type="text/javascript">
 	$(document).ready(function() {
 		// Based on this accepted answer of so
 		// http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
 		function manageEnter() {			
-			$(".annotationFeatureForm :input").keypress(function(e) {
+			$("#annotationFeatureForm :input").keypress(function(e) {
 			    if (e.which == 13) {
 			        e.preventDefault();
 			        var inputs = $(this).parents("form").eq(0).find(":input");
@@ -39,7 +39,7 @@
 	                return false;
 			    }
 			});		
-		};
+		}
 		$(document).on("keypress", manageEnter);
 		manageEnter();
 	});
@@ -47,130 +47,86 @@
 </wicket:head>
 </head>
 <body>
-	<wicket:panel>
-		<form class="annotationFeatureForm" wicket:id="annotationFeatureForm">
-			<div wicket:id=yesNoModal></div>
-				<fieldset>
-					<legend>Actions</legend>
-					<table>
-						<tr>
-							<td colspan="3">
-								<button type="button"  wicket:id="delete">Delete</button>
-								<button class="buttons" wicket:id="reverse">Reverse</button>
-								<button class="buttons" wicket:id="clear">Clear</button>
-							</td>
-						</tr>
-						<tr>
-							<td>Layer</td>
-							<td><select wicket:id="defaultAnnotationLayer"
-								style="width: 100%"></select></td>
-						</tr>
-						<tr>
-							<td colspan="2">Forward annotation ?</td>
-							<td><input type="checkbox" wicket:id="forwardAnnotation" /></td>
-						</tr>					 				
-					</table>
-			    </fieldset>		
-			    <fieldset>
-				<legend>Annotation</legend>
-				  <span wicket:id="noAnnotationWarning"></span>
-	              <div style="width: 1px; height: 1px; overflow: hidden;">
-	                  <input style=" width:100%; display: block; overflow: hidden; height: 1px" wicket:id=forwardAnno></input>
-	              </div>
-				  <div wicket:id="featureEditorsContainer">
-					<table class="hfill">
-						<tr>
-							<td colspan="2"><label wicket:id="layerName"></label></td>
-	                        <td class="hfill"><div class="hfill k-textbox"
-	                                style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
-	                                wicket:id="selectedAnnotationLayer"></div></td>
-						</tr>
-						<tr>
-							<td colspan="2" style="white-space: nowrap;">Text</td>
-							<td class="hfill"><div class="hfill k-textbox"
-		                            style="display: block; background: 0; padding-left: 0.3em; padding-right: 0.3em; padding-top: 0.4em; padding-bottom: 0.4em;"
-		                            wicket:id="selectedText"></div></td>
-						</tr>
-					</table>
-	                <table class="hfill">
-						<tr>
-						   <td colspan="3"><hr></hr></td>
-						</tr>
-	                    <tr>
-	                       <td colspan="3"><span wicket:id="noFeaturesWarning"></span></td>
-	                    </tr>
-						<tr wicket:id="featureValues" id="featureValues">
-							<td wicket:id="editor"></td>
-						</tr>
-					</table>
-				</div>
-			</fieldset>
-            <wicket:fragment wicket:id="textFeatureEditor">
-                <td>
-                    <span wicket:id="feature"></span>
-                    <span wicket:id="textIndicator" class="" style=""></span>
-                </td>
-                <td><input  style="width: 100%" wicket:id="value"></input></td>
-            </wicket:fragment>
-            <wicket:fragment wicket:id="numberFeatureEditor">
-                <td><span wicket:id="feature"></span></td>
-                <td><input type="number" style="width: 100%"
-                    wicket:id="value"></input></td>
-            </wicket:fragment>
-            <wicket:fragment wicket:id="booleanFeatureEditor">
-                <td><span wicket:id="feature"></span></td>
-                <td><input type="checkbox" style="width: 100%"
-                    wicket:id="value"></input></td>
-            </wicket:fragment>
-            <wicket:fragment wicket:id="linkFeatureEditor">
-                <td colspan="2">
-                    <fieldset>
-                        <legend>
-                            <span wicket:id="feature"></span>
-                            <span wicket:id="linkIndicator" class="" style=""></span>
-                        </legend>
-                        <div wicket:id="content">
-                            <table class="hfill">
-                                <tr wicket:id="slots">
-                                    <td><span wicket:id="role"></span></td>
-                                    <td><div class="hfill k-textbox"
-                                        style="display: block; white-space: nowrap; background: 0; line-height: 2.13em; max-width: 20em; max-height: 2.13em; padding-left: 0.3em; padding-right: 0.3em; width: 100%; overflow:hidden; text-overflow: ellipsis;"
-                                        wicket:id="label"></div></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" class="hfill">
-                                        <table class="hfill">
-                                            <tr>
-                                                <td class="hfill"><input style="width: 100%"
-                                                    wicket:id="newRole" placeholder="Select role"></input></td>
-                                                <td>
-                                                    <button style="" wicket:id="add">Add</button>
-                                                    <button style="" wicket:id="del">Del</button>
-                                                    <button style="" wicket:id="set">Set</button>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </fieldset>
-                </td>
-            </wicket:fragment>
-            <!--  
-            <wicket:fragment wicket:id="multiEditor">
-                   <td colspan="2">
-                       <fieldset>
-                           <legend>
-                               <span wicket:id="feature"></span>
-                           </legend>
-                           <table class="hfill">
-                           </table>
-                       </fieldset>
-                   </td>
-            </wicket:fragment>
-            -->
-	    </form>
-	</wicket:panel>
+  <wicket:panel>
+    <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
+      <form wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
+          class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
+        <div wicket:id=deleteAnnotationDialog></div>
+        <div wicket:id=replaceAnnotationDialog></div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="col-sm-12">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label wicket:for="defaultAnnotationLayer" class="col-sm-3 control-label">
+                    <wicket:label key="layer"/>
+                  </label>
+                  <div class="col-sm-9">
+                    <select wicket:id="defaultAnnotationLayer" class="form-control"></select>
+                  </div>
+                  <div class="col-sm-offset-3 col-sm-9 small">
+                    <em wicket:id="relationHint"></em>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div class="col-sm-offset-3 col-sm-9">
+                    <div class="checkbox">
+                      <label wicket:for="forwardAnnotation">
+                        <input wicket:id="forwardAnnotation" type="checkbox"> Forward annotation
+                      </label>
+                    </div>
+                  </div>              
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">
+              Annotation
+              <div class="pull-right">
+                <input wicket:id="delete" type="button" class="btn btn-xs btn-danger" wicket:message="value:delete"/>
+                <input wicket:id="reverse" type="button" class="btn btn-xs btn-default" wicket:message="value:reverse"/>
+                <input wicket:id="clear" type="button" class="btn btn-xs btn-default" wicket:message="value:clear"/>
+              </div> 
+            </h3>
+          </div>
+          <div class="scrolling panel-body">
+            <div class="col-sm-12">
+              <span wicket:id="noAnnotationWarning"></span>
+              
+              <div style="width: 1px; height: 1px; overflow: hidden;">
+                <input style="width: 100%; display: block; overflow: hidden; height: 1px"
+                  wicket:id=forwardAnno></input>
+              </div>
+              
+              <div wicket:id="featureEditorsContainer" class="form-horizontal">
+                <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
+                  <label class="col-sm-3 control-label">Layer</label>
+                  <div class="col-sm-9">
+                    <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>
+                  </div>
+                </div>
+                <div class="form-group" wicket:enclosure="selectedText">
+                  <label class="col-sm-3 control-label">Text</label>
+                  <div class="col-sm-9" style="position: relative; height: 5em;">
+                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;" readonly>
+                      <wicket:container wicket:id="selectedText"/>
+                    </div>
+                  </div>
+                </div>
+                <hr/>
+                <div wicket:id="noFeaturesWarning"></div>
+                <div id="featureValues" wicket:id="featureValues">
+                  <div wicket:id="editor"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </wicket:panel>
 </body>
 </html>

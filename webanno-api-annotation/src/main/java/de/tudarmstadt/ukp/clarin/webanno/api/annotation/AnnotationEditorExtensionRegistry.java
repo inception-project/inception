@@ -17,11 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import java.io.IOException;
 import java.util.List;
+
+import org.apache.uima.jcas.JCas;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public interface AnnotationEditorExtensionRegistry
 {
     List<AnnotationEditorExtension> getExtensions();
     
     AnnotationEditorExtension getExtension(String aName);
+
+    void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
+            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, int aBegin, int aEnd)
+        throws IOException, AnnotationException;
+
+    void fireRender(JCas aJCas, AnnotatorState aModelObject, VDocument aVdoc);
 }

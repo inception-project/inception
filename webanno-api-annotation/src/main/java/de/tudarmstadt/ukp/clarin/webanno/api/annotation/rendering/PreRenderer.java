@@ -17,54 +17,52 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
-
-import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Resource;
+
 import org.apache.uima.jcas.JCas;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
+@Component
 public class PreRenderer
 {
-    public static void render(VDocument aResponse, AnnotatorState aState,
-            JCas aJCas, AnnotationSchemaService aAnnotationService, List<AnnotationLayer> aLayers)
+    private @Resource FeatureSupportRegistry featureSupportRegistry;
+    private @Resource AnnotationSchemaService annotationService;
+
+    public void render(VDocument aResponse, AnnotatorState aState, JCas aJCas,
+            List<AnnotationLayer> aLayers)
     {
-        // Render visible (custom) layers
+        // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer);
-            List<AnnotationFeature> invisibleFeatures = new ArrayList<>();
-            for (AnnotationFeature feature : features) {
-                if (!feature.isVisible()) {
-                    invisibleFeatures.add(feature);
-                }
-            }
-            features.removeAll(invisibleFeatures);
-            
-            TypeAdapter adapter = getAdapter(aAnnotationService, layer);
+            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = getRenderer(adapter);
             renderer.render(aJCas, features, aResponse, aState);
         }
     }
 
-    public static Renderer getRenderer(TypeAdapter aTypeAdapter) {
+    public Renderer getRenderer(TypeAdapter aTypeAdapter)
+    {
         if (aTypeAdapter instanceof SpanAdapter) {
-            return new SpanRenderer((SpanAdapter) aTypeAdapter);
+            return new SpanRenderer((SpanAdapter) aTypeAdapter, featureSupportRegistry);
         }
         else if (aTypeAdapter instanceof ArcAdapter) {
-            return new RelationRenderer((ArcAdapter) aTypeAdapter);
+            return new RelationRenderer((ArcAdapter) aTypeAdapter, featureSupportRegistry);
         }
         else if (aTypeAdapter instanceof ChainAdapter) {
-            return new ChainRenderer((ChainAdapter) aTypeAdapter);
+            return new ChainRenderer((ChainAdapter) aTypeAdapter, featureSupportRegistry);
         }
         else {
             throw new IllegalArgumentException(

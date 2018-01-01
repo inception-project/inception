@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
- * Provides wicket components for project configurations (create project, add document/user/tagset....)
+ * Provides wicket components for project configurations (create project, add
+ * document/user/tagset....)
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;

@@ -29,7 +29,7 @@ public class NameUtil
      */
     public static boolean isNameValid(String aName)
     {
-        if (aName.contains("^") || aName.contains("/") || aName.contains("\\")
+        if (aName == null || aName.contains("^") || aName.contains("/") || aName.contains("\\")
                 || aName.contains("&") || aName.contains("*") || aName.contains("?")
                 || aName.contains("+") || aName.contains("$") || aName.contains("!")
                 || aName.contains("[") || aName.contains("]")) {

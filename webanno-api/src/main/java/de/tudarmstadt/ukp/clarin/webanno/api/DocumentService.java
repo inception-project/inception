@@ -40,9 +40,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
+
 public interface DocumentService
 {
-    static final String SERVICE_NAME = "documentService";
+    String SERVICE_NAME = "documentService";
     
     /**
      * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
@@ -215,6 +216,23 @@ public interface DocumentService
      *
      * @param jCas
      *            the JCas.
+     * @param annotationDocument
+     *            the annotation document.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void writeAnnotationCas(JCas jCas, AnnotationDocument annotationDocument,
+            boolean aUpdateTimestamp)
+        throws IOException;
+    
+    /**
+     * Creates an annotation document. The {@link AnnotationDocument} is stored in the
+     * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
+     * documents are stored per project, user and document
+     *
+     * @param jCas
+     *            the JCas.
      * @param document
      *            the source document.
      * @param user
@@ -267,7 +285,7 @@ public interface DocumentService
      *            the username.
      * @return the serialized CAS file.
      */
-    File getCasFile(SourceDocument document, String user);
+    File getCasFile(SourceDocument document, String user) throws IOException;
 
     /**
      * Get the annotation document.
@@ -296,6 +314,9 @@ public interface DocumentService
         throws IOException;
 
     JCas readAnnotationCas(AnnotationDocument aAnnotationDocument, boolean aAnalyzeAndRepair)
+        throws IOException;
+    
+    void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
     
     /**

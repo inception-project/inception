@@ -318,7 +318,8 @@ public class AnnotatorStateImpl
 
         Sentence lastVisibleUnit = getLastSentenceInDisplayWindow(jcas, getAddr(aFirstVisibleUnit),
                 getPreferences().getWindowSize());
-        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, aFirstVisibleUnit.getBegin());
+        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas,
+                aFirstVisibleUnit.getBegin());
         lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, lastVisibleUnit.getBegin());
         unitCount = select(jcas, Sentence.class).size();
         
@@ -537,10 +538,20 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void clearAllSelections()
+    public void reset()
     {
         getSelection().clear();
         clearArmedSlot();
+        clearRememberedFeatures();
+        focusUnitIndex = 0;
+        firstVisibleUnitAddress = -1;
+        firstVisibleUnitBegin = 0;
+        firstVisibleUnitEnd = 0;
+        firstVisibleUnitIndex = 0;
+        lastVisibleUnitIndex = 0;
+        unitCount = 0;
+        windowBeginOffset = 0;
+        windowEndOffset = 0;
     }
 
     private AnnotationFeature armedFeature;

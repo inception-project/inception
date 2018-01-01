@@ -18,6 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -30,7 +34,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
@@ -40,6 +43,7 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -48,6 +52,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -65,27 +70,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.AnnotationPreferencesModalPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.ExportModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.GuidelineModalPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.dialog.ReCreateMergeCASModalPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.dialog.ReMergeCasModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -95,9 +99,8 @@ import wicket.contrib.input.events.key.KeyType;
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
- *
  */
-@MenuItem(icon="images/data_table.png", label="Curation", prio=200)
+@MenuItem(icon = "images/data_table.png", label = "Curation", prio = 200)
 @MountPath("/curation.html")
 public class CurationPage
     extends AnnotationPageBase
@@ -106,6 +109,7 @@ public class CurationPage
 
     private static final long serialVersionUID = 1378872465851908515L;
 
+    private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -124,13 +128,15 @@ public class CurationPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
+    private AnnotationPreferencesDialog preferencesModal;
+    private ExportDocumentDialog exportDialog;
+    private GuidelinesDialog guidelinesDialog;
 
-    private ReMergeCasModel reMerge;
     private CurationContainer curationContainer;
 
     private CurationPanel curationPanel;
-    private AjaxLink<Void> showreCreateMergeCasModal;
-    private ModalWindow reCreateMergeCas;
+    private ChallengeResponseDialog remergeDocumentDialog;
+    private ActionBarLink remergeDocumentLink;
 
     private WebMarkupContainer finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -139,7 +145,6 @@ public class CurationPage
     public CurationPage()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
-        reMerge = new ReMergeCasModel();
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
@@ -153,27 +158,27 @@ public class CurationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    actionRefreshDocument(aTarget, getEditorCas());
+                    actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {
                     handleException(aTarget, e);
                 }
 //                
-//                AnnotatorState state = CurationPage.this.getModelObject();
-//                JCas mergeJCas = null;
-//                try {
-//                    mergeJCas = repository.readCurationCas(state.getDocument());
-//                }
-//                catch (Exception e) {
-//                    aTarget.add(getFeedbackPanel());
-//                    LOG.error("Unable to load data", e);
-//                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//                }
-//                aTarget.add(numberOfPages);
-//                gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
-//                gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
-//                aTarget.add(gotoPageTextField);
-//                aTarget.add(curationPanel);
+//              AnnotatorState state = CurationPage.this.getModelObject();
+//              JCas mergeJCas = null;
+//              try {
+//                  mergeJCas = repository.readCurationCas(state.getDocument());
+//              }
+//              catch (Exception e) {
+//                  aTarget.add(getFeedbackPanel());
+//                  LOG.error("Unable to load data", e);
+//                  error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+//              }
+//              aTarget.add(numberOfPages);
+//              gotoPageTextField.setModelObject(state.getFirstVisibleSentenceNumber());
+//              gotoPageAddress = getSentenceAddress(mergeJCas, gotoPageTextField.getModelObject());
+//              aTarget.add(gotoPageTextField);
+//              aTarget.add(curationPanel);
             }
         };
         add(curationPanel);
@@ -204,7 +209,8 @@ public class CurationPage
                 if (state.getDocument() != null) {
                     try {
                         documentService.createSourceDocument(state.getDocument());
-                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(), username);
+                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(),
+                                username);
 
                         actionLoadDocument(aTarget);
                         curationPanel.editor.loadFeatureEditorModels(aTarget);
@@ -217,21 +223,50 @@ public class CurationPage
             }
         });        
 
-        add(new AnnotationPreferencesModalPanel("annotationLayersModalPanel", getModel(),
-                curationPanel.editor)
-        {
-            private static final long serialVersionUID = -4657965743173979437L;
+        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
+        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
 
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                actionCompletePreferencesChange(aTarget);
-            }
+        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
+        
+        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
+
+        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
+        // FIXME minimum and maximum should be obtained from the annotator state
+        gotoPageTextField.setMinimum(1); 
+        gotoPageTextField.setOutputMarkupId(true); 
+        gotoPageTextFieldForm.add(gotoPageTextField);
+        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
+                gotoPageTextFieldForm, this::actionGotoPage);
+        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
+        gotoPageTextFieldForm.add(gotoPageLink);
+        add(gotoPageTextFieldForm);
+
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
+        remergeDocumentDialog = new ChallengeResponseDialog("remergeDocumentDialog",
+                new StringResourceModel("RemergeDocumentDialog.title", this),
+                new StringResourceModel("RemergeDocumentDialog.text", this).setModel(getModel())
+                        .setParameters(documentNameModel),
+                documentNameModel);
+        remergeDocumentDialog.setConfirmAction(this::actionRemergeDocument);
+        add(remergeDocumentDialog);
+        remergeDocumentLink = new ActionBarLink("showRemergeDocumentDialog", t -> 
+            remergeDocumentDialog.show(t));
+        remergeDocumentLink.onConfigure(_this -> {
+            AnnotatorState state = CurationPage.this.getModelObject();
+            _this.setEnabled(state.getDocument() != null && !state.getDocument().getState()
+                    .equals(SourceDocumentState.CURATION_FINISHED));
         });
+        add(remergeDocumentLink);
 
-        add(new ExportModalPanel("exportModalPanel", getModel())
-        {
-            private static final long serialVersionUID = -468896211970839443L;
+        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
+        
+        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
+
+        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
+
+        add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
+            private static final long serialVersionUID = -8443987117825945678L;
 
             {
                 setOutputMarkupId(true);
@@ -243,57 +278,10 @@ public class CurationPage
             {
                 super.onConfigure();
                 AnnotatorState state = CurationPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (SecurityUtil.isAdmin(state.getProject(), projectService, state.getUser())
-                                || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
+                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
             }
         });
-
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        gotoPageTextFieldForm.add(new LambdaAjaxSubmitLink("gotoPageLink", gotoPageTextFieldForm,
-                this::actionGotoPage));
-        add(gotoPageTextFieldForm);
-
-        add(reCreateMergeCas = new ModalWindow("reCreateMergeCasModal"));
-        reCreateMergeCas.setOutputMarkupId(true);
-        //Change size if you change text here
-        reCreateMergeCas.setInitialWidth(580);
-        reCreateMergeCas.setInitialHeight(40);
-        reCreateMergeCas.setResizable(true);
-        reCreateMergeCas.setWidthUnit("px");
-        reCreateMergeCas.setHeightUnit("px");
-        reCreateMergeCas
-                .setTitle("Are you sure? All curation annotations for this document will be lost.");
-
-        add(showreCreateMergeCasModal = new AjaxLink<Void>("showreCreateMergeCasModal")
-        {
-            private static final long serialVersionUID = 7496156015186497496L;
-
-            @Override
-            protected void onConfigure()
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null
-                        && !state.getDocument().getState()
-                                .equals(SourceDocumentState.CURATION_FINISHED));
-            }
-
-            @Override
-            public void onClick(AjaxRequestTarget aTarget)
-            {
-                actionRemergeDocument(aTarget);
-            }
-        });
-        showreCreateMergeCasModal.setOutputMarkupId(true);
-        
-        add(new GuidelineModalPanel("guidelineModalPanel", getModel()));        
-        
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -375,10 +363,11 @@ public class CurationPage
             @Override
             protected List<DecoratedObject<Project>> load()
             {
-                User user = userRepository.get(
-                        SecurityContextHolder.getContext().getAuthentication().getName());
+                User user = userRepository
+                        .get(SecurityContextHolder.getContext().getAuthentication().getName());
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
-                List<Project> projectsWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
+                List<Project> projectsWithFinishedAnnos = projectService
+                        .listProjectsWithFinishedAnnos();
                 for (Project project : projectService.listProjects()) {
                     if (SecurityUtil.isCurator(project, projectService, user)) {
                         DecoratedObject<Project> dp = DecoratedObject.of(project);
@@ -391,7 +380,7 @@ public class CurationPage
                         allowedProject.add(dp);
                     }
                 }
-               return allowedProject;
+                return allowedProject;
             }
         };
     }
@@ -490,6 +479,12 @@ public class CurationPage
         openDocumentsModal.show(aTarget);
     }
 
+    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
+    {
+        getModelObject().getSelection().clear();
+        preferencesModal.show(aTarget);
+    }
+    
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {
@@ -504,7 +499,7 @@ public class CurationPage
         state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
         state.setFocusUnitIndex(selectedSentence);        
         
-        actionRefreshDocument(aTarget, jcas);
+        actionRefreshDocument(aTarget);
         
         curationPanel.updatePanel(aTarget, curationContainer);
     }
@@ -542,9 +537,7 @@ public class CurationPage
             updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
         }
         catch (Exception e) {
-            aTarget.add(getFeedbackPanel());
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            handleException(aTarget, e);
         }
     }
 
@@ -557,12 +550,10 @@ public class CurationPage
             SourceDocument sourceDocument = state.getDocument();
 
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                sourceDocument.setState(SourceDocumentStateTransition.transition(
-                        SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
+                sourceDocument.setState(transition(CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
             }
             else {
-                sourceDocument.setState(SourceDocumentStateTransition.transition(
-                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
+                sourceDocument.setState(transition(CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
             }
             
             documentService.createSourceDocument(sourceDocument);
@@ -570,41 +561,19 @@ public class CurationPage
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
             aCallbackTarget.add(curationPanel.editor);
-            aCallbackTarget.add(showreCreateMergeCasModal);
+            aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
     }
 
-    private void actionRemergeDocument(AjaxRequestTarget aTarget)
+    private void actionRemergeDocument(AjaxRequestTarget aTarget) throws IOException
     {
-        reCreateMergeCas.setContent(new ReCreateMergeCASModalPanel(reCreateMergeCas.getContentId(),
-                reCreateMergeCas, reMerge));
-        reCreateMergeCas.setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
-        {
-            private static final long serialVersionUID = 4816615910398625993L;
-
-            @Override
-            public void onClose(AjaxRequestTarget aCallbackTarget)
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                if (reMerge.isReMerege()) {
-                    try {
-                        aCallbackTarget.add(getFeedbackPanel());
-                        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                                state.getUser().getUsername());
-                        actionLoadDocument(aCallbackTarget);
-
-                        aCallbackTarget.appendJavaScript("alert('Re-merge finished!')");
-                    }
-                    catch (Exception e) {
-                        aCallbackTarget.add(getFeedbackPanel());
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        });
-        reCreateMergeCas.show(aTarget);
+        AnnotatorState state = CurationPage.this.getModelObject();
+        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
+                state.getUser().getUsername());
+        actionLoadDocument(aTarget);
+        info("Re-merge finished!");
+        aTarget.add(getFeedbackPanel());
     }
 
     /**
@@ -624,10 +593,11 @@ public class CurationPage
         state.setUser(user);
 
         try {
-            // Update source document state to CURRATION_INPROGRESS, if it was not ANNOTATION_FINISHED
+            // Update source document state to CURRATION_INPROGRESS, if it was not
+            // ANNOTATION_FINISHED
             if (!state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                state.getDocument().setState(SourceDocumentStateTransition.transition(
-                        SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
+                state.getDocument()
+                        .setState(transition(ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
                 documentService.createSourceDocument(state.getDocument());
             }
     
@@ -647,8 +617,9 @@ public class CurationPage
                 }
             }
     
-            SuggestionBuilder cb = new SuggestionBuilder(documentService, correctionDocumentService,
-                    curationDocumentService, annotationService, userRepository);
+            SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
+                    userRepository);
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
@@ -665,8 +636,9 @@ public class CurationPage
                     randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
-            state.clearAllSelections();
-            state.getPreferences().setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
+            state.reset();
+            state.getPreferences()
+                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(mergeJCas));
@@ -678,7 +650,7 @@ public class CurationPage
     
             currentprojectId = state.getProject().getId();
     
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
@@ -694,7 +666,7 @@ public class CurationPage
     
             aTarget.add(getOrCreatePositionInfoLabel());
             aTarget.add(documentNamePanel);
-            aTarget.add(showreCreateMergeCasModal);
+            aTarget.add(remergeDocumentLink);
             aTarget.add(finishDocumentLink);
         }
         catch (Exception e) {
@@ -705,7 +677,7 @@ public class CurationPage
     }
 
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget, JCas aJCas)
+    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             aTarget.add(getOrCreatePositionInfoLabel());

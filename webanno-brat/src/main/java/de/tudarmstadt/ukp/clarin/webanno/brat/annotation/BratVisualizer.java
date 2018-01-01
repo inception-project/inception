@@ -46,71 +46,70 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceRefer
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 
 /**
- * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()}
- * and {@code #getDocumentData()} to provide the actual data.
- *
+ * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()} and
+ * {@code #getDocumentData()} to provide the actual data.
  */
 public abstract class BratVisualizer
-	extends Panel
+    extends Panel
 {
-	private static final long serialVersionUID = -1537506294440056609L;
+    private static final long serialVersionUID = -1537506294440056609L;
 
-	protected static final String EMPTY_DOC = "{text: ''}";
+    protected static final String EMPTY_DOC = "{text: ''}";
 
-	protected WebMarkupContainer vis;
+    protected WebMarkupContainer vis;
 
-	protected AbstractAjaxBehavior collProvider;
+    protected AbstractAjaxBehavior collProvider;
 
-	protected AbstractAjaxBehavior docProvider;
+    protected AbstractAjaxBehavior docProvider;
 
     private @SpringBean DocumentService repository;
 
-	public BratVisualizer(String id, IModel<?> aModel)
-	{
-		super(id, aModel);
+    public BratVisualizer(String id, IModel<?> aModel)
+    {
+        super(id, aModel);
 
-		vis = new WebMarkupContainer("vis");
-		vis.setOutputMarkupId(true);
+        vis = new WebMarkupContainer("vis");
+        vis.setOutputMarkupId(true);
 
-		// Provides collection-level information like type definitions, styles, etc.
-		collProvider = new AbstractAjaxBehavior()
-		{
-			private static final long serialVersionUID = 1L;
+        // Provides collection-level information like type definitions, styles, etc.
+        collProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			public void onRequest()
-			{
-				getRequestCycle().scheduleRequestHandlerAfterCurrent(
-						new TextRequestHandler("application/json", "UTF-8", getCollectionData()));
-			}
-		};
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getCollectionData()));
+            }
+        };
 
-		// Provides the actual document contents
-		docProvider = new AbstractAjaxBehavior()
-		{
-			private static final long serialVersionUID = 1L;
+        // Provides the actual document contents
+        docProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
 
-			@Override
-			public void onRequest()
-			{
-				getRequestCycle().scheduleRequestHandlerAfterCurrent(
-						new TextRequestHandler("application/json", "UTF-8", getDocumentData()));
-			}
-		};
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getDocumentData()));
+            }
+        };
 
-		add(vis);
-		add(collProvider, docProvider);
-	}
+        add(vis);
+        add(collProvider, docProvider);
+    }
 
-	@Override
-	public void renderHead(IHeaderResponse aResponse)
-	{
-		super.renderHead(aResponse);
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
 
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
-        
+
         // Libraries
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
@@ -118,37 +117,32 @@ public abstract class BratVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
 
         // BRAT helpers
-        aResponse.render(JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
-        
+
         // BRAT modules
         aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        aResponse
+                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        //aResponse.render(JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
-		
-		// BRAT call to load the BRAT JSON from our collProvider and docProvider.
-		String[] script = new String[] {
-				"Util.embedByURL(",
-				"  '"+vis.getMarkupId()+"',",
-				"  '"+collProvider.getCallbackUrl()+"', ",
-				"  '"+docProvider.getCallbackUrl()+"', ",
-				"  null);",
-		};
 
-		// This doesn't work with head.js because the onLoad event is fired before all the
-		// JavaScript references are loaded.
-        aResponse.render(OnLoadHeaderItem.forScript("\n"+StringUtils.join(script, "\n")));
-	}
+        // BRAT call to load the BRAT JSON from our collProvider and docProvider.
+        String[] script = { "Util.embedByURL(", "  '" + vis.getMarkupId() + "',",
+                "  '" + collProvider.getCallbackUrl() + "', ",
+                "  '" + docProvider.getCallbackUrl() + "', ", "  null);", };
 
-	protected abstract String getDocumentData();
+        // This doesn't work with head.js because the onLoad event is fired before all the
+        // JavaScript references are loaded.
+        aResponse.render(OnLoadHeaderItem.forScript("\n" + StringUtils.join(script, "\n")));
+    }
 
-	protected String getCollectionData()
-	{
-		return "{}";
-	}
+    protected abstract String getDocumentData();
+
+    protected String getCollectionData()
+    {
+        return "{}";
+    }
 }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.3-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-ui-core</artifactId>
   <name>WebAnno - UI - Core</name>
@@ -57,8 +57,8 @@
     </dependency>
 
     <dependency>
-      <groupId>${servlet.api.groupId}</groupId>
-      <artifactId>${servlet.api.artifactId}</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -96,6 +96,10 @@
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
     </dependency>
     <dependency>
@@ -121,6 +125,32 @@
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-starter</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-tomcat</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket.webjars</groupId>
+      <artifactId>wicket-webjars</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-less</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.sommeri</groupId>
+      <artifactId>less4j</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -175,6 +205,9 @@
                   <excludes combine.children="append">
                     <!-- otherwise license files mentioned in NOTICE.txt -->
                     <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/css_browser_selector.js</exclude>
+                    <!-- Customized simple Bootstrap files (MIT license) -->
+                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.less</exclude>
+                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.less</exclude>
                   </excludes>
                 </configuration>
               </execution>

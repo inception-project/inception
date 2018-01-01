@@ -27,9 +27,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.uima.cas.CAS;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -120,8 +120,8 @@ public class FixCoreferenceFeatures
             q.setParameter("fixedType", CAS.TYPE_NAME_STRING);
             int changed = q.executeUpdate();
             if (changed > 0) {
-                log.info("DATABASE UPGRADE PERFORMED: [" + changed
-                        + "] coref chain features had their type fixed");
+                log.info("DATABASE UPGRADE PERFORMED: [{}] coref chain features had their "
+                        + "type fixed.", changed);
             }
             txManager.commit(status);
         }

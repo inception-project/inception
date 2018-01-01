@@ -17,23 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -44,7 +46,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
-import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -90,7 +91,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 
 @Component(ImportExportService.SERVICE_NAME)
 public class ImportExportServiceImpl
@@ -181,7 +181,7 @@ public class ImportExportServiceImpl
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(project.getId()))) {
-            log.info("Exported annotation document [{}]({}) for user [{}] from project [{}]({})",
+            log.info("Exported annotation document content [{}]({}) for user [{}] from project [{}]({})",
                     aDocument.getName(), aDocument.getId(), aUser, project.getName(),
                     project.getId());
         }
@@ -213,7 +213,7 @@ public class ImportExportServiceImpl
             throw e;
         }
         catch (Exception e) {
-        	automationService.removeTrainingDocument(aDocument);
+            automationService.removeTrainingDocument(aDocument);
             throw new IOException(e.getMessage(), e);
         }
 
@@ -224,8 +224,7 @@ public class ImportExportServiceImpl
 
         // Copy the initial conversion of the file into the repository
         if (cas != null) {
-            CasPersistenceUtils.writeSerializedCas(cas,
-            		automationService.getCasFile(aDocument));
+            CasPersistenceUtils.writeSerializedCas(cas, automationService.getCasFile(aDocument));
         }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -244,7 +243,14 @@ public class ImportExportServiceImpl
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    readableFormats.add(readWriteFileFormats.getProperty(key));
+                    try {
+                        Class.forName(readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                        readableFormats.add(readWriteFileFormats.getProperty(key));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Reader class not found: "
+                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                    }
                 }
             }
         }
@@ -270,15 +276,20 @@ public class ImportExportServiceImpl
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Class<CollectionReader>> getReadableFormats()
-        throws ClassNotFoundException
     {
         Map<String, Class<CollectionReader>> readableFormats = new HashMap<>();
         for (String key : readWriteFileFormats.stringPropertyNames()) {
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String readerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(readerLabel + ".reader"))) {
-                    readableFormats.put(readerLabel, (Class) Class.forName(readWriteFileFormats
-                            .getProperty(readerLabel + ".reader")));
+                    try {
+                        readableFormats.put(readerLabel, (Class) Class.forName(
+                                readWriteFileFormats.getProperty(readerLabel + ".reader")));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Reader class not found: "
+                                + readWriteFileFormats.getProperty(readerLabel + ".reader"));
+                    }
                 }
             }
         }
@@ -293,7 +304,14 @@ public class ImportExportServiceImpl
             if (key.contains(".label") && !isBlank(readWriteFileFormats.getProperty(key))) {
                 String writerLabel = key.substring(0, key.lastIndexOf(".label"));
                 if (!isBlank(readWriteFileFormats.getProperty(writerLabel + ".writer"))) {
-                    writableFormats.add(readWriteFileFormats.getProperty(key));
+                    try {
+                        Class.forName(readWriteFileFormats.getProperty(writerLabel + ".writer"));
+                        writableFormats.add(readWriteFileFormats.getProperty(key));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Writer class not found: "
+                                + readWriteFileFormats.getProperty(writerLabel + ".writer"));
+                    }
                 }
             }
         }
@@ -319,7 +337,6 @@ public class ImportExportServiceImpl
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
-        throws ClassNotFoundException
     {
         Map<String, Class<JCasAnnotator_ImplBase>> writableFormats = new HashMap<>();
         Set<String> keys = (Set) readWriteFileFormats.keySet();
@@ -328,8 +345,14 @@ public class ImportExportServiceImpl
             if (keyvalue.contains(".label")) {
                 String writerLabel = keyvalue.substring(0, keyvalue.lastIndexOf(".label"));
                 if (readWriteFileFormats.getProperty(writerLabel + ".writer") != null) {
-                    writableFormats.put(writerLabel, (Class) Class.forName(readWriteFileFormats
-                            .getProperty(writerLabel + ".writer")));
+                    try {
+                        writableFormats.put(writerLabel, (Class) Class.forName(
+                                readWriteFileFormats.getProperty(writerLabel + ".writer")));
+                    }
+                    catch (ClassNotFoundException e) {
+                        log.error("Writer class not found: "
+                                + readWriteFileFormats.getProperty(writerLabel + ".reader"));
+                    }
                 }
             }
         }
@@ -370,15 +393,117 @@ public class ImportExportServiceImpl
         boolean hasTokens = JCasUtil.exists(jCas, Token.class);
         boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
 
-        if (!hasTokens || !hasSentences) {
-            AnalysisEngine pipeline = createEngine(createEngineDescription(
-                    BreakIteratorSegmenter.class, BreakIteratorSegmenter.PARAM_WRITE_TOKEN,
-                    !hasTokens, BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
-            pipeline.process(jCas);
+//        if (!hasTokens || !hasSentences) {
+//            AnalysisEngine pipeline = createEngine(createEngineDescription(
+//                    BreakIteratorSegmenter.class, 
+//                    BreakIteratorSegmenter.PARAM_WRITE_TOKEN, !hasTokens,
+//                    BreakIteratorSegmenter.PARAM_WRITE_SENTENCE, !hasSentences));
+//            pipeline.process(jCas);
+//        }
+        
+        if (!hasSentences) {
+            splitSentences(jCas);
         }
 
+        if (!hasTokens) {
+            tokenize(jCas);
+        }
+        
+        if (!JCasUtil.exists(jCas, Token.class) || !JCasUtil.exists(jCas, Sentence.class)) {
+            throw new IOException("The document appears to be empty. Unable to detect any "
+                    + "tokens or sentences. Empty documents cannot be imported.");
+        }
+        
         return jCas;
     }
+    
+    public static void splitSentences(JCas aJCas)
+    {
+        BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
+        bi.setText(aJCas.getDocumentText());
+        int last = bi.first();
+        int cur = bi.next();
+        while (cur != BreakIterator.DONE) {
+            int[] span = new int[] { last, cur };
+            trim(aJCas.getDocumentText(), span);
+            if (!isEmpty(span[0], span[1])) {
+                Sentence seg = new Sentence(aJCas, span[0], span[1]);
+                seg.addToIndexes(aJCas);
+            }
+            last = cur;
+            cur = bi.next();
+        }
+    }
+    
+    public static void tokenize(JCas aJCas)
+    {
+        BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
+        for (Sentence s : select(aJCas, Sentence.class)) {
+            bi.setText(s.getCoveredText());
+            int last = bi.first();
+            int cur = bi.next();
+            while (cur != BreakIterator.DONE) {
+                int[] span = new int[] { last, cur };
+                trim(s.getCoveredText(), span);
+                if (!isEmpty(span[0], span[1])) {
+                    Token seg = new Token(aJCas, span[0] + s.getBegin(), span[1] + s.getBegin());
+                    seg.addToIndexes(aJCas);
+                }
+                last = cur;
+                cur = bi.next();
+            }
+        }
+    }
+    
+    /**
+     * Remove trailing or leading whitespace from the annotation.
+     * 
+     * @param aText
+     *            the text.
+     * @param aSpan
+     *            the offsets.
+     */
+    public static void trim(String aText, int[] aSpan)
+    {
+        String data = aText;
+
+        int begin = aSpan[0];
+        int end = aSpan[1] - 1;
+
+        // Remove whitespace at end
+        while ((end > 0) && trimChar(data.charAt(end))) {
+            end--;
+        }
+        end++;
+
+        // Remove whitespace at start
+        while ((begin < end) && trimChar(data.charAt(begin))) {
+            begin++;
+        }
+
+        aSpan[0] = begin;
+        aSpan[1] = end;
+    }
+
+    public static boolean isEmpty(int aBegin, int aEnd)
+    {
+        return aBegin >= aEnd;
+    }
+
+    public static boolean trimChar(final char aChar)
+    {
+        switch (aChar) {
+        case '\n':     return true; // Line break
+        case '\r':     return true; // Carriage return
+        case '\t':     return true; // Tab
+        case '\u200E': return true; // LEFT-TO-RIGHT MARK
+        case '\u200F': return true; // RIGHT-TO-LEFT MARK
+        case '\u2028': return true; // LINE SEPARATOR
+        case '\u2029': return true; // PARAGRAPH SEPARATOR
+        default:
+            return  Character.isWhitespace(aChar);
+        }
+    }    
     
     /**
      * A new directory is created using UUID so that every exported file will reside in its own
@@ -393,16 +518,17 @@ public class ImportExportServiceImpl
         // Update the source file name in case it is changed for some reason. This is necessary
         // for the writers to create the files under the correct names.
         Project project = aDocument.getProject();
-        File currentDocumentUri = new File(dir.getAbsolutePath() + PROJECT + project.getId()
-                + DOCUMENT + aDocument.getId() + SOURCE);
+        File currentDocumentUri = new File(
+                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + project.getId() + "/"
+                        + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
         DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
         documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + PROJECT + project.getId()
-                + DOCUMENT + aDocument.getId() + SOURCE + "/" + aFileName).toURI().toURL()
-                .toExternalForm());
+        documentMetadata.setDocumentUri(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + project.getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/"
+                + SOURCE_FOLDER + "/" + aFileName).toURI().toURL().toExternalForm());
 
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
@@ -425,7 +551,8 @@ public class ImportExportServiceImpl
             AnalysisEngineDescription writer;
             if (aWriter.getName()
                     .equals("de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3Writer")) {
-                List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aDocument.getProject());
+                List<AnnotationLayer> layers = annotationService
+                        .listAnnotationLayer(aDocument.getProject());
     
                 List<String> slotFeatures = new ArrayList<>();
                 List<String> slotTargets = new ArrayList<>();
@@ -437,7 +564,7 @@ public class ImportExportServiceImpl
                     
                     if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
                         // TSV will not use this
-                        if(!annotationExists(cas, layer.getName())){
+                        if (!annotationExists(cas, layer.getName())) {
                             continue;
                         }
                         boolean isslotLayer = false;
@@ -462,7 +589,7 @@ public class ImportExportServiceImpl
                 List<String> chainLayers = new ArrayList<>();
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.CHAIN_TYPE)) {
-                        if(!chainAnnotationExists(cas, layer.getName()+"Chain")){
+                        if (!chainAnnotationExists(cas, layer.getName() + "Chain")) {
                             continue;
                         }
                         chainLayers.add(layer.getName());
@@ -473,17 +600,19 @@ public class ImportExportServiceImpl
                 for (AnnotationLayer layer : layers) {
                     if (layer.getType().contentEquals(WebAnnoConst.RELATION_TYPE)) {
                         // TSV will not use this
-                        if(!annotationExists(cas, layer.getName())){
+                        if (!annotationExists(cas, layer.getName())) {
                             continue;
                         }
                         relationLayers.add(layer.getName());
                     }
                 }
     
-                writer = createEngineDescription(aWriter, JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension, "spanLayers", spanLayers,
-                        "slotFeatures", slotFeatures, "slotTargets", slotTargets, "linkTypes", linkTypes, "chainLayers",
-                        chainLayers, "relationLayers", relationLayers);
+                writer = createEngineDescription(aWriter,
+                        JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                        JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension,
+                        "spanLayers", spanLayers, "slotFeatures", slotFeatures, "slotTargets",
+                        slotTargets, "linkTypes", linkTypes, "chainLayers", chainLayers,
+                        "relationLayers", relationLayers);
             }
             else {
                 writer = createEngineDescription(aWriter,
@@ -508,7 +637,8 @@ public class ImportExportServiceImpl
                 }
             }
             else {
-                exportFile = new File(exportTempDir.getParent(), exportTempDir.listFiles()[0].getName());
+                exportFile = new File(exportTempDir.getParent(),
+                        exportTempDir.listFiles()[0].getName());
                 FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
             }
             

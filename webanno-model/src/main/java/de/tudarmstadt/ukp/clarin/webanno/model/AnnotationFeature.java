@@ -30,17 +30,17 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Type;
 
 /**
  * A persistence object for an annotation feature. One or more features can be defined per
- * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label feature”.
- * Additional features may be defined. Features have a type which can either be String, integer,
- * float, or boolean. To control the values that a String feature assumes, it can be associated with
- * a tagset. If the feature is defined on a span type, it is also possible to add a feature of
- * another span type which then serves as a label type for the first one
- *
- *
+ * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label
+ * feature”. Additional features may be defined. Features have a type which can either be String,
+ * integer, float, or boolean. To control the values that a String feature assumes, it can be
+ * associated with a tagset. If the feature is defined on a span type, it is also possible to add a
+ * feature of another span type which then serves as a label type for the first one
  */
 @Entity
 @Table(name = "annotation_feature", uniqueConstraints = { @UniqueConstraint(columnNames = {
@@ -69,6 +69,7 @@ public class AnnotationFeature
     @ManyToOne
     @ForeignKey(name = "none")
     @JoinColumn(name = "tag_set")
+    @NotFound(action = NotFoundAction.IGNORE)
     private TagSet tagset;
 
     @Column(nullable = false)
@@ -85,6 +86,8 @@ public class AnnotationFeature
 
     private boolean visible = true;
     
+    private boolean includeInHover = false;
+    
     private boolean remember;
     
     private boolean hideUnconstraintFeature;
@@ -92,11 +95,11 @@ public class AnnotationFeature
     private boolean required;
 
     @Column(name = "multi_value_mode")
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
     private MultiValueMode multiValueMode;
 
     @Column(name = "link_mode")
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
     private LinkMode linkMode;
 
     @Column(name = "link_type_name")
@@ -267,6 +270,16 @@ public class AnnotationFeature
         this.visible = visible;
     }
 
+    public boolean isIncludeInHover()
+    {
+        return includeInHover;
+    }
+
+    public void setIncludeInHover(boolean includeInHover)
+    {
+        this.includeInHover = includeInHover;
+    }
+
     /**
      * @return the tagset.
      */
@@ -353,15 +366,17 @@ public class AnnotationFeature
         remember = aRemember;
     }
 
-    public boolean isHideUnconstraintFeature() {
-		return hideUnconstraintFeature;
-	}
+    public boolean isHideUnconstraintFeature()
+    {
+        return hideUnconstraintFeature;
+    }
 
-	public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature) {
-		hideUnconstraintFeature = aHideUnconstraintFeature;
-	}
-	
-	public boolean isRequired()
+    public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
+    {
+        hideUnconstraintFeature = aHideUnconstraintFeature;
+    }
+
+    public boolean isRequired()
     {
         return required;
     }
@@ -369,6 +384,15 @@ public class AnnotationFeature
     public void setRequired(boolean aRequired)
     {
         required = aRequired;
+    }
+    
+    /**
+     * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
+     * must be mapped to a plain UIMA type (usually to String).
+     */
+    public boolean isVirtualFeature()
+    {
+        return getType().contains(":");
     }
 
     @Override
@@ -430,6 +454,4 @@ public class AnnotationFeature
         }
         return true;
     }
-
-
 }

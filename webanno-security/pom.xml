@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.3-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-security</artifactId>
   <name>WebAnno - Core - Security</name>
@@ -37,8 +37,8 @@
     </dependency>
 
     <dependency>
-      <groupId>${servlet.api.groupId}</groupId>
-      <artifactId>${servlet.api.artifactId}</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
 

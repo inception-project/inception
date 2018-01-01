@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.v2.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
 
 public class RDocument
 {
@@ -29,14 +31,14 @@ public class RDocument
     {
         id = aDocument.getId();
         name = aDocument.getName();
-        state = aDocument.getState().name();
+        state = RemoteApiController2.sourceDocumentStateToString(aDocument.getState());
     }
     
-    public RDocument(long aId, String aName, String aState)
+    public RDocument(long aId, String aName, SourceDocumentState aState)
     {
         super();
         id = aId;
         name = aName;
-        state = aState;
+        state = RemoteApiController2.sourceDocumentStateToString(aState);
     }
 }

@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public interface AnnotatorState
     extends Serializable
 {
-    void clearAllSelections();
+    void reset();
 
     // ---------------------------------------------------------------------------------------------
     // Window of visible annotations
@@ -58,12 +63,12 @@ public interface AnnotatorState
     void setFirstVisibleUnit(Sentence aUnit);
 
     /**
-     * @param aIndex the index of the focus unit (curation view)
+     * @param aIndex the 1-based index of the focus unit
      */
     void setFocusUnitIndex(int aIndex);
 
     /**
-     * @return the index of the focus unit (curation view)
+     * @return the 1-based index of the focus unit
      */
     int getFocusUnitIndex();
 
@@ -332,5 +337,68 @@ public interface AnnotatorState
                 lastDisplayWindowBeginingSentenceAddress);
         setFirstVisibleUnit(sentence);
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+    }
+
+    default void moveToUnit(JCas aJCas, int aIndex)
+    {
+        List<Sentence> units = new ArrayList<>(select(aJCas, Sentence.class));
+        
+        // Index is 1-based!
+        // The code below sets the focus unit index explicitly - see comment on getSentenceNumber
+        // in moveToOffset for an explanation. We already know the index here, so no need to
+        // calculate it (wrongly) using getSentenceNumber.
+        if (aIndex <= 0) {
+            moveToOffset(aJCas, units.get(0).getBegin());
+            setFocusUnitIndex(1);
+        }
+        else if (aIndex > units.size()) {
+            moveToOffset(aJCas, units.get(units.size() - 1).getBegin());
+            setFocusUnitIndex(units.size());
+        }
+        else {
+            moveToOffset(aJCas, units.get(aIndex - 1).getBegin());
+            setFocusUnitIndex(aIndex);
+        }
+    }
+    
+    default void moveToOffset(JCas aJCas, int aOffset)
+    {
+        // Fetch the first sentence on screen or first sentence
+        Sentence sentence;
+        if (getFirstVisibleUnitAddress() > -1) {
+            sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());
+        }
+        else {
+            sentence = getFirstSentence(aJCas);
+        }
+        
+        // Calculate the first sentence in the window in such a way that the annotation
+        // currently selected is in the center of the window
+        sentence = findWindowStartCenteringOnSelection(aJCas, sentence, aOffset,
+                getProject(), getDocument(), getPreferences().getWindowSize());
+        
+        // Move to it
+        setFirstVisibleUnit(sentence);
+        
+        // FIXME getSentenceNumber is not a good option... if we aim for the begin offset of the
+        // very last unit, then we get (max-units - 1) instead of (max-units). However, this
+        // method is used also in curation and I dimly remember that things broke when I tried
+        // to fix it. Probably better to move away from it in the long run. -- REC
+        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, aOffset));
+    }
+
+    default void moveToSelection(JCas aJCas)
+    {
+        moveToOffset(aJCas, getSelection().getBegin());
+    }
+
+    default void moveForward(JCas aJCas)
+    {
+        // Fetch the first sentence on screen
+        Sentence sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());
+        // Find the following one
+        int address = getNextSentenceAddress(aJCas, sentence);
+        // Move to it
+        setFirstVisibleUnit(selectByAddr(aJCas, Sentence.class, address));
     }
 }

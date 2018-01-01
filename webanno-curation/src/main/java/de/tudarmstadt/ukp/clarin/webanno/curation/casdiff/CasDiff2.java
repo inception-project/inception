@@ -44,8 +44,6 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -56,11 +54,12 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.TOP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -142,7 +141,8 @@ public class CasDiff2
     public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType, DiffAdapter aAdapter,
             LinkCompareBehavior aLinkCompareBehavior, Map<String, List<JCas>> aCasMap)
     {
-        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior, aCasMap);
+        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior,
+                aCasMap);
     }
 
     /**
@@ -226,8 +226,8 @@ public class CasDiff2
      * @return a diff result.
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap, int aBegin,
-            int aEnd, LinkCompareBehavior aLinkCompareBehavior)
+            Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap,
+            int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         sanityCheck(aCasMap);
         
@@ -376,7 +376,8 @@ public class CasDiff2
             positions.add(getAdapter(aType).getPosition(aCasId, fs));
             
             // Generate secondary positions for multi-link features
-            positions.addAll(getAdapter(aType).generateSubPositions(aCasId, fs, linkCompareBehavior));
+            positions.addAll(
+                    getAdapter(aType).generateSubPositions(aCasId, fs, linkCompareBehavior));
 
             for (Position pos : positions) {
                 ConfigurationSet configSet = configSets.get(pos);
@@ -406,7 +407,7 @@ public class CasDiff2
 //        entryTypes.add(aType);
     }
     
-    public static enum LinkCompareBehavior
+    public enum LinkCompareBehavior
     {
         /**
          * The link target is considered to be the label. As a consequence, the
@@ -428,11 +429,11 @@ public class CasDiff2
     }
     
     /**
-     * Represents a logical position in the text. All annotations considered to be at the same logical
-     * position in the document are collected under this. Within the position, there are groups
-     * that represent the different configurations of the annotation made by different users.
+     * Represents a logical position in the text. All annotations considered to be at the same
+     * logical position in the document are collected under this. Within the position, there are
+     * groups that represent the different configurations of the annotation made by different users.
      */
-    public static interface Position extends Comparable<Position>
+    public interface Position extends Comparable<Position>
     {
         /**
          * @return the CAS id.
@@ -577,12 +578,14 @@ public class CasDiff2
                 return featureCmp;
             }
 
-            int linkCmpCmp = ObjectUtils.compare(linkCompareBehavior, aOther.getLinkCompareBehavior());
+            int linkCmpCmp = ObjectUtils.compare(linkCompareBehavior,
+                    aOther.getLinkCompareBehavior());
             if (linkCmpCmp != 0) {
                 // If the linkCompareBehavior is not the same, then we are dealing with different
                 // positions
                 return linkCmpCmp;
             }
+            
             // If linkCompareBehavior is equal, then we still only have to continue if it is non-
             // null.
             else if (linkCompareBehavior != null) {
@@ -660,8 +663,9 @@ public class CasDiff2
         private final String text;
 
         public SpanPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
-                int aBegin, int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
-                int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
+                int aBegin, int aEnd, String aText, String aFeature, String aRole,
+                int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
+                LinkCompareBehavior aLinkCompareBehavior)
         {
             super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
                     aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
@@ -837,9 +841,11 @@ public class CasDiff2
             StringBuilder builder = new StringBuilder();
             builder.append("Arc [");
             toStringFragment(builder);
-            builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd).append(')');
+            builder.append(", source=(").append(sourceBegin).append('-').append(sourceEnd)
+                    .append(')');
             builder.append('[').append(sourceText).append(']');
-            builder.append(", target=(").append(targetBegin).append('-').append(targetEnd).append(')');
+            builder.append(", target=(").append(targetBegin).append('-').append(targetEnd)
+                    .append(')');
             builder.append('[').append(targetText).append(']');
             builder.append("]");
             return builder.toString();
@@ -848,12 +854,8 @@ public class CasDiff2
         @Override
         public String toMinimalString()
         {
-            StringBuilder builder = new StringBuilder();
-            builder.append("(").append(sourceBegin).append('-').append(sourceEnd).append(')');
-            builder.append('[').append(sourceText).append(']');
-            builder.append(" -> (").append(targetBegin).append('-').append(targetEnd).append(')');
-            builder.append(" [").append(targetText).append(']');
-            return builder.toString();
+            return "(" + sourceBegin + '-' + sourceEnd + ')' + '[' + sourceText + ']' +
+                " -> (" + targetBegin + '-' + targetEnd + ')' + " [" + targetText + ']';
         }
     }
 
@@ -910,7 +912,8 @@ public class CasDiff2
                     Configuration configuration = null;
                     switch (position.getLinkCompareBehavior()) {
                     case LINK_TARGET_AS_LABEL: {
-                        String role = link.getStringValue(link.getType().getFeatureByBaseName(decl.roleFeature));
+                        String role = link.getStringValue(
+                                link.getType().getFeatureByBaseName(decl.roleFeature));
                         if (!role.equals(position.getRole())) {
                             continue;
                         }
@@ -921,10 +924,11 @@ public class CasDiff2
                         cfgLoop: for (Configuration cfg : configurations) {
                             FeatureStructure repFS = cfg.getRepresentative();
                             AID repAID = cfg.getRepresentativeAID();
-                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
-                                    .getFeatureByBaseName(decl.name))).get(repAID.index);
-                            AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
-                                    .getType().getFeatureByBaseName(decl.targetFeature));                        
+                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
+                                    repFS.getType().getFeatureByBaseName(decl.name)))
+                                            .get(repAID.index);
+                            AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(
+                                    repLink.getType().getFeatureByBaseName(decl.targetFeature));
                             
                             // Compare targets
                             if (equalsAnnotationFS(repTarget, target)) {
@@ -948,8 +952,9 @@ public class CasDiff2
                         cfgLoop: for (Configuration cfg : configurations) {
                             FeatureStructure repFS = cfg.getRepresentative();
                             AID repAID = cfg.getRepresentativeAID();
-                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(repFS.getType()
-                                    .getFeatureByBaseName(decl.name))).get(repAID.index);
+                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
+                                    repFS.getType().getFeatureByBaseName(decl.name)))
+                                            .get(repAID.index);
                             String linkRole = repLink.getStringValue(repLink.getType()
                                     .getFeatureByBaseName(decl.roleFeature));
                             
@@ -1554,7 +1559,7 @@ public class CasDiff2
         }
     }
     
-    public static interface DiffAdapter
+    public interface DiffAdapter
     {
         String getType();
         
@@ -1656,12 +1661,12 @@ public class CasDiff2
         
         public <T extends TOP> SpanDiffAdapter(Class<T> aType, String... aLabelFeatures)
         {
-            this(aType.getName(), new HashSet<String>(asList(aLabelFeatures)));
+            this(aType.getName(), new HashSet<>(asList(aLabelFeatures)));
         }
         
         public SpanDiffAdapter(String aType, String... aLabelFeatures)
         {
-            this(aType, new HashSet<String>(asList(aLabelFeatures)));
+            this(aType, new HashSet<>(asList(aLabelFeatures)));
         }
         
         public SpanDiffAdapter(String aType, Set<String> aLabelFeatures)
@@ -1708,17 +1713,17 @@ public class CasDiff2
         private String sourceFeature;
         private String targetFeature;
         
-        public <T extends TOP> ArcDiffAdapter(Class<T> aType, String aSourceFeature, String aTargetFeature,
-                String... aLabelFeatures)
+        public <T extends TOP> ArcDiffAdapter(Class<T> aType, String aSourceFeature,
+                String aTargetFeature, String... aLabelFeatures)
         {
-            this(aType.getName(), aSourceFeature, aTargetFeature, new HashSet<String>(
-                    asList(aLabelFeatures)));
+            this(aType.getName(), aSourceFeature, aTargetFeature,
+                    new HashSet<>(asList(aLabelFeatures)));
         }
         
         public ArcDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
                 String... aLabelFeatures)
         {
-            this(aType, aSourceFeature, aTargetFeature, new HashSet<String>(asList(aLabelFeatures)));
+            this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aLabelFeatures)));
         }
         
         public ArcDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
@@ -1779,7 +1784,8 @@ public class CasDiff2
         }
     }
 
-    public static List<DiffAdapter> getAdapters(AnnotationSchemaService annotationService, Project project)
+    public static List<DiffAdapter> getAdapters(AnnotationSchemaService annotationService,
+            Project project)
     {
         List<DiffAdapter> adapters = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
@@ -1804,7 +1810,7 @@ public class CasDiff2
                 break;
             }
             case RELATION_TYPE: {
-                ArcAdapter typeAdpt = (ArcAdapter) TypeUtil.getAdapter(annotationService, layer);
+                ArcAdapter typeAdpt = (ArcAdapter) annotationService.getAdapter(layer);
                 adpt = new ArcDiffAdapter(layer.getName(),
                         typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
                         labelFeatures);

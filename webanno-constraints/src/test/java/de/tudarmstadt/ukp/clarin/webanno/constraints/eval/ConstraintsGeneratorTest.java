@@ -143,7 +143,7 @@ public class ConstraintsGeneratorTest
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
         
         Token t1 = tokens.get(0);
-        Token t2 = tokens.get(tokens.size()-1);
+        Token t2 = tokens.get(tokens.size() - 1);
 
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.setValue("Animal");

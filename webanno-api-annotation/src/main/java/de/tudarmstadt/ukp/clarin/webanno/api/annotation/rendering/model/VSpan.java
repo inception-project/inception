@@ -36,43 +36,58 @@ public class VSpan
     extends VObject
 {
     private List<VRange> ranges = new ArrayList<>();
-
+    private String colorHint;
+    
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, 
+                aHoverFeatures, null);
     }
     
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
-            int aEquivalenceClass, Map<String, String> aFeatures)
+            int aEquivalenceClass, Map<String, String> aFeatures, 
+            Map<String, String> aHoverFeatures)
     {
-        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures);
+        super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures, aHoverFeatures);
         ranges = asList(aOffsets);
-   }
+    }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
     {
-        this(aLayer, aVid, aType, asList(aOffsets), aFeatures);
+        this(aLayer, aVid, aType, asList(aOffsets), aFeatures, aHoverFeatures, null);
+    }
+    
+    public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String color)
+    {
+        this(aLayer, aVid, aType, asList(aOffsets), aFeatures, aHoverFeatures, color);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, aHoverFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
-            int aEquivalenceClass, Map<String, String> aFeatures)
+            int aEquivalenceClass, Map<String, String> aFeatures, 
+            Map<String, String> aHoverFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures);
+        this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, aHoverFeatures, null);
     }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, List<VRange> aOffsets,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String color)
     {
-        super(aLayer, aVid, aType, aFeatures);
+        super(aLayer, aVid, aType, aFeatures, aHoverFeatures);
         ranges = aOffsets;
+        colorHint = color;
+    }
+    
+    public String getColorHint () {
+        return colorHint;
     }
 
     public List<VRange> getOffsets()

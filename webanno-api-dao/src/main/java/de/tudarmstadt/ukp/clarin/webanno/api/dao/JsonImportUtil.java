@@ -22,10 +22,9 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -39,13 +38,13 @@ public class JsonImportUtil
      */
     public static TagSet importTagSetFromJsonWithOverwrite(Project project,
             InputStream tagInputStream, AnnotationSchemaService aAnnotationService)
-        throws IOException, JsonParseException, JsonMappingException
+        throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
 
-        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet = JSONUtil
+        ExportedTagSet importedTagSet = JSONUtil
                 .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet.class);
+                .readValue(text, ExportedTagSet.class);
 
         if (aAnnotationService.existsTagSet(importedTagSet.getName(), project)) {
             // A tagset exists so we'll have to replace it
@@ -58,7 +57,7 @@ public class JsonImportUtil
     }
 
     private static TagSet replaceTagSet(Project project,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
+            ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -74,7 +73,7 @@ public class JsonImportUtil
         tagsetInUse.setProject(project);
         aAnnotationService.createTagSet(tagsetInUse);
         // Add all tags from imported tagset
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
+        for (ExportedTag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());
@@ -87,25 +86,25 @@ public class JsonImportUtil
     
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
             AnnotationSchemaService aAnnotationService)
-        throws IOException, JsonParseException, JsonMappingException
+        throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
     
-        de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet = JSONUtil
+        ExportedTagSet importedTagSet = JSONUtil
                 .getJsonConverter().getObjectMapper()
-                .readValue(text, de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet.class);
+                .readValue(text, ExportedTagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
     
     public static TagSet createTagSet(Project project,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.TagSet importedTagSet,
+            ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String importedTagSetName = importedTagSet.getName();
         if (aAnnotationService.existsTagSet(importedTagSetName, project)) {
-            // aAnnotationService.removeTagSet(aAnnotationService.getTagSet(importedTagSet.getName(),
-            // project));
+            // aAnnotationService.removeTagSet(aAnnotationService.getTagSet(
+            // importedTagSet.getName(), project));
             // Rename Imported TagSet instead of deleting the old one.
             importedTagSetName = copyTagSetName(aAnnotationService, importedTagSetName, project);
         }
@@ -116,7 +115,7 @@ public class JsonImportUtil
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
         aAnnotationService.createTagSet(newTagSet);
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.Tag tag : importedTagSet.getTags()) {
+        for (ExportedTag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());

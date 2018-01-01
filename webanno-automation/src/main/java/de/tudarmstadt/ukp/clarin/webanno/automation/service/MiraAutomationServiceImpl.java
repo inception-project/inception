@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA_TEMPLATE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
@@ -32,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -55,7 +53,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -67,10 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(AutomationService.SERVICE_NAME)
 public class MiraAutomationServiceImpl
-    implements AutomationService, ProjectLifecycleAware
+    implements AutomationService
 {
- 
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Resource(name = "automationCasStorageService")
@@ -92,8 +87,8 @@ public class MiraAutomationServiceImpl
     public List<String> listTemplates(Project aProject)
     {
         // list all MIRA template files
-        File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE).listFiles();
+        File[] files = new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + MIRA + MIRA_TEMPLATE).listFiles();
 
         // Name of the MIRA template files
         List<String> templateFiles = new ArrayList<>();
@@ -126,8 +121,8 @@ public class MiraAutomationServiceImpl
     public void removeTemplate(Project aProject, String aFileName, String aUsername)
         throws IOException
     {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE + aFileName));
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + MIRA + MIRA_TEMPLATE + aFileName));
         
         Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
@@ -139,8 +134,8 @@ public class MiraAutomationServiceImpl
     public void createTemplate(Project aProject, File aContent, String aFileName, String aUsername)
         throws IOException
     {
-        String templatePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE;
+        String templatePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
+                + MIRA + MIRA_TEMPLATE;
         FileUtils.forceMkdir(new File(templatePath));
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
                 + aFileName)));
@@ -224,7 +219,7 @@ public class MiraAutomationServiceImpl
     @Override
     public File getMiraDir(AnnotationFeature aFeature)
     {
-        return new File(dir, PROJECT + aFeature.getProject().getId() + MIRA);
+        return new File(dir, "/" + PROJECT_FOLDER + "/" + aFeature.getProject().getId() + MIRA);
     }
 
     @Override
@@ -269,7 +264,8 @@ public class MiraAutomationServiceImpl
     public List<TrainingDocument> listTabSepDocuments(Project aProject)
     {
         List<TrainingDocument> trainingDocuments = entityManager
-                .createQuery("FROM TrainingDocument where project =:project", TrainingDocument.class)
+                .createQuery("FROM TrainingDocument where project =:project",
+                        TrainingDocument.class)
                 .setParameter("project", aProject).getResultList();
         List<TrainingDocument> tabSepDocuments = new ArrayList<>();
         for (TrainingDocument trainingDocument : trainingDocuments) {
@@ -296,28 +292,34 @@ public class MiraAutomationServiceImpl
             return false;
         }
     }
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-   public File getDocumentFolder(TrainingDocument trainingDocument) throws IOException{
-    	File trainingDocFolder = new File(dir, PROJECT + trainingDocument.getProject().getId() + TRAIN
-                + trainingDocument.getId()+SOURCE);
+    public File getDocumentFolder(TrainingDocument trainingDocument)
+        throws IOException
+    {
+        File trainingDocFolder = new File(dir,
+                "/" + PROJECT_FOLDER + "/" + trainingDocument.getProject().getId() + TRAIN
+                        + trainingDocument.getId() + "/" + SOURCE_FOLDER);
         FileUtils.forceMkdir(trainingDocFolder);
         return trainingDocFolder;
     }
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<TrainingDocument> listTrainingDocuments(Project aProject)
     {
-    	// both TAB_SEP and WebAnno training documents
+        // both TAB_SEP and WebAnno training documents
         List<TrainingDocument> trainingDocuments = entityManager
-                .createQuery("FROM TrainingDocument where project =:project", TrainingDocument.class)
+                .createQuery("FROM TrainingDocument where project =:project",
+                        TrainingDocument.class)
                 .setParameter("project", aProject).getResultList();
-   /*     List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>();
-        for (TrainingDocument trainingDocument : trainingDocuments) {
-            if (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-            	webAnnoTraiingDocuments.add(trainingDocument);
-            }
-        }*/
+       /*
+        * List<TrainingDocument> webAnnoTraiingDocuments = new ArrayList<TrainingDocument>(); for
+        * (TrainingDocument trainingDocument : trainingDocuments) { if
+        * (trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+        * webAnnoTraiingDocuments.add(trainingDocument); } }
+        */
         return trainingDocuments;
     }
     
@@ -327,8 +329,9 @@ public class MiraAutomationServiceImpl
     {
         return entityManager
                 .createQuery("FROM TrainingDocument WHERE name = :name AND project =:project",
-                		TrainingDocument.class).setParameter("name", aDocumentName)
-                .setParameter("project", aProject).getSingleResult();
+                        TrainingDocument.class)
+                .setParameter("name", aDocumentName).setParameter("project", aProject)
+                .getSingleResult();
     }
     
     @Override
@@ -338,8 +341,8 @@ public class MiraAutomationServiceImpl
     {       
         entityManager.remove(aDocument);
 
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + TRAIN
-                + aDocument.getId();
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aDocument.getProject().getId() + TRAIN + aDocument.getId();
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
@@ -376,8 +379,9 @@ public class MiraAutomationServiceImpl
             catch (Exception e) {
                 log.error("The reader for format [" + aTrainingAnnotationDocument.getFormat()
                         + "] is unable to digest data", e);
-                throw new IOException("The reader for format [" + aTrainingAnnotationDocument.getFormat()
-                        + "] is unable to digest data: " + e.getMessage());
+                throw new IOException(
+                        "The reader for format [" + aTrainingAnnotationDocument.getFormat()
+                                + "] is unable to digest data: " + e.getMessage());
             }
             automationCasStorageService.writeCas(aTrainingAnnotationDocument, jcas);
         }
@@ -422,81 +426,57 @@ public class MiraAutomationServiceImpl
     }
     
 
-	@Override
-	public JCas createInitialCas(TrainingDocument aDocument) 
-			throws UIMAException, IOException, ClassNotFoundException {
+    @Override
+    public JCas createInitialCas(TrainingDocument aDocument)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
         JCas jcas = importExportService.importCasFromFile(getTrainingDocumentFile(aDocument),
                 aDocument.getProject(), aDocument.getFormat());
         automationCasStorageService.analyzeAndRepair(aDocument, jcas.getCas());
-        CasPersistenceUtils.writeSerializedCas(jcas,
-                getCasFile(aDocument));
-        
+        CasPersistenceUtils.writeSerializedCas(jcas, getCasFile(aDocument));
+
         return jcas;
-	}
-	
-	@Override
-	public File getTrainingDocumentFile(TrainingDocument aDocument) {
-		File documentUri = new File(
-				dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + 
-				TRAIN + aDocument.getId() + SOURCE);
-		return new File(documentUri, aDocument.getName());
-	}
-
-	@Override
-	public JCas readInitialCas(TrainingDocument aDocument)
-			throws CASException, ResourceInitializationException, IOException {
-				JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
-	        
-				CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument));
-	        
-				automationCasStorageService.analyzeAndRepair(aDocument, jcas.getCas());
-	        
-	        return jcas;
-	}
-
-	@Override
-	public JCas createOrReadInitialCas(TrainingDocument aDocument)
-			throws IOException, UIMAException, ClassNotFoundException {
-		   if (existsInitialCas(aDocument)) {
-	            return readInitialCas(aDocument);
-	        }
-	        else {
-	            return createInitialCas(aDocument);
-	        }
-	}
-
-	@Override
-    public File getCasFile(TrainingDocument aDocument)
-    {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT
-                + aDocument.getProject().getId() + TRAIN + aDocument.getId() + ANNOTATION);
-        return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
     }
 
-	@Override
-	public void afterProjectCreate(Project aProject) throws Exception {
-		 // Nothing at the moment
-		
-	}
+    @Override
+    public File getTrainingDocumentFile(TrainingDocument aDocument)
+    {
+        File documentUri = new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aDocument.getProject().getId() + TRAIN + aDocument.getId() + "/" + SOURCE_FOLDER);
+        return new File(documentUri, aDocument.getName());
+    }
 
-	@Override
-	public void beforeProjectRemove(Project aProject) throws Exception {
-		  for (TrainingDocument document : listTrainingDocuments(aProject)) {
-	            removeTrainingDocument(document);
-	        }
-		  for(MiraTemplate template: listMiraTemplates(aProject)){
-			  removeMiraTemplate(template);
-		  }
-		
-	}
+    @Override
+    public JCas readInitialCas(TrainingDocument aDocument)
+        throws CASException, ResourceInitializationException, IOException
+    {
+        JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
 
-	@Override
-	public void onProjectImport(ZipFile zip, de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-			Project aProject) throws Exception {
-		 // Nothing at the moment
-		
-	}
+        CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument));
 
+        automationCasStorageService.analyzeAndRepair(aDocument, jcas.getCas());
 
-        
+        return jcas;
+    }
+
+    @Override
+    public JCas createOrReadInitialCas(TrainingDocument aDocument)
+        throws IOException, UIMAException, ClassNotFoundException
+    {
+        if (existsInitialCas(aDocument)) {
+            return readInitialCas(aDocument);
+        }
+        else {
+            return createInitialCas(aDocument);
+        }
+    }
+
+    @Override
+    public File getCasFile(TrainingDocument aDocument)
+    {
+        File documentUri = new File(
+                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
+                        + TRAIN + aDocument.getId() + "/" + ANNOTATION_FOLDER);
+        return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
+    }
 }

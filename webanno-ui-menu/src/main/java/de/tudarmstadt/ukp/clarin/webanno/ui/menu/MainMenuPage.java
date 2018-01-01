@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabele
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.NoResultException;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.StatelessLink;
@@ -34,9 +32,7 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -55,7 +51,6 @@ public class MainMenuPage
     private static final long serialVersionUID = -2487663821276301436L;
 
     private @SpringBean ProjectService projectService;
-    private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemService menuItemService;
 
@@ -67,23 +62,20 @@ public class MainMenuPage
         setVersioned(false);
         
         // In case we restore a saved session, make sure the user actually still exists in the DB.
-        User user = null;
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            user = userRepository.get(username);
-        }
         // redirect to login page (if no usr is found, admin/admin will be created)
-        catch (NoResultException e) {
+        User user = userRepository.getCurrentUser();
+        if (user == null) {
             setResponsePage(LoginPage.class);
         }
         
         // if not either a curator or annotator, display warning message
         if (
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION) && 
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION) && 
-            !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION) && 
-            !curationEnabeled(projectService, user)) {
-            info("You are not member of any projects to annotate or curate");
+                !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION)
+                && !curationEnabeled(projectService, user)) 
+        {
+            warn("You are not member of any projects to annotate or curate.");
         }
         
         List<MenuItemDecl> menuItems = new ArrayList<>(menuItemService.getMenuItems());

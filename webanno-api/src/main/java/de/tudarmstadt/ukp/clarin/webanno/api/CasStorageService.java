@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CasStorageService
 {
-    static final String SERVICE_NAME = "casStorageService";
+    String SERVICE_NAME = "casStorageService";
     
     /**
      * Creates an annotation document (either user's annotation document or CURATION_USER's
@@ -62,7 +62,25 @@ public interface CasStorageService
     JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException;
     
+    boolean deleteCas(SourceDocument aDocument, String aUsername)
+        throws IOException;
+    
     File getAnnotationFolder(SourceDocument aDocument)
             throws IOException;
+    
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
+    
+    boolean isCacheEnabled();
+
+    /**
+     * Disables the CAS cache for the current request cycle. This is useful to avoid quickly filling
+     * up the memory during bulk operations e.g. repairing all CASes in a project. It is also useful
+     * when a CAS needs to be copied and modified, e.g. during a curation re-merge.
+     */
+    void disableCache();
+
+    /**
+     * Enables the CAS cache for the current request cycle.
+     */
+    void enableCache();
 }

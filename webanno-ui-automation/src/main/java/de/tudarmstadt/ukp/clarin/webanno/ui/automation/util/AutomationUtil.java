@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getAdapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -28,7 +27,6 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -37,7 +35,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +57,6 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
@@ -72,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -91,8 +86,6 @@ import edu.lium.mira.Mira;
 
 /**
  * A utility class for the automation modules
- *
- *
  */
 public class AutomationUtil
 {
@@ -102,8 +95,8 @@ public class AutomationUtil
 
     public static void repeateSpanAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationSchemaService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
-            String aValue)
+            AnnotationSchemaService aAnnotationService, int aStart, int aEnd,
+            AnnotationFeature aFeature, String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aBModel.getDocument(),
@@ -112,8 +105,7 @@ public class AutomationUtil
 
         // get selected text, concatenations of tokens
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
-        SpanAdapter adapter = (SpanAdapter) getAdapter(aAnnotationService,
-                aFeature.getLayer());
+        SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
@@ -124,10 +116,9 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        adapter.add(jCas, sentence.getBegin() + i,
-                                sentence.getBegin() + i + selectedText.length() - 1, aFeature,
-                                aValue);
-
+                        int addr = adapter.add(jCas, sentence.getBegin() + i,
+                                sentence.getBegin() + i + selectedText.length() - 1);
+                        adapter.setFeatureValue(aFeature, jCas, addr, aValue);
                     }
                 }
             }
@@ -145,7 +136,7 @@ public class AutomationUtil
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
+            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -174,14 +165,14 @@ public class AutomationUtil
             if (adapter.isCrossMultipleSentence()) {
                 List<AnnotationFS> mSpanAnnos = new ArrayList<>(
                         getAllAnnoFss(jCas, governorFs.getType()));
-                repeatRelation(0, jCas.getDocumentText().length()-1, aFeature, aValue, jCas, adapter, dependentFs, governorFs,
-                        mSpanAnnos);
+                repeatRelation(0, jCas.getDocumentText().length() - 1, aFeature, aValue, jCas,
+                        adapter, dependentFs, governorFs, mSpanAnnos);
             }
             else {
                 for (Sentence sent : select(jCas, Sentence.class)) {
                     List<AnnotationFS> spanAnnos = selectCovered(governorFs.getType(), sent);
-                    repeatRelation(sent.getBegin(), sent.getEnd(), aFeature, aValue, jCas, adapter, dependentFs,
-                            governorFs, spanAnnos);
+                    repeatRelation(sent.getBegin(), sent.getEnd(), aFeature, aValue, jCas, adapter,
+                            dependentFs, governorFs, spanAnnos);
                 }
 
             }
@@ -203,7 +194,8 @@ public class AutomationUtil
         for (AnnotationFS fs : aSpanAnnos) {
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
-                    adapter.add(g, fs, jCas, aStart, aEnd, aFeature, aValue);
+                    AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
                     g = null;
                     d = null;
                     continue;// so we don't go to the other if
@@ -216,7 +208,8 @@ public class AutomationUtil
             // we don't use else, in case gov and dep are the same
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
-                    adapter.add(fs, d, jCas, aStart, aEnd, aFeature, aValue);
+                    AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aFeature, jCas, getAddr(arc), aValue);
                     g = null;
                     d = null;
                 }
@@ -230,7 +223,7 @@ public class AutomationUtil
     private static Collection<AnnotationFS> getAllAnnoFss(JCas aJcas, Type aType)
     {
         Collection<AnnotationFS> spanAnnos = select(aJcas.getCas(), aType);
-	new ArrayList<>(spanAnnos).sort(Comparator.comparingInt(AnnotationFS::getBegin));
+        new ArrayList<>(spanAnnos).sort(Comparator.comparingInt(AnnotationFS::getBegin));
         return spanAnnos;
     }
 
@@ -249,10 +242,10 @@ public class AutomationUtil
                 continue;
             }
             // do not attach relation on empty span annotations
-            if (aMFs.getFeatureValueAsString(f) == null){
+            if (aMFs.getFeatureValueAsString(f) == null) {
                 continue;
             }
-            if (aFs.getFeatureValueAsString(f) == null){
+            if (aFs.getFeatureValueAsString(f) == null) {
                 continue;
             }
             if (!aMFs.getFeatureValueAsString(f).equals(aFs.getFeatureValueAsString(f))) {
@@ -279,9 +272,6 @@ public class AutomationUtil
                 aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
-            catch (IOException e) {
-                throw e;
-            }
             catch (DataRetrievalFailureException | NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
@@ -300,8 +290,8 @@ public class AutomationUtil
 
     public static void deleteSpanAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            AnnotationSchemaService aAnnotationService, int aStart, int aEnd, AnnotationFeature aFeature,
-            String aValue)
+            AnnotationSchemaService aAnnotationService, int aStart, int aEnd,
+            AnnotationFeature aFeature, String aValue)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationDocument annoDoc = aDocumentService.getAnnotationDocument(aBModel.getDocument(),
@@ -314,8 +304,8 @@ public class AutomationUtil
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) getAdapter(aAnnotationService,
-                    aFeature.getLayer());
+            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -342,7 +332,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
-            ArcAdapter adapter = (ArcAdapter) getAdapter(aAnnotationService, aFeature.getLayer());
+            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -382,8 +372,9 @@ public class AutomationUtil
 
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
-    public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate, AnnotationSchemaService aAnnotationService,
-            AutomationService aAutomationService, UserDao aUserDao)
+    public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
+            AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
+            UserDao aUserDao)
         throws IOException, UIMAException, ClassNotFoundException
     {
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
@@ -395,9 +386,10 @@ public class AutomationUtil
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
             File trainFile = new File(miraDir, feature.getId() + ".train");
             boolean documentChanged = false;
-            for (TrainingDocument document : aAutomationService.listTrainingDocuments(feature.getProject())) {
-                if (!document.isProcessed()
-                        && (document.getFeature() != null && document.getFeature().equals(feature))) {
+            for (TrainingDocument document : aAutomationService
+                    .listTrainingDocuments(feature.getProject())) {
+                if (!document.isProcessed() && (document.getFeature() != null
+                        && document.getFeature().equals(feature))) {
                     documentChanged = true;
                     break;
                 }
@@ -407,20 +399,20 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                    aAnnotationService, feature.getLayer());
-            for (TrainingDocument trainingDocument : aAutomationService.listTrainingDocuments(feature
-                    .getProject())) {
-                if ((trainingDocument.getFeature() != null && trainingDocument
-                        .getFeature().equals(feature))) {
+            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                    .getAdapter(feature.getLayer());
+            for (TrainingDocument trainingDocument : aAutomationService
+                    .listTrainingDocuments(feature.getProject())) {
+                if ((trainingDocument.getFeature() != null
+                        && trainingDocument.getFeature().equals(feature))) {
                     JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString())
+                                .append("\n");
                     }
                     trainingDocument.setProcessed(false);
                     status.setTrainDocs(status.getTrainDocs() - 1);
                 }
-
             }
             trainOut.close();
         }
@@ -430,44 +422,43 @@ public class AutomationUtil
      * If the training file or the test file already contain the "Other layer" annotations, get the
      * UIMA annotation and add it as a feature - no need to train and predict for this "other layer"
      */
-    private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature, DocumentService aRepository,
-    		 AutomationService aAutomationServic, AnnotationSchemaService aAnnotationService, UserDao aUserDao,
+    private static void addOtherFeatureFromAnnotation(AnnotationFeature aFeature,
+            DocumentService aRepository, AutomationService aAutomationServic,
+            AnnotationSchemaService aAnnotationService, UserDao aUserDao,
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, aFeature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(aFeature.getLayer());
         List<String> annotations = new ArrayList<>();
      // this is training - all training documents will be converted to a single training file
         if (aSourceDocument == null) {
-            for (TrainingDocument trainingDocument : aAutomationServic.listTrainingDocuments(aFeature
-                    .getProject())) {
+            for (TrainingDocument trainingDocument : aAutomationServic
+                    .listTrainingDocuments(aFeature.getProject())) {
 
-                    JCas jCas = aAutomationServic.readTrainingAnnotationCas(trainingDocument);
-                    for (Sentence sentence : select(jCas, Sentence.class)) {
+                JCas jCas = aAutomationServic.readTrainingAnnotationCas(trainingDocument);
+                for (Sentence sentence : select(jCas, Sentence.class)) {
 
-                        if (aFeature.getLayer().isMultipleTokens()) {
-                            annotations.addAll((List<String>) ((SpanAdapter) adapter)
-                                    .getMultipleAnnotation(sentence, aFeature).values());
-                        }
-                        else {
-                            annotations.addAll(adapter.getAnnotation(sentence, aFeature));
-                        }
-
+                    if (aFeature.getLayer().isMultipleTokens()) {
+                        annotations.addAll(((SpanAdapter) adapter)
+                                .getMultipleAnnotation(sentence, aFeature).values());
                     }
-
+                    else {
+                        annotations.addAll(adapter.getAnnotation(sentence, aFeature));
+                    }
+                }
             }
             aPredictions.add(annotations);
         }
         // This is SourceDocument to predict (in the suggestion pane)
         else {
-        	String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = aUserDao.get(username);
-            AnnotationDocument annodoc = aRepository.createOrGetAnnotationDocument(aSourceDocument, user);
+            User user = aUserDao.getCurrentUser();
+            AnnotationDocument annodoc = aRepository.createOrGetAnnotationDocument(aSourceDocument,
+                    user);
             JCas jCas = aRepository.readAnnotationCas(annodoc);
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 if (aFeature.getLayer().isMultipleTokens()) {
-                    annotations.addAll((List<String>) ((SpanAdapter) adapter)
+                    annotations.addAll(((SpanAdapter) adapter)
                             .getMultipleAnnotation(sentence, aFeature).values());
                 }
                 else {
@@ -478,7 +469,8 @@ public class AutomationUtil
         }
     }
 
-    public static void addTabSepTrainDocument(MiraTemplate aTemplate, AutomationService aAutomationService)
+    public static void addTabSepTrainDocument(MiraTemplate aTemplate,
+            AutomationService aAutomationService)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
@@ -489,8 +481,8 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         boolean documentChanged = false;
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(aTemplate.getTrainFeature()
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (!document.isProcessed()) {
                 documentChanged = true;
                 break;
@@ -532,9 +524,10 @@ public class AutomationUtil
 
     }
 
-    public static void generateTrainDocument(MiraTemplate aTemplate,DocumentService aRepository,
-            CurationDocumentService aCurationDocumentService, AnnotationSchemaService aAnnotationService,
-            AutomationService aAutomationService, UserDao aUserDao, boolean aBase)
+    public static void generateTrainDocument(MiraTemplate aTemplate, DocumentService aRepository,
+            CurationDocumentService aCurationDocumentService,
+            AnnotationSchemaService aAnnotationService, AutomationService aAutomationService,
+            UserDao aUserDao, boolean aBase)
         throws IOException, UIMAException, ClassNotFoundException, AutomationException
     {
         LOG.info("Starting to generate training document");
@@ -557,7 +550,8 @@ public class AutomationUtil
             }
         }
         // B. Training document for the main training layer were changed
-        for (TrainingDocument document : aAutomationService.listTrainingDocuments(feature.getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTrainingDocuments(feature.getProject())) {
             if (!document.isProcessed()
                     && (document.getFeature() != null && document.getFeature().equals(feature))) {
                 documentChanged = true;
@@ -565,13 +559,13 @@ public class AutomationUtil
             }
         }
         // C. New Curation document arrives
-		if (aRepository.listSourceDocuments(feature.getProject()).size() > 0) {
-			documentChanged = true;
-		}
-            
+        if (aRepository.listSourceDocuments(feature.getProject()).size() > 0) {
+            documentChanged = true;
+        }
+
         // D. tab-sep training documents
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(aTemplate.getTrainFeature()
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (!document.isProcessed() && document.getFeature() != null
                     && document.getFeature().equals(feature)) {
                 documentChanged = true;
@@ -594,21 +588,25 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
-        List<TrainingDocument> trainingDocuments =  aAutomationService.listTrainingDocuments(feature.getProject());
+        List<TrainingDocument> trainingDocuments = aAutomationService
+                .listTrainingDocuments(feature.getProject());
         int trainingDocsCount = 0;
         for (TrainingDocument trainingDocument : trainingDocuments) {
-            if ((trainingDocument.getFeature() != null && trainingDocument
-                    .getFeature().equals(feature))) {
+            if ((trainingDocument.getFeature() != null 
+                    && trainingDocument.getFeature().equals(feature)) 
+                    && !trainingDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
                 JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
+                    if (aBase) { // base training document
+                        trainOut.append(getMiraLine(sentence, null, adapter)
+                            .toString()).append("\n");
                     }
-                    else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                    else { // training document with other features
+                        trainOut.append(getMiraLine(sentence, feature, adapter)
+                            .toString()).append("\n");
                     }
                 }
                 trainingDocument.setProcessed(!aBase);
@@ -618,16 +616,19 @@ public class AutomationUtil
             }
         }
         // for curated docuemnts
-        List<SourceDocument> sourceDocuments =  aRepository.listSourceDocuments(feature.getProject());
-        for(SourceDocument sourceDocument:sourceDocuments){
-             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
+        List<SourceDocument> sourceDocuments = aRepository
+                .listSourceDocuments(feature.getProject());
+        for (SourceDocument sourceDocument : sourceDocuments) {
+            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
                 JCas jCas = aCurationDocumentService.readCurationCas(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-                    if (aBase) {// base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
+                    if (aBase) { // base training document
+                        trainOut.append(getMiraLine(sentence, null, adapter).toString())
+                                .append("\n");
                     }
-                    else {// training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString() + "\n");
+                    else { // training document with other features
+                        trainOut.append(getMiraLine(sentence, feature, adapter).toString())
+                                .append("\n");
                     }
                 }
                 if (!aBase) {
@@ -635,7 +636,8 @@ public class AutomationUtil
                 }
             }
             trainingDocsCount++;
-            LOG.info("Processed source document " + trainingDocsCount + " of " + trainingDocuments.size());
+            LOG.info("Processed source document " + trainingDocsCount + " of "
+                    + trainingDocuments.size());
         }
         // Tab-sep documents to be used as a target layer train document
         int goldStandardDocsCounter = 0;
@@ -688,27 +690,27 @@ public class AutomationUtil
             FileUtils.forceMkdir(miraDir);
         }
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserDao.get(username);
+        User user = aUserDao.getCurrentUser();
         AnnotationFeature feature = aTemplate.getTrainFeature();
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) TypeUtil.getAdapter(
-                aAnnotationService, feature.getLayer());
+        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
+                .getAdapter(feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
-                File predFile = new File(miraDir, document.getId() + ".pred.ft");
-                BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
-                JCas jCas;
-                try {
-                    jCas = aCorrectionDocumentService.readCorrectionCas(document);
-                }
-                catch (Exception e) { 
-                	AnnotationDocument annoDoc = aRepository.createOrGetAnnotationDocument(document, user);
-                    jCas = aRepository.readAnnotationCas(annoDoc);
-                }
+            File predFile = new File(miraDir, document.getId() + ".pred.ft");
+            BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
+            JCas jCas;
+            try {
+                jCas = aCorrectionDocumentService.readCorrectionCas(document);
+            }
+            catch (Exception e) {
+                AnnotationDocument annoDoc = aRepository.createOrGetAnnotationDocument(document,
+                        user);
+                jCas = aRepository.readAnnotationCas(annoDoc);
+            }
 
-                for (Sentence sentence : select(jCas, Sentence.class)) {
-                    predOut.append(getMiraLine(sentence, null, adapter).toString() + "\n");
-                }
-                predOut.close();
+            for (Sentence sentence : select(jCas, Sentence.class)) {
+                predOut.append(getMiraLine(sentence, null, adapter).toString()).append("\n");
+            }
+            predOut.close();
         }
     }
 
@@ -719,7 +721,7 @@ public class AutomationUtil
         StringBuffer sb = new StringBuffer();
 
         String tag = "";
-        List<String> annotations = new ArrayList<String>();
+        List<String> annotations = new ArrayList<>();
         Map<Integer, String> multAnno = null;
         if (aLayerFeature != null) {
             if (aLayerFeature.getLayer().isMultipleTokens()) {
@@ -778,8 +780,9 @@ public class AutomationUtil
                 }
 
             }
-            sb.append(word + " " + prefix1 + prefix2 + prefix3 + prefix4 + suffix1 + suffix2
-                    + suffix3 + suffix4 + tag + nl);
+            sb.append(word).append(" ").append(prefix1).append(prefix2).append(prefix3)
+                .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+                .append(tag).append(nl);
         }
         return sb;
 
@@ -818,8 +821,9 @@ public class AutomationUtil
                 + " ";
 
         String nl = "\n";
-        sb.append(aToken + " " + prefix1 + prefix2 + prefix3 + prefix4 + suffix1 + suffix2
-                + suffix3 + suffix4 + aFeature + nl);
+        sb.append(aToken).append(" ").append(prefix1).append(prefix2).append(prefix3)
+            .append(prefix4).append(suffix1).append(suffix2).append(suffix3).append(suffix4)
+            .append(aFeature).append(nl);
         return sb;
 
     }
@@ -852,14 +856,16 @@ public class AutomationUtil
         String templateName = null;
 
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
-            templateName = createTemplate(feature, getMiraTemplateFile(feature, aAutomationService), 0);
+            templateName = createTemplate(feature, getMiraTemplateFile(feature, aAutomationService),
+                    0);
 
             File miraDir = aAutomationService.getMiraDir(aTemplate.getTrainFeature());
             File trainFile = new File(miraDir, feature.getId() + ".train");
             String initalModelName = "";
             String trainName = trainFile.getAbsolutePath();
 
-            String modelName = aAutomationService.getMiraModel(feature, true, null).getAbsolutePath();
+            String modelName = aAutomationService.getMiraModel(feature, true, null)
+                    .getAbsolutePath();
 
             boolean randomInit = false;
 
@@ -906,8 +912,8 @@ public class AutomationUtil
         String templateName = null;
 
         boolean documentChanged = false;
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(aTemplate.getTrainFeature()
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (!document.isProcessed()) {
                 documentChanged = true;
                 break;
@@ -971,13 +977,13 @@ public class AutomationUtil
     private static void setNgramForLable(StringBuffer aSb, int aOther)
     {
         int i = 1;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("U" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("U" +
          * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
          */
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("U" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
@@ -985,15 +991,17 @@ public class AutomationUtil
 
         int temp = 1;
         int tempOther = aOther;
-        if (aOther > 0) {// consider other layer annotations as features
+        if (aOther > 0) { // consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1001,28 +1009,30 @@ public class AutomationUtil
         aSb.append("\n");
 
         i = 1;
-        aSb.append("B" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("B").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("B" + String.format("%02d", i) + "%x[0,1]\n"); i++; aSb.append("B" +
          * String.format("%02d", i) + "%x[0,0]" + "%x[0,1]\n"); i++;
          */
-        aSb.append("B" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("B").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
         /*
          * aSb.append("B" + String.format("%02d", i) + "%x[-1,1]" + "%x[0,1]\n"); i++;
          */
         aSb.append("\n");
         temp = 1;
-        if (tempOther > 0) {// consider other layer annotations as features
+        if (tempOther > 0) { // consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("B" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("B" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("B" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("B").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1033,67 +1043,72 @@ public class AutomationUtil
     private static void setMorphoTemplate(StringBuffer aSb, int aOther)
     {
         int i = 1;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0," + i + "]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(i).append("]\n");
         i++;
         aSb.append("\n");
 
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]").append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[1,0]" + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[1,0]").append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
+            .append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[0,0]" + "%x[1,0]" + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[0,0]").append("%x[1,0]")
+            .append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0]"
-                + "%x[1,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0]").append("%x[1,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-1,0]" + "%x[0,0]" + "%x[1,0]"
-                + "%x[2,0]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-1,0]").append("%x[0,0]")
+            .append("%x[1,0]").append("%x[2,0]\n");
         i++;
-        aSb.append("U" + String.format("%02d", i) + "%x[-2,0]" + "%x[-1,0]" + "%x[0,0" + "%x[1,0]"
-                + "%x[2,0]]\n");
+        aSb.append("U").append(String.format("%02d", i)).append("%x[-2,0]").append("%x[-1,0]")
+            .append("%x[0,0").append("%x[1,0]").append("%x[2,0]]\n");
         aSb.append("\n");
         int temp = 1;
-        if (aOther > 0) {// consider other layer annotations as features
+        if (aOther > 0) { // consider other layer annotations as features
             while (aOther > 0) {
                 aOther--;
-                aSb.append("U" + String.format("%02d", i) + "%x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,").append(temp)
+                    .append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[0,0] %x[0," + temp + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[0,0] %x[0,")
+                    .append(temp).append("]\n");
                 i++;
-                aSb.append("U" + String.format("%02d", i) + "%x[-1," + temp + "] %x[0," + temp
-                        + "]\n");
+                aSb.append("U").append(String.format("%02d", i)).append("%x[-1,").append(temp)
+                    .append("] %x[0,").append(temp).append("]\n");
                 i++;
                 temp++;
             }
@@ -1141,7 +1156,7 @@ public class AutomationUtil
         int beamSize = 0;
         boolean maxPosteriors = false;
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
-        List<List<String>> predictions = new ArrayList<List<String>>();
+        List<List<String>> predictions = new ArrayList<>();
 
         File miraDir = aAutomationService.getMiraDir(layerFeature);
         Mira mira = new Mira();
@@ -1163,9 +1178,10 @@ public class AutomationUtil
             }
         }
         // B. Training document for the main training layer were changed
-        for (TrainingDocument document : aAutomationService.listTrainingDocuments(layerFeature.getProject())) {
-            if (!document.isProcessed()
-                    && (document.getFeature() != null && document.getFeature().equals(layerFeature))) {
+        for (TrainingDocument document : aAutomationService
+                .listTrainingDocuments(layerFeature.getProject())) {
+            if (!document.isProcessed() && (document.getFeature() != null
+                    && document.getFeature().equals(layerFeature))) {
                 trainingDocumentUpdated = true;
                 break;
             }
@@ -1179,8 +1195,8 @@ public class AutomationUtil
             }
         }
         // D. tab-sep training documents
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(aTemplate.getTrainFeature()
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             if (!document.isProcessed() && document.getFeature() != null
                     && document.getFeature().equals(layerFeature)) {
                 trainingDocumentUpdated = true;
@@ -1205,7 +1221,8 @@ public class AutomationUtil
         String finalClassifierModelName = aAutomationService.getMiraModel(layerFeature, false, null)
                 .getAbsolutePath();
         getFeatureOtherLayer(aTemplate, aRepository, aAutomationService, aAnnotationService,
-                aUserDao, beamSize, maxPosteriors, predictions, mira, predFile, predcitedFile, null);
+                aUserDao, beamSize, maxPosteriors, predictions, mira, predFile, predcitedFile,
+                null);
 
         getFeaturesTabSep(aTemplate, aAutomationService, beamSize, maxPosteriors,
                 layerFeature, predictions, mira, predFile, predcitedFile);
@@ -1243,8 +1260,9 @@ public class AutomationUtil
         mira.saveModel(finalClassifierModelName);
 
         // all training documents are processed by now
-        for (TrainingDocument document : aAutomationService.listTrainingDocuments(layerFeature.getProject())) {
-                document.setProcessed(true);
+        for (TrainingDocument document : aAutomationService
+                .listTrainingDocuments(layerFeature.getProject())) {
+            document.setProcessed(true);
         }
         for (TrainingDocument document : aAutomationService.listTabSepDocuments(layerFeature
                 .getProject())) {
@@ -1253,20 +1271,21 @@ public class AutomationUtil
         return trainResult;
     }
 
-    private static void getFeatureOtherLayer(MiraTemplate aTemplate, DocumentService aRepository, AutomationService aAutomationService,
-            AnnotationSchemaService aAnnotationService, 
+    private static void getFeatureOtherLayer(MiraTemplate aTemplate, DocumentService aRepository,
+            AutomationService aAutomationService, AnnotationSchemaService aAnnotationService,
             UserDao aUserDao, int beamSize, boolean maxPosteriors, List<List<String>> predictions,
             Mira mira, File predFtFile, File predcitedFile, SourceDocument document)
-        throws FileNotFoundException, IOException, ClassNotFoundException, UIMAException
+        throws IOException, ClassNotFoundException, UIMAException
     {
         // other layers as training document
         for (AnnotationFeature feature : aTemplate.getOtherFeatures()) {
             int shiftColumns = 0;
             int nbest = 1;
-            String modelName = aAutomationService.getMiraModel(feature, true, null).getAbsolutePath();
+            String modelName = aAutomationService.getMiraModel(feature, true, null)
+                    .getAbsolutePath();
             if (!new File(modelName).exists()) {
-                addOtherFeatureFromAnnotation(feature, aRepository, aAutomationService, aAnnotationService, aUserDao,
-                        predictions, document);
+                addOtherFeatureFromAnnotation(feature, aRepository, aAutomationService,
+                        aAnnotationService, aUserDao, predictions, document);
                 continue;
             }
             String testName = predFtFile.getAbsolutePath();
@@ -1284,7 +1303,7 @@ public class AutomationUtil
             mira.test(input, stream);
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1306,10 +1325,10 @@ public class AutomationUtil
             AutomationService aAutomationService, int beamSize, boolean maxPosteriors,
             AnnotationFeature layerFeature, List<List<String>> predictions, Mira mira,
             File predFile, File predcitedFile)
-        throws FileNotFoundException, IOException, ClassNotFoundException, AutomationException
+        throws IOException, ClassNotFoundException, AutomationException
     {
-        for (TrainingDocument document : aAutomationService.listTabSepDocuments(aTemplate.getTrainFeature()
-                .getProject())) {
+        for (TrainingDocument document : aAutomationService
+                .listTabSepDocuments(aTemplate.getTrainFeature().getProject())) {
             int shiftColumns = 0;
             int nbest = 1;
             String modelName = aAutomationService.getMiraModel(layerFeature, true, document)
@@ -1337,7 +1356,7 @@ public class AutomationUtil
             }
 
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1383,33 +1402,33 @@ public class AutomationUtil
 
         File miraDir = aAutomationService.getMiraDir(layerFeature);
         for (SourceDocument document : aRepository.listSourceDocuments(layerFeature.getProject())) {
-            List<List<String>> predictions = new ArrayList<List<String>>();
-                File predFtFile = new File(miraDir, document.getId() + ".pred.ft");
-                Mira mira = new Mira();
-                int beamSize = 0;
-                boolean maxPosteriors = false;
-                File predcitedFile = new File(predFtFile.getAbsolutePath() + "-pred");
+            List<List<String>> predictions = new ArrayList<>();
+            File predFtFile = new File(miraDir, document.getId() + ".pred.ft");
+            Mira mira = new Mira();
+            int beamSize = 0;
+            boolean maxPosteriors = false;
+            File predcitedFile = new File(predFtFile.getAbsolutePath() + "-pred");
 
-                getFeatureOtherLayer(aTemplate,aRepository, aAutomationService, aAnnotationService
-                        , aUserDao, beamSize, maxPosteriors, predictions, mira,
-                        predFtFile, predcitedFile, document);
+            getFeatureOtherLayer(aTemplate, aRepository, aAutomationService, aAnnotationService,
+                    aUserDao, beamSize, maxPosteriors, predictions, mira, predFtFile, predcitedFile,
+                    document);
 
-                getFeaturesTabSep(aTemplate, aAutomationService, beamSize,
-                        maxPosteriors, layerFeature, predictions, mira, predFtFile, predcitedFile);
+            getFeaturesTabSep(aTemplate, aAutomationService, beamSize, maxPosteriors, layerFeature,
+                    predictions, mira, predFtFile, predcitedFile);
 
-                File basePredFile = new File(miraDir, document.getId() + ".pred");
-                if (predictions.size() == 0) {
-                    createTemplate(aTemplate.getTrainFeature(),
-                            getMiraTemplateFile(layerFeature, aAutomationService), 0);
-                    FileUtils.copyFile(predFtFile, basePredFile);
-                }
-                else {
-                    createTemplate(aTemplate.getTrainFeature(),
-                            getMiraTemplateFile(layerFeature, aAutomationService), predictions.size());
-                    buildPredictFile(predFtFile, basePredFile, predictions,
-                            aTemplate.getTrainFeature());
-                }
+            File basePredFile = new File(miraDir, document.getId() + ".pred");
+            if (predictions.size() == 0) {
+                createTemplate(aTemplate.getTrainFeature(),
+                        getMiraTemplateFile(layerFeature, aAutomationService), 0);
+                FileUtils.copyFile(predFtFile, basePredFile);
             }
+            else {
+                createTemplate(aTemplate.getTrainFeature(),
+                        getMiraTemplateFile(layerFeature, aAutomationService), predictions.size());
+                buildPredictFile(predFtFile, basePredFile, predictions,
+                        aTemplate.getTrainFeature());
+            }
+        }
     }
 
     // add all predicted features and its own label at the end, to train a classifier.
@@ -1418,7 +1437,7 @@ public class AutomationUtil
         throws IOException
     {
         LineIterator it = IOUtils.lineIterator(new FileReader(aBaseFile));
-        StringBuffer trainBuffer = new StringBuffer();
+        StringBuilder trainBuffer = new StringBuilder();
         int i = 0;
         while (it.hasNext()) {
             String line = it.next();
@@ -1436,15 +1455,15 @@ public class AutomationUtil
                     label = feature;
                     continue;
                 }
-                trainBuffer.append(label + " ");
+                trainBuffer.append(label).append(" ");
                 label = feature;
 
             }
             for (List<String> prediction : aPredictions) {
-                trainBuffer.append(prediction.get(i) + " ");
+                trainBuffer.append(prediction.get(i)).append(" ");
             }
             // add its own label
-            trainBuffer.append(label + "\n");
+            trainBuffer.append(label).append("\n");
             i++;
         }
         IOUtils.write(trainBuffer.toString(), new FileOutputStream(aTrainFile));
@@ -1458,7 +1477,7 @@ public class AutomationUtil
         throws IOException
     {
         LineIterator it = IOUtils.lineIterator(new FileReader(apredFt));
-        StringBuffer predBuffer = new StringBuffer();
+        StringBuilder predBuffer = new StringBuilder();
         int i = 0;
         while (it.hasNext()) {
             String line = it.next();
@@ -1470,15 +1489,15 @@ public class AutomationUtil
             // if the target feature is on multiple token, we do not need the morphological features
             // in the prediction file
             if (aFeature.getLayer().isMultipleTokens()) {
-                predBuffer.append(st.nextToken() + " ");
+                predBuffer.append(st.nextToken()).append(" ");
             }
             else {
                 while (st.hasMoreTokens()) {
-                    predBuffer.append(st.nextToken() + " ");
+                    predBuffer.append(st.nextToken()).append(" ");
                 }
             }
             for (List<String> prediction : aPredictions) {
-                predBuffer.append(prediction.get(i) + " ");
+                predBuffer.append(prediction.get(i)).append(" ");
             }
             // add its
             predBuffer.append("\n");
@@ -1603,7 +1622,7 @@ public class AutomationUtil
     public static void predict(MiraTemplate aTemplate, DocumentService aRepository,
             CorrectionDocumentService aCorrectionDocumentService,
             AutomationService aAutomationService, UserDao aUserDao)
-        throws CASException, UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotationFeature layerFeature = aTemplate.getTrainFeature();
 
@@ -1634,7 +1653,7 @@ public class AutomationUtil
 
             LOG.info("Prediction is wrtten to a MIRA File. To be done is writing back to the CAS");
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
-            List<String> annotations = new ArrayList<String>();
+            List<String> annotations = new ArrayList<>();
 
             while (it.hasNext()) {
                 String line = it.next();
@@ -1652,8 +1671,7 @@ public class AutomationUtil
 
             LOG.info(annotations.size() + " Predictions found to be written to the CAS");
             JCas jCas = null;
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = aUserDao.get(username);
+            User user = aUserDao.getCurrentUser();
             try {
                 AnnotationDocument annoDocument = aRepository.getAnnotationDocument(document,
                         user);
@@ -1661,10 +1679,10 @@ public class AutomationUtil
                 automate(jCas, layerFeature, annotations);
             }
             catch (DataRetrievalFailureException e) {
-            automate(jCas, layerFeature, annotations);
-            LOG.info("Predictions found are written to the CAS");
-            aCorrectionDocumentService.writeCorrectionCas(jCas, document);
-            status.setAnnoDocs(status.getAnnoDocs() - 1);
+                automate(jCas, layerFeature, annotations);
+                LOG.info("Predictions found are written to the CAS");
+                aCorrectionDocumentService.writeCorrectionCas(jCas, document);
+                status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
             automate(jCas, layerFeature, annotations);
             LOG.info("Predictions found are written to the CAS");
@@ -1676,11 +1694,8 @@ public class AutomationUtil
     public static void clearAnnotations(JCas aJCas, Type aType)
         throws IOException
     {
-        List<AnnotationFS> annotationsToRemove = new ArrayList<AnnotationFS>();
-        for (AnnotationFS a : select(aJCas.getCas(), aType)) {
-            annotationsToRemove.add(a);
-
-        }
+        List<AnnotationFS> annotationsToRemove = new ArrayList<>();
+        annotationsToRemove.addAll(select(aJCas.getCas(), aType));
         for (AnnotationFS annotation : annotationsToRemove) {
             aJCas.removeFsFromIndexes(annotation);
         }

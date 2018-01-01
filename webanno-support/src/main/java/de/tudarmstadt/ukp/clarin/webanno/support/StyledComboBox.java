@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -49,6 +50,18 @@ public class StyledComboBox<T>
     {
         super(string, choices);
     }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        // This was an attempt to fix the problem that Wicket does not correctly return the
+        // focus to ComboBoxes after an AJAX submit/onChange event. Unfortunately, it does
+        // not fix the problem.
+        // aResponse.render(new OnLoadHeaderItem("$('#" + getMarkupId()
+        // + "').data('kendoComboBox').input.attr('id', '" + getMarkupId() + "-vis')"));
+    }
 
     @Override
     protected IJQueryTemplate newTemplate()
@@ -66,13 +79,11 @@ public class StyledComboBox<T>
                 // Some docs on how the templates work in Kendo, in case we need
                 // more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                StringBuilder sb = new StringBuilder();
-                sb.append("# if (data.reordered == 'true') { #");
-                sb.append("<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n");
-                sb.append("# } else { #");
-                sb.append("<div title=\"#: data.description #\">#: data.name #</div>\n");
-                sb.append("# } #");
-                return sb.toString();
+                return "# if (data.reordered == 'true') { #" +
+                    "<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n" +
+                    "# } else { #" +
+                    "<div title=\"#: data.description #\">#: data.name #</div>\n" +
+                    "# } #";
             }
 
             @Override

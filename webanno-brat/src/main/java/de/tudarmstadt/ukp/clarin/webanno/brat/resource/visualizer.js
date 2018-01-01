@@ -33,7 +33,11 @@ var Visualizer = (function($, window, undefined) {
 	// WEBANNO EXTENSION BEGIN - RTL support - DEV mode switch
 	var rtlmode = false;
 	// WEBANNO EXTENSION END
-    
+
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+	var fontZoom = 100;
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+
     var DocumentData = function(text) {
       this.text = text;
       this.chunks = [];
@@ -212,7 +216,12 @@ var Visualizer = (function($, window, undefined) {
     };
 
     var Row = function(svg) {
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
       this.group = svg.group();
+ */
+      this.group = svg.group({ 'class': 'row' });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
       this.background = svg.group(this.group);
       this.chunks = [];
       this.hasAnnotations = false;
@@ -596,12 +605,15 @@ var Visualizer = (function($, window, undefined) {
           var span =
               //      (id,        type,      offsets,   generalType)
               new Span(entity[0], entity[1], entity[2], 'entity');
-// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+// WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
           if (entity[3]) {
         	  span.labelText = entity[3];
           }
           if (entity[4]) {
         	  span.color = entity[4];
+          }
+          if (entity[5]){
+        	  span.hovertext = entity[5];
           }
 // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
@@ -1397,8 +1409,8 @@ var Visualizer = (function($, window, undefined) {
         				  corrFactor: corrFactor
             		  };
     				  
-		          	  console.log("Completed calculating static RTL metrics in " + (new Date() - 
-		          			  start) + " for " + text.getNumberOfChars() + " characters.");
+		          	  //console.log("Completed calculating static RTL metrics in " + (new Date() - 
+		          	  //		  start) + " for " + text.getNumberOfChars() + " characters.");
 				  }
 		              
 	              //startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
@@ -1590,7 +1602,15 @@ Util.profileStart('init');
 // WEBANNO EXTENSION BEGIN - RTL support - mode switch
 	    rtlmode = sourceData.rtl_mode;
 // WEBANNO EXTENSION END
-        
+
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+	    fontZoom = sourceData.font_zoom;
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+
+// WEBANNO EXTENSION BEGIN - #406 - Sharable link for annotation documents  
+	    args = sourceData.args;
+// WEBANNO EXTENSION END - #406 - Sharable link for annotation documents  
+
         if (sourceData) setData(sourceData);
         showMtime();
 
@@ -1598,16 +1618,34 @@ Util.profileStart('init');
         svg.clear(true);
         if (!data || data.length == 0) return;
 
+// WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+        $svg.css("font-size", fontZoom+"%");
+// WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+        
+// WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
+/*
         // establish the width according to the enclosing element
         canvasWidth = that.forceWidth || $svgDiv.width();
+*/
+        // establish the width according to the enclosing element
+        baseCanvasWidth = that.forceWidth || $svgDiv.width();
+        canvasWidth = that.forceWidth || ($svgDiv.width() - $.scrollbarWidth());
+// WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
+        
+        
 // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 
         // Take hairline border of SVG into account
-        canvasWidth -= 2;
+        canvasWidth -= 4;
 // WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered 
 
         var defs = addHeaderAndDefs();
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var backgroundGroup = svg.group({ 'class': 'background' });
+*/
+        var backgroundGroup = svg.group({ 'class': 'background', 'pointer-events': 'none' });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         var glowGroup = svg.group({ 'class': 'glow' });
         highlightGroup = svg.group({ 'class': 'highlight' });
         var textGroup = svg.group({ 'class': 'text' });
@@ -1795,7 +1833,14 @@ Util.profileStart('chunks');
               // * non-first word in a line
               // don't indent if
               // * the first word in a non-paragraph line
+// WEBANNO EXTENSION BEGIN - #564 - Improvements to brat visualization with large font size 
+/*
               for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
+*/
+              for (var i = spacePos; i < spaceLen; i++) {
+            	    spaceWidth += spaceWidths[chunk.lastSpace[i]] * (fontZoom / 100.0) || 0;
+              }
+// WEBANNO EXTENSION END - #564 - Improvements to brat visualization with large font size 
 // WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spaceWidth             
 /*
               currentX += spaceWidth;
@@ -3093,7 +3138,12 @@ Util.profileStart('rows');
 
         // position the rows
         var y = Configuration.visual.margin.y;
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var sentNumGroup = svg.group({'class': 'sentnum'});
+*/
+        var sentNumGroup = svg.group({'class': 'sentnum unselectable'});
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         var currentSent;
         $.each(rows, function(rowId, row) {
           // find the maximum fragment height
@@ -3126,6 +3176,9 @@ Util.profileStart('rows');
           }
 
           rowBoxHeight += rowPadding;
+
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin
+/*
           var bgClass;
           if (data.markedSent[currentSent]) {
             // specifically highlighted
@@ -3142,6 +3195,41 @@ Util.profileStart('rows');
             canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
             'class': bgClass,
           });
+*/
+
+          var bgClass;
+          if (Configuration.textBackgrounds == "striped") {
+            // give every other sentence a different bg class
+            bgClass = 'background'+ row.backgroundIndex;
+          } else {
+            // plain "standard" bg
+            bgClass = 'background0';
+          }
+          svg.rect(backgroundGroup,
+            0, y + sizes.texts.y + sizes.texts.height,
+            canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
+            'class': bgClass,
+          });
+
+          if (row.sentence && data.markedSent[currentSent]) {
+            if (rtlmode) {
+              svg.rect(backgroundGroup,
+                canvasWidth - sentNumMargin,            // x
+                y + sizes.texts.y + sizes.texts.height, // y
+                sentNumMargin,                          // width
+                rowBoxHeight + sizes.texts.height + 1,  // height
+                { 'class': 'backgroundHighlight' });
+            } else {
+              svg.rect(backgroundGroup,
+                0, 
+                y + sizes.texts.y + sizes.texts.height,
+                sentNumMargin, 
+                rowBoxHeight + sizes.texts.height + 1, 
+                { 'class': 'backgroundHighlight' });
+            }
+          }
+// WEBANNO EXTENSION END
+
           y += rowBoxHeight;
           y += sizes.texts.height;
           row.textY = y - rowPadding;
@@ -3152,7 +3240,7 @@ Util.profileStart('rows');
             var link = svg.link(sentNumGroup, sentence_hash.getHash());
 */
         	var link = sentNumGroup;
-// WEBANNO EXTENSION END            
+// WEBANNO EXTENSION END
 // WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin           
 /*
             var text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
@@ -3167,7 +3255,10 @@ Util.profileStart('rows');
               text = svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                   '' + row.sentence, { 'data-sent': row.sentence });
             }
-// WEBANNO EXTENSION END            
+// WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+            $(text).css('cursor', 'pointer');
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
             var sentComment = data.sentComment[row.sentence];
             if (sentComment) {
               var box = text.getBBox();
@@ -3197,9 +3288,11 @@ Util.profileStart('rows');
               } else {
                 text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
                     '' + row.sentence, { 'data-sent': row.sentence });
-
               }
 // WEBANNO EXTENSION END            
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+            $(text).css('cursor', 'pointer');
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
             }
           }
 
@@ -3233,11 +3326,19 @@ Util.profileStart('chunkFinish');
           return endDiff != 0 ? endDiff : Util.cmp(bc.to-bc.from, ac.to-ac.from);
         }
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         var sentenceText = null;
+*/
+        var prevChunk = null;
+        var rowTextGroup = null;
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
         $.each(data.chunks, function(chunkNo, chunk) {
           // context for sort
           currentChunk = chunk;
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
           // text rendering
           if (chunk.sentence) {
             if (sentenceText) {
@@ -3249,6 +3350,19 @@ Util.profileStart('chunkFinish');
           if (!sentenceText) {
             sentenceText = svg.createText();
           }
+*/
+          if (!rowTextGroup || prevChunk.row != chunk.row) {
+            if (rowTextGroup) {
+              horizontalSpacer(svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
+                'data-chunk-id': prevChunk.index,
+                'class': 'row-final spacing'
+              });
+            }
+            rowTextGroup = svg.group(textGroup, { 'class': 'text-row'})
+          }
+          prevChunk = chunk;
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+          
           var nextChunk = data.chunks[chunkNo + 1];
           var nextSpace = nextChunk ? nextChunk.space : '';
 // WEBANNO EXTENSION BEGIN - RTL support - Render chunks as SVG text
@@ -3263,16 +3377,70 @@ Util.profileStart('chunkFinish');
         	// Render every text chunk as a SVG text so we maintain control over the layout. When 
         	// rendering as a SVG span (as brat does), then the browser changes the layout on the 
         	// X-axis as it likes in RTL mode.
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
             svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text + nextSpace, {
               'data-chunk-id': chunk.index
             });
+ */
+            if (!rowTextGroup.firstChild) {
+              horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
+                'class': 'row-initial spacing',
+                'data-chunk-id': chunk.index
+              });
+            }
+
+            svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
+              'data-chunk-id': chunk.index
+            });
+
+            // If there needs to be space between this chunk and the next one, add a spacer 
+            // item that stretches across the entire inter-chunk space. This ensures a 
+            // smooth selection.
+            if (nextChunk) {
+              var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
+              var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
+              horizontalSpacer(svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+                'data-chunk-id': chunk.index
+              });
+            }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
           else {
         	// Original rendering using tspan in ltr mode as it play nicer with selection
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
             sentenceText.span(chunk.text + nextSpace, {
               x: chunk.textX,
               y: chunk.row.textY,
               'data-chunk-id': chunk.index});
+ */
+            if (!rowTextGroup.firstChild) {
+              horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
+                'class': 'row-initial spacing',
+                'data-chunk-id': chunk.index
+              });
+            }
+
+            svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
+              'data-chunk-id': chunk.index
+            });
+
+            // If there needs to be space between this chunk and the next one, add a spacer 
+            // item that stretches across the entire inter-chunk space. This ensures a 
+            // smooth selection.
+            if (nextChunk) {
+            	  var spaceX = chunk.textX + sizes.texts.widths[chunk.text];
+            	  var spaceWidth = nextChunk.textX - spaceX;
+              horizontalSpacer(svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+                'data-chunk-id': chunk.index
+              });
+            }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
           }
 // WEBANNO EXTENSION END
 
@@ -3406,10 +3574,21 @@ Util.profileStart('chunkFinish');
             }
           }
         });
+        
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+/*
         if (sentenceText) {
           // svg.text(textGroup, sentenceText); // avoids jQuerySVG bug
           svg.text(textGroup, 0, 0, sentenceText);
         }
+*/
+        if (rowTextGroup) {
+          horizontalSpacer(svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
+            'data-chunk-id': currentChunk.index,
+            'class': 'row-final spacing'
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 
         // draw the markedText
         $.each(textMarkedRows, function(textRowNo, textRowDesc) { // row, from, to
@@ -3462,22 +3641,30 @@ Util.profileStart('finish');
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Add scrolling box
+/*
+        if (width > canvasWidth) canvasWidth = width;
+*/ 
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
-	        $svgDiv.width(canvasWidth);
-	        $svgDiv.css("overflow-x", "auto");
-        	canvasWidth = width;
-        	// Allow some extra space for arcs
-        	canvasWidth += 32;
-        	oversized += 32;
+          $svgDiv.width(baseCanvasWidth);
+          canvasWidth = width;
+          // Allow some extra space for arcs
+          canvasWidth += 32;
+          oversized += 32;
         }
-//        if (width > canvasWidth) {canvasWidth = width;
 // WEBANNO EXTENSION END        
         
         $svg.width(canvasWidth);
         $svg.height(y);
         $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
-// WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
+
+        // WEBANNO BEGIN #331 - Interface jumps to the top
+        // Originally, this code was within the oversized > 0 block above, but we moved it here
+        // to prevent erratic jumping
+        $svgDiv.height(y + 4); // Need to take the hairline border into account here
+        // WEBANNO END #331 - Interface jumps to the top
+        
+        // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
         if (rtlmode) {
           $svg.attr("direction", "rtl");
 // WEBANNO EXTENSION BEGIN - #300 - RTL, line breaks and Scrollbars          
@@ -3489,7 +3676,10 @@ Util.profileStart('finish');
               $(highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
               $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-	          $svgDiv.scrollLeft(oversized+4);
+              var scrollable = findClosestHorizontalScrollable($svgDiv);
+              if (scrollable) {
+                  scrollable.scrollLeft(oversized+4);
+              }
           }
 // WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars          
         }
@@ -3497,21 +3687,85 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
         if (oversized > 0) {
-	        $(backgroundGroup).attr('width', canvasWidth);
-	        $(backgroundGroup).children().each(function(index,element) {
-	      	  $(element).attr('width', canvasWidth);
-	        })
+            $(backgroundGroup).attr('width', canvasWidth);
+            $(backgroundGroup).children().each(function(index,element) {
+              // We render the backgroundHighlight only in the margin, so we have to translate
+              // it instead of transforming it.
+              if ($(element).attr('class') == 'backgroundHighlight') {
+                if (rtlmode) {
+                  $(element).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+                }
+              }
+              else {
+                $(element).attr('width', canvasWidth);
+              }
+            });
         }
-        
-        // WEBANNO BEGIN #331 - Interface jumps to the top
-        // Originally, this code was within the oversized > 0 block above, but we moved it here
-        // to prevent erratic jumping
-        $svgDiv.css("padding-bottom", "16px");
-        $svgDiv.height(y+16); // Need to take the padding into account here
-        // WEBANNO END #331 - Interface jumps to the top
-        
 // WEBANNO EXTENSION END        
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+        var svgRect = $svg[0].getBoundingClientRect();
+        
+        // Go through each row and adjust the row-initial and row-final spacing
+        $(textGroup).children(".text-row").each(function (rowIndex, textRow) {
+          var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+          var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+          var firstChunkRect = rowInitialSpacing.next()[0].getBoundingClientRect();
+          var lastChunkRect = rowFinalSpacing.prev()[0].getBoundingClientRect();
+
+          if (rtlmode) {
+            var initialSpacingX = canvasWidth - sentNumMargin;
+            var initialSpacingWidth = initialSpacingX - (firstChunkRect.x - svgRect.x + firstChunkRect.width);
+            rowInitialSpacing.attr('x', initialSpacingX);
+            rowInitialSpacing.attr('textLength', initialSpacingWidth);
+            
+            var finalSpacingX = lastChunkRect.x - svgRect.x;
+            var finalSpacingWidth = finalSpacingX;
+            rowFinalSpacing.attr('x', finalSpacingX);
+            rowFinalSpacing.attr('textLength', finalSpacingWidth);
+          }
+          else {
+            var initialSpacingX = sentNumMargin;
+            var initialSpacingWidth = (firstChunkRect.x - svgRect.x) - initialSpacingX;
+            rowInitialSpacing.attr('x', initialSpacingX);
+            rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+            var finalSpacingX = lastChunkRect.x + lastChunkRect.width - svgRect.x;
+            var finalSpacingWidth = canvasWidth - finalSpacingX;
+            rowFinalSpacing.attr('x', lastChunkRect.x + lastChunkRect.width - svgRect.x);
+            rowFinalSpacing.attr('textLength', finalSpacingWidth);
+           }
+        });
+
+        // Go through each row and add an unselectable spacer between this row and the next row
+        // While the space is unselectable, it will still help in guiding the browser into which
+        // direction the selection should in principle go and thus avoids jumpyness.
+        var prevRowRect = { y: svgRect.y, width: 0, height: 0 };
+        
+        var textRows = $(textGroup).children(".text-row");
+        textRows.each(function (rowIndex, textRow) {
+          var rowRect = textRow.getBoundingClientRect();
+          var spaceHeight = rowRect.y - (prevRowRect.y + prevRowRect.height);
+
+          // Adding a spacer between the rows. We make is a *little* bit larger than necessary
+          // to avoid exposing areas where the background shines through and which would again
+          // cause jumpyness during selection.
+          textRow.before(vertialSpacer( 
+            Math.floor((prevRowRect.y - svgRect.y) + prevRowRect.height), 
+            Math.ceil(spaceHeight) + 1));
+          
+          prevRowRect = rowRect;
+          
+          // Add a spacer below the final row until the end of the canvas
+          if (rowIndex == textRows.length - 1) {
+            var lastSpacerY = Math.floor((rowRect.y - svgRect.y) + rowRect.height);
+            textRow.after(vertialSpacer( 
+              Math.floor((rowRect.y - svgRect.y) + rowRect.height), 
+              Math.ceil(y - lastSpacerY) + 1));
+          }
+        });
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+        
 Util.profileEnd('finish');
 Util.profileEnd('render');
 Util.profileReport();
@@ -3520,7 +3774,6 @@ Util.profileReport();
         drawing = false;
         if (redraw) {
           redraw = false;
-          renderDataReal();
         }
         $svg.find('animate').each(function() {
           if (this.beginElement) { // protect against non-SMIL browsers
@@ -3632,6 +3885,7 @@ Util.profileStart('before render');
           dispatcher.post('displaySpanComment', [
               evt, target, id, span.type, span.attributeText,
               span.text,
+              span.hovertext,
               span.comment && span.comment.text,
               span.comment && span.comment.type,
               span.normalizations]);
@@ -3688,11 +3942,20 @@ Util.profileStart('before render');
               equivSelector.push('[data-arc-ed^="' + equiv + '"]');
             });
 
+// BEGIN WEBANNO EXTENSION - #246 - Highlighting in curation confused
+/*
             highlightArcs = $svg.
                 find(equivSelector.join(', ')).
                 parent().
                 add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
                 addClass('highlight');
+*/
+            highlightArcs = $svg.
+                find(equivSelector.join(', ')).
+                parent().
+                add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, $svg).
+                addClass('highlight');
+// END WEBANNO EXTENSION - #246 - Highlighting in curation confused 
 
             $.each(spans, function(spanId, dummy) {
                 spanIds.push('rect[data-span-id="' + spanId + '"]');
@@ -3958,6 +4221,47 @@ Util.profileStart('before render');
         return !drawing;
       };
       
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+      var vertialSpacer = function(y, height) {
+        if (height > 0) {
+          var foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject' );
+          var spacer = document.createElement('span');
+          $(spacer)
+            .addClass('unselectable')
+            .css('display', 'inline-block')
+            .css('width', '100%')
+            .css('height', '100%')
+            //.css('background-color', 'yellow')
+            .text('\u00a0');
+          $(foreignObject)
+            .attr("x", rtlmode ? 0 : sentNumMargin)
+            .attr("y", y)
+            .attr("width", rtlmode ? canvasWidth - sentNumMargin : canvasWidth)
+            .attr("height", height)
+            .append(spacer);
+          return foreignObject;
+        }
+      }
+      
+      var horizontalSpacer = function(svg, group, x, y, width, attrs) {
+        if (width > 0) {
+          var attributes = $.extend({
+            textLength: width,
+            lengthAdjust: 'spacingAndGlyphs',
+            //'fill': 'blue',
+            'class': 'spacing'}, attrs);
+          // To visualize the spacing use \u2588, otherwise \u00a0
+          svg.text(group, x, y, rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
+          /*
+          svg.rect(group,
+            x - (rtlmode ? width : 0), y - 10,
+            width, 10,
+            { fill: 'blue' });
+          */
+        }
+      }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+      
 // BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it   
 /*
       // If we are yet to load our fonts, dispatch them
@@ -4059,6 +4363,24 @@ Util.profileStart('before render');
       return (yiq >= 128) ? '#000000' : '#ffffff';
     }    
 // WEBANNO EXTENSION END
+    
+// WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
+// https://stackoverflow.com/a/35940276/2511197
+    function findClosestHorizontalScrollable(node) {
+      if (node === null || node.is('html')) {
+        return null;
+      }
+
+      if (
+        (node.css('overflow-x') == 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
+        (node.css('overflow-x') == 'scroll')
+      ) {
+        return node;
+      } else {
+        return findClosestHorizontalScrollable(node.parent());
+      }
+    }
+// WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
     
     return Visualizer;
 })(jQuery, window);

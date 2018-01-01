@@ -186,41 +186,55 @@ var AnnotatorUI = (function($, window, undefined) {
         }
       };
 
-/// BEGIN: WEBANNO CLICK EXTENSION
-      var clickcnt = 0;
+// WEBANNO EXTENSION BEGIN - #520 Perform javascript action on click 
+      var clickCount = 0;
+      var clickTimer = null;
+      var CLICK_DELAY = 300;
       // need a function that distinguishes between double clicks and single clicks  
       var onClick = function(evt){
-          clickcnt++;
-          setTimeout(function() {
-        	  if (clickcnt == 1){
-        		  onSnglClick.call(self, evt);
-        		  clickcnt = 0;
-        	  } else {
-        		  onDblClick.call(self, evt);
-        		  clickcnt = 0;
-        	  }
-          }, 300);
+    	    clickCount++;
+    	    
+    	    if (clickCount === 1) {
+    	      timer = setTimeout(function() {
+            onSnglClick.call(self, evt);  // perform single-click action    
+            clickCount = 0;               // after action performed, reset counter
+          }, CLICK_DELAY);
+        } else {
+          clearTimeout(timer);            // prevent single-click action
+          onDblClick.call(self, evt);     // perform double-click action
+          clickCount = 0;                 // after action performed, reset counter
+        }
       }
       
       var onSnglClick = function(evt) {
-      	  // must be logged in
-          if (that.user === null) return;
-          var target = $(evt.target);
-          var id;
-          // single click actions currently only for spans
-    	  if (id = target.attr('data-span-id')){
-    		  preventDefault(evt);
-    		  editedSpan = data.spans[id];    		  
-        	  dispatcher.post('ajax', [ {
-        			action: 'doAction',
-        			id:id,
-        			labelText: editedSpan.labelText,
-        			type: editedSpan.type
-        	  	}, 'serverResult']);
-    	  }
-      }
-      
-/// END: WEBANNO CLICK EXTENSION
+      	// must be logged in
+        if (that.user === null) return;
+        var target = $(evt.target);
+        var id;
+        // single click actions for spans
+        if (id = target.attr('data-span-id')) {
+          preventDefault(evt);
+          editedSpan = data.spans[id];    		  
+          dispatcher.post('ajax', [ {
+            action: 'doAction',
+            	id: id,
+            	labelText: editedSpan.labelText,
+            	type: editedSpan.type
+          }, 'serverResult']);
+        	}
+// WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
+        // single click action on sentence id
+        else if (id = target.attr('data-sent')) {
+          preventDefault(evt);
+          if (window.UrlUtil) {
+        	    window.UrlUtil.putFragmentParameter('f', id);
+        	    window.UrlUtil.sentParametersOnInitialPageLoad = false;
+        	    window.UrlUtil.sendUrlParameters();
+        	  }
+        }
+// WEBANNO EXTENSION END - #406 Sharable link for annotation documents
+      }      
+// WEBANNO EXTENSION END - #520 Perform javascript action on click 
 
       var onDblClick = function(evt) {
         // must be logged in
@@ -346,6 +360,16 @@ var AnnotatorUI = (function($, window, undefined) {
           startArcDrag(id);
           return false;
         }
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+        // If user starts selecting text, suppress all pointer events on annotations to
+        // avoid the selection jumping around. During selection, we don't need the annotations
+        // to react on mouse events anyway.
+        if (target.attr('data-chunk-id')) {
+          $(svgElement).children('.row, .sentnum').each(function(index, row) {
+            $(row).css('pointer-events', 'none');
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       };
 
       var onMouseMove = function(evt) {
@@ -973,9 +997,9 @@ var AnnotatorUI = (function($, window, undefined) {
       };
 */
       
-      var fillSpanTypesAndDisplayForm =function(evt, offsets, spanText, span, id) {
+      var fillSpanTypesAndDisplayForm = function(evt, offsets, spanText, span, id) {
     	  
-       if(id) {
+      if (id) {
       	dispatcher.post('ajax', [ {
   			action: 'spanOpenDialog',
   			offsets: $.toJSON(offsets),
@@ -985,12 +1009,11 @@ var AnnotatorUI = (function($, window, undefined) {
   		}, 'serverResult']);
       }
       else{
-    	dispatcher.post('ajax', [ {
+      	dispatcher.post('ajax', [ {
   			action: 'spanOpenDialog',
   			offsets: $.toJSON(offsets),
   			spanText: spanText
   		}, 'serverResult']);  
-	  
       }
     };
 // WEBANNO EXTENSION END
@@ -1665,6 +1688,15 @@ var AnnotatorUI = (function($, window, undefined) {
       var onMouseUp = function(evt) {
         if (that.user === null) return;
 
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+        // Restore pointer events on annotations
+        if (dragStartedAt && $(dragStartedAt.target).attr('data-chunk-id')) {
+          $(svgElement).children('.row, .sentnum').each(function(index, row) {
+            $(row).css('pointer-events', 'auto');
+          });
+        }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+
         var target = $(evt.target);
 
         // three things that are clickable in SVG
@@ -1710,9 +1742,12 @@ var AnnotatorUI = (function($, window, undefined) {
         } else if (!evt.ctrlKey) {
           // if not, then is it span selection? (ctrl key cancels)
           var sel = window.getSelection();
+
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+/*
           var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
           var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
-
+          
           // fallback for firefox (at least):
           // it's unclear why, but for firefox the anchor and focus
           // node parents are always undefined, the the anchor and
@@ -1767,6 +1802,97 @@ var AnnotatorUI = (function($, window, undefined) {
             anchorOffset = sel.anchorOffset;
             focusOffset = sel.focusOffset;
           }
+ */
+          // Try getting anchor and focus node via the selection itself. This works in Chrome and
+          // Safari.
+          var anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
+          var anchorOffset = sel.anchorOffset;
+          var focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
+          var focusOffset = sel.focusOffset;
+          
+          // If using the selection was not successful, try using the ranges instead. This should
+          // work on Firefox.
+          if (!anchorNode[0] || !focusNode[0]) {
+            anchorNode = $(sel.getRangeAt(0).startContainer).closest('*[data-chunk-id]');
+            anchorOffset = sel.getRangeAt(0).startOffset;
+            focusNode = $(sel.getRangeAt(sel.rangeCount - 1).endContainer).closest('*[data-chunk-id]');
+            focusOffset = sel.getRangeAt(sel.rangeCount - 1).endOffset;
+          }
+          
+          // If neither approach worked, give up.
+          if (!anchorNode[0] || !focusNode[0]) {
+            console.error("Unable to locate start/end chunks");
+            clearSelection();
+            stopArcDrag(target);
+            return;
+          }
+          
+          var chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
+          var chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
+          
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+          
+          
+// BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+          if (focusNode && anchorNode && focusNode[0] == anchorNode[0] && focusNode.hasClass('spacing')) {
+            if (evt.shiftKey) {
+              if (anchorOffset == 0) {
+                // Move anchor to the end of the previous node
+                anchorNode = focusNode = anchorNode.prev();
+                anchorOffset = focusOffset = anchorNode.text().length;
+                chunkIndexFrom = chunkIndexTo = anchorNode.attr('data-chunk-id');
+              }
+              else {
+                // Move anchor to the beginning of the next node
+                anchorNode = focusNode = anchorNode.next();
+                anchorOffset = focusOffset = 0;
+                chunkIndexFrom = chunkIndexTo = anchorNode.attr('data-chunk-id');
+              }
+            }
+            else {
+              // misclick
+              clearSelection();
+              stopArcDrag(target);
+              return;
+            }
+          }
+          else {
+            // If we hit a spacing element, then we shift the anchors left or right, depending on
+            // the direction of the selected range.
+            if (anchorNode.hasClass('spacing')) {
+              if (Number(chunkIndexFrom) < Number(chunkIndexTo)) {
+                anchorNode = anchorNode.next();
+                anchorOffset = 0;
+                chunkIndexFrom = anchorNode.attr('data-chunk-id');
+              }
+              else if (anchorNode.hasClass('row-initial')) {
+                anchorNode = anchorNode.next();
+                anchorOffset = 0;
+              }
+              else {
+                anchorNode = anchorNode.prev();
+                anchorOffset = anchorNode.text().length;
+              }
+            }
+            if (focusNode.hasClass('spacing')) {
+              if (Number(chunkIndexFrom) > Number(chunkIndexTo)) {
+                focusNode = focusNode.next();
+                focusOffset = 0;
+                chunkIndexTo = focusNode.attr('data-chunk-id');
+              }
+              else if (focusNode.hasClass('row-initial')) {
+                focusNode = focusNode.next();
+                focusOffset = 0;
+              }
+              else {
+                focusNode = focusNode.prev();
+                focusOffset = focusNode.text().length;
+              }
+            }
+          }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+// END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
 
           if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
             var chunkFrom = data.chunks[chunkIndexFrom];
@@ -2856,7 +2982,11 @@ var AnnotatorUI = (function($, window, undefined) {
           on('isReloadOkay', isReloadOkay).
           on('keydown', onKeyDown).
           on('click', onClick).
-          on('dblclick', onDblClick).
+// WEBANNO EXTENSION BEGIN - #520 Perform javascript action on click 
+// We perform a manual double-click detection in the single-click handler - if we also bind to
+// the double-click event, then the bound actions will be triggered too often.
+          //on('dblclick', onDblClick).
+// WEBANNO EXTENSION END - #520 Perform javascript action on click 
           on('dragstart', preventDefault).
           on('mousedown', onMouseDown).
           on('mouseup', onMouseUp).

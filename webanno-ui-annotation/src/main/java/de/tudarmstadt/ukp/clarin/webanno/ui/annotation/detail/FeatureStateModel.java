@@ -25,42 +25,43 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public class FeatureStateModel implements IModel<FeatureState>, IObjectClassAwareModel<FeatureState>
+public class FeatureStateModel
+    implements IModel<FeatureState>, IObjectClassAwareModel<FeatureState>
 {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final IModel<AnnotatorState> state;
-	private final AnnotationFeature feature;
+    private final IModel<AnnotatorState> state;
+    private final AnnotationFeature feature;
 
-	public FeatureStateModel(final IModel<AnnotatorState> aState, final AnnotationFeature aFeature)
-	{
-	    state = aState;
-	    feature = aFeature;
-	}
+    public FeatureStateModel(final IModel<AnnotatorState> aState, final AnnotationFeature aFeature)
+    {
+        state = aState;
+        feature = aFeature;
+    }
 
-	@Override
-	public FeatureState getObject()
-	{
-		return state.getObject().getFeatureState(feature);
-	}
+    @Override
+    public FeatureState getObject()
+    {
+        return state.getObject().getFeatureState(feature);
+    }
 
-	@Override
-	public void setObject(FeatureState object)
-	{
-	    FeatureState fm = state.getObject().getFeatureState(feature);
-	    fm.value = object.value;
-	    // Probably don't need to copy the other fields
-	}
+    @Override
+    public void setObject(FeatureState object)
+    {
+        FeatureState fm = state.getObject().getFeatureState(feature);
+        fm.value = object.value;
+        // Probably don't need to copy the other fields
+    }
 
-	/**
-	 * @see org.apache.wicket.model.IDetachable#detach()
-	 */
-	@Override
-	public void detach()
-	{
-		// Do nothing.
-	}
-	
+    /**
+     * @see org.apache.wicket.model.IDetachable#detach()
+     */
+    @Override
+    public void detach()
+    {
+        // Do nothing.
+    }
+
     public static FeatureStateModel of(final IModel<AnnotatorState> aState,
             FeatureState aFeatureModel)
     {
@@ -76,15 +77,13 @@ public class FeatureStateModel implements IModel<FeatureState>, IObjectClassAwar
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj)
-        {
+        if (this == obj) {
             return true;
         }
-        if (!(obj instanceof FeatureStateModel))
-        {
+        if (!(obj instanceof FeatureStateModel)) {
             return false;
         }
-        FeatureStateModel that = (FeatureStateModel)obj;
+        FeatureStateModel that = (FeatureStateModel) obj;
         return Objects.equal(feature, that.feature);
     }
 

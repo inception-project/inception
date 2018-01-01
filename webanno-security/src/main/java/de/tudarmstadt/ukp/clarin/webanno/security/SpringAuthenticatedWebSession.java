@@ -35,6 +35,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -57,6 +58,18 @@ public class SpringAuthenticatedWebSession
         super(request);
         injectDependencies();
         ensureDependenciesNotNull();
+        
+        // If the a proper (non-anonymous) authentication has already been performed (e.g. via
+        // external pre-authentication) then also mark the Wicket session as signed-in.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (
+                authentication != null && 
+                authentication.isAuthenticated() && 
+                authentication instanceof PreAuthenticatedAuthenticationToken
+                //!(authentication instanceof AnonymousAuthenticationToken && !isSignedIn())
+        ) {
+            signIn(true);
+        }
     }
 
     private void ensureDependenciesNotNull()

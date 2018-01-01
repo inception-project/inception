@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.*;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -31,37 +33,50 @@ public class VArc
 {
     private VID source;
     private VID target;
+    private String colorHint;
+    private String labelHint;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, new VID(getAddr(aSourceFS)),
-                new VID(getAddr(aTargetFS)), aFeatures);
+                new VID(getAddr(aTargetFS)), null, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, Map<String, String> aFeatures)
+            FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
     {
         this(aLayer, aVid, aType, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aFeatures);
+                aLabelHint, aFeatures, null);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
     {
-        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures);
+        super(aLayer, aVid, aType, aEquivalenceSet, aFeatures, Collections.emptyMap());
         source = new VID(getAddr(aSourceFS));
         target = new VID(getAddr(aTargetFS));
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            Map<String, String> aFeatures)
+            String aLabelHint, Map<String, String> aFeatures, String aColor)
     {
-        super(aLayer, aVid, aType, aFeatures);
+        super(aLayer, aVid, aType, aFeatures, Collections.emptyMap());
         source = aSource;
         target = aTarget;
+        labelHint = aLabelHint;
+        colorHint = aColor;
     }
 
+    public String getColorHint () {
+        return colorHint;
+    }
+    
+    public String getLabelHint()
+    {
+        return labelHint;
+    }
+    
     public VID getSource()
     {
         return source;

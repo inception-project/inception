@@ -128,7 +128,8 @@ public class TeiReader
     /**
      * Location of the mapping file for part-of-speech tags to UIMA types.
      */
-    public static final String PARAM_POS_MAPPING_LOCATION = ComponentParameters.PARAM_POS_MAPPING_LOCATION;
+    public static final String PARAM_POS_MAPPING_LOCATION = 
+            ComponentParameters.PARAM_POS_MAPPING_LOCATION;
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     protected String mappingPosLocation;
 
@@ -523,7 +524,7 @@ public class TeiReader
         public void characters(char[] aCh, int aStart, int aLength)
             throws SAXException
         {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(aCh, aStart, aLength);
             if (captureText) {
                 if (isSpaceChar && !buffer.toString().isEmpty()) {

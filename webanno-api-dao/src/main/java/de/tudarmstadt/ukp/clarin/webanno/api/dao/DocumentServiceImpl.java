@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -32,12 +31,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.ZipFile;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -57,17 +54,18 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAware;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentLifecycleAwareRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -81,7 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
 public class DocumentServiceImpl
-    implements DocumentService, InitializingBean, ProjectLifecycleAware
+    implements DocumentService, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -101,17 +99,32 @@ public class DocumentServiceImpl
     private ImportExportService importExportService;
 
     @Resource
-    private DocumentLifecycleAwareRegistry documentLifecycleAwareRegistry;
-
+    private ApplicationEventPublisher applicationEventPublisher;
+    
     @Value(value = "${repository.path}")
     private File dir;
 
+    @Value(value = "${database.dialect}")
+    private String databaseDialect;
+
+    @Value(value = "${database.driver}")
+    private String databaseDriver;
+
+    @Value(value = "${database.url}")
+    private String databaseUrl;
+
+    @Value(value = "${database.username}")
+    private String databaseUsername;
 
     @Override
     public void afterPropertiesSet()
         throws Exception
     {
-        log.info("Repository: " + dir);
+        log.info("Database dialect: " + databaseDialect);
+        log.info("Database driver: " + databaseDriver);
+        log.info("Database URL: " + databaseUrl);
+        log.info("Database username: " + databaseUsername);
+        log.info("Document repository path: " + dir);
     }
     
     @Override
@@ -124,8 +137,8 @@ public class DocumentServiceImpl
     public File getDocumentFolder(SourceDocument aDocument)
         throws IOException
     {
-        File sourceDocFolder = new File(dir, PROJECT + aDocument.getProject().getId() + DOCUMENT
-                + aDocument.getId() + SOURCE);
+        File sourceDocFolder = new File(dir, "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
+                + aDocument.getId() + "/" + SOURCE_FOLDER);
         FileUtils.forceMkdir(sourceDocFolder);
         return sourceDocFolder;
     }
@@ -192,8 +205,7 @@ public class DocumentServiceImpl
     public boolean existsCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        return new File(casStorageService.getAnnotationFolder(aSourceDocument), aUsername + ".ser")
-                .exists();
+        return getCasFile(aSourceDocument, aUsername).exists();
     }
 
     @Override
@@ -224,17 +236,16 @@ public class DocumentServiceImpl
     @Override
     public File getSourceDocumentFile(SourceDocument aDocument)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT
-                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + SOURCE);
+        File documentUri = new File(
+                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
+                        + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
         return new File(documentUri, aDocument.getName());
     }
 
     @Override
-    public File getCasFile(SourceDocument aDocument, String aUser)
+    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT
-                + aDocument.getProject().getId() + DOCUMENT + aDocument.getId() + ANNOTATION);
-        return new File(documentUri, aUser + ".ser");
+        return new File(casStorageService.getAnnotationFolder(aDocument), aUser + ".ser");
     }
     
     @Override
@@ -285,9 +296,11 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public SourceDocument getSourceDocument(long aProjectId, long aSourceDocId)
     {              
-        return entityManager.createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid", SourceDocument.class)
-                .setParameter("docid", aSourceDocId)
-                .setParameter("pid", aProjectId).getSingleResult();
+        return entityManager
+                .createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid",
+                        SourceDocument.class)
+                .setParameter("docid", aSourceDocId).setParameter("pid", aProjectId)
+                .getSingleResult();
     }
 
     @Override
@@ -361,7 +374,8 @@ public class DocumentServiceImpl
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC", SourceDocument.class)
+                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC",
+                        SourceDocument.class)
                 .setParameter("project", aProject).getResultList();
         List<SourceDocument> tabSepDocuments = new ArrayList<>();
         for (SourceDocument sourceDocument : sourceDocuments) {
@@ -378,30 +392,18 @@ public class DocumentServiceImpl
     public void removeSourceDocument(SourceDocument aDocument)
         throws IOException
     {
+        // BeforeDocumentRemovedEvent is triggered first, since methods that rely 
+        // on it might need to have access to the associated annotation documents 
+        applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, aDocument));
+        
         for (AnnotationDocument annotationDocument : listAllAnnotationDocuments(aDocument)) {
             removeAnnotationDocument(annotationDocument);
         }
         
-        // Notify all relevant service so that they can clean up themselves before we remove the
-        // document - notification happens in reverse order
-        List<DocumentLifecycleAware> beans = new ArrayList<>(
-                documentLifecycleAwareRegistry.getBeans());
-        Collections.reverse(beans);
-        for (DocumentLifecycleAware bean : beans) {
-            try {
-                bean.beforeDocumentRemove(aDocument);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        
-        entityManager.remove(aDocument);
+        entityManager.remove(
+                entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + DOCUMENT
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId();
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
@@ -466,19 +468,8 @@ public class DocumentServiceImpl
             throw new IOException(e.getMessage(), e);
         }
 
-        // Notify all relevant service so that they can initialize themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
-            try {
-                bean.afterDocumentCreate(aDocument, jcas);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IOException(e.getMessage(), e);
-            }
-        }
+        applicationEventPublisher
+                .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, jcas));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
@@ -621,6 +612,36 @@ public class DocumentServiceImpl
 
         return jcas;
     }
+
+    @Override
+    public void writeAnnotationCas(JCas aJCas, AnnotationDocument aAnnotationDocument,
+            boolean aUpdateTimestamp)
+        throws IOException
+    {
+        casStorageService.writeCas(aAnnotationDocument.getDocument(), aJCas,
+                aAnnotationDocument.getUser());
+        
+        if (aUpdateTimestamp) {
+            // FIXME REC Does it really make sense to set the accessed sentence from the source
+            // document?!
+            aAnnotationDocument
+                    .setSentenceAccessed(aAnnotationDocument.getDocument().getSentenceAccessed());
+            aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            aAnnotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
+            entityManager.merge(aAnnotationDocument);
+        }
+        
+        applicationEventPublisher
+                .publishEvent(new AfterAnnotationUpdateEvent(this, aAnnotationDocument, aJCas));
+    }
+    
+    
+    @Override
+    public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
+    {
+        casStorageService.deleteCas(aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getUser());
+    }
     
     @Override
     @Transactional
@@ -628,29 +649,8 @@ public class DocumentServiceImpl
             boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, aUser.getUsername());
-        
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        if (aUpdateTimestamp) {
-            annotationDocument.setSentenceAccessed(aDocument.getSentenceAccessed());
-            annotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            annotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
-            entityManager.merge(annotationDocument);
-        }
-        
-        // Notify all relevant service so that they can update themselves for the given document
-        for (DocumentLifecycleAware bean : documentLifecycleAwareRegistry
-                .getBeans()) {
-            try {
-                bean.afterAnnotationUpdate(annotationDocument, aJcas);
-            }
-            catch (IOException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
     }
 
     @Override
@@ -669,7 +669,7 @@ public class DocumentServiceImpl
             try {
                 CAS cas = readAnnotationCas(annotationDocument).getCas();
                 upgradeCas(cas, annotationDocument);
-                writeAnnotationCas(cas.getJCas(), annotationDocument.getDocument(), user, false);
+                writeAnnotationCas(cas.getJCas(), annotationDocument, false);
 
                 // This is no longer needed because it is handled on the respective pages.
 //                if (aMode.equals(Mode.ANNOTATION)) {
@@ -726,10 +726,11 @@ public class DocumentServiceImpl
     @Override
     public boolean existFinishedDocument(SourceDocument aSourceDocument, Project aProject)
     {
-        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments = listAnnotationDocuments(
-                aSourceDocument);
+        List<de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument> annotationDocuments =
+                listAnnotationDocuments(aSourceDocument);
         boolean finishedAnnotationDocumentExist = false;
-        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : annotationDocuments) {
+        for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
+            annotationDocuments) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocumentExist = true;
                 break;
@@ -817,7 +818,7 @@ public class DocumentServiceImpl
         // Bail out already. HQL doesn't seem to like queries with an empty
         // parameter right of "in"
         if (users.isEmpty()) {
-            return new ArrayList<AnnotationDocument>();
+            return new ArrayList<>();
         }
 
         return entityManager
@@ -878,7 +879,7 @@ public class DocumentServiceImpl
         // check if the username is in the Users database (imported projects
         // might have username
         // in the ProjectPermission entry while it is not in the Users database
-        List<String> notInUsers = new ArrayList<String>();
+        List<String> notInUsers = new ArrayList<>();
         for (String user : users) {
             if (!userRepository.exists(user)) {
                 notInUsers.add(user);
@@ -888,31 +889,4 @@ public class DocumentServiceImpl
 
         return users;
     }
-    
-    @Override
-    public void afterProjectCreate(Project aProject)
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws IOException
-    {
-        for (SourceDocument document : listSourceDocuments(aProject)) {
-            removeSourceDocument(document);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // Nothing at the moment
-    }
-
-
-	}
+}

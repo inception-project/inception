@@ -334,8 +334,10 @@ var VisualizerUI = (function($, window, undefined) {
                     return Util.cmp(a[2], b[2]);
                 }
 
+// WEBANNO EXTENSION BEGIN - #587 Customize mouse hover text   
             var displaySpanComment = function(
-                evt, target, spanId, spanType, mods, spanText, commentText, commentType, normalizations) {
+                evt, target, spanId, spanType, mods, spanText, hoverText, commentText, commentType, normalizations) {
+// WEBANNO EXTENSION END - #587 Customize mouse hover text
 
                     var immediately = false;
                     var comment = ('<div><span class="comment_type_id_wrapper">' + '<span class="comment_type">' + Util.escapeHTML(Util.spanDisplayForm(spanTypes, spanType)) + '</span>' + ' ' + '<span class="comment_id">' + 'ID:' + Util.escapeHTML(spanId) + '</span></span>');
@@ -344,7 +346,15 @@ var VisualizerUI = (function($, window, undefined) {
                     }
 
                     comment += '</div>';
-                    comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
+                    
+// WEBANNO EXTENSION BEGIN - #587 Customize mouse hover text
+                    if (hoverText) {
+                        comment += ('<div class="comment_text">' + Util.escapeHTML(hoverText) + '</div>');
+                    } else if (spanText) {
+                        comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
+                    }
+// WEBANNO EXTENSION END - #587 Customize mouse hover text
+                    
                     var validArcTypesForDrag = dispatcher.post('getValidArcTypesForDrag', [spanId, spanType]);
                     if (validArcTypesForDrag && validArcTypesForDrag[0]) {
                         if (validArcTypesForDrag[0].length) {

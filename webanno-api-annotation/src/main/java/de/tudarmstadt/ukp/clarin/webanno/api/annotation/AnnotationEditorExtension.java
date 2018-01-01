@@ -17,25 +17,33 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import java.io.IOException;
+
+import org.apache.uima.jcas.JCas;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+
 public interface AnnotationEditorExtension
 {
     /**
      * @return get the bean name.
      */
     String getBeanName();
-    
-    /**
-     * @return {@code true} if the extension should handle the given action.
-     */
-    boolean applies(/*...*/);
-    
+
     /**
      * Handle an action.
      */
-    void handleAction(/*...*/);
-    
+    void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
+            AjaxRequestTarget aTarget, JCas jCas, VID paramId, int aBegin, int aEnd)
+        throws AnnotationException, IOException;
+
     /**
      * Post-process the output during rendering.
      */
-    void render(/*...*/);
+    void render(JCas jCas, AnnotatorState aState, VDocument vdoc);
 }

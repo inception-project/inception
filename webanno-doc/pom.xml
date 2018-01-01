@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.3-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-doc</artifactId>
   <packaging>jar</packaging>
@@ -127,12 +127,12 @@
             </goals>
             <configuration>
               <tasks>
-                <mkdir dir="src/main/resources/de/tudarmstadt/ukp/clarin/webanno/doc" />
+                <mkdir dir="src/main/resources/public/doc" />
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
                 an endless build loop in Eclipse.
                  -->
-                <sync todir="src/main/resources/de/tudarmstadt/ukp/clarin/webanno/doc">
+                <sync todir="src/main/resources/public/doc">
                   <fileset dir="target/generated-docs">
                     <include name="**/*.html" />
                     <include name="**/*.png" />

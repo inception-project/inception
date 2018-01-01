@@ -120,8 +120,13 @@ image::annotation_pos.jpg[align="center"]
 .Zero-width spans
 To create a zero-length annotation, hold *SHIFT* and click on the position where you wish to create the annotation. To avoid accidental creations of zero-length annotations, a simple single-click triggers no action by default. The *lock to token* behavior cancels the ability to create zero-length annotations.
 
+NOTE: A zero-width span between two tokens that are directly adjacent, e.g. the full stop at the
+      end of a sentence and the token before it (`end.`) is always considered to be *at the end of the
+      first token* rather than at the beginning of the next token. So an annotation between `d` and `.`
+      in this example would rendered at the right side of `end` rather than at the left side of `.`. 
+
 .Forward annotation
-To improve the speed of POS-annotation, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to the first tag in the tagset. Once a POS-tag has been selected, pushing *space* and *Enter* keys automatically assigns the POS-tag to the token in focus and the next token can be annotated as described. Note that the *Enter* key will not work for the *Safari* browser. Also the *Forward annotation* works only for span annotations with 1)*tagset* and 2) a layer with only one *feature*.
+To improve the speed of POS-annotation, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to the first tag in the tagset. Once a POS-tag has been selected, pushing *space* and *Enter* keys automatically assigns the POS-tag to the token in focus and the next token can be annotated as described. Note that the *Enter* key will not work for the *Safari* browser. Also the *Forward annotation* works only for span annotations with 1) *tagset* and 2) a layer with only one *feature*.
 
 image::key_binding_POS.png[align="center"]
 
@@ -149,7 +154,13 @@ NOTE: Currently, there can be at most one relation layer per span layer. Relatio
 NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
       are induced by <<sect_annotation_link_features>>.
 
-image::annotation_span_many.jpg[align="center"]
+When moving the mouse over an annotation with outgoing relations, the info popup includes the
+*yield* of the relations. This is the text transitively covered by the outgoing relations. This
+is useful e.g. in order to see all text governed the head of a particular dependency relation.
+The text may be abbreviated.
+
+.Example of the yield of a dependency relation
+image::annotation_relation_yield.png[align="center"]
 
 ==== Chains
 
@@ -160,7 +171,11 @@ is enabled for the chain layer or not. To enable or disable the *linked list* be
 in the *Projects Settings* mode. After choosing *Coreference*, *linked list* behaviour
 is displayed in the checkbox and can either be marked or unmarked.
 
+.Configuration of a chain layer in the project settings
 image::LinkedList_1.png[align="center"]
+
+.Example of chain annotations
+image::annotation_span_many.jpg[align="center"]
 
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 

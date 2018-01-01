@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 /**
  * Response for the {@code whoami} command. Provides the user name of the user currently logged in.
- * Currently not used in the BRAT UI, saved future reference if there is a need to use it, likely for
- * Curation!
+ * Currently not used in the BRAT UI, saved future reference if there is a need to use it, likely
+ * for Curation!
  */
 public class WhoamiResponse
     extends AjaxResponse

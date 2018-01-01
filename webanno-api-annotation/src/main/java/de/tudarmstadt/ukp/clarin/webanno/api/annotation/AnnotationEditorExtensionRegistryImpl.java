@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.uima.jcas.JCas;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.OrderComparator;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -66,11 +76,7 @@ public class AnnotationEditorExtensionRegistryImpl
     {
         if (!sorted) {
             sortedBeans.addAll(beans.values());
-            sortedBeans.sort((a, b) -> {
-                int phaseA = (a instanceof Ordered) ? ((Ordered) a).getOrder() : 0;
-                int phaseB = (b instanceof Ordered) ? ((Ordered) b).getOrder() : 0;
-                return phaseB - phaseA;
-            });
+            OrderComparator.sort(sortedBeans);
             sorted = true;
         }
         return sortedBeans;
@@ -80,5 +86,23 @@ public class AnnotationEditorExtensionRegistryImpl
     public AnnotationEditorExtension getExtension(String aName)
     {
         return beans.get(aName);
+    }
+    
+    @Override
+    public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
+            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aJCas, aParamId, aBegin, aEnd);
+        }
+    }
+    
+    @Override
+    public void fireRender(JCas aJCas, AnnotatorState aModelObject, VDocument aVdoc)
+    {
+        for (AnnotationEditorExtension ext: getExtensions()) {
+            ext.render(aJCas, aModelObject, aVdoc);
+        }
     }
 }

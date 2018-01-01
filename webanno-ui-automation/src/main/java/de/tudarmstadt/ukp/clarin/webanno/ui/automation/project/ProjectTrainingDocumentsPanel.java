@@ -20,11 +20,15 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -37,6 +41,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -65,7 +70,6 @@ public class ProjectTrainingDocumentsPanel
     private ArrayList<String> documents = new ArrayList<>();
     private ArrayList<String> selectedDocuments = new ArrayList<>();
 
-    private List<FileUpload> uploadedFiles;
     private FileUploadField fileUpload;
 
     private ArrayList<String> readableFormats;
@@ -83,7 +87,7 @@ public class ProjectTrainingDocumentsPanel
         feature = afeatureModel.getObject();
         if (aTabsDocModel.getObject().isTabSep()) {
             readableFormats = new ArrayList<>(
-                    Arrays.asList(new String[]{WebAnnoConst.TAB_SEP}));
+                    Arrays.asList(WebAnnoConst.TAB_SEP));
             selectedFormat = WebAnnoConst.TAB_SEP;
         }
         else {
@@ -112,7 +116,7 @@ public class ProjectTrainingDocumentsPanel
             @Override
             public void onSubmit()
             {
-                uploadedFiles = fileUpload.getFileUploads();
+                List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
                 Project project = selectedProjectModel.getObject();
                 if (isEmpty(uploadedFiles)) {
                     error("No document is selected to upload, please select a document first");
@@ -133,18 +137,17 @@ public class ProjectTrainingDocumentsPanel
                     }
 
                     try {
-                        File uploadFile = documentToUpload.writeToTempFile();
-
                         TrainingDocument document = new TrainingDocument();
                         document.setName(fileName);
                         document.setProject(project);
 
-						for (TrainingDocument sd : automationService.listTrainingDocuments(project)) {
-							sd.setProcessed(false);
-						}
+                        for (TrainingDocument sd : automationService
+                                .listTrainingDocuments(project)) {
+                            sd.setProcessed(false);
+                        }
 
                         for (TrainingDocument sd : automationService.listTabSepDocuments(project)) {
-                             	sd.setProcessed(false);
+                            sd.setProcessed(false);
                         }
                         // If this document is tab-sep and used as a feature itself, no need to add
                         // a feature to the document
@@ -156,12 +159,26 @@ public class ProjectTrainingDocumentsPanel
                             document.setFormat(selectedFormat);
                         }
                         else {
-                            String reader = importExportService.getReadableFormatId(readableFormatsChoice
-                                    .getModelObject());
+                            String reader = importExportService
+                                    .getReadableFormatId(readableFormatsChoice.getModelObject());
                             document.setFormat(reader);
                         }
+
                         automationService.createTrainingDocument(document);
-                        importExportService.uploadTrainingDocument(uploadFile, document);
+
+                        // Workaround for WICKET-6425
+                        File tempFile = File.createTempFile("webanno-training", null);
+                        try (
+                                InputStream is = documentToUpload.getInputStream();
+                                OutputStream os = new FileOutputStream(tempFile);
+                        ) {
+                            IOUtils.copyLarge(is, os);
+                            importExportService.uploadTrainingDocument(tempFile, document);
+                        }
+                        finally {
+                            tempFile.delete();
+                        }
+
                         info("File [" + fileName + "] has been imported successfully!");
                     }
                     catch (IOException e) {
@@ -234,7 +251,8 @@ public class ProjectTrainingDocumentsPanel
                 boolean isTrain = false;
                 for (String document : selectedDocuments) {
                     try {
-                        TrainingDocument trainingDoc = automationService.getTrainingDocument(project, document);
+                        TrainingDocument trainingDoc = automationService
+                                .getTrainingDocument(project, document);
                         isTrain = true;
                         automationService.removeTrainingDocument(trainingDoc);
                     }
@@ -244,16 +262,16 @@ public class ProjectTrainingDocumentsPanel
                     }
                     documents.remove(document);
                 }
-                // If the deleted document is training document, re-training an automation should be possible again
-                if(isTrain){
-                	List<TrainingDocument> docs = automationService.listTrainingDocuments(project);
-                		docs.addAll(automationService.listTabSepDocuments(project));
-                	for(TrainingDocument trainingDoc:docs){
-                		trainingDoc.setProcessed(false);
-                	}
+                // If the deleted document is training document, re-training an automation should be
+                // possible again
+                if (isTrain) {
+                    List<TrainingDocument> docs = automationService.listTrainingDocuments(project);
+                    docs.addAll(automationService.listTabSepDocuments(project));
+                    for (TrainingDocument trainingDoc : docs) {
+                        trainingDoc.setProcessed(false);
+                    }
                 }
             }
         });
     }
-    
 }

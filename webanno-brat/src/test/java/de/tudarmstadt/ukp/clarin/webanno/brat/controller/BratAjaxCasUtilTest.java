@@ -45,8 +45,8 @@ public class BratAjaxCasUtilTest
         assertTrue(isSameSentence(jcas, s2.getBegin(), s2.getEnd()));
         assertTrue(isSameSentence(jcas, s2.getEnd(), s2.getBegin()));
 
-        assertTrue(isSameSentence(jcas, s1.getBegin()+1, s1.getEnd()-1));
-        assertTrue(isSameSentence(jcas, s1.getEnd()-1, s1.getBegin()+1));
+        assertTrue(isSameSentence(jcas, s1.getBegin() + 1, s1.getEnd() - 1));
+        assertTrue(isSameSentence(jcas, s1.getEnd() - 1, s1.getBegin() + 1));
         
         assertTrue(isSameSentence(jcas, s1.getBegin(), s1.getEnd()));
         assertTrue(isSameSentence(jcas, s1.getEnd(), s1.getBegin()));

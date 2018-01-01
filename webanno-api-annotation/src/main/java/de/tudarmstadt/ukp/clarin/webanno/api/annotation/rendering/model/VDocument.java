@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -37,6 +38,7 @@ public class VDocument
     private MultiMap<Long, VArc> arcsByLayer = new MultiValueMap<>();
     private MultiMap<Long, VSpan> spansByLayer = new MultiValueMap<>();
     private Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
+    private List<VMarker> markers = new ArrayList<>();
 
     public void add(VArc aArc)
     {
@@ -65,6 +67,11 @@ public class VDocument
         comments.put(aComment.getVid(), aComment);
     }
     
+    public void add(VMarker aMarker)
+    {
+        markers.add(aMarker);
+    }
+    
     public VSpan getSpan(VID aVid) {
         return spans.get(aVid);
     }
@@ -76,6 +83,11 @@ public class VDocument
     public Collection<VSpan> spans()
     {
         return Collections.unmodifiableCollection(spans.values());
+    }
+    
+    public List<VMarker> getMarkers()
+    {
+        return markers;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

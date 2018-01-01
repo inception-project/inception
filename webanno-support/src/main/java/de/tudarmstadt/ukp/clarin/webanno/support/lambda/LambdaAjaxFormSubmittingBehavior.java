@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxFormSubmittingBehavior extends AjaxFormSubmitBehavior
@@ -72,7 +72,7 @@ public class LambdaAjaxFormSubmittingBehavior extends AjaxFormSubmitBehavior
                 LoggerFactory.getLogger(component.getPage().getClass())
                         .error("Error: " + e.getMessage(), e);
                 component.error("Error: " + e.getMessage());
-                aTarget.addChildren(component.getPage(), FeedbackPanel.class);
+                aTarget.addChildren(component.getPage(), IFeedback.class);
             }
         }
     }

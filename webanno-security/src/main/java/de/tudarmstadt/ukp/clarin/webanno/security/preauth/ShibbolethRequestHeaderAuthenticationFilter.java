@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -41,8 +40,6 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private UserDetailsManager userDetailsManager;
-
-    @Resource(name = "userRepository")
     private UserDao userRepository;
 
     private void newUserLogin(String aID, HttpServletRequest aRequest)
@@ -82,6 +79,11 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     public void setUserDetailsManager(UserDetailsManager aUserDetailsManager)
     {
         userDetailsManager = aUserDetailsManager;
+    }
+
+    public void setUserRepository(UserDao aUserRepository)
+    {
+        userRepository = aUserRepository;
     }
 
     @Override

@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.ArrayFS;
@@ -45,6 +45,8 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -60,6 +62,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
+    private static final Logger LOG = LoggerFactory.getLogger(WebAnnoCasUtil.class);
+
     /**
      * Annotation a and annotation b are the same if they have the same address.
      *
@@ -74,7 +78,7 @@ public class WebAnnoCasUtil
         if (a == null || b == null) {
             return false;
         }
-	    
+
         if (a.getCAS() != b.getCAS()) {
             return false;
         }
@@ -136,7 +140,8 @@ public class WebAnnoCasUtil
         return selectByAddr(aCas, FeatureStructure.class, aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType, int aAddress)
+    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType,
+            int aAddress)
     {
         return aType.cast(aCas.getLowLevelCAS().ll_getFSForRef(aAddress));
     }
@@ -337,13 +342,12 @@ public class WebAnnoCasUtil
 
     public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
     {
-
-    	AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
-		// thid happens when tokens such as Dr. OR Ms. selected with double
-		// click, which make  seletected text as Dr OR Ms
-		if (currentToken == null) {
-			currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
-		}
+        AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+        // thid happens when tokens such as Dr. OR Ms. selected with double
+        // click, which make seletected text as Dr OR Ms
+        if (currentToken == null) {
+            currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
+        }
         Token nextToken = null;
 
         for (Token token : selectFollowing(Token.class, currentToken, 1)) {
@@ -399,7 +403,7 @@ public class WebAnnoCasUtil
     private static <T extends Annotation> FSIterator<T> seekByAddress(JCas aJcas, Class<T> aType,
             int aAddr)
     {
-        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
                 .getAnnotationType(aJcas, aType));
         return idx.iterator(selectByAddr(aJcas, aAddr));
     }
@@ -419,7 +423,7 @@ public class WebAnnoCasUtil
     private static <T extends Annotation> FSIterator<T> seekByFs(JCas aJcas, Class<T> aType,
             AnnotationFS aFS)
     {
-        AnnotationIndex<T> idx = (AnnotationIndex) aJcas.getAnnotationIndex(JCasUtil
+        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
                 .getAnnotationType(aJcas, aType));
         return idx.iterator(aFS);
     }
@@ -431,7 +435,7 @@ public class WebAnnoCasUtil
      *            the CAS object
      * @param aSentence
      *            the old sentence
-     * @param aFocosOffset
+     * @param aFocusOffset
      *            the actual offset of the sentence.
      * @param aProject
      *            the project.
@@ -442,47 +446,33 @@ public class WebAnnoCasUtil
      * @return the ID of the first sentence.
      */
     public static Sentence findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
-            int aFocosOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
+            int aFocusOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
     {
-        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, aSentence);
-
-        // no auto-forward for single sentence window
-        Sentence s = si.get();
         if (aWindowSize == 1) {
-            return s;
+            return aSentence;
         }
 
         // Seek the sentence that contains the current focus
-        while (si.isValid()) {
-            if (s.getEnd() < aFocosOffset) {
-                // Focus after current sentence
-                si.moveToNext();
-            }
-            else if (aFocosOffset < s.getBegin()) {
-                // Focus before current sentence
-                si.moveToPrevious();
-            }
-            else {
-                // Focus must be in current sentence
-                break;
-            }
-            s = si.get();
+        Sentence s = getSentence(aJcas, aFocusOffset);
+        
+        // If the focus is outside any sentence, then we just return the reference sentence.
+        // This should actually never happen, but in case it does, we log a warning and try to
+        // behave.
+        if (s == null) {
+            LOG.warn("Focus [{}] is outside any unit, using first unit.", aFocusOffset);
+            return aSentence;
         }
 
         // Center sentence
-        Sentence c = aSentence;
-        Sentence n = s;
-
-        if (aWindowSize == 2 && n.getBegin() > c.getBegin()) {
+        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, s);
+        if (aWindowSize == 2 && s.getBegin() > aSentence.getBegin()) {
             return s;
         }
-
         int count = 0;
         while (si.isValid() && count < (aWindowSize / 2)) {
             si.moveToPrevious();
             if (si.isValid()) {
                 s = si.get();
-
             }
 
             count++;
@@ -491,13 +481,16 @@ public class WebAnnoCasUtil
         return s;
     }
 
-	public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence) {
-		try {
-			return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
-		} catch (Exception e) { // end of the document reached
-			return WebAnnoCasUtil.getAddr(aSentence);
-		}
-	}
+    public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence)
+    {
+        try {
+            return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
+        }
+        catch (Exception e) { // end of the document reached
+            return WebAnnoCasUtil.getAddr(aSentence);
+        }
+    }
+
     /**
      * Move to the next page of size display window.
      *
@@ -574,10 +567,10 @@ public class WebAnnoCasUtil
 
     public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
     {
-        List<Integer> displayWindowBeginingSentenceAddresses = getDisplayWindowBeginningSentenceAddresses(
-                aJcas, aWindowSize);
-        return displayWindowBeginingSentenceAddresses.get(displayWindowBeginingSentenceAddresses
-                .size() - 1);
+        List<Integer> displayWindowBeginingSentenceAddresses = 
+                getDisplayWindowBeginningSentenceAddresses(aJcas, aWindowSize);
+        return displayWindowBeginingSentenceAddresses
+                .get(displayWindowBeginingSentenceAddresses.size() - 1);
     }
 
     /**
@@ -773,71 +766,6 @@ public class WebAnnoCasUtil
         }
     }
 
-    public static <T> T getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
-    {
-        Feature feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-
-        switch (aFeature.getMultiValueMode()) {
-        case NONE: {
-            // Sanity check
-            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
-                throw new IllegalArgumentException("Actual feature type ["
-                        + feature.getRange().getName() + "]does not match expected feature type ["
-                        + aFeature.getType() + "].");
-            }
-
-            // switch (aFeature.getType()) {
-            // case CAS.TYPE_NAME_STRING:
-            // return (T) aFS.getStringValue(feature);
-            // case CAS.TYPE_NAME_BOOLEAN:
-            // return (T) (Boolean) aFS.getBooleanValue(feature);
-            // case CAS.TYPE_NAME_FLOAT:
-            // return (T) (Float) aFS.getFloatValue(feature);
-            // case CAS.TYPE_NAME_INTEGER:
-            // return (T) (Integer) aFS.getIntValue(feature);
-            // default:
-            // throw new IllegalArgumentException("Cannot get value of feature ["
-            // + aFeature.getName() + "] with type [" + feature.getRange().getName() + "]");
-            // }
-            return getFeature(aFS, aFeature.getName());
-        }
-        case ARRAY: {
-            switch (aFeature.getLinkMode()) {
-            case WITH_ROLE: {
-                // Get type and features - we need them later in the loop
-                Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-                Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
-                Feature roleFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeRoleFeatureName());
-                Feature targetFeat = linkType.getFeatureByBaseName(aFeature
-                        .getLinkTypeTargetFeatureName());
-
-                List<LinkWithRoleModel> links = new ArrayList<>();
-                ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
-                if (array != null) {
-                    for (FeatureStructure link : array.toArray()) {
-                        LinkWithRoleModel m = new LinkWithRoleModel();
-                        m.role = link.getStringValue(roleFeat);
-                        m.targetAddr = getAddr(link.getFeatureValue(targetFeat));
-                        m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
-                                .getCoveredText();
-                        links.add(m);
-                    }
-                }
-                return (T) links;
-            }
-            default:
-                throw new IllegalArgumentException("Cannot get value of feature ["
-                        + aFeature.getName() + "] with link mode [" + aFeature.getMultiValueMode()
-                        + "]");
-            }
-        }
-        default:
-            throw new IllegalArgumentException("Unsupported multi-value mode ["
-                    + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
-        }
-    }
-
     /**
      * Set a feature value.
      *
@@ -859,14 +787,19 @@ public class WebAnnoCasUtil
 
         switch (aFeature.getMultiValueMode()) {
         case NONE: {
+            String effectiveType = aFeature.getType();
+            if (effectiveType.contains(":")) {
+                effectiveType = CAS.TYPE_NAME_STRING;
+            }
+            
             // Sanity check
-            if (!Objects.equals(aFeature.getType(), feature.getRange().getName())) {
+            if (!Objects.equals(effectiveType, feature.getRange().getName())) {
                 throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] feature ["
                         + aFeature.getName() + "] actual type [" + feature.getRange().getName()
-                        + "] does not match expected feature type [" + aFeature.getType() + "].");
+                        + "] does not match expected feature type [" + effectiveType + "].");
             }
 
-            switch (aFeature.getType()) {
+            switch (effectiveType) {
             case CAS.TYPE_NAME_STRING:
                 aFS.setStringValue(feature, (String) aValue);
                 break;
@@ -917,11 +850,10 @@ public class WebAnnoCasUtil
         // Create all the links
         // FIXME: actually we could re-use existing link link feature structures
         List<FeatureStructure> linkFSes = new ArrayList<>();
-        List<LinkWithRoleModel> linksList = aValue;
 
-        if (linksList != null) {
+        if (aValue != null) {
             // remove duplicate links
-            Set<LinkWithRoleModel> links = new HashSet<>(linksList);
+            Set<LinkWithRoleModel> links = new HashSet<>(aValue);
             for (LinkWithRoleModel e : links) {
                 // Skip links that have been added in the UI but where the target has not
                 // yet been

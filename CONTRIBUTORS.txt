@@ -9,13 +9,15 @@
 
 # Please keep the list sorted.
     
-Aakash Sharma <aakash.y.sharma@gmail.com>
+Aakash Sharma <aakash.y.sharma@gmail.com> [@aakashysharma]
+Aleks Stier [@astier]
 Andreas Straninger
-Anshul Tak
-Benjamin Milde
-Darina Benikova
+Anshul Tak [@anshul-tak]
+Benjamin Milde [@bmilde]
+Darina Benikova 
 Erik-Lân Do Dinh
-Richard Eckart de Castilho <richard.eckart@gmail.com>
-Sarah Holschneider
-Seid Muhie Yimam
-Sushil Jain
+Richard Eckart de Castilho <richard.eckart@gmail.com> [@reckart]
+Sarah Holschneider [@sholschneider]
+Seid Muhie Yimam [@seyyaw]
+Steffen Remus [@remstef]
+Sushil Jain 

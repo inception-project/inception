@@ -35,7 +35,7 @@ public class DescriptionTooltipBehavior
 {
     private static final long serialVersionUID = 1L;
 
-    public static enum Mode {
+    public enum Mode {
         DEFAULT,
         MARKDOWN
     }
@@ -78,7 +78,7 @@ public class DescriptionTooltipBehavior
     public static Options makeTooltipOptions()
     {
         Options options = new Options();
-        options.set("position", "{ my: 'center bottom', at: 'center top', of: '.pagefooter' }");
+        options.set("position", "{ my: 'center bottom', at: 'center top', of: '.page-footer' }");
         options.set("show", false);
         options.set("hide", false);
         return options;

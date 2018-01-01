@@ -101,15 +101,19 @@ public class AJAXDownload
      */
     protected IResourceStream getResourceStream()
     {
-        
-        IResourceStream resStream = new AbstractResourceStream() {
-            private static final long serialVersionUID = 1L;
+
+        return new AbstractResourceStream() {
+            private static final long serialVersionUID1 = 1L;
             InputStream inStream;
             @Override
-            public InputStream getInputStream() throws ResourceStreamNotFoundException{
+            public InputStream getInputStream()
+                throws ResourceStreamNotFoundException
+            {
                 try {
-                    inStream =  new FileInputStream(fileName);
-                } catch (IOException e) {                               
+                    inStream = new FileInputStream(fileName);
+                }
+                catch (IOException e) {
+                    throw new ResourceStreamNotFoundException(e);
                 }
                 return inStream;
             }
@@ -120,7 +124,5 @@ public class AJAXDownload
                 FileUtils.forceDelete(new File(fileName));
             }
         };
-        return resStream; 
-
     }
 }

@@ -38,7 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
  * A persistence object for MIRA template configurations
  */
 @Entity
-@Table(name = "mira_template", uniqueConstraints = { @UniqueConstraint(columnNames = { "trainFeature" }) })
+@Table(name = "mira_template", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "trainFeature" }) })
 public class MiraTemplate
     implements Serializable
 {
@@ -60,7 +61,7 @@ public class MiraTemplate
     /**
      * {@link TagSet} used as a feature for the trainFeature
      */
-    @ManyToMany(fetch=FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<AnnotationFeature> otherFeatures = new HashSet<>();
 
     private boolean currentLayer = false;// The current training layer for this mira template
@@ -125,17 +126,17 @@ public class MiraTemplate
         this.result = result;
     }
 
+    public boolean isCurrentLayer()
+    {
+        return currentLayer;
+    }
 
+    public void setCurrentLayer(boolean currentLayer)
+    {
+        this.currentLayer = currentLayer;
+    }
 
-    public boolean isCurrentLayer() {
-		return currentLayer;
-	}
-
-	public void setCurrentLayer(boolean currentLayer) {
-		this.currentLayer = currentLayer;
-	}
-
-	public boolean isAutomationStarted()
+    public boolean isAutomationStarted()
     {
         return automationStarted;
     }

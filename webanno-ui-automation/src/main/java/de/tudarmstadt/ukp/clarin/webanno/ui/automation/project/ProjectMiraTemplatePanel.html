@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 #Copyright 2014
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
@@ -15,33 +16,28 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:panel>
-	<table class="hfill">
-		<tr>
-			<td style="vertical-align: top" width="30%">
-				<form wicket:id="miraTrainLayerSelectionForm">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<legend>Select automation layer</legend>
-						<select wicket:id="features"></select>
-					</fieldset>
-				</form>
-				<p></p>
-				<form wicket:id="applyForm" style="background: olive">
-					<fieldset class="ui-widget-content ui-corner-all">
-						<div class="buttons">
-							<input type="submit" wicket:id="apply" />
-						</div>
-					</fieldset>
-				</form>
-			</td>
-			<td style="vertical-align: top" width="50%">
-				<form wicket:id="targetLayerDetailForm">
-					<div wicket:id="autoTabs" class="tabpanel"></div>
-				</form>
-			</td>
-		</tr>
-	</table>
-</wicket:panel>
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-content flex-h-container flex-gutter">
+      <div class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title"><wicket:message key="features"/></h3>
+          </div>
+          <form wicket:id="miraTrainLayerSelectionForm" class="scrolling panel-body fit-child-snuck">
+            <select wicket:id="features" class="form-control"></select>
+          </form>
+          <form wicket:id="applyForm" class="panel-footer text-right">
+            <input wicket:id="apply" type="submit" class="btn btn-primary"/> 
+          </form>            
+        </div>
+      </div>
+      
+      <form wicket:id="targetLayerDetailForm" class="flex-content flex-v-container flex-gutter">
+        <div wicket:id="autoTabs" class="flex-content flex-v-container"></div>
+      </form>
+    </div>
+  </wicket:panel>
+</body>
 </html>

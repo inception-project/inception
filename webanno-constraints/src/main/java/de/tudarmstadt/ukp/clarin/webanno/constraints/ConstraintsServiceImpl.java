@@ -17,24 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -42,7 +38,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectLifecycleAware;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -51,15 +46,12 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ConstraintsService.SERVICE_NAME)
 public class ConstraintsServiceImpl
-    implements ConstraintsService, ProjectLifecycleAware
+    implements ConstraintsService
 {
-    private static final String CONSTRAINTS = "/constraints/";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @PersistenceContext
@@ -112,8 +104,8 @@ public class ConstraintsServiceImpl
     public String readConstrainSet(ConstraintSet aSet)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
 
@@ -130,8 +122,8 @@ public class ConstraintsServiceImpl
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
@@ -150,8 +142,8 @@ public class ConstraintsServiceImpl
     @Override
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         File constraintsFile = new File(constraintRulesPath, filename);
         if (constraintsFile.exists()) {
@@ -174,12 +166,14 @@ public class ConstraintsServiceImpl
 
     /**
      * Checks if there's a constraint set already with the name
-     * @param constraintSetName The name of constraint set
+     * 
+     * @param constraintSetName
+     *            The name of constraint set
      * @return true if exists
      */
     @Override
-    public boolean existConstraintSet(String constraintSetName, Project aProject){
-        
+    public boolean existConstraintSet(String constraintSetName, Project aProject)
+    {
         try {
             entityManager.createQuery("FROM ConstraintSet WHERE project = :project" 
                             + " AND name = :name ", ConstraintSet.class)
@@ -190,8 +184,7 @@ public class ConstraintsServiceImpl
         }
         catch (NoResultException ex) {
             return false;
-        }
-        
+        }        
     }
     
     @Override
@@ -217,17 +210,13 @@ public class ConstraintsServiceImpl
                     if (merged.getImports().containsKey(e.getKey()) && !e.getValue()
                             .equalsIgnoreCase(merged.getImports().get(e.getKey()))) {
                         // If detected, notify user with proper message and abort merging
-                        StringBuilder errorMessage = new StringBuilder();
-                        errorMessage.append("Conflict detected in imports for key \"");
-                        errorMessage.append(e.getKey());
-                        errorMessage.append("\", conflicting values are \"");
-                        errorMessage.append(e.getValue());
-                        errorMessage.append("\" & \"");
-                        errorMessage.append(merged.getImports().get(e.getKey()));
-                        errorMessage.append(
-                                "\". Please contact Project Admin for correcting this. Constraints feature may not work.");
-                        errorMessage.append("\nAborting Constraint rules merge!");
-                        throw new ParseException(errorMessage.toString());
+                        String errorMessage = "Conflict detected in imports for key \"" + e.getKey()
+                                + "\", conflicting values are \"" + e.getValue() + "\" & \""
+                                + merged.getImports().get(e.getKey())
+                                + "\". Please contact Project Admin for correcting this."
+                                + "Constraints feature may not work."
+                                + "\nAborting Constraint rules merge!";
+                        throw new ParseException(errorMessage);
                     }
                 }
                 merged.getImports().putAll(constraints.getImports());
@@ -248,51 +237,5 @@ public class ConstraintsServiceImpl
         }
 
         return merged;
-    }
-    
-    @Override
-    public void afterProjectCreate(Project aProject)
-        throws Exception
-    {
-        // Nothing to do
-    }
-    
-    @Override
-    public void beforeProjectRemove(Project aProject)
-        throws Exception
-    {
-        //Remove Constraints
-        for (ConstraintSet set: listConstraintSets(aProject) ){
-            removeConstraintSet(set);
-        }
-    }
-    
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        for (Enumeration zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(CONSTRAINTS)) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if(fileName.trim().isEmpty()){
-                    continue;
-                }
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.setProject(aProject);
-                constraintSet.setName(fileName);
-                createConstraintSet(constraintSet);
-                writeConstraintSet(constraintSet, aZip.getInputStream(entry));
-                log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
-            }
-        }
     }
 }

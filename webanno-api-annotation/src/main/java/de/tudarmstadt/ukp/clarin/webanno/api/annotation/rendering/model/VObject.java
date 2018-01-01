@@ -28,20 +28,23 @@ public abstract class VObject
     private VID vid;
     private String type;
     private Map<String, String> features;
+    private Map<String, String> hoverFeatures;
     private int equivalenceSet;
 
-    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures)
+    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures, 
+            Map<String, String> aHoverFeatures)
     {
-        this(aLayer, aVid, aType, -1, aFeatures);
+        this(aLayer, aVid, aType, -1, aFeatures, aHoverFeatures);
     }
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, int aEquivalenceSet,
-            Map<String, String> aFeatures)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
     {
         layer = aLayer;
         vid = aVid;
         type = aType;
         features = aFeatures;
+        setHoverFeatures(aHoverFeatures);
         equivalenceSet = aEquivalenceSet;
     }
 
@@ -68,5 +71,15 @@ public abstract class VObject
     public Map<String, String> getFeatures()
     {
         return features;
+    }
+
+    public Map<String, String> getHoverFeatures()
+    {
+        return hoverFeatures;
+    }
+
+    public void setHoverFeatures(Map<String, String> hoverFeatures)
+    {
+        this.hoverFeatures = hoverFeatures;
     }
 }

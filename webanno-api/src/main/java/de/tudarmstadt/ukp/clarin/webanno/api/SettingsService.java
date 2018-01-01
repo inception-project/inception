@@ -19,15 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 public interface SettingsService
 {
-    static final String SERVICE_NAME = "settingsService";
+    String SERVICE_NAME = "settingsService";
     
-    /**
-     * Get the name of the database driver in use.
-     *
-     * @return the driver name.
-     */
-    String getDatabaseDriverName();
-
     /**
      * Get default number of sentences to display per page, set by administrator, which is read from
      * settings.properties file

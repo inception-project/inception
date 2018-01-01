@@ -23,16 +23,9 @@ This section describes how to upgrade the standalone version of WebAnno using an
 
 Before any upgrade, make a copy of your WebAnno home folder.
 
-IMPORTANT: If WebAnno is configured to use an external database, e.g. MySQL, make a backup of this
-         database as well. See the <<admin-guide.adoc#,Administrator Guide>> for further information.
-
-=== Clean working folder
-
-* clean up the temporary installation before running the new version:
-** On OS X: `rm -R "$TMPDIR/winstoneEmbeddedWAR"`
-** On Linux: `rm -R /tmp/winstoneEmbeddedWAR`
-** On Windows: remove the `winstoneEmbeddedWAR` that should be somewhere under `C:\Users\<username>\AppData\Local\Temp`
-* start the new version
+IMPORTANT: If WebAnno is configured to use an external database, e.g. MySQL, make a 
+            backup of this database as well. See the <<admin-guide.adoc#,Administrator Guide>> 
+            for further information.
 
 include::../common/migration.adoc[]
 

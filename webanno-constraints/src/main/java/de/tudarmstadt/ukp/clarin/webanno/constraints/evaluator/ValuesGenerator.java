@@ -18,13 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -32,6 +29,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
@@ -63,7 +62,7 @@ public class ValuesGenerator
         //Enabling the second option might take too much time for rules to execute.
 //        if(!areThereRulesFor(aContext, parsedConstraints)){
 //        if(!isThisAffectedByConstraintRules(aContext, aFeature, parsedConstraints)){
-        if(!parsedConstraints.areThereRules(aContext.getType().getName(), aFeature)) {
+        if (!parsedConstraints.areThereRules(aContext.getType().getName(), aFeature)) {
             return possibleValues;
         }
        
@@ -205,19 +204,13 @@ public class ValuesGenerator
         List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
 
         // Remove all that do not have the exact same offset
-        Iterator<AnnotationFS> i = covered.iterator();
-        while (i.hasNext()) {
-            AnnotationFS cur = i.next();
-            if (!(cur.getBegin() == aBegin && cur.getEnd() == aEnd)) {
-                i.remove();
-            }
-        }
-
+        covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));
         return covered;
     }
 
 //    @Override
-//    public boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints)
+//    public boolean areThereRulesFor(FeatureStructure aContext, 
+//            ParsedConstraints parsedConstraints)
 //    {
 //        if(imports==null){
 //            imports = parsedConstraints.getImports();

@@ -85,7 +85,12 @@ svg.reselect {
 
 /* "basic" font */
 text {
+/* BEGIN WEBANNO EXTENSION - #XXX Font size */
+/*
   font-size: 13px;
+*/
+  font-size: 100%;
+/* END WEBANNO EXTENSION - #XXX Font size */
 /* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 /*
   font-family: 'Liberation Sans', Verdana, Arial, Helvetica, sans-serif;
@@ -107,7 +112,12 @@ path {
 /* "basic" font */
 .span text {
   /*  font-size: 10.5px; */
+/* BEGIN WEBANNO EXTENSION - #XXX Font size */
+/*
   font-size: 10px;
+*/
+  font-size: 75%;
+/* END WEBANNO EXTENSION - #XXX Font size */
   text-anchor: middle;
 /* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 /*
@@ -337,7 +347,12 @@ WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
 }
 
 .arcs text {
+/* BEGIN WEBANNO EXTENSION - #XXX Font size */
+/*
   font-size: 9px;
+*/
+  font-size: 70%;
+/* END WEBANNO EXTENSION - #XXX Font size */
   text-anchor: middle;
 /* BEGIN WEBANNO EXTENSION - #337 Remove font loading code since we do not use it */
 /*
@@ -464,7 +479,7 @@ fieldset legend {
   /* background-color: #d7e7ee; */
   /* background-color: #eeeeee; */
   color: #000000;
-  z-index: 20;
+  z-index: 100;
   -moz-box-shadow: 5px 5px 5px #aaaaaa;
   -webkit-box-shadow: 5px 5px 5px #aaaaaa;
   box-shadow: 5px 5px 5px #aaaaaa;

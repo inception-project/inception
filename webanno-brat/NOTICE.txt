@@ -17,3 +17,7 @@ And the JQuery SVG module:
 
  * Copyright 2007 - 2014 Keith Wood
 
+
+And jquery.ba-scrollbarwidth.js dual-licensed under MIT and GPL:
+
+ * Copyright (c) 2010 "Cowboy" Ben Alman

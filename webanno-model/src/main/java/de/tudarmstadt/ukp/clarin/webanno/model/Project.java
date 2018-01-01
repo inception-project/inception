@@ -18,21 +18,24 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
 
 /**
  * A persistence object for a Project.
- *
- *
  */
 @Entity
 @Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
@@ -60,8 +63,16 @@ public class Project
     // Disable users from exporting annotation documents
     private boolean disableExport = false;
     
-    @Type(type="de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date created;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date updated;
 
     public Project()
     {
@@ -109,16 +120,17 @@ public class Project
         this.version = version;
     }
 
-    
-    public boolean isDisableExport() {
-		return disableExport;
-	}
+    public boolean isDisableExport()
+    {
+        return disableExport;
+    }
 
-	public void setDisableExport(boolean disableExport) {
-		this.disableExport = disableExport;
-	}
+    public void setDisableExport(boolean disableExport)
+    {
+        this.disableExport = disableExport;
+    }
 
-	public ScriptDirection getScriptDirection()
+    public ScriptDirection getScriptDirection()
     {
         // If unset, default to LTR - property was not present in older WebAnno versions
         if (scriptDirection == null) {
@@ -134,6 +146,53 @@ public class Project
         this.scriptDirection = scriptDirection;
     }
 
+    public String getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(String aMode)
+    {
+        this.mode = aMode;
+    }
+
+    @PrePersist
+    protected void onCreate()
+    {
+        // When we import data, we set the fields via setters and don't want these to be 
+        // overwritten by this event handler.
+        if (created != null) {
+            created = new Date();
+            updated = created;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate()
+    {
+        updated = new Date();
+    }
+
+    public Date getCreated()
+    {
+        return created;
+    }
+
+    public void setCreated(Date aCreated)
+    {
+        created = aCreated;
+    }
+
+    public Date getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(Date aUpdated)
+    {
+        updated = aUpdated;
+    }
+    
     @Override
     public int hashCode()
     {
@@ -167,14 +226,15 @@ public class Project
         return true;
     }
 
-    public String getMode()
+    @Override
+    public String toString()
     {
-        return mode;
+        StringBuilder builder = new StringBuilder();
+        builder.append("Project [id=");
+        builder.append(id);
+        builder.append(", name=");
+        builder.append(name);
+        builder.append("]");
+        return builder.toString();
     }
-
-    public void setMode(String aMode)
-    {
-        this.mode = aMode;
-    }
-
 }

@@ -90,8 +90,8 @@ public class JSONUtil
     }
     public static MappingJackson2HttpMessageConverter getJsonConverter()
     {
-        return ApplicationContextProvider.getApplicationContext().getBean("jsonConverter",
-                MappingJackson2HttpMessageConverter.class);
+        return ApplicationContextProvider.getApplicationContext()
+                .getBean(MappingJackson2HttpMessageConverter.class);
     }
     
     public static String toInterpretableJsonString(Object aObject)
@@ -119,12 +119,12 @@ public class JSONUtil
         public SerializableString getEscapeSequence(int aCh)
         {
             switch (aCh) {
-                case '\u2028':
-                    return new SerializedString("\\u2028");
-                case '\u2029':
-                    return new SerializedString("\\u2029");
-                default:
-                    return null;
+            case '\u2028':
+                return new SerializedString("\\u2028");
+            case '\u2029':
+                return new SerializedString("\\u2029");
+            default:
+                return null;
             }
         }
         

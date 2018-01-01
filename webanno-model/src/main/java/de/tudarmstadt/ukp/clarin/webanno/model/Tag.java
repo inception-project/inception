@@ -28,9 +28,9 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+
 /**
  * A persistence object for a Tag
- *
  */
 @Entity
 @Table(name = "tag")
@@ -151,7 +151,7 @@ public class Tag
         reordered = aB;
     }
     
-     public boolean getReordered()
+    public boolean getReordered()
     {
         return reordered;
     }

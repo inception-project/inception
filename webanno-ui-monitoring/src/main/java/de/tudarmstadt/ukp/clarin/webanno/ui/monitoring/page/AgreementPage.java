@@ -34,17 +34,19 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
@@ -55,6 +57,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -79,6 +84,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -115,7 +123,7 @@ public class AgreementPage
                 cachedCASes = null;
             }
             agreementForm.agreementTable2.getDefaultModel().detach();
-            if (aTarget != null) {
+            if (aTarget != null && agreementForm.agreementTable2.isVisibleInHierarchy()) {
                 aTarget.add(agreementForm.agreementTable2);
             }
         }
@@ -123,7 +131,7 @@ public class AgreementPage
             LOG.error("Error updating agreement table", e);
             error("Error updating agreement table: " + ExceptionUtils.getRootCauseMessage(e));
             if (aTarget != null) {
-                aTarget.addChildren(getPage(), FeedbackPanel.class);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -221,6 +229,13 @@ public class AgreementPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            PopoverConfig config = new PopoverConfig().withPlacement(Placement.left)
+                    .withHtml(true);
+            WebMarkupContainer legend = new WebMarkupContainer("legend");
+            legend.add(new PopoverBehavior(new ResourceModel("legend"), 
+                    new StringResourceModel("legend.content", legend), config));
+            add(legend);
+            
             add(measureDropDown = new DropDownChoice<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
@@ -251,17 +266,6 @@ public class AgreementPage
             add(exportFormat = new DropDownChoice<>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
-            exportFormat.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = -1L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    // Actually nothing to do, we just want the Ajax behavior to update the model
-                    // object.
-                }
-            });
 
             add(excludeIncomplete = new CheckBox("excludeIncomplete")
             {
@@ -493,7 +497,8 @@ public class AgreementPage
 
         public boolean excludeIncomplete = false;
 
-        public ConcreteAgreementMeasure measure = ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
+        public ConcreteAgreementMeasure measure = 
+                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
 
         private boolean savedExcludeIncomplete = excludeIncomplete;
         private boolean savedNullSupported = measure.isNullValueSupported();
@@ -536,63 +541,40 @@ public class AgreementPage
 
         public ProjectSelectionForm(String id)
         {
-            super(id,
-                    new CompoundPropertyModel<>(new ProjectSelectionModel()));
+            super(id, new CompoundPropertyModel<>(new ProjectSelectionModel()));
 
-            add(new ListChoice<Project>("project")
-            {
-                private static final long serialVersionUID = 1L;
+            ListChoice<Project> projectList = new OverviewListChoice<>("project");
+            projectList.setChoiceRenderer(new ChoiceRenderer<>("name"));
+            projectList.setChoices(LambdaModel.of(this::listAllowedProjects));
+            projectList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::onSelectionChanged));
+            add(projectList);
+        }
+        
+        private void onSelectionChanged(AjaxRequestTarget aTarget)
+        {
+            agreementForm.setModelObject(new AgreementFormModel());
+            aTarget.add(agreementForm);
 
-                {
-                    setChoices(new LoadableDetachableModel<List<Project>>()
-                    {
-                        private static final long serialVersionUID = 1L;
+            // Clear the cached CASes. When we switch to another project, we'll have to
+            // reload them.
+            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).get(), true);
+        }
+        
+        private List<Project> listAllowedProjects()
+        {
+            List<Project> allowedProject = new ArrayList<>();
 
-                        @Override
-                        protected List<Project> load()
-                        {
-                            List<Project> allowedProject = new ArrayList<>();
+            User user = userRepository.getCurrentUser();
 
-                            String username = SecurityContextHolder.getContext().getAuthentication()
-                                    .getName();
-                            User user = userRepository.get(username);
-
-                            List<Project> allProjects = projectService.listProjects();
-                            for (Project project : allProjects) {
-                                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                                        || SecurityUtil.isCurator(project, projectService, user)) {
-                                    allowedProject.add(project);
-                                }
-                            }
-                            return allowedProject;
-                        }
-                    });
-                    setChoiceRenderer(new ChoiceRenderer<>("name"));
-                    setNullValid(false);
-                    
-                    add(new FormComponentUpdatingBehavior() {
-                        private static final long serialVersionUID = -993092727599599088L;
-
-                        @Override
-                        protected void onUpdate() {
-                            agreementForm.setModelObject(new AgreementFormModel());
-
-                            ProjectSelectionForm.this.setVisible(true);
-
-                            // Clear the cached CASes. When we switch to another project, we'll have
-                            // to reload them.
-                            updateAgreementTable(
-                                    RequestCycle.get().find(AjaxRequestTarget.class).get(), true);
-                        }
-                    });
+            List<Project> allProjects = projectService.listProjects();
+            for (Project project : allProjects) {
+                if (SecurityUtil.isProjectAdmin(project, projectService, user)
+                        || SecurityUtil.isCurator(project, projectService, user)) {
+                    allowedProject.add(project);
                 }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
+            }
+            return allowedProject;
         }
     }
 

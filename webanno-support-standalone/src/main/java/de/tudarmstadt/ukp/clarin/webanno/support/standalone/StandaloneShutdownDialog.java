@@ -21,9 +21,8 @@ import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
+import javax.annotation.Resource;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,6 +30,8 @@ import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -44,6 +45,15 @@ public class StandaloneShutdownDialog
 
     private boolean running = false;
 
+    @Resource
+    private ApplicationEventPublisher eventPublisher;
+    
+    @Value("${running.from.commandline}")
+    private boolean runningFromCommandline;
+    
+    @Value("${spring.application.name}")
+    private String applicationName;
+    
     @Override
     public void start()
     {
@@ -84,25 +94,28 @@ public class StandaloneShutdownDialog
 
     private void displayShutdownDialog()
     {
-        String serverId =  ServerDetector.getServerId();
-        log.info("Running in: " + (serverId != null ? serverId : "unknown server"));
         log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
         
         // Show this only when run from the standalone JAR via a double-click
-        if (System.console() == null && !GraphicsEnvironment.isHeadless() && ServerDetector.isWinstone()) {
-            log.info("If you are running WebAnno in a server environment, please use '-Djava.awt.headless=true'");
+        if (System.console() == null && !GraphicsEnvironment.isHeadless()
+                && runningFromCommandline) {
+            log.info("If you are running " + applicationName
+                    + " in a server environment, please use '-Djava.awt.headless=true'");
+            eventPublisher.publishEvent(
+                    new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
 
             EventQueue.invokeLater(() -> {
                 final JOptionPane optionPane = new JOptionPane(
-                        new JLabel(
-                                "<HTML>WebAnno is running now and can be accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
-                                        + "WebAnno works best with the browsers Google Chrome or Safari.<br>"
-                                        + "Use this dialog to shut WebAnno down.</HTML>"),
+                        new JLabel("<HTML>" + applicationName + " is running now and can be "
+                                + "accessed via <a href=\"http://localhost:8080\">http://localhost:8080</a>.<br>"
+                                + applicationName
+                                + " works best with the browsers Google Chrome or Safari.<br>"
+                                + "Use this dialog to shut " + applicationName + " down.</HTML>"),
                         JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_OPTION, null,
                         new String[] { "Shutdown" });
 
-                final JDialog dialog = new JDialog((JFrame) null, "WebAnno", true);
+                final JDialog dialog = new JDialog((JFrame) null, applicationName, true);
                 dialog.setContentPane(optionPane);
                 dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                 dialog.addWindowListener(new WindowAdapter()

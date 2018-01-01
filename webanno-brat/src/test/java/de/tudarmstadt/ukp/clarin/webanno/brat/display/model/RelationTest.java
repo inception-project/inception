@@ -36,11 +36,14 @@ public class RelationTest
     public void toJsonTest()
         throws IOException
     {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        MappingJackson2HttpMessageConverter jsonConverter = 
+                new MappingJackson2HttpMessageConverter();
 
         String json = JSONUtil.toPrettyJsonString(jsonConverter, new Relation(new VID(1, 2), "type",
                 asList(new Argument("arg1", 1), new Argument("arg2", 2)), "label", "color"));
         
-        assertEquals("[ \"1.2\", \"type\", [ [ \"arg1\", \"1\" ], [ \"arg2\", \"2\" ] ], \"label\", \"color\" ]", json);
+        assertEquals(
+                "[ \"1.2\", \"type\", [ [ \"arg1\", \"1\" ], [ \"arg2\", \"2\" ] ], \"label\", \"color\" ]",
+                json);
     }
 }

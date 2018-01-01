@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
  * Permission levels for a project. {@link PermissionLevel#USER} is an annotator while
  * {@link PermissionLevel#ADMIN} is a project administrator
- *
- *
  */
 public enum PermissionLevel
-    implements PersistentEnum
+    implements PersistentEnum, Serializable
 {
     USER("user"), CURATOR("curator"), ADMIN("admin");
     public String getName()

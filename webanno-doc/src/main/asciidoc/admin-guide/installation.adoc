@@ -19,8 +19,8 @@
 
 === Prerequisites
 
-* This guide assumes Debian 8.0.0 (Jessie). It may also work on Ubuntu with some modifications, but we do not test this. Instructions for other Linux distributions likely deviate significantly.
-* It is further assumed that the user "www-data" already exists on the system and that it shall be used to run WebAnno. Finally, it is expected that you have set up a MySQL database that WebAnno can use. 
+* This guide assumes Debian 9.1 (Stretch). It may also work on Ubuntu with some modifications, but we do not test this. Instructions for other Linux distributions likely deviate significantly.
+* It is further assumed that the user "www-data" already exists on the system and that it shall be used to run WebAnno.
 * All commands assume that you are logged in as the *root* user. 
 
 NOTE: If you cannot log in as root but have to use `sudo` to become root, then the recommended way to do that is using the command `sudo su -`.
@@ -31,6 +31,8 @@ You can install an Oracle Java 8 JDK using the following commands.
 
 [source,bash]
 ----
+$ apt-get update
+$ apt-get install dirmngr
 $ echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list
 $ echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list
 $ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
@@ -41,17 +43,28 @@ $ apt-get install oracle-java8-set-default
 
 === Prepare database
 
+For production use of WebAnno, it is highly recommended to use a MySQL database. In this section,
+we briefly describe how to install a MySQL server and how to prepare it for use with WebAnno.
+
 * Install MySQL
 +
 [source,bash]
 ----
-$ sudo apt-get install mysql-server
+$ apt-get install mysql-server
 ----
-* make sure your MySQL server is configured for UTF-8. Check the following line is present in `/etc/mysql/my.cnf`:
+* make sure your MySQL server is configured for UTF-8. Check the following line is present in `/etc/mysql/mariadb.conf.d/50-server.cnf` (this is specific to Debian 9; on other systems the relevant file
+may be `/etc/mysql/my.cnf`):
 +
 [source,bash]
 ----
 character-set-server = utf8
+collation-server     = utf8_bin
+----
+* also ensure the default settings for client connections to are UTF-8 in `/etc/mysql/mariadb.conf.d/50-server.cnf` (again Debian 9; likely in `/etc/mysql/my.cnf` on other systems)
++
+[source,bash]
+----
+default-character-set = utf8
 ----
 * login to MySQL
 +
@@ -71,17 +84,184 @@ mysql> CREATE DATABASE webanno DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
 ----
 mysql> CREATE USER 'webanno'@'localhost' IDENTIFIED BY 't0t4llYSecreT';
 mysql> GRANT ALL PRIVILEGES ON webanno.* TO 'webanno'@'localhost';
+mysql> FLUSH PRIVILEGES;
 ----
 
 IMPORTANT: For production use, make sure you choose a different, secret, and secure password.
 
-=== Dedicated Tomcat instance
+=== Setting up the WebAnno home folder
+
+The WebAnno home folder is the place where WebAnno's configuration file `settings.properties`
+resides and where WebAnno stores its data. Mind that if you are using a MySQL database server
+(recommended), then WebAnno also stores some data in the MySQL database. This is important when
+you plan to perform a backup, as both the home folder and the database content need to be
+included in the backup.
+
+Now, let's go through the steps of setting up a home folder for WebAnno and creating a
+configuration file instructing WebAnno to access the previously prepared MySQL database.
+
+* Create WebAnno home folder. This is the directory where WebAnno settings files and projects (documents, annotations, etc.) are stored
++
+[source,bash]
+----
+$ mkdir /srv/webanno
+----
+////
+// FIXME How to reference to sample data?
+* *Optional* If you want to test WebAnno with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
+////
+* Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties:
++
+[source,text]
+----
+database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+database.driver=com.mysql.jdbc.Driver
+database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false
+database.username=webanno
+database.password=t0t4llYSecreT
+
+# 60 * 60 * 24 * 30 = 30 days
+backup.keep.time=1000000
+
+# 60 * 5 = 5 minutes
+backup.interval=1000
+
+backup.keep.number=10
+
+ui.brat.sentences.number = 5
+----
++
+* Fix permissions in WebAnno home folder
++
+[source,bash]
+----
+$ chown -R www-data /srv/webanno
+----
+
+=== Running via embedded Tomcat
+
+The WebAnno standalone JAR with an embedded Tomcat server and can be easily set up as a 
+UNIX service. This is the recommended way of running WebAnno on a server.
+
+==== Installing WebAnno as a service
+
+To set it up as a service, you can do the following steps. For the following
+example, I assume that you install WebAnno in `/srv/webanno`:
+
+* Copy the standalone JAR file +webanno-standalone-{revnumber}.jar+ to `/srv/webanno/webanno.jar`.
+   Note the change of the filename to `webanno.jar`.
+* Create the file `/srv/webanno/webanno.conf` with the following content
++
+[source,text]
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dwebanno.home=/srv/webanno"
+----
++
+* In the previous step, you have already created the `/srv/webanno/settings.properties` file. 
+  You *may optionally* configure the Tomcat port using the following line
++
+[source,text]
+----
+server.port=18080
+----
++
+If you need to do additional configurations of the embedded Tomcat, best refer to the 
+documentation of Spring Boot itself.
++
+* Make sure that the file `/srv/webanno/webanno.conf` is owned by the root user. If this is
+  not the case, WebAnno will ignore it and any settings made there will not have any effect. If
+  you start WebAnno and intead of using the MySQL database, it is using an embedded database,
+  then you should double-check that `/srv/webanno/webanno.conf` is owned by the root user.
++
+[source,bash]
+----
+$ chown root:root /srv/webanno/webanno.conf
+----
++
+* Change the owner/group of `/srv/webanno/webanno.jar` to `www-data`. When the service is started,
+  it will run with the privileges of the user that owns the JAR file, i.e. in this case WebAnno
+  will run as under the `www-data` user.
++
+[source,bash]
+----
+$ chown www-data:www-data /srv/webanno/webanno.jar
+----
++
+* Create a symlink from `/etc/init.d` to the `/srv/webanno/webanno.jar`:
++
+[source,bash]
+----
+$ ln -s /srv/webanno/webanno.jar /etc/init.d/webanno
+----
++
+* Start WebAnno using
++
+[source,bash]
+----
+$ service webanno start
+----
++
+* Stop WebAnno using
++
+[source,bash]
+----
+$ service webanno stop
+----
+
+==== Running the standalone behind HTTPD
+
+These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead
+of accessing it directly. This assumes that you already have the following packages installed:
+
+* Apache Web Server
+* mod_proxy
+* mod_proxy_ajp
+
+* Add the following lines to `/srv/webanno/settings.properties`:
++
+[source,text]
+----
+tomcat.ajp.port=18009
+server.contextPath=/webanno
+server.use-forward-headers=true
+----
++
+* Edit `/etc/apache2/conf.d/webanno.local.conf`
++
+[source,xml]
+----
+ProxyPreserveHost On
+
+<Proxy ajp://localhost/webanno >
+  Order Deny,Allow
+  Deny from none
+  Allow from all
+</Proxy>
+
+<Location /webanno >
+  ProxyPass ajp://localhost:18009/webanno timeout=1200
+  ProxyPassReverse http://localhost/webanno
+</Location>
+----
+* Restart Apache web server
++
+[source,bash]
+----
+$ service apache2 restart
+----
+
+=== Running via separate Tomcat
+
+Instead of using the WebAnno standalone JAR (recommended) which comes with an embedded Tomcat,
+you can also  deploy the WebAnno WAR archive into a separately installed Tomcat instance. 
+
+==== Installing Tomcat
 
 * Install package to install user-instances of Tomcat. 
 +
 [source,bash]
 ----
-$ aptitude install tomcat8-user authbind
+$ apt-get install tomcat8-user authbind
 ----
 * Create new instance
 +
@@ -115,7 +295,7 @@ NOTE: If you deploy WebAnno on a Linux machine that is short on entropy, you can
 
 Now we have a dedicated Apache Tomcat instance for WebAnno installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
 
-=== Deploy WAR file
+==== Deploying the WAR file
 
 * Place the WebAnno WAR into the Tomcat `webapps` folder:
 +
@@ -125,44 +305,6 @@ $ cp webanno-webapp-{revnumber}.war /opt/webanno/webapps/webanno.war
 ----
 +
 NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that WebAnno is accessible at the URL noted later in the present guidelines.
-* Create WebAnno home folder. This is the directory where webanno settings files and projects (Serialized Cases, Source documents...) are stored
-+
-[source,bash]
-----
-$ mkdir /srv/webanno
-----
-////
-// FIXME How to reference to sample data?
-* *Optional* If you want to test WebAnno with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
-////
-* Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties:
-+
-[source,text]
-----
-database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
-database.driver=com.mysql.jdbc.Driver
-database.url=jdbc:mysql://localhost:3306/webanno
-database.username=webanno
-database.password=t0t4llYSecreT
-
-# 60 * 60 * 24 * 30 = 30 days
-backup.keep.time=1000000
-
-# 60 * 5 = 5 minutes
-backup.interval=1000
-
-backup.keep.number=10
-
-ui.brat.sentences.number = 5
-----
-+
-NOTE: If you are using MySQL 5.5.45{plus}, 5.6.26{plus} or 5.7.6{plus}, you may have to append `?useSSL=false` to the `database.url` value.
-* Fix permissions in WebAnno home folder
-+
-[source,bash]
-----
-$ chown -R www-data /srv/webanno
-----
 * Start WebAnno
 +
 [source,bash]
@@ -170,13 +312,12 @@ $ chown -R www-data /srv/webanno
 $ service webanno start
 ----
 * Open it with your browser at `http://localhost:18080/webanno`. If you chose to run WebAnno behind the Apache web-server use `http://localhost/webanno`.
-The first time, it will create a username admin with password admin. login with this username and proceed.
+The first time, it will create a username `admin` with password `admin`. Log in with this username and proceed.
 
-You can start with the SampleProjects to explore some of the functionalities.
+==== Running the WAR behind Apache HTTPD
 
-=== Running behind Apache HTTPD
-
-These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead of accessing it directly. This assumes that you already have the following packages installed:
+These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead
+of accessing it directly. This assumes that you already have the following packages installed:
 
 * Apache Web Server
 * mod_proxy
@@ -197,7 +338,7 @@ These are *optional* instructions if you want to run WebAnno behind an Apache we
            URIEncoding="UTF-8"
            redirectPort="8443" /-->
 ----
-* Edit `/etc/apache2/conf.d/webanno.local`
+* Edit `/etc/apache2/conf.d/webanno.local.conf`
 +
 [source,xml]
 ----

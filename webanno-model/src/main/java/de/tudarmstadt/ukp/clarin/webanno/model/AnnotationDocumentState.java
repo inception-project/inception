@@ -21,8 +21,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.
- *
- *
  */
 public enum AnnotationDocumentState implements PersistentEnum
 {
@@ -33,7 +31,6 @@ public enum AnnotationDocumentState implements PersistentEnum
     NEW("NEW", "black"),
     
     /**
-     *
      * annotation document has been created for this document for this annotator
      */
     IN_PROGRESS("INPROGRESS", "blue"),

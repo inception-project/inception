@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <version>3.3.3-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-support</artifactId>
   <name>WebAnno - Core - Support</name>
@@ -36,6 +36,28 @@
     <dependency>
       <groupId>com.github.rjeschke</groupId>
       <artifactId>txtmark</artifactId>
+    </dependency>
+    
+    <!-- JFreeChart dependencies -->
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-dom</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-svggen</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.xmlgraphics</groupId>
+      <artifactId>batik-constants</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -69,6 +91,10 @@
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-request</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
     </dependency>
     <dependency>
@@ -86,6 +112,10 @@
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-urlfragment</artifactId>
     </dependency>
 
     <!-- Hibernate dependencies -->
@@ -109,8 +139,8 @@
     </dependency>
 
     <dependency>
-      <groupId>${servlet.api.groupId}</groupId>
-      <artifactId>${servlet.api.artifactId}</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -138,4 +168,30 @@
       </resource>
     </resources>
   </build>
+  <profiles>
+    <profile>
+      <id>rat-check</id>
+      <activation>
+        <file>
+          <exists>src/main/java</exists>
+        </file>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes combine.children="append">
+                  <!-- MIT License -->
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
 </project>

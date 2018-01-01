@@ -22,11 +22,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Comparator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -35,15 +35,16 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
+    private static String PROP_APPLICATION_HOME = "webanno.home";
+    private static String APPLICATION_USER_HOME_SUBDIR = ".webanno";
+    
     public static final String PROP_BUILD_NUMBER = "buildNumber";
     public static final String PROP_TIMESTAMP = "timestamp";
     public static final String PROP_VERSION = "version";
     
     private static final String PROP_USER_HOME = "user.home";
-    private static final String PROP_WEBANNO_HOME = "webanno.home";
     
     private static final String SETTINGS_FILE = "settings.properties";
-    private static final String WEBANNO_USER_HOME_SUBDIR = ".webanno";
     
     public static final String CFG_LOCALE = "locale";
     public static final String CFG_STYLE_LOGO = "style.logo";
@@ -60,6 +61,12 @@ public class SettingsUtil
     
     private static Properties versionInfo;
     private static Properties settings;
+    
+    public static void customizeApplication(String aPropertyName, String aSubdirName)
+    {
+        PROP_APPLICATION_HOME = aPropertyName;
+        APPLICATION_USER_HOME_SUBDIR = aSubdirName;
+    }
     
     public static Properties getVersionProperties()
     {
@@ -99,16 +106,16 @@ public class SettingsUtil
      */
     public static File getSettingsFile()
     {
-        String appHome = System.getProperty(PROP_WEBANNO_HOME);
+        String appHome = System.getProperty(PROP_APPLICATION_HOME);
         String userHome = System.getProperty(PROP_USER_HOME);
 
-        // Locate settings, first in webanno.home, then in user home
+        // Locate settings, first in application, then in user home
         File settings = null;
         if (appHome != null) {
             settings = new File(appHome, SETTINGS_FILE);
         }
         else if (userHome != null) {
-            settings = new File(userHome + "/" + WEBANNO_USER_HOME_SUBDIR, SETTINGS_FILE);
+            settings = new File(userHome + "/" + APPLICATION_USER_HOME_SUBDIR, SETTINGS_FILE);
         }
 
         if (settings.exists()) {
