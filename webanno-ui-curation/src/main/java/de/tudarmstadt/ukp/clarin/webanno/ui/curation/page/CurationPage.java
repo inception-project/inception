@@ -629,10 +629,10 @@ public class CurationPage
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
             curationPanel.editor.reset(aTarget);
-            curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
             updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
-    
+            curationPanel.init(aTarget, curationContainer);
+            //curationPanel.updatePanel(aTarget, curationContainer);
             
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
