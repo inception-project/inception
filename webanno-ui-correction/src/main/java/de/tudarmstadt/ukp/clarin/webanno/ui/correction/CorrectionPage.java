@@ -247,27 +247,6 @@ public class CorrectionPage
                 // Reload the page using AJAX. This does not add the project/document ID to the URL,
                 // but being AJAX it flickers less.
                 actionLoadDocument(aTarget);
-                
-//                aCallbackTarget.addChildren(getPage(), IFeedback.class);
-//                try {
-//                    actionLoadDocument(aCallbackTarget);
-//
-//                    String username = SecurityContextHolder.getContext().getAuthentication()
-//                            .getName();
-//                    User user = userRepository.get(username);
-//                    detailEditor.setEnabled(
-//                            !FinishImage.isFinished(getModel(), user, documentService));
-//                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
-//                }
-//                catch (Exception e) {
-//                    LOG.error("Unable to load data", e);
-//                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//                }
-//                aCallbackTarget.add(finishDocumentIcon);
-//                aCallbackTarget.appendJavaScript(
-//                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
-//                aCallbackTarget.add(documentNamePanel);
-//                aCallbackTarget.add(getOrCreatePositionInfoLabel());
             }
         });
 

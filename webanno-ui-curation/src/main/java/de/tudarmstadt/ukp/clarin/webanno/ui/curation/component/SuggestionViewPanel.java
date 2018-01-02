@@ -584,7 +584,6 @@ public class SuggestionViewPanel
 
         addSuggestionColor(state.getProject(), state.getMode(), jCases, annoStates, all, false,
                 true);
-
         return annoStates;
     }
     
