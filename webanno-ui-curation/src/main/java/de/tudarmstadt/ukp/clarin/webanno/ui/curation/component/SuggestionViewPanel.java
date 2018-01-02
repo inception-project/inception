@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
@@ -416,7 +415,6 @@ public class SuggestionViewPanel
             Map<String, JCas> aJCases,
             List<CurationUserSegmentForAnnotationDocument> aSentences,
             AnnotatorState aBratAnnotatorModel,
-            final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
             final Map<String, Map<VID, AnnotationState>> aStates)
@@ -565,7 +563,6 @@ public class SuggestionViewPanel
         // get differing feature structures
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
                 state.getAnnotationLayers(), annotationService);
-        List<AnnotationOption> annotationOptions = null;
 
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
@@ -605,7 +602,7 @@ public class SuggestionViewPanel
 
         // update sentence list on the right side
         List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        populateCurationSentences(jCases, sentences, state, annotationOptions,
+        populateCurationSentences(jCases, sentences, state,
                 aAnnotationSelectionByUsernameAndAddress, annotationService, aCurationContainer,
                 annoStates);
         setModelObject(sentences);
