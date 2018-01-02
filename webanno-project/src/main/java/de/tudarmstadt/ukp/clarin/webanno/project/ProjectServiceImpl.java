@@ -150,9 +150,14 @@ public class ProjectServiceImpl
     @Transactional
     public boolean existsProject(String aName)
     {
+        String query = 
+                "FROM Project " +
+                "WHERE name = :name";
         try {
-            entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
-                    .setParameter("name", aName).getSingleResult();
+            entityManager
+                    .createQuery(query, Project.class)
+                    .setParameter("name", aName)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -163,12 +168,15 @@ public class ProjectServiceImpl
     @Override
     public boolean existsProjectPermission(User aUser, Project aProject)
     {
-
+        String query =
+                "FROM ProjectPermission " + 
+                "WHERE user = :user AND project = :project";
         List<ProjectPermission> projectPermissions = entityManager
-                .createQuery(
-                        "FROM ProjectPermission WHERE user = :user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser.getUsername())
-                .setParameter("project", aProject).getResultList();
+                .createQuery(query, ProjectPermission.class)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("project", aProject)
+                .getResultList();
+        
         // if at least one permission level exist
         if (projectPermissions.size() > 0) {
             return true;
@@ -176,7 +184,6 @@ public class ProjectServiceImpl
         else {
             return false;
         }
-
     }
 
     @Override
@@ -184,14 +191,16 @@ public class ProjectServiceImpl
     public boolean existsProjectPermissionLevel(User aUser, Project aProject,
             PermissionLevel aLevel)
     {
+        String query =
+                "FROM ProjectPermission " + 
+                "WHERE user = :user AND project = :project AND level = :level";
         try {
             entityManager
-                    .createQuery(
-                            "FROM ProjectPermission WHERE user = :user AND "
-                                    + "project =:project AND level =:level",
-                            ProjectPermission.class)
-                    .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
-                    .setParameter("level", aLevel).getSingleResult();
+                    .createQuery(query, ProjectPermission.class)
+                    .setParameter("user", aUser.getUsername())
+                    .setParameter("project", aProject)
+                    .setParameter("level", aLevel)
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
@@ -204,7 +213,6 @@ public class ProjectServiceImpl
     public boolean existsProjectTimeStamp(Project aProject, String aUsername)
     {
         try {
-
             if (getProjectTimeStamp(aProject, aUsername) == null) {
                 return false;
             }
@@ -219,7 +227,6 @@ public class ProjectServiceImpl
     public boolean existsProjectTimeStamp(Project aProject)
     {
         try {
-
             if (getProjectTimeStamp(aProject) == null) {
                 return false;
             }
@@ -255,8 +262,11 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
+        String query =
+                "FROM Authority " + 
+                "WHERE username = :username";
         return entityManager
-                .createQuery("FROM Authority where username =:username", Authority.class)
+                .createQuery(query, Authority.class)
                 .setParameter("username", aUser).getResultList();
     }
 
@@ -271,21 +281,30 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject)
     {
+        String query = 
+                "FROM ProjectPermission " +
+                "WHERE user =:user AND project =:project";
         return entityManager
-                .createQuery("FROM ProjectPermission WHERE user =:user AND " + "project =:project",
-                        ProjectPermission.class).setParameter("user", aUser.getUsername())
-                .setParameter("project", aProject).getResultList();
+                .createQuery(query, ProjectPermission.class)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("project", aProject)
+                .getResultList();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
+        String query = 
+                "SELECT level " +
+                "FROM ProjectPermission " +
+                "WHERE user = :user AND " + "project = :project";
         try {
-            String query = "SELECT level FROM ProjectPermission WHERE user =:user AND " + "project =:project";
-            return entityManager.createQuery(query, PermissionLevel.class)
+            return entityManager
+                    .createQuery(query, PermissionLevel.class)
                     .setParameter("user", aUser.getUsername())
-                    .setParameter("project", aProject).getResultList();
+                    .setParameter("project", aProject)
+                    .getResultList();
         }
         catch (NoResultException e) {
             return Collections.emptyList();
@@ -325,12 +344,15 @@ public class ProjectServiceImpl
     @Override
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
-
+        String query = 
+                "SELECT DISTINCT perm.user " +
+                "FROM ProjectPermission AS perm" +
+                "WHERE perm.project = :project " +
+                "ORDER BY perm.user ASC";
         List<String> usernames = entityManager
-                .createQuery(
-                        "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project ORDER BY user ASC", String.class)
-                .setParameter("project", aProject).getResultList();
+                .createQuery(query, String.class)
+                .setParameter("project", aProject)
+                .getResultList();
 
         List<User> users = new ArrayList<>();
 
@@ -346,12 +368,16 @@ public class ProjectServiceImpl
     public List<User> listProjectUsersWithPermissions(Project aProject,
             PermissionLevel aPermissionLevel)
     {
+        String query = 
+                "SELECT DISTINCT user " +
+                "FROM ProjectPermission " +
+                "WHERE project = :project AND level = :level " +
+                "ORDER BY user ASC";
         List<String> usernames = entityManager
-                .createQuery(
-                        "SELECT DISTINCT user FROM ProjectPermission WHERE "
-                                + "project =:project AND level =:level ORDER BY user ASC",
-                        String.class).setParameter("project", aProject)
-                .setParameter("level", aPermissionLevel).getResultList();
+                .createQuery(query, String.class)
+                .setParameter("project", aProject)
+                .setParameter("level", aPermissionLevel)
+                .getResultList();
         List<User> users = new ArrayList<>();
         for (String username : usernames) {
             if (userRepository.exists(username)) {
@@ -365,15 +391,25 @@ public class ProjectServiceImpl
     @Transactional
     public Project getProject(String aName)
     {
-        return entityManager.createQuery("FROM Project WHERE name = :name", Project.class)
-                .setParameter("name", aName).getSingleResult();
+        String query = 
+                "FROM Project " + 
+                "WHERE name = :name";
+        return entityManager
+                .createQuery(query, Project.class)
+                .setParameter("name", aName)
+                .getSingleResult();
     }
 
     @Override
     public Project getProject(long aId)
     {
-        return entityManager.createQuery("FROM Project WHERE id = :id", Project.class)
-                .setParameter("id", aId).getSingleResult();
+        String query = 
+                "FROM Project " +
+                "WHERE id = :id";
+        return entityManager
+                .createQuery(query, Project.class)
+                .setParameter("id", aId)
+                .getSingleResult();
     }
 
     @Override
@@ -397,19 +433,25 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> getProjectPermissions(Project aProject)
     {
+        String query = 
+                "FROM ProjectPermission " +
+                "WHERE project = :project";
         return entityManager
-                .createQuery("FROM ProjectPermission WHERE project =:project",
-                        ProjectPermission.class).setParameter("project", aProject).getResultList();
+                .createQuery(query, ProjectPermission.class)
+                .setParameter("project", aProject)
+                .getResultList();
     }
 
     @Override
     @Transactional
     public Date getProjectTimeStamp(Project aProject, String aUsername)
     {
+        String query = 
+                "SELECT MAX(ann.timestamp) " +
+                "FROM AnnotationDocument AS ann " +
+                "WHERE ann.project = :project AND ann.user = :user";
         return entityManager
-                .createQuery(
-                        "SELECT max(timestamp) FROM AnnotationDocument WHERE project = :project "
-                                + " AND user = :user", Date.class)
+                .createQuery(query, Date.class)
                 .setParameter("project", aProject).setParameter("user", aUsername)
                 .getSingleResult();
     }
@@ -417,21 +459,28 @@ public class ProjectServiceImpl
     @Override
     public Date getProjectTimeStamp(Project aProject)
     {
+        String query = 
+                "SELECT MAX(doc.timestamp) " +
+                "FROM SourceDocument AS doc " +
+                "WHERE doc.project = :project";
         return entityManager
-                .createQuery("SELECT max(timestamp) FROM SourceDocument WHERE project = :project",
-                        Date.class).setParameter("project", aProject).getSingleResult();
+                .createQuery(query, Date.class)
+                .setParameter("project", aProject)
+                .getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Project> listProjectsWithFinishedAnnos()
     {
-
+        String query = 
+                "SELECT DISTINCT ann.project " +
+                "FROM AnnotationDocument AS ann " +
+                "WHERE ann.state = :state";
         return entityManager
-                .createQuery("SELECT DISTINCT project FROM AnnotationDocument WHERE state = :state",
-                        Project.class)
-                .setParameter("state", AnnotationDocumentState.FINISHED.getName()).getResultList();
-
+                .createQuery(query, Project.class)
+                .setParameter("state", AnnotationDocumentState.FINISHED)
+                .getResultList();
     }
 
     @Override
@@ -455,7 +504,11 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjects()
     {
-        return entityManager.createQuery("FROM Project  ORDER BY name ASC ", Project.class)
+        String query = 
+                "FROM Project " +
+                "ORDER BY name ASC";
+        return entityManager
+                .createQuery(query, Project.class)
                 .getResultList();
     }
 

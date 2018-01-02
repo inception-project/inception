@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationOption;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
@@ -126,30 +125,30 @@ public class SuggestionViewPanel
      *
      * @param aModel the model.
      */
-    public void setModel(IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel)
+    public void setModel(IModel<List<CurationUserSegmentForAnnotationDocument>> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(LinkedList<CurationUserSegmentForAnnotationDocument> aModel)
+    public void setModelObject(List<CurationUserSegmentForAnnotationDocument> aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> getModel()
+    public IModel<List<CurationUserSegmentForAnnotationDocument>> getModel()
     {
-        return (IModel<LinkedList<CurationUserSegmentForAnnotationDocument>>) getDefaultModel();
+        return (IModel<List<CurationUserSegmentForAnnotationDocument>>) getDefaultModel();
     }
 
     @SuppressWarnings("unchecked")
-    public LinkedList<CurationUserSegmentForAnnotationDocument> getModelObject()
+    public List<CurationUserSegmentForAnnotationDocument> getModelObject()
     {
-        return (LinkedList<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
+        return (List<CurationUserSegmentForAnnotationDocument>) getDefaultModelObject();
     }
 
     public SuggestionViewPanel(String id,
-            IModel<LinkedList<CurationUserSegmentForAnnotationDocument>> aModel)
+            IModel<List<CurationUserSegmentForAnnotationDocument>> aModel)
     {
         super(id, aModel);
         // update list of brat embeddings
@@ -416,7 +415,6 @@ public class SuggestionViewPanel
             Map<String, JCas> aJCases,
             List<CurationUserSegmentForAnnotationDocument> aSentences,
             AnnotatorState aBratAnnotatorModel,
-            final List<AnnotationOption> aAnnotationOptions,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             AnnotationSchemaService aAnnotationService, CurationContainer aCurationContainer,
             final Map<String, Map<VID, AnnotationState>> aStates)
@@ -514,7 +512,7 @@ public class SuggestionViewPanel
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         info.setEntityTypes(BratRenderer.buildEntityTypes(aCurationContainer
-                .getBratAnnotatorModel().getAnnotationLayers(), aAnnotationService));
+                .getAnnotatorState().getAnnotationLayers(), aAnnotationService));
 
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = JSONUtil.getJsonConverter().getObjectMapper()
@@ -551,12 +549,12 @@ public class SuggestionViewPanel
             SourceListView aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        AnnotatorState bModel = aCurationContainer.getBratAnnotatorModel();
-        SourceDocument sourceDocument = bModel.getDocument();
+        AnnotatorState state = aCurationContainer.getAnnotatorState();
+        SourceDocument sourceDocument = state.getDocument();
         Map<String, JCas> jCases = new HashMap<>();
 
         // This is the CAS that the user can actively edit
-        JCas annotatorCas = getAnnotatorCas(bModel, aAnnotationSelectionByUsernameAndAddress,
+        JCas annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
                 sourceDocument, jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
@@ -564,20 +562,18 @@ public class SuggestionViewPanel
 
         // get differing feature structures
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
-                bModel.getAnnotationLayers(), annotationService);
-        List<AnnotationOption> annotationOptions = null;
+                state.getAnnotationLayers(), annotationService);
 
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
         DiffResult diff;
-
-        if (bModel.getMode().equals(Mode.CURATION)) {
-            diff = CasDiff2.doDiffSingle(annotationService, bModel.getProject(), entryTypes,
+        if (state.getMode().equals(Mode.CURATION)) {
+            diff = CasDiff2.doDiffSingle(annotationService, state.getProject(), entryTypes,
                     LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases,
                     aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
         }
         else {
-            diff = CasDiff2.doDiffSingle(annotationService, bModel.getProject(), entryTypes,
+            diff = CasDiff2.doDiffSingle(annotationService, state.getProject(), entryTypes,
                     LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, aCurationSegment.getBegin(),
                     aCurationSegment.getEnd());
         }
@@ -591,28 +587,25 @@ public class SuggestionViewPanel
             }
         }
 
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, d, false,
+        addSuggestionColor(state.getProject(), state.getMode(), jCases, annoStates, d, false,
                 false);
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, i, true,
+        addSuggestionColor(state.getProject(), state.getMode(), jCases, annoStates, i, true,
                 false);
 
         List<ConfigurationSet> all = new ArrayList<>();
-
         all.addAll(diff.getConfigurationSets());
         all.removeAll(d);
         all.removeAll(i);
 
-        addSuggestionColor(bModel.getProject(), bModel.getMode(), jCases, annoStates, all, false,
+        addSuggestionColor(state.getProject(), state.getMode(), jCases, annoStates, all, false,
                 true);
 
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-
-        populateCurationSentences(jCases, sentences, bModel, annotationOptions,
+        // update sentence list on the right side
+        List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
+        populateCurationSentences(jCases, sentences, state,
                 aAnnotationSelectionByUsernameAndAddress, annotationService, aCurationContainer,
                 annoStates);
-
-        // update sentence list on the right side
-        this.setModelObject(sentences);
+        setModelObject(sentences);
 
         aTarget.add(this);
     }

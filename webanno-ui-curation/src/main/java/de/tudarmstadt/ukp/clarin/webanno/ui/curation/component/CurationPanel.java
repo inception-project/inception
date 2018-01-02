@@ -47,6 +47,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -72,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionB
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
- * Main Panel for the curation page. It displays a box with the complete text on the left side and a
+ * Main panel of the curation page. It displays a box with the complete text on the left side and a
  * box for a selected sentence on the right side.
  */
 public class CurationPanel
@@ -87,32 +88,30 @@ public class CurationPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    public SuggestionViewPanel suggestionViewPanel;
-    private AnnotationEditorBase annotationEditor;
-    public AnnotationDetailEditorPanel editor;
+    private SuggestionViewPanel suggestionViewPanel;
 
     private final WebMarkupContainer sentencesListView;
-    private final WebMarkupContainer corssSentAnnoView;
+    private final WebMarkupContainer crossSentAnnoView;
 
-    private AnnotatorState bModel;
+    private AnnotationEditorBase annotationEditor;
+    public AnnotationDetailEditorPanel editor;
+    private AnnotatorState state;
+
+    private ListView<String> crossSentAnnoList;
+    
+    public SourceListView curationView;
+    private List<SourceListView> sourceListModel;
 
     private int fSn = 0;
     private int lSn = 0;
     private boolean firstLoad = true;
-    private boolean annotate = false;
+    
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
      * username from which the span has been selected
      */
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
             new HashMap<>();
-
-    public SourceListView curationView;
-
-    ListView<String> crossSentAnnoList;
-    List<SourceListView> sourceListModel;
-
-    // CurationContainer curationContainer;
 
     public CurationPanel(String id, final IModel<CurationContainer> cCModel)
     {
@@ -124,7 +123,7 @@ public class CurationPanel
         sidebarCell.setOutputMarkupId(true);
         // Override sidebar width from preferences
         sidebarCell.add(new AttributeModifier("style", LambdaModel.of(() -> String
-                .format("flex-basis: %d%%;", bModel.getPreferences().getSidebarSize()))));
+                .format("flex-basis: %d%%;", state.getPreferences().getSidebarSize()))));
         add(sidebarCell);
         
         // add container for list of sentences panel
@@ -134,27 +133,28 @@ public class CurationPanel
     
         // add container for the list of sentences where annotations exists crossing multiple
         // sentences outside of the current page
-        corssSentAnnoView = new WebMarkupContainer("corssSentAnnoView");
-        corssSentAnnoView.setOutputMarkupId(true);
-        add(corssSentAnnoView);
+        crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
+        crossSentAnnoView.setOutputMarkupId(true);
+        add(crossSentAnnoView);
     
-        bModel = getModelObject().getBratAnnotatorModel();
-    
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
+        List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
         CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
                 new CurationUserSegmentForAnnotationDocument();
-        if (bModel != null) {
+        
+        state = getModelObject().getAnnotatorState();
+        if (state != null) {
             curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
                     annotationSelectionByUsernameAndAddress);
-            curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(bModel);
+            curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(state);
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
+        
         // update source list model only first time.
         sourceListModel = sourceListModel == null ? getModelObject().getCurationViews()
                 : sourceListModel;
     
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
-                new Model<>(sentences))
+                new ListModel<>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
             CurationContainer curationContainer = cCModel.getObject();
@@ -181,7 +181,7 @@ public class CurationPanel
         add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel(
-                "annotationDetailEditorPanel", new Model<>(bModel))
+                "annotationDetailEditorPanel", new Model<>(state))
         {
             private static final long serialVersionUID = 2857345299480098279L;
     
@@ -189,7 +189,6 @@ public class CurationPanel
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 aTarget.addChildren(getPage(), IFeedback.class);
-                annotate = true;
     
                 try {
                     updatePanel(aTarget, cCModel.getObject());
@@ -214,23 +213,23 @@ public class CurationPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(bModel.getDocument() != null && !documentService
-                        .getSourceDocument(bModel.getDocument().getProject(),
-                                bModel.getDocument().getName())
+                setEnabled(state.getDocument() != null && !documentService
+                        .getSourceDocument(state.getDocument().getProject(),
+                                state.getDocument().getName())
                         .getState().equals(SourceDocumentState.CURATION_FINISHED));
             }
         };
         sidebarCell.add(editor);
     
-        annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(bModel), editor,
+        annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(state), editor,
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
     
         IModel<List<String>> sentenceDiffModel = LambdaModel.of(() -> {
-            int fSN = bModel.getFirstVisibleUnitIndex();
-            int lSN = bModel.getLastVisibleUnitIndex();
+            int fSN = state.getFirstVisibleUnitIndex();
+            int lSN = state.getLastVisibleUnitIndex();
 
             List<String> crossSentAnnos = new ArrayList<>();
             if (SuggestionBuilder.crossSentenceLists != null) {
@@ -280,7 +279,7 @@ public class CurationPanel
     
         };
         crossSentAnnoList.setOutputMarkupId(true);
-        corssSentAnnoView.add(crossSentAnnoList);
+        crossSentAnnoView.add(crossSentAnnoList);
     
         // add subcomponents to the component
         sentencesListView.add(new ListView<SourceListView>("sentencesList",
@@ -314,7 +313,7 @@ public class CurationPanel
             final SourceListView curationViewItem = getModelObject();
             
             // Is in focus?
-            if (curationViewItem.getSentenceNumber() == bModel.getFocusUnitIndex()) {
+            if (curationViewItem.getSentenceNumber() == state.getFocusUnitIndex()) {
                 aTag.append("class", "current", " ");
             }
             
@@ -364,11 +363,11 @@ public class CurationPanel
             curationView = curationViewItem;
             fSn = 0;
             try {
-                JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
+                JCas jCas = curationDocumentService.readCurationCas(state.getDocument());
                 updateCurationView(CurationPanel.this.getModelObject(), curationViewItem, aTarget,
                         jCas);
                 updatePanel(aTarget, CurationPanel.this.getModelObject());
-                bModel.setFocusUnitIndex(curationViewItem.getSentenceNumber());
+                state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
             catch (UIMAException e) {
                 error("Error: " + ExceptionUtils.getRootCauseMessage(e));
@@ -405,26 +404,26 @@ public class CurationPanel
     {
         Sentence currentSent = WebAnnoCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
                 curationViewItem.getEnd());
-        bModel.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
-                currentSent, curationViewItem.getBegin(), bModel.getProject(), bModel.getDocument(),
-                bModel.getPreferences().getWindowSize()));
-        curationContainer.setBratAnnotatorModel(bModel);
+        state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
+                currentSent, curationViewItem.getBegin(), state.getProject(), state.getDocument(),
+                state.getPreferences().getWindowSize()));
+        curationContainer.setBratAnnotatorModel(state);
         onChange(aTarget);
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
     {
-
+        // Nothing done by default
     }
 
     protected JCas getEditorCas()
         throws IOException
     {
-        if (bModel.getDocument() == null) {
+        if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
 
-        return curationDocumentService.readCurationCas(bModel.getDocument());
+        return curationDocumentService.readCurationCas(state.getDocument());
     }
 
     @Override
@@ -440,13 +439,13 @@ public class CurationPanel
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        JCas jCas = curationDocumentService.readCurationCas(bModel.getDocument());
+        JCas jCas = curationDocumentService.readCurationCas(state.getDocument());
 
-        final Sentence sentence = selectSentenceAt(jCas, bModel.getFirstVisibleUnitBegin(),
-                bModel.getFirstVisibleUnitEnd());
-        bModel.setFirstVisibleUnit(sentence);
+        final Sentence sentence = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
+                state.getFirstVisibleUnitEnd());
+        state.setFirstVisibleUnit(sentence);
 
-        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, bModel
+        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, state
                 .getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
@@ -458,42 +457,35 @@ public class CurationPanel
         curationView.setCurationBegin(sentence.getBegin());
         curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
 
-        int ws = bModel.getPreferences().getWindowSize();
-        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, bModel.getFirstVisibleUnitBegin(),
-                bModel.getFirstVisibleUnitEnd());
+        int ws = state.getPreferences().getWindowSize();
+        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
+                state.getFirstVisibleUnitEnd());
         Sentence ls = WebAnnoCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
 
         aTarget.add(sentencesListView);
 
-        /*
-         * corssSentAnnoView.addOrReplace(crossSentAnnoList); aTarget.add(corssSentAnnoView);
-         */
-        aTarget.add(suggestionViewPanel);
+        //aTarget.add(suggestionViewPanel);
         annotationEditor.requestRender(aTarget);
         
-        annotate = false;
         suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor,
                 annotationSelectionByUsernameAndAddress, curationView);
     }
 
-    // CurationContainer curationContainer;
-    
     /**
      * Class for combining an on click ajax call and a label
      */
     class AjaxLabel
         extends Label
     {
-    
         private static final long serialVersionUID = -4528869530409522295L;
         private AbstractAjaxBehavior click;
     
-        public AjaxLabel(String id, String label, AbstractAjaxBehavior click)
+        public AjaxLabel(String id, String label, AbstractAjaxBehavior aClick)
         {
             super(id, label);
-            this.click = click;
+            click = aClick;
         }
     
         @Override
@@ -505,6 +497,5 @@ public class CurationPanel
             tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
             tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
         }
-    
     }
 }
