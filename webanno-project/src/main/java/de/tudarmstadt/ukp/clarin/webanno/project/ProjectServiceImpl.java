@@ -346,7 +346,7 @@ public class ProjectServiceImpl
     {
         String query = 
                 "SELECT DISTINCT perm.user " +
-                "FROM ProjectPermission AS perm" +
+                "FROM ProjectPermission AS perm " +
                 "WHERE perm.project = :project " +
                 "ORDER BY perm.user ASC";
         List<String> usernames = entityManager
