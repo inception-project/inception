@@ -23,6 +23,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -50,7 +51,7 @@ public class AnnotationDocument
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(nullable = false)
@@ -73,6 +74,7 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
     @Temporal(TemporalType.TIMESTAMP)

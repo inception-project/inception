@@ -20,17 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import java.io.Serializable;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.ForeignKey;
-
 
 /**
  * A persistence object for an annotation layer. Currently, the builtin layers are:
@@ -51,7 +51,7 @@ public class AnnotationLayer
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
@@ -67,6 +67,7 @@ public class AnnotationLayer
 
     private boolean enabled = true;
 
+    @Column(name = "builtIn")
     private boolean builtIn = false;
     
     private boolean readonly = false;
@@ -80,31 +81,36 @@ public class AnnotationLayer
 
     @ManyToOne
    // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_type")
+    @JoinColumn(name = "annotation_type", 
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     private AnnotationLayer attachType;
 
     @ManyToOne
-    @ForeignKey(name = "none")
-    @JoinColumn(name = "annotation_feature")
+    @JoinColumn(name = "annotation_feature",
+        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     private AnnotationFeature attachFeature;
 
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
 
+    @Column(name = "lockToTokenOffset")
     private boolean lockToTokenOffset = true;
 
-    // There wase a type in the code which unfortunately made it into databases...
+    // There was a type in the code which unfortunately made it into databases...
     @Column(name = "allowSTacking")
     private boolean allowStacking;
 
+    @Column(name = "crossSentence")
     private boolean crossSentence;
     
+    @Column(name = "showTextInHover")
     private boolean showTextInHover = true;
 
+    @Column(name = "multipleTokens")
     private boolean multipleTokens;
     
+    @Column(name = "linkedListBehavior")
     private boolean linkedListBehavior;
 
     

@@ -634,7 +634,7 @@ public class RemoteApiController2
     @ApiOperation(value = "Delete a document from a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
-                    + PARAM_DOCUMENT_ID + "}/", 
+                    + PARAM_DOCUMENT_ID + "}", 
             method = RequestMethod.DELETE,
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> documentDelete(
@@ -910,10 +910,11 @@ public class RemoteApiController2
                 FileUtils.forceDelete(exportedAnnoFile);
             }
         }
-
+        
         String filename = FilenameUtils.removeExtension(doc.getName());
         filename += "-" + aAnnotatorId;
-        filename += "." + FilenameUtils.getExtension(doc.getName());
+        // Actually, exportedAnnoFile cannot be null here - the warning can be ignored.
+        filename += "." + FilenameUtils.getExtension(exportedAnnoFile.getName());
         
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentLength(resource.length);

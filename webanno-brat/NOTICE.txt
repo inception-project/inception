@@ -21,3 +21,8 @@ And the JQuery SVG module:
 And jquery.ba-scrollbarwidth.js dual-licensed under MIT and GPL:
 
  * Copyright (c) 2010 "Cowboy" Ben Alman
+ 
+
+JSON-Patch
+
+ * Copyright (c) 2013, 2014 Joachim Wester

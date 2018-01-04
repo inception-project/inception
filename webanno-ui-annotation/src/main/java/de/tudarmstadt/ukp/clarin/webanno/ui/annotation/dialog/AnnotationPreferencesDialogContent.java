@@ -225,10 +225,10 @@ public class AnnotationPreferencesDialogContent
         AnnotationPreference prefs = state.getPreferences();
         Preferences model = form.getModelObject();
 
-        List<Long> preferredLayerIds = state.getPreferences().getAnnotationLayers();
+        List<Long> hiddenLayerIds = state.getPreferences().getHiddenAnnotationLayerIds();
         state.setAnnotationLayers(
                 model.annotationLayers.stream()
-                .filter(l -> preferredLayerIds.contains(l.getId()))
+                .filter(l -> !hiddenLayerIds.contains(l.getId()))
                 .collect(Collectors.toList()));
 
         prefs.setScrollPage(model.scrollPage);
@@ -262,8 +262,8 @@ public class AnnotationPreferencesDialogContent
                 // add checkbox
                 // get initial state
                 AnnotationPreference pref = stateModel.getObject().getPreferences();
-                List<Long> preferredLayers = pref.getAnnotationLayers();
-                boolean isPreferredToShow = preferredLayers.contains(item.getModelObject().getId());
+                List<Long> hiddenLayerIds = pref.getHiddenAnnotationLayerIds();
+                boolean isPreferredToShow = !hiddenLayerIds.contains(item.getModelObject().getId());
                 
                 CheckBox layer_cb = new CheckBox("annotationLayerActive",
                         Model.of(isPreferredToShow));
@@ -276,19 +276,19 @@ public class AnnotationPreferencesDialogContent
                     protected void onEvent(AjaxRequestTarget target)
                     {
                         // check state & live update preferences
-                        List<Long> preferredLayers = stateModel.getObject()
-                                .getPreferences().getAnnotationLayers();
+                        List<Long> hiddenLayerIds = stateModel.getObject()
+                                .getPreferences().getHiddenAnnotationLayerIds();
                         // get and switch state of checkbox
                         boolean isPreferredToShow = layer_cb.getModelObject();
                         layer_cb.setModelObject(!isPreferredToShow);
                         // live update preferences
                         if (isPreferredToShow) {
                             // prefer to deactivate layer
-                            preferredLayers.remove(item.getModelObject().getId());
+                            hiddenLayerIds.add(item.getModelObject().getId());
                         }
                         else {
                             // prefer to activate layer
-                            preferredLayers.add(item.getModelObject().getId());
+                            hiddenLayerIds.remove(item.getModelObject().getId());
                         }
                     }
                 });

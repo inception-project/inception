@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,8 +104,8 @@ public class ConstraintsServiceImpl
     public String readConstrainSet(ConstraintSet aSet)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         String data = FileUtils.readFileToString(new File(constraintRulesPath, filename), "UTF-8");
 
@@ -122,8 +122,8 @@ public class ConstraintsServiceImpl
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
@@ -142,8 +142,8 @@ public class ConstraintsServiceImpl
     @Override
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
-        String constraintRulesPath = dir.getAbsolutePath() + PROJECT + aSet.getProject().getId()
-                + CONSTRAINTS;
+        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         File constraintsFile = new File(constraintRulesPath, filename);
         if (constraintsFile.exists()) {

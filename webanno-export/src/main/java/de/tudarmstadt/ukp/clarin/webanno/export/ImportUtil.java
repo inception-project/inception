@@ -286,7 +286,7 @@ public class ImportUtil
             }
             if (exLayer.getAttachFeature() != null) {
                 layersMap.get(exLayer)
-                        .setAttachFeature(featuresMap.get(exLayer.getAttachFeature()));
+                        .setAttachFeature(featuresMap.get(exLayer.getAttachFeature().getName()));
                 aAnnotationService.createLayer(layersMap.get(exLayer));
             }
 

@@ -154,7 +154,13 @@ NOTE: Currently, there can be at most one relation layer per span layer. Relatio
 NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
       are induced by <<sect_annotation_link_features>>.
 
-image::annotation_span_many.jpg[align="center"]
+When moving the mouse over an annotation with outgoing relations, the info popup includes the
+*yield* of the relations. This is the text transitively covered by the outgoing relations. This
+is useful e.g. in order to see all text governed the head of a particular dependency relation.
+The text may be abbreviated.
+
+.Example of the yield of a dependency relation
+image::annotation_relation_yield.png[align="center"]
 
 ==== Chains
 
@@ -165,7 +171,11 @@ is enabled for the chain layer or not. To enable or disable the *linked list* be
 in the *Projects Settings* mode. After choosing *Coreference*, *linked list* behaviour
 is displayed in the checkbox and can either be marked or unmarked.
 
+.Configuration of a chain layer in the project settings
 image::LinkedList_1.png[align="center"]
+
+.Example of chain annotations
+image::annotation_span_many.jpg[align="center"]
 
 To abort the creation of an annotation, hold *CTRL* when you release the mouse button.
 

@@ -21,9 +21,11 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
@@ -46,9 +48,10 @@ public class MiraTemplate
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(name = "automationStarted")
     private boolean automationStarted = false;
 
     /**
@@ -64,14 +67,15 @@ public class MiraTemplate
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<AnnotationFeature> otherFeatures = new HashSet<>();
 
+    @Column(name = "currentLayer")
     private boolean currentLayer = false;// The current training layer for this mira template
 
     /**
      * Repeat span annotation to the suggestions view 
      */
+    @Column(name = "annotateAndPredict")
     private boolean annotateAndPredict = true;
     
-
     /**
      * Results comprising of the training accuracy and number of examples used
      */

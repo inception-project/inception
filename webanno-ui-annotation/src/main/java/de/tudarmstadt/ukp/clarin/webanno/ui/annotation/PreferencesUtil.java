@@ -87,7 +87,7 @@ public class PreferencesUtil
             Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
             for (Entry<Object, Object> entry : props.entrySet()) {
                 String property = entry.getKey().toString();
-                int index = property.lastIndexOf(".");
+                int index = property.indexOf(".");
                 String propertyName = property.substring(index + 1);
                 String mode = property.substring(0, index);
                 if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
@@ -120,27 +120,22 @@ public class PreferencesUtil
                     .listAnnotationLayer(aBModel.getProject()).stream()
                     .filter(l -> l.isEnabled())// only allow enabled layers
                     .collect(Collectors.toList());
-                        
-            if (preference.getAnnotationLayers() != null) {
-                List<Long> prefferedLayerIds = preference.getAnnotationLayers();
-                enabledLayers = enabledLayers.stream()
-                        .filter(l -> prefferedLayerIds.contains(l.getId()))
-                        .collect(Collectors.toList());
-            }            
+          
+            List<Long> hiddenLayerIds = preference.getHiddenAnnotationLayerIds();
+            enabledLayers = enabledLayers.stream()
+                    .filter(l -> !hiddenLayerIds.contains(l.getId()))
+                    .collect(Collectors.toList());
+          
             aBModel.setAnnotationLayers(enabledLayers);
             
             // Get color preferences for each layer, init with legacy if not found
             Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
-            if (colorPerLayer == null) {
-                colorPerLayer = new HashMap<>();
-            }
             for (AnnotationLayer layer : aAnnotationService
                     .listAnnotationLayer(aBModel.getProject())) {
                 if (!colorPerLayer.containsKey(layer.getId())) {
                     colorPerLayer.put(layer.getId(), ColoringStrategyType.LEGACY);
                 }
             }
-            preference.setColorPerLayer(colorPerLayer);
 
         }
         // no preference found
@@ -151,10 +146,6 @@ public class PreferencesUtil
                     .listAnnotationLayer(aBModel.getProject()).stream()
                     .filter(l -> l.isEnabled())// only allow enabled layers
                     .collect(Collectors.toList()); 
-            preference.setAnnotationLayers(
-                        enabledLayers.stream()
-                        .map(l -> l.getId())
-                        .collect(Collectors.toList()));
             aBModel.setAnnotationLayers(enabledLayers);
             
             preference.setWindowSize(aSettingsService.getNumberOfSentences());

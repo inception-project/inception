@@ -1,0 +1,212 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+ # Copyright 2017
+ # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ # Technische Universität Darmstadt
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ # 
+ #  http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+  <changeSet author="WebAnno Team" id="1512223050574-5">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="auto_stat" />
+      </not>
+    </preConditions>
+    <createTable tableName="auto_stat">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="annoDocs" type="INT" />
+      <column name="endTime" type="datetime(6)" />
+      <column name="startime" type="datetime(6)" />
+      <column name="status" type="VARCHAR(255)" />
+      <column name="totalDocs" type="INT" />
+      <column name="trainDocs" type="INT" />
+      <column name="template" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-7">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="mira_template" />
+      </not>
+    </preConditions>
+    <createTable tableName="mira_template">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="annotateAndPredict" type="BIT(1)" />
+      <column name="automationStarted" type="BIT(1)" />
+      <column name="currentLayer" type="BIT(1)" />
+      <column name="result" type="VARCHAR(255)" />
+      <column name="trainFeature" type="BIGINT" />
+    </createTable>
+  </changeSet>
+  
+  <!--
+    Clean up legacy unique constraint (trainFeature) on (mira_template)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-7.1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="mira_template" 
+      constraintName="UK_3rq9eim60vi4p3h8us1g93h9"
+      uniqueColumns="trainFeature" />
+  </changeSet>
+
+  <!-- 
+    Add unique constraint (trainFeature) on (mira_template)
+    
+    NOTE: This change set ignores failures since there is no precondition to check if
+          unique constraints exist or not. So we simply have to try it.
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-7.2" failOnError="false">
+    <addUniqueConstraint 
+      tableName="mira_template" 
+      constraintName="UK3rq9eim60vi4p3h8us1g93h9"
+      columnNames="trainFeature" />
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-8">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="mira_template_annotation_feature" />
+      </not>
+    </preConditions>
+    <createTable tableName="mira_template_annotation_feature">
+      <column name="mira_template_id" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="otherFeatures_id" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+    <addPrimaryKey columnNames="mira_template_id, otherFeatures_id" tableName="mira_template_annotation_feature" />
+  </changeSet>
+  
+  <!--
+    Add index (otherFeatures_id) on (mira_template_annotation_feature)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-8.2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists tableName="mira_template_annotation_feature" indexName="FKayk512nn6inqtrmw2ujjm9hd4"/>
+      </not>
+    </preConditions>
+    <createIndex indexName="FKayk512nn6inqtrmw2ujjm9hd4" tableName="mira_template_annotation_feature">
+      <column name="otherFeatures_id" />
+    </createIndex>
+  </changeSet>  
+
+
+  <changeSet author="WebAnno Team" id="1512223050574-43.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FKF6CA457D513DEEC" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template_annotation_feature" constraintName="FKF6CA457D513DEEC" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-43.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FK_3xkcbyluqsj5d7nj1s08mof21" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template_annotation_feature" constraintName="FK_3xkcbyluqsj5d7nj1s08mof21" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-43.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FKayk512nn6inqtrmw2ujjm9hd4" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="otherFeatures_id"
+      baseTableName="mira_template_annotation_feature" constraintName="FKayk512nn6inqtrmw2ujjm9hd4"
+      deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+      referencedColumnNames="id" referencedTableName="annotation_feature" />
+  </changeSet>
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-52.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FKF6CA457C98B9E19" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template_annotation_feature" constraintName="FKF6CA457C98B9E19" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-52.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FK_klxwqiwnungkm1yac1ttr6qc6" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template_annotation_feature" constraintName="FK_klxwqiwnungkm1yac1ttr6qc6" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-52.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FKo2qm4wft370pwt0osf5qa400x" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="mira_template_id"
+      baseTableName="mira_template_annotation_feature" constraintName="FKo2qm4wft370pwt0osf5qa400x"
+      deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+      referencedColumnNames="id" referencedTableName="mira_template" />
+  </changeSet>
+  
+  
+  <changeSet author="WebAnno Team" id="1512223050574-47.1">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template" foreignKeyName="FK49F20D6EAF8B4F8D" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template" constraintName="FK49F20D6EAF8B4F8D" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="1512223050574-47.2">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template" foreignKeyName="FK_3rq9eim60vi4p3h8us1g93h9" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template" constraintName="FK_3rq9eim60vi4p3h8us1g93h9" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="1512223050574-47.3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyTableName="mira_template" foreignKeyName="FKhcycakwsagn3r5n4ntfm5pann" />
+      </not>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="trainFeature" baseTableName="mira_template"
+      constraintName="FKhcycakwsagn3r5n4ntfm5pann" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="annotation_feature" />
+  </changeSet>
+
+  <!--
+    Clean up legacy index (otherFeatures_id) on (mira_template_annotation_feature)
+   -->
+  <changeSet author="WebAnno Team" id="1512223050574-8.1">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="mira_template_annotation_feature" indexName="FK_3xkcbyluqsj5d7nj1s08mof21"/>
+    </preConditions>
+    <dropIndex 
+      tableName="mira_template_annotation_feature"
+      indexName="FK_3xkcbyluqsj5d7nj1s08mof21" />
+  </changeSet>
+</databaseChangeLog>

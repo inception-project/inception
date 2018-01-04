@@ -1524,8 +1524,19 @@ public abstract class WebAnnoTsv3WriterTestBase
     public void testSentenceWithTab() throws Exception
     {
         JCas jcas = makeJCasOneSentence("This is\ta test .");
-                
+        
         NamedEntity neToken = new NamedEntity(jcas, 0, 4);
+        neToken.addToIndexes();
+        
+        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));
+    }
+
+    @Test
+    public void testSentenceWithEmoji() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence("I like it 😊 .");
+        
+        NamedEntity neToken = new NamedEntity(jcas, 10, 12);
         neToken.addToIndexes();
         
         writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(NamedEntity.class));

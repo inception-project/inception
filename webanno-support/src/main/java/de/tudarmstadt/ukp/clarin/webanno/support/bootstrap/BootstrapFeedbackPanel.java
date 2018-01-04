@@ -56,7 +56,7 @@ public class BootstrapFeedbackPanel extends FeedbackPanel {
                 // If there is more than 1 sticky messages, then show the close-all button
                 int stickyMessages = 0;
                 for (FeedbackMessage msg : getCurrentMessages()) {
-                    if ((!msg.isSuccess() || msg.isInfo())) {
+                    if (!(msg.isSuccess() || msg.isInfo())) {
                         stickyMessages ++;
                     }
                     if (stickyMessages > 1) {
@@ -70,7 +70,7 @@ public class BootstrapFeedbackPanel extends FeedbackPanel {
         
         messagesContainer.add(closeAll);
     }
-
+    
     @Override
     protected String getCSSClass(FeedbackMessage message) {
         String cssClass = "alert alert-dismissable";

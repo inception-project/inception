@@ -45,6 +45,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,8 +185,7 @@ public class CorrectionPage
             curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(getModelObject());
             sentences.add(curationUserSegmentForAnnotationDocument);
         }
-        suggestionView = new SuggestionViewPanel("correctionView",
-                new Model<>(sentences))
+        suggestionView = new SuggestionViewPanel("correctionView", new ListModel<>(sentences))
         {
             private static final long serialVersionUID = 2583509126979792202L;
 
@@ -247,27 +247,6 @@ public class CorrectionPage
                 // Reload the page using AJAX. This does not add the project/document ID to the URL,
                 // but being AJAX it flickers less.
                 actionLoadDocument(aTarget);
-                
-//                aCallbackTarget.addChildren(getPage(), IFeedback.class);
-//                try {
-//                    actionLoadDocument(aCallbackTarget);
-//
-//                    String username = SecurityContextHolder.getContext().getAuthentication()
-//                            .getName();
-//                    User user = userRepository.get(username);
-//                    detailEditor.setEnabled(
-//                            !FinishImage.isFinished(getModel(), user, documentService));
-//                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
-//                }
-//                catch (Exception e) {
-//                    LOG.error("Unable to load data", e);
-//                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-//                }
-//                aCallbackTarget.add(finishDocumentIcon);
-//                aCallbackTarget.appendJavaScript(
-//                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
-//                aCallbackTarget.add(documentNamePanel);
-//                aCallbackTarget.add(getOrCreatePositionInfoLabel());
             }
         });
 

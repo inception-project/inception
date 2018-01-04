@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
 
@@ -173,6 +174,7 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new KendoResourceBehavior());
+                component.add(new WicketJQueryFocusPatchBehavior());
             }
         });
     }

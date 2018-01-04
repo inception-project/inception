@@ -34,3 +34,6 @@ text_width.png
 update.png
 user_add.png
 user_go.png
+
+The file wicket-jquery-focus-patch.js is a stripped-down version of Apache Wicket's 
+wicket-ajax-jquery.js which is licensed under the Apache License 2.0.

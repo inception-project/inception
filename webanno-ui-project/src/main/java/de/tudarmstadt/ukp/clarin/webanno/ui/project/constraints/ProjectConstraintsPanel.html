@@ -21,31 +21,31 @@
   <wicket:panel>
     <div class="flex-content flex-h-container">
       <div class="flex-v-container">
-        <form wicket:id="importForm" class="panel-default">
-          <div class="panel-heading flex-h-container flex-centered flex-gutter">
+        <div class="flex-content panel-default panel-flex">
+          <form wicket:id="importForm" class="panel-heading flex-h-container flex-centered flex-gutter">
             <label wicket:for="uploads" class="text-nowrap">
               <wicket:label key="filesToImport"/>
             </label>
             <input wicket:id="uploads" type="file" multiple class="flex-content"></input>
             
             <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
-          </div>
-        </form>
-        <form wicket:id="selectionForm" class="flex-content flex-v-container">
-          <div class="flex-content fit-child-snuck">
-            <select wicket:id="ruleset"></select>
-          </div>
-        </form>
+          </form>
+          <form wicket:id="selectionForm" class="panel-body flex-v-container" style="padding: 0px;">
+            <div class="flex-content fit-child-snuck">
+              <select class="form-control" wicket:id="ruleset"></select>
+            </div>
+          </form>
+        </div>
       </div>
       <div class="flex-content flex-v-container">
-        <form wicket:id="detailForm" class="flex-content flex-v-container panel-default">
+        <form wicket:id="detailForm" class="flex-content flex-v-container panel-default panel-flex">
           <div class="panel-heading flex-h-container flex-centered flex-gutter">
             <label wicket:for="name" class="control-label"><wicket:label key="name"/></label>
             <input wicket:id="name" class="form-control flex-content"/>
             <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:save"/>
           </div>
-          <div class="flex-content fit-child-snuck">
-            <textarea wicket:id="script"></textarea>
+          <div class="panel-body flex-h-container" style="padding: 0px;">
+            <textarea wicket:id="script" class="flex-content" style="padding: 0px; border: none; resize: none;"></textarea>
           </div>
           <div class="panel-footer text-right">
             <input type="submit" wicket:id="delete" class="btn btn-danger" wicket:message="value:delete"/>

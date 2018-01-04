@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA_TEMPLATE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
@@ -87,8 +87,8 @@ public class MiraAutomationServiceImpl
     public List<String> listTemplates(Project aProject)
     {
         // list all MIRA template files
-        File[] files = new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE).listFiles();
+        File[] files = new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + MIRA + MIRA_TEMPLATE).listFiles();
 
         // Name of the MIRA template files
         List<String> templateFiles = new ArrayList<>();
@@ -121,8 +121,8 @@ public class MiraAutomationServiceImpl
     public void removeTemplate(Project aProject, String aFileName, String aUsername)
         throws IOException
     {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE + aFileName));
+        FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + MIRA + MIRA_TEMPLATE + aFileName));
         
         Logging.setMDC(aProject.getId(), aUsername);
         log.info("Removed template file [{}] from project [{}] ({})", aFileName, aProject.getName(),
@@ -134,8 +134,8 @@ public class MiraAutomationServiceImpl
     public void createTemplate(Project aProject, File aContent, String aFileName, String aUsername)
         throws IOException
     {
-        String templatePath = dir.getAbsolutePath() + PROJECT + aProject.getId() + MIRA
-                + MIRA_TEMPLATE;
+        String templatePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
+                + MIRA + MIRA_TEMPLATE;
         FileUtils.forceMkdir(new File(templatePath));
         copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(templatePath
                 + aFileName)));
@@ -219,7 +219,7 @@ public class MiraAutomationServiceImpl
     @Override
     public File getMiraDir(AnnotationFeature aFeature)
     {
-        return new File(dir, PROJECT + aFeature.getProject().getId() + MIRA);
+        return new File(dir, "/" + PROJECT_FOLDER + "/" + aFeature.getProject().getId() + MIRA);
     }
 
     @Override
@@ -298,8 +298,9 @@ public class MiraAutomationServiceImpl
     public File getDocumentFolder(TrainingDocument trainingDocument)
         throws IOException
     {
-        File trainingDocFolder = new File(dir, PROJECT + trainingDocument.getProject().getId()
-                + TRAIN + trainingDocument.getId() + SOURCE);
+        File trainingDocFolder = new File(dir,
+                "/" + PROJECT_FOLDER + "/" + trainingDocument.getProject().getId() + TRAIN
+                        + trainingDocument.getId() + "/" + SOURCE_FOLDER);
         FileUtils.forceMkdir(trainingDocFolder);
         return trainingDocFolder;
     }
@@ -340,8 +341,8 @@ public class MiraAutomationServiceImpl
     {       
         entityManager.remove(aDocument);
 
-        String path = dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId() + TRAIN
-                + aDocument.getId();
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aDocument.getProject().getId() + TRAIN + aDocument.getId();
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
@@ -440,8 +441,8 @@ public class MiraAutomationServiceImpl
     @Override
     public File getTrainingDocumentFile(TrainingDocument aDocument)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId()
-                + TRAIN + aDocument.getId() + SOURCE);
+        File documentUri = new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aDocument.getProject().getId() + TRAIN + aDocument.getId() + "/" + SOURCE_FOLDER);
         return new File(documentUri, aDocument.getName());
     }
 
@@ -473,8 +474,9 @@ public class MiraAutomationServiceImpl
     @Override
     public File getCasFile(TrainingDocument aDocument)
     {
-        File documentUri = new File(dir.getAbsolutePath() + PROJECT + aDocument.getProject().getId()
-                + TRAIN + aDocument.getId() + ANNOTATION);
+        File documentUri = new File(
+                dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
+                        + TRAIN + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
     }
 }

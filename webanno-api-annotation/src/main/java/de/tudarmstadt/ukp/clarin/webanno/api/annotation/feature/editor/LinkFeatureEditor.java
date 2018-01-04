@@ -253,6 +253,10 @@ public class LinkFeatureEditor
             {
                 private static final long serialVersionUID = 1L;
 
+                {
+                    setOutputMarkupId(true);
+                }
+                
                 @Override
                 protected void onConfigure()
                 {

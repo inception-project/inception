@@ -3827,6 +3827,27 @@ Util.profileReport();
           }, 0);
         }
       };
+      
+// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+      var renderDataPatch = function(patchData) {
+        Util.profileEnd('invoke getDocument');
+        sourceData = jsonpatch.applyPatch(sourceData, patchData).newDocument;
+        dispatcher.post('startedRendering', [coll, doc, args]);
+        dispatcher.post('spin');
+        setTimeout(function() {
+            try {
+              renderDataReal(sourceData);
+            } catch (e) {
+              // We are sure not to be drawing anymore, reset the state
+              drawing = false;
+              // TODO: Hook printout into dispatch elsewhere?
+              console.warn('Rendering terminated due to: ' + e, e.stack);
+              dispatcher.post('renderError: Fatal', [sourceData, e]);
+            }
+            dispatcher.post('unspin');
+        }, 0);
+      }
+// END WEBANNO EXTENSION - #790 - Differential updates for brat view 
 
       var renderDocument = function() {
         Util.profileStart('invoke getDocument');
@@ -4322,6 +4343,9 @@ Util.profileStart('before render');
           on('collectionChanged', collectionChanged).
           on('collectionLoaded', collectionLoaded).
           on('renderData', renderData).
+// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+          on('renderDataPatch', renderDataPatch).
+// END WEBANNO EXTENSION - #790 - Differential updates for brat view 
           on('triggerRender', triggerRender).
           on('requestRenderData', requestRenderData).
           on('isReloadOkay', isReloadOkay).

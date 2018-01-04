@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +46,11 @@ public class AnnotationPreference
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
     
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
+    @Deprecated
     private List<Long> annotationLayers;
+    
+    // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
+    private List<Long> hiddenAnnotationLayerIds = new ArrayList<>();
 
     private int windowSize;
 
@@ -61,7 +67,7 @@ public class AnnotationPreference
     private boolean staticColor = true; // this is only here to not break previous user settings,
                                         // its not an option that can be set anymore
 
-    private Map<Long, ColoringStrategyType> colorPerLayer;
+    private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
 
     private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour = 
             ReadonlyColoringBehaviour.LEGACY;
@@ -71,14 +77,35 @@ public class AnnotationPreference
     
     private String editor;
 
+    /**
+     * working with preferred layers is deprecated, use hidden layers instead
+     * @return
+     */
+    @Deprecated
     public List<Long> getAnnotationLayers()
     {
         return annotationLayers;
     }
-
+    
+    /**
+     * working with preferred layers is deprecated, use hidden layers instead 
+     * 
+     * @param aAnnotationLayers
+     */
+    @Deprecated()
     public void setAnnotationLayers(List<Long> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
+    }
+    
+    public List<Long> getHiddenAnnotationLayerIds()
+    {
+        return hiddenAnnotationLayerIds;
+    }
+    
+    public void setHiddenAnnotationLayerIds(List<Long> aAnnotationLayerIds)
+    {
+        hiddenAnnotationLayerIds = aAnnotationLayerIds;
     }
 
     /**
