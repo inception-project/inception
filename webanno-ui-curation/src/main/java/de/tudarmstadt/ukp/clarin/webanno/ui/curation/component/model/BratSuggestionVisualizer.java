@@ -49,8 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 /**
  * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
  * arc, the Method onSelectAnnotationForMerge() is called. Override that method to receive the
- * result in another wicket panel.
- *
+ * result in another Wicket panel.
  */
 public class BratSuggestionVisualizer
     extends BratVisualizer
@@ -59,12 +58,12 @@ public class BratSuggestionVisualizer
     private AbstractDefaultAjaxBehavior controller;
 
     public BratSuggestionVisualizer(String id,
-            IModel<CurationUserSegmentForAnnotationDocument> aModel)
+            IModel<UserAnnotationSegment> aModel)
     {
         super(id, aModel);
         String username;
-        if (getModelObject().getBratAnnotatorModel().getMode().equals(Mode.AUTOMATION)
-                || getModelObject().getBratAnnotatorModel().getMode().equals(Mode.CORRECTION)) {
+        if (getModelObject().getAnnotatorState().getMode().equals(Mode.AUTOMATION)
+                || getModelObject().getAnnotatorState().getMode().equals(Mode.CORRECTION)) {
             username = "Suggestion";
         }
         else {
@@ -93,25 +92,25 @@ public class BratSuggestionVisualizer
         add(controller);
     }
 
-    public void setModel(IModel<CurationUserSegmentForAnnotationDocument> aModel)
+    public void setModel(IModel<UserAnnotationSegment> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(CurationUserSegmentForAnnotationDocument aModel)
+    public void setModelObject(UserAnnotationSegment aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<CurationUserSegmentForAnnotationDocument> getModel()
+    public IModel<UserAnnotationSegment> getModel()
     {
-        return (IModel<CurationUserSegmentForAnnotationDocument>) getDefaultModel();
+        return (IModel<UserAnnotationSegment>) getDefaultModel();
     }
 
-    public CurationUserSegmentForAnnotationDocument getModelObject()
+    public UserAnnotationSegment getModelObject()
     {
-        return (CurationUserSegmentForAnnotationDocument) getDefaultModelObject();
+        return (UserAnnotationSegment) getDefaultModelObject();
     }
 
     @Override
@@ -146,13 +145,19 @@ public class BratSuggestionVisualizer
         //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        String script = "Util.embedByURL(" + "  '" + vis.getMarkupId() + "'," + "  '"
-                + collProvider.getCallbackUrl() + "', " + "  '" + docProvider.getCallbackUrl()
-                + "', " + "  function(dispatcher) {" + "    dispatcher.wicketId = '"
-                + vis.getMarkupId() + "'; " + "    dispatcher.ajaxUrl = '"
-                + controller.getCallbackUrl() + "'; " + "    var ajax = new Ajax(dispatcher);"
+        String script = 
+                "Util.embedByURL(" 
+                + "  '" + vis.getMarkupId() + "'," 
+                + "  '" + collProvider.getCallbackUrl() + "', " 
+                + "  '" + docProvider.getCallbackUrl() + "', " 
+                + "  function(dispatcher) {" 
+                + "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " 
+                + "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " 
+                + "    var ajax = new Ajax(dispatcher);"
                 + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
-                + "    dispatcher.post('clearSVG', []);" + "  });";
+                + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
+//                + "    dispatcher.post('clearSVG', []);" 
+                + "  });";
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
