@@ -364,18 +364,16 @@ public class LinkMention
             if ((t.getPos().getPosValue().startsWith("V")
                     || t.getPos().getPosValue().startsWith("N")
                     || t.getPos().getPosValue().startsWith("J"))
-                    && !splitMention.contains(t.getCoveredText().toLowerCase())) {
+                && !splitMention.contains(t.getCoveredText().toLowerCase())
+                && (!stopwords.contains(t.getCoveredText().toLowerCase())
+                    || !splitMention.contains(t.getCoveredText().toLowerCase()))) {
                 sentenceContentTokens.add(t.getCoveredText().toLowerCase());
             }
         }
-        sentenceContentTokens = sentenceContentTokens.stream()
-                // correct?
-                .filter(f -> !stopwords.contains(f.toLowerCase())
-                        || !splitMention.contains(f.toLowerCase()))
-                .collect(Collectors.toSet());
 
-        for (Entity l : linkings) {
         double startLoop = System.currentTimeMillis();
+        
+        linkings.parallelStream().forEach( l -> {
             String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
             String anylabel = l.getAnyLabel().toLowerCase();
 
