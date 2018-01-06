@@ -60,10 +60,12 @@ public class LinkMention
             Arrays.asList(PUNCTUATION_VALUES));
 
     private static final Set<String> stopwords = Utils.readFile("resources/stopwords-de.txt");
-
+    
     private static String SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-
+    
     // "https://query.wikidata.org/sparql?query=SPARQL";
+    private static final Map<String, Integer> entityFrequencyMap
+            = Utils.loadEntityFrequencyMap();
     public static void main(String[] args)
     {
 
@@ -319,42 +321,49 @@ public class LinkMention
             String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
             String anylabel = l.getAnyLabel().toLowerCase();
 
-            l.setIdRank(Math.log(Double.parseDouble(wikidataId)));
-
+            l.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+            
+            if (entityFrequencyMap.get(wikidataId) != null) {
+                l.setFrequency(entityFrequencyMap.get(wikidataId));
+            } else {
+                l.setFrequency(0);
+            }
+            
             LevenshteinDistance lev = new LevenshteinDistance();
             // TODO adjustable costs
             l.setLevMatchLabel(lev.apply(mention, anylabel).intValue());
             l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel).intValue());
             l.setNumRelatedRelations(0);
 
-            Set<String> semanticSignature = getSemanticSignature(wikidataId);
+            SemanticSignature sig = getSemanticSignature(wikidataId);
+            Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
-            for (String s : semanticSignature) {
-                if (sentenceContentTokens.contains(s))
+            for (String s : relatedEntities) {
+                if (sentenceContentTokens.contains(s)) {
                     signatureOverlap.add(s);
             }
-            l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
         }
+            l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
+            l.setNumRelatedRelations(sig.getRelatedRelations().size());
+        });
         List<Entity> result = sortCandidates(new ArrayList<>(linkings));
+        logger.debug(System.currentTimeMillis() - startLoop + "ms until end loop.");
         return result;
-
     }
 
     private static List<Entity> sortCandidates(List<Entity> candidates)
     {
         Collections.sort(candidates, new Comparator<Entity>()
         {
-
             @Override
             public int compare(Entity e1, Entity e2)
             {
-
                 return new org.apache.commons.lang.builder.CompareToBuilder()
                         .append(-e1.getSignatureOverlapScore(), -e2.getSignatureOverlapScore())
                         .append(e1.getLevSentence() + e1.getLevMatchLabel(),
                                 e2.getLevSentence() + e2.getLevMatchLabel())
-                        // TODO -entity['freqs']
-                        // TODO .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
+                        .append(-e1.getFrequency(), -e2.getFrequency())
+                        .append(-e1.getNumRelatedRelations(), -e2.getNumRelatedRelations())
                         .append(e1.getIdRank(), e2.getIdRank()).toComparison();
             }
         });
@@ -370,23 +379,26 @@ public class LinkMention
         return result;
     }
 
-    // TODO include relations
     // TODO filter against blacklist
-    public static Set<String> getSemanticSignature(String wikidataId)
+    public static SemanticSignature getSemanticSignature(String wikidataId)
     {
-        Set<String> semanticSignature = new HashSet<>();
+        Set<String> relatedRelations = new HashSet<>();
+        Set<String> relatedEntities = new HashSet<>();
         String queryString = QueryUtil.semanticSignatureQuery(wikidataId);
         TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
         try (TupleQueryResult result = query.evaluate()) {
             while (result.hasNext()) {
                 BindingSet sol = result.next();
-                semanticSignature.add(sol.getValue("label").toString());
+                relatedEntities.add(sol.getValue("label").stringValue());
+                String p = sol.getValue("p").stringValue();
+                relatedRelations.add(p.substring(0, p.length()-2));
             }
         }
         catch (Exception e) {
             logger.error("could not get semantic signature", e);
         }
-        return semanticSignature;
+        
+        return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
 }

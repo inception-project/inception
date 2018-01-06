@@ -19,6 +19,7 @@ public class Entity
     private int numRelatedRelations;
     private int signatureOverlapScore;
     private double idRank;
+    private int frequency;
 
     public Entity(String e2, String label, String anylabel)
     {
@@ -110,6 +111,16 @@ public class Entity
     public double getIdRank()
     {
         return idRank;
+    }
+
+    public void setFrequency(int frequency)
+    {
+        this.frequency = frequency;
+    }
+    
+    public int getFrequency()
+    {
+        return frequency;
     }
 
 }

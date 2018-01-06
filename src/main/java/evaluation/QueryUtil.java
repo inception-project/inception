@@ -86,10 +86,12 @@ public class QueryUtil
         String semanticSignatureInst = "{\n" + SPARQL_RELATION_DIRECT;
         semanticSignatureInst += "UNION \n" + SPARQL_RELATION_REVERSE + "}\n";
         semanticSignatureInst = semanticSignatureInst.replace("?e2", "e:" + wikidataId);
+        semanticSignatureInst = semanticSignatureInst
+                .replace(" ?p ?m . ?m ?rd ", " ?rd ?m . ?m ?p ");
         query += semanticSignatureInst;
         query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1");
         query += "\n}";
-        query = query.replace("%queryvariables%", "?label ?p");
+        query = query.replace("%queryvariables%", "?label ?p ?e1");
         query = query.replace("%restriction%", "");
         query += SPARQL_LIMIT + 1000;
         return query;
