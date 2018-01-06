@@ -328,25 +328,6 @@ public class LinkMention
         return mentionSentence.subList(start, end);
     }
 
-    public static List<Token> tokenizeMention(String mention)
-        throws UIMAException
-    {
-        JCas doc = JCasFactory.createText(mention, "en");
-        AnalysisEngineDescription desc = createEngineDescription(
-                createEngineDescription(StanfordSegmenter.class), createEngineDescription(
-                        StanfordPosTagger.class, StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
-        AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
-        pipeline.process(doc);
-
-        List<Token> tokenizedMention = new LinkedList<>();
-        for (Sentence s : JCasUtil.select(doc, Sentence.class)) {
-            for (Token t : JCasUtil.selectCovered(Token.class, s)) {
-                tokenizedMention.add(t);
-            }
-        }
-        return tokenizedMention;
-    }
-
     /**
      * The method should compute scores for each candidate linking for the given entity and sort the
      * candidates so that the most probable candidate comes first.
