@@ -140,13 +140,13 @@ public class LinkMention
                     correct++;
                 }
                 
+                total++;
+                
                 logger.info("Number of correct linkings: " + correct);
                 logger.info("Number of sets that contains the correct result: " + contain);
                 logger.info("Number of terms in Virtuoso: " + total);
                 logger.info("Percentage of correct linkings: " + correct/ total);
                 logger.info("Percentage of sets containing the correct result: " + contain/total);
-
-                total++;
             }
             catch (UIMAException | IOException e) {
                 logger.error("Could not compute candidate scores: ", e);
