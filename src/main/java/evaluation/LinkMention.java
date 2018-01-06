@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.Math;
 
 import java.util.ArrayList;
@@ -19,6 +21,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -37,6 +41,9 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+
+import opennlp.tools.sentdetect.SentenceDetectorME; 
+import opennlp.tools.sentdetect.SentenceModel;  
 
 import de.dailab.irml.gerned.NewsReader;
 import de.dailab.irml.gerned.QueriesReader;
@@ -144,32 +151,58 @@ public class LinkMention
     }
 
     /*
-     * Retrieves the sentence containing the mention as Tokens
+     * Retrieves the first sentence containing the mention as Tokens
      */
     public static List<Token> getMentionSentence(String docText, String mention)
-        throws UIMAException
+        throws UIMAException, IOException
     {
-        JCas doc = JCasFactory.createText(docText, "en");
+        double startTime = System.currentTimeMillis();
+        String sentenceText;
+        sentenceText = findMentionSentenceInDoc(docText, mention);
+        JCas mentionSentence = JCasFactory.createText(sentenceText, "en");
         AnalysisEngineDescription desc = createEngineDescription(
                 createEngineDescription(StanfordSegmenter.class), createEngineDescription(
                         StanfordPosTagger.class, StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
         AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
-        pipeline.process(doc);
+        pipeline.process(mentionSentence);
 
-        for (Sentence s : JCasUtil.select(doc, Sentence.class)) {
+        for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
             List<Token> sentence = new LinkedList<>();
-            boolean containsMention = false;
             for (Token t : JCasUtil.selectCovered(Token.class, s)) {
                 sentence.add(t);
-                if (t.getCoveredText().toLowerCase().equals(mention)) {
-                    containsMention = true;
-                }
             }
-            if (containsMention) {
-                return sentence;
-            }
+            return sentence;
         }
-        return null;
+    /**
+     * Return sentence containing the mention
+     * @param docText
+     * @param mention
+     * @return
+     * @throws IOException
+     */
+    public static String findMentionSentenceInDoc(String docText, String mention) 
+            throws IOException
+    {
+         //Loading german sentence detector model from OpenNlp 
+         InputStream inputStream = new FileInputStream("resources/de-sent.bin"); 
+         SentenceModel model = new SentenceModel(inputStream); 
+          
+         //Instantiating the SentenceDetectorME class 
+         SentenceDetectorME detector = new SentenceDetectorME(model);  
+       
+         //Detecting the sentence
+         String sentences[] = detector.sentDetect(docText); 
+       
+         //Check whether mention occurs in this sentence
+         Pattern p = Pattern.compile(".*\\b" + mention.toLowerCase() + "\\b.*");
+         
+         for(String sent : sentences) {       
+            Matcher m = p.matcher(sent.toLowerCase());
+            if (m.matches()) {
+                return sent;
+            }
+         }
+         return null;
     }
 
     // TODO consider # and @
@@ -291,7 +324,7 @@ public class LinkMention
      */
     public static List<Entity> computeCandidateScores(String mention, Set<Entity> linkings,
             String text)
-        throws UIMAException
+        throws UIMAException, IOException
     {
 
         mention = mention.toLowerCase();
