@@ -60,19 +60,23 @@ public class LinkMention
 
     private static RepositoryConnection conn;
 
-    private final static String[] PUNCTUATION_VALUES = new String[] { "``", "''", "(", ")", ",",
-            ".", ":", "--" };
+    private static final String[] PUNCTUATION_VALUES 
+            = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
     private static final Set<String> punctuations = new HashSet<>(
             Arrays.asList(PUNCTUATION_VALUES));
 
-    private static final Set<String> stopwords = Utils.readFile("resources/stopwords-de.txt");
+    private static final Set<String> stopwords 
+            = Utils.readFile("resources/stopwords-de.txt");
     
-    private static String SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     
+    private static String SPARQL_ENDPOINT 
+            = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     // "https://query.wikidata.org/sparql?query=SPARQL";
+    
     private static final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap();
+    
     public static void main(String[] args)
     {
 
@@ -130,14 +134,6 @@ public class LinkMention
 
                 total++;
             }
-            // System.out.println(expected);
-            // System.out.println(actual);
-            // System.out.println(linkings);
-            // System.out.println("Results unempty : " + (double) coverageCounter/i);
-            // System.out.println("Results contain correct answer : " + (double) counter/i);
-            // } catch (UIMAException e) {
-            // logger.error("Could not parse Text", e);
-            // }
             catch (UIMAException | IOException e) {
                 logger.error("Could not compute candidate scores: ", e);
             }
