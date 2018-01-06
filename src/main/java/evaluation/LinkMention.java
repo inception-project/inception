@@ -34,6 +34,7 @@ import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -60,6 +61,8 @@ public class LinkMention
 
     private static RepositoryConnection conn;
 
+    private static AnalysisEngine pipeline;
+    
     private static final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
@@ -82,6 +85,17 @@ public class LinkMention
 
         initializeConnection();
 
+        AnalysisEngineDescription desc;
+        try {
+            desc = createEngineDescription(createEngineDescription(StanfordSegmenter.class),
+                    createEngineDescription(StanfordPosTagger.class,
+                            StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
+            pipeline = AnalysisEngineFactory.createEngine(desc);
+        }
+        catch (ResourceInitializationException e) {
+            logger.error("Could not create AnalysisEngine!", e);
+        }
+        
         QueriesReader reader = new QueriesReader();
         File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
         List<Query> queries = reader.readQueries(answersFile);
@@ -173,13 +187,8 @@ public class LinkMention
         throws UIMAException, IOException
     {
         double startTime = System.currentTimeMillis();
-        String sentenceText;
-        sentenceText = findMentionSentenceInDoc(docText, mention);
+        String sentenceText = findMentionSentenceInDoc(docText, mention);
         JCas mentionSentence = JCasFactory.createText(sentenceText, "en");
-        AnalysisEngineDescription desc = createEngineDescription(
-                createEngineDescription(StanfordSegmenter.class), createEngineDescription(
-                        StanfordPosTagger.class, StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
-        AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
         pipeline.process(mentionSentence);
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
 
