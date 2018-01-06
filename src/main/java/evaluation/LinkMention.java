@@ -82,39 +82,54 @@ public class LinkMention
         File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
         List<Query> queries = reader.readQueries(answersFile);
 
-        System.out.println("Total number of queries: " + queries.size());
-        Map<String, Set<Entity>> entities = new HashMap<>();
-
-        int counter = 0;
-        int coverageCounter = 0;
-        int i = 1;
+        logger.info("Total number of queries: " + queries.size());
+        
+        double correct = 0;
+        double contain = 0;
+        double total = 0;
 
         for (Query query : queries) {
+            double startTime = System.currentTimeMillis();
             String docText = NewsReader
                     .readFile("../gerned/dataset/news/" + query.getDocid() + ".xml");
-            // try {
-            // List<Token> taggedText = getMentionSentence(docText, query.getName());
+
+            // These entities have no result
+            if (query.getEntity().startsWith("NIL")) {
+                continue;
+            }
+            
             String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
+            // Skip terms that are not in Virtuoso dump 
+            if (expected == null) {
+                continue;
+            }
             Set<Entity> linkings = linkMention(query.getName());
             try {
-                List<Entity> sortedCandidates = computeCandidateScores(query.getName(), linkings,
-                        docText);
-            }
-            catch (UIMAException e) {
-                logger.error("Could not compute candidate scores: ", e);
-            }
-            // String actual = sortedCandidates.get(0);
-            entities.put(query.getId(), linkings);
-            Set<String> linkingsAsStrings = linkings.stream().map(e -> e.getE2())
-                    .collect(Collectors.toSet());
-            if (linkingsAsStrings.contains(expected)) {
-                counter++;
-            }
+                List<Entity> sortedCandidates = 
+                        computeCandidateScores(query.getName().toLowerCase(), linkings, docText);
+                
+                if (sortedCandidates == null || sortedCandidates.isEmpty()) {
+                    continue;
+                }
+                String actual = sortedCandidates.get(0).getE2();
+                
+                if (sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList())
+                        .contains(expected)) {
+                    contain++;
+                }
 
-            if (!linkings.isEmpty()) {
-                coverageCounter++;
+                if (actual.equals(expected)) {
+                    correct++;
+                }
+                
+                logger.info("Number of correct linkings: " + correct);
+                logger.info("Number of sets that contains the correct result: " + contain);
+                logger.info("Number of terms in Virtuoso: " + total);
+                logger.info("Percentage of correct linkings: " + correct/ total);
+                logger.info("Percentage of sets containing the correct result: " + contain/total);
+
+                total++;
             }
-            i++;
             // System.out.println(expected);
             // System.out.println(actual);
             // System.out.println(linkings);
@@ -123,6 +138,11 @@ public class LinkMention
             // } catch (UIMAException e) {
             // logger.error("Could not parse Text", e);
             // }
+            catch (UIMAException | IOException e) {
+                logger.error("Could not compute candidate scores: ", e);
+            }
+
+            logger.debug(System.currentTimeMillis() - startTime + "ms for this iteration.\n");
         }
     }
 
@@ -145,7 +165,7 @@ public class LinkMention
             }
         }
         catch (Exception e) {
-            logger.error("could not map wikipedia URL to Wikidata Id", e);
+            logger.error("Could not map wikipedia URL to Wikidata Id", e);
         }
         return null;
     }
@@ -165,6 +185,7 @@ public class LinkMention
                         StanfordPosTagger.class, StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
         AnalysisEngine pipeline = AnalysisEngineFactory.createEngine(desc);
         pipeline.process(mentionSentence);
+        logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
 
         for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
             List<Token> sentence = new LinkedList<>();
@@ -173,6 +194,10 @@ public class LinkMention
             }
             return sentence;
         }
+        logger.info("Could not return mention sentence.");
+        return null;
+    }
+
     /**
      * Return sentence containing the mention
      * @param docText
@@ -202,12 +227,14 @@ public class LinkMention
                 return sent;
             }
          }
+         logger.info("Mention " + mention + " could not be found in docText.");
          return null;
     }
 
     // TODO consider # and @
     public static Set<Entity> linkMention(String mention)
     {
+        double startTime = System.currentTimeMillis();
         Set<Entity> linkings = new HashSet<>();
         List<String> mentionArray = Arrays.asList(mention.split(" "));
 
@@ -233,6 +260,7 @@ public class LinkMention
         }
 
         if (mentionArray.isEmpty() || onlyStopwords) {
+            logger.error("Mention array is empty or consists of stopwords only - returning.");
             return null;
         }
 
@@ -249,6 +277,7 @@ public class LinkMention
         catch (QueryEvaluationException e) {
             throw new QueryEvaluationException(e);
         }
+        logger.debug(System.currentTimeMillis() - startTime + "ms for linkMention method.");
         return linkings;
     }
 
@@ -281,7 +310,8 @@ public class LinkMention
         }
 
         if (start == end) {
-            throw new IllegalStateException("Mention not found in sentence!");
+            logger.warn("Mention not found in sentence!");
+            return mentionSentence;
         }
         if (start < 0) {
             start = 0;
@@ -326,8 +356,6 @@ public class LinkMention
             String text)
         throws UIMAException, IOException
     {
-
-        mention = mention.toLowerCase();
         int mentionContextSize = 2;
         List<Token> mentionSentence = getMentionSentence(text, mention);
         List<String> splitMention = Arrays.asList(mention.split(" "));
@@ -351,6 +379,7 @@ public class LinkMention
                 .collect(Collectors.toSet());
 
         for (Entity l : linkings) {
+        double startLoop = System.currentTimeMillis();
             String wikidataId = l.getE2().replace("http://www.wikidata.org/entity/", "");
             String anylabel = l.getAnyLabel().toLowerCase();
 
