@@ -25,4 +25,45 @@ public class Utils
         }
         return null;
     }
+
+    public static Map<String, Label> loadPropertyLabels(String location)
+    {
+        Map<String, Label> property2LabelMap = new HashMap<String, Label>();
+        try {
+            File f = new File(location);
+            List<String> lines = FileUtils.readLines(f, "UTF-8");
+            for (String line: lines) {
+                if (!line.startsWith("#")) {
+                    String[] col = line.split("\t");
+                    Label label = new Label(col[1], col[3], col[4], col[5]);
+                    property2LabelMap.put(col[0].trim(), label);
+                }
+            }
+            return property2LabelMap;
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Map<String, Integer> loadEntityFrequencyMap()
+    {
+        Map<String, Integer> entityFreqMap = new HashMap<String, Integer>();
+        try {
+            File f = new File("resources/wikidata_entity_freqs.map");
+            List<String> lines = FileUtils.readLines(f, "UTF-8");
+            for (String line: lines) {
+                if (!line.startsWith("#")) {
+                    String[] col = line.split("\t");
+                    entityFreqMap.put(col[0], Integer.parseInt(col[1]));
+                }
+            }
+            return entityFreqMap;
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
