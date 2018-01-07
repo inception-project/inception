@@ -48,11 +48,8 @@ public class ProjectSettingsPanelRegistryServiceImpl
 
     private List<ProjectSettingsPanelDecl> panels;
 
-    @Resource(name = "projectService")
-    private ProjectService projectService;
-
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
+    private @Resource ProjectService projectService;
+    private @Resource UserDao userRepository;
     
     @Override
     public boolean isRunning()

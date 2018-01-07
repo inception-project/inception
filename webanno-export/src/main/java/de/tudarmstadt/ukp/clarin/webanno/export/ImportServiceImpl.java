@@ -27,6 +27,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -35,22 +36,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component(ImportService.SERVICE_NAME)
-public class ImportServiceImpl implements ImportService
+public class ImportServiceImpl
+    implements ImportService
 {
     private @Resource AnnotationSchemaService annotationService;
-    private @Resource AutomationService automationService;
     private @Resource DocumentService documentService;
     private @Resource ProjectService projectService;
-    private @Resource ConstraintsService constraintsService;
     private @Resource UserDao userRepository;
     private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired(required = false) AutomationService automationService;
     
     @Override
     public Project importProject(File aProjectFile, boolean aGenerateUsers) throws Exception
@@ -100,15 +100,21 @@ public class ImportServiceImpl implements ImportService
         ImportUtil.createSourceDocument(importedProjectSetting, importedProject, documentService);
 
         // Import Training document
-        ImportUtil.createTrainingDocument(importedProjectSetting, importedProject,
-                automationService, featuresMap);
+        if (automationService != null) {
+            ImportUtil.createTrainingDocument(importedProjectSetting, importedProject,
+                    automationService, featuresMap);
+        }
         // Import source document content
         ImportUtil.createSourceDocumentContent(zip, importedProject, documentService);
         // Import training document content
-        ImportUtil.createTrainingDocumentContent(zip, importedProject, automationService);
+        if (automationService != null) {
+            ImportUtil.createTrainingDocumentContent(zip, importedProject, automationService);
+        }
 
         // Import automation settings
-        ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
+        if (automationService != null) {
+            ImportUtil.createMiraTemplate(importedProjectSetting, automationService, featuresMap);
+        }
 
         // Import annotation document content
         ImportUtil.createAnnotationDocument(importedProjectSetting, importedProject,

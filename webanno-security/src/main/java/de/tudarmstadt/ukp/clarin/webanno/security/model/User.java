@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
@@ -91,6 +93,23 @@ public class User
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
+    
+    public User()
+    {
+        // No-args constructor required for ORM.
+    }
+    
+    /**
+     * This constructor is mainly intended for testing.
+     */
+    public User(String aName, Role... aRoles)
+    {
+        username = aName;
+        enabled = true;
+        if (aRoles != null) {
+            roles = new HashSet<>(asList(aRoles));
+        }
+    }
     
     private String encodePassword(String aPassword)
     {

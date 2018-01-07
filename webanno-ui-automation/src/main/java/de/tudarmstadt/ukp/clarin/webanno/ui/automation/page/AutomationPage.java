@@ -104,9 +104,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
@@ -184,16 +184,16 @@ public class AutomationPage
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
 
-        LinkedList<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
-                new CurationUserSegmentForAnnotationDocument();
+        List<UserAnnotationSegment> segments = new LinkedList<>();
+        UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
         if (getModelObject().getDocument() != null) {
-            curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
-                    annotationSelectionByUsernameAndAddress);
-            curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(getModelObject());
-            sentences.add(curationUserSegmentForAnnotationDocument);
+            userAnnotationSegment
+                    .setSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            userAnnotationSegment.setAnnotatorState(getModelObject());
+            segments.add(userAnnotationSegment);
         }
-        suggestionView = new SuggestionViewPanel("automateView", new ListModel<>(sentences))
+        
+        suggestionView = new SuggestionViewPanel("automateView", new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
 
@@ -209,7 +209,7 @@ public class AutomationPage
                     JCas editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                    suggestionView.updatePanel(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.requestRender(aTarget);
@@ -221,7 +221,6 @@ public class AutomationPage
                 }
             }
         };
-        suggestionView.setOutputMarkupId(true);
         add(suggestionView);
 
         rightSidebar.add(detailEditor = createDetailEditor());
@@ -412,7 +411,7 @@ public class AutomationPage
                     setCurationSegmentBeginEnd(getEditorCas());
                     curationContainer.setBratAnnotatorModel(state);
 
-                    suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+                    suggestionView.updatePanel(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     update(aTarget);
@@ -576,13 +575,12 @@ public class AutomationPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        suggestionView.updatePanel(target, curationContainer, annotationEditor,
+        suggestionView.updatePanel(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
 
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
 
         target.add(gotoPageTextField);
-        target.add(suggestionView);
         target.add(getOrCreatePositionInfoLabel());
     }
 
@@ -632,7 +630,7 @@ public class AutomationPage
         annotationEditor.requestRender(aTarget);
 
         curationContainer.setBratAnnotatorModel(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer, annotationEditor,
+        suggestionView.updatePanel(aTarget, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
     
@@ -767,6 +765,8 @@ public class AutomationPage
             gotoPageTextField.setModelObject(1);
 
             setCurationSegmentBeginEnd(editorCas);
+            suggestionView.init(aTarget, curationContainer, annotationSelectionByUsernameAndAddress,
+                    curationSegment);
             update(aTarget);
 
             // Re-render the whole page because the font size

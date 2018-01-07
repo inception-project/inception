@@ -104,26 +104,9 @@ public class DocumentServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
-    @Value(value = "${spring.jpa.properties.hibernate.dialect}")
-    private String databaseDialect;
-
-    @Value(value = "${spring.datasource.driver-class-name}")
-    private String databaseDriver;
-
-    @Value(value = "${spring.datasource.url}")
-    private String databaseUrl;
-
-    @Value(value = "${spring.datasource.username}")
-    private String databaseUsername;
-
     @Override
     public void afterPropertiesSet()
-        throws Exception
     {
-        log.info("Database dialect: " + databaseDialect);
-        log.info("Database driver: " + databaseDriver);
-        log.info("Database URL: " + databaseUrl);
-        log.info("Database username: " + databaseUsername);
         log.info("Document repository path: " + dir);
     }
     
