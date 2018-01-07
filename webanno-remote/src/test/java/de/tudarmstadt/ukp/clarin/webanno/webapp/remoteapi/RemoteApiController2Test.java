@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -156,8 +156,8 @@ public class RemoteApiController2Test
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(fileUpload("/api/v2/projects/1/documents")
-                .file("file", "This is a test.".getBytes("UTF-8"))
+        mvc.perform(multipart("/api/v2/projects/1/documents")
+                .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
