@@ -42,11 +42,12 @@
           };
               
           this.start = function() {
+               const TICK_RATE = 10 * 1000; // 10 seconds
                if (this.timer) {
                    clearInterval(instance.timer);
                }
                started = new Date();
-               timer = setInterval(instance.tick, 1000);
+               timer = setInterval(instance.tick, TICK_RATE);
                instance.tick();
           };
     	  
