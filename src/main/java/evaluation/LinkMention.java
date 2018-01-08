@@ -353,6 +353,17 @@ public class LinkMention
         catch (QueryEvaluationException e) {
             throw new QueryEvaluationException(e);
         }
+        catch (NullPointerException e) {
+            logger.error("NullPointerException occured:", e);
+        }
+        if (linkings.isEmpty()) {
+            String[] split = mention.split(" ");
+            if (split.length > 1) {
+                for (String s : split) {
+                    linkings.addAll(linkMention(s));
+                }
+            }
+        }
         logger.debug(System.currentTimeMillis() - startTime + "ms for linkMention method.");
         return linkings;
     }
