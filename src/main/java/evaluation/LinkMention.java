@@ -151,7 +151,8 @@ public class LinkMention
             Set<Entity> linkings = linkMention(query.getName());
             try {
                 List<Entity> sortedCandidates = 
-                        computeCandidateScores(query.getName().toLowerCase(), linkings, docText);
+                        computeCandidateScores(query.getName().toLowerCase(), linkings, 
+                                docText.toLowerCase());
                 
                 if (sortedCandidates == null || sortedCandidates.isEmpty()) {
                     continue;
@@ -162,7 +163,7 @@ public class LinkMention
                         .contains(expected)) {
                     contain++;
                 }
-
+                
                 if (actual.equals(expected)) {
                     correct++;
                 }
@@ -247,10 +248,10 @@ public class LinkMention
          String sentences[] = detector.sentDetect(docText); 
        
          //Check whether mention occurs in this sentence
-         Pattern p = Pattern.compile(".*\\b" + mention.toLowerCase() + "\\b.*");
+         Pattern p = Pattern.compile(".*\\b" + mention + "\\b.*");
          
          for(String sent : sentences) {       
-            Matcher m = p.matcher(sent.toLowerCase());
+            Matcher m = p.matcher(sent);
             if (m.matches()) {
                 return sent;
             }
@@ -269,7 +270,7 @@ public class LinkMention
         ListIterator<String> it = mentionArray.listIterator();
         String current;
         while (it.hasNext()) {
-            current = it.next().toLowerCase();
+            current = it.next();
             it.set(current);
             if (punctuations.contains(current)) {
                 it.remove();
@@ -279,7 +280,7 @@ public class LinkMention
         boolean onlyStopwords = true;
         ListIterator<String> it2 = mentionArray.listIterator();
         while (it2.hasNext()) {
-            current = it2.next().toLowerCase();
+            current = it2.next();
             it2.set(current);
             if (!stopwords.contains(current)) {
                 onlyStopwords = false;
@@ -324,7 +325,7 @@ public class LinkMention
         boolean done = false;
         while (done == false && j < mentionSentence.size()) {
             for (int i = 0; i < mention.size(); i++) {
-                if (!mentionSentence.get(j).getCoveredText().toLowerCase()
+                if (!mentionSentence.get(j).getCoveredText()
                         .contains(mention.get(i))) {
                     break;
                 }
@@ -378,10 +379,10 @@ public class LinkMention
             if ((t.getPos().getPosValue().startsWith("V")
                     || t.getPos().getPosValue().startsWith("N")
                     || t.getPos().getPosValue().startsWith("J"))
-                && !splitMention.contains(t.getCoveredText().toLowerCase())
-                && (!stopwords.contains(t.getCoveredText().toLowerCase())
-                    || !splitMention.contains(t.getCoveredText().toLowerCase()))) {
-                sentenceContentTokens.add(t.getCoveredText().toLowerCase());
+                && !splitMention.contains(t.getCoveredText())
+                && (!stopwords.contains(t.getCoveredText())
+                    || !splitMention.contains(t.getCoveredText()))) {
+                sentenceContentTokens.add(t.getCoveredText());
             }
         }
 
