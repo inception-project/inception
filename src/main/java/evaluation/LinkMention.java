@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
+import edu.stanford.nlp.util.StringUtils;
 
 public class LinkMention
 {
@@ -443,11 +444,11 @@ public class LinkMention
 
     private static String tokensToString(List<Token> sentence)
     {
-        String result = "";
+        StringBuilder builder = new StringBuilder();
         for (Token t : sentence) {
-            result.concat(t.getCoveredText());
+            builder.append(t.getCoveredText() + " ");
         }
-        return result;
+        return builder.toString();
     }
 
     // TODO filter against blacklist
