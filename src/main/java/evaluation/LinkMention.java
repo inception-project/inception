@@ -261,7 +261,7 @@ public class LinkMention
          return null;
     }
 
-    // TODO consider # and @
+    // TODO lemmatization
     public static Set<Entity> linkMention(String mention)
     {
         double startTime = System.currentTimeMillis();
@@ -402,7 +402,6 @@ public class LinkMention
             }
             
             LevenshteinDistance lev = new LevenshteinDistance();
-            // TODO adjustable costs
             l.setLevMatchLabel(lev.apply(mention, anylabel).intValue());
             l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel).intValue());
             l.setNumRelatedRelations(0);
