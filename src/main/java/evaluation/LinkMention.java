@@ -134,48 +134,72 @@ public class LinkMention
         double contain = 0;
         double total = 0;
         
+        List<String> nil = new LinkedList<>();
+        List<String> noIdInVirtuoso = new LinkedList<>();
+        List<String> noCandidatesForId = new LinkedList<>();
+        List<String> resultNotInCandidates = new LinkedList<>();
+        List<String> resultInTopFive = new LinkedList<>();
+        
         for (Query query : queries) {
             double startTime = System.currentTimeMillis();
             String docText = NewsReader
                     .readFile("../gerned/dataset/news/" + query.getDocid() + ".xml");
             
+            logger.debug(query.getId());
+            
             // These entities have no result
             if (query.getEntity().startsWith("NIL")) {
+                nil.add(query.getId());
                 continue;
             }
             
             String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
+            
             // Skip terms that are not in Virtuoso dump 
             if (expected == null) {
+                noIdInVirtuoso.add(query.getId());
                 continue;
             }
             Set<Entity> linkings = linkMention(query.getName());
+            
             try {
                 List<Entity> sortedCandidates = 
                         computeCandidateScores(query.getName().toLowerCase(), linkings, 
                                 docText.toLowerCase());
                 
                 if (sortedCandidates == null || sortedCandidates.isEmpty()) {
+                    noCandidatesForId.add(query.getId());
                     continue;
                 }
                 String actual = sortedCandidates.get(0).getE2();
                 
+                // The correct linking is in included in the set of candidates
                 if (sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList())
                         .contains(expected)) {
                     contain++;
+                } else {
+                    resultNotInCandidates.add(query.getId());
                 }
                 
+                // The correct linking is in the top five
+                if (sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList())
+                        .subList(0, 5)
+                        .contains(expected)) {
+                    resultInTopFive.add(query.getId());
+                }
+                
+                // The entity was linked correctly.
                 if (actual.equals(expected)) {
                     correct++;
                 }
                 
                 total++;
                 
+                logger.info("Number of terms in Virtuoso: " + total);
                 logger.info("Number of correct linkings: " + correct);
                 logger.info("Number of sets that contains the correct result: " + contain);
-                logger.info("Number of terms in Virtuoso: " + total);
-                logger.info("Percentage of correct linkings: " + correct/ total);
-                logger.info("Percentage of sets containing the correct result: " + contain/total);
+                logger.info("Proportion of correct linkings: " + correct/ total);
+                logger.info("Proportion of candidate sets containing the correct result: " + contain/total);
             }
             catch (UIMAException | IOException e) {
                 logger.error("Could not compute candidate scores: ", e);
@@ -183,6 +207,28 @@ public class LinkMention
 
             logger.debug(System.currentTimeMillis() - startTime + "ms for this iteration.\n");
         }
+        
+        int totalSkipped = nil.size() + noIdInVirtuoso.size() + noCandidatesForId.size();
+        logger.info("Evaluation finished. " + totalSkipped + " entities skipped.");
+        logger.info(nil.size() + " entries are NIL.");
+        logger.info(noIdInVirtuoso.size() + " entry Ids could not be resolved.");
+        logger.info(noCandidatesForId.size() + " entries got no candidates.");
+        logger.info(resultInTopFive.size() + " entries were in the top 5.");
+        logger.info("------------------------------------------------------------------------");
+        logger.info("Entries with no Id:");
+        logger.info(Arrays.toString(nil.toArray()));
+        logger.info("------------------------------------------------------------------------");
+        logger.info("Entries whose Ids could not be resolved:");
+        logger.info(Arrays.toString(noIdInVirtuoso.toArray()));
+        logger.info("------------------------------------------------------------------------");
+        logger.info("Entries with no candidates found:");
+        logger.info(Arrays.toString(noCandidatesForId.toArray()));
+        logger.info("------------------------------------------------------------------------");
+        logger.info("Entries where correct linking was not in candidates:");
+        logger.info(Arrays.toString(noCandidatesForId.toArray()));
+        logger.info("------------------------------------------------------------------------");
+        logger.info("Entries where correct linking was in the top 5:");
+        logger.info(Arrays.toString(resultInTopFive.toArray()));
     }
 
     public static void initializeConnection()
