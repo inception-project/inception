@@ -63,6 +63,10 @@ public class LinkMention
 
     private static AnalysisEngine pipeline;
     
+    private static SentenceDetectorME detector;
+    
+    private static JCas mentionSentence;
+    
     private static final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
@@ -76,6 +80,8 @@ public class LinkMention
     private static String SPARQL_ENDPOINT 
             = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     // "https://query.wikidata.org/sparql?query=SPARQL";
+    private static int candidateQueryLimit = 100;
+    private static int signatureQueryLimit = 10;
     
     private static final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap();
@@ -96,21 +102,42 @@ public class LinkMention
             logger.error("Could not create AnalysisEngine!", e);
         }
         
+        try {
+            mentionSentence = JCasFactory.createText("", "en");
+        }
+        catch (UIMAException e) {
+            logger.error("Could not create JCas.", e);
+        }
+
+        try {
+            //Loading german sentence detector model from OpenNlp 
+            InputStream inputStream = new FileInputStream("resources/de-sent.bin");
+            SentenceModel model = new SentenceModel(inputStream); 
+            
+            //Instantiating the SentenceDetectorME class 
+            detector = new SentenceDetectorME(model);
+        }
+        catch (IOException e) {
+            logger.error("Could not load sentence detector model.", e);
+        } 
+
         QueriesReader reader = new QueriesReader();
         File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
         List<Query> queries = reader.readQueries(answersFile);
 
         logger.info("Total number of queries: " + queries.size());
+        logger.info("Candidate query limit: " + candidateQueryLimit);
+        logger.info("Signature query limit: " + signatureQueryLimit);
         
         double correct = 0;
         double contain = 0;
         double total = 0;
-
+        
         for (Query query : queries) {
             double startTime = System.currentTimeMillis();
             String docText = NewsReader
                     .readFile("../gerned/dataset/news/" + query.getDocid() + ".xml");
-
+            
             // These entities have no result
             if (query.getEntity().startsWith("NIL")) {
                 continue;
@@ -188,7 +215,10 @@ public class LinkMention
     {
         double startTime = System.currentTimeMillis();
         String sentenceText = findMentionSentenceInDoc(docText, mention);
-        JCas mentionSentence = JCasFactory.createText(sentenceText, "en");
+        mentionSentence.reset();
+        mentionSentence.setDocumentText(sentenceText);
+        mentionSentence.setDocumentLanguage("en");
+        
         pipeline.process(mentionSentence);
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
 
@@ -212,14 +242,7 @@ public class LinkMention
      */
     public static String findMentionSentenceInDoc(String docText, String mention) 
             throws IOException
-    {
-         //Loading german sentence detector model from OpenNlp 
-         InputStream inputStream = new FileInputStream("resources/de-sent.bin"); 
-         SentenceModel model = new SentenceModel(inputStream); 
-          
-         //Instantiating the SentenceDetectorME class 
-         SentenceDetectorME detector = new SentenceDetectorME(model);  
-       
+    {    
          //Detecting the sentence
          String sentences[] = detector.sentDetect(docText); 
        
@@ -269,7 +292,7 @@ public class LinkMention
             return null;
         }
 
-        String entityQueryString = QueryUtil.entityQuery(mentionArray, 1000);
+        String entityQueryString = QueryUtil.entityQuery(mentionArray, candidateQueryLimit);
         TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
         try (TupleQueryResult entityResult = query.evaluate()) {
             while (entityResult.hasNext()) {
@@ -431,7 +454,7 @@ public class LinkMention
     {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
-        String queryString = QueryUtil.semanticSignatureQuery(wikidataId);
+        String queryString = QueryUtil.semanticSignatureQuery(wikidataId, signatureQueryLimit);
         TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
         try (TupleQueryResult result = query.evaluate()) {
             while (result.hasNext()) {

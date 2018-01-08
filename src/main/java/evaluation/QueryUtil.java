@@ -79,7 +79,7 @@ public class QueryUtil
         return query;
     }
 
-    public static String semanticSignatureQuery(String wikidataId)
+    public static String semanticSignatureQuery(String wikidataId, int limit)
     {
         String query = SPARQL_PREFIX + "\n";
         query += SPARQL_SELECT + "{\n";
@@ -93,7 +93,7 @@ public class QueryUtil
         query += "\n}";
         query = query.replace("%queryvariables%", "?label ?p ?e1");
         query = query.replace("%restriction%", "");
-        query += SPARQL_LIMIT + 1000;
+        query += SPARQL_LIMIT + limit;
         return query;
     }
 
