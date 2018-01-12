@@ -215,8 +215,14 @@ var AnnotatorUI = (function($, window, undefined) {
         if (id = target.attr('data-span-id')) {
           preventDefault(evt);
           editedSpan = data.spans[id];    		  
+          editedFragment = target.attr('data-fragment-id');
+          var offsets = [];
+          $.each(editedSpan.fragments, function(fragmentNo, fragment) {
+            offsets.push([fragment.from, fragment.to]);
+          });
           dispatcher.post('ajax', [ {
             action: 'doAction',
+            offsets: $.toJSON(offsets),
             	id: id,
             	labelText: editedSpan.labelText,
             	type: editedSpan.type

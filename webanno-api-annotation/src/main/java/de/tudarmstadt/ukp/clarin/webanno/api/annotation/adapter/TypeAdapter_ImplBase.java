@@ -98,7 +98,7 @@ public abstract class TypeAdapter_ImplBase
 
         Object newValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
 
-        publishEvent(new FeatureValueUpdatedEvent(this, null, fs, aFeature, newValue, oldValue));
+        publishEvent(new FeatureValueUpdatedEvent(this, aState, fs, aFeature, newValue, oldValue));
     }
 
     @Override

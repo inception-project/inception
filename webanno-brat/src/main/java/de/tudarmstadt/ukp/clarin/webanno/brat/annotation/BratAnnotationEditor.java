@@ -209,7 +209,14 @@ public class BratAnnotationEditor
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (DoActionResponse.is(action)) {
-                        actionDoAction(aTarget, request, jCas, paramId);
+                        if (paramId.isSynthetic()) {
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                        }
+                        else {
+                            actionDoAction(aTarget, request, jCas, paramId);
+                        }
                     }
                     else {
                         if (paramId.isSynthetic()) {
