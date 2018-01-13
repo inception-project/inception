@@ -39,6 +39,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -231,6 +232,7 @@ public class CasToBratJsonTest
         private @Resource Project project;
         private @Resource AnnotationSchemaService annotationSchemaService;
         private @Resource FeatureSupportRegistryImpl featureSupportRegistry;
+        private @Resource ApplicationEventPublisher applicationEventPublisher;
         
         private AnnotationLayer tokenLayer;
         private AnnotationFeature tokenPosFeature;
@@ -292,7 +294,7 @@ public class CasToBratJsonTest
                 TypeAdapter getAdapter(AnnotationLayer aLayer)
                 {
                     return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                            featureSupportRegistry, aLayer);
+                            featureSupportRegistry, applicationEventPublisher, aLayer);
                 }
 
             }.getMockInstance();
