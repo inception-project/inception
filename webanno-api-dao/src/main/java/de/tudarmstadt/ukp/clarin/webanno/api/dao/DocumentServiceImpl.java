@@ -107,26 +107,9 @@ public class DocumentServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
-    @Value(value = "${database.dialect}")
-    private String databaseDialect;
-
-    @Value(value = "${database.driver}")
-    private String databaseDriver;
-
-    @Value(value = "${database.url}")
-    private String databaseUrl;
-
-    @Value(value = "${database.username}")
-    private String databaseUsername;
-
     @Override
     public void afterPropertiesSet()
-        throws Exception
     {
-        log.info("Database dialect: " + databaseDialect);
-        log.info("Database driver: " + databaseDriver);
-        log.info("Database URL: " + databaseUrl);
-        log.info("Database username: " + databaseUsername);
         log.info("Document repository path: " + dir);
     }
     

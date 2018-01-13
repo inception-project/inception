@@ -32,8 +32,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Resource;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.uima.UIMAException;
@@ -47,6 +45,8 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
@@ -63,7 +63,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 @Component(CasStorageService.SERVICE_NAME)
 public class CasStorageServiceImpl
-    implements CasStorageService
+    implements CasStorageService, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -83,21 +83,28 @@ public class CasStorageServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
     
-    @Value(value = "${backup.keep.time}")
+    @Value(value = "${backup.keep.time:0}")
     private long backupKeepTime;
 
-    @Value(value = "${backup.interval}")
+    @Value(value = "${backup.interval:0}")
     private long backupInterval;
 
-    @Value(value = "${backup.keep.number}")
+    @Value(value = "${backup.keep.number:0}")
     private int backupKeepNumber;
     
-    @Resource(name = "casDoctor")
-    private CasDoctor casDoctor;
+    private @Autowired(required = false) CasDoctor casDoctor;
     
     public CasStorageServiceImpl()
     {
         // Nothing to do
+    }
+    
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        if (casDoctor == null) {
+            log.info("CAS doctor not available - unable to check/repair CASes");
+        }
     }
 
     /**
@@ -143,7 +150,9 @@ public class CasStorageServiceImpl
         // DebugUtils.smallStack();
 
         try {
-            casDoctor.analyze(aProject, aJcas.getCas());
+            if (casDoctor != null) {
+                casDoctor.analyze(aProject, aJcas.getCas());
+            }
         }
         catch (CasDoctorException e) {
             StringBuilder detailMsg = new StringBuilder();
@@ -417,44 +426,46 @@ public class CasStorageServiceImpl
     private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,
             String aUsername, CAS aCas)
     {
-        // Check if repairs are active - if this is the case, we only need to run the repairs
-        // because the repairs do an analysis as a pre- and post-condition. 
-        if (casDoctor.isRepairsActive()) {
-            try {
-                casDoctor.repair(aProject, aCas);
+        if (casDoctor != null) {
+            // Check if repairs are active - if this is the case, we only need to run the repairs
+            // because the repairs do an analysis as a pre- and post-condition. 
+            if (casDoctor.isRepairsActive()) {
+                try {
+                    casDoctor.repair(aProject, aCas);
+                }
+                catch (Exception e) {
+                    throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                            + aUsername + "] for document ["
+                            + aDocumentName + "] (" + aDocumentId + ") in project["
+                            + aProject.getName() + "] ("
+                            + aProject.getId() + ")", e);
+                }
             }
-            catch (Exception e) {
-                throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                        + aUsername + "] for document ["
-                        + aDocumentName + "] (" + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")", e);
-            }
-        }
-        // If the repairs are not active, then we run the analysis explicitly
-        else {
-            try {
-                casDoctor.analyze(aProject, aCas);
-            }
-            catch (CasDoctorException e) {
-                StringBuilder detailMsg = new StringBuilder();
-                detailMsg.append("CAS Doctor found problems for user [")
-                    .append(aUsername)
-                    .append("] in document [")
-                    .append(aDocumentName).append("] (").append(aDocumentId)
-                    .append(") in project[")
-                    .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
-                e.getDetails().forEach(m -> detailMsg.append(
-                        String.format("- [%s] %s%n", m.level, m.message)));
-                
-                throw new DataRetrievalFailureException(detailMsg.toString());
-            }
-            catch (Exception e) {
-                throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                        + aUsername + "] in document [" + aDocumentName + "] ("
-                        + aDocumentId + ") in project["
-                        + aProject.getName() + "] ("
-                        + aProject.getId() + ")", e);
+            // If the repairs are not active, then we run the analysis explicitly
+            else {
+                try {
+                    casDoctor.analyze(aProject, aCas);
+                }
+                catch (CasDoctorException e) {
+                    StringBuilder detailMsg = new StringBuilder();
+                    detailMsg.append("CAS Doctor found problems for user [")
+                        .append(aUsername)
+                        .append("] in document [")
+                        .append(aDocumentName).append("] (").append(aDocumentId)
+                        .append(") in project[")
+                        .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
+                    e.getDetails().forEach(m -> detailMsg.append(
+                            String.format("- [%s] %s%n", m.level, m.message)));
+                    
+                    throw new DataRetrievalFailureException(detailMsg.toString());
+                }
+                catch (Exception e) {
+                    throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                            + aUsername + "] in document [" + aDocumentName + "] ("
+                            + aDocumentId + ") in project["
+                            + aProject.getName() + "] ("
+                            + aProject.getId() + ")", e);
+                }
             }
         }
     }
@@ -493,6 +504,7 @@ public class CasStorageServiceImpl
         return new File(aTo.getPath());
     }
     
+    @Override
     public boolean isCacheEnabled()
     {
         RequestCycle requestCycle = RequestCycle.get();

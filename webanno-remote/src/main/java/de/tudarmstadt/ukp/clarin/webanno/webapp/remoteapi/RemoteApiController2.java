@@ -634,7 +634,7 @@ public class RemoteApiController2
     @ApiOperation(value = "Delete a document from a project")
     @RequestMapping(
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" 
-                    + PARAM_DOCUMENT_ID + "}/", 
+                    + PARAM_DOCUMENT_ID + "}", 
             method = RequestMethod.DELETE,
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<Void>> documentDelete(

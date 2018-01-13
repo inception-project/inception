@@ -24,31 +24,35 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 
 /**
- * A Model comprises of document and collection brat responses togehter with the username that will
- * populate the sentence with {@link AnnotationDocument}s
- *
+ * A Model comprises of document and collection brat responses together with the username that
+ * will populate the sentence with {@link AnnotationDocument}s
  */
-public class CurationUserSegmentForAnnotationDocument
+public class UserAnnotationSegment
     implements Serializable
 {
-
     private static final long serialVersionUID = 1785666148278992450L;
+    
     private String documentResponse;
     private String collectionData = "{}";
     private String username = "";
     //NEw Additions
-    private AnnotatorState bratAnnotatorModel;
-    private  AnnotationSelection annotationSelection;
+    private AnnotatorState state;
+    private AnnotationSelection annotationSelection;
     private Map<String, Map<Integer, AnnotationSelection>> selectionByUsernameAndAddress;
 
+    public UserAnnotationSegment()
+    {
+        // TODO Auto-generated constructor stub
+    }
+    
     public String getDocumentResponse()
     {
         return documentResponse;
     }
 
-    public void setDocumentResponse(String documentResponse)
+    public void setDocumentResponse(String aDocumentResponse)
     {
-        this.documentResponse = documentResponse;
+        documentResponse = aDocumentResponse;
     }
 
     public String getCollectionData()
@@ -56,15 +60,9 @@ public class CurationUserSegmentForAnnotationDocument
         return collectionData;
     }
 
-    public void setCollectionData(String collectionData)
+    public void setCollectionData(String aCollectionData)
     {
-        this.collectionData = collectionData;
-    }
-
-    public boolean equals(CurationUserSegmentForAnnotationDocument segment)
-    {
-        return segment.getCollectionData().equals(collectionData)
-                && segment.getDocumentResponse().equals(documentResponse);
+        collectionData = aCollectionData;
     }
 
     public String getUsername()
@@ -77,14 +75,14 @@ public class CurationUserSegmentForAnnotationDocument
         username = aUsername;
     }
 
-    public AnnotatorState getBratAnnotatorModel()
+    public AnnotatorState getAnnotatorState()
     {
-        return bratAnnotatorModel;
+        return state;
     }
 
-    public void setBratAnnotatorModel(AnnotatorState bratAnnotatorModel)
+    public void setAnnotatorState(AnnotatorState aState)
     {
-        this.bratAnnotatorModel = bratAnnotatorModel;
+        state = aState;
     }
 
     public AnnotationSelection getAnnotationSelection()
@@ -92,9 +90,9 @@ public class CurationUserSegmentForAnnotationDocument
         return annotationSelection;
     }
 
-    public void setAnnotationSelection(AnnotationSelection annotationSelection)
+    public void setAnnotationSelection(AnnotationSelection aAnnotationSelection)
     {
-        this.annotationSelection = annotationSelection;
+        annotationSelection = aAnnotationSelection;
     }
 
     public Map<String, Map<Integer, AnnotationSelection>> getSelectionByUsernameAndAddress()
@@ -105,6 +103,12 @@ public class CurationUserSegmentForAnnotationDocument
     public void setSelectionByUsernameAndAddress(
             Map<String, Map<Integer, AnnotationSelection>> aSelectionByUsernameAndAddress)
     {
-        this.selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
+        selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
+    }
+    
+    public boolean equals(UserAnnotationSegment segment)
+    {
+        return segment.getCollectionData().equals(collectionData)
+                && segment.getDocumentResponse().equals(documentResponse);
     }
 }

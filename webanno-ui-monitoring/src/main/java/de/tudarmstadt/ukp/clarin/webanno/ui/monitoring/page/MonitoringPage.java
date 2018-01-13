@@ -782,29 +782,38 @@ public class MonitoringPage
     {
         // fill dataset
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (String chartValue : chartValues.keySet()) {
-            dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
+        if (aMaxValue > 0) {
+            for (String chartValue : chartValues.keySet()) {
+                dataset.setValue(chartValues.get(chartValue), "Completion", chartValue);
+            }
         }
+        
         // create chart
         JFreeChart chart = ChartFactory.createBarChart(null, null, null, dataset,
                 PlotOrientation.HORIZONTAL, false, false, false);
 
         CategoryPlot plot = chart.getCategoryPlot();
-        plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
-        plot.getRangeAxis().setRange(0.0, aMaxValue);
-        ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
-        // For documents lessan 10, avoid repeating the number of documents such
-        // as 0 0 1 1 1
-        // NumberTickUnit automatically determin the range
-        if (!aIsPercentage && aMaxValue <= 10) {
-            TickUnits standardUnits = new TickUnits();
-            NumberAxis tick = new NumberAxis();
-            tick.setTickUnit(new NumberTickUnit(1));
-            standardUnits.add(tick.getTickUnit());
-            plot.getRangeAxis().setStandardTickUnits(standardUnits);
-        }
         plot.setOutlineVisible(false);
         plot.setBackgroundPaint(null);
+        plot.setNoDataMessage("No data");
+        plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
+        if (aMaxValue > 0) {
+            plot.getRangeAxis().setRange(0.0, aMaxValue);
+            ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));
+            // For documents less than 10, avoid repeating the number of documents such
+            // as 0 0 1 1 1 - NumberTickUnit automatically determines the range
+            if (!aIsPercentage && aMaxValue <= 10) {
+                TickUnits standardUnits = new TickUnits();
+                NumberAxis tick = new NumberAxis();
+                tick.setTickUnit(new NumberTickUnit(1));
+                standardUnits.add(tick.getTickUnit());
+                plot.getRangeAxis().setStandardTickUnits(standardUnits);
+            }
+        }
+        else {
+            plot.getRangeAxis().setVisible(false);
+            plot.getDomainAxis().setVisible(false);
+        }
 
         BarRenderer renderer = new BarRenderer();
         renderer.setBarPainter(new StandardBarPainter());

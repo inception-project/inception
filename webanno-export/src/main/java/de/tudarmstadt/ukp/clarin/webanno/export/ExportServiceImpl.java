@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil.EXPORTED_PROJE
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 
@@ -28,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -47,12 +49,12 @@ public class ExportServiceImpl implements ExportService
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private @Resource AnnotationSchemaService annotationService;
-    private @Resource AutomationService automationService;
     private @Resource DocumentService documentService;
     private @Resource ProjectService projectService;
-    private @Resource ConstraintsService constraintsService;
     private @Resource UserDao userRepository;
     private @Resource ImportExportService importExportService;
+    private @Autowired(required = false) ConstraintsService constraintsService;
+    private @Autowired(required = false) AutomationService automationService;
     
     @Override
     public File generateZipFile(final ProjectExportRequest aRequest)
@@ -81,22 +83,27 @@ public class ExportServiceImpl implements ExportService
             }
     
             de.tudarmstadt.ukp.clarin.webanno.export.model.Project exProjekt = ExportUtil
-                    .exportProjectSettings(annotationService, automationService, documentService,
-                            projectService, project, projectSettings, exportTempDir);
+                    .exportProjectSettings(annotationService,
+                            Optional.ofNullable(automationService), documentService, projectService,
+                            project, projectSettings, exportTempDir);
     
             JSONUtil.generatePrettyJson(exProjekt, projectSettings);
             FileUtils.copyFileToDirectory(projectSettings, exportTempDir);
             
             aRequest.progress = 9;
-            ExportUtil.exportSourceDocuments(documentService, automationService, aRequest, project,
-                    exportTempDir);
-            ExportUtil.exportTrainingDocuments(automationService, aRequest, project, exportTempDir);
+            ExportUtil.exportSourceDocuments(documentService, aRequest, project, exportTempDir);
+            if (automationService != null) {
+                ExportUtil.exportTrainingDocuments(automationService, aRequest, project,
+                        exportTempDir);
+            }
             ExportUtil.exportAnnotationDocuments(documentService, importExportService,
                     userRepository, aRequest, exportTempDir);
             ExportUtil.exportProjectLog(projectService, project, exportTempDir);
             ExportUtil.exportGuideLine(projectService, project, exportTempDir);
             ExportUtil.exportProjectMetaInf(projectService, project, exportTempDir);
-            ExportUtil.exportProjectConstraints(constraintsService, project, exportTempDir);
+            if (constraintsService != null) {
+                ExportUtil.exportProjectConstraints(constraintsService, project, exportTempDir);
+            }
             aRequest.progress = 90;
             
             ExportUtil.exportCuratedDocuments(documentService, importExportService, aRequest,
