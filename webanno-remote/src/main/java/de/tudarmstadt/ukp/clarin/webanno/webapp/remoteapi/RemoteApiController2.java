@@ -853,6 +853,18 @@ public class RemoteApiController2
         SourceDocument doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
         
+        // If we delete the curation, it cannot be any longer in-progress or finished. The best
+        // guess is that we set the state back to annotation-in-progress. 
+        switch (doc.getState()) {
+        case CURATION_IN_PROGRESS: // Fall-through
+        case CURATION_FINISHED:
+            doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            documentService.createSourceDocument(doc);
+            break;
+        default:
+            // Nothing to do
+        }
+        
         return ResponseEntity
                 .ok(new RResponse<>(INFO, "Curated annotations for document ["
                         + aDocumentId + "] deleted from project [" + aProjectId + "]."));

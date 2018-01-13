@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -173,9 +174,96 @@ public class RemoteApiController2Test
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"));
+            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.content[0].state").value("NEW"));
     }
 
+    @Test
+    public void t003_testAnnotationCreate() throws Exception
+    {
+        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.messages").isEmpty());
+        
+        mvc.perform(fileUpload("/api/v2/projects/1/documents/1/annotations/admin")
+                .file("file", "This is a test.".getBytes("UTF-8"))
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("name", "test.txt")
+                .param("format", "text"))
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content.user").value("admin"))
+            .andExpect(jsonPath("$.content.state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.content.timestamp").doesNotExist());
+     
+        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content[0].user").value("admin"))
+            .andExpect(jsonPath("$.content[0].state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.content[0].timestamp").doesNotExist());
+    }
+
+    @Test
+    public void t004_testCurationCreate() throws Exception
+    {
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content[0].id").value("1"))
+            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.content[0].state").value("NEW"));
+        
+        mvc.perform(fileUpload("/api/v2/projects/1/documents/1/curation")
+                .file("file", "This is a test.".getBytes("UTF-8"))
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("name", "test.txt")
+                .param("format", "text"))
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content.user").value("CURATION_USER"))
+            .andExpect(jsonPath("$.content.state").value("NEW"))
+            .andExpect(jsonPath("$.content.timestamp").exists());
+     
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content[0].id").value("1"))
+            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.content[0].state").value("CURATION-IN-PROGRESS"));
+    }
+
+    @Test
+    public void t005_testCurationDelete() throws Exception
+    {
+        mvc.perform(delete("/api/v2/projects/1/documents/1/curation")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1")
+                .param("documentId", "1"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"));
+     
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.content[0].id").value("1"))
+            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.content[0].state").value("ANNOTATION-IN-PROGRESS"));
+    }
     @Configuration
     public static class TestContext {
         @Bean
