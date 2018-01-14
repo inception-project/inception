@@ -135,16 +135,16 @@ public class RemoteApiController2Test
                 .param("name", "project1"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.id").value("1"))
-            .andExpect(jsonPath("$.content.name").value("project1"));
+            .andExpect(jsonPath("$.body.id").value("1"))
+            .andExpect(jsonPath("$.body.name").value("project1"));
         
         mvc.perform(get("/api/v2/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("project1"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("project1"));
     }
     
     @Test
@@ -165,17 +165,17 @@ public class RemoteApiController2Test
                 .param("format", "text"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.id").value("1"))
-            .andExpect(jsonPath("$.content.name").value("test.txt"));
+            .andExpect(jsonPath("$.body.id").value("1"))
+            .andExpect(jsonPath("$.body.name").value("test.txt"));
      
         mvc.perform(get("/api/v2/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
-            .andExpect(jsonPath("$.content[0].state").value("NEW"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("NEW"));
     }
 
     @Test
@@ -196,18 +196,18 @@ public class RemoteApiController2Test
                 .param("format", "text"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.user").value("admin"))
-            .andExpect(jsonPath("$.content.state").value("IN-PROGRESS"))
-            .andExpect(jsonPath("$.content.timestamp").doesNotExist());
+            .andExpect(jsonPath("$.body.user").value("admin"))
+            .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.body.timestamp").doesNotExist());
      
         mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].user").value("admin"))
-            .andExpect(jsonPath("$.content[0].state").value("IN-PROGRESS"))
-            .andExpect(jsonPath("$.content[0].timestamp").doesNotExist());
+            .andExpect(jsonPath("$.body[0].user").value("admin"))
+            .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
     }
 
     @Test
@@ -218,9 +218,9 @@ public class RemoteApiController2Test
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
-            .andExpect(jsonPath("$.content[0].state").value("NEW"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("NEW"));
         
         mvc.perform(fileUpload("/api/v2/projects/1/documents/1/curation")
                 .file("file", "This is a test.".getBytes("UTF-8"))
@@ -231,18 +231,18 @@ public class RemoteApiController2Test
                 .param("state", "CURATION-COMPLETE"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.user").value("CURATION_USER"))
-            .andExpect(jsonPath("$.content.state").value("COMPLETE"))
-            .andExpect(jsonPath("$.content.timestamp").exists());
+            .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
+            .andExpect(jsonPath("$.body.state").value("COMPLETE"))
+            .andExpect(jsonPath("$.body.timestamp").exists());
      
         mvc.perform(get("/api/v2/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
-            .andExpect(jsonPath("$.content[0].state").value("CURATION-COMPLETE"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
     }
 
     @Test
@@ -261,9 +261,9 @@ public class RemoteApiController2Test
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"))
-            .andExpect(jsonPath("$.content[0].state").value("ANNOTATION-IN-PROGRESS"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
     }
 
     @Configuration

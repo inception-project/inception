@@ -522,7 +522,7 @@ public class RemoteApiController2
             case CURATION_FINISHED:
             default: 
                 throw new IllegalObjectStateException(
-                        "State [%s] not valid when uploading a curation.", aState.get());
+                        "State [%s] not valid when uploading a document.", aState.get());
             }
         }
         
