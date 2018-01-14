@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -134,16 +135,16 @@ public class RemoteApiController2Test
                 .param("name", "project1"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.id").value("1"))
-            .andExpect(jsonPath("$.content.name").value("project1"));
+            .andExpect(jsonPath("$.body.id").value("1"))
+            .andExpect(jsonPath("$.body.name").value("project1"));
         
         mvc.perform(get("/api/v2/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("project1"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("project1"));
     }
     
     @Test
@@ -164,16 +165,105 @@ public class RemoteApiController2Test
                 .param("format", "text"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content.id").value("1"))
-            .andExpect(jsonPath("$.content.name").value("test.txt"));
+            .andExpect(jsonPath("$.body.id").value("1"))
+            .andExpect(jsonPath("$.body.name").value("test.txt"));
      
         mvc.perform(get("/api/v2/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
-            .andExpect(jsonPath("$.content[0].id").value("1"))
-            .andExpect(jsonPath("$.content[0].name").value("test.txt"));
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("NEW"));
+    }
+
+    @Test
+    public void t003_testAnnotationCreate() throws Exception
+    {
+        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.messages").isEmpty());
+        
+        mvc.perform(multipart("/api/v2/projects/1/documents/1/annotations/admin")
+                .file("content", "This is a test.".getBytes("UTF-8"))
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("name", "test.txt")
+                .param("format", "text"))
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body.user").value("admin"))
+            .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.body.timestamp").doesNotExist());
+     
+        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body[0].user").value("admin"))
+            .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
+            .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
+    }
+
+    @Test
+    public void t004_testCurationCreate() throws Exception
+    {
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("NEW"));
+        
+        mvc.perform(multipart("/api/v2/projects/1/documents/1/curation")
+                .file("content", "This is a test.".getBytes("UTF-8"))
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("name", "test.txt")
+                .param("format", "text")
+                .param("state", "CURATION-COMPLETE"))
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
+            .andExpect(jsonPath("$.body.state").value("COMPLETE"))
+            .andExpect(jsonPath("$.body.timestamp").exists());
+     
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
+    }
+
+    @Test
+    public void t005_testCurationDelete() throws Exception
+    {
+        mvc.perform(delete("/api/v2/projects/1/documents/1/curation")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1")
+                .param("documentId", "1"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"));
+     
+        mvc.perform(get("/api/v2/projects/1/documents")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"))
+            .andExpect(jsonPath("$.body[0].id").value("1"))
+            .andExpect(jsonPath("$.body[0].name").value("test.txt"))
+            .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
     }
 
     @Configuration
