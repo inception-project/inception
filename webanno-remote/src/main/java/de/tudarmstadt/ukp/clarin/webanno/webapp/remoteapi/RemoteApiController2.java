@@ -719,7 +719,7 @@ public class RemoteApiController2
         
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + ANNOTATIONS
-                        + "{aid}")
+                        + "/{aid}")
                 .buildAndExpand(project.getId(), document.getId(), annotator.getUsername()).toUri())
                 .body(response);
     }
