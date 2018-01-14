@@ -158,7 +158,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(fileUpload("/api/v2/projects/1/documents")
-                .file("file", "This is a test.".getBytes("UTF-8"))
+                .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
@@ -189,7 +189,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.messages").isEmpty());
         
         mvc.perform(fileUpload("/api/v2/projects/1/documents/1/annotations/admin")
-                .file("file", "This is a test.".getBytes("UTF-8"))
+                .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
@@ -223,7 +223,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
         
         mvc.perform(fileUpload("/api/v2/projects/1/documents/1/curation")
-                .file("file", "This is a test.".getBytes("UTF-8"))
+                .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
