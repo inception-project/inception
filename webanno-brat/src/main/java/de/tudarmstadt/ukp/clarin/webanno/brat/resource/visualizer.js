@@ -3811,7 +3811,12 @@ Util.profileReport();
                 // We are sure not to be drawing anymore, reset the state
                 drawing = false;
                 // TODO: Hook printout into dispatch elsewhere?
+// WEBANNO EXTENSION BEGIN - #823 - Errors happening during brat rendering are logged as warnings
+/*
                 console.warn('Rendering terminated due to: ' + e, e.stack);
+*/
+                console.error('Rendering terminated due to: ' + e, e.stack);
+// WEBANNO EXTENSION END - #823 - Errors happening during brat rendering are logged as warnings
                 dispatcher.post('renderError: Fatal', [sourceData, e]);
               }
               dispatcher.post('unspin');
