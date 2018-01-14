@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import java.io.IOException;
 
 import org.apache.uima.UIMAException;
@@ -29,7 +31,7 @@ import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
@@ -120,7 +122,7 @@ public class BratSuggestionVisualizer
         // super.renderHead(aResponse);
 
         // Libraries
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
