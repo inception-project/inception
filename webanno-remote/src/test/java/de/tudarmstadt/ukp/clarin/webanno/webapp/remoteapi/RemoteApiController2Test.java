@@ -227,11 +227,12 @@ public class RemoteApiController2Test
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
-                .param("format", "text"))
+                .param("format", "text")
+                .param("state", "CURATION-COMPLETE"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.content.user").value("CURATION_USER"))
-            .andExpect(jsonPath("$.content.state").value("NEW"))
+            .andExpect(jsonPath("$.content.state").value("COMPLETE"))
             .andExpect(jsonPath("$.content.timestamp").exists());
      
         mvc.perform(get("/api/v2/projects/1/documents")
@@ -241,7 +242,7 @@ public class RemoteApiController2Test
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.content[0].id").value("1"))
             .andExpect(jsonPath("$.content[0].name").value("test.txt"))
-            .andExpect(jsonPath("$.content[0].state").value("CURATION-IN-PROGRESS"));
+            .andExpect(jsonPath("$.content[0].state").value("CURATION-COMPLETE"));
     }
 
     @Test
@@ -264,6 +265,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.content[0].name").value("test.txt"))
             .andExpect(jsonPath("$.content[0].state").value("ANNOTATION-IN-PROGRESS"));
     }
+
     @Configuration
     public static class TestContext {
         @Bean

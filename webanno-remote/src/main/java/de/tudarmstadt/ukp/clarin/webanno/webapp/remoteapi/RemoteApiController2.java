@@ -790,11 +790,17 @@ public class RemoteApiController2
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
 
+        AnnotationDocumentState resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
             SourceDocumentState state = parseSourceDocumentState(aState.get());
             switch (state) {
-            case CURATION_IN_PROGRESS: // fallthrough
+            case CURATION_IN_PROGRESS: 
+                resultState = AnnotationDocumentState.IN_PROGRESS;
+                document.setState(state);
+                documentService.createSourceDocument(document);
+                break;
             case CURATION_FINISHED:
+                resultState = AnnotationDocumentState.FINISHED;
                 document.setState(state);
                 documentService.createSourceDocument(document);
                 break;
@@ -812,7 +818,7 @@ public class RemoteApiController2
         }
         
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(
-                WebAnnoConst.CURATION_USER, AnnotationDocumentState.NEW, new Date()));
+                WebAnnoConst.CURATION_USER, resultState, new Date()));
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
                 .buildAndExpand(project.getId(), document.getId()).toUri())
