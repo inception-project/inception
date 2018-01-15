@@ -20,25 +20,33 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class SpanDeletedEvent extends ApplicationEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
     
-    private final AnnotatorState state;
+    private final SourceDocument document;
+    private final String user;
     private final AnnotationFS annotation;
     
-    public SpanDeletedEvent(Object aSource, AnnotatorState aState, AnnotationFS aAnnotation)
+    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationFS aAnnotation)
     {
         super(aSource);
-        state = aState;
+        document = aDocument;
+        user = aUser;
         annotation = aAnnotation;
     }
     
-    public AnnotatorState getState()
+    public SourceDocument getDocument()
     {
-        return state;
+        return document;
+    }
+    
+    public String getUser()
+    {
+        return user;
     }
     
     public AnnotationFS getAnnotation()
@@ -51,11 +59,11 @@ public class SpanDeletedEvent extends ApplicationEvent
     {
         StringBuilder builder = new StringBuilder();
         builder.append("SpanDeletedEvent [");
-        if (state != null) {
+        if (document != null) {
             builder.append("docID=");
-            builder.append(state.getDocument().getId());
+            builder.append(document.getId());
             builder.append(", user=");
-            builder.append(state.getUser().getUsername());
+            builder.append(user);
             builder.append(", ");
         }
         builder.append("span=[");

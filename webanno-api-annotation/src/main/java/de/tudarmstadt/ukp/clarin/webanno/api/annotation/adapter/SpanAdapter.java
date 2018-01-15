@@ -262,7 +262,8 @@ public class SpanAdapter
         
         aCas.addFsToIndexes(newAnnotation);
         
-        publishEvent(new SpanCreatedEvent(this, aState, newAnnotation));
+        publishEvent(new SpanCreatedEvent(this, aState.getDocument(),
+                aState.getUser().getUsername(), newAnnotation));
         
         return getAddr(newAnnotation);
     }
@@ -283,7 +284,8 @@ public class SpanAdapter
             }
         }
         
-        publishEvent(new SpanDeletedEvent(this, aState, fs));
+        publishEvent(new SpanDeletedEvent(this, aState.getDocument(),
+                aState.getUser().getUsername(), fs));
     }
 
     @Override
