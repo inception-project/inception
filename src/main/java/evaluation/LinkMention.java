@@ -52,9 +52,13 @@ import de.dailab.irml.gerned.QueriesReader;
 import de.dailab.irml.gerned.data.Query;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
+import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpSegmenter;
+import de.tudarmstadt.ukp.dkpro.core.performance.Stopwatch;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
 import edu.stanford.nlp.util.StringUtils;
+
 
 public class LinkMention
 {
@@ -64,7 +68,8 @@ public class LinkMention
     private static RepositoryConnection conn;
 
     private static AnalysisEngine pipeline;
-    
+    private static AnalysisEngine coreNlpPipeline;
+
     private static SentenceDetectorME detector;
     
     private static JCas mentionSentence;
@@ -95,10 +100,31 @@ public class LinkMention
 
         AnalysisEngineDescription desc;
         try {
-            desc = createEngineDescription(createEngineDescription(StanfordSegmenter.class),
+            desc = createEngineDescription(
+                    createEngineDescription(Stopwatch.class, Stopwatch.PARAM_TIMER_NAME,
+                            "testTimer"),
+                    createEngineDescription(StanfordSegmenter.class),
                     createEngineDescription(StanfordPosTagger.class,
-                            StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"));
+                            StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"),
+                    createEngineDescription(
+                            Stopwatch.class,
+                            Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer",
+                            Stopwatch.PARAM_OUTPUT_FILE, "target/stanfordnlpPipeline.txt"
+                    ));
             pipeline = AnalysisEngineFactory.createEngine(desc);
+            
+            desc = createEngineDescription(
+                    createEngineDescription(Stopwatch.class, Stopwatch.PARAM_TIMER_NAME,
+                            "testTimer"),
+                    createEngineDescription(CoreNlpSegmenter.class),
+                    createEngineDescription(CoreNlpPosTagger.class,
+                            CoreNlpSegmenter.PARAM_LANGUAGE, "en"),
+                    createEngineDescription(
+                            Stopwatch.class,
+                            Stopwatch.PARAM_TIMER_NAME, "coreNlpTimer",
+                            Stopwatch.PARAM_OUTPUT_FILE, "target/coreNlpPipeline.txt"
+                    ));
+            coreNlpPipeline = AnalysisEngineFactory.createEngine(desc);
         }
         catch (ResourceInitializationException e) {
             logger.error("Could not create AnalysisEngine!", e);
@@ -299,6 +325,35 @@ public class LinkMention
         return null;
     }
 
+    public static List<Token> getMentionSentenceWithCorenlp(String docText, String mention) 
+        throws UIMAException, IOException
+    {
+        double startTime = System.currentTimeMillis();
+        String sentenceText = findMentionSentenceInDoc(docText, mention);
+        mentionSentence.reset();
+        mentionSentence.setDocumentText(sentenceText);
+        mentionSentence.setDocumentLanguage("en");
+        
+        if(mentionSentence == null) {
+            logger.info("Could not return mention sentence.");
+            return null;
+        }
+        
+        coreNlpPipeline.process(mentionSentence);
+        logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
+
+        for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
+            List<Token> sentence = new LinkedList<>();
+            for (Token t : JCasUtil.selectCovered(Token.class, s)) {
+                sentence.add(t);
+            }
+            return sentence;
+        }
+        logger.info("Could not return mention sentence.");
+        return null;
+    }
+    
+    
     /**
      * Return sentence containing the mention
      * @param docText
@@ -493,8 +548,8 @@ public class LinkMention
             for (String s : relatedEntities) {
                 if (sentenceContentTokens.contains(s)) {
                     signatureOverlap.add(s);
+                }
             }
-        }
             l.setSignatureOverlapScore(splitMention.size() + signatureOverlap.size());
             l.setNumRelatedRelations(sig.getRelatedRelations().size());
         });
