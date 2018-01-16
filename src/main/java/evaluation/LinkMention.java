@@ -345,9 +345,12 @@ public class LinkMention
         try (TupleQueryResult entityResult = query.evaluate()) {
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
-                linkings.add(new Entity(solution.getValue("e2").toString(),
-                        solution.getValue("label").toString(),
-                        solution.getValue("anylabel").toString()));
+                Value e2 = solution.getValue("e2");
+                Value label = solution.getValue("label");
+                Value anylabel = solution.getValue("anylabel");
+                linkings.add(new Entity((e2 != null) ? e2.toString() : "",
+                                     (label != null) ? label.toString() : "",
+                                  (anylabel != null) ? anylabel.toString() : ""));
             }
         }
         catch (QueryEvaluationException e) {
@@ -427,6 +430,9 @@ public class LinkMention
     {
         int mentionContextSize = 2;
         List<Token> mentionSentence = getMentionSentence(text, mention);
+        if (mentionSentence == null) {
+            return null;
+        }
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
                 mentionContextSize);
