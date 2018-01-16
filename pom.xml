@@ -88,6 +88,17 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <!-- For SNAPSHOTs of DKPro Core -->
+    <repository>
+      <id>ukp-oss-snapshots</id>
+      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
   <dependencyManagement>
     <dependencies>
