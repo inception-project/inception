@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +87,7 @@ public class AnnotationSchemaServiceImpl
     private EntityManager entityManager;
     
     private @Resource FeatureSupportRegistry featureSupportRegistry;
+    private @Resource ApplicationEventPublisher applicationEventPublisher;
 
     public AnnotationSchemaServiceImpl()
     {
@@ -673,15 +675,16 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return getAdapter(this, featureSupportRegistry, aLayer);
+        return getAdapter(this, featureSupportRegistry, applicationEventPublisher, aLayer);
     }
     
     public static TypeAdapter getAdapter(AnnotationSchemaService aSchemaService,
-            FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer)
+            FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer)
     {
         switch (aLayer.getType()) {
         case WebAnnoConst.SPAN_TYPE: {
-            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aLayer,
+            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
                     aSchemaService.listAnnotationFeature(aLayer));
             adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
             adapter.setAllowStacking(aLayer.isAllowStacking());
@@ -690,8 +693,9 @@ public class AnnotationSchemaServiceImpl
             return adapter;
         }
         case WebAnnoConst.RELATION_TYPE: {
-            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
-                    aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
+            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
+                    aLayer.getId(), aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET,
+                    WebAnnoConst.FEAT_REL_SOURCE,
                     aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
                     aLayer.getAttachType().getName(), aSchemaService.listAnnotationFeature(aLayer));
 
@@ -702,9 +706,9 @@ public class AnnotationSchemaServiceImpl
             // default is chain (based on operation, change to CoreferenceLinK)
         }
         case WebAnnoConst.CHAIN_TYPE: {
-            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aLayer, aLayer.getId(),
-                    aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(), "first", "next",
-                    aSchemaService.listAnnotationFeature(aLayer));
+            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aEventPublisher,
+                    aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
+                    "first", "next", aSchemaService.listAnnotationFeature(aLayer));
 
             adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
 

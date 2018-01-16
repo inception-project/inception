@@ -39,7 +39,6 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -67,9 +66,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationUserSegmentForAnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
@@ -104,7 +103,6 @@ public class CurationPanel
 
     private int fSn = 0;
     private int lSn = 0;
-    private boolean firstLoad = true;
     
     /**
      * Map for tracking curated spans. Key contains the address of the span, the value contains the
@@ -126,6 +124,8 @@ public class CurationPanel
                 .format("flex-basis: %d%%;", state.getPreferences().getSidebarSize()))));
         add(sidebarCell);
         
+        curationView = new SourceListView();
+        
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
         sentencesListView.setOutputMarkupId(true);
@@ -137,16 +137,15 @@ public class CurationPanel
         crossSentAnnoView.setOutputMarkupId(true);
         add(crossSentAnnoView);
     
-        List<CurationUserSegmentForAnnotationDocument> sentences = new LinkedList<>();
-        CurationUserSegmentForAnnotationDocument curationUserSegmentForAnnotationDocument = 
-                new CurationUserSegmentForAnnotationDocument();
-        
+        List<UserAnnotationSegment> segments = new LinkedList<>();
+        UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
+
         state = getModelObject().getAnnotatorState();
         if (state != null) {
-            curationUserSegmentForAnnotationDocument.setSelectionByUsernameAndAddress(
-                    annotationSelectionByUsernameAndAddress);
-            curationUserSegmentForAnnotationDocument.setBratAnnotatorModel(state);
-            sentences.add(curationUserSegmentForAnnotationDocument);
+            userAnnotationSegments
+                    .setSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            userAnnotationSegments.setAnnotatorState(state);
+            segments.add(userAnnotationSegments);
         }
         
         // update source list model only first time.
@@ -154,7 +153,7 @@ public class CurationPanel
                 : sourceListModel;
     
         suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
-                new ListModel<>(sentences))
+                new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
             CurationContainer curationContainer = cCModel.getObject();
@@ -163,7 +162,7 @@ public class CurationPanel
             public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    // update begin/end of the curationsegment based on bratAnnotatorModel changes
+                    // update begin/end of the curationsegment based on annotator state changes
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), IFeedback.class);
                     CurationPanel.this.updatePanel(aTarget, curationContainer);
@@ -176,8 +175,6 @@ public class CurationPanel
                 }
             }
         };
-    
-        suggestionViewPanel.setOutputMarkupId(true);
         add(suggestionViewPanel);
     
         editor = new AnnotationDetailEditorPanel(
@@ -425,52 +422,59 @@ public class CurationPanel
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
-
-    @Override
-    public void renderHead(IHeaderResponse response)
+    
+    public void init(AjaxRequestTarget aTarget, CurationContainer aCC)
+        throws UIMAException, ClassNotFoundException, IOException
     {
-        super.renderHead(response);
-
-        if (firstLoad) {
-            firstLoad = false;
-        }
+        commonUpdate();
+        
+        suggestionViewPanel.init(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+                curationView);
     }
 
     public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
+        commonUpdate();
+        
+        // Render the sentence list sidebar
+        aTarget.add(sentencesListView);
+
+        // Render the main annotation editor (upper part)
+        annotationEditor.requestRender(aTarget);
+        
+        // Render the user annotation segments (lower part)
+        suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+                curationView);
+    }
+    
+    private void commonUpdate() throws IOException
+    {
         JCas jCas = curationDocumentService.readCurationCas(state.getDocument());
 
-        final Sentence sentence = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
+        // Determine the FIRST visible unit
+        final Sentence firstVisibleUnit = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
                 state.getFirstVisibleUnitEnd());
-        state.setFirstVisibleUnit(sentence);
+        state.setFirstVisibleUnit(firstVisibleUnit);
 
-        List<Sentence> followingSentences = selectFollowing(jCas, Sentence.class, sentence, state
-                .getPreferences().getWindowSize());
+        // Determine the LAST visible unit
+        List<Sentence> followingUnits = selectFollowing(jCas, Sentence.class, firstVisibleUnit,
+                state.getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
-        Sentence lastSentenceAddressInDisplayWindow = followingSentences.size() == 0 ? sentence
-                : followingSentences.get(followingSentences.size() - 1);
-        if (curationView == null) {
-            curationView = new SourceListView();
-        }
-        curationView.setCurationBegin(sentence.getBegin());
-        curationView.setCurationEnd(lastSentenceAddressInDisplayWindow.getEnd());
+        Sentence lastVisibleUnit = followingUnits.size() == 0 ? firstVisibleUnit
+                : followingUnits.get(followingUnits.size() - 1);
+        
+        curationView.setCurationBegin(firstVisibleUnit.getBegin());
+        curationView.setCurationEnd(lastVisibleUnit.getEnd());
 
+        // Determine the number of the first and last visible unit
         int ws = state.getPreferences().getWindowSize();
         Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
                 state.getFirstVisibleUnitEnd());
         Sentence ls = WebAnnoCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
-
-        aTarget.add(sentencesListView);
-
-        //aTarget.add(suggestionViewPanel);
-        annotationEditor.requestRender(aTarget);
-        
-        suggestionViewPanel.updatePanel(aTarget, aCC, annotationEditor,
-                annotationSelectionByUsernameAndAddress, curationView);
     }
 
     /**

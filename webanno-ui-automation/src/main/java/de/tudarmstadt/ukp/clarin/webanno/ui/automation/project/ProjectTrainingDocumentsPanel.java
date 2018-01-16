@@ -173,7 +173,7 @@ public class ProjectTrainingDocumentsPanel
                                 OutputStream os = new FileOutputStream(tempFile);
                         ) {
                             IOUtils.copyLarge(is, os);
-                            importExportService.uploadTrainingDocument(tempFile, document);
+                            automationService.uploadTrainingDocument(tempFile, document);
                         }
                         finally {
                             tempFile.delete();

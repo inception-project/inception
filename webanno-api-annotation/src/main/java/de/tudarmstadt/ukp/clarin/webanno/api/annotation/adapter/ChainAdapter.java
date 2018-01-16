@@ -33,9 +33,11 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -76,11 +78,12 @@ public class ChainAdapter
 
     private boolean linkedListBehavior;
 
-    public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry, AnnotationLayer aLayer,
-            long aLayerId, String aTypeName, String aLabelFeatureName, String aFirstFeatureName,
+    public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aLayerId,
+            String aTypeName, String aLabelFeatureName, String aFirstFeatureName,
             String aNextFeatureName, Collection<AnnotationFeature> aFeatures)
     {
-        super(aFeatureSupportRegistry, aLayer, aFeatures);
+        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
         
         layerId = aLayerId;
         annotationTypeName = aTypeName;
@@ -228,7 +231,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, VID aVid)
+    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
     {
         if (aVid.getSubId() == VID.NONE) {
             deleteSpan(aJCas, aVid.getId());
@@ -358,7 +361,8 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
+            int aEnd, Object aValue)
     {
         // TODO Auto-generated method stub
     }

@@ -27,7 +27,6 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import java.util.Set;
 import javax.annotation.Resource;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
@@ -72,8 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationCasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -82,7 +78,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -101,22 +96,10 @@ public class ImportExportServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
     
-    @Resource(name = "casStorageService")
-    private CasStorageService casStorageService;
+    private @Resource CasStorageService casStorageService;
+    private @Resource AnnotationSchemaService annotationService;
+    private @Resource DocumentService documentService;
     
-    @Resource(name = "automationCasStorageService")
-    private AutomationCasStorageService automationCasStorageService;
-    
-    
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @Resource(name = "documentService")
-    private DocumentService documentService;
-    
-    @Resource(name = "automationService")
-    private AutomationService automationService;
-
     @Resource(name = "formats")
     private Properties readWriteFileFormats;
 
@@ -187,52 +170,6 @@ public class ImportExportServiceImpl
         }
 
         return exportFile;
-    }
-    
-    @Override
-    @Transactional
-    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
-        throws IOException
-    {
-        // Check if the file has a valid format / can be converted without error
-        JCas cas = null;
-        try {
-            if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
-                if (!isTabSepFileFormatCorrect(aFile)) {
-                    throw new IOException(
-                            "This TAB-SEP file is not in correct format. It should have two columns separated by TAB!");
-                }
-            }
-            else {
-                cas = importCasFromFile(aFile, aDocument.getProject(), aDocument.getFormat());
-                automationCasStorageService.analyzeAndRepair(aDocument, cas.getCas());
-            }
-        }
-        catch (IOException e) {
-            automationService.removeTrainingDocument(aDocument);
-            throw e;
-        }
-        catch (Exception e) {
-            automationService.removeTrainingDocument(aDocument);
-            throw new IOException(e.getMessage(), e);
-        }
-
-        // Copy the original file into the repository
-        File targetFile = automationService.getTrainingDocumentFile(aDocument);
-        FileUtils.forceMkdir(targetFile.getParentFile());
-        FileUtils.copyFile(aFile, targetFile);
-
-        // Copy the initial conversion of the file into the repository
-        if (cas != null) {
-            CasPersistenceUtils.writeSerializedCas(cas, automationService.getCasFile(aDocument));
-        }
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aDocument.getProject().getId()))) {
-            Project project = aDocument.getProject();
-            log.info("Imported training document [{}]({}) to project [{}]({})", 
-                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
-        }
     }
     
     @Override
@@ -669,29 +606,6 @@ public class ImportExportServiceImpl
         return true;
     }
     
-    /**
-     * Check if a TAB-Sep training file is in correct format before importing
-     */
-    private boolean isTabSepFileFormatCorrect(File aFile)
-    {
-        try {
-            LineIterator it = new LineIterator(new FileReader(aFile));
-            while (it.hasNext()) {
-                String line = it.next();
-                if (line.trim().length() == 0) {
-                    continue;
-                }
-                if (line.split("\t").length != 2) {
-                    return false;
-                }
-            }
-        }
-        catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * A Helper method to add {@link TagsetDescription} to {@link CAS}
      *

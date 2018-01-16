@@ -95,20 +95,11 @@ public class RemoteApiController
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    @Resource(name = "projectService")
-    private ProjectService projectRepository;
-
-    @Resource(name = "documentService")
-    private DocumentService documentRepository;
-
-    @Resource(name = "importExportService")
-    private ImportExportService importExportService;
-
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
+    private @Resource ProjectService projectRepository;
+    private @Resource DocumentService documentRepository;
+    private @Resource ImportExportService importExportService;
+    private @Resource AnnotationSchemaService annotationService;
+    private @Resource UserDao userRepository;
 
     /**
      * Create a new project.

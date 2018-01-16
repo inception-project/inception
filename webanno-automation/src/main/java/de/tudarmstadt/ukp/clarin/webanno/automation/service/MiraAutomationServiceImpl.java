@@ -28,6 +28,7 @@ import static org.apache.commons.io.IOUtils.copyLarge;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
@@ -478,5 +480,75 @@ public class MiraAutomationServiceImpl
                 dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId()
                         + TRAIN + aDocument.getId() + "/" + ANNOTATION_FOLDER);
         return new File(documentUri, FilenameUtils.removeExtension(aDocument.getName()) + ".ser");
+    }
+    
+    @Override
+    @Transactional
+    public void uploadTrainingDocument(File aFile, TrainingDocument aDocument)
+        throws IOException
+    {
+        // Check if the file has a valid format / can be converted without error
+        JCas cas = null;
+        try {
+            if (aDocument.getFormat().equals(WebAnnoConst.TAB_SEP)) {
+                if (!isTabSepFileFormatCorrect(aFile)) {
+                    throw new IOException(
+                            "This TAB-SEP file is not in correct format. It should have two columns separated by TAB!");
+                }
+            }
+            else {
+                cas = importExportService.importCasFromFile(aFile, aDocument.getProject(),
+                        aDocument.getFormat());
+                automationCasStorageService.analyzeAndRepair(aDocument, cas.getCas());
+            }
+        }
+        catch (IOException e) {
+            removeTrainingDocument(aDocument);
+            throw e;
+        }
+        catch (Exception e) {
+            removeTrainingDocument(aDocument);
+            throw new IOException(e.getMessage(), e);
+        }
+
+        // Copy the original file into the repository
+        File targetFile = getTrainingDocumentFile(aDocument);
+        FileUtils.forceMkdir(targetFile.getParentFile());
+        FileUtils.copyFile(aFile, targetFile);
+
+        // Copy the initial conversion of the file into the repository
+        if (cas != null) {
+            CasPersistenceUtils.writeSerializedCas(cas, getCasFile(aDocument));
+        }
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aDocument.getProject().getId()))) {
+            Project project = aDocument.getProject();
+            log.info("Imported training document [{}]({}) to project [{}]({})", 
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+        }
+    }
+
+    /**
+     * Check if a TAB-Sep training file is in correct format before importing
+     */
+    private boolean isTabSepFileFormatCorrect(File aFile)
+    {
+        try {
+            LineIterator it = new LineIterator(new FileReader(aFile));
+            while (it.hasNext()) {
+                String line = it.next();
+                if (line.trim().length() == 0) {
+                    continue;
+                }
+                if (line.split("\t").length != 2) {
+                    return false;
+                }
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 }

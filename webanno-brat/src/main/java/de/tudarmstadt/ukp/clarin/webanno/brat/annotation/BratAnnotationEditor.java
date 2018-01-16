@@ -52,7 +52,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.zjsonpatch.JsonDiff;
-import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -209,7 +209,14 @@ public class BratAnnotationEditor
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (DoActionResponse.is(action)) {
-                        actionDoAction(aTarget, request, jCas, paramId);
+                        if (paramId.isSynthetic()) {
+                            Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
+                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                        }
+                        else {
+                            actionDoAction(aTarget, request, jCas, paramId);
+                        }
                     }
                     else {
                         if (paramId.isSynthetic()) {
@@ -454,7 +461,7 @@ public class BratAnnotationEditor
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
                 
         // Libraries
-        aResponse.render(forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(forReference(JQuerySvgResourceReference.get()));
         aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(forReference(JQueryJsonResourceReference.get()));

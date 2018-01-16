@@ -605,8 +605,9 @@ public class AnnotationPage
                 WicketUtil.refreshPage(aTarget, getPage());
             }
             
-            applicationEventPublisherHolder.get()
-                    .publishEvent(new DocumentOpenedEvent(this, editorCas, getModelObject()));
+            applicationEventPublisherHolder.get().publishEvent(
+                    new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
+                            getModelObject().getUser().getUsername()));
             
             LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser().getUsername()
                     + "] f:[" + state.getFirstVisibleUnitIndex() + "] l:["

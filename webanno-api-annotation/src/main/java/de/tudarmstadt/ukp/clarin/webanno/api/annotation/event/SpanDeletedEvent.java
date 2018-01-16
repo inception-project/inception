@@ -17,31 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DocumentOpenedEvent
-    extends ApplicationEvent
+public class SpanDeletedEvent extends ApplicationEvent
 {
-    private static final long serialVersionUID = -2739175937794842083L;
+    private static final long serialVersionUID = 5206262614840209407L;
     
-    private final JCas jcas;
     private final SourceDocument document;
     private final String user;
+    private final AnnotationFS annotation;
     
-    public DocumentOpenedEvent(Object aSource, JCas aJCas, SourceDocument aDocument, String aUser)
+    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationFS aAnnotation)
     {
         super(aSource);
-        jcas = aJCas;
         document = aDocument;
         user = aUser;
-    }
-    
-    public JCas getJCas()
-    {
-        return jcas;
+        annotation = aAnnotation;
     }
     
     public SourceDocument getDocument()
@@ -52,5 +47,32 @@ public class DocumentOpenedEvent
     public String getUser()
     {
         return user;
+    }
+    
+    public AnnotationFS getAnnotation()
+    {
+        return annotation;
+    }
+    
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("SpanDeletedEvent [");
+        if (document != null) {
+            builder.append("docID=");
+            builder.append(document.getId());
+            builder.append(", user=");
+            builder.append(user);
+            builder.append(", ");
+        }
+        builder.append("span=[");
+        builder.append(annotation.getBegin());
+        builder.append("-");
+        builder.append(annotation.getEnd());
+        builder.append("](");
+        builder.append(annotation.getCoveredText());
+        builder.append(")]");
+        return builder.toString();
     }
 }

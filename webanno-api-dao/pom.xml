@@ -164,10 +164,7 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      	<artifactId>webanno-api-automation</artifactId>
-    </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

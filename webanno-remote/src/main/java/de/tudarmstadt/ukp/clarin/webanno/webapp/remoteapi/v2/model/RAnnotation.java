@@ -35,7 +35,8 @@ public class RAnnotation
     public RAnnotation(AnnotationDocument aAnnotationDocument)
     {
         user = aAnnotationDocument.getUser();
-        state = aAnnotationDocument.getState().name();
+        state = RemoteApiController2
+                .annotationDocumentStateToString(aAnnotationDocument.getState());
         if (aAnnotationDocument.getTimestamp() != null) {
             timestamp = FORMAT.format(aAnnotationDocument.getTimestamp());
         }

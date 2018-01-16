@@ -239,7 +239,7 @@ public class AnnotationDetailEditorPanel
                 }
             }
         }
-        int annoId = aAdapter.add(aJCas, selection.getBegin(), selection.getEnd());
+        int annoId = aAdapter.add(state, aJCas, selection.getBegin(), selection.getEnd());
         AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
         selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
@@ -317,7 +317,7 @@ public class AnnotationDetailEditorPanel
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                         .getLayer(state.getArmedFeature().getType(), state.getProject()));
 
-                id = adapter.add(aJCas, aBegin, aEnd);
+                id = adapter.add(state, aJCas, aBegin, aEnd);
             }
             else {
                 throw new AnnotationException(
@@ -729,7 +729,7 @@ public class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(jCas, state.getSelection().getAnnotation());
+        adapter.delete(state, jCas, state.getSelection().getAnnotation());
 
         // Store CAS again
         writeEditorCas(jCas);
@@ -786,7 +786,7 @@ public class AnnotationDetailEditorPanel
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(featureState.feature, jCas, getAddr(arc),
+                adapter.setFeatureValue(state, jCas, getAddr(arc), featureState.feature,
                         featureState.value);
             }
         }
@@ -1083,8 +1083,8 @@ public class AnnotationDetailEditorPanel
             
             LOG.trace("writeFeatureEditorModelsToCas() "
                 + featureState.feature.getUiName() + " = " + featureState.value);
-            aAdapter.setFeatureValue(featureState.feature, aJCas,
-                    state.getSelection().getAnnotation().getId(), featureState.value);
+            aAdapter.setFeatureValue(state, aJCas, state.getSelection().getAnnotation().getId(),
+                    featureState.feature, featureState.value);
         }
 
         // Generate info message
