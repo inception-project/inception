@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -138,7 +139,7 @@ public class LinkMention
         List<String> noIdInVirtuoso = new LinkedList<>();
         List<String> noCandidatesForId = new LinkedList<>();
         List<String> resultNotInCandidates = new LinkedList<>();
-        List<String> resultInTopFive = new LinkedList<>();
+        Map<Integer, Set<String>> inFirstX = new HashMap<>();
         
         for (Query query : queries) {
             double startTime = System.currentTimeMillis();
@@ -150,6 +151,7 @@ public class LinkMention
             // These entities have no result
             if (query.getEntity().startsWith("NIL")) {
                 nil.add(query.getId());
+                logger.info("NIL query: " + query.getEntity());
                 continue;
             }
             
@@ -158,6 +160,7 @@ public class LinkMention
             // Skip terms that are not in Virtuoso dump 
             if (expected == null) {
                 noIdInVirtuoso.add(query.getId());
+                logger.info("Mention " + query.getName() + "not in Virtuoso.");
                 continue;
             }
             Set<Entity> linkings = linkMention(query.getName());
@@ -169,23 +172,36 @@ public class LinkMention
                 
                 if (sortedCandidates == null || sortedCandidates.isEmpty()) {
                     noCandidatesForId.add(query.getId());
+                    logger.info("No candidates for mention" + query.getName());
                     continue;
                 }
                 String actual = sortedCandidates.get(0).getE2();
                 
-                // The correct linking is in included in the set of candidates
-                if (sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList())
-                        .contains(expected)) {
+                List<String> candidateIds = 
+                        sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList());
+                
+                // The correct linking is included in the set of candidates
+                if (candidateIds.contains(expected)) {
                     contain++;
                 } else {
                     resultNotInCandidates.add(query.getId());
                 }
-                
-                // The correct linking is in the top five
-                if (sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList())
-                        .subList(0, 5)
-                        .contains(expected)) {
-                    resultInTopFive.add(query.getId());
+
+                for (int x = 0; x <= 9; x++) {
+                    List<String> subList;
+                    if (candidateIds.size() < x) {
+                        subList = candidateIds.subList(0, candidateIds.size());
+                    } else {
+                        subList = candidateIds.subList(0, x);
+                    }
+                    if (subList.contains(expected)) {
+                        Set<String> firstX = inFirstX.get(x);
+                        if (firstX == null) {
+                            firstX = new HashSet<>();
+                        }
+                        firstX.add(query.getId());
+                        inFirstX.put(x, firstX);
+                    }
                 }
                 
                 // The entity was linked correctly.
@@ -213,7 +229,6 @@ public class LinkMention
         logger.info(nil.size() + " entries are NIL.");
         logger.info(noIdInVirtuoso.size() + " entry Ids could not be resolved.");
         logger.info(noCandidatesForId.size() + " entries got no candidates.");
-        logger.info(resultInTopFive.size() + " entries were in the top 5.");
         logger.info("------------------------------------------------------------------------");
         logger.info("Entries with no Id:");
         logger.info(Arrays.toString(nil.toArray()));
@@ -227,8 +242,11 @@ public class LinkMention
         logger.info("Entries where correct linking was not in candidates:");
         logger.info(Arrays.toString(noCandidatesForId.toArray()));
         logger.info("------------------------------------------------------------------------");
-        logger.info("Entries where correct linking was in the top 5:");
-        logger.info(Arrays.toString(resultInTopFive.toArray()));
+        
+        for (int i = 1; i <= 10 ; i++) {
+            logger.info("Precision at i: " + inFirstX.get(i).size() / total);
+        }
+
     }
 
     public static void initializeConnection()
