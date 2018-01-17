@@ -20,9 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.menu;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.StatelessLink;
@@ -37,9 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemService.MenuItemDecl;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -52,10 +50,10 @@ public class MainMenuPage
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean MenuItemService menuItemService;
+    private @SpringBean MenuItemRegistry menuItemService;
 
-    private ListView<MenuItemDecl> menu;
-
+    private ListView<MenuItem> menu;
+    
     public MainMenuPage()
     {
         setStatelessHint(true);
@@ -78,30 +76,27 @@ public class MainMenuPage
             warn("You are not member of any projects to annotate or curate.");
         }
         
-        List<MenuItemDecl> menuItems = new ArrayList<>(menuItemService.getMenuItems());
-        
-        menu = new ListView<MenuItemDecl>("menu", menuItems)
+        menu = new ListView<MenuItem>("menu", LambdaModel.of(menuItemService::getMenuItems))
         {
             private static final long serialVersionUID = -5492972164756003552L;
 
             @Override
-            protected void populateItem(ListItem<MenuItemDecl> aItem)
+            protected void populateItem(ListItem<MenuItem> aItem)
             {
-                MenuItemDecl item = aItem.getModelObject();
+                MenuItem item = aItem.getModelObject();
                 StatelessLink<Void> menulink = new StatelessLink<Void>("menulink") {
                     private static final long serialVersionUID = 4110674757822252390L;
 
                     @Override
                     public void onClick()
                     {
-                        setResponsePage(item.page);
+                        setResponsePage(item.getPageClass());
                     }
                 };
-                menulink.add(new Image("icon", new UrlResourceReference(Url.parse(item.icon))));
+                menulink.add(
+                        new Image("icon", new UrlResourceReference(Url.parse(item.getIcon()))));
                 menulink.add(new Label("label", PropertyModel.of(item, "label")));
-                if (item.condition != null) {
-                    menulink.setVisible(item.condition.applies());
-                }
+                menulink.setVisible(item.applies());
                 aItem.add(menulink);
             }
         };

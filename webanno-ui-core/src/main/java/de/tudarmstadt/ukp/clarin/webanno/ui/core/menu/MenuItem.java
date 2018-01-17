@@ -17,16 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.apache.wicket.Page;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface MenuItem
+public interface MenuItem
 {
-    String icon();
-    String label();
-    int prio() default Integer.MAX_VALUE;
+    String getIcon();
+    String getLabel();
+    Class<? extends Page> getPageClass();
+    boolean applies();
 }

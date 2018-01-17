@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface MenuItemCondition
+public interface MenuItemRegistry
 {
+    String SERVICE_NAME = "menuItemService";
+
+    List<MenuItem> getMenuItems();
 }

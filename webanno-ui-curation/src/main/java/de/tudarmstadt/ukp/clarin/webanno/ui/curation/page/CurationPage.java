@@ -85,8 +85,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
@@ -100,7 +98,6 @@ import wicket.contrib.input.events.key.KeyType;
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MenuItem(icon = "images/data_table.png", label = "Curation", prio = 200)
 @MountPath("/curation.html")
 public class CurationPage
     extends AnnotationPageBase
@@ -660,16 +657,5 @@ public class CurationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    }
-    
-    /**
-     * Only project admins and curators can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.curationEnabeled(aRepo, user);
     }
 }

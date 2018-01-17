@@ -93,8 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -110,7 +108,6 @@ import wicket.contrib.input.events.key.KeyType;
  * This is the main class for the correction page. Displays in the lower panel the Automatically
  * annotated document and in the upper panel the corrected annotation
  */
-@MenuItem(icon = "images/check_box.png", label = "Correction", prio = 120)
 @MountPath("/correction.html")
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_CORRECTION, prio = 120)
 public class CorrectionPage
@@ -715,16 +712,5 @@ public class CorrectionPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    }
-    
-    /**
-     * Only project admins and annotators can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = aUserRepo.get(username);
-        return SecurityUtil.annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_CORRECTION);
     }
 }

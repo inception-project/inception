@@ -107,8 +107,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.jfreechart.SvgChart;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider;
@@ -116,7 +114,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.TableDataProvider
 /**
  * A Page To display different monitoring and statistics measurements tabularly and graphically.
  */
-@MenuItem(icon = "images/attribution.png", label = "Monitoring", prio = 300)
 @MountPath("/monitoring.html")
 public class MonitoringPage
     extends ApplicationPageBase
@@ -1119,15 +1116,5 @@ public class MonitoringPage
                     SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
             documentService.createSourceDocument(aSourceDocument);
         }
-    }
-    
-    /**
-     * Only admins and project managers can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-        return SecurityUtil.monitoringEnabeled(aRepo, user);
     }
 }
