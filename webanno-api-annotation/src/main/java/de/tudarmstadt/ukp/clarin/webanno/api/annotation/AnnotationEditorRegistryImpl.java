@@ -56,7 +56,13 @@ public class AnnotationEditorRegistryImpl
     @Override
     public AnnotationEditorFactory getEditorFactory(String aId)
     {
-        return factories.stream().filter(f -> aId.equals(f.getBeanName())).findFirst().orElse(null);
+        if (aId == null) {
+            return null;
+        }
+        else {
+            return factories.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+                    .orElse(null);
+        }
     }
     
     @Override

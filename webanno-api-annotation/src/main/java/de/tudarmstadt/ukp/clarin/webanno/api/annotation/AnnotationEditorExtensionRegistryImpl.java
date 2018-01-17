@@ -69,10 +69,15 @@ public class AnnotationEditorExtensionRegistryImpl
     }
     
     @Override
-    public AnnotationEditorExtension getExtension(String aName)
+    public AnnotationEditorExtension getExtension(String aId)
     {
-        return extensions.stream().filter(ext -> aName.equals(ext.getBeanName())).findFirst()
-                .orElse(null);
+        if (aId == null) {
+            return null;
+        }
+        else {
+            return extensions.stream().filter(ext -> aId.equals(ext.getBeanName())).findFirst()
+                    .orElse(null);
+        }
     }
     
     @Override
