@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 
 @Component
 @Order(110)
@@ -61,6 +60,6 @@ public class AutomationPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ManageUsersPage.class;
+        return AutomationPage.class;
     }
 }

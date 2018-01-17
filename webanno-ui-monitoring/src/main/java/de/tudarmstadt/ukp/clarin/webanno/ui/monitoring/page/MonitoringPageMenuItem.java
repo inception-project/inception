@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 
 @Component
 @Order(300)
@@ -59,6 +58,6 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ManageUsersPage.class;
+        return MonitoringPage.class;
     }
 }

@@ -17,66 +17,46 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.OrderComparator;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AnnotationEditorRegistryImpl
-    implements AnnotationEditorRegistry, BeanPostProcessor
+    implements AnnotationEditorRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, AnnotationEditorFactory> beans = new HashMap<>();
-    private final List<AnnotationEditorFactory> sortedBeans = new ArrayList<>();
-    private boolean sorted = false;
+    private final List<AnnotationEditorFactory> factories;
 
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
+    public AnnotationEditorRegistryImpl(@Autowired List<AnnotationEditorFactory> aFactories)
     {
-        // Collect annotation editor extensions
-        if (aBean instanceof AnnotationEditorFactory) {
-            beans.put(aBeanName, (AnnotationEditorFactory) aBean);
-            log.debug("Found annotation editor factory: {}", aBeanName);
+        OrderComparator.sort(aFactories);
+        
+        for (AnnotationEditorFactory ext : aFactories) {
+            log.info("Found annotation editor factory: {}",
+                    ClassUtils.getAbbreviatedName(ext.getClass(), 20));
         }
         
-        return aBean;
-    }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
+        factories = Collections.unmodifiableList(aFactories);
     }
 
     @Override
     public List<AnnotationEditorFactory> getEditorFactories()
     {
-        if (!sorted) {
-            sortedBeans.addAll(beans.values());
-            OrderComparator.sort(sortedBeans);
-            sorted = true;
-        }
-        return sortedBeans;
+        return factories;
     }
     
     @Override
     public AnnotationEditorFactory getEditorFactory(String aId)
     {
-        return beans.get(aId);
+        return factories.stream().filter(f -> aId.equals(f.getBeanName())).findFirst().orElse(null);
     }
     
     @Override
