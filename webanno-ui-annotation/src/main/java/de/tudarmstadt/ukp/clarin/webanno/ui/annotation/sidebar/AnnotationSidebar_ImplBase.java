@@ -146,9 +146,6 @@ public abstract class AnnotationSidebar_ImplBase
 
         JCas jCas = annotationPage.getEditorCas();
 
-        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
-        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
-
         int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
         Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);
 
