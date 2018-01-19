@@ -54,6 +54,7 @@ public class WebAnnoTsv3XReaderWriterTest
         AnalysisEngineDescription writer = createEngineDescription(
                 WebannoTsv3XWriter.class,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true,
                 WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true);
 
         runPipeline(reader, writer);

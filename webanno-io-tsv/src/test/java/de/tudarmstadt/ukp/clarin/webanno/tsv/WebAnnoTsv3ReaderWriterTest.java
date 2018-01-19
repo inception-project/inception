@@ -73,6 +73,7 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.class,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true, 
+                WebannoTsv3Writer.PARAM_OVERWRITE, true, 
                 WebannoTsv3Writer.PARAM_SPAN_LAYERS, spanLayers, 
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, slotFeatures,
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, slotTargets,

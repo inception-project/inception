@@ -51,9 +51,11 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class WebAnnoTsv3WriterTestBase
 {
     protected abstract AnalysisEngineDescription makeWriter()
@@ -1578,6 +1581,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         params.addAll(asList(aParams));
         params.add(WebannoTsv3Writer.PARAM_TARGET_LOCATION);
         params.add(targetFolder);
+        params.add(WebannoTsv3Writer.PARAM_OVERWRITE);
+        params.add(true);
         
         AnalysisEngineDescription tsv = makeWriter();
         for (int i = 0; i < params.size(); i += 2) {
@@ -1589,7 +1594,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         }
         
         AnalysisEngineDescription xmi = createEngineDescription(XmiWriter.class,
-                XmiWriter.PARAM_TARGET_LOCATION, targetFolder);
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
+                XmiWriter.PARAM_OVERWRITE, true);
         
         SimplePipeline.runPipeline(aJCas, tsv, xmi);
         

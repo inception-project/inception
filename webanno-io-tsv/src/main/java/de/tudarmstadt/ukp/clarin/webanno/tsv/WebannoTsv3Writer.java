@@ -649,9 +649,9 @@ public class WebannoTsv3Writer
             ref = 0;
         }
         for (Feature feature : aType.getFeatures()) {
-            if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                    || feature.toString().equals("uima.tcas.Annotation:begin")
-                    || feature.toString().equals("uima.tcas.Annotation:end")
+            if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                     || feature.getShortName().equals(GOVERNOR)
                     || feature.getShortName().equals(DEPENDENT)
                     || feature.getShortName().equals(FIRST)
@@ -800,9 +800,9 @@ public class WebannoTsv3Writer
     {
         List<String> annoPerFeatures = new ArrayList<>();
         for (Feature feature : aType.getFeatures()) {
-            if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                    || feature.toString().equals("uima.tcas.Annotation:begin")
-                    || feature.toString().equals("uima.tcas.Annotation:end")
+            if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                     || feature.getShortName().equals(GOVERNOR)
                     || feature.getShortName().equals(DEPENDENT)
                     || feature.getShortName().equals(FIRST)
@@ -848,9 +848,9 @@ public class WebannoTsv3Writer
         List<String> annoPerFeatures = new ArrayList<>();
         featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
         for (Feature feature : type.getFeatures()) {
-            if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                    || feature.toString().equals("uima.tcas.Annotation:begin")
-                    || feature.toString().equals("uima.tcas.Annotation:end")
+            if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                    || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                     || feature.getShortName().equals(GOVERNOR)
                     || feature.getShortName().equals(DEPENDENT)
                     || feature.getShortName().equals(FIRST)
