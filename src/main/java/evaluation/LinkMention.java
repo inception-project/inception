@@ -199,45 +199,47 @@ public class LinkMention
                 if (sortedCandidates == null || sortedCandidates.isEmpty()) {
                     noCandidatesForId.add(query.getId());
                     logger.info("No candidates for mention" + query.getName());
-                    continue;
                 }
-                String actual = sortedCandidates.get(0).getE2();
-                
-                List<String> candidateIds = 
-                        sortedCandidates.stream().map(e-> e.getE2()).collect(Collectors.toList());
-                
-                // The correct linking is included in the set of candidates
-                if (candidateIds.contains(expected)) {
-                    contain++;
-                } else {
-                    resultNotInCandidates.add(query.getId());
-                }
+                else {
+                    String actual = sortedCandidates.get(0).getE2();
 
-                for (int x = 0; x <= 9; x++) {
-                    List<String> subList;
-                    if (candidateIds.size() < x) {
-                        subList = candidateIds.subList(0, candidateIds.size());
-                    } else {
-                        subList = candidateIds.subList(0, x);
+                    List<String> candidateIds = sortedCandidates.stream().map(e -> e.getE2())
+                            .collect(Collectors.toList());
+
+                    // The correct linking is included in the set of candidates
+                    if (candidateIds.contains(expected)) {
+                        contain++;
                     }
-                    if (subList.contains(expected)) {
-                        Set<String> firstX = inFirstX.get(x);
-                        if (firstX == null) {
-                            firstX = new HashSet<>();
+                    else {
+                        resultNotInCandidates.add(query.getId());
+                    }
+
+                    for (int x = 0; x <= 9; x++) {
+                        List<String> subList;
+                        if (candidateIds.size() < x) {
+                            subList = candidateIds.subList(0, candidateIds.size());
+                        } else {
+                            subList = candidateIds.subList(0, x);
                         }
-                        firstX.add(query.getId());
-                        inFirstX.put(x, firstX);
+                        if (subList.contains(expected)) {
+                            Set<String> firstX = inFirstX.get(x + 1);
+                            if (firstX == null) {
+                                firstX = new HashSet<>();
+                            }
+                            firstX.add(query.getId());
+                            inFirstX.put(x + 1, firstX);
+                        }
                     }
-                }
-                
-                // The entity was linked correctly.
-                if (actual.equals(expected)) {
-                    correct++;
+                    
+                    // The entity was linked correctly.
+                    if (actual.equals(expected)) {
+                        correct++;
+                    }
                 }
                 
                 total++;
                 
-                logger.info("Number of terms in Virtuoso: " + total);
+                logger.info("\nNumber of terms in Virtuoso: " + total);
                 logger.info("Number of correct linkings: " + correct);
                 logger.info("Number of sets that contains the correct result: " + contain);
                 logger.info("Proportion of correct linkings: " + correct/ total);
@@ -268,11 +270,15 @@ public class LinkMention
         logger.info("Entries where correct linking was not in candidates:");
         logger.info(Arrays.toString(noCandidatesForId.toArray()));
         logger.info("------------------------------------------------------------------------");
-        
-        for (int i = 1; i <= 10 ; i++) {
-            logger.info("Precision at i: " + inFirstX.get(i).size() / total);
-        }
 
+        for (int i = 1; i <= 10; i++) {
+            double precisionAt = 0.0;
+            if (inFirstX.get(i) != null) {
+                precisionAt = inFirstX.get(i).size();
+            }
+            logger.info("Precision at " + i + ": " + precisionAt / total);
+        }
+        
     }
 
     public static void initializeConnection()
