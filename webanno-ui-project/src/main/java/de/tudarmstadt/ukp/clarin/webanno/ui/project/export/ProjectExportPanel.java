@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
@@ -86,7 +85,6 @@ public class ProjectExportPanel
     public static final String EXPORTED_PROJECT = ImportUtil.EXPORTED_PROJECT;
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ExportService exportService;

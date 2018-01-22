@@ -138,7 +138,7 @@ public class MonitoringPage
     public static final String LAST_ACCESS_ROW = "last access";
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AutomationService automationService;
+    private @SpringBean(required = false) AutomationService automationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -198,6 +198,7 @@ public class MonitoringPage
 
         trainingResultForm = new TrainingResultForm("trainingResultForm");
         trainingResultForm.setVisible(false);
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
 
         annotatorsProgressImage = new SvgChart("annotator",
@@ -566,6 +567,7 @@ public class MonitoringPage
     {
         trainingResultForm.remove();
         trainingResultForm = new TrainingResultForm("trainingResultForm");
+        trainingResultForm.setVisibilityAllowed(automationService != null);
         add(trainingResultForm);
         trainingResultForm
                 .setVisible(WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(aProject.getMode()));
