@@ -1,6 +1,9 @@
-package evaluation;
+package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import org.apache.commons.io.FileUtils;
+
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Label;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

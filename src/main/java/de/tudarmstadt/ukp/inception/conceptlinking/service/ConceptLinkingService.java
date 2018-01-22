@@ -1,11 +1,10 @@
-package evaluation;
-
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,12 +42,10 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 
-import opennlp.tools.sentdetect.SentenceDetectorME; 
-import opennlp.tools.sentdetect.SentenceModel;  
-
-import de.dailab.irml.gerned.NewsReader;
-import de.dailab.irml.gerned.QueriesReader;
-import de.dailab.irml.gerned.data.Query;
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
@@ -58,12 +54,14 @@ import de.tudarmstadt.ukp.dkpro.core.performance.Stopwatch;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
 import edu.stanford.nlp.util.StringUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
+import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
 
 
-public class LinkMention
+public class ConceptLinkingService
 {
 
-    private static Logger logger = LoggerFactory.getLogger(LinkMention.class);
+    private static Logger logger = LoggerFactory.getLogger(ConceptLinkingService.class);
 
     private static RepositoryConnection conn;
 
@@ -93,11 +91,10 @@ public class LinkMention
     private static final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap();
     
-    public static void main(String[] args)
+    public static void init()
     {
-
         initializeConnection();
-
+    
         AnalysisEngineDescription desc;
         try {
             desc = createEngineDescription(
@@ -111,7 +108,7 @@ public class LinkMention
                             Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer",
                             Stopwatch.PARAM_OUTPUT_FILE, "target/stanfordnlpPipeline.txt"
                     ));
-            pipeline = AnalysisEngineFactory.createEngine(desc);
+            ConceptLinkingService.pipeline = AnalysisEngineFactory.createEngine(desc);
             
             desc = createEngineDescription(
                     createEngineDescription(Stopwatch.class, 
@@ -136,151 +133,21 @@ public class LinkMention
         catch (UIMAException e) {
             logger.error("Could not create JCas.", e);
         }
-
+        
         try {
             //Loading german sentence detector model from OpenNlp 
             InputStream inputStream = new FileInputStream("resources/de-sent.bin");
             SentenceModel model = new SentenceModel(inputStream); 
             
             //Instantiating the SentenceDetectorME class 
-            detector = new SentenceDetectorME(model);
+            ConceptLinkingService.detector = new SentenceDetectorME(model);
         }
         catch (IOException e) {
             logger.error("Could not load sentence detector model.", e);
         } 
-
-        QueriesReader reader = new QueriesReader();
-        File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
-        List<Query> queries = reader.readQueries(answersFile);
-
-        logger.info("Total number of queries: " + queries.size());
-        logger.info("Candidate query limit: " + candidateQueryLimit);
-        logger.info("Signature query limit: " + signatureQueryLimit);
-        
-        double correct = 0;
-        double contain = 0;
-        double total = 0;
-        
-        List<String> nil = new LinkedList<>();
-        List<String> noIdInVirtuoso = new LinkedList<>();
-        List<String> noCandidatesForId = new LinkedList<>();
-        List<String> resultNotInCandidates = new LinkedList<>();
-        Map<Integer, Set<String>> inFirstX = new HashMap<>();
-        
-        for (Query query : queries) {
-            double startTime = System.currentTimeMillis();
-            String docText = NewsReader
-                    .readFile("../gerned/dataset/news/" + query.getDocid() + ".xml");
-            
-            logger.debug(query.getId());
-            
-            // These entities have no result
-            if (query.getEntity().startsWith("NIL")) {
-                nil.add(query.getId());
-                logger.info("NIL query: " + query.getEntity());
-                continue;
-            }
-            
-            String expected = mapWikipediaUrlToWikidataUrl(query.getEntity());
-            
-            // Skip terms that are not in Virtuoso dump 
-            if (expected == null) {
-                noIdInVirtuoso.add(query.getId());
-                logger.info("Mention " + query.getName() + "not in Virtuoso.");
-                continue;
-            }
-            Set<Entity> linkings = linkMention(query.getName());
-            
-            try {
-                List<Entity> sortedCandidates = 
-                        computeCandidateScores(query.getName().toLowerCase(), linkings, 
-                                docText.toLowerCase());
-                
-                if (sortedCandidates == null || sortedCandidates.isEmpty()) {
-                    noCandidatesForId.add(query.getId());
-                    logger.info("No candidates for mention" + query.getName());
-                }
-                else {
-                    String actual = sortedCandidates.get(0).getE2();
-
-                    List<String> candidateIds = sortedCandidates.stream().map(e -> e.getE2())
-                            .collect(Collectors.toList());
-
-                    // The correct linking is included in the set of candidates
-                    if (candidateIds.contains(expected)) {
-                        contain++;
-                    }
-                    else {
-                        resultNotInCandidates.add(query.getId());
-                    }
-
-                    for (int x = 0; x <= 9; x++) {
-                        List<String> subList;
-                        if (candidateIds.size() < x) {
-                            subList = candidateIds.subList(0, candidateIds.size());
-                        } else {
-                            subList = candidateIds.subList(0, x);
-                        }
-                        if (subList.contains(expected)) {
-                            Set<String> firstX = inFirstX.get(x + 1);
-                            if (firstX == null) {
-                                firstX = new HashSet<>();
-                            }
-                            firstX.add(query.getId());
-                            inFirstX.put(x + 1, firstX);
-                        }
-                    }
-                    
-                    // The entity was linked correctly.
-                    if (actual.equals(expected)) {
-                        correct++;
-                    }
-                }
-                
-                total++;
-                
-                logger.info("\nNumber of terms in Virtuoso: " + total);
-                logger.info("Number of correct linkings: " + correct);
-                logger.info("Number of sets that contains the correct result: " + contain);
-                logger.info("Proportion of correct linkings: " + correct/ total);
-                logger.info("Proportion of candidate sets containing the correct result: " + contain/total);
-            }
-            catch (UIMAException | IOException e) {
-                logger.error("Could not compute candidate scores: ", e);
-            }
-
-            logger.debug(System.currentTimeMillis() - startTime + "ms for this iteration.\n");
-        }
-        
-        int totalSkipped = nil.size() + noIdInVirtuoso.size() + noCandidatesForId.size();
-        logger.info("Evaluation finished. " + totalSkipped + " entities skipped.");
-        logger.info(nil.size() + " entries are NIL.");
-        logger.info(noIdInVirtuoso.size() + " entry Ids could not be resolved.");
-        logger.info(noCandidatesForId.size() + " entries got no candidates.");
-        logger.info("------------------------------------------------------------------------");
-        logger.info("Entries with no Id:");
-        logger.info(Arrays.toString(nil.toArray()));
-        logger.info("------------------------------------------------------------------------");
-        logger.info("Entries whose Ids could not be resolved:");
-        logger.info(Arrays.toString(noIdInVirtuoso.toArray()));
-        logger.info("------------------------------------------------------------------------");
-        logger.info("Entries with no candidates found:");
-        logger.info(Arrays.toString(noCandidatesForId.toArray()));
-        logger.info("------------------------------------------------------------------------");
-        logger.info("Entries where correct linking was not in candidates:");
-        logger.info(Arrays.toString(noCandidatesForId.toArray()));
-        logger.info("------------------------------------------------------------------------");
-
-        for (int i = 1; i <= 10; i++) {
-            double precisionAt = 0.0;
-            if (inFirstX.get(i) != null) {
-                precisionAt = inFirstX.get(i).size();
-            }
-            logger.info("Precision at " + i + ": " + precisionAt / total);
-        }
-        
+    
     }
-
+    
     public static void initializeConnection()
     {
         SPARQLRepository repo = new SPARQLRepository(SPARQL_ENDPOINT);
@@ -615,4 +482,14 @@ public class LinkMention
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
+    public static int getCandidateQueryLimit()
+    {
+        return candidateQueryLimit;
+    }
+
+    public static int getSignatureQueryLimit()
+    {
+        return signatureQueryLimit;
+    } 
+    
 }

@@ -1,4 +1,4 @@
-package evaluation;
+package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.List;
 
