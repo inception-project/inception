@@ -80,20 +80,16 @@ public class ConceptLinkingService
 
     private static final Set<String> stopwords 
             = Utils.readFile("resources/stopwords-de.txt");
-    
-    
-    private static String SPARQL_ENDPOINT 
-            = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-    // "https://query.wikidata.org/sparql?query=SPARQL";
+
     private static int candidateQueryLimit = 100;
     private static int signatureQueryLimit = 10;
     
     private static final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap();
     
-    public static void init()
+    public static void init(String SPARQL_ENDPOINT)
     {
-        initializeConnection();
+        initializeConnection(SPARQL_ENDPOINT);
     
         AnalysisEngineDescription desc;
         try {
@@ -148,7 +144,7 @@ public class ConceptLinkingService
     
     }
     
-    public static void initializeConnection()
+    public static void initializeConnection(String SPARQL_ENDPOINT)
     {
         SPARQLRepository repo = new SPARQLRepository(SPARQL_ENDPOINT);
         repo.initialize();

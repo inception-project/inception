@@ -23,12 +23,15 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 
 public class EvaluationRun
 {
-
     private static Logger logger = LoggerFactory.getLogger(EvaluationRun.class);
+    
+    private static String SPARQL_ENDPOINT 
+        = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     
     public static void main(String[] args)
     {
-        ConceptLinkingService.init();
+        
+        ConceptLinkingService.init(SPARQL_ENDPOINT);
         
         QueriesReader reader = new QueriesReader();
         File answersFile = new File("../gerned/dataset/ANY_german_queries_with_answers.xml");
