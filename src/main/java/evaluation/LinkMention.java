@@ -101,8 +101,8 @@ public class LinkMention
         AnalysisEngineDescription desc;
         try {
             desc = createEngineDescription(
-                    createEngineDescription(Stopwatch.class, Stopwatch.PARAM_TIMER_NAME,
-                            "testTimer"),
+                    createEngineDescription(Stopwatch.class, 
+                            Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer"),
                     createEngineDescription(StanfordSegmenter.class),
                     createEngineDescription(StanfordPosTagger.class,
                             StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"),
@@ -114,8 +114,8 @@ public class LinkMention
             pipeline = AnalysisEngineFactory.createEngine(desc);
             
             desc = createEngineDescription(
-                    createEngineDescription(Stopwatch.class, Stopwatch.PARAM_TIMER_NAME,
-                            "testTimer"),
+                    createEngineDescription(Stopwatch.class, 
+                            Stopwatch.PARAM_TIMER_NAME, "coreNlpTimer"),
                     createEngineDescription(CoreNlpSegmenter.class),
                     createEngineDescription(CoreNlpPosTagger.class,
                             CoreNlpSegmenter.PARAM_LANGUAGE, "en"),
@@ -312,6 +312,7 @@ public class LinkMention
         mentionSentence.setDocumentLanguage("en");
         
         pipeline.process(mentionSentence);
+        pipeline.collectionProcessComplete();
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
 
         for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
