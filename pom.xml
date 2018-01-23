@@ -55,6 +55,7 @@
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-recommendation</module>
+    <module>inception-concept-linking</module>
     <module>inception-active-learning</module>
     <module>inception-imls-core</module>
     <!-- module>inception-imls-mira</module -->

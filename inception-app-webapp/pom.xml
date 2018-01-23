@@ -54,6 +54,13 @@
       <artifactId>inception-ui-kb</artifactId>
     </dependency>
 
+    <!-- INCEPTION - CONCEPT LINKING FUNCTIONALITY -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-concept-linking</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
