@@ -80,6 +80,9 @@ public class ConceptLinkingService
     
     private static JCas mentionSentence;
     
+    private static String wd = "";
+    // private static String wd = "workspace/inception-concept-linking/";
+    
     private static final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
@@ -87,13 +90,13 @@ public class ConceptLinkingService
             Arrays.asList(PUNCTUATION_VALUES));
 
     private static final Set<String> stopwords 
-            = Utils.readFile("resources/stopwords-de.txt");
+            = Utils.readFile(wd + "resources/stopwords-de.txt");
 
     private static int candidateQueryLimit = 100;
     private static int signatureQueryLimit = 10;
     
     private static final Map<String, Integer> entityFrequencyMap
-            = Utils.loadEntityFrequencyMap();
+            = Utils.loadEntityFrequencyMap(wd + "resources/wikidata_entity_freqs.map");
     
     public static void init(String SPARQL_ENDPOINT)
     {
@@ -140,7 +143,8 @@ public class ConceptLinkingService
         
         try {
             //Loading german sentence detector model from OpenNlp 
-            InputStream inputStream = new FileInputStream("resources/de-sent.bin");
+            InputStream inputStream = 
+                    new FileInputStream(wd + "resources/de-sent.bin");
             SentenceModel model = new SentenceModel(inputStream); 
             
             //Instantiating the SentenceDetectorME class 

@@ -1,9 +1,5 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
-import org.apache.commons.io.FileUtils;
-
-import de.tudarmstadt.ukp.inception.conceptlinking.model.Label;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,6 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Label;
 
 public class Utils
 {
@@ -50,11 +50,11 @@ public class Utils
         return null;
     }
 
-    public static Map<String, Integer> loadEntityFrequencyMap()
+    public static Map<String, Integer> loadEntityFrequencyMap(String filename)
     {
         Map<String, Integer> entityFreqMap = new HashMap<String, Integer>();
         try {
-            File f = new File("resources/wikidata_entity_freqs.map");
+            File f = new File(filename);
             List<String> lines = FileUtils.readLines(f, "UTF-8");
             for (String line: lines) {
                 if (!line.startsWith("#")) {
