@@ -76,9 +76,8 @@ public class EvaluationRun
             Set<Entity> linkings = ConceptLinkingService.linkMention(query.getName());
             
             try {
-                List<Entity> sortedCandidates = 
-                        ConceptLinkingService.computeCandidateScores(query.getName().toLowerCase(), linkings, 
-                                docText.toLowerCase());
+                List<Entity> sortedCandidates = ConceptLinkingService.computeCandidateScores(
+                        query.getName().toLowerCase(), linkings,docText.toLowerCase());
                 
                 if (sortedCandidates == null || sortedCandidates.isEmpty()) {
                     noCandidatesForId.add(query.getId());
@@ -126,8 +125,9 @@ public class EvaluationRun
                 logger.info("\nNumber of terms in Virtuoso: " + total);
                 logger.info("Number of correct linkings: " + correct);
                 logger.info("Number of sets that contains the correct result: " + contain);
-                logger.info("Proportion of correct linkings: " + correct/ total);
-                logger.info("Proportion of candidate sets containing the correct result: " + contain/total);
+                logger.info("Proportion of correct linkings: " + correct / total);
+                logger.info("Proportion of candidate sets containing the correct result: "
+                        + contain / total);
             }
             catch (UIMAException | IOException e) {
                 logger.error("Could not compute candidate scores: ", e);

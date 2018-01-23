@@ -70,9 +70,10 @@ class ConceptLinkingServiceTest
     @Test
     public void testGetSemanticSignature()
     {
-        ConceptLinkingService.initializeConnection();
-         SemanticSignature s = ConceptLinkingService.getSemanticSignature("Q1");
-         System.out.println(s);
+        ConceptLinkingService.initializeConnection(
+                "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
+        SemanticSignature s = ConceptLinkingService.getSemanticSignature("Q1");
+        System.out.println(s);
     }
 
 }

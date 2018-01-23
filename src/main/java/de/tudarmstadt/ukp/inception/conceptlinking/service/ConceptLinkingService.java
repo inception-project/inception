@@ -1,14 +1,10 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.Math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +19,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
@@ -42,10 +40,16 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.sentdetect.SentenceModel;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
-import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
@@ -54,9 +58,13 @@ import de.tudarmstadt.ukp.dkpro.core.performance.Stopwatch;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
 import edu.stanford.nlp.util.StringUtils;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
 
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
 
 public class ConceptLinkingService
 {
@@ -204,7 +212,7 @@ public class ConceptLinkingService
         mentionSentence.setDocumentText(sentenceText);
         mentionSentence.setDocumentLanguage("en");
         
-        if(mentionSentence == null) {
+        if (mentionSentence == null) {
             logger.info("Could not return mention sentence.");
             return null;
         }
@@ -234,20 +242,17 @@ public class ConceptLinkingService
     public static String findMentionSentenceInDoc(String docText, String mention) 
             throws IOException
     {    
-         //Detecting the sentence
-         String sentences[] = detector.sentDetect(docText); 
-       
-         //Check whether mention occurs in this sentence
-         Pattern p = Pattern.compile(".*\\b" + mention + "\\b.*");
-         
-         for(String sent : sentences) {       
-            Matcher m = p.matcher(sent);
-            if (m.matches()) {
+        // Detecting the sentence
+        String[] sentences = detector.sentDetect(docText);
+
+        // Check whether mention occurs in this sentence
+        for (String sent : sentences) {
+            if (sent.contains(mention)) {
                 return sent;
             }
-         }
-         logger.info("Mention " + mention + " could not be found in docText.");
-         return null;
+        }
+        logger.info("Mention " + mention + " could not be found in docText.");
+        return null;
     }
 
     // TODO lemmatization
@@ -468,7 +473,7 @@ public class ConceptLinkingService
                 BindingSet sol = result.next();
                 relatedEntities.add(sol.getValue("label").stringValue());
                 String p = sol.getValue("p").stringValue();
-                relatedRelations.add(p.substring(0, p.length()-2));
+                relatedRelations.add(p.substring(0, p.length() - 2));
             }
         }
         catch (Exception e) {
