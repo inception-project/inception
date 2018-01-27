@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//CHECKSTYLE:OFF
+// CHECKSTYLE:OFF
 
 /* First created by JCasGen Wed Nov 15 10:30:01 CET 2017 */
 package de.tudarmstadt.ukp.dkpro.core.api.semantics.type;
