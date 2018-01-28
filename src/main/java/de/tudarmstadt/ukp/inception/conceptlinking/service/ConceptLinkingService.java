@@ -171,7 +171,8 @@ public class ConceptLinkingService
         try (TupleQueryResult wikidataIdResult = wikidataIdQuery.evaluate()) {
             while (wikidataIdResult.hasNext()) {
                 BindingSet sol = wikidataIdResult.next();
-                return sol.getValue("e2").toString();
+                Value e2 = sol.getValue("e2");
+                return (e2 != null) ? e2.toString() : null;
             }
         }
         catch (Exception e) {
