@@ -292,7 +292,7 @@ public class ConceptLinkingService
             return null;
         }
 
-        String entityQueryString = QueryUtil.entityQuery(mentionArray, candidateQueryLimit);
+        String entityQueryString = QueryUtil.entityQuery(mentionArray, candidateQueryLimit, null);
         TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
         try (TupleQueryResult entityResult = query.evaluate()) {
             while (entityResult.hasNext()) {
