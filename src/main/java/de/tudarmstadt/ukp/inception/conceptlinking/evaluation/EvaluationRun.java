@@ -56,7 +56,7 @@ public class EvaluationRun
             String docText = NewsReader
                     .readFile("../gerned/dataset/news/" + query.getDocid() + ".xml");
             
-            logger.debug(query.getId());
+            logger.debug(query.getId() + ": " + query.getName());
             
             // These entities have no result
             if (query.getEntity().startsWith("NIL")) {
@@ -70,7 +70,7 @@ public class EvaluationRun
             // Skip terms that are not in Virtuoso dump 
             if (expected == null) {
                 noIdInVirtuoso.add(query.getId());
-                logger.info("Mention " + query.getName() + "not in Virtuoso.");
+                logger.info("Mention " + query.getName() + " not in Virtuoso.");
                 continue;
             }
             Set<Entity> linkings = ConceptLinkingService.linkMention(query.getName());
