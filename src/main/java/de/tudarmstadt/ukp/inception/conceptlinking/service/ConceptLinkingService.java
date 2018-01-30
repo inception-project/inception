@@ -2,12 +2,11 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -20,36 +19,31 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
@@ -62,46 +56,41 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.sentdetect.SentenceModel;
-
+@Component
 public class ConceptLinkingService
 {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static Logger logger = LoggerFactory.getLogger(ConceptLinkingService.class);
+    private @Resource DocumentService docService;
+    private @Resource KnowledgeBaseService kbService;
 
-    private static RepositoryConnection conn;
-
-    private static AnalysisEngine pipeline;
-    private static AnalysisEngine coreNlpPipeline;
-
-    private static SentenceDetectorME detector;
+    private AnalysisEngine pipeline;
+    private AnalysisEngine coreNlpPipeline;
     
-    private static JCas mentionSentence;
+    // private static String wd = "";
+    private String wd = "workspace/inception-concept-linking/";
     
-    private static String wd = "";
-    // private static String wd = "workspace/inception-concept-linking/";
-    
-    private static final String[] PUNCTUATION_VALUES 
+    private final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
 
-    private static final Set<String> punctuations = new HashSet<>(
+    private final Set<String> punctuations = new HashSet<>(
             Arrays.asList(PUNCTUATION_VALUES));
 
-    private static final Set<String> stopwords 
+    private final Set<String> stopwords 
             = Utils.readFile(wd + "resources/stopwords-de.txt");
 
-    private static int candidateQueryLimit = 100;
-    private static int signatureQueryLimit = 10;
+    private int candidateQueryLimit = 200;
+    private int signatureQueryLimit = 10;
     
-    private static final Map<String, Integer> entityFrequencyMap
+    private final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap(wd + "resources/wikidata_entity_freqs.map");
-    
-    public static void init(String SPARQL_ENDPOINT)
+
+    @PostConstruct
+    public void init()
     {
-        initializeConnection(SPARQL_ENDPOINT);
-    
         AnalysisEngineDescription desc;
         try {
             desc = createEngineDescription(
@@ -115,7 +104,7 @@ public class ConceptLinkingService
                             Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer",
                             Stopwatch.PARAM_OUTPUT_FILE, "target/stanfordnlpPipeline.txt"
                     ));
-            ConceptLinkingService.pipeline = AnalysisEngineFactory.createEngine(desc);
+            pipeline = AnalysisEngineFactory.createEngine(desc);
             
             desc = createEngineDescription(
                     createEngineDescription(Stopwatch.class, 
@@ -134,64 +123,20 @@ public class ConceptLinkingService
             logger.error("Could not create AnalysisEngine!", e);
         }
         
-        try {
-            mentionSentence = JCasFactory.createText("", "en");
-        }
-        catch (UIMAException e) {
-            logger.error("Could not create JCas.", e);
-        }
-        
-        try {
-            //Loading german sentence detector model from OpenNlp 
-            InputStream inputStream = 
-                    new FileInputStream(wd + "resources/de-sent.bin");
-            SentenceModel model = new SentenceModel(inputStream); 
-            
-            //Instantiating the SentenceDetectorME class 
-            ConceptLinkingService.detector = new SentenceDetectorME(model);
-        }
-        catch (IOException e) {
-            logger.error("Could not load sentence detector model.", e);
-        } 
-    
-    }
-    
-    public static void initializeConnection(String SPARQL_ENDPOINT)
-    {
-        SPARQLRepository repo = new SPARQLRepository(SPARQL_ENDPOINT);
-        repo.initialize();
-        conn = repo.getConnection();
-    }
-
-    public static String mapWikipediaUrlToWikidataUrl(String url)
-    {
-        String wikidataQueryString = QueryUtil.mapWikipediaUrlToWikidataUrlQuery(url);
-        TupleQuery wikidataIdQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL,
-                wikidataQueryString);
-        try (TupleQueryResult wikidataIdResult = wikidataIdQuery.evaluate()) {
-            while (wikidataIdResult.hasNext()) {
-                BindingSet sol = wikidataIdResult.next();
-                Value e2 = sol.getValue("e2");
-                return (e2 != null) ? e2.toString() : null;
-            }
-        }
-        catch (Exception e) {
-            logger.error("Could not map wikipedia URL to Wikidata Id", e);
-        }
-        return null;
     }
 
     /*
      * Retrieves the first sentence containing the mention as Tokens
      */
-    public static List<Token> getMentionSentence(String docText, String mention)
-        throws UIMAException, IOException
+    private synchronized List<Token> getMentionSentence(JCas mentionSentence, String mention, 
+            String language)
+        throws UIMAException, IOException, IllegalStateException
     {
         double startTime = System.currentTimeMillis();
-        String sentenceText = findMentionSentenceInDoc(docText, mention);
+        String sentenceText = findMentionSentenceInDoc(mentionSentence, mention);
         mentionSentence.reset();
         mentionSentence.setDocumentText(sentenceText);
-        mentionSentence.setDocumentLanguage("en");
+        mentionSentence.setDocumentLanguage(language);
         
         pipeline.process(mentionSentence);
         pipeline.collectionProcessComplete();
@@ -205,22 +150,18 @@ public class ConceptLinkingService
             return sentence;
         }
         logger.info("Could not return mention sentence.");
-        return null;
+        throw new IllegalStateException();
     }
 
-    public static List<Token> getMentionSentenceWithCorenlp(String docText, String mention) 
+    private synchronized List<Token> getMentionSentenceWithCorenlp(JCas mentionSentence, 
+            String mention) 
         throws UIMAException, IOException
     {
         double startTime = System.currentTimeMillis();
-        String sentenceText = findMentionSentenceInDoc(docText, mention);
+        String sentenceText = findMentionSentenceInDoc(mentionSentence, mention);
         mentionSentence.reset();
         mentionSentence.setDocumentText(sentenceText);
         mentionSentence.setDocumentLanguage("en");
-        
-        if (mentionSentence == null) {
-            logger.info("Could not return mention sentence.");
-            return null;
-        }
         
         coreNlpPipeline.process(mentionSentence);
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
@@ -233,7 +174,7 @@ public class ConceptLinkingService
             return sentence;
         }
         logger.info("Could not return mention sentence.");
-        return null;
+        throw new IllegalStateException();
     }
     
     
@@ -244,24 +185,25 @@ public class ConceptLinkingService
      * @return
      * @throws IOException
      */
-    public static String findMentionSentenceInDoc(String docText, String mention) 
-            throws IOException
+    private String findMentionSentenceInDoc(JCas aJcas, String mention) 
+            throws IOException, IllegalStateException
     {    
         // Detecting the sentence
-        String[] sentences = detector.sentDetect(docText);
+        Collection<Sentence> sentences = JCasUtil.select(aJcas, Sentence.class);
 
         // Check whether mention occurs in this sentence
-        for (String sent : sentences) {
-            if (sent.contains(mention)) {
-                return sent;
+        for (Sentence sent : sentences) {
+            if (sent.getCoveredText().contains(mention)) {
+                return sent.getCoveredText();
             }
         }
         logger.info("Mention " + mention + " could not be found in docText.");
-        return null;
+        throw new IllegalStateException();
     }
 
     // TODO lemmatization
-    public static Set<Entity> linkMention(String mention)
+    private Set<Entity> linkMention(KnowledgeBase aKB, String mention, IRI conceptIri, 
+            String aLanguage)
     {
         double startTime = System.currentTimeMillis();
         Set<Entity> linkings = new HashSet<>();
@@ -290,33 +232,38 @@ public class ConceptLinkingService
 
         if (mentionArray.isEmpty() || onlyStopwords) {
             logger.error("Mention array is empty or consists of stopwords only - returning.");
-            return null;
+            throw new IllegalStateException();
         }
 
-        String entityQueryString = QueryUtil.entityQuery(mentionArray, candidateQueryLimit, null);
-        TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
-        try (TupleQueryResult entityResult = query.evaluate()) {
-            while (entityResult.hasNext()) {
-                BindingSet solution = entityResult.next();
-                Value e2 = solution.getValue("e2");
-                Value label = solution.getValue("label");
-                Value anylabel = solution.getValue("anylabel");
-                linkings.add(new Entity((e2 != null) ? e2.toString() : "",
-                                     (label != null) ? label.toString() : "",
-                                  (anylabel != null) ? anylabel.toString() : ""));
+        String entityQueryString = 
+                QueryUtil.entityQuery(mentionArray, candidateQueryLimit, conceptIri, aLanguage);
+        
+        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, entityQueryString);
+            try (TupleQueryResult entityResult = query.evaluate()) {
+                while (entityResult.hasNext()) {
+                    BindingSet solution = entityResult.next();
+                    Value e2 = solution.getValue("e2");
+                    Value label = solution.getValue("label");
+                    Value anylabel = solution.getValue("anylabel");
+                    linkings.add(new Entity((e2 != null) ? e2.toString() : "",
+                                         (label != null) ? label.toString() : "",
+                                      (anylabel != null) ? anylabel.toString() : ""));
+                }
+            }
+            catch (QueryEvaluationException e) {
+                throw new QueryEvaluationException(e);
+            }
+            catch (NullPointerException e) {
+                throw new NullPointerException();
             }
         }
-        catch (QueryEvaluationException e) {
-            throw new QueryEvaluationException(e);
-        }
-        catch (NullPointerException e) {
-            logger.error("NullPointerException occured:", e);
-        }
+
         if (linkings.isEmpty()) {
             String[] split = mention.split(" ");
             if (split.length > 1) {
                 for (String s : split) {
-                    linkings.addAll(linkMention(s));
+                    linkings.addAll(linkMention(aKB, s, null, aLanguage));
                 }
             }
         }
@@ -331,7 +278,7 @@ public class ConceptLinkingService
      * 
      * TODO what happens if there are multiple mentions in a sentence?
      */
-    public static List<Token> getMentionContext(List<Token> mentionSentence, List<String> mention,
+    private List<Token> getMentionContext(List<Token> mentionSentence, List<String> mention,
             int mentionContextSize)
     {
         int start = 0, end = 0;
@@ -377,14 +324,14 @@ public class ConceptLinkingService
      * @return
      * @throws UIMAException
      */
-    public static List<Entity> computeCandidateScores(String mention, Set<Entity> linkings,
-            String text)
+    private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
+            Set<Entity> linkings, JCas jCas, String aLanguage)
         throws UIMAException, IOException
     {
         int mentionContextSize = 2;
-        List<Token> mentionSentence = getMentionSentence(text, mention);
+        List<Token> mentionSentence = getMentionSentence(jCas, mention, aLanguage);
         if (mentionSentence == null) {
-            return null;
+            throw new IllegalStateException();
         }
         List<String> splitMention = Arrays.asList(mention.split(" "));
         List<Token> mentionContext = getMentionContext(mentionSentence, splitMention,
@@ -422,7 +369,7 @@ public class ConceptLinkingService
             l.setLevSentence(lev.apply(tokensToString(mentionContext), anylabel).intValue());
             l.setNumRelatedRelations(0);
 
-            SemanticSignature sig = getSemanticSignature(wikidataId);
+            SemanticSignature sig = getSemanticSignature(aKB, wikidataId);
             Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
             for (String s : relatedEntities) {
@@ -457,7 +404,7 @@ public class ConceptLinkingService
         return candidates;
     }
 
-    private static String tokensToString(List<Token> sentence)
+    private String tokensToString(List<Token> sentence)
     {
         StringBuilder builder = new StringBuilder();
         for (Token t : sentence) {
@@ -467,35 +414,50 @@ public class ConceptLinkingService
     }
 
     // TODO filter against blacklist
-    public static SemanticSignature getSemanticSignature(String wikidataId)
+    private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String wikidataId)
     {
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         String queryString = QueryUtil.semanticSignatureQuery(wikidataId, signatureQueryLimit);
-        TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
-        try (TupleQueryResult result = query.evaluate()) {
-            while (result.hasNext()) {
-                BindingSet sol = result.next();
-                relatedEntities.add(sol.getValue("label").stringValue());
-                String p = sol.getValue("p").stringValue();
-                relatedRelations.add(p.substring(0, p.length() - 2));
+        try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+            try (TupleQueryResult result = query.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet sol = result.next();
+                    relatedEntities.add(sol.getValue("label").stringValue());
+                    String p = sol.getValue("p").stringValue();
+                    relatedRelations.add(p.substring(0, p.length() - 2));
+                }
             }
-        }
-        catch (Exception e) {
-            logger.error("could not get semantic signature", e);
+            catch (Exception e) {
+                logger.error("could not get semantic signature", e);
+            }
         }
         
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    public static int getCandidateQueryLimit()
+    public List<Entity> disambiguate (KnowledgeBase aKB, String mention, IRI conceptIri, JCas jCas, 
+            String aLanguage)
+        throws IOException
+    {
+        List<Entity> candidates = new ArrayList<>();
+        try {
+            candidates = computeCandidateScores(aKB, mention,
+                    linkMention(aKB, mention, conceptIri, aLanguage), jCas, aLanguage);
+        } catch (IOException | UIMAException e) {
+            logger.error("Could not compute candidate scores: ", e);
+        }
+        return candidates;
+    }
+
+    public int getCandidateQueryLimit()
     {
         return candidateQueryLimit;
     }
 
-    public static int getSignatureQueryLimit()
+    public int getSignatureQueryLimit()
     {
         return signatureQueryLimit;
-    } 
-    
+    }
 }

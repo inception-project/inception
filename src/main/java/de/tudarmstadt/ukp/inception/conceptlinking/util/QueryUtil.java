@@ -2,6 +2,8 @@ package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
 import java.util.List;
 
+import org.eclipse.rdf4j.model.IRI;
+
 public class QueryUtil
 {
 
@@ -19,17 +21,17 @@ public class QueryUtil
     private static String SPARQL_ENTITY_LABEL =
               "             {\n"
             + "                  {GRAPH <http://wikidata.org/statements> { \n"
-            + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@de\n"
+            + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@%language\n"
             + "                      }\n"
             + "                  }\n"
             + "                  UNION\n"
             + "                  {VALUES ?labelpredicate {rdfs:label skos:altLabel}\n"
             + "                      GRAPH <http://wikidata.org/terms> {\n"
             + "                          ?e2 ?labelpredicate ?anylabel. \n"
-            + "                          ?anylabel bif:contains '\"%entitylabel\"'@de. \n"
+            + "                          ?anylabel bif:contains '\"%entitylabel\"'@%language. \n"
             + "                      }\n"
-            + "                      ?e2 rdf:type e:\"conceptId\" \n"
-            + "                      FILTER ( lang(?anylabel) = \"de\" )\n"
+            + "                      ?e2 rdf:type \"%conceptIri\" \n"
+            + "                      FILTER ( lang(?anylabel) = \"%language\" )\n"
             + "                  }\n"
             + "              }\n"
             + "    FILTER EXISTS { GRAPH <http://wikidata.org/statements> { ?e2 ?p ?v }}\n"
@@ -40,7 +42,7 @@ public class QueryUtil
     
     private static String SPARQL_CANONICAL_LABEL_ENTITY = "{\n"
             + "        GRAPH <http://wikidata.org/terms> { ?e2 rdfs:label ?label. }\n"
-            + "        FILTER ( lang(?label) = \"de\" )\n"
+            + "        FILTER ( lang(?label) = \"%language\" )\n"
             + "   }\n";
 
     private static String SPARQL_LIMIT = " \n LIMIT ";
@@ -55,7 +57,8 @@ public class QueryUtil
     private static String SPARQL_RELATION_REVERSE = 
             "{GRAPH <http://wikidata.org/statements> { ?e2 ?p ?m . ?m ?rr ?e1 . %restriction% }}\n";
 
-    public static String entityQuery(List<String> tokens, int limit, String conceptId)
+    public static String entityQuery(List<String> tokens, int limit, IRI conceptIri, 
+            String language)
     {
         String query = SPARQL_INFERENCE_CLAUSE;
         query += SPARQL_PREFIX + "\n";
@@ -69,20 +72,23 @@ public class QueryUtil
         else {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace(
                     "{GRAPH <http://wikidata.org/statements> { \n"
-             + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@de\n"
+             + "                      ?e2 e:P1549s/e:P1549v \"%demonym\"@" + language + "\n"
              + "                      }\n"
              + "                  }\n"
              + "                  UNION\n",
             "");
         }
         
-        if (conceptId != null) {
-            SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace("%conceptId", conceptId);
+        if (conceptIri != null) {
+            SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
+                    .replace("%conceptIri", conceptIri.getNamespace() + conceptIri.getLocalName());
         } 
         else {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
-                    .replace("?e2 rdf:type e:\"conceptId\" \n", "");
+                    .replace("?e2 rdf:type \"%conceptIri\" \n", "");
         }
+        SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST.replace("%language", language);
+        
         query += SPARQL_ENTITY_LABEL_INST;
         query += "} \n";
         query += SPARQL_LIMIT + limit;
@@ -91,10 +97,10 @@ public class QueryUtil
         return query;
     }
 
-    public static String mapWikipediaUrlToWikidataUrlQuery(String wikipediaURL)
+    public static String mapWikipediaUrlToWikidataUrlQuery(String wikipediaURL, String language)
     {
-        String wikipediaId = wikipediaURL.replace("http://de.wikipedia.org/wiki/",
-                "https://de.wikipedia.org/wiki/");
+        String wikipediaId = wikipediaURL.replace("http://" + language + ".wikipedia.org/wiki/",
+                "https://" + language + ".wikipedia.org/wiki/");
         String query = SPARQL_PREFIX + "\n";
         query += SPARQL_SELECT + "{\n";
         query += SPARQL_MAP_WIKIPEDIA_ID.replace("%otherkbid%", wikipediaId);
