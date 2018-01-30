@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.eclipse.rdf4j.model.IRI;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 

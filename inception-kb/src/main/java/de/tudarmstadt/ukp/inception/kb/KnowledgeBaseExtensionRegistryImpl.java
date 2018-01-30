@@ -11,12 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-
-
-
 
 @Component
 public class KnowledgeBaseExtensionRegistryImpl
