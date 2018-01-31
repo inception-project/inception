@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemPred;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
+import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
 
 /**
  * This class is meant to be used only by {@link AnnotationSchemaServiceImpl} and within a
@@ -93,6 +94,8 @@ class ProjectInitializer
         createCorefLayer(aProject, corefTypeTagSet, corefRelTagSet);
 
         createLemmaLayer(aProject);
+        
+        createOrthoGraphyLayer(aProject);
 
         createChunkLayer(aProject);
 
@@ -296,6 +299,45 @@ class ProjectInitializer
         lemmaFeature.setUiName("Lemma");
         lemmaFeature.setLayer(lemmaLayer);
         annotationSchemaService.createFeature(lemmaFeature);
+    }
+    
+    private void createOrthoGraphyLayer(Project aProject) throws IOException {
+        AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
+                "Orthography Correction", SPAN_TYPE, aProject, true);
+
+        orthography.setAllowStacking(false);
+        orthography.setMultipleTokens(false);
+        orthography.setLockToTokenOffset(true);
+        annotationSchemaService.createLayer(orthography);
+
+        AnnotationFeature correction = new AnnotationFeature();
+        correction.setDescription("Correct this token using the specified operation.");
+        correction.setName("value");
+        correction.setType(CAS.TYPE_NAME_STRING);
+        correction.setProject(aProject);
+        correction.setUiName("Correction");
+        correction.setLayer(orthography);
+        annotationSchemaService.createFeature(correction);
+
+        TagSet operationTagset = annotationSchemaService.createTagSet(
+                "operation to be done with specified in tokenIDs token/tokens in order to correct",
+                "Operation", "en",
+                new String[] { "replace", "insert_before", "insert_after", "delete" },
+                new String[] { "replace", "insert before", "insert after", "delete" },
+                aProject);
+
+        AnnotationFeature operation = new AnnotationFeature();
+        operation.setDescription("An operation taken to change this token.");
+        operation.setName("operation");
+        operation.setType(CAS.TYPE_NAME_STRING);
+        operation.setProject(aProject);
+        operation.setUiName("Operation");
+        operation.setLayer(orthography);
+        operation.setVisible(false);
+        operation.setTagset(operationTagset);
+
+        annotationSchemaService.createFeature(operation);
+
     }
 
     private void createMorphologicalFeaturesLayer(Project aProject)

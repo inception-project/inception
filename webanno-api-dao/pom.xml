@@ -158,6 +158,10 @@
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.transform-asl</artifactId>
+    </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
     <dependency>
