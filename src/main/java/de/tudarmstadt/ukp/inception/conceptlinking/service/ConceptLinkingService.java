@@ -157,7 +157,7 @@ public class ConceptLinkingService
      */
     private synchronized List<Token> getMentionSentence(JCas mentionSentence, String mention, 
             String language)
-        throws UIMAException, IOException, IllegalStateException
+        throws UIMAException, IOException
     {
         double startTime = System.currentTimeMillis();
         String sentenceText = findMentionSentenceInDoc(mentionSentence, mention);
@@ -213,7 +213,7 @@ public class ConceptLinkingService
      * @throws IOException
      */
     private String findMentionSentenceInDoc(JCas aJcas, String mention) 
-            throws IOException, IllegalStateException
+            throws IOException
     {    
         // Detecting the sentence
         Collection<Sentence> sentences = JCasUtil.select(aJcas, Sentence.class);
