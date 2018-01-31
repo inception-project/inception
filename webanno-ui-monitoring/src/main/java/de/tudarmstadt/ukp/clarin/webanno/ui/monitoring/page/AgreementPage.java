@@ -169,7 +169,7 @@ public class AgreementPage
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
                             jCas = documentService.readAnnotationCas(annotationDocument);
-                            documentService.upgradeCas(jCas.getCas(), annotationDocument);
+                            annotationService.upgradeCas(jCas.getCas(), annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
 

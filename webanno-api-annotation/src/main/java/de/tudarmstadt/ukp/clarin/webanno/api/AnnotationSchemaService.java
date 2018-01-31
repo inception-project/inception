@@ -27,6 +27,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -389,6 +390,9 @@ public interface AnnotationSchemaService
                 throws IOException;
     
     List<TypeSystemDescription> getProjectTypes(Project aProject);
+    
+    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
+            throws UIMAException, IOException;
     
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;

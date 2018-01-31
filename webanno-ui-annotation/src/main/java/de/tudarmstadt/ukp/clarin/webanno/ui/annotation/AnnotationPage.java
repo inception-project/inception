@@ -549,7 +549,7 @@ public class AnnotationPage
             JCas editorCas = documentService.readAnnotationCas(annotationDocument);
 
             // Update the annotation document CAS
-            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
+            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas.getCas().getJCas(), annotationDocument,

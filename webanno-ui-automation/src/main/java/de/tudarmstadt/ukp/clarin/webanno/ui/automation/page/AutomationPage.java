@@ -725,7 +725,7 @@ public class AutomationPage
             }
 
             // Update the CASes
-            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
+            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
             correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
                     state.getDocument());
 

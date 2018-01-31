@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -190,8 +191,7 @@ public class CurationPage
                 if (state.getDocument() != null) {
                     try {
                         documentService.createSourceDocument(state.getDocument());
-                        documentService.upgradeCasAndSave(state.getDocument(), state.getMode(),
-                                username);
+                        upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
                         curationPanel.editor.loadFeatureEditorModels(aTarget);
@@ -546,6 +546,25 @@ public class CurationPage
         aTarget.add(getFeedbackPanel());
     }
 
+    public void upgradeCasAndSave(SourceDocument aDocument, String aUsername)
+        throws IOException
+    {
+        User user = userRepository.get(aUsername);
+        if (documentService.existsAnnotationDocument(aDocument, user)) {
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
+                    user);
+            try {
+                CAS cas = documentService.readAnnotationCas(annotationDocument).getCas();
+                annotationService.upgradeCas(cas, annotationDocument);
+                documentService.writeAnnotationCas(cas.getJCas(), annotationDocument, false);
+            }
+            catch (Exception e) {
+                // no need to catch, it is acceptable that no curation document
+                // exists to be upgraded while there are annotation documents
+            }
+        }
+    }
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
@@ -598,7 +617,7 @@ public class CurationPage
             // upgrade CASes for each user, what if new type is added once the user finished
             // annotation
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                documentService.upgradeCasAndSave(ad.getDocument(), state.getMode(), ad.getUser());
+                upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
             Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());

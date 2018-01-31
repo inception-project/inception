@@ -43,7 +43,6 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -58,7 +57,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -68,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -86,9 +83,6 @@ public class DocumentServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Resource(name = "annotationService")
-    private AnnotationSchemaService annotationService;
-    
     @Resource(name = "userRepository")
     private UserDao userRepository;
 
@@ -636,66 +630,6 @@ public class DocumentServiceImpl
         writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
     }
 
-    @Override
-    @Deprecated
-    public void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String aUsername)
-        throws IOException
-    {
-        User user = userRepository.get(aUsername);
-        if (existsAnnotationDocument(aDocument, user)) {
-            log.debug("Upgrading annotation document [" + aDocument.getName() + "] " + "with ID ["
-                    + aDocument.getId() + "] in project ID [" + aDocument.getProject().getId()
-                    + "] for user [" + aUsername + "] in mode [" + aMode + "]");
-            // DebugUtils.smallStack();
-
-            AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, user);
-            try {
-                CAS cas = readAnnotationCas(annotationDocument).getCas();
-                upgradeCas(cas, annotationDocument);
-                writeAnnotationCas(cas.getJCas(), annotationDocument, false);
-
-                // This is no longer needed because it is handled on the respective pages.
-//                if (aMode.equals(Mode.ANNOTATION)) {
-//                    // In this case we only need to upgrade to annotation document
-//                }
-//                else if (aMode.equals(Mode.AUTOMATION) || aMode.equals(Mode.CORRECTION)) {
-//                    CAS corrCas = readCorrectionCas(aDocument).getCas();
-//                    upgradeCas(corrCas, annotationDocument);
-//                    writeCorrectionCas(corrCas.getJCas(), aDocument, user, false);
-//                }
-//                else {
-//                    CAS curCas = readCurationCas(aDocument).getCas();
-//                    upgradeCas(curCas, annotationDocument);
-//                    writeCurationCas(curCas.getJCas(), aDocument, user);
-//                }
-
-            }
-            catch (Exception e) {
-                // no need to catch, it is acceptable that no curation document
-                // exists to be upgraded while there are annotation documents
-            }
-            
-            try (MDC.MDCCloseable closable = MDC.putCloseable(
-                    Logging.KEY_PROJECT_ID,
-                    String.valueOf(aDocument.getProject().getId()))) {
-                Project project = aDocument.getProject();
-                log.info(
-                        "Upgraded annotations of user [{}] for "
-                                + "document [{}]({}) in project [{}]({}) in mode [{}]",
-                        user.getUsername(), aDocument.getName(), aDocument.getId(),
-                        project.getName(), project.getId(), aMode);
-            }
-        }
-    }
-
-    @Override
-    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
-        throws UIMAException, IOException
-    {
-        annotationService.upgradeCas(aCas, aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
-    }
-    
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}

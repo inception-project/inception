@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -626,6 +627,13 @@ public class AnnotationSchemaServiceImpl
             throw new IllegalArgumentException("Unsupported multi-value mode ["
                     + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
+    }
+
+    @Override
+    public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
+        throws UIMAException, IOException
+    {
+        upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
     }
 
     @Override
