@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -41,9 +42,22 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.core.session.SessionDestroyedEvent;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.corenlp.CoreNlpPosTagger;
@@ -57,6 +71,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
@@ -66,7 +81,9 @@ public class ConceptLinkingService
 
     private @Resource DocumentService docService;
     private @Resource KnowledgeBaseService kbService;
-
+    private @Resource UserDao userRepository;
+    private @Resource SessionRegistry sessionRegistry;
+    
     private AnalysisEngine pipeline;
     private AnalysisEngine coreNlpPipeline;
     
@@ -88,6 +105,8 @@ public class ConceptLinkingService
     private final Map<String, Integer> entityFrequencyMap
             = Utils.loadEntityFrequencyMap(wd + "resources/wikidata_entity_freqs.map");
 
+    private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
+    
     @PostConstruct
     public void init()
     {
@@ -437,18 +456,24 @@ public class ConceptLinkingService
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    public List<Entity> disambiguate (KnowledgeBase aKB, String mention, IRI conceptIri, JCas jCas, 
-            String aLanguage)
-        throws IOException
+    public List<Entity> disambiguate (KnowledgeBase aKB, IRI conceptIri, 
+            AnnotatorState aState)
     {
+        String mention = aState.getSelection().getText();
+        User user = aState.getUser();
+
+        ConceptLinkingUserState state = getState(user.getUsername());
+        JCas jCas = state.getJcas();
+        String language = state.getLanguage();
         List<Entity> candidates = new ArrayList<>();
         try {
             candidates = computeCandidateScores(aKB, mention,
-                    linkMention(aKB, mention, conceptIri, aLanguage), jCas, aLanguage);
+                    linkMention(aKB, mention, conceptIri, language), jCas, language);
         } catch (IOException | UIMAException e) {
             logger.error("Could not compute candidate scores: ", e);
         }
         return candidates;
+
     }
 
     public int getCandidateQueryLimit()
@@ -459,5 +484,96 @@ public class ConceptLinkingService
     public int getSignatureQueryLimit()
     {
         return signatureQueryLimit;
+    }
+
+    @EventListener
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public void onApplicationEvent(SessionDestroyedEvent event)
+    {
+        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        // Could be an anonymous session without information.
+        if (info != null) {
+            String username = (String) info.getPrincipal();
+            clearState(username);
+        }
+    }
+    
+    @EventListener
+    private void onDocumentOpen(DocumentOpenedEvent aEvent) throws Exception
+    {
+        User user = userRepository.get(aEvent.getUser());
+        ConceptLinkingUserState state = getState(user.getUsername());
+        SourceDocument doc = aEvent.getDocument();
+        AnnotationDocument annoDoc = docService.createOrGetAnnotationDocument(doc, user);
+        JCas jCas;
+        try {
+            jCas = docService.readAnnotationCas(annoDoc);
+            state.setJCas(jCas);
+        }
+        catch (IOException e) {
+            logger.error("Cannot read annotation CAS.", e);
+        }
+    }
+    
+    @EventListener
+    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
+    {
+        User user = userRepository.get(aEvent.getDocument().getUser());
+        ConceptLinkingUserState state = getState(user.getUsername());
+        AnnotationDocument annoDoc = aEvent.getDocument();
+        JCas jCas;
+        try {
+            jCas = docService.readAnnotationCas(annoDoc);
+            state.setJCas(jCas);
+        }
+        catch (IOException e) {
+            logger.error("Cannot read annotation CAS.", e);
+        }
+
+    }
+    
+    private ConceptLinkingUserState getState(String aUsername)
+    {
+        synchronized (states) {
+            ConceptLinkingUserState state;
+            state = states.get(aUsername);
+            if (state == null) {
+                state = new ConceptLinkingUserState();
+                states.put(aUsername, state);
+            }
+            return state;
+        }
+    }
+    
+    private void clearState(String aUsername)
+    {
+        synchronized (states) {
+            states.remove(aUsername);
+        }
+    }
+       
+    private static class ConceptLinkingUserState
+    {
+        private String language = "en";
+        private JCas jCas;
+
+        
+        private String getLanguage()
+        {
+            return language;
+        }
+
+        private void setLanguage(String aLanguage)
+        {
+            language = aLanguage;
+        }
+
+        private JCas getJcas() {
+            return jCas;
+        }
+        
+        private void setJCas(JCas aJcas) {
+            jCas = aJcas;
+        }
     }
 }
