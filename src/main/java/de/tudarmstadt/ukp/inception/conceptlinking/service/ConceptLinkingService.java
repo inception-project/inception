@@ -70,12 +70,14 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseExtension;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
 public class ConceptLinkingService
+    implements KnowledgeBaseExtension
 {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -106,6 +108,12 @@ public class ConceptLinkingService
             = Utils.loadEntityFrequencyMap(wd + "resources/wikidata_entity_freqs.map");
 
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
+    
+    @Override
+    public String getBeanName()
+    {
+        return "conceptLinkingService";
+    }
     
     @PostConstruct
     public void init()
