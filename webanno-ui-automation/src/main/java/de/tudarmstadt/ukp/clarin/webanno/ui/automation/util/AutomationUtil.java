@@ -262,9 +262,9 @@ public class AutomationUtil
      * Repeat annotation will repeat annotations of same pattern to all documents on the project
      * load CAS from document in case no initial CORRECTION_CAS is not created before
      */
-    public static void loadDocument(SourceDocument aDocument, AnnotationSchemaService annotationService,
-            DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
-            User logedInUser)
+    public static void loadDocument(SourceDocument aDocument,
+            AnnotationSchemaService annotationService, DocumentService aDocumentService,
+            CorrectionDocumentService aCorrectionDocumentService, User logedInUser)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas jCas = null;
