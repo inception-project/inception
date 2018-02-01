@@ -67,7 +67,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -98,7 +97,6 @@ public class ImportExportServiceImpl
     
     private @Resource CasStorageService casStorageService;
     private @Resource AnnotationSchemaService annotationService;
-    private @Resource DocumentService documentService;
     
     @Resource(name = "formats")
     private Properties readWriteFileFormats;

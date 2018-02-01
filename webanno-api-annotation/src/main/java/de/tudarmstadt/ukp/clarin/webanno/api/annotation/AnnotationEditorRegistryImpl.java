@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,6 +25,9 @@ import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -33,24 +37,43 @@ public class AnnotationEditorRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<AnnotationEditorFactory> factories;
+    private final List<AnnotationEditorFactory> extensionsProxy;
 
-    public AnnotationEditorRegistryImpl(@Autowired List<AnnotationEditorFactory> aFactories)
+    private List<AnnotationEditorFactory> extensions;
+
+    public AnnotationEditorRegistryImpl(
+            @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
     {
-        OrderComparator.sort(aFactories);
+        extensionsProxy = aExtensions;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<AnnotationEditorFactory> exts = new ArrayList<>();
+
+        if (extensionsProxy != null) {
+            exts.addAll(extensionsProxy);
+            OrderComparator.sort(exts);
         
-        for (AnnotationEditorFactory ext : aFactories) {
-            log.info("Found annotation editor factory: {}",
-                    ClassUtils.getAbbreviatedName(ext.getClass(), 20));
+            for (AnnotationEditorFactory fs : exts) {
+                log.info("Found annotation editor: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        factories = Collections.unmodifiableList(aFactories);
+        extensions = Collections.unmodifiableList(exts);
     }
 
     @Override
     public List<AnnotationEditorFactory> getEditorFactories()
     {
-        return factories;
+        return extensions;
     }
     
     @Override
@@ -60,7 +83,7 @@ public class AnnotationEditorRegistryImpl
             return null;
         }
         else {
-            return factories.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
                     .orElse(null);
         }
     }

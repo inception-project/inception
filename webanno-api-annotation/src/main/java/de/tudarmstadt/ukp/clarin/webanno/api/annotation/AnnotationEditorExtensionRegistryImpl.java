@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +28,9 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -42,24 +46,37 @@ public class AnnotationEditorExtensionRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<AnnotationEditorExtension> extensions;
+    private final List<AnnotationEditorExtension> extensionsProxy;
+
+    private List<AnnotationEditorExtension> extensions;
     
     public AnnotationEditorExtensionRegistryImpl(
-            @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
+            @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
     {
-        if (aExtensions != null) {
-            OrderComparator.sort(aExtensions);
-            
-            for (AnnotationEditorExtension ext : aExtensions) {
+        extensionsProxy = aExtensions;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<AnnotationEditorExtension> exts = new ArrayList<>();
+
+        if (extensionsProxy != null) {
+            exts.addAll(extensionsProxy);
+            OrderComparator.sort(exts);
+        
+            for (AnnotationEditorExtension fs : exts) {
                 log.info("Found annotation editor extension: {}",
-                        ClassUtils.getAbbreviatedName(ext.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
-            
-            extensions = Collections.unmodifiableList(aExtensions);
         }
-        else {
-            extensions = Collections.emptyList();
-        }
+        
+        extensions = Collections.unmodifiableList(exts);
     }
     
     @Override

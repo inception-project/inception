@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,9 @@ import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -37,19 +41,38 @@ public class FeatureSupportRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<FeatureSupport> featureSupports;
+    private final List<FeatureSupport> featureSupportsProxy;
+    
+    private List<FeatureSupport> featureSupports;
     
     private final Map<Long, FeatureSupport> supportCache = new HashMap<>();
 
-    public FeatureSupportRegistryImpl(@Autowired List<FeatureSupport> aFeatureSupports)
+    public FeatureSupportRegistryImpl(
+            @Lazy @Autowired(required = false) List<FeatureSupport> aFeatureSupports)
     {
-        OrderComparator.sort(aFeatureSupports);
+        featureSupportsProxy = aFeatureSupports;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<FeatureSupport> fsp = new ArrayList<>();
+
+        if (featureSupportsProxy != null) {
+            fsp.addAll(featureSupportsProxy);
+            OrderComparator.sort(fsp);
         
-        for (FeatureSupport fs : aFeatureSupports) {
-            log.info("Found feature support: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            for (FeatureSupport fs : fsp) {
+                log.info("Found feature support: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        featureSupports = Collections.unmodifiableList(aFeatureSupports);
+        featureSupports = Collections.unmodifiableList(fsp);
     }
     
     @Override
