@@ -68,7 +68,8 @@ public class FeatureSupportRegistryImpl
             OrderComparator.sort(fsp);
         
             for (FeatureSupport fs : fsp) {
-                log.info("Found feature support: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.info("Found feature support: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
         
