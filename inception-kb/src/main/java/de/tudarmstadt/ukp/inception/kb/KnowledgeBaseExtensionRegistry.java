@@ -10,7 +10,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface KnowledgeBaseExtensionRegistry
 {
-
     List<KnowledgeBaseExtension> getExtensions();
 
     KnowledgeBaseExtension getExtension(String aId);

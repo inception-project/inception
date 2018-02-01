@@ -1,5 +1,6 @@
 package de.tudarmstadt.ukp.inception.kb;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -8,6 +9,9 @@ import org.eclipse.rdf4j.model.IRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
@@ -20,25 +24,38 @@ public class KnowledgeBaseExtensionRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private final List<KnowledgeBaseExtension> extensions;
+    private final List<KnowledgeBaseExtension> extensionsProxy;
+    
+    private List<KnowledgeBaseExtension> extensions;
         
     public KnowledgeBaseExtensionRegistryImpl(
-                @Autowired(required = false) List<KnowledgeBaseExtension> aExtensions)
+                @Lazy @Autowired(required = false) List<KnowledgeBaseExtension> aExtensions)
     {
-        if (aExtensions != null) {
-            OrderComparator.sort(aExtensions);
-            
-            for (KnowledgeBaseExtension ext : aExtensions) {
-                log.info("Found KnowledgeBase extension: {}",
-                        ClassUtils.getAbbreviatedName(ext.getClass(), 20));
-            }
-            
-            extensions = Collections.unmodifiableList(aExtensions);
-        }
-        else {
-            extensions = Collections.emptyList();
-        }
+        extensionsProxy = aExtensions;
     }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<KnowledgeBaseExtension> exts = new ArrayList<>();
+
+        if (extensionsProxy != null) {
+            exts.addAll(extensionsProxy);
+            OrderComparator.sort(exts);
+        
+            for (KnowledgeBaseExtension fs : exts) {
+                log.info("Found kb extension: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
+        }
+        
+        extensions = Collections.unmodifiableList(exts);
+    }
+    
     
     @Override
     public List<KnowledgeBaseExtension> getExtensions()
