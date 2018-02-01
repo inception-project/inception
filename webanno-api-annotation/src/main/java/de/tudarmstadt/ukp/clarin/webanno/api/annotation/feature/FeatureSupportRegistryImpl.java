@@ -59,7 +59,7 @@ public class FeatureSupportRegistryImpl
         init();
     }
     
-    /* package private */ void init()
+    public void init()
     {
         List<FeatureSupport> fsp = new ArrayList<>();
 

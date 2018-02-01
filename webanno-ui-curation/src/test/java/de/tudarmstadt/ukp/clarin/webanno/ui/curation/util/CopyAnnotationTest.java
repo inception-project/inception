@@ -153,6 +153,7 @@ public class CopyAnnotationTest
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
+        featureSupportRegistry.init();
     }
     
     @Test
