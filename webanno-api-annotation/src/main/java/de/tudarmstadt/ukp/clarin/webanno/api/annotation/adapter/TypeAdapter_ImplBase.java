@@ -24,12 +24,10 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -91,15 +89,15 @@ public abstract class TypeAdapter_ImplBase
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
-        Object oldValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+        //Object oldValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
 
-        Object newValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+        //Object newValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
 
-        publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+        //publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
+        //        aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
     }
 
     @Override
