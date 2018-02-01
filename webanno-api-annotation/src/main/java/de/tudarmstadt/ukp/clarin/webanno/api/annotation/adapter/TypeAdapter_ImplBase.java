@@ -20,14 +20,18 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -89,15 +93,34 @@ public abstract class TypeAdapter_ImplBase
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
-        //Object oldValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+
+        Object oldValue =  getValue(fs, aFeature);;
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
 
-        //Object newValue = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
-
-        //publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
-        //        aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+        Object newValue = getValue(fs, aFeature);
+        
+        publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
+                aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+    }
+    
+    private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
+    {
+        Object value;
+        
+        Feature f = fs.getType().getFeatureByBaseName(aFeature.getName());
+        if (f.getRange().isPrimitive()) {
+            value = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
+        }
+        if (FSUtil.isMultiValuedFeature(fs, f)) {
+            value = FSUtil.getFeature(fs, aFeature.getName(), List.class);
+        }
+        else {
+            value = FSUtil.getFeature(fs, aFeature.getName(), FeatureStructure.class);
+        }
+        
+        return value;
     }
 
     @Override
