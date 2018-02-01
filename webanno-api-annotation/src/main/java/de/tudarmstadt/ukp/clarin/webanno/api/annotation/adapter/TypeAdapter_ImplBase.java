@@ -113,7 +113,7 @@ public abstract class TypeAdapter_ImplBase
         if (f.getRange().isPrimitive()) {
             value = FSUtil.getFeature(fs, aFeature.getName(), Object.class);
         }
-        if (FSUtil.isMultiValuedFeature(fs, f)) {
+        else if (FSUtil.isMultiValuedFeature(fs, f)) {
             value = FSUtil.getFeature(fs, aFeature.getName(), List.class);
         }
         else {
