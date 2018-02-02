@@ -28,7 +28,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
+
     void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
+        throws IOException, AnnotationException;
+
+    /**
+     * Create annotation on the next token for forward annotation
+     */
+    void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
         throws IOException, AnnotationException;
 
     /**
