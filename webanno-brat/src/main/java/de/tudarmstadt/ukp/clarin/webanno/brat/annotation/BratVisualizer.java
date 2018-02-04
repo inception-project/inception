@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,7 +35,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.ui.resource.JQueryUIResourceReference;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -117,7 +118,7 @@ public abstract class BratVisualizer
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
 
         // Libraries
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryUIResourceReference.get()));
+        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));

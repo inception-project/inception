@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
 import eu.clarin.weblicht.wlfxb.io.TextCorpusStreamed;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
@@ -51,22 +52,19 @@ import eu.clarin.weblicht.wlfxb.tc.api.TextCorpus;
 import eu.clarin.weblicht.wlfxb.xb.WLData;
 
 /**
- * Reader for the WebLicht TCF format. It reads all the available annotation Layers from the TCF
- * file and convert it to a CAS annotations. The TCF data do not have begin/end offsets for all of
- * its annotations which is required in CAS annotation. Hence, addresses are manually calculated per
- * tokens and stored in a map (token_id, token(CAS object)) where later we get can get the offset
- * from the token
+ * Reader for the WebLicht TCF format. It reads all the available annotation
+ * Layers from the TCF file and convert it to a CAS annotations. The TCF data do
+ * not have begin/end offsets for all of its annotations which is required in
+ * CAS annotation. Hence, addresses are manually calculated per tokens and
+ * stored in a map (token_id, token(CAS object)) where later we get can get the
+ * offset from the token
  *
  */
-public class TcfReader
-    extends JCasResourceCollectionReader_ImplBase
-{
+public class TcfReader extends JCasResourceCollectionReader_ImplBase {
     int j = 0;
 
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
-    {
+    public void getNext(JCas aJCas) throws IOException, CollectionException {
         Resource res = nextFile();
         initCas(aJCas, res);
 
@@ -76,18 +74,15 @@ public class TcfReader
             WLData wLData = WLDObjector.read(is);
             TextCorpus aCorpusData = wLData.getTextCorpus();
             convertToCas(aJCas, aCorpusData);
-        }
-        catch (WLFormatException e) {
+        } catch (WLFormatException e) {
             throw new CollectionException(e);
-        }
-        finally {
+        } finally {
             closeQuietly(is);
 
         }
     }
 
-    private void convertToCas(JCas aJCas, TextCorpus aCorpusData)
-    {
+    private void convertToCas(JCas aJCas, TextCorpus aCorpusData) {
         convertText(aJCas, aCorpusData);
         Map<String, Token> tokens = convertTokens(aJCas, aCorpusData);
         if (tokens.size() > 0) {
@@ -95,6 +90,8 @@ public class TcfReader
             convertPos(aJCas, aCorpusData, tokens);
 
             convertLemma(aJCas, aCorpusData, tokens);
+
+            convertOrthoGraphy(aJCas, aCorpusData, tokens);
 
             convertSentences(aJCas, aCorpusData, tokens);
 
@@ -107,12 +104,13 @@ public class TcfReader
     }
 
     /**
-     * This method builds texts from the {@link eu.clarin.weblicht.wlfxb.tc.api.Token} annotation
-     * layer. The getText Method of {@link TextCorpusStreamed} is not used as some tokens, such as
-     * special characters represented differently than in the original text.
+     * This method builds texts from the
+     * {@link eu.clarin.weblicht.wlfxb.tc.api.Token} annotation layer. The
+     * getText Method of {@link TextCorpusStreamed} is not used as some tokens,
+     * such as special characters represented differently than in the original
+     * text.
      */
-    private void convertText(JCas aJCas, TextCorpus aCorpusData)
-    {
+    private void convertText(JCas aJCas, TextCorpus aCorpusData) {
         StringBuilder text = new StringBuilder();
 
         for (int i = 0; i < aCorpusData.getTokensLayer().size(); i++) {
@@ -131,8 +129,7 @@ public class TcfReader
      * 
      * @return returns {@code Map} of (token_id, Token), for later references
      */
-    private Map<String, Token> convertTokens(JCas aJCas, TextCorpus aCorpusData)
-    {
+    private Map<String, Token> convertTokens(JCas aJCas, TextCorpus aCorpusData) {
         if (aCorpusData.getTokensLayer() == null) {
             // No layer to read from.
             return new HashMap<>();
@@ -162,8 +159,7 @@ public class TcfReader
         return tokens;
     }
 
-    private void convertPos(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
-    {
+    private void convertPos(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens) {
         if (aCorpusData.getPosTagsLayer() == null) {
             return;
         }
@@ -184,8 +180,7 @@ public class TcfReader
         }
     }
 
-    private void convertLemma(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
-    {
+    private void convertLemma(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens) {
         if (aCorpusData.getLemmasLayer() == null) {
             return;
         }
@@ -207,9 +202,29 @@ public class TcfReader
 
     }
 
-    private void convertSentences(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
-    {
+    private void convertOrthoGraphy(JCas aJCas, TextCorpus aCorpusData,
+            Map<String, Token> aTokens) {
+        if (aCorpusData.getOrthographyLayer() == null) {
+            return;
+        }
+        for (int i = 0; i < aCorpusData.getOrthographyLayer().size(); i++) {
+            eu.clarin.weblicht.wlfxb.tc.api.Token[] orthoTokens = aCorpusData.getOrthographyLayer()
+                    .getTokens(aCorpusData.getOrthographyLayer().getCorrection(i));
+            String value = aCorpusData.getOrthographyLayer().getCorrection(i).getString();
+            String operation = aCorpusData.getOrthographyLayer().getCorrection(i).getOperation()
+                    .name();
+
+            SofaChangeAnnotation ortho = new SofaChangeAnnotation(aJCas);
+            ortho.setBegin(aTokens.get(orthoTokens[0].getID()).getBegin());
+            ortho.setEnd(aTokens.get(orthoTokens[0].getID()).getEnd());
+            ortho.setValue(value);
+            ortho.setOperation(operation);
+            ortho.addToIndexes();
+        }
+
+    }
+
+    private void convertSentences(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens) {
         if (aCorpusData.getSentencesLayer() == null) {
             // No layer to read from.
             return;
@@ -222,15 +237,14 @@ public class TcfReader
             Sentence outSentence = new Sentence(aJCas);
 
             outSentence.setBegin(aTokens.get(sentencesTokens[0].getID()).getBegin());
-            outSentence.setEnd(aTokens.get(sentencesTokens[sentencesTokens.length - 1].getID())
-                    .getEnd());
+            outSentence.setEnd(
+                    aTokens.get(sentencesTokens[sentencesTokens.length - 1].getID()).getEnd());
             outSentence.addToIndexes();
         }
     }
 
     private void convertDependencies(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
-    {
+            Map<String, Token> aTokens) {
         if (aCorpusData.getDependencyParsingLayer() == null) {
             // No layer to read from.
             return;
@@ -248,7 +262,8 @@ public class TcfReader
 
                 POS dependentPos = aTokens.get(dependentTokens[0].getID()).getPos();
 
-                // For dependency annotations in the TCF file without POS, add as a default POS --
+                // For dependency annotations in the TCF file without POS, add
+                // as a default POS --
                 if (dependentPos == null) {
                     getUimaContext().getLogger().log(Level.INFO,
                             "There is no pos for this token, added is -- as a pos");
@@ -264,8 +279,7 @@ public class TcfReader
                     if (governerPos == null) {
                         if (dependency.getFunction().equals("ROOT")) {
                             // do nothing
-                        }
-                        else {
+                        } else {
                             getUimaContext().getLogger().log(Level.INFO,
                                     "There is no pos for this token, added is -- as a pos");
                             governerPos = new POS(aJCas);
@@ -276,15 +290,15 @@ public class TcfReader
                             aTokens.get(governorTokens[0].getID()).setPos(governerPos);
                         }
                     }
-                }
-                else {
+                } else {
                     governorTokens = dependentTokens;
                 }
                 Dependency outDependency = new Dependency(aJCas);
                 outDependency.setDependencyType(dependency.getFunction());
                 outDependency.setGovernor(aTokens.get(governorTokens[0].getID()));
-                outDependency.setDependent(dependency.getFunction().equals("ROOT") ? aTokens
-                        .get(governorTokens[0].getID()) : aTokens.get(dependentTokens[0].getID()));
+                outDependency.setDependent(dependency.getFunction().equals("ROOT")
+                        ? aTokens.get(governorTokens[0].getID())
+                        : aTokens.get(dependentTokens[0].getID()));
                 outDependency.setBegin(outDependency.getDependent().getBegin());
                 outDependency.setEnd(outDependency.getDependent().getEnd());
                 outDependency.addToIndexes();
@@ -294,8 +308,7 @@ public class TcfReader
     }
 
     private void convertNamedEntities(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
-    {
+            Map<String, Token> aTokens) {
         if (aCorpusData.getNamedEntitiesLayer() == null) {
             // No layer to read from.
             return;
@@ -303,8 +316,8 @@ public class TcfReader
 
         for (int i = 0; i < aCorpusData.getNamedEntitiesLayer().size(); i++) {
             // get the named entity
-            eu.clarin.weblicht.wlfxb.tc.api.NamedEntity entity = aCorpusData
-                    .getNamedEntitiesLayer().getEntity(i);
+            eu.clarin.weblicht.wlfxb.tc.api.NamedEntity entity = aCorpusData.getNamedEntitiesLayer()
+                    .getEntity(i);
 
             eu.clarin.weblicht.wlfxb.tc.api.Token[] namedEntityTokens = aCorpusData
                     .getNamedEntitiesLayer().getTokens(entity);
@@ -321,21 +334,23 @@ public class TcfReader
 
     /**
      * Correferences in CAS should be represented {@link CoreferenceChain} and
-     * {@link CoreferenceLink}. The TCF representation Uses <b> rel </b> and <b>target </b> to build
-     * chains. Example: </br>
-     * <i> {@literal  <entity><reference ID="rc_0" tokenIDs="t_0" mintokIDs="t_0" type="nam"/> }
-     * </br>
-     * {@literal <reference ID="rc_1" tokenIDs="t_6" mintokIDs="t_6" type="pro.per3" rel=
+     * {@link CoreferenceLink}. The TCF representation Uses <b> rel </b> and
+     * <b>target </b> to build chains. Example: </br>
+     * <i> {@literal  <entity><reference ID="rc_0" tokenIDs="t_0" mintokIDs=
+     * "t_0" type="nam"/> } </br>
+     * {@literal <reference ID="rc_1" tokenIDs="t_6" mintokIDs="t_6" type=
+     * "pro.per3" rel=
      * "anaphoric" target="rc_0"/></entity>
      * }</i> </br>
-     * The first phase of conversion is getting all <b>references</b> and <b>targets</b> alongside
-     * the <b>type</b> and <b>relations in different maps</b> <br>
-     * Second, an iteration is made through all the maps and the {@link CoreferenceChain} and
-     * {@link CoreferenceLink} annotations are constructed.
+     * The first phase of conversion is getting all <b>references</b> and
+     * <b>targets</b> alongside the <b>type</b> and <b>relations in different
+     * maps</b> <br>
+     * Second, an iteration is made through all the maps and the
+     * {@link CoreferenceChain} and {@link CoreferenceLink} annotations are
+     * constructed.
      */
     private void convertCoreference(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
-    {
+            Map<String, Token> aTokens) {
         if (aCorpusData.getReferencesLayer() == null) {
             // No layer to read from.
             return;
@@ -354,8 +369,7 @@ public class TcfReader
                     chain.setFirst(referencesMap.get(address));
                     link = chain.getFirst();
                     chain.addToIndexes();
-                }
-                else {
+                } else {
                     link.setNext(referencesMap.get(address));
                     if (link.getReferenceRelation() == null) {
                         link.setReferenceRelation(
@@ -370,8 +384,7 @@ public class TcfReader
 
     private void storeReferencesAndTargetsInMap(Map<Integer, CoreferenceLink> aReferencesMap,
             eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity, TextCorpus aCorpusData,
-            Map<String, Token> aTokens, JCas aJcas)
-    {
+            Map<String, Token> aTokens, JCas aJcas) {
         for (Reference reference : entity.getReferences()) {
             StringBuilder sbTokens = new StringBuilder();
             for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aCorpusData.getReferencesLayer()
@@ -405,8 +418,7 @@ public class TcfReader
      *            all available tokens in the file
      */
     private int[] getOffsets(eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
-            Map<String, Token> aAllTokens)
-    {
+            Map<String, Token> aAllTokens) {
         List<Integer> beginPositions = new ArrayList<>();
         List<Integer> endPositions = new ArrayList<>();
         for (eu.clarin.weblicht.wlfxb.tc.api.Token token : aSpanTokens) {
@@ -424,8 +436,7 @@ public class TcfReader
      * @param aAllTokens
      *            all available tokens in the file
      */
-    private int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens)
-    {
+    private int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens) {
         List<Integer> beginPositions = new ArrayList<>();
         List<Integer> endPositions = new ArrayList<>();
         for (String token : aSpanTokens) {

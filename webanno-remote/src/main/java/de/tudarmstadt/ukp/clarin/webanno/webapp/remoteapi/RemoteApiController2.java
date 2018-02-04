@@ -140,6 +140,7 @@ public class RemoteApiController2
     private static final String EXPORT = "export.zip";
     
     private static final String PARAM_FILE = "file";
+    private static final String PARAM_CONTENT = "content";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_FORMAT = "format";
     private static final String PARAM_STATE = "state";
@@ -484,7 +485,7 @@ public class RemoteApiController2
             produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_NAME) String aName,
             @RequestParam(value = PARAM_FORMAT) String aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
@@ -523,7 +524,7 @@ public class RemoteApiController2
             case CURATION_FINISHED:
             default: 
                 throw new IllegalObjectStateException(
-                        "State [%s] not valid when uploading a curation.", aState.get());
+                        "State [%s] not valid when uploading a document.", aState.get());
             }
         }
         
@@ -689,7 +690,7 @@ public class RemoteApiController2
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
             @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
@@ -720,7 +721,7 @@ public class RemoteApiController2
         
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + ANNOTATIONS
-                        + "{aid}")
+                        + "/{aid}")
                 .buildAndExpand(project.getId(), document.getId(), annotator.getUsername()).toUri())
                 .body(response);
     }
@@ -777,7 +778,7 @@ public class RemoteApiController2
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
-            @RequestParam(value = PARAM_FILE) MultipartFile aFile,
+            @RequestParam(value = PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(value = PARAM_FORMAT) Optional<String> aFormat,
             @RequestParam(value = PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb) 
@@ -791,11 +792,17 @@ public class RemoteApiController2
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
 
+        AnnotationDocumentState resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
             SourceDocumentState state = parseSourceDocumentState(aState.get());
             switch (state) {
-            case CURATION_IN_PROGRESS: // fallthrough
+            case CURATION_IN_PROGRESS: 
+                resultState = AnnotationDocumentState.IN_PROGRESS;
+                document.setState(state);
+                documentService.createSourceDocument(document);
+                break;
             case CURATION_FINISHED:
+                resultState = AnnotationDocumentState.FINISHED;
                 document.setState(state);
                 documentService.createSourceDocument(document);
                 break;
@@ -813,7 +820,7 @@ public class RemoteApiController2
         }
         
         RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(
-                WebAnnoConst.CURATION_USER, AnnotationDocumentState.NEW, new Date()));
+                WebAnnoConst.CURATION_USER, resultState, new Date()));
         return ResponseEntity.created(aUcb
                 .path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
                 .buildAndExpand(project.getId(), document.getId()).toUri())
@@ -853,6 +860,18 @@ public class RemoteApiController2
         
         SourceDocument doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
+        
+        // If we delete the curation, it cannot be any longer in-progress or finished. The best
+        // guess is that we set the state back to annotation-in-progress. 
+        switch (doc.getState()) {
+        case CURATION_IN_PROGRESS: // Fall-through
+        case CURATION_FINISHED:
+            doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            documentService.createSourceDocument(doc);
+            break;
+        default:
+            // Nothing to do
+        }
         
         return ResponseEntity
                 .ok(new RResponse<>(INFO, "Curated annotations for document ["

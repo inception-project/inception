@@ -17,7 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
+
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 public class BratVisualizerResourceReference
     extends JavaScriptResourceReference
@@ -43,5 +52,32 @@ public class BratVisualizerResourceReference
     private BratVisualizerResourceReference()
     {
         super(BratVisualizerResourceReference.class, "visualizer.js");
+    }
+    
+    @Override
+    public List<HeaderItem> getDependencies()
+    {
+        List<HeaderItem> dependencies = new ArrayList<>(super.getDependencies());
+        
+        // CSS
+        dependencies.add(CssHeaderItem.forReference(BratCssVisReference.get()));
+        dependencies.add(CssHeaderItem.forReference(BratCssUiReference.get()));
+        
+        // Libraries
+        dependencies.add(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
+        dependencies.add(forReference(JQuerySvgResourceReference.get()));
+        dependencies.add(forReference(JQuerySvgDomResourceReference.get()));
+        dependencies.add(forReference(JQueryJsonResourceReference.get()));
+        dependencies.add(forReference(JQueryScrollbarWidthReference.get()));
+        
+        // BRAT helpers
+        dependencies.add(forReference(BratConfigurationResourceReference.get()));
+        dependencies.add(forReference(BratUtilResourceReference.get()));
+
+        // BRAT modules
+        dependencies.add(forReference(BratDispatcherResourceReference.get()));
+        dependencies.add(forReference(BratAjaxResourceReference.get()));
+
+        return dependencies;
     }
 }
