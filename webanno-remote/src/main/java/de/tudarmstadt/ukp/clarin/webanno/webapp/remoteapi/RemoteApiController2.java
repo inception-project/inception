@@ -1069,6 +1069,10 @@ public class RemoteApiController2
     
     public static SourceDocumentState parseSourceDocumentState(String aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case "NEW":
             return SourceDocumentState.NEW;
@@ -1087,6 +1091,10 @@ public class RemoteApiController2
     
     public static String projectStateToString(ProjectState aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case NEW:
             return "NEW";
@@ -1105,6 +1113,10 @@ public class RemoteApiController2
     
     public static String sourceDocumentStateToString(SourceDocumentState aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case NEW:
             return "NEW";
@@ -1123,6 +1135,10 @@ public class RemoteApiController2
     
     public static AnnotationDocumentState parseAnnotationDocumentState(String aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case "NEW":
             return AnnotationDocumentState.NEW;
@@ -1140,6 +1156,10 @@ public class RemoteApiController2
     
     public static String annotationDocumentStateToString(AnnotationDocumentState aState)
     {
+        if (aState == null) {
+            return null;
+        }
+        
         switch (aState) {
         case NEW:
             return "NEW";
