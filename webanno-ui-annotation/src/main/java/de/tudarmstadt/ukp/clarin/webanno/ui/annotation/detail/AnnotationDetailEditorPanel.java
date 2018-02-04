@@ -489,8 +489,9 @@ public class AnnotationDetailEditorPanel
             loadFeatureEditorModels(aJCas, aTarget);
             createNewAnnotation(aTarget, adapter, aJCas);
         }
-        // Update the features of the selected annotation from the values presently in
-        // the feature editors
+        
+        // Update the features of the selected annotation from the values presently in the
+        // feature editors
         writeFeatureEditorModelsToCas(adapter, aJCas);
 
         // Update progress information
@@ -598,8 +599,9 @@ public class AnnotationDetailEditorPanel
             loadFeatureEditorModels(aJCas, aTarget);
             createNewAnnotation(aTarget, adapter, aJCas);
         }
-        // Update the features of the selected annotation from the values presently in
-        // the feature editors
+
+        // Update the features of the selected annotation from the values presently in the
+        // feature editors
         writeFeatureEditorModelsToCas(adapter, aJCas);
 
         // Update progress information
