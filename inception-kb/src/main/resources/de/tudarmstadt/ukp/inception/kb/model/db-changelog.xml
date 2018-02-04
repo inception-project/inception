@@ -37,6 +37,23 @@
       <column name="supportConceptLinking" type="BOOLEAN"/> 
     </addColumn> 
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180204-2"> 
+    <addColumn tableName="knowledgebase">
+      <column name="modelingLanguage" type="VARCHAR(20)"/> 
+    </addColumn> 
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180204-2-2"> 
+    <modifyDataType tableName="knowledgebase"
+              columnName="modelingLanguage" 
+              newDataType="VARBINARY(20)"/>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20180204-2-3"> 
+    <modifyDataType tableName="knowledgebase"
+            columnName="modelingLanguage" 
+            newDataType="VARCHAR(20)"/>
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180214-1">
     <preConditions onFail="MARK_RAN">

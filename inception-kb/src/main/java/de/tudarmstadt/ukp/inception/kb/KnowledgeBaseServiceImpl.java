@@ -44,8 +44,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.Binding;
@@ -74,7 +76,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -133,12 +134,14 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     @Override
     public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, 
-            boolean canSupportConceptLinking) {
+            boolean canSupportConceptLinking, String aModelingLanguage) {
         // obtain unique repository id
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         kb.setRepositoryId(repositoryId);
         kb.setSupportConceptLinking(canSupportConceptLinking);
+        kb.setModelingLanguage(aModelingLanguage);
+
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
@@ -305,6 +308,12 @@ public class KnowledgeBaseServiceImpl
     {
         return read(kb, (conn) -> {
             ValueFactory vf = conn.getValueFactory();
+            Value modelingLanguage;
+            if (kb.getModelingLanguage().equals("OWL")) {
+                modelingLanguage = OWL.CLASS;
+            } else {
+                modelingLanguage = RDFS.CLASS;
+            }
 
             try (RepositoryResult<Statement> stmts = RdfUtils.getStatements(conn,
                     vf.createIRI(aIdentifier), kb.getTypeIri(), kb.getClassIri(), true)) {

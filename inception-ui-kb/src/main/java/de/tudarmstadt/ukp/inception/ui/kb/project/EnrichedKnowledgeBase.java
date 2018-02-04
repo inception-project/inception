@@ -39,7 +39,8 @@ public class EnrichedKnowledgeBase implements Serializable {
     private boolean enabled = true;
     private List<File> files;
     protected boolean supportConceptLinking;
-
+    protected String modelingLanguage;
+    
     public KnowledgeBase getKb() {
         return kb;
     }
@@ -111,5 +112,15 @@ public class EnrichedKnowledgeBase implements Serializable {
     public void setSupportConceptLinking(boolean aSupportConceptLinking)
     {
         supportConceptLinking = aSupportConceptLinking;
+    }
+
+    public String getModelingLanguage()
+    {
+        return modelingLanguage;
+    }
+
+    public void setModelingLanguage(String aModelingLanguage)
+    {
+        modelingLanguage = aModelingLanguage;
     }
 }

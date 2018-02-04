@@ -40,6 +40,7 @@ import org.apache.wicket.extensions.wizard.dynamic.DynamicWizardStep;
 import org.apache.wicket.extensions.wizard.dynamic.IDynamicWizardStep;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -49,7 +50,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidator;
@@ -101,6 +102,9 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     private final DynamicWizardModel wizardModel;
     private final CompoundPropertyModel<EnrichedKnowledgeBase> wizardDataModel;
 
+    private List<String> modelingLanguageChoices = Arrays.asList(new String[] {
+            "RDFS", "OWL"});
+    
     public KnowledgeBaseCreationWizard(String id, IModel<Project> aProjectModel) {
         super(id);
 
@@ -130,6 +134,12 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
 
             add(nameField("name", "kb.name"));
             add(repositoryTypeRadioButtons("type", "kb.type"));
+
+            DropDownChoice<String> modelingLanguage = new DropDownChoice<String>(
+                    "modelingLanguage",
+                    new PropertyModel<String>(model, "modelingLanguage"),
+                    modelingLanguageChoices);
+            add(modelingLanguage);
         }
 
         @Override
