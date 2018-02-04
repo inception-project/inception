@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.annotation.Resource;
@@ -56,19 +58,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -83,17 +94,11 @@ public class DocumentServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
-
-    @Resource(name = "casStorageService")
-    private CasStorageService casStorageService;
-
-    @Resource(name = "importExportService")
-    private ImportExportService importExportService;
-
-    @Resource
-    private ApplicationEventPublisher applicationEventPublisher;
+    private @Resource UserDao userRepository;
+    private @Resource CasStorageService casStorageService;
+    private @Resource ImportExportService importExportService;
+    private @Resource ProjectService projectService;
+    private @Resource ApplicationEventPublisher applicationEventPublisher;
     
     @Value(value = "${repository.path}")
     private File dir;
@@ -123,7 +128,6 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public void createSourceDocument(SourceDocument aDocument)
-        throws IOException
     {
         if (aDocument.getId() == 0) {
             entityManager.persist(aDocument);
@@ -278,6 +282,35 @@ public class DocumentServiceImpl
                         SourceDocument.class)
                 .setParameter("docid", aSourceDocId).setParameter("pid", aProjectId)
                 .getSingleResult();
+    }
+    
+    @Override
+    @Transactional
+    public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState)
+    {
+        SourceDocumentState oldState = aDocument.getState();
+        
+        aDocument.setState(aState);
+        
+        createSourceDocument(aDocument);
+        
+        // Notify about change in document state
+        if (!Objects.equals(oldState, aDocument.getState())) {
+            applicationEventPublisher
+                    .publishEvent(new DocumentStateChangedEvent(this, aDocument, oldState));
+        }
+        
+        return oldState;
+    }
+
+    @Override
+    @Transactional
+    public SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentStateTransition aTransition)
+    {
+        return setSourceDocumentState(aDocument,
+                SourceDocumentStateTransition.transition(aTransition));
     }
 
     @Override
@@ -531,13 +564,12 @@ public class DocumentServiceImpl
     public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
         throws IOException
     {
-        // Change the state of the source document to in progress
-        aDocument.setState(SourceDocumentStateTransition
-                .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
         AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
+
+        // Change the state of the source document to in progress
+        transitionSourceDocumentState(aDocument, NEW_TO_ANNOTATION_IN_PROGRESS);
 
         return readAnnotationCas(annotationDocument);
     }
@@ -591,6 +623,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional
     public void writeAnnotationCas(JCas aJCas, AnnotationDocument aAnnotationDocument,
             boolean aUpdateTimestamp)
         throws IOException
@@ -601,11 +634,10 @@ public class DocumentServiceImpl
         if (aUpdateTimestamp) {
             // FIXME REC Does it really make sense to set the accessed sentence from the source
             // document?!
-            aAnnotationDocument
-                    .setSentenceAccessed(aAnnotationDocument.getDocument().getSentenceAccessed());
+            aAnnotationDocument.setSentenceAccessed(
+                    aAnnotationDocument.getDocument().getSentenceAccessed());
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            aAnnotationDocument.setState(AnnotationDocumentState.IN_PROGRESS);
-            entityManager.merge(aAnnotationDocument);
+            setAnnotationDocumentState(aAnnotationDocument, AnnotationDocumentState.IN_PROGRESS);
         }
         
         applicationEventPublisher
@@ -805,5 +837,127 @@ public class DocumentServiceImpl
         users.removeAll(notInUsers);
 
         return users;
+    }
+    
+    @Override
+    @Transactional
+    public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState)
+    {
+        AnnotationDocumentState oldState = aDocument.getState();
+        
+        aDocument.setState(aState);
+
+        createAnnotationDocument(aDocument);
+
+        if (!Objects.equals(oldState, aDocument.getState())) {
+            applicationEventPublisher
+                    .publishEvent(new AnnotationStateChangeEvent(this, aDocument, oldState));
+        }
+
+        return oldState;
+    }
+
+    @Override
+    @Transactional
+    public AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentStateTransition aTransition)
+    {
+        return setAnnotationDocumentState(aDocument,
+                AnnotationDocumentStateTransition.transition(aTransition));
+    }
+    
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void onDocumentStateChangeEvent(DocumentStateChangedEvent aEvent)
+    {
+        recalculateProjectState(aEvent.getDocument().getProject());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void onAfterDocumentCreatedEvent(AfterDocumentCreatedEvent aEvent)
+    {
+        recalculateProjectState(aEvent.getDocument().getProject());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
+    {
+        recalculateProjectState(aEvent.getDocument().getProject());
+    }
+
+    private void recalculateProjectState(Project aProject)
+    {
+        String query = 
+                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+                "COUNT(*), " +
+                "SUM(CASE WHEN state = :an  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = :af  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = :cf  THEN 1 ELSE 0 END)) " +
+                "FROM SourceDocument " + 
+                "WHERE project = :project";
+        
+        SourceDocumentStateStats stats = entityManager.createQuery(
+                        query, SourceDocumentStateStats.class)
+                .setParameter("project", aProject)
+                .setParameter("an", SourceDocumentState.NEW)
+                .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+                .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+                .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+                .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+                .getSingleResult();
+        
+        Project project = projectService.getProject(aProject.getId());
+        
+        ProjectState oldState = project.getState();
+        
+        if (stats.total == stats.cf) {
+            project.setState(ProjectState.CURATION_FINISHED);
+        }
+        else if (stats.total == stats.af) {
+            project.setState(ProjectState.ANNOTATION_FINISHED);
+        }
+        else if (stats.total == stats.an) {
+            project.setState(ProjectState.NEW);
+        }
+        else if (stats.cip > 0) {
+            project.setState(ProjectState.CURATION_IN_PROGRESS);
+        }
+        else if (stats.aip > 0) {
+            project.setState(ProjectState.ANNOTATION_IN_PROGRESS);
+        }
+        else {
+            throw new IllegalStateException("Unable to determine project state.");
+        }
+        
+        if (!Objects.equals(oldState, project.getState())) {
+            applicationEventPublisher.publishEvent(
+                    new ProjectStateChangedEvent(this, project, oldState));
+        }
+        
+        projectService.updateProject(project);
+    }
+
+    public static final class SourceDocumentStateStats
+    {
+        public final long total;
+        public final long an;
+        public final long aip;
+        public final long af;
+        public final long cip;
+        public final long cf;
+        
+        public SourceDocumentStateStats(long aTotal, long aAn, long aAip, long aAf, long aCip,
+                long aCf)
+        {
+            super();
+            total = aTotal;
+            an = aAn;
+            aip = aAip;
+            af = aAf;
+            cip = aCip;
+            cf = aCf;
+        }
     }
 }

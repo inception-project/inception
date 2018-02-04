@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -73,12 +75,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -124,8 +124,8 @@ public class AnnotationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
-    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private NumberTextField<Integer> gotoPageTextField;
     
@@ -509,9 +509,8 @@ public class AnnotationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(AnnotationDocumentStateTransition.transition(
-                    AnnotationDocumentStateTransition.
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
@@ -583,10 +582,9 @@ public class AnnotationPage
             annotationEditor = newAnnotationEditor;
 
             // Update document state
-            if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
-                state.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
+            if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        NEW_TO_ANNOTATION_IN_PROGRESS);
             }
             
             // Reset the editor (we reload the page content below, so in order not to schedule

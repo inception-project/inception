@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -1081,6 +1082,24 @@ public class RemoteApiController2
             return SourceDocumentState.CURATION_IN_PROGRESS;
         default:
             throw new IllegalArgumentException("Unknown source document state [" + aState + "]");
+        }
+    }
+    
+    public static String projectStateToString(ProjectState aState)
+    {
+        switch (aState) {
+        case NEW:
+            return "NEW";
+        case ANNOTATION_IN_PROGRESS:
+            return "ANNOTATION-IN-PROGRESS";
+        case ANNOTATION_FINISHED:
+            return "ANNOTATION-COMPLETE";
+        case CURATION_FINISHED:
+            return "CURATION-COMPLETE";
+        case CURATION_IN_PROGRESS:
+            return "CURATION-IN-PROGRESS";
+        default:
+            throw new IllegalArgumentException("Unknown project state [" + aState + "]");
         }
     }
     

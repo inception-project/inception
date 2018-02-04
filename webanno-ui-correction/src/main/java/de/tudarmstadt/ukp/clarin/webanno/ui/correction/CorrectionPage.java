@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -74,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -574,12 +572,9 @@ public class CorrectionPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
-            
-            // manually update state change!! No idea why it is not updated in the DB
-            // without calling createAnnotationDocument(...)
-            documentService.createAnnotationDocument(annotationDocument);
-            
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
             aCallbackTarget.add(detailEditor);
@@ -677,11 +672,8 @@ public class CorrectionPage
             }
 
             // Update document state
-            if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
-                state.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
-            }
+            documentService.transitionSourceDocumentState(state.getDocument(),
+                    SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);            
             
             // Reset the editor
             detailEditor.reset(aTarget);

@@ -113,14 +113,20 @@ public class ProjectServiceImpl
     public void createProject(Project aProject)
         throws IOException
     {
+        if (aProject.getId() != 0) {
+            throw new IllegalArgumentException("Project has already been created before.");
+        }
+        
+        aProject.setCreated(new Date());
         entityManager.persist(aProject);
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
-        FileUtils.forceMkdir(new File(path));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
         }
+        
+        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
+        FileUtils.forceMkdir(new File(path));
         
         applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
     }

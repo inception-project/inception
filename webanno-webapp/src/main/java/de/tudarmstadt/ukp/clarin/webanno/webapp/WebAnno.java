@@ -34,6 +34,7 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
         "classpath:/META-INF/application-context.xml",
         "classpath:/META-INF/rest-context.xml", 
         "classpath:/META-INF/static-resources-context.xml" })
+@EnableAsync
 public class WebAnno
     extends SpringBootServletInitializer
 {

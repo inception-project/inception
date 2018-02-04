@@ -101,7 +101,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
@@ -922,24 +921,19 @@ public class MonitoringPage
                             return;
                         }
                         
-                        try {
-                            SourceDocument doc = documentService.getSourceDocument(project,
-                                    value.substring(value.indexOf(":") + 1));
-                            if (doc.getState().equals(CURATION_FINISHED)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-                            }
-                            else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-                            }
-                            else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
-                                changeSourceDocumentState(doc,
-                                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-                            }
+                        SourceDocument doc = documentService.getSourceDocument(project,
+                                value.substring(value.indexOf(":") + 1));
+                        if (doc.getState().equals(CURATION_FINISHED)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
                         }
-                        catch (IOException e) {
-                            LOG.info(e.getMessage(), e);
+                        else if (doc.getState().equals(CURATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+                        }
+                        else if (doc.getState().equals(ANNOTATION_IN_PROGRESS)) {
+                            documentService.transitionSourceDocumentState(doc,
+                                    ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
                         }
 
                         aTarget.add(aCellItem);
@@ -1040,9 +1034,9 @@ public class MonitoringPage
                             annotationDocument.setName(document.getName());
                             annotationDocument.setProject(project);
                             annotationDocument.setUser(user.getUsername());
-                            annotationDocument.setState(AnnotationDocumentStateTransition
-                                    .transition(NEW_TO_ANNOTATION_IN_PROGRESS));
                             documentService.createAnnotationDocument(annotationDocument);
+                            documentService.transitionAnnotationDocumentState(annotationDocument,
+                                    NEW_TO_ANNOTATION_IN_PROGRESS);
                         }
                         
                         aTarget.add(aCellItem);
@@ -1102,21 +1096,9 @@ public class MonitoringPage
         {
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(aSourceDocument, aUser);
-            annotationDocument.setState(AnnotationDocumentStateTransition
-                    .transition(aAnnotationDocumentStateTransition));
-            documentService.createAnnotationDocument(annotationDocument);
-        }
-
-        /**
-         * change source document state when curation document state is changed.
-         */
-        private void changeSourceDocumentState(SourceDocument aSourceDocument,
-                SourceDocumentStateTransition aSourceDocumentStateTransition)
-            throws IOException
-        {
-            aSourceDocument.setState(
-                    SourceDocumentStateTransition.transition(aSourceDocumentStateTransition));
-            documentService.createSourceDocument(aSourceDocument);
+            
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    aAnnotationDocumentStateTransition);
         }
     }
 }

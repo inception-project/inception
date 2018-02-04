@@ -74,6 +74,10 @@ public class Project
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
+    
+    @Column(nullable = true)
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ProjectStateType")
+    private ProjectState state;
 
     public Project()
     {
@@ -194,6 +198,16 @@ public class Project
         updated = aUpdated;
     }
     
+    public ProjectState getState()
+    {
+        return state;
+    }
+
+    public void setState(ProjectState aState)
+    {
+        state = aState;
+    }
+
     @Override
     public int hashCode()
     {

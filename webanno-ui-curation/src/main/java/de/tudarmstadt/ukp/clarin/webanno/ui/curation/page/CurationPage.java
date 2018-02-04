@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.transition;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -519,14 +518,14 @@ public class CurationPage
             AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();
 
-            if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                sourceDocument.setState(transition(CURATION_FINISHED_TO_CURATION_IN_PROGRESS));
+            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
             }
             else {
-                sourceDocument.setState(transition(CURATION_IN_PROGRESS_TO_CURATION_FINISHED));
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             }
-            
-            documentService.createSourceDocument(sourceDocument);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -584,10 +583,9 @@ public class CurationPage
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
             // ANNOTATION_FINISHED
-            if (!state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                state.getDocument()
-                        .setState(transition(ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
+            if (!SourceDocumentState.CURATION_FINISHED.equals(state.getDocument().getState())) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
     
             // Load user preferences
