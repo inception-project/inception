@@ -26,7 +26,6 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -34,10 +33,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 
@@ -52,27 +52,6 @@ public interface DocumentService
      */
     File getDir();
 
-    /**
-     * Load the CAS for the specified source document and user, upgrade it, and save it again.
-     * Depending on the mode parameter, the automation/correction and curation CASes are also
-     * upgraded.
-     *
-     * @param aDocument
-     *            the source document.
-     * @param aMode
-     *            the mode.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @deprecated Read CAS e.g. using {@link #readAnnotationCas(SourceDocument, User)} then use 
-     *             {@link #upgradeCas(CAS, AnnotationDocument)} and then write the CAS e.g. using
-     *             {@link #writeAnnotationCas(JCas, SourceDocument, User, boolean)}
-     */
-    @Deprecated
-    void upgradeCasAndSave(SourceDocument aDocument, Mode aMode, String username)
-        throws IOException;
-
     // --------------------------------------------------------------------------------------------
     // Methods related to SourceDocuments
     // --------------------------------------------------------------------------------------------
@@ -85,12 +64,9 @@ public interface DocumentService
      *
      * @param document
      *            {@link SourceDocument} to be created
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void createSourceDocument(SourceDocument document)
-        throws IOException;
+    void createSourceDocument(SourceDocument document);
 
     /**
      * Check if a Source document with this same name exist in the project. The caller method then
@@ -194,6 +170,12 @@ public interface DocumentService
      */
     File getDocumentFolder(SourceDocument aDocument)
         throws IOException;
+
+    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentState aState);
+
+    SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
+            SourceDocumentStateTransition aTransition);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to AnnotationDocuments
@@ -440,9 +422,6 @@ public interface DocumentService
      */
     void removeAnnotationDocument(AnnotationDocument annotationDocument);
 
-    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
-        throws UIMAException, IOException;
-
     /**
      * If any of the users finished one annotation document
      */
@@ -461,4 +440,10 @@ public interface DocumentService
      * value. The annotation document may be {@code null}.
      */
     Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject, User aUser);
+    
+    AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentState aState);
+
+    AnnotationDocumentState transitionAnnotationDocumentState(AnnotationDocument aDocument,
+            AnnotationDocumentStateTransition aTransition);
 }

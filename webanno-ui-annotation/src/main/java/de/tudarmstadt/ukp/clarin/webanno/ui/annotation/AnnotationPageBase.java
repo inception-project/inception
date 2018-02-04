@@ -210,12 +210,14 @@ public abstract class AnnotationPageBase
     }
 
     /**
-     * Show the next document if exist
+     * Show the specified document.
      */
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
-        getModelObject().setDocument(aDocument, getListOfDocs());
-        actionLoadDocument(aTarget);
+        if (aDocument.getId() != getModelObject().getDocument().getId()) {
+            getModelObject().setDocument(aDocument, getListOfDocs());
+            actionLoadDocument(aTarget);
+        }
     }
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)

@@ -27,6 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface FeatureSupportRegistry
 {
+    String SERVICE_NAME = "featureSupportRegistry";
+    
     default List<FeatureType> getAllTypes(AnnotationLayer aLayer)
     {
         List<FeatureType> types = new ArrayList<>();

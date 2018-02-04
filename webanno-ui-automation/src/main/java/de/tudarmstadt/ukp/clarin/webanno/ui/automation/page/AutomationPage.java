@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.transition;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
@@ -78,7 +78,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -99,8 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDial
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemCondition;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -117,7 +114,6 @@ import wicket.contrib.input.events.key.KeyType;
  * annotated document and in the upper panel the annotation pane to trigger automation on the lower
  * pane.
  */
-@MenuItem(icon = "images/update.png", label = "Automation", prio = 110)
 @MountPath("/automation.html")
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_AUTOMATION, prio = 110)
 public class AutomationPage
@@ -675,11 +671,8 @@ public class AutomationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
                     state.getDocument(), state.getUser());
 
-            annotationDocument.setState(transition(ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED));
-            
-            // manually update state change!! No idea why it is not updated in the DB
-            // without calling createAnnotationDocument(...)
-            documentService.createAnnotationDocument(annotationDocument);
+            documentService.transitionAnnotationDocumentState(annotationDocument,
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
@@ -728,7 +721,7 @@ public class AutomationPage
             }
 
             // Update the CASes
-            documentService.upgradeCas(editorCas.getCas(), annotationDocument);
+            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
             correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
                     state.getDocument());
 
@@ -776,9 +769,8 @@ public class AutomationPage
 
             // Update document state
             if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
-                state.getDocument().setState(SourceDocumentStateTransition
-                        .transition(SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS));
-                documentService.createSourceDocument(state.getDocument());
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        NEW_TO_ANNOTATION_IN_PROGRESS);
             }
             
             // Reset the editor
@@ -810,15 +802,5 @@ public class AutomationPage
         catch (Exception e) {
             handleException(aTarget, e);
         }
-    }
-    
-    /**
-     * Only project admins and annotators can see this page
-     */
-    @MenuItemCondition
-    public static boolean menuItemCondition(ProjectService aRepo, UserDao aUserRepo)
-    {
-        User user = aUserRepo.getCurrentUser();
-        return SecurityUtil.annotationEnabeled(aRepo, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION);
     }
 }

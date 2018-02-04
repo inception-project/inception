@@ -18,62 +18,68 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class FeatureSupportRegistryImpl
-    implements FeatureSupportRegistry, BeanPostProcessor
+    implements FeatureSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, FeatureSupport> beans = new HashMap<>();
-    private final List<FeatureSupport> sortedBeans = new ArrayList<>();
+    private final List<FeatureSupport> featureSupportsProxy;
+    
+    private List<FeatureSupport> featureSupports;
+    
     private final Map<Long, FeatureSupport> supportCache = new HashMap<>();
-    private boolean sorted = false;
 
-    @Override
-    public Object postProcessAfterInitialization(Object aBean, String aBeanName)
-        throws BeansException
+    public FeatureSupportRegistryImpl(
+            @Lazy @Autowired(required = false) List<FeatureSupport> aFeatureSupports)
     {
-        // Collect annotation editor extensions
-        if (aBean instanceof FeatureSupport) {
-            beans.put(aBeanName, (FeatureSupport) aBean);
-            log.debug("Found feature support: {}", aBeanName);
+        featureSupportsProxy = aFeatureSupports;
+    }
+    
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    public void init()
+    {
+        List<FeatureSupport> fsp = new ArrayList<>();
+
+        if (featureSupportsProxy != null) {
+            fsp.addAll(featureSupportsProxy);
+            OrderComparator.sort(fsp);
+        
+            for (FeatureSupport fs : fsp) {
+                log.info("Found feature support: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+            }
         }
         
-        return aBean;
+        featureSupports = Collections.unmodifiableList(fsp);
     }
-
-    @Override
-    public Object postProcessBeforeInitialization(Object aBean, String aBeanName)
-        throws BeansException
-    {
-        return aBean;
-    }
-
+    
     @Override
     public List<FeatureSupport> getFeatureSupports()
     {
-        if (!sorted) {
-            sortedBeans.addAll(beans.values());
-            OrderComparator.sort(sortedBeans);
-            sorted = true;
-        }
-        return sortedBeans;
+        return featureSupports;
     }
     
     @Override

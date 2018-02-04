@@ -1041,4 +1041,17 @@
       tableName="train_document"
       indexName="FK_ijpb9cuo73wabicxjvnpf8gb6" />
   </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20180204-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="state"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="state" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>

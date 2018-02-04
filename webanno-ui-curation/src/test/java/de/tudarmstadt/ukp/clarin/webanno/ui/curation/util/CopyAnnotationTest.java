@@ -151,10 +151,9 @@ public class CopyAnnotationTest
 
         }.getMockInstance();
         
-        featureSupportRegistry = new FeatureSupportRegistryImpl();
-        featureSupportRegistry.postProcessAfterInitialization(new PrimitiveUimaFeatureSupport(),
-                "uimaPrimitive");
-        featureSupportRegistry.postProcessAfterInitialization(new SlotFeatureSupport(), "slots");
+        featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
+        featureSupportRegistry.init();
     }
     
     @Test
@@ -564,5 +563,4 @@ public class CopyAnnotationTest
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
-
 }

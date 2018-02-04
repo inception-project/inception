@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Properties;
 
 import javax.annotation.Resource;
@@ -301,7 +302,7 @@ public class RemoteApiController2Test
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new FeatureSupportRegistryImpl();
+            return new FeatureSupportRegistryImpl(Collections.emptyList());
         }
         
         @Bean

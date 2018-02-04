@@ -107,7 +107,8 @@ public class AutomationUtil
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
         SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
         for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aState.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
@@ -134,7 +135,8 @@ public class AutomationUtil
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aState.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
@@ -260,7 +262,8 @@ public class AutomationUtil
      * Repeat annotation will repeat annotations of same pattern to all documents on the project
      * load CAS from document in case no initial CORRECTION_CAS is not created before
      */
-    public static void loadDocument(SourceDocument aDocument, DocumentService aDocumentService,
+    public static void loadDocument(SourceDocument aDocument,
+            AnnotationSchemaService annotationService, DocumentService aDocumentService,
             CorrectionDocumentService aCorrectionDocumentService, User logedInUser)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -270,14 +273,14 @@ public class AutomationUtil
                 AnnotationDocument logedInUserAnnotationDocument = aDocumentService
                         .getAnnotationDocument(aDocument, logedInUser);
                 jCas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
-                aDocumentService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
+                annotationService.upgradeCas(jCas.getCas(), logedInUserAnnotationDocument);
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
             catch (DataRetrievalFailureException | NoResultException e) {
                 jCas = aDocumentService.readAnnotationCas(
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 // upgrade this cas
-                aDocumentService.upgradeCas(jCas.getCas(),
+                annotationService.upgradeCas(jCas.getCas(),
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
                 aCorrectionDocumentService.writeCorrectionCas(jCas, aDocument);
             }
@@ -302,7 +305,8 @@ public class AutomationUtil
         String selectedText = WebAnnoCasUtil.getSelectedText(annoCas, aStart, aEnd);
 
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
             AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
@@ -331,7 +335,8 @@ public class AutomationUtil
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
-            loadDocument(d, aDocumentService, aCorrectionDocumentService, aBModel.getUser());
+            loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
+                    aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
             ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
