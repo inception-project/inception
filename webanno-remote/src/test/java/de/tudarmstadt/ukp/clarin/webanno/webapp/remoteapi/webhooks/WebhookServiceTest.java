@@ -33,6 +33,7 @@ import javax.annotation.Resource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,7 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.Document
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
 @RunWith(SpringRunner.class)
-@SpringBootApplication
+@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class WebhookServiceTest
 {

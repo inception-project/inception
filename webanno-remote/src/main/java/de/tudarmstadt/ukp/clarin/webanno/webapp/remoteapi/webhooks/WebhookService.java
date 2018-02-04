@@ -93,7 +93,7 @@ public class WebhookService
         }
     }
     
-    @TransactionalEventListener
+    @TransactionalEventListener(fallbackExecution = true)
     @Async
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
