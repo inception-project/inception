@@ -70,6 +70,9 @@ public interface KnowledgeBaseService
      * @param kb a {@link KnowledgeBase}
      */
     boolean isEmpty(KnowledgeBase kb);
+    
+    void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg,
+            boolean canSupportConceptLinkingaB);
 
     void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg);
 

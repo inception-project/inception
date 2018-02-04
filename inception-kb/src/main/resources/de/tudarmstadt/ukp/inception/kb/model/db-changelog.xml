@@ -31,6 +31,12 @@
       constraintName="FK_4pfd2vykcbrnyvg6v71rhtimf" deferrable="false" initiallyDeferred="false"
       onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20180204"> 
+    <addColumn tableName="knowledgebase">
+      <column name="supportConceptLinking" type="BOOLEAN"/> 
+    </addColumn> 
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20180214-1">
     <preConditions onFail="MARK_RAN">
@@ -154,5 +160,4 @@
       deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
       onUpdate="CASCADE" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
-
 </databaseChangeLog>

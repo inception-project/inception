@@ -106,8 +106,11 @@ public class KnowledgeBase
     private boolean enabled = true;
     
     
-    public String getRepositoryId()
-    {
+    @Column(name = "supportConceptLinking", columnDefinition = "BIT(0,1) default 0", 
+            nullable = false) 
+    private boolean supportConceptLinking = false;
+    
+    public String getRepositoryId() {
         return repositoryId;
     }
 
@@ -203,6 +206,14 @@ public class KnowledgeBase
     public boolean isManagedRepository()
     {
         return !(repositoryId == null || isEmpty(repositoryId));
+    }
+    
+    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
+        supportConceptLinking = aSupportConceptLinking;
+    }
+    
+    public boolean canSupportConceptLinking() {
+        return supportConceptLinking;
     }
     
     @Override

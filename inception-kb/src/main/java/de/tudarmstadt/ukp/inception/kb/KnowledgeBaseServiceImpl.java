@@ -132,13 +132,13 @@ public class KnowledgeBaseServiceImpl
 
     @Transactional
     @Override
-    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
-    {
+    public void registerKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg, 
+            boolean canSupportConceptLinking) {
         // obtain unique repository id
         String baseName = "pid-" + Long.toString(kb.getProject().getId()) + "-kbid-";
         String repositoryId = repoManager.getNewRepositoryID(baseName);
         kb.setRepositoryId(repositoryId);
-
+        kb.setSupportConceptLinking(canSupportConceptLinking);
         repoManager.addRepositoryConfig(new RepositoryConfig(repositoryId, cfg));
         entityManager.persist(kb);
     }
