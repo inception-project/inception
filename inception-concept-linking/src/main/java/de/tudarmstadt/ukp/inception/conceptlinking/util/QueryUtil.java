@@ -30,7 +30,7 @@ public class QueryUtil
             + "                          ?e2 ?labelpredicate ?anylabel. \n"
             + "                          ?anylabel bif:contains '\"%entitylabel\"'@%language. \n"
             + "                      }\n"
-            + "                      ?e2 rdf:type \"%conceptIri\" \n"
+            + "                      ?e2 rdf:type <%conceptIri> \n"
             + "                      FILTER ( lang(?anylabel) = \"%language\" )\n"
             + "                  }\n"
             + "              }\n"
@@ -81,7 +81,7 @@ public class QueryUtil
         
         if (conceptIri != null) {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
-                    .replace("%conceptIri", conceptIri.getNamespace() + conceptIri.getLocalName());
+                    .replace("%conceptIri", conceptIri.stringValue());
         } 
         else {
             SPARQL_ENTITY_LABEL_INST = SPARQL_ENTITY_LABEL_INST
