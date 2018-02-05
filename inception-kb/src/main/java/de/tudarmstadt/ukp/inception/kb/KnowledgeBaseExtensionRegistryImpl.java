@@ -49,7 +49,8 @@ public class KnowledgeBaseExtensionRegistryImpl
             OrderComparator.sort(exts);
         
             for (KnowledgeBaseExtension fs : exts) {
-                log.info("Found kb extension: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.info("Found kb extension: {}",
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
         

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -87,6 +88,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
+import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component(KnowledgeBaseService.SERVICE_NAME)
@@ -97,16 +99,20 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
+    private @Resource KnowledgeBaseExtensionRegistry extensionRegistry;
+
+    @org.springframework.beans.factory.annotation.Value(value = "${data.path}/kb")
+    private File dataDir;
 
     @Autowired
-    public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir)
+    public KnowledgeBaseServiceImpl(@org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir)
     {
         String url = Paths.get(dataDir.getAbsolutePath(), "kb").toUri().toString();
         repoManager = RepositoryProvider.getRepositoryManager(url);
         log.info("Knowledge base repository path: " + url);
     }
 
-    public KnowledgeBaseServiceImpl(@Value("${data.path}") File dataDir,
+    public KnowledgeBaseServiceImpl(@org.springframework.beans.factory.annotation.Value("${data.path}") File dataDir,
         EntityManager entityManager)
     {
         this(dataDir);
@@ -229,8 +235,8 @@ public class KnowledgeBaseServiceImpl
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
     }
 
-    private RepositoryConnection getConnection(KnowledgeBase kb)
-    {
+    @Override
+    public RepositoryConnection getConnection(KnowledgeBase kb) {
         assertRegistration(kb);
         return repoManager.getRepository(kb.getRepositoryId()).getConnection();
     }
@@ -367,11 +373,14 @@ public class KnowledgeBaseServiceImpl
     @Override
     public List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll)
     {
-        return list(kb, kb.getClassIri(), true, aAll);
+        if (kb.canSupportConceptLinking()) {
+            return listLinkingConcepts(kb, true, aAll);
+        } else {
+            return list(kb, RDFS.CLASS, true, aAll);
+        }
     }
 
     @Override
-
     public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
         if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
@@ -526,11 +535,43 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
-    {
+    public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll, 
+            AnnotatorState aState) {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
-        return list(kb, conceptIri, false, aAll);
+        if (kb.canSupportConceptLinking()) {
+            return listLinkingInstances(kb, conceptIri, false, aAll, aState);
+        } else {
+            return list(kb, conceptIri, false, aAll);
+        }
     }
+    
+    private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
+            boolean aIncludeInferred, boolean aAll, AnnotatorState aState)
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState);
+            List<KBHandle> handles = new ArrayList<>();
+
+            for (Entity c: candidates) {
+                String id = c.getE2();
+                String label = c.getLabel();
+
+                if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
+                    continue;
+                }
+
+                KBHandle handle = new KBHandle(id, label);
+                handles.add(handle);
+            }
+
+            return handles;
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
+        return resultList;
+    }
+
 
     @Override
     public void upsertStatement(KnowledgeBase kb, KBStatement aStatement)
@@ -606,7 +647,8 @@ public class KnowledgeBaseServiceImpl
         return listStatements(kb, handle, aAll);
     }
 
-    private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
+    @Override
+private List<Statement> listStatements(KnowledgeBase kb, String aInstanceIdentifier,
                                            boolean aIncludeInferred)
     {
         return read(kb, (conn) -> {
@@ -776,6 +818,56 @@ public class KnowledgeBaseServiceImpl
         });
 
         resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+        return resultList;
+    }
+    
+    // TODO make language configurable 
+    private List<KBHandle> listLinkingConcepts(KnowledgeBase kb, boolean aIncludeInferred,
+            boolean aAll)
+    {
+        List<KBHandle> resultList = read(kb, (conn) -> {
+            String QUERY = "SELECT DISTINCT ?any ?l WHERE { \n" 
+                    + "  ?s ?pTYPE ?any . \n"
+                    + "  OPTIONAL { \n" 
+                    + "    ?any ?pLABEL ?l . \n"
+                    + "    FILTER(LANG(?l) = \"\" || LANGMATCHES(LANG(?l), \"" 
+                    + "en" 
+                    + "\")) \n" 
+                    + "  } \n"
+                    + "} \n" + "LIMIT 10000";
+            
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("pTYPE", RDFS.SUBCLASSOF);
+            tupleQuery.setBinding("pLABEL", RDFS.LABEL);
+            tupleQuery.setIncludeInferred(aIncludeInferred);
+            log.info("waiting for query...");
+            
+            List<KBHandle> handles = new ArrayList<>();
+            try (TupleQueryResult result = tupleQuery.evaluate()) {
+                while (result.hasNext()) {
+                    BindingSet bindings = result.next();
+                    String id = bindings.getBinding("any").getValue().stringValue();
+                    Binding label = bindings.getBinding("l");
+
+                    if (!id.contains(":") || (!aAll && startsWithAny(id, IMPLICIT_NAMESPACES))) {
+                        continue;
+                    }
+
+                    KBHandle handle = new KBHandle(id);
+                    if (label != null) {
+                        handle.setName(label.getValue().stringValue());
+                    }
+
+                    handles.add(handle);
+                }
+            } catch (QueryEvaluationException | RepositoryException e) {
+                log.error("Error: ", e);
+            }
+            return handles;
+        });
+
+        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+
         return resultList;
     }
 

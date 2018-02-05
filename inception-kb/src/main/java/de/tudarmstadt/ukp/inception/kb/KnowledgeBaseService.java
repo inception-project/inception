@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
@@ -238,7 +239,8 @@ public interface KnowledgeBaseService
      * @param aAll        True if entities with implicit namespaces (e.g. defined by RDF)
      * @return All instances of the given concept
      */
-    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll);
+    List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll, 
+            AnnotatorState aState);
 
     /**
      * Inserts a new statement. If the statement has an original statement, that one is deleted
@@ -263,4 +265,6 @@ public interface KnowledgeBaseService
     List<KBHandle> listRootConcepts(KnowledgeBase kb, boolean aAll);
 
     List<KBHandle> listChildConcepts(KnowledgeBase kb, String parentIdentifier, boolean aAll);
+    
+    RepositoryConnection getConnection(KnowledgeBase kb);
 }

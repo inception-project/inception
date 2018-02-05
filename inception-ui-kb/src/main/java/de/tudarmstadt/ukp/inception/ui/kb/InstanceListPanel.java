@@ -117,7 +117,7 @@ public class InstanceListPanel extends Panel {
     private List<KBHandle> getInstances() {
         if (conceptModel.getObject() != null) {
             return kbService.listInstances(kbModel.getObject(),
-                    conceptModel.getObject().getIdentifier(), showAll.getObject());
+                    conceptModel.getObject().getIdentifier(), showAll.getObject(), null);
         } else {
             return Collections.emptyList();
         }
