@@ -59,7 +59,7 @@ public class VID
 
     public static final VID NONE_ID = new VID(NONE);
 
-    private final int layerId;
+    private final long layerId;
     private final int annotationId;
     private final int subAnnotationId;
     private final int attribute;
@@ -124,10 +124,10 @@ public class VID
     public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute,
             int aSlot)
     {
-        this(aExtensionId, NONE, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+        this(aExtensionId, -1l, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
     }
 
-    public VID(String aExtensionId, int aLayerId, int aAnnotationID, int aSubAnnotationId,
+    public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot)
     {
         annotationId = aAnnotationID;
@@ -148,7 +148,7 @@ public class VID
         return !isSet();
     }
 
-    public int getLayerId()
+    public long getLayerId()
     {
         return layerId;
     }
