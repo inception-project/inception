@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import org.apache.uima.cas.Feature;
@@ -94,15 +95,17 @@ public abstract class TypeAdapter_ImplBase
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
 
-        Object oldValue =  getValue(fs, aFeature);;
+        Object oldValue =  getValue(fs, aFeature);
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
 
         Object newValue = getValue(fs, aFeature);
         
-        publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
+                    aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+        }
     }
     
     private Object getValue(FeatureStructure fs, AnnotationFeature aFeature)
