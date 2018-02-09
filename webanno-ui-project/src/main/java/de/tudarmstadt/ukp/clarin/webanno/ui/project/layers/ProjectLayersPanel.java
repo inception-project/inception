@@ -1047,6 +1047,9 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
+                    // cancel selection of feature list
+                    featureSelectionForm.feature.setModelObject(null);
+                    
                     featureDetailForm.setModelObject(new AnnotationFeature());
                     FeatureDetailForm.this.setVisible(false);
                 }
@@ -1141,6 +1144,9 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
+                    // cancel selection of feature list
+                    feature.setModelObject(null);
+                    
                     featureDetailForm.setDefaultModelObject(new AnnotationFeature());
                     featureDetailForm.setVisible(true);
                 }
