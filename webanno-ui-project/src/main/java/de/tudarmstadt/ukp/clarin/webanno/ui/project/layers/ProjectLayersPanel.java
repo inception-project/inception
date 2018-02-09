@@ -717,9 +717,8 @@ public class ProjectLayersPanel
                         layer.setLockToTokenOffset(false);
                     }
 
+                    final Project project = ProjectLayersPanel.this.getModelObject();
                     if (layer.getId() == 0) {
-                        final Project project = ProjectLayersPanel.this.getModelObject();
-                        
                         String layerName = StringUtils
                                 .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                         
@@ -776,10 +775,11 @@ public class ProjectLayersPanel
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
                         featureSelectionForm.setVisible(true);
-
-                        applicationEventPublisherHolder.get()
-                                .publishEvent(new LayerConfigurationChangedEvent(this, project));
                     }
+                    
+                    // Trigger LayerConfigurationChangedEvent
+                    applicationEventPublisherHolder.get()
+                            .publishEvent(new LayerConfigurationChangedEvent(this, project));
                 }
             });
 
@@ -1030,6 +1030,10 @@ public class ProjectLayersPanel
                         feature.setName(name);
                         saveFeature(feature);
                     }
+                    // Trigger LayerConfigurationChangedEvent
+                    applicationEventPublisherHolder.get().publishEvent(
+                            new LayerConfigurationChangedEvent(this, feature.getProject()));
+
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
                     }
@@ -1077,9 +1081,6 @@ public class ProjectLayersPanel
             aFeature.setTagset(null);
         }
 
-        applicationEventPublisherHolder.get()
-                .publishEvent(new LayerConfigurationChangedEvent(this, aFeature.getProject()));
-        
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }
