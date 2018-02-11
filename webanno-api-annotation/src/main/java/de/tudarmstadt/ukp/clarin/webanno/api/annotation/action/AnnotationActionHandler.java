@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-
     void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
         throws IOException, AnnotationException;
 
