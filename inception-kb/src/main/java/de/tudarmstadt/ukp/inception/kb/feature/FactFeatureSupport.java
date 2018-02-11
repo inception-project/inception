@@ -25,15 +25,15 @@ public class FactFeatureSupport implements FeatureSupport {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-    public static final String PREFIX = "Fact:";
+    public static final String PREFIX = "Fact";
     public static final String SUBJECT = "Subject";
     public static final String PREDICATE = "Predicate";
     public static final String OBJECT = "Object";
 
     private final static List<FeatureType> FEATURE_TYPES = Arrays.asList(
-        new FeatureType(PREFIX + SUBJECT, PREFIX + ":" + SUBJECT),
-        new FeatureType(PREFIX + PREDICATE, PREFIX + ":" + PREDICATE),
-        new FeatureType(PREFIX + OBJECT, PREFIX + ":" + OBJECT)
+        new FeatureType(PREFIX + "." + SUBJECT, PREFIX + ":" + SUBJECT),
+        new FeatureType(PREFIX + "." + PREDICATE, PREFIX + ":" + PREDICATE),
+        new FeatureType(PREFIX + "." + OBJECT, PREFIX + ":" + OBJECT)
     );
 
     @Override
@@ -46,9 +46,9 @@ public class FactFeatureSupport implements FeatureSupport {
         switch (annotationFeature.getMultiValueMode()) {
             case NONE:
                 switch (annotationFeature.getType()) {
-                    case PREFIX + SUBJECT:
-                    case PREFIX + PREDICATE:
-                    case PREFIX + OBJECT:
+                    case PREFIX + "." + SUBJECT:
+                    case PREFIX + "." + PREDICATE:
+                    case PREFIX + "." + OBJECT:
                         return true;
                     default:
                         return false;
@@ -69,19 +69,19 @@ public class FactFeatureSupport implements FeatureSupport {
         switch (featureState.feature.getMultiValueMode()) {
             case NONE:
                 switch (featureState.feature.getType()) {
-                    case PREFIX + SUBJECT: {
+                    case PREFIX + "." + SUBJECT: {
                         editor = new FactFeatureSubjectEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created editor:" + PREFIX + SUBJECT);
+                        logger.debug("created fact editor:" + PREFIX + "." + SUBJECT);
                         break;
                     }
-                    case PREFIX + PREDICATE: {
+                    case PREFIX + "." + PREDICATE: {
                         editor = new FaceFeaturePredicateEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created editor:" + PREFIX + PREDICATE);
+                        logger.debug("created fact editor:" + PREFIX + "." + PREDICATE);
                         break;
                     }
-                    case PREFIX + OBJECT: {
+                    case PREFIX + "." + OBJECT: {
                         editor = new FactFeatureSubjectEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created editor:" + PREFIX + OBJECT);
+                        logger.debug("created fact editor:" + PREFIX + "." + OBJECT);
                         break;
                     }
                     default:
