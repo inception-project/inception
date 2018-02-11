@@ -464,57 +464,53 @@ public class AnnotationDetailEditorPanel
 
         internalCommitAnnotation(aTarget, aJCas);
 
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-        if (featureStates.get(0).value != null && !aIsForwarded) {
+        if (!aIsForwarded) {
             if (state.getSelection().getEnd() >= state.getFirstVisibleUnitEnd()) {
                 autoScroll(aJCas, true);
             }
 
-            LOG.info("BEGIN auto-forward annotation for tagset-based annotation");
+            List<FeatureState> featureStates = getModelObject().getFeatureStates();
+            if (featureStates.get(0).value != null) {
+                LOG.info("BEGIN auto-forward annotation for tagset-based annotation");
 
-            AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
-                    state.getSelection().getBegin(), state.getSelection().getEnd());
-            if (nextToken != null) {
-                if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                    state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
-                            nextToken.getEnd());
-                    actionCreateForward(aTarget, aJCas, true);
+                AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
+                        state.getSelection().getBegin(), state.getSelection().getEnd());
+                if (nextToken != null) {
+                    if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
+                        state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
+                                nextToken.getEnd());
+                        actionCreateForward(aTarget, aJCas, true);
+                    }
                 }
+                LOG.info("END auto-forward annotation for tagset-based annotation");
+            }
+            else {
+                LOG.info("BEGIN auto-forward annotation for free-text annotation");
+
+                if (featureStates.get(0).value == null) {
+                    TypeAdapter adapter = annotationService
+                            .getAdapter(state.getSelectedAnnotationLayer());
+                    AnnotationFS fs = selectByAddr(aJCas,
+                            state.getSelection().getAnnotation().getId());
+                    deleteAnnotation(aJCas, state, fs, featureStates.get(0).feature.getLayer(),
+                            adapter);
+                }
+
+                AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
+                        state.getSelection().getBegin(), state.getSelection().getEnd());
+                if (nextToken != null) {
+                    if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
+                        state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
+                                nextToken.getEnd());
+                        actionCreateForward(aTarget, aJCas, true);
+                    }
+                }
+                
+                LOG.info("END auto-forward annotation for free-text annotation"); 
             }
 
             LOG.trace("onAutoForward()");
             onAutoForward(aTarget);
-
-            LOG.info("END auto-forward annotation for tagset-based annotation");
-        }
-        else if (!aIsForwarded) {
-            if (state.getSelection().getEnd() >= state.getFirstVisibleUnitEnd()) {
-                autoScroll(aJCas, true);
-            }
-
-            LOG.info("BEGIN auto-forward annotation for free-text annotation");
-
-            if (featureStates.get(0).value == null) {
-                AnnotationFS fs = selectByAddr(aJCas, state.getSelection().getAnnotation().getId());
-                deleteAnnotation(aJCas, state, fs, featureStates.get(0).feature.getLayer(),
-                        adapter);
-            }
-
-            AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
-                    state.getSelection().getBegin(), state.getSelection().getEnd());
-            if (nextToken != null) {
-                if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                    state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
-                            nextToken.getEnd());
-                    actionCreateForward(aTarget, aJCas, true);
-                }
-            }
-
-            LOG.trace("onAutoForward()");
-            onAutoForward(aTarget);
-
-            LOG.info("END auto-forward annotation for free-text annotation"); 
         }
         
         aTarget.add(annotationFeatureForm);
