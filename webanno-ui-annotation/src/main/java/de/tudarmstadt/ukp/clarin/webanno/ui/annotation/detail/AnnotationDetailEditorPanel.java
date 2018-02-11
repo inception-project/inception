@@ -432,81 +432,7 @@ public class AnnotationDetailEditorPanel
                     annotationFeatureForm.getLayerSelector().getModelObject());
         }
         
-        LOG.trace("actionAnnotate() selectedLayer: {}",
-                state.getSelectedAnnotationLayer().getUiName());
-        LOG.trace("actionAnnotate() defaultLayer: {}",
-                state.getDefaultAnnotationLayer().getUiName());
-
-        if (state.getSelectedAnnotationLayer() == null) {
-            error("No layer is selected. First select a layer.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        if (state.getSelectedAnnotationLayer().isReadonly()) {
-            error("Layer is not editable.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        // Verify if input is valid according to tagset
-        LOG.trace("actionAnnotate() verifying feature values in editors");
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            AnnotationFeature feature = featureState.feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureState.value;
-
-                // Check if tag is necessary, set, and correct
-                if (
-                    value != null &&
-                        feature.getTagset() != null &&
-                        !feature.getTagset().isCreateTag() &&
-                        !annotationService.existsTag(value, feature.getTagset())
-                    ) {
-                    error("[" + value
-                        + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
-
-        // #186 - After filling a slot, the annotation detail panel is not updated
-        aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
-
-        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-
-        // If this is an annotation creation action, create the annotation
-        if (state.getSelection().getAnnotation().isNotSet()) {
-            // Load the feature editors with the remembered values (if any)
-            loadFeatureEditorModels(aJCas, aTarget);
-            createNewAnnotation(aTarget, adapter, aJCas);
-        }
-        
-        // Update the features of the selected annotation from the values presently in the
-        // feature editors
-        writeFeatureEditorModelsToCas(adapter, aJCas);
-
-        // Update progress information
-        LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
-        state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
-
-        // persist changes
-        writeEditorCas(aJCas);
-
-        // Remember the current feature values independently for spans and relations
-        LOG.trace("actionAnnotate() remembering feature editor values");
-        state.rememberFeatures();
-
-        // Loading feature editor values from CAS
-        loadFeatureEditorModels(aJCas, aTarget);
-
-        // onAnnotate callback
-        LOG.trace("onAnnotate()");
-        onAnnotate(aTarget);
-        
+        internalCommitAnnotation(aTarget, aJCas);
 
         internalCompleteAnnotation(aTarget, aJCas);
     }
@@ -536,82 +462,10 @@ public class AnnotationDetailEditorPanel
         state.setSelectedAnnotationLayer(
                 annotationFeatureForm.getLayerSelector().getModelObject());
 
-        
-        LOG.trace("actionAnnotate() selectedLayer: {}",
-                state.getSelectedAnnotationLayer().getUiName());
-        LOG.trace("actionAnnotate() defaultLayer: {}",
-                state.getDefaultAnnotationLayer().getUiName());
+        internalCommitAnnotation(aTarget, aJCas);
 
-        if (state.getSelectedAnnotationLayer() == null) {
-            error("No layer is selected. First select a layer.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        if (state.getSelectedAnnotationLayer().isReadonly()) {
-            error("Layer is not editable.");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        // Verify if input is valid according to tagset
-        LOG.trace("actionAnnotate() verifying feature values in editors");
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            AnnotationFeature feature = featureState.feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureState.value;
-
-                // Check if tag is necessary, set, and correct
-                if (
-                    value != null &&
-                        feature.getTagset() != null &&
-                        !feature.getTagset().isCreateTag() &&
-                        !annotationService.existsTag(value, feature.getTagset())
-                    ) {
-                    error("[" + value
-                        + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
-
-        // #186 - After filling a slot, the annotation detail panel is not updated
-        aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
-
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-
-        // If this is an annotation creation action, create the annotation
-        if (state.getSelection().getAnnotation().isNotSet()) {
-            // Load the feature editors with the remembered values (if any)
-            loadFeatureEditorModels(aJCas, aTarget);
-            createNewAnnotation(aTarget, adapter, aJCas);
-        }
-
-        // Update the features of the selected annotation from the values presently in the
-        // feature editors
-        writeFeatureEditorModelsToCas(adapter, aJCas);
-
-        // Update progress information
-        LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
-        state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
-
-        // persist changes
-        writeEditorCas(aJCas);
-
-        // Remember the current feature values independently for spans and relations
-        LOG.trace("actionAnnotate() remembering feature editor values");
-        state.rememberFeatures();
-
-        // Loading feature editor values from CAS
-        loadFeatureEditorModels(aJCas, aTarget);
-
-        // onAnnotate callback
-        LOG.trace("onAnnotate()");
-        onAnnotate(aTarget);
-        
         if (featureStates.get(0).value != null && !aIsForwarded) {
             if (state.getSelection().getEnd() >= state.getFirstVisibleUnitEnd()) {
                 autoScroll(aJCas, true);
@@ -718,6 +572,87 @@ public class AnnotationDetailEditorPanel
         // This already happens in loadFeatureEditorModels() above - probably not needed
         // here again
         // annotationFeatureForm.updateRememberLayer();
+    }
+    
+    private void internalCommitAnnotation(AjaxRequestTarget aTarget, JCas aJCas)
+        throws AnnotationException, IOException
+    {
+        AnnotatorState state = getModelObject();
+        
+        LOG.trace("actionAnnotate() selectedLayer: {}",
+                state.getSelectedAnnotationLayer().getUiName());
+        LOG.trace("actionAnnotate() defaultLayer: {}",
+                state.getDefaultAnnotationLayer().getUiName());
+
+        if (state.getSelectedAnnotationLayer() == null) {
+            error("No layer is selected. First select a layer.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        if (state.getSelectedAnnotationLayer().isReadonly()) {
+            error("Layer is not editable.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        // Verify if input is valid according to tagset
+        LOG.trace("actionAnnotate() verifying feature values in editors");
+        List<FeatureState> featureStates = getModelObject().getFeatureStates();
+        for (FeatureState featureState : featureStates) {
+            AnnotationFeature feature = featureState.feature;
+            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
+                String value = (String) featureState.value;
+
+                // Check if tag is necessary, set, and correct
+                if (
+                    value != null &&
+                        feature.getTagset() != null &&
+                        !feature.getTagset().isCreateTag() &&
+                        !annotationService.existsTag(value, feature.getTagset())
+                    ) {
+                    error("[" + value
+                        + "] is not in the tag list. Please choose from the existing tags");
+                    return;
+                }
+            }
+        }
+
+        // #186 - After filling a slot, the annotation detail panel is not updated
+        aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+
+        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
+
+        // If this is an annotation creation action, create the annotation
+        if (state.getSelection().getAnnotation().isNotSet()) {
+            // Load the feature editors with the remembered values (if any)
+            loadFeatureEditorModels(aJCas, aTarget);
+            createNewAnnotation(aTarget, adapter, aJCas);
+        }
+
+        // Update the features of the selected annotation from the values presently in the
+        // feature editors
+        writeFeatureEditorModelsToCas(adapter, aJCas);
+
+        // Update progress information
+        LOG.trace("actionAnnotate() updating progress information");
+        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
+        state.setFocusUnitIndex(sentenceNumber);
+        state.getDocument().setSentenceAccessed(sentenceNumber);
+
+        // persist changes
+        writeEditorCas(aJCas);
+
+        // Remember the current feature values independently for spans and relations
+        LOG.trace("actionAnnotate() remembering feature editor values");
+        state.rememberFeatures();
+
+        // Loading feature editor values from CAS
+        loadFeatureEditorModels(aJCas, aTarget);
+
+        // onAnnotate callback
+        LOG.trace("onAnnotate()");
+        onAnnotate(aTarget);
     }
 
     public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
