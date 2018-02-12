@@ -487,6 +487,8 @@ public class AnnotationDetailEditorPanel
             else {
                 LOG.info("BEGIN auto-forward annotation for free-text annotation");
 
+                // If the annotation value was cleared or not filled in by the user, then we
+                // remove the entire annotation.
                 if (featureStates.get(0).value == null) {
                     TypeAdapter adapter = annotationService
                             .getAdapter(state.getSelectedAnnotationLayer());
