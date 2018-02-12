@@ -25,15 +25,21 @@ public class FactFeatureSupport implements FeatureSupport {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-    public static final String PREFIX = "Fact";
-    public static final String SUBJECT = "Subject";
-    public static final String PREDICATE = "Predicate";
-    public static final String OBJECT = "Object";
+    private static final String PREFIX = "Fact";
+    private static final String SUBJECT = "subject";
+    private static final String PREDICATE = "predicate";
+    private static final String OBJECT = "object";
+    private static final String CONTACT = ":";
+
+    private static final String SUBJECT_KEY = PREFIX + CONTACT + SUBJECT;
+    private static final String PREDICATE_KEY = PREFIX + CONTACT + PREDICATE;
+    private static final String OBJECT_KEY = PREFIX + CONTACT + OBJECT;
+
 
     private final static List<FeatureType> FEATURE_TYPES = Arrays.asList(
-        new FeatureType(PREFIX + "." + SUBJECT, PREFIX + ":" + SUBJECT),
-        new FeatureType(PREFIX + "." + PREDICATE, PREFIX + ":" + PREDICATE),
-        new FeatureType(PREFIX + "." + OBJECT, PREFIX + ":" + OBJECT)
+        new FeatureType(SUBJECT_KEY, SUBJECT_KEY),
+        new FeatureType(PREDICATE_KEY, PREDICATE_KEY),
+        new FeatureType(OBJECT_KEY, OBJECT_KEY)
     );
 
     @Override
@@ -46,9 +52,9 @@ public class FactFeatureSupport implements FeatureSupport {
         switch (annotationFeature.getMultiValueMode()) {
             case NONE:
                 switch (annotationFeature.getType()) {
-                    case PREFIX + "." + SUBJECT:
-                    case PREFIX + "." + PREDICATE:
-                    case PREFIX + "." + OBJECT:
+                    case SUBJECT_KEY:
+                    case PREDICATE_KEY:
+                    case OBJECT_KEY:
                         return true;
                     default:
                         return false;
@@ -69,19 +75,19 @@ public class FactFeatureSupport implements FeatureSupport {
         switch (featureState.feature.getMultiValueMode()) {
             case NONE:
                 switch (featureState.feature.getType()) {
-                    case PREFIX + "." + SUBJECT: {
+                    case SUBJECT_KEY: {
                         editor = new FactFeatureSubjectEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created fact editor:" + PREFIX + "." + SUBJECT);
+                        logger.debug("created fact editor:" + SUBJECT_KEY);
                         break;
                     }
-                    case PREFIX + "." + PREDICATE: {
+                    case PREDICATE_KEY: {
                         editor = new FaceFeaturePredicateEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created fact editor:" + PREFIX + "." + PREDICATE);
+                        logger.debug("created fact editor:" + PREDICATE_KEY);
                         break;
                     }
-                    case PREFIX + "." + OBJECT: {
+                    case OBJECT_KEY: {
                         editor = new FactFeatureSubjectEditor(aId, aOwner, aFeatureStateModel);
-                        logger.debug("created fact editor:" + PREFIX + "." + OBJECT);
+                        logger.debug("created fact editor:" + OBJECT_KEY);
                         break;
                     }
                     default:
