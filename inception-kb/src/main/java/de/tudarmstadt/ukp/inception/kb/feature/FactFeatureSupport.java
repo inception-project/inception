@@ -18,7 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ *  To create 3 kinds of editors based on the feature's type:
+ *      Fact:subject, Fact:predicate, Fact:object
  */
 @Component
 public class FactFeatureSupport implements FeatureSupport {
