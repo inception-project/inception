@@ -40,8 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 /**
  * Different Automation statistics such as number of training documents, state of the automation
  * such as, generating Train Document, generating classifier....
- *
- *
  */
 @Entity
 @Table(name = "auto_stat")
@@ -52,12 +50,12 @@ public class AutomationStatus
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "template", 
         foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
-    MiraTemplate template;
+    private MiraTemplate template;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "startime")
@@ -72,77 +70,90 @@ public class AutomationStatus
 
     @Column(name = "annoDocs")
     private int annoDocs;
-    
+
     @Column(name = "totalDocs")
     private int totalDocs;
-    
+
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.StatusType")
     private Status status = Status.NOT_STARTED;
-    
-    public long getId()
+
+    public Long getId()
     {
         return id;
     }
-    public void setId(long id)
+
+    public void setId(Long id)
     {
         this.id = id;
     }
+
     public MiraTemplate getTemplate()
     {
         return template;
     }
+
     public void setTemplate(MiraTemplate template)
     {
         this.template = template;
     }
+
     public Date getStartime()
     {
         return startime;
     }
+
     public void setStartime(Date startime)
     {
         this.startime = startime;
     }
+
     public Date getEndTime()
     {
         return endTime;
     }
+
     public void setEndTime(Date endTime)
     {
         this.endTime = endTime;
     }
+
     public int getTrainDocs()
     {
         return trainDocs;
     }
+
     public void setTrainDocs(int trainDocs)
     {
         this.trainDocs = trainDocs;
     }
+
     public int getAnnoDocs()
     {
         return annoDocs;
     }
+
     public void setAnnoDocs(int annoDocs)
     {
         this.annoDocs = annoDocs;
     }
+
     public Status getStatus()
     {
         return status;
     }
+
     public void setStatus(Status status)
     {
         this.status = status;
     }
+
     public int getTotalDocs()
     {
         return totalDocs;
     }
+
     public void setTotalDocs(int totalDocs)
     {
         this.totalDocs = totalDocs;
     }
-
-
 }

@@ -51,7 +51,7 @@ public class SourceDocument
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -93,12 +93,12 @@ public class SourceDocument
     @Deprecated
     private boolean processed = false;
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -205,7 +205,7 @@ public class SourceDocument
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (id ^ (id >>> 32));
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -223,7 +223,12 @@ public class SourceDocument
             return false;
         }
         SourceDocument other = (SourceDocument) obj;
-        if (id != other.id) {
+        if (id == null) {
+            if (other.id != null) {
+                return false;
+            }
+        }
+        else if (!id.equals(other.id)) {
             return false;
         }
         if (name == null) {
@@ -236,7 +241,7 @@ public class SourceDocument
         }
         return true;
     }
-    
+
     public static final Comparator<SourceDocument> NAME_COMPARATOR = Comparator
             .comparing(SourceDocument::getName);
 }

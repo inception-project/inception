@@ -77,7 +77,7 @@ public class ExportServiceImpl implements ExportService
     
             Project project = aRequest.project.getObject();
             
-            if (project.getId() == 0) {
+            if (project.getId() == null) {
                 throw new ProjectExportException(
                         "Project not yet created. Please save project details first!");
             }

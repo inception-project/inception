@@ -53,7 +53,7 @@ public class AnnotationLayer
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String uiName;
@@ -136,7 +136,7 @@ public class AnnotationLayer
      * 
      * @return the id.
      */
-    public long getId()
+    public Long getId()
     {
         return id;
     }
@@ -148,7 +148,7 @@ public class AnnotationLayer
      * 
      * @param typeId the id.
      */
-    public void setId(long typeId)
+    public void setId(Long typeId)
     {
         this.id = typeId;
     }

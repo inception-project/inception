@@ -99,8 +99,8 @@ public class ImportDocumentsPanel extends Panel
             error("No document is selected to upload, please select a document first");
             return;
         }
-        if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        if (project.getId() == null) {
+            error("Project not yet created, please save project details!");
             return;
         }
 

@@ -1075,7 +1075,7 @@ public class MonitoringPage
                 return aValue;
             }
             // Initialization of the appliaction, no project selected
-            else if (project.getId() == 0) {
+            else if (project.getId() == null) {
                 return "";
             }
             // It is document column, get the status from the database

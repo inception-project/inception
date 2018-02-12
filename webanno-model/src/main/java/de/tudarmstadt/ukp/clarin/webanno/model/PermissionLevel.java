@@ -29,6 +29,9 @@ public enum PermissionLevel
     implements PersistentEnum, Serializable
 {
     USER("user"), CURATOR("curator"), ADMIN("admin");
+    
+    private final String id;
+
     public String getName()
     {
         return this.name().toLowerCase();
@@ -43,8 +46,6 @@ public enum PermissionLevel
     {
         this.id = aId;
     }
-
-    private final String id;
 
     @Override
     public String getId()

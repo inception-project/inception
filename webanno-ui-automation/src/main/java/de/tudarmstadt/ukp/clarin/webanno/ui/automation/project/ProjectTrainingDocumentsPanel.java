@@ -122,7 +122,7 @@ public class ProjectTrainingDocumentsPanel
                     error("No document is selected to upload, please select a document first");
                     return;
                 }
-                if (project.getId() == 0) {
+                if (project.getId() == null) {
                     error("Project not yet created, please save project Details!");
                     return;
                 }
@@ -206,7 +206,7 @@ public class ProjectTrainingDocumentsPanel
                     {
                         Project project = selectedProjectModel.getObject();
                         documents.clear();
-                        if (project.getId() != 0) {
+                        if (project.getId() != null) {
                             if (aTabsDocModel.getObject().isTabSep()) {
                                 for (TrainingDocument document : automationService
                                         .listTabSepDocuments(project)) {

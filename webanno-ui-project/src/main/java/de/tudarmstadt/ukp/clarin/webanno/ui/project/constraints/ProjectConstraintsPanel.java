@@ -213,7 +213,7 @@ public class ProjectConstraintsPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    setVisible(DetailForm.this.getModelObject().getId() >= 0);
+                    setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };
             // Add check to prevent accidental delete operation
@@ -311,7 +311,7 @@ public class ProjectConstraintsPanel
 
             List<FileUpload> uploadedFiles = uploads.getFileUploads();
 
-            if (project.getId() == 0) {
+            if (project.getId() == null) {
                 error("Project not yet created, please save project Details!");
                 return;
             }

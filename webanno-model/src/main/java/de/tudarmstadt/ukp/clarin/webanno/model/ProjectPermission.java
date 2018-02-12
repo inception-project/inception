@@ -45,7 +45,7 @@ public class ProjectPermission
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevelType")
     private PermissionLevel level;
@@ -68,12 +68,12 @@ public class ProjectPermission
         level = aLevel;
     }
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -107,5 +107,4 @@ public class ProjectPermission
     {
         project = aProject;
     }
-
 }

@@ -525,7 +525,7 @@ public class AnnotationFeatureForm
             return false;
         }
 
-        if (selectedLayer.getId() <= 0) {
+        if (selectedLayer.getId() == null) {
             return false;
         }
 
