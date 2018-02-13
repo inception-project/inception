@@ -71,7 +71,7 @@ public class FactFeatureSupport implements FeatureSupport {
                                       IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel) {
 
         FeatureState featureState = aFeatureStateModel.getObject();
-        final FeatureEditor editor;
+        FeatureEditor editor = null;
 
         switch (featureState.feature.getMultiValueMode()) {
             case NONE:
@@ -87,7 +87,7 @@ public class FactFeatureSupport implements FeatureSupport {
                         break;
                     }
                     case OBJECT_KEY: {
-                        editor = new FactFeatureSubjectEditor(aId, aOwner, aFeatureStateModel);
+                        editor = new FaceFeatureObjectEditor(aId, aOwner, aFeatureStateModel);
                         logger.debug("created fact editor:" + OBJECT_KEY);
                         break;
                     }
