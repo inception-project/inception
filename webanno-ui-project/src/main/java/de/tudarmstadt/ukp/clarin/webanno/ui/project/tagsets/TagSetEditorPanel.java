@@ -105,7 +105,7 @@ public class TagSetEditorPanel
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
-                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != 0)));
+                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
         
         form.add(new DropDownChoice<>("format", exportFormat,
@@ -124,7 +124,7 @@ public class TagSetEditorPanel
     }
     
     private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm) {
-        if (selectedTagSet.getObject().getId() == 0) {
+        if (selectedTagSet.getObject().getId() == null) {
             if (annotationSchemaService.existsTagSet(selectedTagSet.getObject()
                     .getName(), selectedProject.getObject())) {
                 error("Only one tagset per project is allowed!");
@@ -181,7 +181,7 @@ public class TagSetEditorPanel
                 return null;
 
             }
-            if (selectedTagSet.getObject().getId() == 0) {
+            if (selectedTagSet.getObject().getId() == null) {
                 error("Project not yet created. Please save project details first!");
             }
             else {
@@ -207,9 +207,8 @@ public class TagSetEditorPanel
                 catch (IOException e) {
                     error("File Path not found or No permision to save the file!");
                 }
-                info("TagSets successfully exported to :"
-                        + exportFile.getAbsolutePath());
-
+                
+                info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
             }
         }
         else if (exportFormat.getObject().equals(ExportedTagSetConstant.TAB_FORMAT)) {

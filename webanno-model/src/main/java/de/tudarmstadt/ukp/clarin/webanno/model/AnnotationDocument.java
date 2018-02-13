@@ -47,12 +47,11 @@ import org.hibernate.annotations.Type;
 public class AnnotationDocument
     implements Serializable
 {
-
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -95,12 +94,12 @@ public class AnnotationDocument
         document = aDocument;
     }
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }

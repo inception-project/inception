@@ -43,7 +43,7 @@ public class Authority
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     @JoinColumn(name = "authority")
@@ -53,12 +53,12 @@ public class Authority
     @JoinColumn(name = "username")
     private User username;
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }
@@ -82,6 +82,4 @@ public class Authority
     {
         this.username = username;
     }
-
-
 }

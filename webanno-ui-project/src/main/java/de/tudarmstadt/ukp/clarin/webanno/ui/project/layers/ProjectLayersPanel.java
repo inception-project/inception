@@ -185,7 +185,7 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
+                    if (ProjectLayersPanel.this.getModelObject().getId() == null) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -211,7 +211,7 @@ public class ProjectLayersPanel
                         {
                             Project project = ProjectLayersPanel.this.getModelObject();
 
-                            if (project.getId() != 0) {
+                            if (project.getId() != null) {
                                 List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
                                 AnnotationLayer tokenLayer = annotationService.getLayer(
@@ -309,8 +309,8 @@ public class ProjectLayersPanel
                         error("Please choose file with layer details before uploading");
                         return;
                     }
-                    else if (project.getId() == 0) {
-                        error("Project not yet created, please save project Details!");
+                    else if (project.getId() == null) {
+                        error("Project not yet created, please save project details!");
                         return;
                     }
                     for (FileUpload tagFile : uploadedFiles) {
@@ -454,7 +454,7 @@ public class ProjectLayersPanel
                 @Override
                 public boolean isEnabled()
                 {
-                    return LayerDetailForm.this.getModelObject().getId() == 0;
+                    return LayerDetailForm.this.getModelObject().getId() == null;
                 }
             }.setRequired(true));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -491,7 +491,7 @@ public class ProjectLayersPanel
                             List<AnnotationLayer> allLayers = annotationService
                                     .listAnnotationLayer(ProjectLayersPanel.this.getModelObject());
 
-                            if (LayerDetailForm.this.getModelObject().getId() > 0) {
+                            if (LayerDetailForm.this.getModelObject().getId() != null) {
                                 if (LayerDetailForm.this.getModelObject().getAttachType() == null) {
                                     return new ArrayList<>();
                                 }
@@ -529,7 +529,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(LayerDetailForm.this.getModelObject().getId() == 0);
+                    setEnabled(LayerDetailForm.this.getModelObject().getId() == null);
                     setNullValid(isVisible());
                 }
             };
@@ -718,7 +718,7 @@ public class ProjectLayersPanel
                     }
 
                     final Project project = ProjectLayersPanel.this.getModelObject();
-                    if (layer.getId() == 0) {
+                    if (layer.getId() == null) {
                         String layerName = StringUtils
                                 .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                         
@@ -798,7 +798,7 @@ public class ProjectLayersPanel
                         error("Unable to create temporary File!!");
                         return null;
                     }
-                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
+                    if (ProjectLayersPanel.this.getModelObject().getId() == null) {
                         error("Project not yet created. Please save project details first!");
                         return null;
                     }
@@ -944,7 +944,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
+                    setEnabled(FeatureDetailForm.this.getModelObject().getId() == null);
                 }
             });
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -1013,7 +1013,7 @@ public class ProjectLayersPanel
                         error("Feature names must start with a letter and consist only of letters, digits, or underscores.");
                         return;
                     }
-                    if (feature.getId() == 0) {
+                    if (feature.getId() == null) {
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(ProjectLayersPanel.this.getModelObject());
 

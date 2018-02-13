@@ -19,14 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-/** Implementation of {@link PersistentEnumUserType}
- *
+/**
+ * Implementation of {@link PersistentEnumUserType}
  */
-public class PermissionLevelType extends PersistentEnumUserType<PermissionLevel> {
-
+public class PermissionLevelType
+    extends PersistentEnumUserType<PermissionLevel>
+{
     @Override
-    public Class<PermissionLevel> returnedClass() {
+    public Class<PermissionLevel> returnedClass()
+    {
         return PermissionLevel.class;
     }
-
 }

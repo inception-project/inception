@@ -129,7 +129,7 @@ public class DocumentServiceImpl
     @Transactional
     public void createSourceDocument(SourceDocument aDocument)
     {
-        if (aDocument.getId() == 0) {
+        if (aDocument.getId() == null) {
             entityManager.persist(aDocument);
         }
         else {
@@ -161,7 +161,7 @@ public class DocumentServiceImpl
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
-        if (aAnnotationDocument.getId() == 0) {
+        if (aAnnotationDocument.getId() == null) {
             entityManager.persist(aAnnotationDocument);
         }
         else {

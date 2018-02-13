@@ -228,7 +228,7 @@ public class MiraAutomationServiceImpl
     @Transactional
     public void createTemplate(MiraTemplate aTemplate)
     {
-        if (aTemplate.getId() == 0) {
+        if (aTemplate.getId() == null) {
             entityManager.persist(aTemplate);
         }
         else {
@@ -403,7 +403,7 @@ public class MiraAutomationServiceImpl
     public void createTrainingDocument(TrainingDocument aDocument)
         throws IOException
     {
-        if (aDocument.getId() == 0) {
+        if (aDocument.getId() == null) {
             entityManager.persist(aDocument);
         }
         else {

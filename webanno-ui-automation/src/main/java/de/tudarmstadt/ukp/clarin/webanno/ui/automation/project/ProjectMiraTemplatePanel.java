@@ -132,7 +132,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                if (template.getId() == 0) {
+                if (template.getId() == null) {
                     this.setVisible(false);
                 }
                 else {
@@ -329,7 +329,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0;
+                    return miraTemplateDetailForm.getModelObject().getId() != null;
                 }
             });
             targetLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -351,7 +351,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -370,7 +370,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return otherLayerDetailForm.getModelObject().selectedFeatures.getId() != 0;
+                    return otherLayerDetailForm.getModelObject().selectedFeatures.getId() != null;
                 }
             });
             otherLayerTarinDocumentsPanel.setOutputMarkupPlaceholderTag(true);
@@ -394,7 +394,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -419,7 +419,7 @@ public class ProjectMiraTemplatePanel
                 @Override
                 public boolean isVisible()
                 {
-                    return miraTemplateDetailForm.getModelObject().getId() != 0
+                    return miraTemplateDetailForm.getModelObject().getId() != null
                             && selectedFeature != null;
                 }
             });
@@ -447,7 +447,7 @@ public class ProjectMiraTemplatePanel
                 public void onSubmit()
                 {
                     template = MiraTemplateDetailForm.this.getModelObject();
-                    if (template.getId() == 0) {
+                    if (template.getId() == null) {
                         template.setTrainFeature(selectedFeature);
                         automationService.createTemplate(template);
                         featureModel.setObject(

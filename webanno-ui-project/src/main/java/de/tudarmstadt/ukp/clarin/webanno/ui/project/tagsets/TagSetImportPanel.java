@@ -107,8 +107,8 @@ public class TagSetImportPanel
             error("Please choose file with tagset before uploading");
             return;
         }
-        else if (project.getId() == 0) {
-            error("Project not yet created, please save project Details!");
+        else if (project.getId() == null) {
+            error("Project not yet created, please save project details!");
             return;
         }
         if (aForm.getModelObject().format.equals(

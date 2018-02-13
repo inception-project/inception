@@ -19,18 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.ajax.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.linesOf;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
@@ -112,16 +110,19 @@ public class CasToBratJsonTest
         List<AnnotationLayer> layerList = new ArrayList<>();
 
         AnnotationLayer layer = new AnnotationLayer();
+        layer.setId(1l);
         layer.setDescription("span annoattion");
         layer.setName("pos");
         layer.setType(WebAnnoConst.SPAN_TYPE);
 
         TagSet tagset = new TagSet();
+        tagset.setId(1l);
         tagset.setDescription("pos");
         tagset.setLanguage("de");
         tagset.setName("STTS");
 
         Tag tag = new Tag();
+        tag.setId(1l);
         tag.setDescription("noun");
         tag.setName("NN");
         tag.setTagSet(tagset);
@@ -151,11 +152,9 @@ public class CasToBratJsonTest
 
         JSONUtil.generatePrettyJson(jsonConverter, collectionInformation, new File(jsonFilePath));
 
-        String reference = FileUtils.readFileToString(new File(
-                "src/test/resources/output_cas_to_json_collection_expected.json"), "UTF-8");
-        String actual = FileUtils.readFileToString(new File(jsonFilePath), "UTF-8");
-        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
-                new StringReader(actual)));
+        assertThat(
+                linesOf(new File("src/test/resources/output_cas_to_json_collection_expected.json"),
+                        "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));
     }
 
     /**
@@ -181,7 +180,6 @@ public class CasToBratJsonTest
 
         state.setProject(project);
 
-        
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, state, jCas, annotationSchemaService.listAnnotationLayer(project));
 
@@ -190,11 +188,8 @@ public class CasToBratJsonTest
 
         JSONUtil.generatePrettyJson(jsonConverter, response, new File(jsonFilePath));
 
-        String reference = FileUtils.readFileToString(new File(
-                "src/test/resources/output_cas_to_json_document_expected.json"), "UTF-8");
-        String actual = FileUtils.readFileToString(new File(jsonFilePath), "UTF-8");
-        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
-                new StringReader(actual)));
+        assertThat(linesOf(new File("src/test/resources/output_cas_to_json_document_expected.json"),
+                "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));
     }
     
     @Test
@@ -241,8 +236,10 @@ public class CasToBratJsonTest
         
         {
             tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true);
+            tokenLayer.setId(1l);
             
             tokenPosFeature = new AnnotationFeature();
+            tokenPosFeature.setId(1l);
             tokenPosFeature.setName("pos");
             tokenPosFeature.setEnabled(true);
             tokenPosFeature.setType(POS.class.getName());
@@ -252,10 +249,12 @@ public class CasToBratJsonTest
             tokenPosFeature.setVisible(true);
             
             posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true);
+            posLayer.setId(2l);
             posLayer.setAttachType(tokenLayer);
             posLayer.setAttachFeature(tokenPosFeature);
             
             posFeature = new AnnotationFeature();
+            posFeature.setId(2l);
             posFeature.setName("PosValue");
             posFeature.setEnabled(true);
             posFeature.setType(CAS.TYPE_NAME_STRING);

@@ -99,7 +99,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTag(Tag aTag)
     {
-        if (aTag.getId() == 0) {
+        if (aTag.getId() == null) {
             entityManager.persist(aTag);
         }
         else {
@@ -120,7 +120,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTagSet(TagSet aTagSet)
     {
-        if (aTagSet.getId() == 0) {
+        if (aTagSet.getId() == null) {
             entityManager.persist(aTagSet);
         }
         else {
@@ -140,7 +140,7 @@ public class AnnotationSchemaServiceImpl
     public void createLayer(AnnotationLayer aLayer)
         throws IOException
     {
-        if (aLayer.getId() == 0) {
+        if (aLayer.getId() == null) {
             entityManager.persist(aLayer);
         }
         else {
@@ -159,7 +159,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
     {
-        if (aFeature.getId() == 0) {
+        if (aFeature.getId() == null) {
             entityManager.persist(aFeature);
         }
         else {
@@ -448,7 +448,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aLayer.getId() == 0) {
+        if (aLayer == null || aLayer.getId() == null) {
             return new ArrayList<>();
         }
 

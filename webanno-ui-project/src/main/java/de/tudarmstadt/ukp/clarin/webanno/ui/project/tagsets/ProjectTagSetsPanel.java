@@ -78,7 +78,7 @@ public class ProjectTagSetsPanel
         
         tagSelectionPanel = new TagSelectionPanel("tagSelector", selectedTagSet, selectedTag);
         tagSelectionPanel.onConfigure(_this -> _this.setVisible(
-                selectedTagSet.getObject() != null && selectedTagSet.getObject().getId() != 0));
+                selectedTagSet.getObject() != null && selectedTagSet.getObject().getId() != null));
         tagSelectionPanel.setCreateAction(target -> selectedTag.setObject(new Tag()));
         tagSelectionPanel.setChangeAction(target -> { 
             target.add(tagEditorPanel);
