@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Status;
+import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
@@ -646,7 +647,7 @@ public class ProjectMiraTemplatePanel
                         boolean existsTrainDocument = false;
                         for (TrainingDocument document : automationService
                                 .listTrainingDocuments(project)) {
-                            if (document.getState().equals(SourceDocumentState.CURATION_FINISHED)
+                            if (document.getState().equals(TrainDocumentState.CURATION_IN_PROGRESS)
                                     || template.getTrainFeature().equals(document.getFeature())) {
                                 existsTrainDocument = true;
                                 break;
