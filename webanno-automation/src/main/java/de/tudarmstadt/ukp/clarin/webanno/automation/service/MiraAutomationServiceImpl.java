@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.MIRA_TEMPLATE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.TRAIN;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -32,6 +34,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
@@ -111,8 +114,8 @@ public class MiraAutomationServiceImpl
                 "FROM MiraTemplate ORDER BY trainFeature ASC ", MiraTemplate.class).getResultList();
         List<MiraTemplate> templatesInThisProject = new ArrayList<>();
         for (MiraTemplate miraTemplate : allTenplates) {
-            if (miraTemplate.getTrainFeature() != null
-                    && miraTemplate.getTrainFeature().getProject().getId() == aProject.getId()) {
+            if (nonNull(miraTemplate.getTrainFeature()) && Objects.equals(
+                    miraTemplate.getTrainFeature().getProject().getId(), aProject.getId())) {
                 templatesInThisProject.add(miraTemplate);
             }
         }
@@ -228,7 +231,7 @@ public class MiraAutomationServiceImpl
     @Transactional
     public void createTemplate(MiraTemplate aTemplate)
     {
-        if (aTemplate.getId() == null) {
+        if (isNull(aTemplate.getId())) {
             entityManager.persist(aTemplate);
         }
         else {
@@ -403,7 +406,7 @@ public class MiraAutomationServiceImpl
     public void createTrainingDocument(TrainingDocument aDocument)
         throws IOException
     {
-        if (aDocument.getId() == null) {
+        if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
         }
         else {

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CASException;
@@ -605,7 +606,7 @@ public class AnnotatorStateImpl
     public FeatureState getFeatureState(AnnotationFeature aFeature)
     {
         for (FeatureState f : featureModels) {
-            if (f.feature.getId() == aFeature.getId()) {
+            if (Objects.equals(f.feature.getId(), aFeature.getId())) {
                 return f;
             }
         }
