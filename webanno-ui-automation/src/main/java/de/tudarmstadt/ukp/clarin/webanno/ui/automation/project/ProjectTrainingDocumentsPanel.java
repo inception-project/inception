@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -122,7 +123,7 @@ public class ProjectTrainingDocumentsPanel
                     error("No document is selected to upload, please select a document first");
                     return;
                 }
-                if (project.getId() == null) {
+                if (isNull(project.getId())) {
                     error("Project not yet created, please save project Details!");
                     return;
                 }

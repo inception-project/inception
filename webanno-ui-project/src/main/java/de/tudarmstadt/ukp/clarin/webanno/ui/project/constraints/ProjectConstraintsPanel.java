@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -311,7 +312,7 @@ public class ProjectConstraintsPanel
 
             List<FileUpload> uploadedFiles = uploads.getFileUploads();
 
-            if (project.getId() == null) {
+            if (isNull(project.getId())) {
                 error("Project not yet created, please save project Details!");
                 return;
             }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil.EXPORTED_PROJECT;
+import static java.util.Objects.isNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,12 +73,11 @@ public class ExportServiceImpl implements ExportService
         
         try {
             // all metadata and project settings data from the database as JSON file
-            File projectSettings = null;
-            projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
+            File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
     
             Project project = aRequest.project.getObject();
             
-            if (project.getId() == null) {
+            if (isNull(project.getId())) {
                 throw new ProjectExportException(
                         "Project not yet created. Please save project details first!");
             }

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
+import static java.util.Objects.isNull;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -132,7 +134,7 @@ public class ProjectMiraTemplatePanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                if (template.getId() == null) {
+                if (isNull(template.getId())) {
                     this.setVisible(false);
                 }
                 else {
@@ -447,7 +449,7 @@ public class ProjectMiraTemplatePanel
                 public void onSubmit()
                 {
                     template = MiraTemplateDetailForm.this.getModelObject();
-                    if (template.getId() == null) {
+                    if (isNull(template.getId())) {
                         template.setTrainFeature(selectedFeature);
                         automationService.createTemplate(template);
                         featureModel.setObject(

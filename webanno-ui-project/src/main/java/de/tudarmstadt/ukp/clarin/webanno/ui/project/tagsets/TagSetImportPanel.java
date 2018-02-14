@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.IOException;
@@ -107,7 +108,7 @@ public class TagSetImportPanel
             error("Please choose file with tagset before uploading");
             return;
         }
-        else if (project.getId() == null) {
+        else if (isNull(project.getId())) {
             error("Project not yet created, please save project details!");
             return;
         }

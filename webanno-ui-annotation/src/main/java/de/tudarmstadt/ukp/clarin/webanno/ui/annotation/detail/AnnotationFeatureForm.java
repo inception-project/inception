@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
+import static java.util.Objects.isNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -521,11 +522,7 @@ public class AnnotationFeatureForm
         AnnotatorState state = getModelObject();
         AnnotationLayer selectedLayer = state.getSelectedAnnotationLayer();
 
-        if (selectedLayer == null) {
-            return false;
-        }
-
-        if (selectedLayer.getId() == null) {
+        if (isNull(selectedLayer) || isNull(selectedLayer.getId())) {
             return false;
         }
 

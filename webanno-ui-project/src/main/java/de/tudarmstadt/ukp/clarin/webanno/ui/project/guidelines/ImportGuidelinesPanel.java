@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.File;
@@ -73,7 +74,7 @@ public class ImportGuidelinesPanel
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
         Project project = projectModel.getObject();
 
-        if (project.getId() == null) {
+        if (isNull(project.getId())) {
             aTarget.addChildren(getPage(), IFeedback.class);
             error("Project not yet created, please save project details!");
             return;

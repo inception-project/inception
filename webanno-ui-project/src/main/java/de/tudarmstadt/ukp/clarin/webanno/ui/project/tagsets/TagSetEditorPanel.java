@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.BufferedWriter;
@@ -124,7 +125,7 @@ public class TagSetEditorPanel
     }
     
     private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm) {
-        if (selectedTagSet.getObject().getId() == null) {
+        if (isNull(selectedTagSet.getObject().getId())) {
             if (annotationSchemaService.existsTagSet(selectedTagSet.getObject()
                     .getName(), selectedProject.getObject())) {
                 error("Only one tagset per project is allowed!");
@@ -181,7 +182,7 @@ public class TagSetEditorPanel
                 return null;
 
             }
-            if (selectedTagSet.getObject().getId() == null) {
+            if (isNull(selectedTagSet.getObject().getId())) {
                 error("Project not yet created. Please save project details first!");
             }
             else {

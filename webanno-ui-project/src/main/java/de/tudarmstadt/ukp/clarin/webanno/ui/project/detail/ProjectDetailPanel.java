@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -144,8 +146,8 @@ public class ProjectDetailPanel
             protected void onConfigure()
             {
                 super.onConfigure();
-                setEnabled(projectModel.getObject() != null
-                        && projectModel.getObject().getId() == null);
+                setEnabled(nonNull(projectModel.getObject())
+                        && isNull(projectModel.getObject().getId()));
             }
         };
 
@@ -161,7 +163,7 @@ public class ProjectDetailPanel
         // aTarget.addChildren(getPage(), IFeedback.class);
         
         Project project = aForm.getModelObject();
-        if (project.getId() == null) {
+        if (isNull(project.getId())) {
             try {
                 String username = SecurityContextHolder.getContext().getAuthentication().getName();
                 projectService.createProject(project);

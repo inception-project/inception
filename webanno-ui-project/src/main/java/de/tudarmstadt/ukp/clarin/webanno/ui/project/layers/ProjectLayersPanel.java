@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYP
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -185,7 +186,7 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (ProjectLayersPanel.this.getModelObject().getId() == null) {
+                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -309,7 +310,7 @@ public class ProjectLayersPanel
                         error("Please choose file with layer details before uploading");
                         return;
                     }
-                    else if (project.getId() == null) {
+                    else if (isNull(project.getId())) {
                         error("Project not yet created, please save project details!");
                         return;
                     }
@@ -454,7 +455,7 @@ public class ProjectLayersPanel
                 @Override
                 public boolean isEnabled()
                 {
-                    return LayerDetailForm.this.getModelObject().getId() == null;
+                    return isNull(LayerDetailForm.this.getModelObject().getId());
                 }
             }.setRequired(true));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -529,7 +530,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(LayerDetailForm.this.getModelObject().getId() == null);
+                    setEnabled(isNull(LayerDetailForm.this.getModelObject().getId()));
                     setNullValid(isVisible());
                 }
             };
@@ -718,7 +719,7 @@ public class ProjectLayersPanel
                     }
 
                     final Project project = ProjectLayersPanel.this.getModelObject();
-                    if (layer.getId() == null) {
+                    if (isNull(layer.getId())) {
                         String layerName = StringUtils
                                 .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                         
@@ -798,7 +799,7 @@ public class ProjectLayersPanel
                         error("Unable to create temporary File!!");
                         return null;
                     }
-                    if (ProjectLayersPanel.this.getModelObject().getId() == null) {
+                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
                         error("Project not yet created. Please save project details first!");
                         return null;
                     }
@@ -944,7 +945,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(FeatureDetailForm.this.getModelObject().getId() == null);
+                    setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
                 }
             });
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -1013,7 +1014,7 @@ public class ProjectLayersPanel
                         error("Feature names must start with a letter and consist only of letters, digits, or underscores.");
                         return;
                     }
-                    if (feature.getId() == null) {
+                    if (isNull(feature.getId())) {
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(ProjectLayersPanel.this.getModelObject());
 

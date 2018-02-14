@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDE
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -129,7 +130,7 @@ public class DocumentServiceImpl
     @Transactional
     public void createSourceDocument(SourceDocument aDocument)
     {
-        if (aDocument.getId() == null) {
+        if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
         }
         else {
@@ -161,7 +162,7 @@ public class DocumentServiceImpl
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
-        if (aAnnotationDocument.getId() == null) {
+        if (isNull(aAnnotationDocument.getId())) {
             entityManager.persist(aAnnotationDocument);
         }
         else {

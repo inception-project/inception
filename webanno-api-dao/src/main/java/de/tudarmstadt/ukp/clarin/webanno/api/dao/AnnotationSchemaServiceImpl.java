@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -99,7 +99,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTag(Tag aTag)
     {
-        if (aTag.getId() == null) {
+        if (isNull(aTag.getId())) {
             entityManager.persist(aTag);
         }
         else {
@@ -120,7 +120,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTagSet(TagSet aTagSet)
     {
-        if (aTagSet.getId() == null) {
+        if (isNull(aTagSet.getId())) {
             entityManager.persist(aTagSet);
         }
         else {
@@ -140,7 +140,7 @@ public class AnnotationSchemaServiceImpl
     public void createLayer(AnnotationLayer aLayer)
         throws IOException
     {
-        if (aLayer.getId() == null) {
+        if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);
         }
         else {
@@ -159,7 +159,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createFeature(AnnotationFeature aFeature)
     {
-        if (aFeature.getId() == null) {
+        if (isNull(aFeature.getId())) {
             entityManager.persist(aFeature);
         }
         else {
@@ -448,7 +448,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aLayer.getId() == null) {
+        if (isNull(aLayer) || isNull(aLayer.getId())) {
             return new ArrayList<>();
         }
 
