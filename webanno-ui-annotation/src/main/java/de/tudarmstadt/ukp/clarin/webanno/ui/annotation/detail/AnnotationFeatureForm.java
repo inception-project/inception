@@ -95,6 +95,7 @@ public class AnnotationFeatureForm
 
     private String selectedTag = "";
     private Label selectedAnnotationLayer;
+    private CheckBox forwardAnnotation;
     private TextField<String> forwardAnnotationText;
     private ConfirmationDialog deleteAnnotationDialog;
     private ConfirmationDialog replaceAnnotationDialog;
@@ -113,7 +114,7 @@ public class AnnotationFeatureForm
         super(id, new CompoundPropertyModel<>(aBModel));
         editorPanel = aEditorPanel;
         add(forwardAnnotationText = createForwardAnnotationTextField());
-        add(createForwardAnnotationCheckBox());
+        add(forwardAnnotation = createForwardAnnotationCheckBox());
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
@@ -504,10 +505,11 @@ public class AnnotationFeatureForm
                                 // forward annotation process checking)
                                 return;
                             }
+                            
                             // Check if this is a free text annotation or a tagset is attached. Use
                             // the hidden forwardAnnotationText element only for tagset based
                             // forward annotations
-                            if (features.get(0).getTagset() == null) {
+                            if (!features.isEmpty() && features.get(0).getTagset() == null) {
                                 FeatureEditor editor = getFirstFeatureEditor();
                                 if (editor != null) {
                                     aTarget.focusComponent(editor.getFocusComponent());
@@ -560,13 +562,9 @@ public class AnnotationFeatureForm
             return false;
         }
 
-        // no forward annotation for multi-feature (which are both enabled and visible) layers.
-        if (getEnabledFeatures(selectedLayer).size() > 1) {       
-            return false;
-        }
-
-        // if there are no features at all, no forward annotation
-        if (annotationService.listAnnotationFeature(selectedLayer).isEmpty()) {
+        // no forward annotation for multi-feature and zero-feature  layers (where features count
+        // which are are both enabled and visible).
+        if (getEnabledFeatures(selectedLayer).size() != 1) {
             return false;
         }
 
@@ -575,8 +573,10 @@ public class AnnotationFeatureForm
             // there should be at least one tag in the tagset
             TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0)
                     .getTagset();
-            return annotationService.listTags(tagSet).size() != 0;
+            return !annotationService.listTags(tagSet).isEmpty();
         }
+
+        // Or layers with a single visible/enabled free-text feature.
         return true;
     }
 
@@ -716,6 +716,7 @@ public class AnnotationFeatureForm
                     AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
 
                     aTarget.add(relationHint);
+                    aTarget.add(forwardAnnotation);
                     
                     // If forward annotation was enabled, disable it
                     if (state.isForwardAnnotation()) {
