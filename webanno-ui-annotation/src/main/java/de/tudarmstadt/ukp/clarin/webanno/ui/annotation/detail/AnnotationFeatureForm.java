@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
@@ -94,6 +95,7 @@ public class AnnotationFeatureForm
 
     private String selectedTag = "";
     private Label selectedAnnotationLayer;
+    private CheckBox forwardAnnotation;
     private TextField<String> forwardAnnotationText;
     private ConfirmationDialog deleteAnnotationDialog;
     private ConfirmationDialog replaceAnnotationDialog;
@@ -112,7 +114,7 @@ public class AnnotationFeatureForm
         super(id, new CompoundPropertyModel<>(aBModel));
         editorPanel = aEditorPanel;
         add(forwardAnnotationText = createForwardAnnotationTextField());
-        add(createForwardAnnotationCheckBox());
+        add(forwardAnnotation = createForwardAnnotationCheckBox());
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
@@ -210,7 +212,7 @@ public class AnnotationFeatureForm
                 if (jsKeycode.equals("32")) {
                     try {
                         JCas jCas = editorPanel.getEditorCas();
-                        editorPanel.actionCreateOrUpdate(aTarget, jCas);
+                        editorPanel.actionCreateForward(aTarget, jCas);
                         selectedTag = "";
                     }
                     catch (Exception e) {
@@ -493,12 +495,30 @@ public class AnnotationFeatureForm
                     private static final long serialVersionUID = 5179816588460867471L;
 
                     @Override
-                    protected void onUpdate(AjaxRequestTarget aTarget)
-                    {
+                    protected void onUpdate(AjaxRequestTarget aTarget) {
                         if (AnnotationFeatureForm.this.getModelObject().isForwardAnnotation()) {
-                            aTarget.appendJavaScript(JavascriptUtils.getFocusScript
-                                    (forwardAnnotationText));
-                            selectedTag = "";
+                            List<AnnotationFeature> features = getEnabledFeatures(
+                                    AnnotationFeatureForm.this.getModelObject()
+                                            .getSelectedAnnotationLayer());
+                            if (features.size() > 1) {
+                                // should not come here in the first place (controlled during
+                                // forward annotation process checking)
+                                return;
+                            }
+                            
+                            // Check if this is a free text annotation or a tagset is attached. Use
+                            // the hidden forwardAnnotationText element only for tagset based
+                            // forward annotations
+                            if (!features.isEmpty() && features.get(0).getTagset() == null) {
+                                FeatureEditor editor = getFirstFeatureEditor();
+                                if (editor != null) {
+                                    aTarget.focusComponent(editor.getFocusComponent());
+                                }
+                            } else {
+                                aTarget.appendJavaScript(
+                                        JavascriptUtils.getFocusScript(forwardAnnotationText));
+                                selectedTag = "";
+                            }
                         }
                     }
                 });
@@ -514,6 +534,11 @@ public class AnnotationFeatureForm
                 }
             }
         };
+    }
+
+    private List<AnnotationFeature> getEnabledFeatures(AnnotationLayer aLayer) {
+        return annotationService.listAnnotationFeature(aLayer).stream().filter(f -> f.isEnabled())
+                .filter(f -> f.isVisible()).collect(Collectors.toList());
     }
 
     private boolean isForwardable()
@@ -537,25 +562,22 @@ public class AnnotationFeatureForm
             return false;
         }
 
-        // no forward annotation for multi-feature layers.
-        if (annotationService.listAnnotationFeature(selectedLayer).size() > 1) {
-            return false;
-        }
-
-        // if there are no features at all, no forward annotation
-        if (annotationService.listAnnotationFeature(selectedLayer).isEmpty()) {
+        // no forward annotation for multi-feature and zero-feature  layers (where features count
+        // which are are both enabled and visible).
+        if (getEnabledFeatures(selectedLayer).size() != 1) {
             return false;
         }
 
         // we allow forward annotation only for a feature with a tagset
-        if (annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset() == null) {
-            return false;
+        if (annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset() != null) {
+            // there should be at least one tag in the tagset
+            TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0)
+                    .getTagset();
+            return !annotationService.listTags(tagSet).isEmpty();
         }
 
-        // there should be at least one tag in the tagset
-        TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset();
-
-        return annotationService.listTags(tagSet).size() != 0;
+        // Or layers with a single visible/enabled free-text feature.
+        return true;
     }
 
     @Override
@@ -694,6 +716,12 @@ public class AnnotationFeatureForm
                     AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
 
                     aTarget.add(relationHint);
+                    aTarget.add(forwardAnnotation);
+                    
+                    // If forward annotation was enabled, disable it
+                    if (state.isForwardAnnotation()) {
+                        state.setForwardAnnotation(false);
+                    }
                     
                     // If "remember layer" is set, the we really just update the selected
                     // layer...
@@ -701,6 +729,7 @@ public class AnnotationFeatureForm
                     if (state.getPreferences().isRememberLayer()) {
                         state.setSelectedAnnotationLayer(getModelObject());
                     }
+                    
                     // If "remember layer" is not set, then changing the layer means that we
                     // want to change the type of the currently selected annotation
                     else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
@@ -756,7 +785,27 @@ public class AnnotationFeatureForm
                 AnnotatorState state = getModelObject();
                 // Put focus on hidden input field if we are in forward-mode
                 if (getModelObject().isForwardAnnotation()) {
-                    target.focusComponent(forwardAnnotationText);
+                    List<AnnotationFeature> features = getEnabledFeatures(
+                            AnnotationFeatureForm.this.getModelObject()
+                                    .getSelectedAnnotationLayer());
+                    if (features.size() > 1) {
+                        // should not come here in the first place (controlled during
+                        // forward annotation process)
+                        return;
+                    }
+                    // Check if this is a free text annotation or a tagset is attached. Use
+                    // the hidden forwardAnnotationText element only for tagset based
+                    // forward annotations
+                    if (features.size() > 0 && features.get(0).getTagset() == null) {
+                        FeatureEditor editor = getFirstFeatureEditor();
+                        if (editor != null) {
+                            target.focusComponent(editor.getFocusComponent());
+                        }
+                    } 
+                    else {
+                        target.focusComponent(forwardAnnotationText);
+                    }
+                   
                 }
                 // If the use selects an annotation (!isAnnotate()) and forward mode is not
                 // not enabled, then we put the focus on the first of the feature editors
@@ -885,15 +934,20 @@ public class AnnotationFeatureForm
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     try {
-                        AnnotatorState state = getModelObject();
                         
+                        AnnotatorState state = getModelObject();
+
                         if (state.getConstraints() != null) {
                             // Make sure we update the feature editor panel because due to
                             // constraints the contents may have to be re-rendered
                             aTarget.add(featureEditorPanel);
                         }
                         JCas jCas = editorPanel.getEditorCas();
-                        editorPanel.actionCreateOrUpdate(aTarget, jCas);
+                        if (state.isForwardAnnotation()) {
+                            editorPanel.actionCreateForward(aTarget, jCas);
+                        } else {
+                            editorPanel.actionCreateOrUpdate(aTarget, jCas);
+                        }
                     }
                     catch (Exception e) {
                         handleException(AnnotationFeatureForm.FeatureEditorPanelContent.this,
