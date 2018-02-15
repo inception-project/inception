@@ -465,7 +465,7 @@ public class AnnotationDetailEditorPanel
         internalCommitAnnotation(aTarget, aJCas);
 
         if (!aIsForwarded) {
-            if (state.getSelection().getEnd() >= state.getFirstVisibleUnitEnd()) {
+            if (state.getSelection().getEnd() >= state.getWindowEndOffset()) {
                 autoScroll(aJCas, true);
             }
 
