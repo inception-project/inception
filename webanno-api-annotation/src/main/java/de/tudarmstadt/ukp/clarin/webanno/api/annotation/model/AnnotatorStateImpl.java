@@ -617,19 +617,4 @@ public class AnnotatorStateImpl
     {
         return this;
     }
-    
-    // if it is annotation or delete operation
-    private boolean isAnnotate = true;
-
-    @Override
-    public boolean isAnnotate()
-    {
-        return isAnnotate;
-    }
-
-    @Override
-    public void setAnnotate(boolean isAnnotate)
-    {
-        this.isAnnotate = isAnnotate;
-    }
 }

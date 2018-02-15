@@ -361,7 +361,6 @@ public class AnnotationDetailEditorPanel
         }
 
         AnnotatorState state = getModelObject();
-        state.getAction().setAnnotate(true);
 
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
@@ -374,10 +373,10 @@ public class AnnotationDetailEditorPanel
             AnnotationFS originFS = selectByAddr(aJCas, state.getSelection().getOrigin());
             AnnotationLayer spanLayer = annotationService.getLayer(state.getProject(), originFS);
             if (
-                state.getPreferences().isRememberLayer() &&
-                    state.getAction().isAnnotate() &&
-                    !spanLayer.equals(state.getDefaultAnnotationLayer()))
-            {
+                    state.getPreferences().isRememberLayer() &&
+                    state.getSelection().getAnnotation().isNotSet() && // i.e. new annotation
+                    !spanLayer.equals(state.getDefaultAnnotationLayer())
+            ) {
                 throw new AnnotationException(
                         "No relation annotation allowed [" + spanLayer.getUiName() + "]");
             }
@@ -455,7 +454,6 @@ public class AnnotationDetailEditorPanel
         }
 
         AnnotatorState state = getModelObject();
-        state.getAction().setAnnotate(true);
 
         // Re-set the selected layer from the drop-down since it might have changed if we
         // have previously created a relation annotation
@@ -737,14 +735,12 @@ public class AnnotationDetailEditorPanel
         }
 
         state.rememberFeatures();
-        state.getAction().setAnnotate(false);
 
         info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
 
         state.getSelection().clear();
 
         // after delete will follow annotation
-        state.getAction().setAnnotate(true);
         aTarget.add(annotationFeatureForm);
 
         onChange(aTarget);

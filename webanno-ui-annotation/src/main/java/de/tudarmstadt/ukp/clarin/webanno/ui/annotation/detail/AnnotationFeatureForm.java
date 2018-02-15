@@ -26,11 +26,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
+import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
@@ -449,7 +451,6 @@ public class AnnotationFeatureForm
             AnnotationLayer layer = layerSelector.getModelObject();
             state.getSelection().set(savedSel);
             state.getSelection().setAnnotation(VID.NONE_ID);
-            state.getAction().setAnnotate(true);
             state.setSelectedAnnotationLayer(layer);
             state.setDefaultAnnotationLayer(layer);
             selectedAnnotationLayer.setDefaultModelObject(layer.getUiName());
@@ -782,7 +783,6 @@ public class AnnotationFeatureForm
             
             AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
             if (target != null) {
-                AnnotatorState state = getModelObject();
                 // Put focus on hidden input field if we are in forward-mode
                 if (getModelObject().isForwardAnnotation()) {
                     List<AnnotationFeature> features = getEnabledFeatures(
@@ -805,11 +805,11 @@ public class AnnotationFeatureForm
                     else {
                         target.focusComponent(forwardAnnotationText);
                     }
-                   
                 }
-                // If the use selects an annotation (!isAnnotate()) and forward mode is not
-                // not enabled, then we put the focus on the first of the feature editors
-                else if (!state.getAction().isAnnotate() ) {
+                // If the user selects or creates an annotation then we put the focus on the
+                // first of the feature editors
+                else if (!Objects.equals(getRequestCycle().getMetaData(IsSidebarAction.INSTANCE),
+                        true)) {
                     FeatureEditor editor = getFirstFeatureEditor();
                     if (editor != null) {
                         target.focusComponent(editor.getFocusComponent());
@@ -934,7 +934,6 @@ public class AnnotationFeatureForm
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     try {
-                        
                         AnnotatorState state = getModelObject();
 
                         if (state.getConstraints() != null) {
@@ -942,6 +941,11 @@ public class AnnotationFeatureForm
                             // constraints the contents may have to be re-rendered
                             aTarget.add(featureEditorPanel);
                         }
+                        
+                        // When updating an annotation in the sidebar, we must not force a
+                        // re-focus after rendering
+                        getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
+                        
                         JCas jCas = editorPanel.getEditorCas();
                         if (state.isForwardAnnotation()) {
                             editorPanel.actionCreateForward(aTarget, jCas);
@@ -997,5 +1001,11 @@ public class AnnotationFeatureForm
     protected LayerSelector getLayerSelector()
     {
         return layerSelector;
+    }
+    
+    private static final class IsSidebarAction extends MetaDataKey<Boolean> {
+        private static final long serialVersionUID = 1L;
+        
+        public final static IsSidebarAction INSTANCE = new IsSidebarAction();
     }
 }

@@ -320,11 +320,9 @@ public class BratAnnotationEditor
 
                 if (selection.getAnnotation().isNotSet()) {
                     // Create new annotation
-                    state.getAction().setAnnotate(true);
                     getActionHandler().actionCreateOrUpdate(aTarget, jCas);
                 }
                 else {
-                    state.getAction().setAnnotate(false);
                     getActionHandler().actionSelect(aTarget, jCas);
                 }
             }
@@ -348,11 +346,9 @@ public class BratAnnotationEditor
 
         if (selection.getAnnotation().isNotSet()) {
             // Create new annotation
-            state.getAction().setAnnotate(true);
             getActionHandler().actionCreateOrUpdate(aTarget, jCas);
         }
         else {
-            state.getAction().setAnnotate(false);
             getActionHandler().actionSelect(aTarget, jCas);
         }
 
