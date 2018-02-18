@@ -507,15 +507,15 @@ public class DocumentServiceImpl
     public JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
         throws CASException, ResourceInitializationException, IOException
     {
-        JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
+        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         
-        CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        CasPersistenceUtils.readSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         
         if (aAnalyzeAndRepair) {
-            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
+            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, cas);
         }
         
-        return jcas;
+        return cas.getJCas();
     }
 
     @Override
