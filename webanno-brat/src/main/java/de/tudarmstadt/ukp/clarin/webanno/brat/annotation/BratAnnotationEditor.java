@@ -47,7 +47,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationRe
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.WhoamiResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -239,10 +237,7 @@ public class BratAnnotationEditor
                                 getModelObject().clearArmedSlot();
                             }
         
-                            if (WhoamiResponse.is(action)) {
-                                result = actionWhoami();
-                            }
-                            else if (SpanAnnotationResponse.is(action)) {
+                            if (SpanAnnotationResponse.is(action)) {
                                 result = actionSpan(aTarget, request, jCas, paramId);
                             }
                             else if (ArcAnnotationResponse.is(action)) {
@@ -315,11 +310,6 @@ public class BratAnnotationEditor
         }
         
         return null;
-    }
-    
-    private WhoamiResponse actionWhoami()
-    {
-        return new WhoamiResponse(SecurityContextHolder.getContext().getAuthentication().getName());
     }
     
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
