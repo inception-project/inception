@@ -164,21 +164,21 @@ public class DocumentServiceImpl
     {
         if (isNull(aAnnotationDocument.getId())) {
             entityManager.persist(aAnnotationDocument);
+            
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aAnnotationDocument.getProject().getId()))) {
+                log.info(
+                        "Created annotation document [{}] for user [{}] for source document "
+                        + "[{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getId(), aAnnotationDocument.getUser(), 
+                        aAnnotationDocument.getDocument().getName(),
+                        aAnnotationDocument.getDocument().getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
+            }
         }
         else {
             entityManager.merge(aAnnotationDocument);
-        }
-        
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aAnnotationDocument.getProject().getId()))) {
-            log.info(
-                    "Created annotation document [{}] for user [{}] for source document [{}]({}) "
-                    + "in project [{}]({})",
-                    aAnnotationDocument.getId(), aAnnotationDocument.getUser(), 
-                    aAnnotationDocument.getDocument().getName(),
-                    aAnnotationDocument.getDocument().getId(),
-                    aAnnotationDocument.getProject().getName(),
-                    aAnnotationDocument.getProject().getId());
         }
     }
 
