@@ -377,8 +377,8 @@ public class AnnotationDetailEditorPanel
                     state.getSelection().getAnnotation().isNotSet() && // i.e. new annotation
                     !spanLayer.equals(state.getDefaultAnnotationLayer())
             ) {
-                throw new AnnotationException(
-                        "No relation annotation allowed [" + spanLayer.getUiName() + "]");
+                throw new AnnotationException("No relation annotation allowed on layer ["
+                        + state.getDefaultAnnotationLayer().getUiName() + "]");
             }
 
             AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
