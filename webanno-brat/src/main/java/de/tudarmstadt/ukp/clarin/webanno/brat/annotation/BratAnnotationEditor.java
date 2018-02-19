@@ -41,7 +41,6 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -172,19 +171,6 @@ public class BratAnnotationEditor
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
 
-                // Record the action in the action context (which currently is persistent...)
-                getModelObject().getAction().setUserAction(action);
-
-                // Ensure that the user action is cleared *AFTER* rendering so that for AJAX
-                // calls that do not go through this AjaxBehavior do not see an active user action.
-                RequestCycle.get().getListeners().add(new AbstractRequestCycleListener() {
-                    @Override
-                    public void onEndRequest(RequestCycle aCycle)
-                    {
-                        BratAnnotationEditor.this.getModelObject().getAction().clearUserAction();
-                    }
-                });
-                
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
@@ -210,7 +196,8 @@ public class BratAnnotationEditor
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                                    aTarget, jCas, paramId, action, offsets.getBegin(),
+                                    offsets.getEnd());
                         }
                         else {
                             actionDoAction(aTarget, request, jCas, paramId);
@@ -220,7 +207,8 @@ public class BratAnnotationEditor
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, jCas, paramId, offsets.getBegin(), offsets.getEnd());
+                                    aTarget, jCas, paramId, action, offsets.getBegin(),
+                                    offsets.getEnd());
                         }
                         else {
                             // HACK: If an arc was clicked that represents a link feature, then 
