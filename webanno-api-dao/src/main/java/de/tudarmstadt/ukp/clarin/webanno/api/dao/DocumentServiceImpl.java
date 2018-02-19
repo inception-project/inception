@@ -46,6 +46,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
