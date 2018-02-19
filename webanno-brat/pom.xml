@@ -122,12 +122,6 @@
       <artifactId>spring-web</artifactId>
     </dependency>
 
-    <!-- Spring security dependencies -->
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
-
     <!-- Wicket dependencies -->
 
     <dependency>
