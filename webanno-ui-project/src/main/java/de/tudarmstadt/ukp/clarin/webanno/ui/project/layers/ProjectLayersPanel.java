@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYP
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -185,7 +186,7 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
-                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
+                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
                         error("Project not yet created. Please save project details first!");
                     }
                     else {
@@ -211,7 +212,7 @@ public class ProjectLayersPanel
                         {
                             Project project = ProjectLayersPanel.this.getModelObject();
 
-                            if (project.getId() != 0) {
+                            if (project.getId() != null) {
                                 List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
                                 AnnotationLayer tokenLayer = annotationService.getLayer(
@@ -309,8 +310,8 @@ public class ProjectLayersPanel
                         error("Please choose file with layer details before uploading");
                         return;
                     }
-                    else if (project.getId() == 0) {
-                        error("Project not yet created, please save project Details!");
+                    else if (isNull(project.getId())) {
+                        error("Project not yet created, please save project details!");
                         return;
                     }
                     for (FileUpload tagFile : uploadedFiles) {
@@ -454,7 +455,7 @@ public class ProjectLayersPanel
                 @Override
                 public boolean isEnabled()
                 {
-                    return LayerDetailForm.this.getModelObject().getId() == 0;
+                    return isNull(LayerDetailForm.this.getModelObject().getId());
                 }
             }.setRequired(true));
             layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -491,7 +492,7 @@ public class ProjectLayersPanel
                             List<AnnotationLayer> allLayers = annotationService
                                     .listAnnotationLayer(ProjectLayersPanel.this.getModelObject());
 
-                            if (LayerDetailForm.this.getModelObject().getId() > 0) {
+                            if (LayerDetailForm.this.getModelObject().getId() != null) {
                                 if (LayerDetailForm.this.getModelObject().getAttachType() == null) {
                                     return new ArrayList<>();
                                 }
@@ -529,7 +530,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(LayerDetailForm.this.getModelObject().getId() == 0);
+                    setEnabled(isNull(LayerDetailForm.this.getModelObject().getId()));
                     setNullValid(isVisible());
                 }
             };
@@ -717,9 +718,8 @@ public class ProjectLayersPanel
                         layer.setLockToTokenOffset(false);
                     }
 
-                    if (layer.getId() == 0) {
-                        final Project project = ProjectLayersPanel.this.getModelObject();
-                        
+                    final Project project = ProjectLayersPanel.this.getModelObject();
+                    if (isNull(layer.getId())) {
                         String layerName = StringUtils
                                 .capitalize(LayerDetailForm.this.getModelObject().getUiName());
                         
@@ -776,10 +776,11 @@ public class ProjectLayersPanel
                                     + ExceptionUtils.getRootCauseMessage(e));
                         }
                         featureSelectionForm.setVisible(true);
-
-                        applicationEventPublisherHolder.get()
-                                .publishEvent(new LayerConfigurationChangedEvent(this, project));
                     }
+                    
+                    // Trigger LayerConfigurationChangedEvent
+                    applicationEventPublisherHolder.get()
+                            .publishEvent(new LayerConfigurationChangedEvent(this, project));
                 }
             });
 
@@ -798,7 +799,7 @@ public class ProjectLayersPanel
                         error("Unable to create temporary File!!");
                         return null;
                     }
-                    if (ProjectLayersPanel.this.getModelObject().getId() == 0) {
+                    if (isNull(ProjectLayersPanel.this.getModelObject().getId())) {
                         error("Project not yet created. Please save project details first!");
                         return null;
                     }
@@ -944,7 +945,7 @@ public class ProjectLayersPanel
                 @Override
                 protected void onConfigure()
                 {
-                    setEnabled(FeatureDetailForm.this.getModelObject().getId() == 0);
+                    setEnabled(isNull(FeatureDetailForm.this.getModelObject().getId()));
                 }
             });
             featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -1013,7 +1014,7 @@ public class ProjectLayersPanel
                         error("Feature names must start with a letter and consist only of letters, digits, or underscores.");
                         return;
                     }
-                    if (feature.getId() == 0) {
+                    if (isNull(feature.getId())) {
                         feature.setLayer(layerDetailForm.getModelObject());
                         feature.setProject(ProjectLayersPanel.this.getModelObject());
 
@@ -1030,6 +1031,10 @@ public class ProjectLayersPanel
                         feature.setName(name);
                         saveFeature(feature);
                     }
+                    // Trigger LayerConfigurationChangedEvent
+                    applicationEventPublisherHolder.get().publishEvent(
+                            new LayerConfigurationChangedEvent(this, feature.getProject()));
+
                     if (tagSet.getModelObject() != null) {
                         FeatureDetailForm.this.getModelObject().setTagset(tagSet.getModelObject());
                     }
@@ -1047,6 +1052,9 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
+                    // cancel selection of feature list
+                    featureSelectionForm.feature.setModelObject(null);
+                    
                     featureDetailForm.setModelObject(new AnnotationFeature());
                     FeatureDetailForm.this.setVisible(false);
                 }
@@ -1074,9 +1082,6 @@ public class ProjectLayersPanel
             aFeature.setTagset(null);
         }
 
-        applicationEventPublisherHolder.get()
-                .publishEvent(new LayerConfigurationChangedEvent(this, aFeature.getProject()));
-        
         annotationService.createFeature(aFeature);
         featureDetailForm.setVisible(false);
     }
@@ -1141,6 +1146,9 @@ public class ProjectLayersPanel
                 @Override
                 public void onSubmit()
                 {
+                    // cancel selection of feature list
+                    feature.setModelObject(null);
+                    
                     featureDetailForm.setDefaultModelObject(new AnnotationFeature());
                     featureDetailForm.setVisible(true);
                 }

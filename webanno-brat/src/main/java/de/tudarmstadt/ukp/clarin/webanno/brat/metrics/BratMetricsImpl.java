@@ -75,6 +75,12 @@ public class BratMetricsImpl implements BratMetrics
         return renderTime;
     }
 
+    @ManagedMetric(metricType = MetricType.COUNTER, unit = "ms")
+    public long getMaxRenderTime()
+    {
+        return maxRenderTime;
+    }
+
     @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
     public long getSentRenderedSize()
     {

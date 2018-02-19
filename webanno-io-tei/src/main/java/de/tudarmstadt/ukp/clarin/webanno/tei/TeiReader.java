@@ -202,7 +202,7 @@ public class TeiReader
             nextTeiElement();
         }
         catch (CollectionException | IOException e) {
-            new ResourceInitializationException(e);
+            throw new ResourceInitializationException(e);
         }
     }
 

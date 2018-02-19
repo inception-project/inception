@@ -42,7 +42,7 @@ public class ConstraintSet
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id = -1;
+    private Long id;
 
     @Column(nullable = false)
     private String name;
@@ -51,12 +51,12 @@ public class ConstraintSet
     @JoinColumn(name = "project")
     private Project project;
 
-    public long getId()
+    public Long getId()
     {
         return id;
     }
 
-    public void setId(long aId)
+    public void setId(Long aId)
     {
         id = aId;
     }

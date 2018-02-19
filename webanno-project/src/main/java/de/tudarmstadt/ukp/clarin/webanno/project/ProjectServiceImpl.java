@@ -113,7 +113,7 @@ public class ProjectServiceImpl
     public void createProject(Project aProject)
         throws IOException
     {
-        if (aProject.getId() != 0) {
+        if (aProject.getId() != null) {
             throw new IllegalArgumentException("Project has already been created before.");
         }
         

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDE
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
@@ -45,6 +46,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -129,7 +131,7 @@ public class DocumentServiceImpl
     @Transactional
     public void createSourceDocument(SourceDocument aDocument)
     {
-        if (aDocument.getId() == 0) {
+        if (isNull(aDocument.getId())) {
             entityManager.persist(aDocument);
         }
         else {
@@ -161,23 +163,23 @@ public class DocumentServiceImpl
     @Transactional
     public void createAnnotationDocument(AnnotationDocument aAnnotationDocument)
     {
-        if (aAnnotationDocument.getId() == 0) {
+        if (isNull(aAnnotationDocument.getId())) {
             entityManager.persist(aAnnotationDocument);
+            
+            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                    String.valueOf(aAnnotationDocument.getProject().getId()))) {
+                log.info(
+                        "Created annotation document [{}] for user [{}] for source document "
+                        + "[{}]({}) in project [{}]({})",
+                        aAnnotationDocument.getId(), aAnnotationDocument.getUser(), 
+                        aAnnotationDocument.getDocument().getName(),
+                        aAnnotationDocument.getDocument().getId(),
+                        aAnnotationDocument.getProject().getName(),
+                        aAnnotationDocument.getProject().getId());
+            }
         }
         else {
             entityManager.merge(aAnnotationDocument);
-        }
-        
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aAnnotationDocument.getProject().getId()))) {
-            log.info(
-                    "Created annotation document [{}] for user [{}] for source document [{}]({}) "
-                    + "in project [{}]({})",
-                    aAnnotationDocument.getId(), aAnnotationDocument.getUser(), 
-                    aAnnotationDocument.getDocument().getName(),
-                    aAnnotationDocument.getDocument().getId(),
-                    aAnnotationDocument.getProject().getName(),
-                    aAnnotationDocument.getProject().getId());
         }
     }
 
@@ -534,15 +536,15 @@ public class DocumentServiceImpl
     public JCas readInitialCas(SourceDocument aDocument, boolean aAnalyzeAndRepair)
         throws CASException, ResourceInitializationException, IOException
     {
-        JCas jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null).getJCas();
+        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         
-        CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
+        CasPersistenceUtils.readSerializedCas(cas, getCasFile(aDocument, INITIAL_CAS_PSEUDO_USER));
         
         if (aAnalyzeAndRepair) {
-            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, jcas.getCas());
+            casStorageService.analyzeAndRepair(aDocument, INITIAL_CAS_PSEUDO_USER, cas);
         }
         
-        return jcas;
+        return cas.getJCas();
     }
 
     @Override
@@ -887,6 +889,17 @@ public class DocumentServiceImpl
 
     private void recalculateProjectState(Project aProject)
     {
+        Project project;
+        try {
+            project = projectService.getProject(aProject.getId());
+        }
+        catch (NoResultException e) {
+            // This happens when this method is called as part of deleting an entire project.
+            // In such a case, the project may no longer be available, so there is no point in
+            // updating its state. So then we do nothing here.
+            return;
+        }
+        
         String query = 
                 "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
                 "COUNT(*), " +
@@ -907,8 +920,6 @@ public class DocumentServiceImpl
                 .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
                 .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
                 .getSingleResult();
-        
-        Project project = projectService.getProject(aProject.getId());
         
         ProjectState oldState = project.getState();
         
@@ -948,16 +959,16 @@ public class DocumentServiceImpl
         public final long cip;
         public final long cf;
         
-        public SourceDocumentStateStats(long aTotal, long aAn, long aAip, long aAf, long aCip,
-                long aCf)
+        public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip,
+                Long aCf)
         {
             super();
-            total = aTotal;
-            an = aAn;
-            aip = aAip;
-            af = aAf;
-            cip = aCip;
-            cf = aCf;
+            total = aTotal != null ? aTotal : 0l;
+            an = aAn != null ? aAn : 0l;
+            aip = aAip != null ? aAip : 0l;
+            af = aAf != null ? aAf : 0l;
+            cip = aCip != null ? aCip : 0l;
+            cf = aCf != null ? aCf : 0l;
         }
     }
 }

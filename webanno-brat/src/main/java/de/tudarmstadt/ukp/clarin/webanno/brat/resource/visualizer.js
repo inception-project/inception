@@ -1514,12 +1514,21 @@ var Visualizer = (function($, window, undefined) {
           var labels = Util.getArcLabels(spanTypes, data.spans[arc.origin].type, arc.type, relationTypesHash);
           if (!labels.length) labels = [arc.type];
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-          if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
-            if (data.eventDescs[arc.eventDescId].labelText) {
-              labels = [data.eventDescs[arc.eventDescId].labelText];
+          if (arc.eventDescId && data.eventDescs[arc.eventDescId] && 
+              data.eventDescs[arc.eventDescId].labelText) {
+            labels = [data.eventDescs[arc.eventDescId].labelText];
+          }
+// WEBANNO EXTENSION END - #820 - Allow setting label/color individually
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+          else {
+            // Make sure we have measurements for the bracketed labels that we use later.
+            var plainLabels = labels;
+            labels = [];
+            for (var i = 0; i < plainLabels.length; i++) {
+              labels[i] = '(' + plainLabels[i] + ')';
             }
           }
-// WEBANNO EXTENSION END
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });

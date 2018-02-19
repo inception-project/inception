@@ -85,16 +85,16 @@ public class WebhookServiceTest
 
         Project project = new Project();
         project.setState(ProjectState.NEW);
-        project.setId(1);
+        project.setId(1l);
 
         SourceDocument doc = new SourceDocument();
         doc.setProject(project);
-        doc.setId(2);
+        doc.setId(2l);
         doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
 
         AnnotationDocument ann = new AnnotationDocument();
         ann.setProject(project);
-        ann.setId(3);
+        ann.setId(3l);
         ann.setDocument(doc);
         ann.setState(AnnotationDocumentState.FINISHED);
         

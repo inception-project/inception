@@ -146,7 +146,7 @@ public class ProjectPage
                 public boolean isVisible()
                 {
                     return selectedProject.getObject() != null
-                            && selectedProject.getObject().getId() != 0
+                            && selectedProject.getObject().getId() != null
                             && psp.condition.applies(selectedProject.getObject());
                 }
             };

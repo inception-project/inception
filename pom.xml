@@ -54,28 +54,36 @@
     </repository>
   </distributionManagement>
   <properties>
-    <jackson.version>2.9.2</jackson.version>
-    <uima.version>3.0.1-SNAPSHOT</uima.version>
+    <jackson.version>2.9.4</jackson.version>
+    <uima.version>3.0.0</uima.version>
     <uimafit.version>3.0.0-SNAPSHOT</uimafit.version>
-    <spring.version>5.0.2.RELEASE </spring.version>
-    <spring.boot.version>1.5.9.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.3.RELEASE</spring.security.version>
+    <spring.version>5.0.3.RELEASE </spring.version>
+    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
+    <spring.security.version>4.2.4.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>7.9.0</wicket.version>
-    <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>7.9.1</wicket-jquery-ui.version>
+    <wicket.version>7.10.0</wicket.version>
+    <wicketstuff.version>7.9.0</wicketstuff.version>
+    <wicket-jquery-ui.version>7.9.2</wicket-jquery-ui.version>
     <wicket-bootstrap.version>0.10.16</wicket-bootstrap.version>
     <wicket-webjars.version>0.5.6</wicket-webjars.version>    
     <wicket-spring-boot.version>1.0.10</wicket-spring-boot.version>
-    <hibernate.version>5.2.12.Final</hibernate.version>
+    <hibernate.version>5.2.13.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>2.0.0-SNAPSHOT</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
     <batik.version>1.9.1</batik.version>
   </properties>
   <repositories>
+  <repository>
+    <id>ext-staging</id>
+    <name>Staging repo</name>
+    <url>https://repository.apache.org/content/repositories/orgapacheuima-1183/</url>
+    <releases>
+      <enabled>true</enabled>
+    </releases>
+  </repository>
     <repository>
       <id>ukp-oss-releases</id>
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
@@ -106,6 +114,11 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.9.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>

@@ -151,7 +151,7 @@ public class ImportExportServiceImpl
         }
 
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+        CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
         // Update type system the CAS
         annotationService.upgradeCas(cas, aDocument, aUser);

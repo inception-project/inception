@@ -145,9 +145,4 @@ public interface AnnotatorState
     List<FeatureState> getFeatureStates();
 
     FeatureState getFeatureState(AnnotationFeature aFeature);
-
-    // ---------------------------------------------------------------------------------------------
-    // Access to transient context
-    // ---------------------------------------------------------------------------------------------
-    TransientActionContext getAction();
 }

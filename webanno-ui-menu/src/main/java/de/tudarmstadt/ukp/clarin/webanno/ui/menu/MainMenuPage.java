@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.menu;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.annotationEnabeled;
 import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.curationEnabeled;
 
+import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -84,18 +84,19 @@ public class MainMenuPage
             protected void populateItem(ListItem<MenuItem> aItem)
             {
                 MenuItem item = aItem.getModelObject();
+                final Class<? extends Page> pageClass = item.getPageClass();
                 StatelessLink<Void> menulink = new StatelessLink<Void>("menulink") {
                     private static final long serialVersionUID = 4110674757822252390L;
 
                     @Override
                     public void onClick()
                     {
-                        setResponsePage(item.getPageClass());
+                        setResponsePage(pageClass);
                     }
                 };
                 menulink.add(
                         new Image("icon", new UrlResourceReference(Url.parse(item.getIcon()))));
-                menulink.add(new Label("label", PropertyModel.of(item, "label")));
+                menulink.add(new Label("label", item.getLabel()));
                 menulink.setVisible(item.applies());
                 aItem.add(menulink);
             }

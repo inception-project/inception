@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static java.util.Objects.isNull;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -1075,7 +1076,7 @@ public class MonitoringPage
                 return aValue;
             }
             // Initialization of the appliaction, no project selected
-            else if (project.getId() == 0) {
+            else if (isNull(project.getId())) {
                 return "";
             }
             // It is document column, get the status from the database
