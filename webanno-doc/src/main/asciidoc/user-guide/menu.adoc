@@ -17,7 +17,7 @@
 [[sect_menu]]
 == Main Menu
 
-After login, you will be presented with the WebAnno overview screen. This screen can be reached at 
+After login, you will be presented with the overview screen. This screen can be reached at 
 any time from within the GUI by clicking on the *Home* link in the left upper corner. 
 
 Here, you can navigate to one of the currently seven options:

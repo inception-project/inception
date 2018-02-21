@@ -17,9 +17,9 @@
 [[sect_database]]
 == Database
 
-WebAnno uses an SQL database to store project and user data. 
+{product-name} uses an SQL database to store project and user data. 
 
-We test MySQL using a MySQL server. WebAnno uses by default an embedded HSQLDB database. However, we 
+We test MySQL using a MySQL server. {product-name} uses by default an embedded HSQLDB database. However, we 
 recommend using the embedded database only for testing purposes. For production use, we recommend
 using a MySQL server. The reason for this is, that:
 
@@ -31,7 +31,7 @@ using a MySQL server. The reason for this is, that:
 
 We try to keep the data model simple, so there should be no significant requirements to the database
 being used. Theoretically, it should be possible to use any JDBC-compatible database after adding a
-corresponding driver to the classpath and configuring WebAnno to use the driver in the
+corresponding driver to the classpath and configuring {product-name} to use the driver in the
 `settings.properties` file.
 
 If you plan to use UTF-8 encoding for project name and tagset/tag name, make sure either of the following settings for MySQL databse
@@ -49,8 +49,8 @@ character-set-server = utf8
 
 === Using HSQLDB in production
 
-WebAnno displays a warning in the user interface when an embedded database is being used. In case
-that you really want to run WebAnno with an embedded database in production, you probably want to
+{product-name} displays a warning in the user interface when an embedded database is being used. In case
+that you really want to run {product-name} with an embedded database in production, you probably want to
 disable this warning. To do so, please add the following entry to the `settings.properties` file:
 
 ----

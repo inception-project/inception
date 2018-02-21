@@ -157,6 +157,8 @@
               <docinfo1>true</docinfo1>
               <project-version>${project.version}</project-version>
               <revnumber>${project.version}</revnumber>
+              <product-name>WebAnno</product-name>
+              <product-website-url>WebAnno</product-website-url>
               <icons>font</icons>
             </attributes>
           </configuration>
