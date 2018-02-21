@@ -1,15 +1,42 @@
+<!--
+#Copyright 2017
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-    <div class="col-sm-12">
-        <div class="form-group">
-            <div class="col-sm-3">
-                <label wicket:id="feature"></label>
-            </div>
+  <div class="panel panel-default panel-small">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <span wicket:id="feature"></span>
+      </h3>
+    </div>
+    <div class="panel-body">
+      <div wicket:id="content">
+        <div wicket:id="slots">
+          <div class="form-group">
+            <label class="col-sm-3 control-label">
+              <span wicket:id="role"></span>
+            </label>
             <div class="col-sm-9">
-                <div><label wicket:id="featureKey"/></div>
+              <span wicket:id="label" class="form-control text-nowrap" style="max-width: 20em; overflow:hidden; text-overflow: ellipsis;"></span>
             </div>
+          </div>
         </div>
     </div>
+  </div>
 </wicket:panel>
 </html>

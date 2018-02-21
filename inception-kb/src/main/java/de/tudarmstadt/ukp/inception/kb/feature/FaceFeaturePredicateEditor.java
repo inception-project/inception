@@ -27,6 +27,7 @@ import java.util.List;
  */
 public class FaceFeaturePredicateEditor extends FeatureEditor {
 
+    private static final long serialVersionUID = -4649541419448384970L;
     private Component focusComponent;
 
     private @SpringBean KnowledgeBaseService kbService;
