@@ -1,7 +1,9 @@
 package de.tudarmstadt.ukp.inception.kb.feature;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -12,6 +14,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -31,8 +34,9 @@ public class FaceFeatureObjectEditor extends FeatureEditor {
     private @SpringBean
     KnowledgeBaseService kbService;
 
-    public FaceFeatureObjectEditor(String aId, MarkupContainer aOwner, IModel<FeatureState> aModel) {
-        super(aId, aOwner, aModel);
+    public FaceFeatureObjectEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
+                                   final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel) {
+        super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
         updateName();
         updateKey();
         updateValue();
