@@ -204,8 +204,7 @@ public abstract class AnnotationPageBase
         throws Exception
     {
         AnnotatorState state = getModelObject();
-        JCas jcas = documentService.createOrReadInitialCas(state.getDocument());
-        documentService.writeAnnotationCas(jcas, state.getDocument(), state.getUser(), false);
+        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
 

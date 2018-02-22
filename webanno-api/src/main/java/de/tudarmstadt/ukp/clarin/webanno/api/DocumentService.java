@@ -245,6 +245,23 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * Resets the annotation document to its initial state by overwriting it with the initial
+     * CAS.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aUser
+     *            The User who perform this operation
+     * @throws UIMAException
+     *             if a data error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void resetAnnotationCas(SourceDocument aDocument, User aUser)
+            throws UIMAException, IOException;
+
+    /**
      * A Method that checks if there is already an annotation document created for the source
      * document
      *
