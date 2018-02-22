@@ -114,6 +114,7 @@ public class JsonImportUtil
         newTagSet.setName(importedTagSetName);
         newTagSet.setLanguage(importedTagSet.getLanguage());
         newTagSet.setProject(project);
+        newTagSet.setCreateTag(importedTagSet.isCreateTag());
         aAnnotationService.createTagSet(newTagSet);
         for (ExportedTag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();

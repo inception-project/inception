@@ -36,7 +36,7 @@ non-latin Asian, Middle-eastern and African scripts.
 WebAnno is implemented in Java. The Java platform internally uses a UTF-16 representation for
 text. For this reason, the offsets used in the TSV format currently represent offsets of the 16bit
 units in UTF-16 strings. This is important if your text contains Unicode characters that cannot
-be represented din 16bit and which thus require two 16bit units. For example a token represented
+be represented in 16bit and which thus require two 16bit units. For example a token represented
 by the Unicode character 😊 (U+1F60A) requires two 16bit units. Hence, the offset count increased
 by 2 for this character. So Unicode characters starting at U+10000 increase the offset count by 2.
 

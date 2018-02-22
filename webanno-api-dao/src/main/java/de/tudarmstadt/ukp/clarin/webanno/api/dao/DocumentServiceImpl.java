@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -500,14 +501,14 @@ public class DocumentServiceImpl
 
     @Override
     public JCas createInitialCas(SourceDocument aDocument)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         return createInitialCas(aDocument, true);
     }
 
     @Override
     public JCas createInitialCas(SourceDocument aDocument, boolean aAnalyzeRepairAndSave)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         // Normally, the initial CAS should be created on document import, but after
         // adding this feature, the existing projects do not yet have initial CASes, so
@@ -549,7 +550,7 @@ public class DocumentServiceImpl
 
     @Override
     public JCas createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException, UIMAException, ClassNotFoundException
+        throws IOException, UIMAException
     {
         if (existsInitialCas(aDocument)) {
             return readInitialCas(aDocument);
@@ -664,6 +665,16 @@ public class DocumentServiceImpl
         writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
     }
 
+    @Override
+    public void resetAnnotationCas(SourceDocument aDocument, User aUser)
+        throws UIMAException, IOException
+    {
+        AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
+        JCas jcas = createOrReadInitialCas(aDocument);
+        writeAnnotationCas(jcas, aDocument, aUser, false);
+        applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
+    }
+    
     /**
      * Return true if there exist at least one annotation document FINISHED for annotation for this
      * {@link SourceDocument}

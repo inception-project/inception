@@ -297,7 +297,7 @@ public class ImportExportServiceImpl
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public JCas importCasFromFile(File aFile, Project aProject, String aFormat)
-        throws UIMAException, IOException, ClassNotFoundException
+        throws UIMAException, IOException
     {
         Class readerClass = getReadableFormats().get(aFormat);
         if (readerClass == null) {

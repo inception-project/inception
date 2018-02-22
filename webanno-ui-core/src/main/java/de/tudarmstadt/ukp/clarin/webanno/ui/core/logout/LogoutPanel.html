@@ -43,6 +43,7 @@
               // Wait an additional couple of seconds before reload to avoid reloading before the
               // server-side session has *really* expired.
               if (remaining <= -10) {
+                clearInterval(instance.timer);
                 location.reload(true);
               }
           };
