@@ -123,4 +123,33 @@ public class Entity
         return frequency;
     }
 
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((e2 == null) ? 0 : e2.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Entity other = (Entity) obj;
+        if (e2 == null) {
+            if (other.e2 != null)
+                return false;
+        }
+        else if (!e2.equals(other.e2))
+            return false;
+        return true;
+    }
+
+    
 }

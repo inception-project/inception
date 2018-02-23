@@ -273,9 +273,15 @@ public class ConceptLinkingService
                     Value e2 = solution.getValue("e2");
                     Value label = solution.getValue("label");
                     Value anylabel = solution.getValue("anylabel");
-                    linkings.add(new Entity((e2 != null) ? e2.toString() : "",
+
+                    Entity newEntity = new Entity((e2 != null) ? e2.toString() : "",
                                          (label != null) ? label.toString() : "",
-                                      (anylabel != null) ? anylabel.toString() : ""));
+                                      (anylabel != null) ? anylabel.toString() : "");
+                    
+                    if (!linkings.contains(newEntity)) {
+                        linkings.add(newEntity);
+                    }
+                    
                 }
             }
             catch (QueryEvaluationException e) {
