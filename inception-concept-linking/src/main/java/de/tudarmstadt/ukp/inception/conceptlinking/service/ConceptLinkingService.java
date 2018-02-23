@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -168,7 +167,7 @@ public class ConceptLinkingService
         pipeline.process(mentionSentence);
         pipeline.collectionProcessComplete();
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
-
+        
         for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
             List<Token> sentence = new LinkedList<>();
             for (Token t : JCasUtil.selectCovered(Token.class, s)) {
@@ -189,7 +188,7 @@ public class ConceptLinkingService
         mentionSentence.reset();
         mentionSentence.setDocumentText(sentenceText);
         mentionSentence.setDocumentLanguage("en");
-        
+
         coreNlpPipeline.process(mentionSentence);
         logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
 
@@ -202,7 +201,7 @@ public class ConceptLinkingService
         }
         logger.info("Could not return mention sentence.");
         throw new IllegalStateException();
-    }
+    }    
     
     
     /**
@@ -535,23 +534,6 @@ public class ConceptLinkingService
         catch (IOException e) {
             logger.error("Cannot read annotation CAS.", e);
         }
-    }
-    
-    @EventListener
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
-    {
-        User user = userRepository.get(aEvent.getDocument().getUser());
-        ConceptLinkingUserState state = getState(user.getUsername());
-        AnnotationDocument annoDoc = aEvent.getDocument();
-        JCas jCas;
-        try {
-            jCas = docService.readAnnotationCas(annoDoc);
-            state.setJCas(jCas);
-        }
-        catch (IOException e) {
-            logger.error("Cannot read annotation CAS.", e);
-        }
-
     }
     
     private ConceptLinkingUserState getState(String aUsername)
