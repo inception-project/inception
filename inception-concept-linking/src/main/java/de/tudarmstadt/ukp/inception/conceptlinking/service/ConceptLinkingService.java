@@ -89,8 +89,7 @@ public class ConceptLinkingService
     private AnalysisEngine pipeline;
     private AnalysisEngine coreNlpPipeline;
     
-    // private static String wd = "";
-    private String wd = "workspace/inception-concept-linking/";
+    private final static String WORKING_DIRECTORY = "workspace/inception-application/inception-concept-linking/";
     
     private final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
@@ -99,13 +98,13 @@ public class ConceptLinkingService
             Arrays.asList(PUNCTUATION_VALUES));
 
     private final Set<String> stopwords 
-            = Utils.readFile(wd + "resources/stopwords-de.txt");
+            = Utils.readFile(WORKING_DIRECTORY + "resources/stopwords-de.txt");
 
     private int candidateQueryLimit = 200;
     private int signatureQueryLimit = 10;
     
     private final Map<String, Integer> entityFrequencyMap
-            = Utils.loadEntityFrequencyMap(wd + "resources/wikidata_entity_freqs.map");
+            = Utils.loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
 
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
     
