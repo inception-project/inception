@@ -150,7 +150,8 @@ public class ConceptFeatureSupport
         switch (featureState.feature.getMultiValueMode()) {
         case NONE:
             if (featureState.feature.getType().startsWith("kb:")) {
-                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel);
+                editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
+                        aHandler);
             }
             else {
                 throw unsupportedMultiValueModeException(featureState);

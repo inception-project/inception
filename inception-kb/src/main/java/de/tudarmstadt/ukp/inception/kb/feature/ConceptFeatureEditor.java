@@ -31,6 +31,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -51,15 +52,16 @@ public class ConceptFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
     
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel, 
-            IModel<AnnotatorState> aStateModel)
+            IModel<AnnotatorState> aStateModel, AnnotationActionHandler aActionHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         // Checks whether hide un-constraint feature is enabled or not
         add(new Label("feature", getModelObject().feature.getUiName()));
-        add(focusComponent = createFieldComboBox(aStateModel.getObject()));
+        add(focusComponent = createFieldComboBox(aStateModel.getObject(), aActionHandler));
     }
 
-    private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState)
+    private DropDownList<KBHandle> createFieldComboBox(AnnotatorState aState, 
+            AnnotationActionHandler aActionHandler)
     {
         DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;    
@@ -71,7 +73,7 @@ public class ConceptFeatureEditor
                 KBConcept concept = kbService.readConcept(kb, identifier);
                 if (concept != null) {
                     handles.addAll(kbService.listInstances(kb, concept.getIdentifier(), true, 
-                            aState));
+                            aState, aActionHandler));
                 }
             }
             return new ArrayList<>(handles);

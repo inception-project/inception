@@ -51,6 +51,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
@@ -464,21 +465,29 @@ public class ConceptLinkingService
     }
 
     public List<Entity> disambiguate (KnowledgeBase aKB, IRI conceptIri, 
-            AnnotatorState aState)
+            AnnotatorState aState, AnnotationActionHandler aActionHandler)
     {
+        List<Entity> candidates = new ArrayList<>();
+        
         String mention = aState.getSelection().getText();
         User user = aState.getUser();
 
-        ConceptLinkingUserState state = getState(user.getUsername());
-        JCas jCas = state.getJcas();
-        String language = state.getLanguage();
-        List<Entity> candidates = new ArrayList<>();
-        try {
-            candidates = computeCandidateScores(aKB, mention,
-                    linkMention(aKB, mention, conceptIri, language), jCas, language);
-        } catch (IOException | UIMAException e) {
-            logger.error("Could not compute candidate scores: ", e);
+        try {        
+            ConceptLinkingUserState userState = getState(user.getUsername());
+            JCas jCas = aActionHandler.getEditorCas();
+            String language = userState.getLanguage();
+
+            try {
+                candidates = computeCandidateScores(aKB, mention,
+                        linkMention(aKB, mention, conceptIri, language), jCas, language);
+            } catch (IOException | UIMAException e) {
+                logger.error("Could not compute candidate scores: ", e);
+            }
         }
+        catch (IOException e) {
+            logger.error("Cannot get JCas", e);
+        }
+
         return candidates;
 
     }

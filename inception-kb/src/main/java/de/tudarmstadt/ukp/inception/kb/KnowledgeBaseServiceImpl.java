@@ -80,6 +80,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -536,20 +538,22 @@ public class KnowledgeBaseServiceImpl
 
     @Override
     public List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll, 
-            AnnotatorState aState) {
+            AnnotatorState aState, AnnotationActionHandler aActionHandler) {
         IRI conceptIri = SimpleValueFactory.getInstance().createIRI(aConceptIri);
         if (kb.canSupportConceptLinking()) {
-            return listLinkingInstances(kb, conceptIri, false, aAll, aState);
+            return listLinkingInstances(kb, conceptIri, false, aAll, aState, aActionHandler);
         } else {
             return list(kb, conceptIri, false, aAll);
         }
     }
     
     private List<KBHandle> listLinkingInstances(KnowledgeBase kb, IRI conceptIri,
-            boolean aIncludeInferred, boolean aAll, AnnotatorState aState)
+            boolean aIncludeInferred, boolean aAll, AnnotatorState aState, 
+            AnnotationActionHandler aActionHandler)
     {
         List<KBHandle> resultList = read(kb, (conn) -> {
-            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState);
+            List<Entity> candidates = extensionRegistry.fireDisambiguate(kb, conceptIri, aState, 
+                    aActionHandler);
             List<KBHandle> handles = new ArrayList<>();
 
             for (Entity c: candidates) {

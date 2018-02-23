@@ -32,6 +32,8 @@ import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.manager.RepositoryInfo;
 import org.eclipse.rdf4j.rio.RDFFormat;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -240,7 +242,7 @@ public interface KnowledgeBaseService
      * @return All instances of the given concept
      */
     List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll, 
-            AnnotatorState aState);
+            AnnotatorState aState, AnnotationActionHandler aActionHandler);
 
     /**
      * Inserts a new statement. If the statement has an original statement, that one is deleted

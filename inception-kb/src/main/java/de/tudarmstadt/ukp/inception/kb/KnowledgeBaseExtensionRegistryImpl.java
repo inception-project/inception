@@ -15,6 +15,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.OrderComparator;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.kb.model.Entity;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -78,9 +80,9 @@ public class KnowledgeBaseExtensionRegistryImpl
     
     @Override
     public List<Entity> fireDisambiguate(KnowledgeBase aKB, IRI conceptIri, 
-            AnnotatorState aState) {
+            AnnotatorState aState, AnnotationActionHandler aActionHandler) {
         for (KnowledgeBaseExtension ext: getExtensions()) {
-            return ext.disambiguate(aKB, conceptIri, aState);
+            return ext.disambiguate(aKB, conceptIri, aState, aActionHandler);
         }
         throw new IllegalStateException();
     }
