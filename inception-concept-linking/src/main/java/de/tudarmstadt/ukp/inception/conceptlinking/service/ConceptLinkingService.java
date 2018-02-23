@@ -1,16 +1,12 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -20,17 +16,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_engine.AnalysisEngine;
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -54,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -86,9 +78,6 @@ public class ConceptLinkingService
     private @Resource UserDao userRepository;
     private @Resource SessionRegistry sessionRegistry;
     
-    private AnalysisEngine pipeline;
-    private AnalysisEngine coreNlpPipeline;
-    
     private final static String WORKING_DIRECTORY = "workspace/inception-application/inception-concept-linking/";
     
     private final String[] PUNCTUATION_VALUES 
@@ -114,119 +103,21 @@ public class ConceptLinkingService
         return "conceptLinkingService";
     }
     
-    @PostConstruct
-    public void init()
-    {
-        AnalysisEngineDescription desc;
-        try {
-            desc = createEngineDescription(
-                    createEngineDescription(Stopwatch.class, 
-                            Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer"),
-                    createEngineDescription(StanfordSegmenter.class),
-                    createEngineDescription(StanfordPosTagger.class,
-                            StanfordSegmenter.PARAM_LANGUAGE_FALLBACK, "en"),
-                    createEngineDescription(
-                            Stopwatch.class,
-                            Stopwatch.PARAM_TIMER_NAME, "stanfordNlpTimer",
-                            Stopwatch.PARAM_OUTPUT_FILE, "target/stanfordnlpPipeline.txt"
-                    ));
-            pipeline = AnalysisEngineFactory.createEngine(desc);
-            
-            desc = createEngineDescription(
-                    createEngineDescription(Stopwatch.class, 
-                            Stopwatch.PARAM_TIMER_NAME, "coreNlpTimer"),
-                    createEngineDescription(CoreNlpSegmenter.class),
-                    createEngineDescription(CoreNlpPosTagger.class,
-                            CoreNlpSegmenter.PARAM_LANGUAGE, "en"),
-                    createEngineDescription(
-                            Stopwatch.class,
-                            Stopwatch.PARAM_TIMER_NAME, "coreNlpTimer",
-                            Stopwatch.PARAM_OUTPUT_FILE, "target/coreNlpPipeline.txt"
-                    ));
-            coreNlpPipeline = AnalysisEngineFactory.createEngine(desc);
-        }
-        catch (ResourceInitializationException e) {
-            logger.error("Could not create AnalysisEngine!", e);
-        }
-        
-    }
-
     /*
      * Retrieves the first sentence containing the mention as Tokens
      */
-    private synchronized List<Token> getMentionSentence(JCas mentionSentence, String mention, 
-            String language)
+    private synchronized List<Token> getMentionSentence(JCas aJcas, String mention, 
+            int aBegin, String language)
         throws UIMAException, IOException
     {
-        double startTime = System.currentTimeMillis();
-        String sentenceText = findMentionSentenceInDoc(mentionSentence, mention);
-        mentionSentence.reset();
-        mentionSentence.setDocumentText(sentenceText);
-        mentionSentence.setDocumentLanguage(language);
-        
-        pipeline.process(mentionSentence);
-        pipeline.collectionProcessComplete();
-        logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
-        
-        for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
-            List<Token> sentence = new LinkedList<>();
-            for (Token t : JCasUtil.selectCovered(Token.class, s)) {
+        Sentence sent = WebAnnoCasUtil.getSentence(aJcas, aBegin);
+        List<Token> sentence = new ArrayList<>();
+        for (Token t : JCasUtil.selectCovered(Token.class, sent)) {
                 sentence.add(t);
             }
             return sentence;
         }
-        logger.info("Could not return mention sentence.");
-        throw new IllegalStateException();
-    }
-
-    private synchronized List<Token> getMentionSentenceWithCorenlp(JCas mentionSentence, 
-            String mention) 
-        throws UIMAException, IOException
-    {
-        double startTime = System.currentTimeMillis();
-        String sentenceText = findMentionSentenceInDoc(mentionSentence, mention);
-        mentionSentence.reset();
-        mentionSentence.setDocumentText(sentenceText);
-        mentionSentence.setDocumentLanguage("en");
-
-        coreNlpPipeline.process(mentionSentence);
-        logger.debug(System.currentTimeMillis() - startTime + "ms for processing text.");
-
-        for (Sentence s : JCasUtil.select(mentionSentence, Sentence.class)) {
-            List<Token> sentence = new LinkedList<>();
-            for (Token t : JCasUtil.selectCovered(Token.class, s)) {
-                sentence.add(t);
-            }
-            return sentence;
-        }
-        logger.info("Could not return mention sentence.");
-        throw new IllegalStateException();
-    }    
     
-    
-    /**
-     * Return sentence containing the mention
-     * @param docText
-     * @param mention
-     * @return
-     * @throws IOException
-     */
-    private String findMentionSentenceInDoc(JCas aJcas, String mention) 
-            throws IOException
-    {    
-        // Detecting the sentence
-        Collection<Sentence> sentences = JCasUtil.select(aJcas, Sentence.class);
-
-        // Check whether mention occurs in this sentence
-        for (Sentence sent : sentences) {
-            if (sent.getCoveredText().contains(mention)) {
-                return sent.getCoveredText();
-            }
-        }
-        logger.info("Mention " + mention + " could not be found in docText.");
-        throw new IllegalStateException();
-    }
-
     // TODO lemmatization
     private Set<Entity> linkMention(KnowledgeBase aKB, String mention, IRI conceptIri, 
             String aLanguage)
@@ -357,11 +248,11 @@ public class ConceptLinkingService
      * @throws UIMAException
      */
     private List<Entity> computeCandidateScores(KnowledgeBase aKB, String mention, 
-            Set<Entity> linkings, JCas jCas, String aLanguage)
+            Set<Entity> linkings, JCas aJCas, int aBegin, String aLanguage)
         throws UIMAException, IOException
     {
         int mentionContextSize = 2;
-        List<Token> mentionSentence = getMentionSentence(jCas, mention, aLanguage);
+        List<Token> mentionSentence = getMentionSentence(aJCas, mention, aBegin, aLanguage);
         if (mentionSentence == null) {
             throw new IllegalStateException();
         }
@@ -372,14 +263,16 @@ public class ConceptLinkingService
         // TODO and t['ner'] not in {"ORDINAL", "MONEY", "TIME", "PERCENTAGE"}} \
         Set<String> sentenceContentTokens = new HashSet<>();
         for (Token t : mentionSentence) {
-            if ((t.getPos().getPosValue().startsWith("V")
-                    || t.getPos().getPosValue().startsWith("N")
-                    || t.getPos().getPosValue().startsWith("J"))
+            if (t.getPosValue() != null) {
+                if ((t.getPosValue().startsWith("V")
+                        || t.getPosValue().startsWith("N")
+                        || t.getPosValue().startsWith("J"))
                 && !splitMention.contains(t.getCoveredText())
                 && (!stopwords.contains(t.getCoveredText())
                     || !splitMention.contains(t.getCoveredText()))) {
                 sentenceContentTokens.add(t.getCoveredText());
             }
+        }
         }
 
         double startLoop = System.currentTimeMillis();
@@ -484,7 +377,8 @@ public class ConceptLinkingService
 
             try {
                 candidates = computeCandidateScores(aKB, mention,
-                        linkMention(aKB, mention, conceptIri, language), jCas, language);
+                        linkMention(aKB, mention, conceptIri, language), jCas, 
+                        aState.getSelection().getBegin(), language);
             } catch (IOException | UIMAException e) {
                 logger.error("Could not compute candidate scores: ", e);
             }
