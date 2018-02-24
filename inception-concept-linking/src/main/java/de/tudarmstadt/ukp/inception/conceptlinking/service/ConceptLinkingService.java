@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordPosTagger;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordSegmenter;
 import edu.stanford.nlp.util.StringUtils;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Entity;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.Utils;
@@ -78,7 +79,8 @@ public class ConceptLinkingService
     private @Resource UserDao userRepository;
     private @Resource SessionRegistry sessionRegistry;
     
-    private final static String WORKING_DIRECTORY = "workspace/inception-application/inception-concept-linking/";
+    private final static String WORKING_DIRECTORY 
+        = "workspace/inception-application/inception-concept-linking/";
     
     private final String[] PUNCTUATION_VALUES 
             = new String[] { "``", "''", "(", ")", ",", ".", ":", "--" };
@@ -91,10 +93,21 @@ public class ConceptLinkingService
 
     private int candidateQueryLimit = 200;
     private int signatureQueryLimit = 10;
+    private int frequencyThreshold = 10;
     
-    private final Map<String, Integer> entityFrequencyMap
-            = Utils.loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
+    private final Map<String, Integer> entityFrequencyMap = Utils
+            .loadEntityFrequencyMap(WORKING_DIRECTORY + "resources/wikidata_entity_freqs.map");
 
+    private final Set<String> propertyBlacklist = Utils
+            .loadPropertyBlacklist(WORKING_DIRECTORY + "resources/property_blacklist.txt");
+    
+    private final Set<String> typeBlacklist = new HashSet<>(
+            Arrays.asList(new String[] { "commonsmedia", "external-id",
+                    "globe-coordinate", "math", "monolingualtext", "quantity", "string", "url",
+                    "wikibase-property" }));
+    private final Map<String, Property> propertyWithLabels = 
+            Utils.loadPropertyLabels(WORKING_DIRECTORY + "resources/property_with_labels.txt");
+    
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
     
     @Override
@@ -102,7 +115,7 @@ public class ConceptLinkingService
     {
         return "conceptLinkingService";
     }
-    
+
     /*
      * Retrieves the first sentence containing the mention as Tokens
      */
@@ -113,11 +126,11 @@ public class ConceptLinkingService
         Sentence sent = WebAnnoCasUtil.getSentence(aJcas, aBegin);
         List<Token> sentence = new ArrayList<>();
         for (Token t : JCasUtil.selectCovered(Token.class, sent)) {
-                sentence.add(t);
-            }
-            return sentence;
+            sentence.add(t);
         }
-    
+        return sentence;
+    }    
+
     // TODO lemmatization
     private Set<Entity> linkMention(KnowledgeBase aKB, String mention, IRI conceptIri, 
             String aLanguage)
@@ -267,12 +280,12 @@ public class ConceptLinkingService
                 if ((t.getPosValue().startsWith("V")
                         || t.getPosValue().startsWith("N")
                         || t.getPosValue().startsWith("J"))
-                && !splitMention.contains(t.getCoveredText())
-                && (!stopwords.contains(t.getCoveredText())
-                    || !splitMention.contains(t.getCoveredText()))) {
-                sentenceContentTokens.add(t.getCoveredText());
+                    && !splitMention.contains(t.getCoveredText())
+                    && (!stopwords.contains(t.getCoveredText())
+                        || !splitMention.contains(t.getCoveredText()))) {
+                    sentenceContentTokens.add(t.getCoveredText());
+                }
             }
-        }
         }
 
         double startLoop = System.currentTimeMillis();
@@ -298,6 +311,7 @@ public class ConceptLinkingService
             Set<String> relatedEntities = sig.getRelatedEntities();
             Set<String> signatureOverlap = new HashSet<>();
             for (String s : relatedEntities) {
+                // if(sentenceContentTokens.contains(s) || s.contains(sentenceContentTokens) {
                 if (sentenceContentTokens.contains(s)) {
                     signatureOverlap.add(s);
                 }
@@ -338,7 +352,6 @@ public class ConceptLinkingService
         return builder.toString();
     }
 
-    // TODO filter against blacklist
     private SemanticSignature getSemanticSignature(KnowledgeBase aKB, String wikidataId)
     {
         Set<String> relatedRelations = new HashSet<>();
@@ -349,9 +362,16 @@ public class ConceptLinkingService
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
-                    relatedEntities.add(sol.getValue("label").stringValue());
-                    String p = sol.getValue("p").stringValue();
-                    relatedRelations.add(p.substring(0, p.length() - 2));
+                    String propertyString = sol.getValue("p").stringValue();
+                    String labelString = sol.getValue("label").stringValue();
+                    Property property = propertyWithLabels.get(labelString);
+                    if (propertyBlacklist.contains(propertyString)
+                        || typeBlacklist.contains(property.getType())
+                        || property.getFreq() < frequencyThreshold) {
+                        continue;
+                    }
+                    relatedEntities.add(labelString);
+                    relatedRelations.add(propertyString.substring(0, propertyString.length() - 2));
                 }
             }
             catch (Exception e) {

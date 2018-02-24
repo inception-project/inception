@@ -1,13 +1,13 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
-public class Label
+public class Property
 {
     private String label;
     private String[] altlabel;
     private double freq;
     private String type;
         
-    public Label(String label, String altlabel, String type, String freq)
+    public Property(String label, String altlabel, String type, String freq)
     {
         super();
         this.label = label.trim().toLowerCase();

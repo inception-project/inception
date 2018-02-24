@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 
-import de.tudarmstadt.ukp.inception.conceptlinking.model.Label;
+import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 
 public class Utils
 {
@@ -29,16 +29,16 @@ public class Utils
         return null;
     }
 
-    public static Map<String, Label> loadPropertyLabels(String location)
+    public static Map<String, Property> loadPropertyLabels(String location)
     {
-        Map<String, Label> property2LabelMap = new HashMap<String, Label>();
+        Map<String, Property> property2LabelMap = new HashMap<String, Property>();
         try {
             File f = new File(location);
             List<String> lines = FileUtils.readLines(f, "UTF-8");
             for (String line: lines) {
                 if (!line.startsWith("#")) {
                     String[] col = line.split("\t");
-                    Label label = new Label(col[1], col[3], col[4], col[5]);
+                    Property label = new Property(col[1], col[3], col[4], col[5]);
                     property2LabelMap.put(col[0].trim(), label);
                 }
             }
@@ -69,4 +69,26 @@ public class Utils
         }
         return null;
     }
+    
+    public static Set<String> loadPropertyBlacklist(String filename)
+    {
+        Set<String> propertyBlacklist = new HashSet<>();
+        try {
+            File f = new File(filename);
+            List<String> lines = FileUtils.readLines(f, "UTF-8");
+            for (String line: lines) {
+                if (!line.startsWith("#")) {
+                    String[] col = line.split("\t");
+                    propertyBlacklist.add(col[0]);
+                }
+            }
+            return propertyBlacklist;
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    
 }
