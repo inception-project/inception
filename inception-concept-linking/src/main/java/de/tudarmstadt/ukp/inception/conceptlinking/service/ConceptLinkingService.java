@@ -106,7 +106,7 @@ public class ConceptLinkingService
                     "globe-coordinate", "math", "monolingualtext", "quantity", "string", "url",
                     "wikibase-property" }));
     private final Map<String, Property> propertyWithLabels = 
-            Utils.loadPropertyLabels(WORKING_DIRECTORY + "resources/property_with_labels.txt");
+            Utils.loadPropertyLabels(WORKING_DIRECTORY + "resources/properties_with_labels.txt");
     
     private Map<String, ConceptLinkingUserState> states = new ConcurrentHashMap<>();
     
