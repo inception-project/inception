@@ -571,8 +571,6 @@ public class KnowledgeBaseServiceImpl
             return handles;
         });
 
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-
         return resultList;
     }
 
