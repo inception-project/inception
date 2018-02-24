@@ -120,7 +120,7 @@ public class QueryUtil
         semanticSignatureInst = semanticSignatureInst
                 .replace(" ?p ?m . ?m ?rd ", " ?rd ?m . ?m ?p ");
         query += semanticSignatureInst;
-        query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1");
+        query += SPARQL_CANONICAL_LABEL_ENTITY.replace("?e2", "?e1").replace("%language", "en");
         query += "\n}";
         query = query.replace("%queryvariables%", "?label ?p ?e1");
         query = query.replace("%restriction%", "");
