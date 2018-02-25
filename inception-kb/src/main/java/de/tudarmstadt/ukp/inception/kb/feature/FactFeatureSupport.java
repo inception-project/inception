@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,6 +73,11 @@ public class FactFeatureSupport implements FeatureSupport {
 
         FeatureState featureState = aFeatureStateModel.getObject();
         final FeatureEditor editor;
+
+        if (aFeatureStateModel.getObject().value == null) {
+            aFeatureStateModel.setObject(new FeatureState(aFeatureStateModel.getObject().feature,
+                new ArrayList<>()));
+        }
 
         switch (featureState.feature.getMultiValueMode()) {
             case NONE:
