@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class StatementGroupPanel extends EventListeningPanel {

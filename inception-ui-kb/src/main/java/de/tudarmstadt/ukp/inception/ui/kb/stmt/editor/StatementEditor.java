@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt;
+package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -24,23 +24,21 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.util.WriteProtectionBehavior;
 
 public class StatementEditor extends Panel {
@@ -52,7 +50,7 @@ public class StatementEditor extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBStatement> statement;
+    private CompoundPropertyModel<KBStatement> statement;
     private Component content;
 
     public StatementEditor(String aId, IModel<KnowledgeBase> aKbModel,
@@ -62,7 +60,7 @@ public class StatementEditor extends Panel {
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-        statement = aStatement;
+        statement = CompoundPropertyModel.of(aStatement);
 
         // new statements start with edit mode right away
         boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
@@ -89,11 +87,12 @@ public class StatementEditor extends Panel {
         // floating changes are persisted in the UI, meaning other statements can be added or
         // deleted while changes to this statement in the UI are not being reset.
         KBStatement shallowCopy = new KBStatement(statement.getObject());
-        IModel<KBStatement> shallowCopyModel = Model.of(shallowCopy);
+        CompoundPropertyModel<KBStatement> shallowCopyModel = new CompoundPropertyModel<>(
+                shallowCopy);
 
         EditMode editMode = new EditMode(CONTENT_MARKUP_ID, shallowCopyModel, false);
         content = content.replaceWith(editMode);
-        aTarget.focusComponent(editMode.getFocusComponent());
+//        aTarget.focusComponent(editMode.getFocusComponent());
         aTarget.add(this);
     }
 
@@ -146,20 +145,17 @@ public class StatementEditor extends Panel {
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
-        public ViewMode(String aId, IModel<KBStatement> aStatement) {
-            super(aId, "viewMode", StatementEditor.this, aStatement);
+        public ViewMode(String aId, CompoundPropertyModel<KBStatement> model) {
+            super(aId, "viewMode", StatementEditor.this, model);
 
-            CompoundPropertyModel<KBStatement> compoundModel = new CompoundPropertyModel<>(
-                    aStatement);
-
-            add(new Label("value", compoundModel.bind("value")));
-            add(new Label("language", compoundModel.bind("language")) {
+            add(new Label("value", model.bind("value")));
+            add(new Label("language", model.bind("language")) {
                 private static final long serialVersionUID = 3436068825093393740L;
 
                 @Override
                 protected void onConfigure() {
                     super.onConfigure();
-                    setVisible(isNotEmpty(aStatement.getObject().getLanguage()));
+                    setVisible(isNotEmpty(model.getObject().getLanguage()));
                 }
             });
             
@@ -200,16 +196,17 @@ public class StatementEditor extends Panel {
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
-        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement) {
-            super(aId, "editMode", StatementEditor.this, aStatement);
-
-            Form<KBStatement> form = new Form<>("form", CompoundPropertyModel.of(aStatement));
+        public EditMode(String aId, CompoundPropertyModel<KBStatement> model,
+                boolean isNewStatement)
+        {
+            super(aId, "editMode", StatementEditor.this, model);
+            
+            Form<KBStatement> form = new Form<>("form", model);
 
             // text area for the statement value should receive focus
-            Component valueTextArea = new TextArea<String>("value").add(
-                    new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
-            initialFocusComponent = valueTextArea;
-            form.add(valueTextArea);
+            StringValueEditor valueEditor = new StringValueEditor("value");
+            initialFocusComponent = valueEditor.getFocusComponent();
+            form.add(valueEditor);
 
             // FIXME This field should only be visible if the selected datatype is
             // langString
