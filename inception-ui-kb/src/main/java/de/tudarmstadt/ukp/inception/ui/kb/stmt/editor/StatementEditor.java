@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.net.URI;
+import java.util.Optional;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -31,10 +34,14 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -48,6 +55,8 @@ public class StatementEditor extends Panel {
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
+    
+    private ValueEditorFactory editorFactory = new ValueEditorFactory();
 
     private IModel<KnowledgeBase> kbModel;
     private CompoundPropertyModel<KBStatement> statement;
@@ -196,17 +205,24 @@ public class StatementEditor extends Panel {
          *            whether the statement being edited is new, meaning it has no corresponding
          *            statement in the KB backend
          */
-        public EditMode(String aId, CompoundPropertyModel<KBStatement> model,
-                boolean isNewStatement)
-        {
-            super(aId, "editMode", StatementEditor.this, model);
+        public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement) {
+            super(aId, "editMode", StatementEditor.this, aStatement);
             
-            Form<KBStatement> form = new Form<>("form", model);
-
-            // text area for the statement value should receive focus
-            StringValueEditor valueEditor = new StringValueEditor("value");
-            initialFocusComponent = valueEditor.getFocusComponent();
-            form.add(valueEditor);
+            Form<KBStatement> form = new Form<>("form", CompoundPropertyModel.of(aStatement));
+            
+            // TODO what if the Optional does not exist?
+            
+            // obtain IRI of property range, if existent
+            Optional<KBProperty> property = kbService.readProperty(kbModel.getObject(),
+                    aStatement.getObject().getProperty().getIdentifier());
+            URI uri = property.get().getRange();            
+            ValueFactory factory = SimpleValueFactory.getInstance();
+            IRI propertyIRI = uri == null ? null : factory.createIRI(uri.toString());
+            
+            // use the IRI to obtain the appropriate value editor
+            ValueEditor<?> editor = editorFactory.getValueEditorClass(propertyIRI, "value");
+            initialFocusComponent = editor.getFocusComponent();
+            form.add(editor);
 
             // FIXME This field should only be visible if the selected datatype is
             // langString
@@ -216,13 +232,6 @@ public class StatementEditor extends Panel {
             // restricted to a single type in the property definition - take into account
             // inheritance?
             //form.add(new TextField<>("datatype"));
-
-            // We do not allow the user to change the property
-
-            // FIXME should offer different editors depending on the data type
-            // in particular when the datatype is a concept type, then
-            // it should be possible to select an instance of that concept using some
-            // auto-completing dropdown box
 
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
