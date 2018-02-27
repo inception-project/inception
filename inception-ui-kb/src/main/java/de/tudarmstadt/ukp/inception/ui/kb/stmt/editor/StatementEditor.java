@@ -17,17 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
-import java.net.URI;
-import java.util.Optional;
-
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -35,13 +28,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -59,17 +48,19 @@ public class StatementEditor extends Panel {
     private ValueEditorFactory editorFactory = new ValueEditorFactory();
 
     private IModel<KnowledgeBase> kbModel;
-    private CompoundPropertyModel<KBStatement> statement;
+    private IModel<KBStatement> statement;
+    private IModel<IRI> propertyIri;
     private Component content;
 
     public StatementEditor(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBStatement> aStatement) {
+            IModel<KBStatement> aStatement, IModel<IRI> aPropertyIri) {
         super(aId, aStatement);
 
         setOutputMarkupId(true);
 
         kbModel = aKbModel;
-        statement = CompoundPropertyModel.of(aStatement);
+        statement = aStatement;
+        propertyIri = aPropertyIri;
 
         // new statements start with edit mode right away
         boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
@@ -154,19 +145,14 @@ public class StatementEditor extends Panel {
     private class ViewMode extends Fragment {
         private static final long serialVersionUID = 2375450134740203778L;
 
-        public ViewMode(String aId, CompoundPropertyModel<KBStatement> model) {
-            super(aId, "viewMode", StatementEditor.this, model);
+        public ViewMode(String aId, IModel<KBStatement> aStatement) {
+            super(aId, "viewMode", StatementEditor.this, aStatement);
 
-            add(new Label("value", model.bind("value")));
-            add(new Label("language", model.bind("language")) {
-                private static final long serialVersionUID = 3436068825093393740L;
-
-                @Override
-                protected void onConfigure() {
-                    super.onConfigure();
-                    setVisible(isNotEmpty(model.getObject().getLanguage()));
-                }
-            });
+            CompoundPropertyModel<KBStatement> model = new CompoundPropertyModel<>(
+                    aStatement);
+            ValuePresenter<?> presenter = editorFactory.getValuePresenter(propertyIri.getObject(),
+                    "value", model.bind("value"));
+            add(presenter);
             
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
@@ -207,26 +193,14 @@ public class StatementEditor extends Panel {
          */
         public EditMode(String aId, IModel<KBStatement> aStatement, boolean isNewStatement) {
             super(aId, "editMode", StatementEditor.this, aStatement);
-            
-            Form<KBStatement> form = new Form<>("form", CompoundPropertyModel.of(aStatement));
-            
-            // TODO what if the Optional does not exist?
-            
-            // obtain IRI of property range, if existent
-            Optional<KBProperty> property = kbService.readProperty(kbModel.getObject(),
-                    aStatement.getObject().getProperty().getIdentifier());
-            URI uri = property.get().getRange();            
-            ValueFactory factory = SimpleValueFactory.getInstance();
-            IRI propertyIRI = uri == null ? null : factory.createIRI(uri.toString());
-            
+            CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
+            Form<KBStatement> form = new Form<>("form", model);
+                       
             // use the IRI to obtain the appropriate value editor
-            ValueEditor<?> editor = editorFactory.getValueEditorClass(propertyIRI, "value");
+            ValueEditor<?> editor = editorFactory.getValueEditor(propertyIri.getObject(),
+                    "value", model.bind("value"));
             initialFocusComponent = editor.getFocusComponent();
             form.add(editor);
-
-            // FIXME This field should only be visible if the selected datatype is
-            // langString
-            form.add(new TextField<>("language"));
 
             // FIXME Selection of the data type should only be possible if it is not
             // restricted to a single type in the property definition - take into account

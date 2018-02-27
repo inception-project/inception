@@ -17,18 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
-import org.apache.wicket.markup.html.form.FormComponentPanel;
-import org.eclipse.rdf4j.model.Value;
+import org.apache.wicket.Component;
+import org.eclipse.rdf4j.model.Literal;
 
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.Focusable;
+public class NumberValueEditor extends ValueEditor<Literal> {
 
-public abstract class ValueEditor<T extends Value> extends FormComponentPanel<T>
-        implements Focusable {
+    private static final long serialVersionUID = -7076244800070117109L;
 
-    private static final long serialVersionUID = 6386684203515199433L;
-
-    public ValueEditor(String id) {
+    public NumberValueEditor(String id) {
         super(id);
+    }
+
+    @Override
+    public Component getFocusComponent() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

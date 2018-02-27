@@ -22,15 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.util.URIUtil;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 public class KBStatement implements Serializable
@@ -44,10 +41,7 @@ public class KBStatement implements Serializable
     private KBHandle property;
 
     // Object
-    private Object value;
-
-    // Language
-    private String language;
+    private Value value;
 
     private boolean inferred;
 
@@ -61,7 +55,6 @@ public class KBStatement implements Serializable
     {
         this.inferred = other.inferred;
         this.instance = other.instance;
-        this.language = other.language;
         this.originalStatements = other.originalStatements;
         this.property = other.property;
         this.value = other.value;
@@ -69,23 +62,15 @@ public class KBStatement implements Serializable
 
     public static KBStatement read(KBHandle aInstance, KBHandle aProperty, Statement aStmt)
     {
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
         KBStatement kbStmt = new KBStatement();
         kbStmt.originalStatements.add(aStmt);
         kbStmt.setInstance(aInstance);
-        kbStmt.setProperty(aProperty);
-        if (aStmt.getObject() instanceof Literal) {
-            Literal litValue = (Literal) aStmt.getObject();
-            kbStmt.setLanguage(litValue.getLanguage().orElse(null));
-            kbStmt.setValue((Serializable) mapper.getJavaObject(litValue));
-        }
-        else if (aStmt.getObject() instanceof IRI) {
+        kbStmt.setProperty(aProperty);       
+        if (aStmt.getObject() instanceof Literal || aStmt.getObject() instanceof IRI) {
             kbStmt.setValue(aStmt.getObject());
-        }
-        else if (aStmt.getObject() instanceof BNode) {
+        } else if (aStmt.getObject() instanceof BNode) {
             kbStmt.setValue(null);
-        }
-        else {
+        } else {
             throw new IllegalStateException("Unknown object type: " + aStmt.getObject().getClass());
         }
         return kbStmt;
@@ -116,19 +101,9 @@ public class KBStatement implements Serializable
         return value;
     }
 
-    public void setValue(Object aValue)
+    public void setValue(Value aValue)
     {
         value = aValue;
-    }
-
-    public String getLanguage()
-    {
-        return language;
-    }
-
-    public void setLanguage(String aLanguage)
-    {
-        language = aLanguage;
     }
     
     public boolean isInferred()
@@ -151,21 +126,7 @@ public class KBStatement implements Serializable
         ValueFactory vf = conn.getValueFactory();
         IRI subject = vf.createIRI(instance.getIdentifier());
         IRI predicate = vf.createIRI(property.getIdentifier());
-
-        Value object;
-        if (value instanceof IRI) {
-            object = (IRI) value;
-        } else if (URIUtil.isValidURIReference((String) value)) {
-            object = vf.createIRI((String) value);
-        }
-        else if (language != null) {
-            object = vf.createLiteral((String) value, language);
-        }
-        else {
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
-            object = mapper.getRDFValue(value, vf);
-        }
-
+        Value object = value;
         return vf.createStatement(subject, predicate, object);
     }
 
@@ -183,7 +144,6 @@ public class KBStatement implements Serializable
         return new ToStringBuilder(this).append("instance", instance)
             .append("property", property)
             .append("value", value)
-            .append("language", language)
             .append("inferred", inferred)
             .append("originalStatements", originalStatements)
             .toString();

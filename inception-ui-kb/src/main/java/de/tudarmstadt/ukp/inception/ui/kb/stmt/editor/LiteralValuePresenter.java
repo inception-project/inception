@@ -17,60 +17,45 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.editor;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.markup.html.form.TextArea;
-import org.apache.wicket.markup.html.form.TextField;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+public class LiteralValuePresenter extends ValuePresenter<Literal> {
 
-public class StringValueEditor extends ValueEditor<Literal> {
-
-    private static final long serialVersionUID = 6935837930064826698L;
+    private static final long serialVersionUID = -6774637988828817203L;
     
     private IModel<Literal> model;
     private IModel<String> value;
     private IModel<String> language;
-    
-    private Component focusComponent;
 
-    public StringValueEditor(String id, IModel<Literal> model) {
-        super(id);
+    public LiteralValuePresenter(String id, IModel<Literal> model) {
+        super(id, model);
         
         this.model = model;
+        
         value = Model.of();
         language = Model.of();
         
-        TextArea<String> valueField = new TextArea<>("value", value);
-        valueField.setOutputMarkupId(true);
-        valueField.add(
-                new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
-        add(valueField);
-        focusComponent = valueField;
-        
-        add(new TextField<>("language", language));
-    }
+        add(new Label("value", value));
+        add(new Label("language", language) {
+            private static final long serialVersionUID = 3436068825093393740L;
 
-    @Override
-    public void convertInput() {
-        String text = value.getObject();
-        String lang = language.getObject();
-        
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        Literal literal = vf.createLiteral(text, lang);
-        
-        setConvertedInput(literal);
+            @Override
+            protected void onConfigure() {
+                super.onConfigure();
+                String language = (String) this.getDefaultModelObject();
+                setVisible(StringUtils.isNotEmpty(language));
+            }
+        });
     }
     
     @Override
     protected void onBeforeRender() {
-        // TODO STRAIGHT COPY PASTE FROM PRESENTER
         Object object = this.model.getObject();
         
         // if the model provides what it promises
@@ -87,11 +72,6 @@ public class StringValueEditor extends ValueEditor<Literal> {
             // TODO "wrong statement" notice
         }  
         super.onBeforeRender();
-    }
-
-    @Override
-    public Component getFocusComponent() {
-        return focusComponent;
     }
 
 }

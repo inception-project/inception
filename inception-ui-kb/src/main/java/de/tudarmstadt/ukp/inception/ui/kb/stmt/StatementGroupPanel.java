@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,12 +43,16 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.kb.EventListeningPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxEvent;
@@ -180,6 +186,22 @@ public class StatementGroupPanel extends EventListeningPanel {
             propertyLink.add(new Label("property", groupModel.bind("property.uiLabel")));
             form.add(propertyLink);
 
+            // obtain IRI of property range, if existent
+            Optional<KBProperty> property = kbService.readProperty(groupModel.getObject().getKb(),
+                    groupModel.getObject().getProperty().getIdentifier());
+            IRI propertyIRI;
+            if (!property.isPresent() || property.get().getRange() == null) {
+                // if the property can't be found (this has happened for British Museum) or if the
+                // range is undefined, use null 
+                propertyIRI = null;
+            } else {
+                // otherwise, obtain the IRI
+                URI uri = property.get().getRange();
+                ValueFactory factory = SimpleValueFactory.getInstance();
+                propertyIRI = factory.createIRI(uri.toString());
+            }            
+            IModel<IRI> propertyIriModel = Model.of(propertyIRI);
+
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
                 private static final long serialVersionUID = 5811425707843441458L;
@@ -198,7 +220,7 @@ public class StatementGroupPanel extends EventListeningPanel {
                 @Override
                 protected void populateItem(Item<KBStatement> aItem) {
                     StatementEditor editor = new StatementEditor("statement",
-                            groupModel.bind("kb"), aItem.getModel());
+                            groupModel.bind("kb"), aItem.getModel(), propertyIriModel);
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }

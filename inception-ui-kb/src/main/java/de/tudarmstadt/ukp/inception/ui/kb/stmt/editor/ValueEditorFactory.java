@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.slf4j.Logger;
@@ -47,6 +48,14 @@ public class ValueEditorFactory implements Serializable {
 //        EDITOR_MAP.put(BigDecimal.class, XMLSchema.DECIMAL);
 //        EDITOR_MAP.put(java.net.URI.class, XMLSchema.ANYURI);
     }
+    
+    private static final Map<IRI, Class<? extends ValuePresenter<?>>> PRESENTER_MAP = 
+            new HashMap<>();
+    
+    static {
+        PRESENTER_MAP.put(XMLSchema.STRING, LiteralValuePresenter.class);
+    }
+    
 
     public ValueEditorFactory() {
     }
@@ -63,18 +72,38 @@ public class ValueEditorFactory implements Serializable {
      *            Wicket markup id received by the editor instances
      * @return a {@link ValueEditor} instance
      */
-    public ValueEditor<?> getValueEditorClass(IRI datatype, String id) {
+    public ValueEditor<?> getValueEditor(IRI datatype, String id, IModel model) {
         if (datatype == null || !EDITOR_MAP.containsKey(datatype)) {
-            return new StringValueEditor(id);
+            return new StringValueEditor(id, model);
         } else {
             try {
-                return EDITOR_MAP.get(datatype).getConstructor(String.class).newInstance(id);
+                return EDITOR_MAP.get(datatype).getConstructor(String.class, IModel.class)
+                        .newInstance(id, model);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                 LOGGER.error("Value editor instantiation failed.", e);
                 throw new IllegalStateException(e);
             }
         }
+    }
+    
+    public ValuePresenter getValuePresenter(IRI datatype, String id, IModel model) {
+        if (datatype == null) {
+            return new LiteralValuePresenter(id, model);
+        }
 
+        if (!PRESENTER_MAP.containsKey(datatype)) {
+            return new IRIValuePresenter<>(id, model);
+        } else {
+            try {
+                return PRESENTER_MAP.get(datatype)
+                        .getConstructor(String.class, IModel.class)
+                        .newInstance(id, model);
+            } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                    | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                LOGGER.error("Value presenter instantiation failed.", e);
+                throw new IllegalStateException(e);
+            }
+        }
     }
 }
