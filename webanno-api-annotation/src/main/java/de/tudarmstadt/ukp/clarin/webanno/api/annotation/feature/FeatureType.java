@@ -23,19 +23,16 @@ public class FeatureType
     implements Serializable
 {
     private static final long serialVersionUID = 5538322359085905396L;
-    
-    private String name;
-    private String uiName;
 
-    public FeatureType(String aName)
-    {
-        name = aName;
-    }
+    private final String name;
+    private final String uiName;
+    private final String featureSupportId;
 
-    public FeatureType(String aName, String aUiName)
+    public FeatureType(String aName, String aUiName, String aFeatureSupportId)
     {
         name = aName;
         uiName = aUiName;
+        featureSupportId = aFeatureSupportId;
     }
 
     public String getName()
@@ -47,12 +44,18 @@ public class FeatureType
     {
         return uiName;
     }
+    
+    public String getFeatureSupportId()
+    {
+        return featureSupportId;
+    }
 
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((featureSupportId == null) ? 0 : featureSupportId.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         return result;
     }
@@ -70,6 +73,14 @@ public class FeatureType
             return false;
         }
         FeatureType other = (FeatureType) obj;
+        if (featureSupportId == null) {
+            if (other.featureSupportId != null) {
+                return false;
+            }
+        }
+        else if (!featureSupportId.equals(other.featureSupportId)) {
+            return false;
+        }
         if (name == null) {
             if (other.name != null) {
                 return false;

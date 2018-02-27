@@ -107,4 +107,11 @@ public class FeatureSupportRegistryImpl
         
         return support;
     }
+    
+    @Override
+    public FeatureSupport getFeatureSupport(String aId)
+    {
+        return getFeatureSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
+                .orElse(null);
+    }
 }

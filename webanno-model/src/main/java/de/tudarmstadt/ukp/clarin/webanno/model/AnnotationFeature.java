@@ -393,7 +393,10 @@ public class AnnotationFeature
     /**
      * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
      * must be mapped to a plain UIMA type (usually to String).
+     * 
+     * @deprecated This method should no longer be used. There is no direct replacement.
      */
+    @Deprecated
     public boolean isVirtualFeature()
     {
         return getType().contains(":");

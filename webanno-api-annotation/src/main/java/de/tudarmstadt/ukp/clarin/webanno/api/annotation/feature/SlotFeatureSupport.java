@@ -22,7 +22,15 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.text.WordUtils;
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
@@ -34,8 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEd
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -45,6 +57,20 @@ public class SlotFeatureSupport
 {
     private @Resource AnnotationSchemaService annotationService;
 
+    private String featureSupportId;
+    
+    @Override
+    public String getId()
+    {
+        return featureSupportId;
+    }
+    
+    @Override
+    public void setBeanName(String aBeanName)
+    {
+        featureSupportId = aBeanName;
+    }
+    
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
@@ -65,12 +91,12 @@ public class SlotFeatureSupport
 
                 if (spanLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
                     types.add(new FeatureType(spanLayer.getName(), 
-                            "Link: " + spanLayer.getUiName()));
+                            "Link: " + spanLayer.getUiName(), featureSupportId));
                 }
             }
             
             // Also allow the user to use any annotation type as slot filler
-            types.add(new FeatureType(CAS.TYPE_NAME_ANNOTATION, "Link: <Any>"));
+            types.add(new FeatureType(CAS.TYPE_NAME_ANNOTATION, "Link: <Any>", featureSupportId));
         }
         
         return types;
@@ -119,5 +145,63 @@ public class SlotFeatureSupport
         }
         
         return editor;
+    }
+    
+    @Override
+    public void configureFeature(AnnotationFeature aFeature)
+    {
+        // Set properties of link features since these are currently not configurable in the UI
+        aFeature.setMode(MultiValueMode.ARRAY);
+        aFeature.setLinkMode(LinkMode.WITH_ROLE);
+        aFeature.setLinkTypeRoleFeatureName("role");
+        aFeature.setLinkTypeTargetFeatureName("target");
+        aFeature.setLinkTypeName(aFeature.getLayer().getName()
+                + WordUtils.capitalize(aFeature.getName()) + "Link");
+    }
+    
+    @Override
+    public boolean isTagsetSupported(AnnotationFeature aFeature)
+    {
+        return true;
+    }
+    
+    @Override
+    public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature)
+    {
+        // Link type
+        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
+                CAS.TYPE_NAME_TOP);
+        linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
+        linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+        // Link feature
+        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
+                false);
+    }
+    
+    @Override
+    public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        // Get type and features - we need them later in the loop
+        Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        Type linkType = aFS.getCAS().getTypeSystem().getType(aFeature.getLinkTypeName());
+        Feature roleFeat = linkType.getFeatureByBaseName(aFeature
+                .getLinkTypeRoleFeatureName());
+        Feature targetFeat = linkType.getFeatureByBaseName(aFeature
+                .getLinkTypeTargetFeatureName());
+
+        List<LinkWithRoleModel> links = new ArrayList<>();
+        ArrayFS array = (ArrayFS) aFS.getFeatureValue(linkFeature);
+        if (array != null) {
+            for (FeatureStructure link : array.toArray()) {
+                LinkWithRoleModel m = new LinkWithRoleModel();
+                m.role = link.getStringValue(roleFeat);
+                m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
+                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
+                        .getCoveredText();
+                links.add(m);
+            }
+        }
+        return (T) links;
     }
 }
