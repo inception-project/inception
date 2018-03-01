@@ -3613,7 +3613,12 @@ Util.profileStart('chunkFinish');
           var textHighlight = svg.rect(highlightGroup,
               textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
               textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
+// WEBANNO EXTENSION BEGIN - #876 - Add ability to highlight text in brat view
+/*          
               { fill: 'yellow' } // TODO: put into css file, as default - turn into class
+*/
+              { fill: 'skyblue', 'class': 'animated flash' }
+// WEBANNO EXTENSION END - #876 - Add ability to highlight text in brat view
           );
           // NOTE: changing highlightTextSequence here will give
           // different-colored highlights

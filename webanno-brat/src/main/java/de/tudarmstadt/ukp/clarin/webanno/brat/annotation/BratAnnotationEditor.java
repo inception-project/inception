@@ -54,6 +54,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.zjsonpatch.JsonDiff;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
+import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
@@ -436,6 +437,8 @@ public class BratAnnotationEditor
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
+        aResponse.render(CssHeaderItem
+                .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
                 
         // Libraries
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
