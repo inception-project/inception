@@ -170,22 +170,18 @@ public class MergeCas
                 int fsBegin = ((AnnotationFS) fs).getBegin();
                 int fsEnd = ((AnnotationFS) fs).getEnd();
                 if (type.getName().equals(POS.class.getName())) {
-                    mergeCas.removeFsFromIndexes(fs);
                     Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
                     t.setPos(null);
                 }
                 if (type.getName().equals(Stem.class.getName())) {
-                    mergeCas.removeFsFromIndexes(fs);
                     Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
                     t.setStem(null);
                 }
                 if (type.getName().equals(Lemma.class.getName())) {
-                    mergeCas.removeFsFromIndexes(fs);
                     Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
                     t.setLemma(null);
                 }
                 if (type.getName().equals(MorphologicalFeatures.class.getName())) {
-                    mergeCas.removeFsFromIndexes(fs);
                     Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
                     t.setMorph(null);
                 }
