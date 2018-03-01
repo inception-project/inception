@@ -34,6 +34,8 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -62,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
@@ -567,8 +570,16 @@ public class BratAnnotationEditor
     {
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
         
+        // Fire render event into backend
+        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
+
+        // Fire render event into UI
+        send(getPage(), Broadcast.BREADTH,
+                new RenderAnnotationsEvent(
+                        RequestCycle.get().find(IPartialPageRequestHandler.class), aJCas,
+                        getModelObject(), vdoc));
+
         if (isHighlightEnabled()) {
             AnnotatorState state = getModelObject();
             
