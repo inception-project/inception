@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -15,6 +18,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
@@ -68,6 +72,8 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
         content.setOutputMarkupId(true);
         add(content);
 
+        //FactFeatureSubjectEditor.this.getModelObject().feature.setMode(MultiValueMode.ARRAY);
+        //FactFeatureSubjectEditor.this.getModelObject().feature.setType(SemArg.class.getName());
         FactFeatureSubjectEditor.this.getModelObject().feature.setLinkMode(LinkMode.WITH_ROLE);
         FactFeatureSubjectEditor.this.getModelObject().feature.setLinkTypeName(SemArgLink.class.getName());
         FactFeatureSubjectEditor.this.getModelObject().feature.setLinkTypeRoleFeatureName("role");
@@ -91,13 +97,7 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
     private Label createSubjectLabel() {
         AnnotatorState state = stateModel.getObject();
         final Label label;
-        if (subjectModel.targetAddr == -1
-            && state.isArmedSlot(getModelObject().feature, 0)) {
-            label = new Label("label", "<Select to fill>");
-        }
-        else {
-            label = new Label("label");
-        }
+        label = new Label("label", LambdaModel.of(this::getSelectionSlotLabel));
         label.add(new AjaxEventBehavior("click")
         {
             private static final long serialVersionUID = 7633309278417475424L;
@@ -123,6 +123,9 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
                 }
             }
         }));
+        if (!state.isArmedSlot(getModelObject().feature, 0)) {
+            label.setDefaultModelObject(subjectModel.label);
+        }
         return  label;
     }
 
@@ -141,6 +144,17 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
         return field;
     }
 
+    private String getSelectionSlotLabel()
+    {
+        if (subjectModel.targetAddr == -1
+            && stateModel.getObject().isArmedSlot(getModelObject().feature, 0)) {
+            return "<Select to fill>";
+        }
+        else {
+            return subjectModel.label;
+        }
+    }
+
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
     {
@@ -152,9 +166,7 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
         }
         else {
             state.setArmedSlot(getModelObject().feature, 0);
-            // Need to re-render the whole form because a slot in another
-            // link editor might get unarmed
-            aTarget.add(getOwner());
+            aTarget.add(content);
         }
     }
 
