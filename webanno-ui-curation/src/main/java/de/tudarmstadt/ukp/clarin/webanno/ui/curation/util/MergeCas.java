@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
@@ -185,6 +186,11 @@ public class MergeCas
                     megerCas.removeFsFromIndexes(fs);
                     Token t = JCasUtil.selectCovered(megerCas, Token.class, fsBegin, fsEnd).get(0);
                     t.setLemma(null);
+                }
+                if (type.getName().equals(MorphologicalFeatures.class.getName())) {
+                    megerCas.removeFsFromIndexes(fs);
+                    Token t = JCasUtil.selectCovered(megerCas, Token.class, fsBegin, fsEnd).get(0);
+                    t.setMorph(null);
                 }
                 megerCas.removeFsFromIndexes(fs);
             }
