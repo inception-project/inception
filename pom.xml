@@ -29,6 +29,7 @@
   <name>WebAnno</name>
   <url>https://webanno.github.io/</url>
   <inceptionYear>2012</inceptionYear>
+  <description>WebAnno is a general purpose web-based annotation tool for a wide range of linguistic annotations including various layers of morphological, syntactical, and semantic annotations.Additionaly, custom annotation layers can be defined, allowing WebAnno to be used also for non-linguistic annotation tasks.</description>
   <licenses>
     <license>
       <name>Apache License Version 2.0</name>
