@@ -8,23 +8,42 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Stream;
+
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 /**
  *  To create 3 kinds of editors based on the feature's type:
  *      Fact:subject, Fact:predicate, Fact:object
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Component
 public class FactFeatureSupport implements FeatureSupport {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Resource
+    private KnowledgeBaseService kbService;
 
 
     private static final String PREFIX = "Fact";
@@ -68,6 +87,59 @@ public class FactFeatureSupport implements FeatureSupport {
     }
 
     @Override
+    public String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs,
+                                     Feature aLabelFeature)
+    {
+        try {
+            String value = aFs.getFeatureValueAsString(aLabelFeature);
+            String renderValue = null;
+            if (value != null) {
+                // FIXME Since this might be called very often during rendering, it *might* be
+                // worth to set up an LRU cache instead of relying on the performance of the
+                // underlying KB store.
+                renderValue = kbService.getKnowledgeBases(aFeature.getProject())
+                    .stream()
+                    .map(k -> kbService.readProperty(k, value))
+                    .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
+                    .map(KBProperty::getUiLabel)
+                    .findAny()
+                    .orElseThrow(NoSuchElementException::new);
+            }
+            return renderValue;
+        }
+        catch (Exception e) {
+            logger.error("Unable to render feature value", e);
+            return "ERROR";
+        }
+    }
+
+    @Override
+    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    {
+        KBHandle kbProperty = (KBHandle) aValue;
+        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        setFeature(fs, aFeature, kbProperty != null ? kbProperty.getIdentifier() : null);
+    }
+
+    @Override
+    public KBHandle getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        String value = (String) FeatureSupport.super.getFeatureValue(aFeature, aFs);
+        if (value != null) {
+            KBProperty property = kbService.getKnowledgeBases(aFeature.getProject())
+                .stream()
+                .map(k -> kbService.readProperty(k, value))
+                .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
+                .findAny()
+                .orElseThrow(() -> new NoSuchElementException());
+            return new KBHandle(property.getIdentifier(), property.getName());
+        }
+        else {
+            return null;
+        }
+    }
+
+    @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
                                       IModel<AnnotatorState> aStateModel, IModel<FeatureState> aFeatureStateModel) {
 
@@ -102,7 +174,11 @@ public class FactFeatureSupport implements FeatureSupport {
                 }
                 break;
             case ARRAY:
-                throw unsupportedLinkModeException(featureState);
+                switch (featureState.feature.getType()) {
+
+                    default:
+                        throw unsupportedLinkModeException(featureState);
+                }
             default:
                 throw unsupportedMultiValueModeException(featureState);
         }
