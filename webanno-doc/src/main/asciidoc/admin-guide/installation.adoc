@@ -121,14 +121,12 @@ database.username=webanno
 database.password=t0t4llYSecreT
 
 # 60 * 60 * 24 * 30 = 30 days
-backup.keep.time=1000000
+backup.keep.time=2592000
 
 # 60 * 5 = 5 minutes
-backup.interval=1000
+backup.interval=300
 
 backup.keep.number=10
-
-ui.brat.sentences.number = 5
 ----
 +
 * Fix permissions in WebAnno home folder
@@ -180,7 +178,7 @@ $ chown root:root /srv/webanno/webanno.conf
 +
 * Change the owner/group of `/srv/webanno/webanno.jar` to `www-data`. When the service is started,
   it will run with the privileges of the user that owns the JAR file, i.e. in this case WebAnno
-  will run as under the `www-data` user.
+  will run as under the `www-data` user. **Do NOT run WebAnno as root.**
 +
 [source,bash]
 ----
@@ -192,6 +190,13 @@ $ chown www-data:www-data /srv/webanno/webanno.jar
 [source,bash]
 ----
 $ ln -s /srv/webanno/webanno.jar /etc/init.d/webanno
+----
++
+* Enable the WebAnno service using
++
+[source,bash]
+----
+$ systemctl enable webanno
 ----
 +
 * Start WebAnno using
