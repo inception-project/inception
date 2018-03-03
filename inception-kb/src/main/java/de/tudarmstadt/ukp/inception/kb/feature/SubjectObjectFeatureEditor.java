@@ -1,12 +1,26 @@
+/*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.kb.feature;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -18,7 +32,6 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
@@ -29,17 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-/**
- *
- */
-public class FactFeatureSubjectEditor extends FeatureEditor {
+public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private static final long serialVersionUID = 4230722501745589589L;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -53,13 +61,14 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
     private IModel<AnnotatorState> stateModel;
 
     @SuppressWarnings("unused")
-    private String newRole = "subj";
     private LinkWithRoleModel subjectModel;
 
     private @SpringBean KnowledgeBaseService kbService;
 
-    public FactFeatureSubjectEditor(String aId, MarkupContainer aOwner, AnnotationActionHandler aHandler,
-                                    final IModel<AnnotatorState> aStateModel, final IModel<FeatureState> aFeatureStateModel) {
+    public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
+                                      AnnotationActionHandler aHandler,
+                                      final IModel<AnnotatorState> aStateModel,
+                                      final IModel<FeatureState> aFeatureStateModel, String role) {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
         stateModel = aStateModel;
@@ -72,22 +81,16 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
         content.setOutputMarkupId(true);
         add(content);
 
-        //FactFeatureSubjectEditor.this.getModelObject().feature.setMode(MultiValueMode.ARRAY);
-        //FactFeatureSubjectEditor.this.getModelObject().feature.setType(SemArg.class.getName());
-        FactFeatureSubjectEditor.this.getModelObject().feature.setLinkMode(LinkMode.WITH_ROLE);
-        FactFeatureSubjectEditor.this.getModelObject().feature.setLinkTypeName(SemArgLink.class.getName());
-        FactFeatureSubjectEditor.this.getModelObject().feature.setLinkTypeRoleFeatureName("role");
-        FactFeatureSubjectEditor.this.getModelObject().feature.setLinkTypeTargetFeatureName("target");
 
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) FactFeatureSubjectEditor.this
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
             .getModelObject().value;
 
-        AnnotatorState state = FactFeatureSubjectEditor.this.stateModel.getObject();
+        AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
 
         subjectModel = new LinkWithRoleModel();
-        subjectModel.role = newRole;
+        subjectModel.role = role;
         links.add(subjectModel);
-        state.setArmedSlot(FactFeatureSubjectEditor.this.getModelObject().feature, links.size() - 1);
+        state.setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
 
         content.add(new Label("role", subjectModel.role));
         content.add(createSubjectLabel());
@@ -126,7 +129,7 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
         if (!state.isArmedSlot(getModelObject().feature, 0)) {
             label.setDefaultModelObject(subjectModel.label);
         }
-        return  label;
+        return label;
     }
 
     private DropDownList<KBHandle> createFieldComboBox()
@@ -158,7 +161,7 @@ public class FactFeatureSubjectEditor extends FeatureEditor {
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = FactFeatureSubjectEditor.this.stateModel.getObject();
+        AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
 
         if (state.isArmedSlot(getModelObject().feature, 0)) {
             state.clearArmedSlot();
