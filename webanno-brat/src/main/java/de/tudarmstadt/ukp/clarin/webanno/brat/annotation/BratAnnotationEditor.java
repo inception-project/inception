@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotat
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -123,6 +124,7 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean BratMetrics metrics;
+    private @SpringBean BratProperties bratProperties;
     
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -236,7 +238,7 @@ public class BratAnnotationEditor
                                 result = actionArc(aTarget, request, jCas, paramId);
                             }
                             else if (LoadConfResponse.is(action)) {
-                                result = new LoadConfResponse();
+                                result = new LoadConfResponse(bratProperties);
                             }
                             else if (GetCollectionInformationResponse.is(action)) {
                                 result = actionGetCollectionInformation();
