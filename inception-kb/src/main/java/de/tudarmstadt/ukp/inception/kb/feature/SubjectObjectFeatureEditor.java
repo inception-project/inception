@@ -61,7 +61,7 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     private IModel<AnnotatorState> stateModel;
 
     @SuppressWarnings("unused")
-    private LinkWithRoleModel subjectModel;
+    private LinkWithRoleModel roleModel;
 
     private @SpringBean KnowledgeBaseService kbService;
 
@@ -85,14 +85,16 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
             .getModelObject().value;
 
-        AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
+        if (links.size() == 0) {
+            AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
 
-        subjectModel = new LinkWithRoleModel();
-        subjectModel.role = role;
-        links.add(subjectModel);
-        state.setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
+            roleModel = new LinkWithRoleModel();
+            roleModel.role = role;
+            links.add(roleModel);
+            state.setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
+        }
 
-        content.add(new Label("role", subjectModel.role));
+        content.add(new Label("role", roleModel.role));
         content.add(createSubjectLabel());
         content.add(focusComponent = createFieldComboBox());
     }
@@ -127,7 +129,7 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
             }
         }));
         if (!state.isArmedSlot(getModelObject().feature, 0)) {
-            label.setDefaultModelObject(subjectModel.label);
+            label.setDefaultModelObject(roleModel.label);
         }
         return label;
     }
@@ -149,12 +151,12 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private String getSelectionSlotLabel()
     {
-        if (subjectModel.targetAddr == -1
+        if (roleModel.targetAddr == -1
             && stateModel.getObject().isArmedSlot(getModelObject().feature, 0)) {
             return "<Select to fill>";
         }
         else {
-            return subjectModel.label;
+            return roleModel.label;
         }
     }
 
@@ -176,5 +178,20 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
     @Override
     public Component getFocusComponent() {
         return focusComponent;
+    }
+
+    @Override
+    public void onConfigure() {
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+        if (links.size() == 0) {
+            String role = roleModel.role;
+            roleModel = new LinkWithRoleModel();
+            roleModel.role = role;
+            links.add(roleModel);
+            this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
+                .getModelObject().feature, 0);
+        } else {
+            roleModel = links.get(0);
+        }
     }
 }

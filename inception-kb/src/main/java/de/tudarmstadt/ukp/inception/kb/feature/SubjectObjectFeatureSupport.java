@@ -88,11 +88,6 @@ public class SubjectObjectFeatureSupport implements FeatureSupport {
         FeatureState featureState = aFeatureStateModel.getObject();
         final FeatureEditor editor;
 
-        if (aFeatureStateModel.getObject().value == null) {
-            aFeatureStateModel.setObject(new FeatureState(aFeatureStateModel.getObject().feature,
-                new ArrayList<>()));
-        }
-
         switch (featureState.feature.getMultiValueMode()) {
         case ARRAY:
             switch (featureState.feature.getLinkMode()) {
