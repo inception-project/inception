@@ -59,6 +59,7 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
+    private IModel<KBHandle> kBItems;
 
     @SuppressWarnings("unused")
     private LinkWithRoleModel roleModel;
@@ -136,7 +137,15 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     private DropDownList<KBHandle> createFieldComboBox()
     {
-        DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
+//        DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
+//            AnnotationFeature feat = getModelObject().feature;
+//            List<KBHandle> handles = new LinkedList<>();
+//            for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
+//                handles.addAll(kbService.listConcepts(kb, true));
+//            }
+//            return new ArrayList<>(handles);
+//        }), new ChoiceRenderer<>("uiLabel"));
+        DropDownList<KBHandle> field = new DropDownList<>("value", kBItems, LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;
             List<KBHandle> handles = new LinkedList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
