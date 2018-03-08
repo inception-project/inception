@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.OrderComparator;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -59,7 +59,7 @@ public class AnnotationSidebarRegistryImpl
 
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
-            OrderComparator.sort(exts);
+            AnnotationAwareOrderComparator.sort(exts);
         
             for (AnnotationSidebarFactory fs : exts) {
                 log.info("Found annotation sidebar extension: {}",
