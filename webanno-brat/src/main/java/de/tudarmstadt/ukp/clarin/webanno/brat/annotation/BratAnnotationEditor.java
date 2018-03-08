@@ -31,9 +31,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
@@ -580,7 +582,11 @@ public class BratAnnotationEditor
         extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
 
         // Fire render event into UI
-        send(getPage(), Broadcast.BREADTH,
+        Page page = (Page) RequestCycle.get().find(IPageRequestHandler.class).getPage();
+        if (page == null) {
+            page = getPage();
+        }
+        send(page, Broadcast.BREADTH,
                 new RenderAnnotationsEvent(
                         RequestCycle.get().find(IPartialPageRequestHandler.class), aJCas,
                         getModelObject(), vdoc));
