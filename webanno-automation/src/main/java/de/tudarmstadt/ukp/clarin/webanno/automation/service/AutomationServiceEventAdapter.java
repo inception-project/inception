@@ -44,6 +44,10 @@ public class AutomationServiceEventAdapter
             service.removeTrainingDocument(document);
         }
         for (MiraTemplate template : service.listMiraTemplates(project)) {
+           // remove associated TRAIN and OTHER features from the Mira Template
+            template.setTrainFeature(null);
+            template.setOtherFeatures(null);
+            
             service.removeMiraTemplate(template);
         }
     }
