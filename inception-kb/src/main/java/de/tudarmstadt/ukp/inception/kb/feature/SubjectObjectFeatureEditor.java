@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb.feature;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -41,7 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEd
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -86,13 +93,10 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
             .getModelObject().value;
 
-        if (links.size() == 0) {
-            AnnotatorState state = SubjectObjectFeatureEditor.this.stateModel.getObject();
-
-            roleModel = new LinkWithRoleModel();
-            roleModel.role = role;
-            links.add(roleModel);
-            state.setArmedSlot(SubjectObjectFeatureEditor.this.getModelObject().feature, 0);
+        roleModel = new LinkWithRoleModel();
+        roleModel.role = role;
+        if (links.size() == 1) {
+            roleModel = links.get(0);
         }
 
         content.add(new Label("role", roleModel.role));
@@ -135,21 +139,14 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
         return label;
     }
 
-    private DropDownList<KBHandle> createFieldComboBox()
-    {
-//        DropDownList<KBHandle> field = new DropDownList<>("value", LambdaModel.of(() -> {
-//            AnnotationFeature feat = getModelObject().feature;
-//            List<KBHandle> handles = new LinkedList<>();
-//            for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-//                handles.addAll(kbService.listConcepts(kb, true));
-//            }
-//            return new ArrayList<>(handles);
-//        }), new ChoiceRenderer<>("uiLabel"));
-        DropDownList<KBHandle> field = new DropDownList<>("value", kBItems, LambdaModel.of(() -> {
+    private DropDownList<KBHandle> createFieldComboBox() {
+        DropDownList<KBHandle> field = new DropDownList<>("value",
+            LambdaModel.of(this::getSelectedKBItem),
+            LambdaModel.of(() -> {
             AnnotationFeature feat = getModelObject().feature;
             List<KBHandle> handles = new LinkedList<>();
             for (KnowledgeBase kb : kbService.getKnowledgeBases(feat.getProject())) {
-                handles.addAll(kbService.listConcepts(kb, true));
+                handles.addAll(kbService.listProperties(kb, true));
             }
             return new ArrayList<>(handles);
         }), new ChoiceRenderer<>("uiLabel"));
@@ -191,16 +188,54 @@ public class SubjectObjectFeatureEditor extends FeatureEditor {
 
     @Override
     public void onConfigure() {
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
-        if (links.size() == 0) {
-            String role = roleModel.role;
-            roleModel = new LinkWithRoleModel();
-            roleModel.role = role;
-            links.add(roleModel);
-            this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
-                .getModelObject().feature, 0);
-        } else {
-            roleModel = links.get(0);
+        if (this.getModelObject().value.getClass() == KBHandle.class) {
+            kBItems = LambdaModel.of(this::getSelectedKBItem);
+        }
+        else {
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+            if (links.size() == 0) {
+                String role = roleModel.role;
+                roleModel = new LinkWithRoleModel();
+                roleModel.role = role;
+                links.add(roleModel);
+                this.stateModel.getObject().setArmedSlot(SubjectObjectFeatureEditor.this
+                    .getModelObject().feature, 0);
+            } else {
+                roleModel = links.get(0);
+            }
         }
     }
+
+    private KBHandle getSelectedKBItem() {
+        KBHandle selectedKBHandleItem = null;
+        if (roleModel.targetAddr != -1) {
+            String linkedType = this.getModelObject().feature.getType();
+            AnnotationLayer linkedLayer = annotationService.getLayer(linkedType, this.stateModel
+                .getObject().getProject());
+            AnnotationFeature linkedAnnotationFeature = annotationService.getFeature("Predicate",
+                linkedLayer);
+            try {
+                JCas jCas = actionHandler.getEditorCas().getCas().getJCas();
+                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                Feature labelFeature = selectedFS.getType().getFeatureByBaseName
+                    (linkedAnnotationFeature.getName());
+                String selectedKBItemIdentifier = selectedFS.getFeatureValueAsString(labelFeature);
+                if (selectedKBItemIdentifier != null) {
+                    List<KBHandle> handles = new ArrayList<>();
+                    for (KnowledgeBase kb : kbService.getKnowledgeBases(linkedAnnotationFeature
+                        .getProject())) {
+                        handles.addAll(kbService.listProperties(kb, true));
+                    }
+                    selectedKBHandleItem = handles.stream().filter(x -> selectedKBItemIdentifier
+                        .equals(x.getIdentifier())).findAny().orElse(null);
+                }
+            } catch (CASException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return selectedKBHandleItem;
+    }
+
 }
